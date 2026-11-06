@@ -100,11 +100,11 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
             least_crest_radius: The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give
                 the rule; a parabola's 1/|z''| = 100·K. Unit: m.
             least_curve: Unit: m.
-            least_grade: Unit: 1.
+            least_grade: Unit: grade.
             least_grade_length: Unit: m.
             least_sag_k: Unit: m/%.
             least_sag_radius: The least sag radius H (Wannenhalbmesser). Unit: m.
-            most_grade: Unit: 1.
+            most_grade: Unit: grade.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1393,7 +1393,7 @@ class _RoadProfilesPropose(LocalCommand[ProfilesPropose, ProfileProposed, Profil
             profile:
             balanced:
             hold: The PVIs (ids) that keep their elevations.
-            most_grade: Unit: 1.
+            most_grade: Unit: grade.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's

@@ -17,7 +17,8 @@ It writes ``samples/yol-ornegi.kcad``: open it with ``kentos-yol`` (or ``kentos-
 - **Kübaj:** *Formasyon–Bitkisel Toprak* (30 cm topsoil, swell 1.20, shrink 0.90) and *Yol–Zemin* side by side; the
   pavement layers' volumes; the mass haul diagram *Brükner* with a 100 m free haul and a waste site at the end.
 
-The numbers (thicknesses, slopes, factors) are examples for review, not a standard's: KentOS fills none in.
+The numbers (thicknesses, slopes, factors) are examples for review, not a standard's: KentOS fills none in. Cross
+slopes and superelevation are grades, rise over run (−0.025 is −2.5 %; docs/adr/0977).
 Coordinates: TUREF / TM36 (Sivas, plate 58); heights orthometric (TUDKA-99).
 """
 
@@ -124,14 +125,14 @@ def main() -> None:
         operation="set",
         name="Ana yol deveri",
         alignment=axis,
-        normal_left=-2.5,
-        normal_right=-2.5,
-        method={"method": "curves", "curves": [{"pi": "p1", "rate": 6.0, "runoff": 50.0, "onTangent": 0.3}]},
+        normal_left=-0.025,
+        normal_right=-0.025,
+        method={"method": "curves", "curves": [{"pi": "p1", "rate": 0.06, "runoff": 50.0, "onTangent": 0.3}]},
     ).superelevation.id
 
     # ── Enkesit: the template with its pavement, the sample line set ─────────────────────────────────────────────
     side = {
-        "components": [{"kind": "lane", "width": 3.5, "slope": -2.5}, {"kind": "shoulder", "width": 1.0, "slope": -4.0}],
+        "components": [{"kind": "lane", "width": 3.5, "slope": -0.025}, {"kind": "shoulder", "width": 1.0, "slope": -0.04}],
         "cut": 1.0,
         "fill": 1.5,
         "ditch": {"fore": 2.0, "depth": 0.6, "bottom": 0.5},

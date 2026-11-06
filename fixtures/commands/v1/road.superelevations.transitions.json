@@ -229,12 +229,12 @@
                 {
                   "kind": "lane",
                   "width": 3.5,
-                  "slope": -2.5
+                  "slope": -0.025
                 },
                 {
                   "kind": "shoulder",
                   "width": 1.0,
-                  "slope": -4.0
+                  "slope": -0.04
                 }
               ],
               "cut": 1.0,
@@ -255,12 +255,12 @@
                 {
                   "kind": "lane",
                   "width": 3.0,
-                  "slope": -2.0
+                  "slope": -0.02
                 },
                 {
                   "kind": "shoulder",
                   "width": 1.5,
-                  "slope": -4.0
+                  "slope": -0.04
                 }
               ],
               "cut": 1.5,
@@ -271,17 +271,17 @@
                 {
                   "kind": "lane",
                   "width": 3.5,
-                  "slope": -2.5
+                  "slope": -0.025
                 },
                 {
                   "kind": "lane",
                   "width": 3.5,
-                  "slope": -2.5
+                  "slope": -0.025
                 },
                 {
                   "kind": "shoulder",
                   "width": 1.0,
-                  "slope": -4.0
+                  "slope": -0.04
                 }
               ],
               "cut": 1.0,
@@ -337,14 +337,14 @@
             "alignment": "g-1",
             "alignmentRevision": 1,
             "revision": 1,
-            "normalLeft": -2.5,
-            "normalRight": -2.5,
+            "normalLeft": -0.025,
+            "normalRight": -0.025,
             "method": {
               "method": "curves",
               "curves": [
                 {
                   "pi": "p1",
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "runoff": 40.0,
                   "onTangent": 0.0,
                   "widening": 0.5
@@ -358,30 +358,30 @@
             "alignment": "g-2",
             "alignmentRevision": 2,
             "revision": 2,
-            "normalLeft": -2.0,
-            "normalRight": -2.0,
+            "normalLeft": -0.02,
+            "normalRight": -0.02,
             "method": {
               "method": "stations",
               "rows": [
                 {
                   "station": 100.0,
-                  "left": -2.0,
-                  "right": -2.0
+                  "left": -0.02,
+                  "right": -0.02
                 },
                 {
                   "station": 200.0,
-                  "left": 3.0,
-                  "right": -3.0
+                  "left": 0.03,
+                  "right": -0.03
                 },
                 {
                   "station": 400.0,
-                  "left": 3.0,
-                  "right": -3.0
+                  "left": 0.03,
+                  "right": -0.03
                 },
                 {
                   "station": 500.0,
-                  "left": -2.0,
-                  "right": -2.0
+                  "left": -0.02,
+                  "right": -0.02
                 }
               ]
             }
@@ -392,27 +392,27 @@
             "alignment": "g-5",
             "alignmentRevision": 1,
             "revision": 1,
-            "normalLeft": -2.5,
-            "normalRight": -2.5,
+            "normalLeft": -0.025,
+            "normalRight": -0.025,
             "method": {
               "method": "curves",
               "curves": [
                 {
                   "pi": "p1",
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "runoff": 40.0,
                   "onTangent": 0.67
                 },
                 {
                   "pi": "p2",
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "runoff": 35.0,
                   "onTangent": 0.0,
                   "widening": 0.6
                 },
                 {
                   "pi": "p3",
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "runoff": 30.0,
                   "onTangent": 0.6
                 }
@@ -1991,7 +1991,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -2222,12 +2222,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2248,12 +2248,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -2264,17 +2264,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2330,14 +2330,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -2351,30 +2351,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -2385,27 +2385,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -2439,7 +2439,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -2671,12 +2671,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2697,12 +2697,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -2713,17 +2713,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2779,14 +2779,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -2800,30 +2800,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -2834,27 +2834,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -2889,7 +2889,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -3135,12 +3135,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3161,12 +3161,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -3177,17 +3177,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3243,14 +3243,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -3264,30 +3264,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -3298,27 +3298,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -3353,7 +3353,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -3601,12 +3601,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3627,12 +3627,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -3643,17 +3643,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3709,14 +3709,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -3730,30 +3730,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -3764,27 +3764,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -3819,7 +3819,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -4053,12 +4053,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4079,12 +4079,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -4095,17 +4095,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4161,14 +4161,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -4182,30 +4182,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -4216,27 +4216,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -4272,7 +4272,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -4521,12 +4521,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4547,12 +4547,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -4563,17 +4563,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4629,14 +4629,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -4650,30 +4650,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -4684,27 +4684,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -4738,7 +4738,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -4985,12 +4985,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -5011,12 +5011,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -5027,17 +5027,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -5093,14 +5093,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -5114,30 +5114,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -5148,27 +5148,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -5203,7 +5203,7 @@
                   "from": 194.712598760949,
                   "to": 357.8635760864612,
                   "radius": 150.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 40.0,
                   "spiralOut": 40.0,
                   "runoffNow": 40.0,
@@ -5436,12 +5436,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -5462,12 +5462,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -5478,17 +5478,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -5544,14 +5544,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -5565,30 +5565,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -5599,27 +5599,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -5652,7 +5652,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -5666,7 +5666,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -5682,7 +5682,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -5911,12 +5911,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -5937,12 +5937,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -5953,17 +5953,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -6019,14 +6019,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -6040,30 +6040,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -6074,27 +6074,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -6129,7 +6129,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -6146,7 +6146,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -6163,7 +6163,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -6409,12 +6409,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -6435,12 +6435,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -6451,17 +6451,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -6517,14 +6517,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -6538,30 +6538,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -6572,27 +6572,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -6628,7 +6628,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -6645,7 +6645,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -6662,7 +6662,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -6922,12 +6922,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -6948,12 +6948,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -6964,17 +6964,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -7030,14 +7030,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -7051,30 +7051,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -7085,27 +7085,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -7145,7 +7145,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -7166,7 +7166,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -7187,7 +7187,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -7465,12 +7465,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -7491,12 +7491,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -7507,17 +7507,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -7573,14 +7573,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -7594,30 +7594,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -7628,27 +7628,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -7683,7 +7683,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -7700,7 +7700,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -7717,7 +7717,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -7949,12 +7949,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -7975,12 +7975,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -7991,17 +7991,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -8057,14 +8057,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -8078,30 +8078,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -8112,27 +8112,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -8166,7 +8166,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -8182,7 +8182,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -8199,7 +8199,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -8458,12 +8458,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -8484,12 +8484,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -8500,17 +8500,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -8566,14 +8566,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -8587,30 +8587,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -8621,27 +8621,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -8879,12 +8879,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -8905,12 +8905,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -8921,17 +8921,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -8987,14 +8987,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.0,
                       "widening": 0.5
@@ -9008,30 +9008,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -9042,27 +9042,27 @@
                 "alignment": "g-5",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.67
                     },
                     {
                       "pi": "p2",
-                      "rate": 8.0,
+                      "rate": 0.08,
                       "runoff": 35.0,
                       "onTangent": 0.0,
                       "widening": 0.6
                     },
                     {
                       "pi": "p3",
-                      "rate": 5.0,
+                      "rate": 0.05,
                       "runoff": 30.0,
                       "onTangent": 0.6
                     }
@@ -10643,7 +10643,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -10659,7 +10659,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -10676,7 +10676,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -10907,12 +10907,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -10933,12 +10933,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -10949,17 +10949,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -11015,14 +11015,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -11036,30 +11036,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -11070,27 +11070,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -11125,7 +11125,7 @@
                   "from": 160.0,
                   "to": 326.9131392402902,
                   "radius": 180.0,
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 40.0,
@@ -11142,7 +11142,7 @@
                   "from": 403.07889077530405,
                   "to": 558.933915220966,
                   "radius": 120.0,
-                  "rate": 8.0,
+                  "rate": 0.08,
                   "spiralIn": 35.0,
                   "spiralOut": 35.0,
                   "runoffNow": 35.0,
@@ -11159,7 +11159,7 @@
                   "from": 619.9812352644925,
                   "to": 820.3524444087421,
                   "radius": 250.0,
-                  "rate": 5.0,
+                  "rate": 0.05,
                   "spiralIn": 0.0,
                   "spiralOut": 0.0,
                   "runoffNow": 30.0,
@@ -11419,12 +11419,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -11445,12 +11445,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -11461,17 +11461,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -11527,14 +11527,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -11548,30 +11548,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -11582,27 +11582,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -11853,12 +11853,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -11879,12 +11879,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -11895,17 +11895,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -11961,14 +11961,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -11982,30 +11982,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -12016,27 +12016,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -13873,12 +13873,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -13899,12 +13899,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -13915,17 +13915,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -13981,14 +13981,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -14002,30 +14002,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -14036,27 +14036,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -14302,12 +14302,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -14328,12 +14328,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -14344,17 +14344,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -14410,14 +14410,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -14431,30 +14431,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -14465,27 +14465,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -14731,12 +14731,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -14757,12 +14757,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -14773,17 +14773,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -14839,14 +14839,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -14860,30 +14860,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -14894,27 +14894,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -15161,12 +15161,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -15187,12 +15187,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -15203,17 +15203,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -15269,14 +15269,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -15290,30 +15290,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -15324,27 +15324,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -15591,12 +15591,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -15617,12 +15617,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -15633,17 +15633,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -15699,14 +15699,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -15720,30 +15720,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -15754,27 +15754,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -16022,12 +16022,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -16048,12 +16048,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -16064,17 +16064,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -16130,14 +16130,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -16151,30 +16151,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -16185,27 +16185,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -16453,12 +16453,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -16479,12 +16479,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -16495,17 +16495,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -16561,14 +16561,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -16582,30 +16582,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -16616,27 +16616,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -16883,12 +16883,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -16909,12 +16909,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -16925,17 +16925,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -16991,14 +16991,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -17012,30 +17012,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -17046,27 +17046,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -17313,12 +17313,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17339,12 +17339,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -17355,17 +17355,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17421,14 +17421,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -17442,30 +17442,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -17476,27 +17476,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -17742,12 +17742,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17768,12 +17768,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -17784,17 +17784,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17810,7 +17810,7 @@
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17821,12 +17821,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17882,14 +17882,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -17903,30 +17903,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -17937,27 +17937,27 @@
                   "alignment": "g-5",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.67
                       },
                       {
                         "pi": "p2",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 35.0,
                         "onTangent": 0.0,
                         "widening": 0.6
                       },
                       {
                         "pi": "p3",
-                        "rate": 5.0,
+                        "rate": 0.05,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -18194,12 +18194,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -18220,12 +18220,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -18236,17 +18236,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -18262,7 +18262,7 @@
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -18273,12 +18273,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -18334,14 +18334,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.0,
                       "widening": 0.5
@@ -18355,30 +18355,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -18389,27 +18389,27 @@
                 "alignment": "g-5",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.67
                     },
                     {
                       "pi": "p2",
-                      "rate": 8.0,
+                      "rate": 0.08,
                       "runoff": 35.0,
                       "onTangent": 0.0,
                       "widening": 0.6
                     },
                     {
                       "pi": "p3",
-                      "rate": 5.0,
+                      "rate": 0.05,
                       "runoff": 30.0,
                       "onTangent": 0.6
                     }

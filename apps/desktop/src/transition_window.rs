@@ -187,7 +187,7 @@ impl App {
             .as_ref()
             .and_then(|w| w.chosen.and_then(|i| w.rows.get(i)))
             .and_then(|r| r.def().ok())
-            .map_or((-2.5, -2.5), |d| (d.normal_left, d.normal_right));
+            .map_or((-0.025, -0.025), |d| (d.normal_left, d.normal_right));
         d = d
             .picture(iced::widget::canvas(Ramps { out: ok, normal }).width(Fill).height(Fill), 220.0)
             .legend("Dış yanın enine eğimi (%) km boyunca: kesikli şimdiki, düz önerilen; kırmızı aralık geçişlerin sığmadığı teğet");
@@ -225,7 +225,7 @@ impl App {
                         vec![
                             r.pi.clone(),
                             comma_text(r.radius, 1),
-                            comma_text(r.rate, 2),
+                            comma_text(100.0 * r.rate, 2),
                             r.gradient_now.map_or_else(|| "—".into(), |g| format!("1:{:.0}", 1.0 / g)),
                             o(r.runoff_gradient, 1),
                             o(r.spiral, 1),
@@ -291,13 +291,14 @@ impl canvas::Program<Message> for Ramps<'_> {
             text(&mut frame, "Çizelgenin kurpları ve geçişleri burada çizilir.".into(), Point::new(16.0, 20.0), t.muted);
             return vec![frame.into_geometry()];
         };
-        let n = self.normal.0.min(self.normal.1);
+        // The chart is in percent, as its labels are; the schedule and the rows hold grades (docs/adr/0977).
+        let n = 100.0 * self.normal.0.min(self.normal.1);
         let ramps: Vec<(Vec<[f64; 2]>, Vec<[f64; 2]>)> = out
             .rows
             .iter()
             .map(|r| {
-                let now = ramp(r.from, r.to, r.runoff_now, r.on_tangent_now, n, r.rate);
-                let new = ramp(r.from, r.to, r.runoff.unwrap_or(r.runoff_now), r.on_tangent.unwrap_or(r.on_tangent_now), n, r.rate);
+                let now = ramp(r.from, r.to, r.runoff_now, r.on_tangent_now, n, 100.0 * r.rate);
+                let new = ramp(r.from, r.to, r.runoff.unwrap_or(r.runoff_now), r.on_tangent.unwrap_or(r.on_tangent_now), n, 100.0 * r.rate);
                 (now, new)
             })
             .collect();
@@ -308,7 +309,7 @@ impl canvas::Program<Message> for Ramps<'_> {
                 s1 = s1.max(p[0]);
             }
         }
-        let top = out.rows.iter().map(|r| r.rate).fold(0.0, f64::max);
+        let top = out.rows.iter().map(|r| 100.0 * r.rate).fold(0.0, f64::max);
         let (z0, z1) = (n.min(0.0) - 0.5, top + 0.5);
         let (left, right, up, down) = (48.0, 12.0, 12.0, 24.0);
         let (w, h) = (bounds.width - left - right, bounds.height - up - down);

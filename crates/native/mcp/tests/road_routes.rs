@@ -40,7 +40,7 @@ fn a_route_is_found_drawn_and_fitted() {
     let drawing = opened["structuredContent"]["drawing"].clone();
 
     let ask = json!({"drawing":drawing,"surface":"Mevcut zemin","from":{"x":70.0,"y":80.0},"to":{"x":520.0,"y":280.0},
-        "cell":10.0,"margin":30.0,"grade":8.0,"climb":10.0});
+        "cell":10.0,"margin":30.0,"grade":0.08,"climb":10.0});
     let open = call(&mut server, "road.routes.find", ask.clone());
     assert_eq!(open["isError"], false, "{open}");
     let mut avoiding = ask.clone();

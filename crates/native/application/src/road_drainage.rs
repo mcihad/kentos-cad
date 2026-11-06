@@ -75,7 +75,7 @@ fn end_of(e: DropEnd) -> DrainageDropEnd {
 /// A culvert's barrels full: each pipe or cell by Manning at the culvert's slope; none without a roughness.
 fn capacity(def: &kentos_commands::CulvertDef) -> Option<(f64, f64)> {
     let n = def.roughness?;
-    let slope = def.slope / 100.0;
+    let slope = def.slope;
     let (channel, count) = match def.shape {
         CulvertShapeDef::Pipe { diameter, count, .. } => (Channel::Pipe { diameter }, count),
         CulvertShapeDef::Box { width, height, cells, .. } => (Channel::Box { width, height }, cells),

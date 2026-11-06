@@ -1,7 +1,7 @@
 //! A preliminary route over a terrain (plan/road.md Y12.1, docs/adr/0910 §1; ROAD-ALIGN-13): the least-cost path
 //! between two places on a grid of the terrain's heights, as a corridor analysis gives it before an alignment is
 //! designed. A step between grid nodes costs its plan length plus `climb` times the height it rises or falls; a step
-//! steeper than `grade` (percent) is not taken; a node off the terrain or in an area to avoid is not entered. Nodes are
+//! steeper than `grade` (rise over run) is not taken; a node off the terrain or in an area to avoid is not entered. Nodes are
 //! joined to their 16 neighbours (the knight's moves too, so a path is not held to 45° turns). Equal costs keep the
 //! path found first, the neighbours tried in a fixed order; the nodes' heights are rounded to the micrometre so the
 //! same terrain gives the same path wherever it is computed. The result is a line to fit, not an alignment: its fit,
@@ -110,7 +110,7 @@ impl Ord for Open {
 }
 
 /// The least-cost path from node `a` to node `b`: `heights[n]` the node's height (none: not entered), `grade` the
-/// steepest step (percent), `climb` the cost of a metre risen or fallen.
+/// steepest step (rise over run), `climb` the cost of a metre risen or fallen.
 pub fn least_cost(grid: &Grid, heights: &[Option<f64>], a: usize, b: usize, grade: f64, climb: f64) -> Result<Found, NoRoute> {
     if heights[a].is_none() {
         return Err(NoRoute::Blocked { end: false });
@@ -122,7 +122,7 @@ pub fn least_cost(grid: &Grid, heights: &[Option<f64>], a: usize, b: usize, grad
     let mut dist = vec![f64::INFINITY; n];
     let mut from = vec![usize::MAX; n];
     let mut done = vec![false; n];
-    let steepest = grade / 100.0;
+    let steepest = grade;
     let lengths: Vec<f64> = STEPS
         .iter()
         .map(|&(di, dj)| {

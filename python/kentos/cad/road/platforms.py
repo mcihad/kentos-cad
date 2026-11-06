@@ -163,15 +163,15 @@ class _RoadPlatformsEdit(LocalCommand[PlatformsEdit, PlatformsWritten, Platforms
     """``road.platforms.edit`` v1. Platformu düzenle: Yol projesinin platformunu (platform:
     kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın
     (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y,
-    z), grade eğimi (%), direction yükseldiği yön (derece, +x'ten saat yönü tersine).
-    Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev
-    çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en
-    çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler
-    kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. Yeni platformun
-    kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan
-    sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project,
-    unknown_platform, unknown_terrain, invalid_platform, invalid_revision,
-    revision_conflict.
+    z), grade eğimi (oran, 0,02 %2'dir), direction yükseldiği yön (derece, +x'ten saat
+    yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca
+    şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece,
+    en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi.
+    Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. Yeni
+    platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki
+    köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler:
+    not_a_road_project, unknown_platform, unknown_terrain, invalid_platform,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.platforms.edit"
@@ -206,9 +206,9 @@ class _RoadPlatformsEdit(LocalCommand[PlatformsEdit, PlatformsWritten, Platforms
     ) -> PlatformsWritten:
         """Platformu düzenle: Yol projesinin platformunu (platform: kimliği ya da adı; yoksa
         yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki
-        yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (%),
-        direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu
-        (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan
+        yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (oran, 0,02
+        %2'dir), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve
+        dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan
         dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun
         erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS
         öntanımlı şev, aralık ya da erim vermez. Yeni platformun kimliği verilen ya da ilk
@@ -226,7 +226,7 @@ class _RoadPlatformsEdit(LocalCommand[PlatformsEdit, PlatformsWritten, Platforms
             expected_revision:
             fan: Unit: deg.
             fill: Unit: 1.
-            grade: Unit: percent.
+            grade: Unit: grade.
             name:
             platform:
             reach: Unit: m.

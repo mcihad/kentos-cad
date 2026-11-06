@@ -362,6 +362,8 @@ pub(super) struct Features {
     pub(super) slope_transitions: bool,
     /// Schema 179: an earthwork volume on a grid and its cell (docs/adr/0974).
     pub(super) volume_grid: bool,
+    /// Schema 187: a road project's grades as rise over run, percent before (docs/adr/0977).
+    pub(super) road_grades: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
     /// Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
@@ -629,6 +631,7 @@ impl Features {
             cut_benches: schema >= crate::SCHEMA_WITH_CUT_BENCHES,
             slope_transitions: schema >= crate::SCHEMA_WITH_SLOPE_TRANSITIONS,
             volume_grid: schema >= crate::SCHEMA_WITH_VOLUME_GRID,
+            road_grades: schema >= crate::SCHEMA_WITH_ROAD_GRADES,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,

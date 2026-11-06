@@ -120,7 +120,7 @@ fn propose(
             (Some(most), Some(g)) if g > 0.0 => Some(tr::runoff_for(rule.runoff, g, most)),
             _ => None,
         };
-        let e = rule.rate / 100.0;
+        let e = rule.rate;
         let spiral_comfort = input.speed.zip(input.comfort).map(|(v, k)| tr::comfort_spiral(v, c.radius, e, k));
         let spiral_shift = input.shift.map(|p| tr::shift_spiral(p, c.radius));
         let spiral_most = input.most_shift.map(|p| tr::shift_spiral(p, c.radius));

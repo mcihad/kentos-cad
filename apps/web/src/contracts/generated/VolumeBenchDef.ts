@@ -2,6 +2,6 @@
 
 /**
  * The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
- * percent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
+ * (a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
  */
 export type VolumeBenchDef = { slope: number, height: number, };

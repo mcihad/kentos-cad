@@ -20,6 +20,7 @@ import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_superelevation_cases as supref  # noqa: E402
@@ -244,7 +245,7 @@ def edit_cases():
     no("Paralel aksa bağlanmaz", {**base, "alignment": "g-3", "method": m1},
        rulefail("dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır", "alignment"))
     no("Aynı ad", {**base, "name": "yan AKS deveri", "method": m1}, rulefail("bu adda başka bir dever çizelgesi var", "name"))
-    no("Normal eğim çok dik", {**base, "normalLeft": -120.0, "method": m1}, rulefail("normal enine eğim en çok %100 olur", "normalLeft"))
+    no("Normal eğim çok dik", {**base, "normalLeft": -120.0, "method": m1}, rulefail("normal enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur", "normalLeft"))
     for title, method, d_ in [
         ("Kurbu olmayan PI", curves(rule("b", 6.0, 40.0, 0.0)), None),
         ("Sıfır oran", curves(rule("p1", 0.0, 40.0, 0.0)), None),
@@ -352,6 +353,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
         path = OUT / name
         if check:

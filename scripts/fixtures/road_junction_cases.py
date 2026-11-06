@@ -22,6 +22,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 
 mp.mp.dps = 40
@@ -539,6 +540,7 @@ def main():
     check = "--check" in sys.argv
     for name, data in files.items():
         path = OUT / f"{name}.json"
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         if check:
             if path.read_text(encoding="utf-8") != text:

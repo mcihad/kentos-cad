@@ -25,6 +25,7 @@ import ground_survey_cases as gsurvey  # noqa: E402
 import road_alignment_cases as aref  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/road.stakeout.query.json"
@@ -284,6 +285,7 @@ def main():
                     "kodlar road_corridor_cases.py), zemin boyu PROJ'un nokta ölçekleri ve Euler yarıçapıyla "
                     "(ground_survey_cases.py); KentOS kodu yok. Okur, yazmaz.",
             "setup": setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

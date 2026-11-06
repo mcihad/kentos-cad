@@ -20,8 +20,8 @@ pub const ROAD_SUPERELEVATIONS_QUERY: &str = "road.superelevations.query";
 pub const ROAD_SUPERELEVATIONS_QUERY_VERSION: u32 = 1;
 
 /// Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,
-/// `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,
-/// outward from the axis, falling outward negative.
+/// `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are grades
+/// (rise over run, −0.025 is −2.5 %; docs/adr/0977), outward from the axis, falling outward negative.
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),
 /// `unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition
@@ -47,11 +47,11 @@ pub struct SuperelevationsEdit {
     pub alignment: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_left: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_right: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -84,7 +84,7 @@ pub struct SuperCritical {
     pub exit: bool,
 }
 
-/// A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,
+/// A superelevation schedule as it is now: each side's break points (station, grade) and widening (station,
 /// metres), the critical stations; why it no longer builds when it does not.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -99,14 +99,14 @@ pub struct SuperelevationReport {
     pub alignment: String,
     /// The alignment changed since it was made or rebound.
     pub stale: bool,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_left: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_right: f64,
-    /// (station, slope percent) pairs.
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/%")))]
+    /// (station, grade) pairs.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "station-grade")))]
     pub left: Vec<[f64; 2]>,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/%")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "station-grade")))]
     pub right: Vec<[f64; 2]>,
     /// (station, width) pairs, metres.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -154,7 +154,7 @@ pub struct SuperelevationsQuery {
     pub stations: Vec<f64>,
 }
 
-/// The cross slopes (percent) and widening (metres) of both sides at a station.
+/// The cross slopes (grades) and widening (metres) of both sides at a station.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -166,9 +166,9 @@ pub struct SuperAt {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub km: f64,
     pub km_text: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub left: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub right: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub left_widening: f64,
@@ -217,7 +217,7 @@ pub struct SuperelevationsCheck {
     pub most_friction: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub most_relative: Option<f64>,
     /// How often a clothoid's friction is read (m); absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -237,9 +237,9 @@ pub struct RelativeGradient {
     pub from: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub left: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub right: f64,
 }
 
@@ -262,7 +262,7 @@ pub struct CurveFrictionRow {
     pub at: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub e: f64,
 }
 
@@ -444,7 +444,7 @@ pub struct SuperelevationsTransitions {
     pub template: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub most_relative: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -472,7 +472,7 @@ pub struct SuperelevationsTransitions {
     pub step: Option<f64>,
 }
 
-/// A curve's transition: its PI, TS and ST, radius, rate (percent) and clothoids now; its runoff, share on the tangent
+/// A curve's transition: its PI, TS and ST, radius, rate (a grade) and clothoids now; its runoff, share on the tangent
 /// and largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by
 /// the relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the
 /// runoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held
@@ -490,7 +490,7 @@ pub struct SuperTransitionRow {
     pub to: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub rate: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_in: f64,
@@ -502,7 +502,7 @@ pub struct SuperTransitionRow {
     pub on_tangent_now: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub gradient_now: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

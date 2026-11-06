@@ -23,6 +23,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
+import road_grades  # noqa: E402
 import road_sampling_cases as sref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
@@ -815,6 +816,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = []
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         path = OUT / name
         if check:

@@ -1,11 +1,12 @@
 //! A road's superelevation and widening (docs/adr/0904, plan/road.md Y6): the cross slope of each side along an
 //! alignment as a schedule of break points, built from the curves (a rate, a runoff length and the share of the runoff
 //! before the curve, rotating about the centreline) or from rows of stations; and the extra width on a curve's inside.
-//! Slopes are percent, measured outward from the axis: falling outward is negative. Left and right are the alignment's.
+//! Slopes are grades (rise over run, −0.025 is −2.5 %; docs/adr/0977), measured outward from the axis: falling outward
+//! is negative. Left and right are the alignment's.
 
 use crate::alignment::Alignment;
 
-/// The cross slopes of both sides at a station (percent, outward).
+/// The cross slopes of both sides at a station (grades, outward).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Crossfall {
     pub left: f64,
@@ -20,7 +21,7 @@ pub struct Row {
     pub right: f64,
 }
 
-/// A curve's superelevation: its PI, the full rate (percent, above 0), the runoff length (level crown to full rate),
+/// A curve's superelevation: its PI, the full rate (a grade, above 0), the runoff length (level crown to full rate),
 /// the share of the runoff before the curve's start (0–1) and the extra width on its inside (0 none).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CurveRule {

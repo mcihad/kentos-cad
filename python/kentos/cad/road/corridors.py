@@ -1009,7 +1009,7 @@ class _RoadCorridorsWater(LocalCommand[CorridorsWater, CorridorsWatered, Corrido
         Args:
             doc: The drawing it works on.
             corridor:
-            least: Unit: 1.
+            least: Unit: grade.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's

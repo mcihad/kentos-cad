@@ -53,8 +53,8 @@ fn the_window_makes_a_schedule_and_shows_its_diagram() {
     let w = app.superelevation_window.as_ref().expect("open");
     let report = w.report.as_ref().expect("built").as_ref().expect("builds");
     assert_eq!(report.critical.len(), 8, "NC, LC, RC and FS in and out");
-    assert!(report.right.iter().any(|p| (p[1] - 6.0).abs() < 1e-9), "the left turn puts the right side outside");
-    assert!(report.left.iter().any(|p| (p[1] + 6.0).abs() < 1e-9));
+    assert!(report.right.iter().any(|p| (p[1] - 0.06).abs() < 1e-9), "the left turn puts the right side outside");
+    assert!(report.left.iter().any(|p| (p[1] + 0.06).abs() < 1e-9));
     assert!(!report.left_widening.is_empty(), "the inside widens");
     send(&mut app, W::Save);
     assert!(app.superelevation_window.is_none(), "Kaydet closes the window");

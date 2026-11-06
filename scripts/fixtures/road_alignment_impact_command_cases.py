@@ -26,6 +26,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_alignment_command_cases as acmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_profile_impact_command_cases as pimp  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
@@ -445,6 +446,7 @@ def main_():
                    "(mpmath), ayak 0,5 m'lik yerlerde en yakından altın oranla, eleman başına 32 örnek ve ikiye bölmeyle; "
                    "KentOS kodu yok. Çizim road_profile_impact_command_cases.py'nindir.",
            "setup": base, "cases": cs}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text() != text:

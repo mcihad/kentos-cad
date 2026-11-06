@@ -18,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_volume_command_cases as vcmd  # noqa: E402
 import road_volume_ledger_cases as lref  # noqa: E402
 
@@ -246,6 +247,7 @@ def main():
                     "road_volume_command_cases.py'nin, defter road_volume_ledger_cases.py'nin tam kesirli işlevleriyle; "
                     "KentOS kodu yok.",
             "setup": vcmd.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

@@ -24,6 +24,7 @@ from pathlib import Path
 import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
 import road_landxml_cases as lx  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -278,6 +279,7 @@ def main():
                     "road_profile_command_cases.py'nin başvurusundandır; KentOS kodu yok. Dosyanın içeriği --written ile "
                     "IfcOpenShell'le (şema, EXPRESS kuralları, eşleme, eğrilerin değerlendirmesi) denetlenir.",
             "setup": SETUP, "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

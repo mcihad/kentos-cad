@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_volume_command_cases as vcmd  # noqa: E402
 import road_volume_uncertainty_cases as uref  # noqa: E402
@@ -184,6 +185,7 @@ def main():
                     "road_volume_command_cases.py'nin, arazi noktalarının ağırlıkları road_volume_uncertainty_cases.py'nin "
                     "(kesirli bindirme, farklarla ve Monte Carlo denemeleriyle sınanmış); KentOS kodu yok.",
             "setup": vcmd.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if "--check" in sys.argv[1:]:
         if OUT.read_text("utf-8") != text:

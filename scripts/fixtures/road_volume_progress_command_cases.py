@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_surface_cases as sref  # noqa: E402
 import road_terrain_command_cases as tcmd  # noqa: E402
@@ -285,6 +286,7 @@ def main():
                     "road_volume_command_cases.py'nin, ölçüler bu betiğin (ilk arazinin noktaları ve koridor boyunca "
                     "işin %40'ı, %80'i), iş road_volume_progress_cases.py'nin (kesirli üç yüzey bindirmesi); KentOS kodu yok.",
             "setup": doc0, "cases": got}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if "--check" in sys.argv[1:]:
         if OUT.read_text("utf-8") != text:

@@ -38971,7 +38971,7 @@
               "number",
               "null"
             ],
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "leastGradeLength": {
             "format": "double",
@@ -39004,7 +39004,7 @@
               "number",
               "null"
             ],
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "profile": {
             "type": "string"
@@ -39596,7 +39596,7 @@
               "number",
               "null"
             ],
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "profile": {
             "type": "string"
@@ -40207,7 +40207,7 @@
       "id": "road.templates.edit",
       "version": 1,
       "title": "Tip kesiti düzenle",
-      "summary": "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. right verilmezse ya da mirror ile sağ yan solun aynısıdır. pavement üstyapıdır (iki yanda aynı): layers yukarıdan aşağı tabakalar (ad name, kalınlık thickness m, isteğe bağlı malzeme kodu material), bitmiş yüze paralel; edge menteşede nasıl bittikleri: vertical dik, slope h ile menteşeden 1 düşeye h yatay inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun yüzü). Son tabakanın tabanı formasyondur. removePavement üstyapıyı kaldırır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template, invalid_road_template, road_template_in_use, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (oran: −0,025 %−2,5'tir, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. right verilmezse ya da mirror ile sağ yan solun aynısıdır. pavement üstyapıdır (iki yanda aynı): layers yukarıdan aşağı tabakalar (ad name, kalınlık thickness m, isteğe bağlı malzeme kodu material), bitmiş yüze paralel; edge menteşede nasıl bittikleri: vertical dik, slope h ile menteşeden 1 düşeye h yatay inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun yüzü). Son tabakanın tabanı formasyondur. removePavement üstyapıyı kaldırır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template, invalid_road_template, road_template_in_use, invalid_revision, revision_conflict.",
       "aliases": [
         "tipkesit"
       ],
@@ -40376,12 +40376,12 @@
               "components": [
                 {
                   "kind": "lane",
-                  "slope": -2.5,
+                  "slope": -0.025,
                   "width": 3.5
                 },
                 {
                   "kind": "shoulder",
-                  "slope": -4.0,
+                  "slope": -0.04,
                   "width": 1.0
                 }
               ],
@@ -40962,7 +40962,7 @@
       "id": "road.superelevations.edit",
       "version": 1,
       "title": "Deveri düzenle",
-      "summary": "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa yüzdedir, dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (yüzde), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa orandır (−0,025 %−2,5'tir; ADR 0977), dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (eğim oranı, 0,06 %6'dır), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict.",
       "aliases": [
         "dever"
       ],
@@ -40979,7 +40979,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,\noutward from the axis, falling outward negative.\n\nRefusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),\n`unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition\nby `road_problem`, a schedule that does not build: a PI without a curve, a rate, runoff, share or width out of range,\na rate below the normal slope, a full rate that does not fit on its curve, two curves' transitions overlapping, a\ntransition off the alignment, a PI twice, rows not in increasing station or off the alignment),\n`superelevation_in_use` (remove while a sample line set uses it), `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,\n`alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are grades\n(rise over run, −0.025 is −2.5 %; docs/adr/0977), outward from the axis, falling outward negative.\n\nRefusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),\n`unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition\nby `road_problem`, a schedule that does not build: a PI without a curve, a rate, runoff, share or width out of range,\na rate below the normal slope, a full rate that does not fit on its curve, two curves' transitions overlapping, a\ntransition off the alignment, a PI twice, rows not in increasing station or off the alignment),\n`superelevation_in_use` (remove while a sample line set uses it), `invalid_revision`, `revision_conflict`.",
         "properties": {
           "alignment": {
             "type": [
@@ -41016,7 +41016,7 @@
               "number",
               "null"
             ],
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "normalRight": {
             "format": "double",
@@ -41024,7 +41024,7 @@
               "number",
               "null"
             ],
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "operation": {
             "$ref": "#/$defs/RoadEditOperation"
@@ -41138,15 +41138,15 @@
                 {
                   "onTangent": 0.0,
                   "pi": "p1",
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "runoff": 60.0
                 }
               ],
               "method": "curves"
             },
             "name": "Ana aks deveri",
-            "normalLeft": -2.5,
-            "normalRight": -2.5,
+            "normalLeft": -0.025,
+            "normalRight": -0.025,
             "operation": "set"
           }
         }
@@ -41304,7 +41304,7 @@
               "number",
               "null"
             ],
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "speed": {
             "format": "double",
@@ -41712,7 +41712,7 @@
               "number",
               "null"
             ],
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "mostShift": {
             "format": "double",
@@ -42151,7 +42151,7 @@
           "least": {
             "format": "double",
             "type": "number",
-            "x-unit": "1"
+            "x-unit": "grade"
           }
         },
         "required": [
@@ -42188,7 +42188,7 @@
           "least": {
             "format": "double",
             "type": "number",
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "lows": {
             "items": {
@@ -42242,7 +42242,7 @@
           "least": {
             "format": "double",
             "type": "number",
-            "x-unit": "1"
+            "x-unit": "grade"
           },
           "lows": {
             "items": {
@@ -43159,7 +43159,7 @@
       "id": "road.volumes.edit",
       "version": 1,
       "title": "Kübaj hesabını düzenle",
-      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu orandan dikken; 0,2 %20'dir dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict.",
       "aliases": [
         "kubaj",
         "kübaj"
@@ -43177,7 +43177,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram\nuses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or\nbenching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a\nFormasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to\n1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.",
+        "description": "Input of `road.volumes.edit` v1: the earthwork volume by its id or name (absent: a new one). A new one needs `name`,\n`corridor` and `method`. A volume is not rebound: it follows its corridor.\n\nRefusals, in this order: `not_a_road_project`, `invalid_volume` (rebind), `unknown_volume` (remove one not in the\nproject), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram\nuses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to\nset, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows\noverlapping or a depth not in (0, 5] m; a bench's slope not in (0, 10] (a grade) or its height not in (0, 10] m; stripping or\nbenching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a\nFormasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to\n1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.",
         "properties": {
           "bench": {
             "anyOf": [
@@ -47166,7 +47166,7 @@
       "id": "road.culverts.edit",
       "version": 1,
       "title": "Menfezi düzenle",
-      "summary": "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (%), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (oran, 0,02 %2'dir), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert, invalid_revision, revision_conflict.",
       "aliases": [
         "menfez",
         "culvert"
@@ -47289,7 +47289,7 @@
               "number",
               "null"
             ],
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "station": {
             "format": "double",
@@ -47399,7 +47399,7 @@
               "thickness": 0.25,
               "width": 2.0
             },
-            "slope": 1.0,
+            "slope": 0.01,
             "station": 380.0
           }
         }
@@ -47770,7 +47770,7 @@
           "slope": {
             "format": "double",
             "type": "number",
-            "x-unit": "1"
+            "x-unit": "grade"
           }
         },
         "required": [
@@ -47839,7 +47839,7 @@
           "slope": {
             "format": "double",
             "type": "number",
-            "x-unit": "1"
+            "x-unit": "grade"
           }
         },
         "required": [
@@ -51178,7 +51178,7 @@
       "id": "road.platforms.edit",
       "version": 1,
       "title": "Platformu düzenle",
-      "summary": "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (%), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. Yeni platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project, unknown_platform, unknown_terrain, invalid_platform, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (oran, 0,02 %2'dir), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. Yeni platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project, unknown_platform, unknown_terrain, invalid_platform, invalid_revision, revision_conflict.",
       "aliases": [
         "platform",
         "tesviye"
@@ -51272,7 +51272,7 @@
               "number",
               "null"
             ],
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "name": {
             "type": [
@@ -51427,7 +51427,7 @@
             "direction": 90.0,
             "fan": 15.0,
             "fill": 2.0,
-            "grade": 1.0,
+            "grade": 0.01,
             "name": "Depo platformu",
             "operation": "set",
             "reach": 100.0,
@@ -52457,7 +52457,7 @@
       "id": "road.routes.find",
       "version": 1,
       "title": "Ön güzergâh bul",
-      "summary": "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (yüzde) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached.",
+      "summary": "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (oran, 0,08 %8'dir) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (oran), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached.",
       "aliases": [
         "onguzergah",
         "routefind"
@@ -52500,7 +52500,7 @@
           "grade": {
             "format": "double",
             "type": "number",
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "margin": {
             "format": "double",
@@ -52537,7 +52537,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (percent, between the points kept), its cost, the grid's nodes and those settled.",
+        "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (a grade, between the points kept), its cost, the grid's nodes and those settled.",
         "properties": {
           "climb": {
             "format": "double",
@@ -52575,7 +52575,7 @@
           "steepest": {
             "format": "double",
             "type": "number",
-            "x-unit": "percent"
+            "x-unit": "grade"
           }
         },
         "required": [
@@ -52592,7 +52592,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (percent, between the points kept), its cost, the grid's nodes and those settled.",
+        "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (a grade, between the points kept), its cost, the grid's nodes and those settled.",
         "properties": {
           "climb": {
             "format": "double",
@@ -52630,7 +52630,7 @@
           "steepest": {
             "format": "double",
             "type": "number",
-            "x-unit": "percent"
+            "x-unit": "grade"
           }
         },
         "required": [
@@ -52667,7 +52667,7 @@
               "x": 100.0,
               "y": 100.0
             },
-            "grade": 8.0,
+            "grade": 0.08,
             "margin": 50.0,
             "surface": "Mevcut zemin",
             "to": {
@@ -52732,7 +52732,7 @@
           "grade": {
             "format": "double",
             "type": "number",
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "layerId": {
             "type": "string"
@@ -52848,7 +52848,7 @@
               "x": 100.0,
               "y": 100.0
             },
-            "grade": 8.0,
+            "grade": 0.08,
             "layerId": "guzergah",
             "margin": 50.0,
             "surface": "Mevcut zemin",
@@ -53509,7 +53509,7 @@
       "id": "road.junctions.tie",
       "version": 1,
       "title": "Kavşağa bağla",
-      "summary": "Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; yüzde, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (yüzde) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar: junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie, invalid_revision, revision_conflict.",
+      "summary": "Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (oran) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar: junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie, invalid_revision, revision_conflict.",
       "aliases": [
         "kavsakbagla",
         "talibagla"
@@ -53527,10 +53527,10 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.junctions.tie` v1 (docs/adr/0918): at an at-grade junction the secondary road's profile tied to the\nprimary road's crown, which is kept: three PVIs without curves on the secondary profile, at the crossing (the\nprimary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation\nplus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the\nleg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's\nalignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,\nfalling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.\n`maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is\nseparated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not\nbuild, before or after the tie), `unknown_superelevation`, `invalid_superelevation`, `invalid_tie` (see docs/adr/0918 §3), `invalid_revision`,\n`revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.",
+        "description": "Input of `road.junctions.tie` v1 (docs/adr/0918): at an at-grade junction the secondary road's profile tied to the\nprimary road's crown, which is kept: three PVIs without curves on the secondary profile, at the crossing (the\nprimary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation\nplus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the\nleg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's\nalignment's only one). The primary road's cross slopes are either `crossfall` (left and right, grades outward,\nfalling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.\n`maxGradeChange` (a grade difference) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.\n\nRefusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is\nseparated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not\nbuild, before or after the tie), `unknown_superelevation`, `invalid_superelevation`, `invalid_tie` (see docs/adr/0918 §3), `invalid_revision`,\n`revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.",
         "properties": {
           "crossfall": {
-            "description": "The primary road's cross slopes, left and right (percent, outward, falling negative).",
+            "description": "The primary road's cross slopes, left and right (grades, outward, falling negative).",
             "items": {
               "format": "double",
               "type": "number"
@@ -53541,7 +53541,7 @@
               "array",
               "null"
             ],
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -53559,7 +53559,7 @@
               "number",
               "null"
             ],
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "primary": {
             "format": "uint32",
@@ -53592,7 +53592,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its\nthree ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the\nties, the grade change at each tie (percent, absolute), and the revision.",
+        "description": "Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its\nthree ties in station order, the PVIs taken off, the grades of the four segments around and between the\nties, the grade change at each tie (absolute), and the revision.",
         "properties": {
           "changes": {
             "items": {
@@ -53600,7 +53600,7 @@
               "type": "number"
             },
             "type": "array",
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "grades": {
             "items": {
@@ -53608,7 +53608,7 @@
               "type": "number"
             },
             "type": "array",
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "junction": {
             "type": "string"
@@ -53653,7 +53653,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its\nthree ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the\nties, the grade change at each tie (percent, absolute), and the revision.",
+        "description": "Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its\nthree ties in station order, the PVIs taken off, the grades of the four segments around and between the\nties, the grade change at each tie (absolute), and the revision.",
         "properties": {
           "changes": {
             "items": {
@@ -53661,7 +53661,7 @@
               "type": "number"
             },
             "type": "array",
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "grades": {
             "items": {
@@ -53669,7 +53669,7 @@
               "type": "number"
             },
             "type": "array",
-            "x-unit": "percent"
+            "x-unit": "grade"
           },
           "junction": {
             "type": "string"
@@ -53738,11 +53738,11 @@
           "title": "Ana yolun sırtı korunur, %2,5 enine eğim",
           "input": {
             "crossfall": [
-              -2.5,
-              -2.5
+              -0.025,
+              -0.025
             ],
             "junction": "j-1",
-            "maxGradeChange": 4.0,
+            "maxGradeChange": 0.04,
             "primary": 0
           }
         }
@@ -99075,6 +99075,14 @@
       "meaning": "Yüzde (0–100)."
     },
     {
+      "unit": "station-grade",
+      "meaning": "Km (m) ve o km'deki eğim oranı çifti: dever çizelgesinin kırık noktaları."
+    },
+    {
+      "unit": "grade",
+      "meaning": "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir (ADR 0977)."
+    },
+    {
       "unit": "ppm",
       "meaning": "Milyonda bir."
     },
@@ -112968,7 +112976,7 @@
     },
     "CulvertDef": {
       "additionalProperties": false,
-      "description": "A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its\nstation and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and\nits fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning\nroughness (typed, kept).",
+      "description": "A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its\nstation and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and\nits fall (a grade, 0.02 is 2 %; docs/adr/0977) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning\nroughness (typed, kept).",
       "properties": {
         "corridor": {
           "type": "string"
@@ -113037,7 +113045,7 @@
         "slope": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "station": {
           "format": "double",
@@ -114200,7 +114208,7 @@
         "e": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "friction": {
           "format": "double",
@@ -118903,7 +118911,7 @@
         "slope": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         }
       },
       "required": [
@@ -132736,7 +132744,7 @@
       ]
     },
     "JunctionTie": {
-      "description": "A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right\npositive, 0 at the crossing), the cross slope used (percent; 0 at the crossing), the elevation tied, the secondary\nprofile's elevation there before and the difference (tied less before).",
+      "description": "A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right\npositive, 0 at the crossing), the cross slope used (a grade; 0 at the crossing), the elevation tied, the secondary\nprofile's elevation there before and the difference (tied less before).",
       "properties": {
         "before": {
           "format": "double",
@@ -132746,7 +132754,7 @@
         "crossfall": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "difference": {
           "format": "double",
@@ -155777,7 +155785,7 @@
     },
     "PlatformDef": {
       "additionalProperties": false,
-      "description": "A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` percent towards\n`direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of\nits slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is\ngraded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).",
+      "description": "A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` (0.02 is 2 %; docs/adr/0977) towards\n`direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of\nits slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is\ngraded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).",
       "properties": {
         "base": {
           "items": {
@@ -155825,7 +155833,7 @@
         "grade": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "id": {
           "type": "string"
@@ -155883,7 +155891,7 @@
         "least": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "region": {
           "format": "uint32",
@@ -157347,7 +157355,7 @@
             "number",
             "null"
           ],
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "km": {
           "format": "double",
@@ -157689,12 +157697,12 @@
         "gIn": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "gOut": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "k": {
           "description": "K = length / |A|, metres per percent.",
@@ -158024,7 +158032,7 @@
           "description": "Rise over run (0.025 is 2.5 %).",
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "stations": {
           "description": "Their stations.",
@@ -160463,7 +160471,7 @@
         "grade": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "limit": {
           "anyOf": [
@@ -163653,12 +163661,12 @@
         "left": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "right": {
           "format": "double",
           "type": "number",
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "to": {
           "format": "double",
@@ -165611,7 +165619,7 @@
       ]
     },
     "RouteFound": {
-      "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (percent, between the points kept), its cost, the grid's nodes and those settled.",
+      "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (a grade, between the points kept), its cost, the grid's nodes and those settled.",
       "properties": {
         "climb": {
           "format": "double",
@@ -165649,7 +165657,7 @@
         "steepest": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         }
       },
       "required": [
@@ -175285,7 +175293,7 @@
       "type": "object"
     },
     "SuperAt": {
-      "description": "The cross slopes (percent) and widening (metres) of both sides at a station.",
+      "description": "The cross slopes (grades) and widening (metres) of both sides at a station.",
       "properties": {
         "km": {
           "format": "double",
@@ -175298,7 +175306,7 @@
         "left": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "leftWidening": {
           "format": "double",
@@ -175308,7 +175316,7 @@
         "right": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "rightWidening": {
           "format": "double",
@@ -175370,7 +175378,7 @@
     },
     "SuperCurveDef": {
       "additionalProperties": false,
-      "description": "A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full\nrate), the share of the runoff before the curve (0–1) and the extra width on its inside.",
+      "description": "A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (a grade, 0.07 is 7 %), the runoff length (level crown to full\nrate), the share of the runoff before the curve (0–1) and the extra width on its inside.",
       "properties": {
         "onTangent": {
           "format": "double",
@@ -175383,7 +175391,7 @@
         "rate": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "runoff": {
           "format": "double",
@@ -175412,12 +175420,12 @@
         "left": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "right": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "station": {
           "format": "double",
@@ -175465,7 +175473,7 @@
       "type": "object"
     },
     "SuperTransitionRow": {
-      "description": "A curve's transition: its PI, TS and ST, radius, rate (percent) and clothoids now; its runoff, share on the tangent\nand largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by\nthe relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the\nrunoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held\nat full superelevation.",
+      "description": "A curve's transition: its PI, TS and ST, radius, rate (a grade) and clothoids now; its runoff, share on the tangent\nand largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by\nthe relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the\nrunoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held\nat full superelevation.",
       "properties": {
         "from": {
           "format": "double",
@@ -175486,7 +175494,7 @@
             "number",
             "null"
           ],
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "onTangent": {
           "format": "double",
@@ -175512,7 +175520,7 @@
         "rate": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "runoff": {
           "format": "double",
@@ -175606,7 +175614,7 @@
     },
     "SuperelevationDef": {
       "additionalProperties": false,
-      "description": "A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross\nslopes of the left and the right side (percent, outward; falling outward negative) and how it is had.",
+      "description": "A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross\nslopes of the left and the right side (grades, outward; falling outward negative; docs/adr/0977) and how it is had.",
       "properties": {
         "alignment": {
           "type": "string"
@@ -175629,12 +175637,12 @@
         "normalLeft": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "normalRight": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "pivot": {
           "anyOf": [
@@ -175764,7 +175772,7 @@
       "type": "string"
     },
     "SuperelevationReport": {
-      "description": "A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,\nmetres), the critical stations; why it no longer builds when it does not.",
+      "description": "A superelevation schedule as it is now: each side's break points (station, grade) and widening (station,\nmetres), the critical stations; why it no longer builds when it does not.",
       "properties": {
         "alignment": {
           "type": "string"
@@ -175779,7 +175787,7 @@
           "type": "string"
         },
         "left": {
-          "description": "(station, slope percent) pairs.",
+          "description": "(station, grade) pairs.",
           "items": {
             "items": {
               "format": "double",
@@ -175790,7 +175798,7 @@
             "type": "array"
           },
           "type": "array",
-          "x-unit": "m/%"
+          "x-unit": "station-grade"
         },
         "leftWidening": {
           "description": "(station, width) pairs, metres.",
@@ -175812,12 +175820,12 @@
         "normalLeft": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "normalRight": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "problem": {
           "type": [
@@ -175842,7 +175850,7 @@
             "type": "array"
           },
           "type": "array",
-          "x-unit": "m/%"
+          "x-unit": "station-grade"
         },
         "rightWidening": {
           "items": {
@@ -179134,12 +179142,12 @@
     },
     "TemplateBenchDef": {
       "additionalProperties": false,
-      "description": "A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its\nsurface falling `fall` percent outward (absent: level). From the project's geotechnical report: KentOS gives none.",
+      "description": "A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its\nsurface falling `fall` outward (a grade, 0.04 is 4 %; absent: level; docs/adr/0977). From the project's geotechnical report: KentOS gives none.",
       "properties": {
         "fall": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "height": {
           "format": "double",
@@ -179160,7 +179168,7 @@
     },
     "TemplateComponentDef": {
       "additionalProperties": false,
-      "description": "A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward\nnegative).",
+      "description": "A component of a template's side, outward from the axis: its width and cross slope (a grade: rise over run, −0.025\nis −2.5 %; falling outward negative; docs/adr/0977).",
       "properties": {
         "kind": {
           "$ref": "#/$defs/TemplateComponentKind"
@@ -179168,7 +179176,7 @@
         "slope": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         },
         "width": {
           "format": "double",
@@ -180144,7 +180152,7 @@
             "number",
             "null"
           ],
-          "x-unit": "1"
+          "x-unit": "grade"
         },
         "x": {
           "format": "double",
@@ -184544,7 +184552,7 @@
     },
     "VolumeBenchDef": {
       "additionalProperties": false,
-      "description": "The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`\npercent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).",
+      "description": "The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`\n(a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).",
       "properties": {
         "height": {
           "format": "double",
@@ -184554,7 +184562,7 @@
         "slope": {
           "format": "double",
           "type": "number",
-          "x-unit": "percent"
+          "x-unit": "grade"
         }
       },
       "required": [

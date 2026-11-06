@@ -4,6 +4,6 @@ import type { RoutePoint } from "./RoutePoint";
 /**
  * Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes
  * between, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest
- * stretch (percent, between the points kept), its cost, the grid's nodes and those settled.
+ * stretch (a grade, between the points kept), its cost, the grid's nodes and those settled.
  */
 export type RouteFound = { points: Array<RoutePoint>, length: number, climb: number, steepest: number, cost: number, nodes: number, settled: number, };

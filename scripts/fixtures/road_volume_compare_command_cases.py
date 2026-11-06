@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alternatives_cases as alt  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_terrain_command_cases as tcmd  # noqa: E402
@@ -220,6 +221,7 @@ def main():
                     "road_volume_command_cases.py'nin, iki alternatifle (Geniş kurp, Yüksek kot); ayrılmalar "
                     "road_alternatives_cases.py'nin (sık örnekleme ve kesin inceltme); KentOS kodu yok.",
             "setup": doc0, "cases": got}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if "--check" in sys.argv[1:]:
         if OUT.read_text("utf-8") != text:

@@ -14,7 +14,7 @@ import type { VolumeStripDef } from "./VolumeStripDef";
  * project), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram
  * uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
  * set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
- * overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
+ * overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 10] (a grade) or its height not in (0, 10] m; stripping or
  * benching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a
  * Formasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to
  * 1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.

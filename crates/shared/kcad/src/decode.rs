@@ -1450,7 +1450,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             // Schema 159 (plan/road.md Y2.2): a road project's terrain surfaces' definitions.
             "road" if has.road_work => {
-                let (v, at): (kentos_contracts::RoadSettings, usize) = objects::json_part(r, "yol ayarları")?;
+                let (mut v, at): (kentos_contracts::RoadSettings, usize) = objects::json_part(r, "yol ayarları")?;
+                // Schema 187 (docs/adr/0977): an older file's grades were percent.
+                if !has.road_grades {
+                    v.grades_from_percent();
+                }
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş yol ayarı yazılmaz"));
                 }

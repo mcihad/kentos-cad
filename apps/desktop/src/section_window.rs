@@ -134,7 +134,7 @@ impl SideRow {
                 .map(|c| PartRow {
                     kind: usize::from(c.kind == TemplateComponentKind::Shoulder),
                     width: trimmed(c.width),
-                    slope: trimmed(c.slope),
+                    slope: road_dialog::percent_text(c.slope),
                 })
                 .collect(),
             cut: trimmed(s.cut),
@@ -144,9 +144,9 @@ impl SideRow {
             depth: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.depth)),
             bottom: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.bottom)),
             bench: s.bench.is_some(),
-            bench_fields: s.bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), trimmed(b.fall)]),
+            bench_fields: s.bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), road_dialog::percent_text(b.fall)]),
             fill_bench: s.fill_bench.is_some(),
-            fill_bench_fields: s.fill_bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), trimmed(b.fall)]),
+            fill_bench_fields: s.fill_bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), road_dialog::percent_text(b.fall)]),
         }
     }
 
@@ -156,7 +156,10 @@ impl SideRow {
             components.push(TemplateComponentDef {
                 kind: if p.kind == 1 { TemplateComponentKind::Shoulder } else { TemplateComponentKind::Lane },
                 width: need(&p.width, &format!("{side} yanın {}. bileşeninin genişliği", i + 1))?,
-                slope: need(&p.slope, &format!("{side} yanın {}. bileşeninin enine eğimi", i + 1))?,
+                slope: road_dialog::grade_of(&p.slope)
+                    .ok()
+                    .flatten()
+                    .ok_or_else(|| format!("{side} yanın {}. bileşeninin enine eğimi bir sayı olmalı.", i + 1))?,
             });
         }
         let ditch = if self.ditch {
@@ -175,7 +178,7 @@ impl SideRow {
             Ok(Some(kentos_commands::TemplateBenchDef {
                 height: need(&f[0], &format!("{side} yanın {what} basamak yüksekliği"))?,
                 width: need(&f[1], &format!("{side} yanın {what} basamak genişliği"))?,
-                fall: number(&f[2]).ok().flatten().unwrap_or(0.0),
+                fall: road_dialog::grade_of(&f[2]).ok().flatten().unwrap_or(0.0),
             }))
         };
         let bench = benched(self.bench, &self.bench_fields, "yarma")?;

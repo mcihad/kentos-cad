@@ -4,7 +4,7 @@ import type { SuperelevationPivot } from "./SuperelevationPivot";
 
 /**
  * A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
- * slopes of the left and the right side (percent, outward; falling outward negative) and how it is had.
+ * slopes of the left and the right side (grades, outward; falling outward negative; docs/adr/0977) and how it is had.
  */
 export type SuperelevationDef = { id: string, name: string, alignment: string, alignmentRevision?: number, revision?: number, normalLeft: number, normalRight: number, method: SuperelevationMethod, 
 /**

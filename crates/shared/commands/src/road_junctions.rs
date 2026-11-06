@@ -343,9 +343,9 @@ pub const ROAD_JUNCTIONS_TIE_VERSION: u32 = 1;
 /// primary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation
 /// plus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the
 /// leg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's
-/// alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,
+/// alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, grades outward,
 /// falling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.
-/// `maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
+/// `maxGradeChange` (a grade difference) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is
 /// separated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not
@@ -363,17 +363,17 @@ pub struct JunctionsTie {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub profiles: Option<Vec<String>>,
-    /// The primary road's cross slopes, left and right (percent, outward, falling negative).
+    /// The primary road's cross slopes, left and right (grades, outward, falling negative).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub crossfall: Option<[f64; 2]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub max_grade_change: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -382,7 +382,7 @@ pub struct JunctionsTie {
 }
 
 /// A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right
-/// positive, 0 at the crossing), the cross slope used (percent; 0 at the crossing), the elevation tied, the secondary
+/// positive, 0 at the crossing), the cross slope used (a grade; 0 at the crossing), the elevation tied, the secondary
 /// profile's elevation there before and the difference (tied less before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -397,7 +397,7 @@ pub struct JunctionTie {
     pub primary_station: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub primary_offset: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub crossfall: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub elevation: f64,
@@ -408,8 +408,8 @@ pub struct JunctionTie {
 }
 
 /// Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its
-/// three ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the
-/// ties, the grade change at each tie (percent, absolute), and the revision.
+/// three ties in station order, the PVIs taken off, the grades of the four segments around and between the
+/// ties, the grade change at each tie (absolute), and the revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -422,9 +422,9 @@ pub struct JunctionsTied {
     pub profile: String,
     pub ties: Vec<JunctionTie>,
     pub removed: Vec<String>,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grades: Vec<f64>,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub changes: Vec<f64>,
     pub revision: String,
 }

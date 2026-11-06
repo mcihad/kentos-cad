@@ -7,11 +7,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -21,11 +21,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -84,11 +84,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -103,11 +103,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -171,11 +171,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -185,11 +185,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -264,11 +264,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -278,11 +278,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -336,11 +336,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -350,11 +350,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -404,11 +404,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -418,11 +418,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -483,11 +483,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -497,11 +497,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -544,11 +544,11 @@
      "components": [
       {
        "width": 4.0,
-       "slope": -3.125
+       "slope": -0.03125
       },
       {
        "width": 1.0,
-       "slope": -12.5
+       "slope": -0.125
       }
      ],
      "cut": 1.5,
@@ -558,11 +558,11 @@
      "components": [
       {
        "width": 4.0,
-       "slope": -3.125
+       "slope": -0.03125
       },
       {
        "width": 1.0,
-       "slope": -12.5
+       "slope": -0.125
       }
      ],
      "cut": 1.5,
@@ -627,11 +627,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -646,11 +646,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -699,11 +699,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -713,11 +713,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -776,11 +776,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -793,18 +793,18 @@
      "bench": {
       "height": 4.0,
       "width": 3.0,
-      "fall": 5.0
+      "fall": 0.05
      }
     },
     "right": {
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -817,7 +817,7 @@
      "bench": {
       "height": 4.0,
       "width": 3.0,
-      "fall": 5.0
+      "fall": 0.05
      }
     }
    },
@@ -883,11 +883,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -907,11 +907,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -980,11 +980,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -992,18 +992,18 @@
      "fillBench": {
       "height": 3.0,
       "width": 2.0,
-      "fall": 4.0
+      "fall": 0.04
      }
     },
     "right": {
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -1011,7 +1011,7 @@
      "fillBench": {
       "height": 3.0,
       "width": 2.0,
-      "fall": 4.0
+      "fall": 0.04
      },
      "bench": {
       "height": 1.0,
@@ -1083,11 +1083,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,
@@ -1097,11 +1097,11 @@
      "components": [
       {
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "width": 1.0,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.5,

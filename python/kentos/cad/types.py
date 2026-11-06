@@ -67,6 +67,8 @@ UNITS: dict[str, str] = {
     "survey-angle": "Ölçme açısı girdinin unit'inde, yoksa projenin açı biriminde (grad ya da derece); saat yönünde.",
     "1": "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
     "percent": "Yüzde (0–100).",
+    "station-grade": "Km (m) ve o km'deki eğim oranı çifti: dever çizelgesinin kırık noktaları.",
+    "grade": "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir (ADR 0977).",
     "ppm": "Milyonda bir.",
     "pattern": "Tarama deseninin tanımının birimi; taramanın ölçeğiyle çarpılınca metre.",
     "count": "Adet.",
@@ -23007,7 +23009,7 @@ class CorridorsWater(_Model):
     and the corridor's when it no longer builds. Warnings: `corridor_flat` and the corridor's own (stale, unsolved,
     folded …).
     Attributes:
-        least: Unit: 1.
+        least: Unit: grade.
     """
     corridor: str
     least: float
@@ -23031,7 +23033,7 @@ class CorridorsWatered(_Model):
     """Output of `road.corridors.water` v1: the corridor's id, the least asked, the flat triangles' count and plan area, the
     flat stretches, the zero crossfall stations and the low points.
     Attributes:
-        least: Unit: 1.
+        least: Unit: grade.
         flat_triangles: Unit: count.
         flat_area: Unit: area.
     """
@@ -23627,12 +23629,12 @@ class CulvertClosureRead(_Model):
 class CulvertDef(_Model):
     """A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its
     station and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and
-    its fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
+    its fall (a grade, 0.02 is 2 %; docs/adr/0977) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
     roughness (typed, kept).
     Attributes:
         station: Unit: m.
         invert: Unit: elevation.
-        slope: Unit: percent.
+        slope: Unit: grade.
         corridor_revision: Unit: version.
         cover: Unit: m.
         extend: Unit: m.
@@ -23806,7 +23808,7 @@ class CulvertHydraulicsRead(_Model):
         inlet_invert: Unit: elevation.
         outlet_invert: Unit: elevation.
         length: Unit: m.
-        slope: Unit: 1.
+        slope: Unit: grade.
         cells: Unit: count.
         roughness: Unit: 1.
         crest: Unit: elevation.
@@ -24161,7 +24163,7 @@ class CulvertsEdit(_Model):
         material: The barrel's material; null takes it off.
         roughness: Its Manning roughness; null takes it off. Unit: 1.
         skew: Unit: deg.
-        slope: Unit: percent.
+        slope: Unit: grade.
         station: Unit: m.
     """
     operation: RoadEditOperation | RoadEditOperationName
@@ -24395,7 +24397,7 @@ class CurveFrictionRow(_Model):
         friction: Unit: 1.
         at: Unit: m.
         radius: Unit: m.
-        e: Unit: 1.
+        e: Unit: grade.
     """
     pi: str
     from_: float
@@ -27924,7 +27926,7 @@ class DrainageCatchment(_Model):
         path: Unit: length.
         length: Unit: m.
         fall: Unit: m.
-        slope: Unit: 1.
+        slope: Unit: grade.
         peak: Unit: discharge.
     """
     at: list[float]
@@ -44232,13 +44234,13 @@ class JunctionReturn(_Model):
 @dataclass(kw_only=True, slots=True)
 class JunctionTie(_Model):
     """A tied PVI: its id, its station on the secondary road, the primary road's station and its offset there (right
-    positive, 0 at the crossing), the cross slope used (percent; 0 at the crossing), the elevation tied, the secondary
+    positive, 0 at the crossing), the cross slope used (a grade; 0 at the crossing), the elevation tied, the secondary
     profile's elevation there before and the difference (tied less before).
     Attributes:
         station: Unit: m.
         primary_station: Unit: m.
         primary_offset: Unit: m.
-        crossfall: Unit: percent.
+        crossfall: Unit: grade.
         elevation: Unit: elevation.
         before: Unit: elevation.
         difference: Unit: m.
@@ -44663,9 +44665,9 @@ class JunctionsTie(_Model):
     primary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation
     plus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the
     leg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's
-    alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,
+    alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, grades outward,
     falling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.
-    `maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
+    `maxGradeChange` (a grade difference) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
 
     Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is
     separated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not
@@ -44673,8 +44675,8 @@ class JunctionsTie(_Model):
     `revision_conflict`. Warnings: `junction_stale`, `profile_stale`, `superelevation_stale`, `junction_grade_change`.
     Attributes:
         primary: Unit: index.
-        crossfall: The primary road's cross slopes, left and right (percent, outward, falling negative). Unit: percent.
-        max_grade_change: Unit: percent.
+        crossfall: The primary road's cross slopes, left and right (grades, outward, falling negative). Unit: grade.
+        max_grade_change: Unit: grade.
     """
     junction: str
     primary: int
@@ -44716,12 +44718,12 @@ class JunctionsTie(_Model):
 @dataclass(kw_only=True, slots=True)
 class JunctionsTied(_Model):
     """Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its
-    three ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the
-    ties, the grade change at each tie (percent, absolute), and the revision.
+    three ties in station order, the PVIs taken off, the grades of the four segments around and between the
+    ties, the grade change at each tie (absolute), and the revision.
     Attributes:
         primary: Unit: index.
-        grades: Unit: percent.
-        changes: Unit: percent.
+        grades: Unit: grade.
+        changes: Unit: grade.
     """
     junction: str
     primary: int
@@ -61100,7 +61102,7 @@ class PlatformBalanced(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PlatformDef(_Model):
-    """A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` percent towards
+    """A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` (0.02 is 2 %; docs/adr/0977) towards
     `direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of
     its slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is
     graded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).
@@ -61113,7 +61115,7 @@ class PlatformDef(_Model):
         fan: Unit: deg.
         reach: Unit: m.
         direction: Unit: deg.
-        grade: Unit: percent.
+        grade: Unit: grade.
         revision: Unit: version.
     """
     id: str
@@ -61178,7 +61180,7 @@ class PlatformFlat(_Model):
         from_: Unit: m.
         to: Unit: m.
         area: Unit: area.
-        least: Unit: 1.
+        least: Unit: grade.
     """
     region: int
     from_: float
@@ -61464,7 +61466,7 @@ class PlatformsEdit(_Model):
         direction: Unit: deg.
         fan: Unit: deg.
         fill: Unit: 1.
-        grade: Unit: percent.
+        grade: Unit: grade.
         reach: Unit: m.
         step: Unit: m.
         surface: The terrain surface by its id or name.
@@ -63503,7 +63505,7 @@ class ProfileAt(_Model):
             rows' difference is the length in space between their kms. Unit: m.
         black: The terrain (black) elevation; absent off the surface or without one. Unit: elevation.
         difference: Red − black: fill positive, cut negative; absent without both. Unit: elevation.
-        grade: Unit: 1.
+        grade: Unit: grade.
         radius: The red line's radius of curvature there, (1 + g²)^{3/2} / |z″|: a circle's own radius, a parabola's H at its
             vertex; absent on a straight grade and outside the profile. Unit: m.
         rate: The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;
@@ -63759,8 +63761,8 @@ class ProfileCurveRow(_Model):
     """A vertical curve on a PVI.
     Attributes:
         kind: `parabola`, `asymmetric` or `circle`.
-        g_in: Unit: 1.
-        g_out: Unit: 1.
+        g_in: Unit: grade.
+        g_out: Unit: grade.
         start: Its start and end: station and elevation. Unit: m.
         end: Unit: m.
         length: Its horizontal length (end − start), m. Unit: m.
@@ -64024,7 +64026,7 @@ class ProfileGradeRow(_Model):
     Attributes:
         between: The PVIs it runs between.
         stations: Their stations. Unit: m.
-        grade: Rise over run (0.025 is 2.5 %). Unit: 1.
+        grade: Rise over run (0.025 is 2.5 %). Unit: grade.
     """
     between: list[str]
     stations: list[float]
@@ -65316,7 +65318,7 @@ class ProfilesPropose(_Model):
     does not fix, rules that contradict; a surface that is not or does not build). Warnings: `profile_stale`.
     Attributes:
         hold: The PVIs (ids) that keep their elevations.
-        most_grade: Unit: 1.
+        most_grade: Unit: grade.
     """
     profile: str
     balanced: bool | Unset = UNSET
@@ -67880,7 +67882,7 @@ class ProjectVariable(_Model):
 class ProposedGrade(_Model):
     """A proposed grade between two PVIs.
     Attributes:
-        grade: Unit: 1.
+        grade: Unit: grade.
     """
     between: list[str]
     grade: float
@@ -71463,8 +71465,8 @@ class RelativeGradient(_Model):
     Attributes:
         from_: Unit: m.
         to: Unit: m.
-        left: Unit: 1.
-        right: Unit: 1.
+        left: Unit: grade.
+        right: Unit: grade.
     """
     from_: float
     to: float
@@ -72947,11 +72949,11 @@ class RoadProfilesCheck(_Model):
         least_crest_radius: The least crest radius H (docs/adr/0961): as RAA (Kuppenhalbmesser) and the standards that write a radius give
             the rule; a parabola's 1/|z''| = 100·K. Unit: m.
         least_curve: Unit: m.
-        least_grade: Unit: 1.
+        least_grade: Unit: grade.
         least_grade_length: Unit: m.
         least_sag_k: Unit: m/%.
         least_sag_radius: The least sag radius H (Wannenhalbmesser). Unit: m.
-        most_grade: Unit: 1.
+        most_grade: Unit: grade.
     """
     profile: str
     least_crest_k: float | None | Unset = UNSET
@@ -73841,11 +73843,11 @@ class RoadsEdited(_Model):
 class RouteFound(_Model):
     """Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes
     between, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest
-    stretch (percent, between the points kept), its cost, the grid's nodes and those settled.
+    stretch (a grade, between the points kept), its cost, the grid's nodes and those settled.
     Attributes:
         length: Unit: m.
         climb: Unit: m.
-        steepest: Unit: percent.
+        steepest: Unit: grade.
         cost: Unit: m.
         nodes: Unit: count.
         settled: Unit: count.
@@ -73922,7 +73924,7 @@ class RoutesDraw(_Model):
         to: Unit: length.
         cell: Unit: m.
         margin: Unit: m.
-        grade: Unit: percent.
+        grade: Unit: grade.
         climb: Unit: 1.
         tolerance: Unit: m.
     """
@@ -74009,7 +74011,7 @@ class RoutesFind(_Model):
         to: Unit: length.
         cell: Unit: m.
         margin: Unit: m.
-        grade: Unit: percent.
+        grade: Unit: grade.
         climb: Unit: 1.
         tolerance: Unit: m.
     """
@@ -84377,12 +84379,12 @@ class SubtypeField(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SuperAt(_Model):
-    """The cross slopes (percent) and widening (metres) of both sides at a station.
+    """The cross slopes (grades) and widening (metres) of both sides at a station.
     Attributes:
         station: Unit: m.
         km: Unit: m.
-        left: Unit: percent.
-        right: Unit: percent.
+        left: Unit: grade.
+        right: Unit: grade.
         left_widening: Unit: m.
         right_widening: Unit: m.
     """
@@ -84457,10 +84459,10 @@ class SuperCritical(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SuperCurveDef(_Model):
-    """A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full
+    """A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (a grade, 0.07 is 7 %), the runoff length (level crown to full
     rate), the share of the runoff before the curve (0–1) and the extra width on its inside.
     Attributes:
-        rate: Unit: percent.
+        rate: Unit: grade.
         runoff: Unit: m.
         on_tangent: Unit: 1.
         widening: Absent: none. Unit: m.
@@ -84497,8 +84499,8 @@ class SuperRowDef(_Model):
     """A row of a superelevation schedule written by station: the alignment's own station and each side's slope.
     Attributes:
         station: Unit: m.
-        left: Unit: percent.
-        right: Unit: percent.
+        left: Unit: grade.
+        right: Unit: grade.
     """
     station: float
     left: float
@@ -84558,7 +84560,7 @@ class SuperTransitionFinding(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SuperTransitionRow(_Model):
-    """A curve's transition: its PI, TS and ST, radius, rate (percent) and clothoids now; its runoff, share on the tangent
+    """A curve's transition: its PI, TS and ST, radius, rate (a grade) and clothoids now; its runoff, share on the tangent
     and largest relative gradient now (none where the curve alone does not build); and what is proposed: the runoff by
     the relative gradient, the clothoids by comfort, by the least and the most shift and the shortest of them, the
     runoff and share (on a clothoid the runoff is at least the clothoid and lies on it), its runout and the length held
@@ -84567,13 +84569,13 @@ class SuperTransitionRow(_Model):
         from_: Unit: m.
         to: Unit: m.
         radius: Unit: m.
-        rate: Unit: percent.
+        rate: Unit: grade.
         spiral_in: Unit: m.
         spiral_out: Unit: m.
         runoff_now: Unit: m.
         on_tangent_now: Unit: 1.
         full: Unit: m.
-        gradient_now: Unit: 1.
+        gradient_now: Unit: grade.
         on_tangent: Unit: 1.
         runoff: Unit: m.
         runoff_gradient: Unit: m.
@@ -84664,10 +84666,10 @@ class SuperTransitionRow(_Model):
 @dataclass(kw_only=True, slots=True)
 class SuperelevationDef(_Model):
     """A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
-    slopes of the left and the right side (percent, outward; falling outward negative) and how it is had.
+    slopes of the left and the right side (grades, outward; falling outward negative; docs/adr/0977) and how it is had.
     Attributes:
-        normal_left: Unit: percent.
-        normal_right: Unit: percent.
+        normal_left: Unit: grade.
+        normal_right: Unit: grade.
         alignment_revision: Unit: version.
         pivot: The line the traveled way turns about (docs/adr/0931 §1); absent: the centreline.
         revision: Unit: version.
@@ -84753,15 +84755,15 @@ class SuperelevationFinding(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SuperelevationReport(_Model):
-    """A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,
+    """A superelevation schedule as it is now: each side's break points (station, grade) and widening (station,
     metres), the critical stations; why it no longer builds when it does not.
     Attributes:
         revision: Unit: version.
         stale: The alignment changed since it was made or rebound.
-        normal_left: Unit: percent.
-        normal_right: Unit: percent.
-        left: (station, slope percent) pairs. Unit: m/%.
-        right: Unit: m/%.
+        normal_left: Unit: grade.
+        normal_right: Unit: grade.
+        left: (station, grade) pairs. Unit: station-grade.
+        right: Unit: station-grade.
         left_widening: (station, width) pairs, metres. Unit: m.
         right_widening: Unit: m.
     """
@@ -84829,7 +84831,7 @@ class SuperelevationsCheck(_Model):
     without a lane on a side).
     Attributes:
         most_friction: Unit: 1.
-        most_relative: Unit: 1.
+        most_relative: Unit: grade.
         speed: Unit: km/h.
         step: How often a clothoid's friction is read (m); absent: 1. Unit: m.
     """
@@ -84905,8 +84907,8 @@ class SuperelevationsChecked(_Model):
 @dataclass(kw_only=True, slots=True)
 class SuperelevationsEdit(_Model):
     """Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,
-    `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,
-    outward from the axis, falling outward negative.
+    `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are grades
+    (rise over run, −0.025 is −2.5 %; docs/adr/0977), outward from the axis, falling outward negative.
 
     Refusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),
     `unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition
@@ -84915,8 +84917,8 @@ class SuperelevationsEdit(_Model):
     transition off the alignment, a PI twice, rows not in increasing station or off the alignment),
     `superelevation_in_use` (remove while a sample line set uses it), `invalid_revision`, `revision_conflict`.
     Attributes:
-        normal_left: Unit: percent.
-        normal_right: Unit: percent.
+        normal_left: Unit: grade.
+        normal_right: Unit: grade.
         pivot: The axis of rotation (docs/adr/0931 §2); `centerline` takes an edge's off.
     """
     operation: RoadEditOperation | RoadEditOperationName
@@ -85051,7 +85053,7 @@ class SuperelevationsTransitions(_Model):
     not in [0, 1], a schedule written by station, a template without a lane on a side).
     Attributes:
         comfort: Unit: m/s3.
-        most_relative: Unit: 1.
+        most_relative: Unit: grade.
         most_shift: Unit: m.
         on_tangent: Unit: 1.
         shift: Unit: m.
@@ -87342,11 +87344,11 @@ class TargetReference(_Model):
 @dataclass(kw_only=True, slots=True)
 class TemplateBenchDef(_Model):
     """A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its
-    surface falling `fall` percent outward (absent: level). From the project's geotechnical report: KentOS gives none.
+    surface falling `fall` outward (a grade, 0.04 is 4 %; absent: level; docs/adr/0977). From the project's geotechnical report: KentOS gives none.
     Attributes:
         height: Unit: length.
         width: Unit: length.
-        fall: Unit: percent.
+        fall: Unit: grade.
     """
     height: float
     width: float
@@ -87371,11 +87373,11 @@ class TemplateBenchDef(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class TemplateComponentDef(_Model):
-    """A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward
-    negative).
+    """A component of a template's side, outward from the axis: its width and cross slope (a grade: rise over run, −0.025
+    is −2.5 %; falling outward negative; docs/adr/0977).
     Attributes:
         width: Unit: m.
-        slope: Unit: percent.
+        slope: Unit: grade.
     """
     kind: TemplateComponentKind | TemplateComponentKindName
     width: float
@@ -88367,7 +88369,7 @@ class TerrainHeight(_Model):
         x: Unit: length.
         y: Unit: length.
         aspect: The azimuth it falls towards, radians clockwise from north; none on a flat triangle. Unit: rad.
-        slope: The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet). Unit: 1.
+        slope: The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet). Unit: grade.
         z: Unit: elevation.
     """
     x: float
@@ -93048,9 +93050,9 @@ class VolumeApprovalReport(_Model):
 @dataclass(kw_only=True, slots=True)
 class VolumeBenchDef(_Model):
     """The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
-    percent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
+    (a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
     Attributes:
-        slope: Unit: percent.
+        slope: Unit: grade.
         height: Unit: elevation.
     """
     slope: float
@@ -94219,7 +94221,7 @@ class VolumesEdit(_Model):
     project), `volume_approved` (change or remove an approved one), `volume_in_use` (remove one a mass haul diagram
     uses), `unknown_corridor`, `invalid_volume` (another corridor, a new one without its fields, set with nothing to
     set, the definition by `road_problem`: factors not positive, over 10 or over overlapping stretches; strip rows
-    overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 1000] % or its height not in (0, 10] m; stripping or
+    overlapping or a depth not in (0, 5] m; a bench's slope not in (0, 10] (a grade) or its height not in (0, 10] m; stripping or
     benching between surfaces or on the grid; a corridor that does not build; a Bitkisel Toprak rule without stripping, a
     Formasyon rule between surfaces, on the grid or on a template without a pavement; the grid without a cell of 0.01 to
     1000 m, a cell on another method), `invalid_revision`, `revision_conflict`.

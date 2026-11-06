@@ -63,7 +63,7 @@ pub struct CulvertsEdit {
     pub invert: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -386,7 +386,7 @@ pub struct CulvertHydraulicsRead {
     pub outlet_invert: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub length: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub cells: u32,

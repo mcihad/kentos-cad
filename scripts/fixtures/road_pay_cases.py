@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_culvert_cases as cv  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 import road_volume_command_cases as vc  # noqa: E402
 import road_wall_cases as wv  # noqa: E402
@@ -374,6 +375,7 @@ def main():
     check = "--check" in sys.argv
     for name, data in files.items():
         path = OUT / f"{name}.json"
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         if check:
             if path.read_text(encoding="utf-8") != text:

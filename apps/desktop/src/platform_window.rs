@@ -162,7 +162,8 @@ impl Window {
             name: Some(self.fields[0].trim().to_owned()),
             corners: Some(corners),
             base: Some([need(2)?, need(3)?, need(4)?]),
-            grade: Some(may(5)?),
+            // The field is percent, the pad's grade a ratio (docs/adr/0977).
+            grade: Some(may(5)? / 100.0),
             direction: Some(may(6)?),
             cut: Some(need(7)?),
             fill: Some(need(8)?),
@@ -262,7 +263,7 @@ impl App {
                         f[2] = trimmed(p.base[0]);
                         f[3] = trimmed(p.base[1]);
                         f[4] = trimmed(p.base[2]);
-                        f[5] = trimmed(p.grade);
+                        f[5] = crate::road_dialog::percent_text(p.grade);
                         f[6] = trimmed(p.direction);
                         f[7] = trimmed(p.cut);
                         f[8] = trimmed(p.fill);

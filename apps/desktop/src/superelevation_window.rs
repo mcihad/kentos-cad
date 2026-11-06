@@ -113,6 +113,14 @@ pub(crate) fn number(text: &str) -> Result<Option<f64>, ()> {
     t.parse::<f64>().map(Some).map_err(|_| ())
 }
 
+/// A percent field's grade (docs/adr/0977).
+fn need_grade(text: &str, what: &str) -> Result<f64, String> {
+    match road_dialog::grade_of(text) {
+        Ok(Some(v)) => Ok(v),
+        _ => Err(format!("{what} bir sayı olmalı.")),
+    }
+}
+
 fn need(text: &str, what: &str) -> Result<f64, String> {
     match number(text) {
         Ok(Some(v)) => Ok(v),
@@ -146,7 +154,7 @@ impl Row {
             revision: d.revision,
             alignment: d.alignment.clone(),
             alignment_revision: d.alignment_revision,
-            normal: [trimmed(d.normal_left), trimmed(d.normal_right)],
+            normal: [road_dialog::percent_text(d.normal_left), road_dialog::percent_text(d.normal_right)],
             pivot: d.pivot,
             ..Self::default()
         };
@@ -155,13 +163,13 @@ impl Row {
                 r.curves = curves
                     .iter()
                     .map(|c| {
-                        [c.pi.clone(), trimmed(c.rate), trimmed(c.runoff), trimmed(c.on_tangent), if c.widening == 0.0 { String::new() } else { trimmed(c.widening) }]
+                        [c.pi.clone(), road_dialog::percent_text(c.rate), trimmed(c.runoff), trimmed(c.on_tangent), if c.widening == 0.0 { String::new() } else { trimmed(c.widening) }]
                     })
                     .collect();
             }
             SuperelevationMethod::Stations { rows } => {
                 r.method = 1;
-                r.rows = rows.iter().map(|x| [trimmed(x.station), trimmed(x.left), trimmed(x.right)]).collect();
+                r.rows = rows.iter().map(|x| [trimmed(x.station), road_dialog::percent_text(x.left), road_dialog::percent_text(x.right)]).collect();
             }
         }
         r
@@ -201,7 +209,7 @@ impl Row {
                 let n = i + 1;
                 curves.push(SuperCurveDef {
                     pi: c[0].trim().to_owned(),
-                    rate: need(&c[1], &format!("{n}. kurbun oranı"))?,
+                    rate: need_grade(&c[1], &format!("{n}. kurbun oranı"))?,
                     runoff: need(&c[2], &format!("{n}. kurbun geçiş boyu"))?,
                     on_tangent: need(&c[3], &format!("{n}. kurbun teğet payı"))?,
                     widening: number(&c[4]).map_err(|_| format!("{n}. kurbun genişlemesi bir sayı olmalı."))?.unwrap_or(0.0),
@@ -214,8 +222,8 @@ impl Row {
                 let n = i + 1;
                 rows.push(SuperRowDef {
                     station: need(&x[0], &format!("{n}. satırın km'si"))?,
-                    left: need(&x[1], &format!("{n}. satırın sol eğimi"))?,
-                    right: need(&x[2], &format!("{n}. satırın sağ eğimi"))?,
+                    left: need_grade(&x[1], &format!("{n}. satırın sol eğimi"))?,
+                    right: need_grade(&x[2], &format!("{n}. satırın sağ eğimi"))?,
                 });
             }
             SuperelevationMethod::Stations { rows }
@@ -226,8 +234,8 @@ impl Row {
             alignment: self.alignment.clone(),
             alignment_revision: self.alignment_revision,
             revision: self.revision,
-            normal_left: need(&self.normal[0], "Sol normal eğim")?,
-            normal_right: need(&self.normal[1], "Sağ normal eğim")?,
+            normal_left: need_grade(&self.normal[0], "Sol normal eğim")?,
+            normal_right: need_grade(&self.normal[1], "Sağ normal eğim")?,
             method,
             pivot: self.pivot,
         })
@@ -918,11 +926,14 @@ impl canvas::Program<Message> for Chart<'_> {
             word(&mut frame, "Normal eğimleri ve kurpların değerlerini yazınca dever burada çizilir.".into(), Point::new(16.0, 20.0), t.muted, false);
             return vec![frame.into_geometry()];
         };
-        let length = self.length.max(rep.left.iter().chain(&rep.right).map(|p| p[0]).fold(0.0, f64::max));
+        // The chart is in percent, as its labels and the fields are; the schedule holds grades (docs/adr/0977).
+        let percent = |points: &[[f64; 2]]| points.iter().map(|p| [p[0], 100.0 * p[1]]).collect::<Vec<_>>();
+        let (pl, pr, nl, nr) = (percent(&rep.left), percent(&rep.right), 100.0 * nl, 100.0 * nr);
+        let length = self.length.max(pl.iter().chain(&pr).map(|p| p[0]).fold(0.0, f64::max));
         if length <= 0.0 {
             return vec![frame.into_geometry()];
         }
-        let slopes = rep.left.iter().chain(&rep.right).map(|p| p[1]).chain([nl, nr]);
+        let slopes = pl.iter().chain(&pr).map(|p| p[1]).chain([nl, nr]);
         let step = if slopes.clone().fold(0.0_f64, |a, v| a.max(v.abs())) > 8.0 { 4.0 } else { 2.0 };
         let top = (slopes.fold(0.0_f64, |a, v| a.max(v.abs())) / step).ceil().max(1.0) * step + step / 2.0;
         let widened = !(rep.left_widening.is_empty() && rep.right_widening.is_empty());
@@ -988,7 +999,7 @@ impl canvas::Program<Message> for Chart<'_> {
             out.push([length, points.last().map_or(normal, |p| p[1])]);
             out
         };
-        for (points, color) in [(side(&rep.left, nl), t.accent), (side(&rep.right, nr), t.danger)] {
+        for (points, color) in [(side(&pl, nl), t.accent), (side(&pr, nr), t.danger)] {
             let line = Path::new(|b| {
                 for (i, p) in points.iter().enumerate() {
                     let at = Point::new(x(p[0]), y(p[1]));

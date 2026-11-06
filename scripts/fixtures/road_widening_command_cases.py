@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_superelevation_command_cases as sup  # noqa: E402
@@ -258,6 +259,7 @@ def main():
                     "road_superelevation_command_cases.py'nin, genişletme road_widening_cases.py'nin (kararlı dönüş "
                     "dingil dingil, 40 basamak), sürüş bisiklet modelinin Runge–Kutta tümlevi; KentOS kodu yok.",
             "setup": sup.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text() != text:

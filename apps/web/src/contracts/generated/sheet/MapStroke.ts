@@ -5,19 +5,19 @@ import type { LineJoin } from "./LineJoin";
 /**
  * A line of the drawing on a map: its colour, its width and dashes on the paper (millimetres).
  */
-export type MapStroke = {
+export type MapStroke = { 
 /**
  * `#rrggbb` or `#rrggbbaa`.
  */
-color: string,
+color: string, 
 /**
  * On the paper, millimetres; 0: the thinnest line the device draws.
  */
-width: number,
+width: number, 
 /**
  * Dash and gap lengths on the paper, millimetres, alternating; empty: solid.
  */
-dash: Array<number>,
+dash: Array<number>, 
 /**
  * Distance already consumed in the pattern, paper millimetres; absent: 0.
  */

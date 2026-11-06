@@ -3,7 +3,7 @@ import type { Vec2 } from "./Vec2";
 
 /**
  * What a route is asked with: the terrain surface (id or name), the two places, the grid's cell and the margin
- * around the places, the steepest step (percent), the cost of a metre risen or fallen (in metres of length), the
+ * around the places, the steepest step (a grade, 0.08 is 8 %), the cost of a metre risen or fallen (in metres of length), the
  * layers whose areas are avoided and the plan tolerance the line is simplified within (none: every node).
  */
 export type RouteAsk = { surface: string, from: Vec2, to: Vec2, cell: number, margin: number, grade: number, climb: number, avoid?: Array<string>, tolerance?: number, };

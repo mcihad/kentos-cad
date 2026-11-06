@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
 import road_junction_clearance_cases as cref  # noqa: E402
 import road_vertical_cases as vref  # noqa: E402
 
@@ -374,6 +375,7 @@ def main():
                    "boykesitler road_vertical_cases.py'nin kesin kesirleri ve dairesi, dever km satırlarından doğrusal, "
                    "bağ ADR 0918 §2'nin kuralıyla; KentOS kodu olmadan.",
            "setup": setup(), "cases": found}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     path = OUT / "road.junctions.tie.json"
     if "--check" in sys.argv:

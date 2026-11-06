@@ -808,11 +808,14 @@ pub const SCHEMA_WITH_SHX_FONTS: u32 = 184;
 pub const SCHEMA_WITH_TABLE_STYLES: u32 = 185;
 /// Schema 186 (docs/adr/1023): the text style a dimension style writes its value in (`textStyle`, by name).
 pub const SCHEMA_WITH_DIMENSION_TEXT_STYLES: u32 = 186;
+/// Schema 187 (docs/adr/0977): a road project's grades (cross slopes, superelevation, a culvert's fall, a pad's grade, a
+/// benched ground's slope) as rise over run; before it they were percent and are divided by 100 as they are read.
+pub const SCHEMA_WITH_ROAD_GRADES: u32 = 187;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 184] = [
+pub const SCHEMAS: [u32; 185] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -997,6 +1000,7 @@ pub const SCHEMAS: [u32; 184] = [
     SCHEMA_WITH_SHX_FONTS,
     SCHEMA_WITH_TABLE_STYLES,
     SCHEMA_WITH_DIMENSION_TEXT_STYLES,
+    SCHEMA_WITH_ROAD_GRADES,
 ];
 
 /// The file a drawing is saved as.

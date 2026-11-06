@@ -192,12 +192,12 @@
                 {
                   "kind": "lane",
                   "width": 3.5,
-                  "slope": -2.5
+                  "slope": -0.025
                 },
                 {
                   "kind": "shoulder",
                   "width": 1.0,
-                  "slope": -4.0
+                  "slope": -0.04
                 }
               ],
               "cut": 1.0,
@@ -218,12 +218,12 @@
                 {
                   "kind": "lane",
                   "width": 3.0,
-                  "slope": -2.0
+                  "slope": -0.02
                 },
                 {
                   "kind": "shoulder",
                   "width": 1.5,
-                  "slope": -4.0
+                  "slope": -0.04
                 }
               ],
               "cut": 1.5,
@@ -234,17 +234,17 @@
                 {
                   "kind": "lane",
                   "width": 3.5,
-                  "slope": -2.5
+                  "slope": -0.025
                 },
                 {
                   "kind": "lane",
                   "width": 3.5,
-                  "slope": -2.5
+                  "slope": -0.025
                 },
                 {
                   "kind": "shoulder",
                   "width": 1.0,
-                  "slope": -4.0
+                  "slope": -0.04
                 }
               ],
               "cut": 1.0,
@@ -300,14 +300,14 @@
             "alignment": "g-1",
             "alignmentRevision": 1,
             "revision": 1,
-            "normalLeft": -2.5,
-            "normalRight": -2.5,
+            "normalLeft": -0.025,
+            "normalRight": -0.025,
             "method": {
               "method": "curves",
               "curves": [
                 {
                   "pi": "p1",
-                  "rate": 6.0,
+                  "rate": 0.06,
                   "runoff": 40.0,
                   "onTangent": 0.0,
                   "widening": 0.5
@@ -321,30 +321,30 @@
             "alignment": "g-2",
             "alignmentRevision": 2,
             "revision": 2,
-            "normalLeft": -2.0,
-            "normalRight": -2.0,
+            "normalLeft": -0.02,
+            "normalRight": -0.02,
             "method": {
               "method": "stations",
               "rows": [
                 {
                   "station": 100.0,
-                  "left": -2.0,
-                  "right": -2.0
+                  "left": -0.02,
+                  "right": -0.02
                 },
                 {
                   "station": 200.0,
-                  "left": 3.0,
-                  "right": -3.0
+                  "left": 0.03,
+                  "right": -0.03
                 },
                 {
                   "station": 400.0,
-                  "left": 3.0,
-                  "right": -3.0
+                  "left": 0.03,
+                  "right": -0.03
                 },
                 {
                   "station": 500.0,
-                  "left": -2.0,
-                  "right": -2.0
+                  "left": -0.02,
+                  "right": -0.02
                 }
               ]
             }
@@ -1918,42 +1918,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -2048,42 +2048,42 @@
                   "revision": 2,
                   "alignment": "g-2",
                   "stale": true,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "left": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      3.0
+                      0.03
                     ],
                     [
                       400.0,
-                      3.0
+                      0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "right": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       400.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "leftWidening": [],
@@ -2279,12 +2279,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2305,12 +2305,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -2321,17 +2321,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2387,14 +2387,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -2408,30 +2408,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -2461,42 +2461,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -2768,12 +2768,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2794,12 +2794,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -2810,17 +2810,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -2876,14 +2876,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -2897,30 +2897,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -2960,42 +2960,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -3090,8 +3090,8 @@
                   "station": 178.04593209428234,
                   "km": 1178.0459320942823,
                   "kmText": "1+178.046",
-                  "left": -2.5,
-                  "right": -2.4999999999999987,
+                  "left": -0.025,
+                  "right": -0.024999999999999988,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -3099,7 +3099,7 @@
                   "station": 194.712598760949,
                   "km": 1194.712598760949,
                   "kmText": "1+194.713",
-                  "left": -2.5,
+                  "left": -0.025,
                   "right": 0.0,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
@@ -3108,8 +3108,8 @@
                   "station": 211.37926542761565,
                   "km": 1211.3792654276156,
                   "kmText": "1+211.379",
-                  "left": -2.5,
-                  "right": 2.4999999999999987,
+                  "left": -0.025,
+                  "right": 0.024999999999999988,
                   "leftWidening": 0.2083333333333332,
                   "rightWidening": 0.0
                 },
@@ -3117,8 +3117,8 @@
                   "station": 234.712598760949,
                   "km": 1234.712598760949,
                   "kmText": "1+234.713",
-                  "left": -6.0,
-                  "right": 6.0,
+                  "left": -0.06,
+                  "right": 0.06,
                   "leftWidening": 0.5,
                   "rightWidening": 0.0
                 },
@@ -3126,8 +3126,8 @@
                   "station": 317.8635760864612,
                   "km": 1317.8635760864613,
                   "kmText": "1+317.864",
-                  "left": -6.0,
-                  "right": 6.0,
+                  "left": -0.06,
+                  "right": 0.06,
                   "leftWidening": 0.5,
                   "rightWidening": 0.0
                 },
@@ -3135,8 +3135,8 @@
                   "station": 341.1969094197945,
                   "km": 1341.1969094197946,
                   "kmText": "1+341.197",
-                  "left": -2.5000000000000027,
-                  "right": 2.5000000000000027,
+                  "left": -0.025000000000000026,
+                  "right": 0.025000000000000026,
                   "leftWidening": 0.20833333333333356,
                   "rightWidening": 0.0
                 },
@@ -3144,7 +3144,7 @@
                   "station": 357.8635760864612,
                   "km": 1357.8635760864613,
                   "kmText": "1+357.864",
-                  "left": -2.5,
+                  "left": -0.025,
                   "right": 0.0,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
@@ -3153,8 +3153,8 @@
                   "station": 374.5302427531279,
                   "km": 1374.5302427531278,
                   "kmText": "1+374.530",
-                  "left": -2.5,
-                  "right": -2.5,
+                  "left": -0.025,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 }
@@ -3340,12 +3340,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3366,12 +3366,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -3382,17 +3382,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3448,14 +3448,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -3469,30 +3469,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -3531,42 +3531,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -3661,8 +3661,8 @@
                   "station": 0.0,
                   "km": 1000.0,
                   "kmText": "1+000.000",
-                  "left": -2.5,
-                  "right": -2.5,
+                  "left": -0.025,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -3670,8 +3670,8 @@
                   "station": 150.0,
                   "km": 1150.0,
                   "kmText": "1+150.000",
-                  "left": -2.5,
-                  "right": -2.5,
+                  "left": -0.025,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -3679,8 +3679,8 @@
                   "station": 200.0,
                   "km": 1200.0,
                   "kmText": "1+200.000",
-                  "left": -2.5,
-                  "right": 0.7931101858576511,
+                  "left": -0.025,
+                  "right": 0.007931101858576511,
                   "leftWidening": 0.06609251548813759,
                   "rightWidening": 0.0
                 },
@@ -3688,8 +3688,8 @@
                   "station": 230.0,
                   "km": 1230.0,
                   "kmText": "1+230.000",
-                  "left": -5.2931101858576515,
-                  "right": 5.2931101858576515,
+                  "left": -0.05293110185857652,
+                  "right": 0.05293110185857652,
                   "leftWidening": 0.4410925154881376,
                   "rightWidening": 0.0
                 },
@@ -3697,8 +3697,8 @@
                   "station": 260.0,
                   "km": 1260.0,
                   "kmText": "1+260.000",
-                  "left": -6.0,
-                  "right": 6.0,
+                  "left": -0.06,
+                  "right": 0.06,
                   "leftWidening": 0.5,
                   "rightWidening": 0.0
                 },
@@ -3706,8 +3706,8 @@
                   "station": 400.0,
                   "km": 1400.0,
                   "kmText": "1+400.000",
-                  "left": -2.5,
-                  "right": -2.5,
+                  "left": -0.025,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -3715,8 +3715,8 @@
                   "station": 600.0,
                   "km": 1600.0,
                   "kmText": "1+600.000",
-                  "left": -2.5,
-                  "right": -2.5,
+                  "left": -0.025,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 }
@@ -3902,12 +3902,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -3928,12 +3928,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -3944,17 +3944,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4010,14 +4010,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -4031,30 +4031,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -4092,42 +4092,42 @@
                   "revision": 2,
                   "alignment": "g-2",
                   "stale": true,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "left": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      3.0
+                      0.03
                     ],
                     [
                       400.0,
-                      3.0
+                      0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "right": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       400.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "leftWidening": [],
@@ -4140,8 +4140,8 @@
                   "station": 0.0,
                   "km": 0.0,
                   "kmText": "0+000.000",
-                  "left": -2.0,
-                  "right": -2.0,
+                  "left": -0.02,
+                  "right": -0.02,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -4149,8 +4149,8 @@
                   "station": 100.0,
                   "km": 100.0,
                   "kmText": "0+100.000",
-                  "left": -2.0,
-                  "right": -2.0,
+                  "left": -0.02,
+                  "right": -0.02,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -4158,8 +4158,8 @@
                   "station": 150.0,
                   "km": 150.0,
                   "kmText": "0+150.000",
-                  "left": 0.5,
-                  "right": -2.5,
+                  "left": 0.005,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -4167,8 +4167,8 @@
                   "station": 300.0,
                   "km": 300.0,
                   "kmText": "0+300.000",
-                  "left": 3.0,
-                  "right": -3.0,
+                  "left": 0.03,
+                  "right": -0.03,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -4176,8 +4176,8 @@
                   "station": 450.0,
                   "km": 450.0,
                   "kmText": "0+450.000",
-                  "left": 0.5,
-                  "right": -2.5,
+                  "left": 0.005,
+                  "right": -0.025,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -4185,8 +4185,8 @@
                   "station": 600.0,
                   "km": 600.0,
                   "kmText": "0+600.000",
-                  "left": -2.0,
-                  "right": -2.0,
+                  "left": -0.02,
+                  "right": -0.02,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 }
@@ -4378,12 +4378,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4404,12 +4404,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -4420,17 +4420,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4486,14 +4486,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -4507,30 +4507,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -4565,42 +4565,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -4695,8 +4695,8 @@
                   "station": 180.0,
                   "km": 1180.0,
                   "kmText": "1+180.000",
-                  "left": -2.5,
-                  "right": -2.206889814142349,
+                  "left": -0.025,
+                  "right": -0.02206889814142349,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -4704,8 +4704,8 @@
                   "station": 200.0,
                   "km": 1200.0,
                   "kmText": "1+200.000",
-                  "left": -2.5,
-                  "right": 0.7931101858576511,
+                  "left": -0.025,
+                  "right": 0.007931101858576511,
                   "leftWidening": 0.06609251548813759,
                   "rightWidening": 0.0
                 },
@@ -4713,8 +4713,8 @@
                   "station": 240.0,
                   "km": 1240.0,
                   "kmText": "1+240.000",
-                  "left": -6.0,
-                  "right": 6.0,
+                  "left": -0.06,
+                  "right": 0.06,
                   "leftWidening": 0.5,
                   "rightWidening": 0.0
                 }
@@ -4900,12 +4900,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -4926,12 +4926,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -4942,17 +4942,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -5008,14 +5008,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -5029,30 +5029,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -5250,12 +5250,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -5276,12 +5276,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -5292,17 +5292,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -5358,14 +5358,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.0,
                       "widening": 0.5
@@ -5379,30 +5379,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -6983,42 +6983,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       186.087598760949,
-                      -2.5
+                      -0.025
                     ],
                     [
                       206.712598760949,
-                      -8.0
+                      -0.08
                     ],
                     [
                       345.8635760864612,
-                      -8.0
+                      -0.08
                     ],
                     [
                       366.4885760864612,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       167.337598760949,
-                      -2.5
+                      -0.025
                     ],
                     [
                       206.712598760949,
-                      8.0
+                      0.08
                     ],
                     [
                       345.8635760864612,
-                      8.0
+                      0.08
                     ],
                     [
                       385.2385760864612,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [],
@@ -7096,8 +7096,8 @@
                   "station": 170.0,
                   "km": 1170.0,
                   "kmText": "1+170.000",
-                  "left": -2.5,
-                  "right": -1.7900263362530648,
+                  "left": -0.025,
+                  "right": -0.017900263362530647,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -7105,8 +7105,8 @@
                   "station": 190.0,
                   "km": 1190.0,
                   "kmText": "1+190.000",
-                  "left": -3.5433069970802684,
-                  "right": 3.5433069970802684,
+                  "left": -0.035433069970802686,
+                  "right": 0.035433069970802686,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -7114,8 +7114,8 @@
                   "station": 210.0,
                   "km": 1210.0,
                   "kmText": "1+210.000",
-                  "left": -8.0,
-                  "right": 8.0,
+                  "left": -0.08,
+                  "right": 0.08,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 }
@@ -7301,12 +7301,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -7327,12 +7327,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -7343,17 +7343,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -7409,14 +7409,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 8.0,
+                        "rate": 0.08,
                         "runoff": 30.0,
                         "onTangent": 0.6
                       }
@@ -7429,30 +7429,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -7650,12 +7650,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -7676,12 +7676,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -7692,17 +7692,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -7758,14 +7758,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 8.0,
+                      "rate": 0.08,
                       "runoff": 30.0,
                       "onTangent": 0.6
                     }
@@ -7778,30 +7778,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -9383,42 +9383,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": 2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": 0.02,
+                  "normalRight": -0.02,
                   "left": [
                     [
                       154.712598760949,
-                      2.0
+                      0.02
                     ],
                     [
                       214.712598760949,
-                      -4.0
+                      -0.04
                     ],
                     [
                       337.8635760864612,
-                      -4.0
+                      -0.04
                     ],
                     [
                       397.8635760864612,
-                      2.0
+                      0.02
                     ]
                   ],
                   "right": [
                     [
                       154.712598760949,
-                      -2.0
+                      -0.02
                     ],
                     [
                       214.712598760949,
-                      4.0
+                      0.04
                     ],
                     [
                       337.8635760864612,
-                      4.0
+                      0.04
                     ],
                     [
                       397.8635760864612,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "leftWidening": [],
@@ -9480,8 +9480,8 @@
                   "station": 150.0,
                   "km": 1150.0,
                   "kmText": "1+150.000",
-                  "left": 2.0,
-                  "right": -2.0,
+                  "left": 0.02,
+                  "right": -0.02,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -9489,8 +9489,8 @@
                   "station": 180.0,
                   "km": 1180.0,
                   "kmText": "1+180.000",
-                  "left": -0.5287401239051007,
-                  "right": 0.5287401239051007,
+                  "left": -0.005287401239051007,
+                  "right": 0.005287401239051007,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -9498,8 +9498,8 @@
                   "station": 220.0,
                   "km": 1220.0,
                   "kmText": "1+220.000",
-                  "left": -4.0,
-                  "right": 4.0,
+                  "left": -0.04,
+                  "right": 0.04,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -9507,8 +9507,8 @@
                   "station": 260.0,
                   "km": 1260.0,
                   "kmText": "1+260.000",
-                  "left": -4.0,
-                  "right": 4.0,
+                  "left": -0.04,
+                  "right": 0.04,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 }
@@ -9694,12 +9694,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -9720,12 +9720,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -9736,17 +9736,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -9802,14 +9802,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": 2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": 0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 4.0,
+                        "rate": 0.04,
                         "runoff": 40.0,
                         "onTangent": 0.5
                       }
@@ -9822,30 +9822,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -10043,12 +10043,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -10069,12 +10069,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -10085,17 +10085,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -10151,14 +10151,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": 2.0,
-                "normalRight": -2.0,
+                "normalLeft": 0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 4.0,
+                      "rate": 0.04,
                       "runoff": 40.0,
                       "onTangent": 0.5
                     }
@@ -10171,30 +10171,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -11776,42 +11776,42 @@
                   "revision": 2,
                   "alignment": "g-2",
                   "stale": true,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "left": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      3.0
+                      0.03
                     ],
                     [
                       400.0,
-                      3.0
+                      0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "right": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       400.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "leftWidening": [],
@@ -11824,8 +11824,8 @@
                   "station": 120.0,
                   "km": 120.0,
                   "kmText": "0+120.000",
-                  "left": -1.0,
-                  "right": -2.2,
+                  "left": -0.01,
+                  "right": -0.022000000000000002,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -11833,8 +11833,8 @@
                   "station": 175.0,
                   "km": 175.0,
                   "kmText": "0+175.000",
-                  "left": 1.75,
-                  "right": -2.75,
+                  "left": 0.0175,
+                  "right": -0.0275,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -11842,8 +11842,8 @@
                   "station": 250.0,
                   "km": 250.0,
                   "kmText": "0+250.000",
-                  "left": 3.0,
-                  "right": -3.0,
+                  "left": 0.03,
+                  "right": -0.03,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 },
@@ -11851,8 +11851,8 @@
                   "station": 480.0,
                   "km": 480.0,
                   "kmText": "0+480.000",
-                  "left": -1.0,
-                  "right": -2.2,
+                  "left": -0.01,
+                  "right": -0.022000000000000002,
                   "leftWidening": 0.0,
                   "rightWidening": 0.0
                 }
@@ -12044,12 +12044,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -12070,12 +12070,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -12086,17 +12086,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -12152,14 +12152,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -12173,30 +12173,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -12224,8 +12224,8 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [],
                   "right": [],
                   "leftWidening": [],
@@ -12239,42 +12239,42 @@
                   "revision": 2,
                   "alignment": "g-2",
                   "stale": true,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "left": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      3.0
+                      0.03
                     ],
                     [
                       400.0,
-                      3.0
+                      0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "right": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       400.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "leftWidening": [],
@@ -12470,12 +12470,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -12496,12 +12496,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -12512,17 +12512,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -12578,14 +12578,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p9",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0
                       }
@@ -12598,30 +12598,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -12819,12 +12819,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -12845,12 +12845,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -12861,17 +12861,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -12927,14 +12927,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p9",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.0
                     }
@@ -12947,30 +12947,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -14551,42 +14551,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -14681,8 +14681,8 @@
                   "station": 199.999,
                   "km": 1199.999,
                   "kmText": "1+199.999",
-                  "left": -2.5,
-                  "right": 0.7929601858576504,
+                  "left": -0.025,
+                  "right": 0.007929601858576503,
                   "leftWidening": 0.06608001548813754,
                   "rightWidening": 0.0
                 },
@@ -14690,8 +14690,8 @@
                   "station": 200.0,
                   "km": 1500.0,
                   "kmText": "1+500.000",
-                  "left": -2.5,
-                  "right": 0.7931101858576511,
+                  "left": -0.025,
+                  "right": 0.007931101858576511,
                   "leftWidening": 0.06609251548813759,
                   "rightWidening": 0.0
                 },
@@ -14699,8 +14699,8 @@
                   "station": 200.001,
                   "km": 1500.001,
                   "kmText": "1+500.001",
-                  "left": -2.5,
-                  "right": 0.7932601858576518,
+                  "left": -0.025,
+                  "right": 0.007932601858576518,
                   "leftWidening": 0.06610501548813766,
                   "rightWidening": 0.0
                 }
@@ -14892,12 +14892,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -14918,12 +14918,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -14934,17 +14934,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -15000,14 +15000,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -15021,30 +15021,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -15248,12 +15248,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -15274,12 +15274,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -15290,17 +15290,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -15356,14 +15356,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.0,
                       "widening": 0.5
@@ -15377,30 +15377,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -16979,42 +16979,42 @@
                   "revision": 1,
                   "alignment": "g-1",
                   "stale": false,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "left": [
                     [
                       211.37926542761565,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      -6.0
+                      -0.06
                     ],
                     [
                       317.8635760864612,
-                      -6.0
+                      -0.06
                     ],
                     [
                       341.1969094197945,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "right": [
                     [
                       178.04593209428234,
-                      -2.5
+                      -0.025
                     ],
                     [
                       234.712598760949,
-                      6.0
+                      0.06
                     ],
                     [
                       317.8635760864612,
-                      6.0
+                      0.06
                     ],
                     [
                       374.5302427531279,
-                      -2.5
+                      -0.025
                     ]
                   ],
                   "leftWidening": [
@@ -17109,8 +17109,8 @@
                   "station": 200.0,
                   "km": 1200.0,
                   "kmText": "1+200.000",
-                  "left": -2.5,
-                  "right": 0.7931101858576511,
+                  "left": -0.025,
+                  "right": 0.007931101858576511,
                   "leftWidening": 0.06609251548813759,
                   "rightWidening": 0.0
                 }
@@ -17296,12 +17296,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17322,12 +17322,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -17338,17 +17338,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17404,14 +17404,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -17425,30 +17425,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -17657,12 +17657,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17683,12 +17683,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -17699,17 +17699,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -17765,14 +17765,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -17786,30 +17786,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -18013,12 +18013,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -18039,12 +18039,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -18055,17 +18055,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -18306,12 +18306,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -18332,12 +18332,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -18348,17 +18348,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -19977,42 +19977,42 @@
                   "revision": 2,
                   "alignment": "g-2",
                   "stale": true,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "left": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      3.0
+                      0.03
                     ],
                     [
                       400.0,
-                      3.0
+                      0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "right": [
                     [
                       100.0,
-                      -2.0
+                      -0.02
                     ],
                     [
                       200.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       400.0,
-                      -3.0
+                      -0.03
                     ],
                     [
                       500.0,
-                      -2.0
+                      -0.02
                     ]
                   ],
                   "leftWidening": [],
@@ -20208,12 +20208,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -20234,12 +20234,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -20250,17 +20250,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -20316,14 +20316,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -20337,30 +20337,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -22154,12 +22154,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -22180,12 +22180,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -22196,17 +22196,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -22262,14 +22262,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -22283,30 +22283,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -22514,12 +22514,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -22540,12 +22540,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -22556,17 +22556,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -22622,14 +22622,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -22643,30 +22643,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -22876,12 +22876,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -22902,12 +22902,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -22918,17 +22918,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -22984,14 +22984,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -23005,30 +23005,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -23237,12 +23237,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -23263,12 +23263,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -23279,17 +23279,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -23345,14 +23345,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0,
                         "widening": 0.5
@@ -23366,30 +23366,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -23598,12 +23598,12 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -23624,12 +23624,12 @@
                       {
                         "kind": "lane",
                         "width": 3.0,
-                        "slope": -2.0
+                        "slope": -0.02
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.5,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.5,
@@ -23640,17 +23640,17 @@
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "lane",
                         "width": 3.5,
-                        "slope": -2.5
+                        "slope": -0.025
                       },
                       {
                         "kind": "shoulder",
                         "width": 1.0,
-                        "slope": -4.0
+                        "slope": -0.04
                       }
                     ],
                     "cut": 1.0,
@@ -23706,14 +23706,14 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p9",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 40.0,
                         "onTangent": 0.0
                       }
@@ -23726,30 +23726,30 @@
                   "alignment": "g-2",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       },
                       {
                         "station": 200.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 3.0,
-                        "right": -3.0
+                        "left": 0.03,
+                        "right": -0.03
                       },
                       {
                         "station": 500.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -23947,12 +23947,12 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -23973,12 +23973,12 @@
                     {
                       "kind": "lane",
                       "width": 3.0,
-                      "slope": -2.0
+                      "slope": -0.02
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.5,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.5,
@@ -23989,17 +23989,17 @@
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "lane",
                       "width": 3.5,
-                      "slope": -2.5
+                      "slope": -0.025
                     },
                     {
                       "kind": "shoulder",
                       "width": 1.0,
-                      "slope": -4.0
+                      "slope": -0.04
                     }
                   ],
                   "cut": 1.0,
@@ -24055,14 +24055,14 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p9",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 40.0,
                       "onTangent": 0.0
                     }
@@ -24075,30 +24075,30 @@
                 "alignment": "g-2",
                 "alignmentRevision": 2,
                 "revision": 2,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     },
                     {
                       "station": 200.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 3.0,
-                      "right": -3.0
+                      "left": 0.03,
+                      "right": -0.03
                     },
                     {
                       "station": 500.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }

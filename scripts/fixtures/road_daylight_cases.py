@@ -13,6 +13,8 @@ from fractions import Fraction as F
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "daylight.json"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402  (docs/adr/0977: the grades are written as KentOS holds them)
 
 
 def outward(ground, right):
@@ -214,8 +216,18 @@ def cases():
     return out
 
 
+def written(cases):
+    """The cases as KentOS reads them (docs/adr/0977): this reference works in percent, KentOS's templates hold grades."""
+    out = [dict(c) for c in cases]
+    for c in out:
+        # A fresh copy each, through JSON: the cases share their templates and a template its sides.
+        c["template"] = json.loads(json.dumps(c["template"]))
+        road_grades.template(c["template"])
+    return out
+
+
 def main():
-    data = {"cases": cases()}
+    data = {"cases": written(cases())}
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if not OUT.exists() or OUT.read_text() != text:

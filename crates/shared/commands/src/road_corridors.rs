@@ -414,7 +414,7 @@ pub const ROAD_CORRIDORS_WATER_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CorridorsWater {
     pub corridor: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub least: f64,
 }
 
@@ -434,7 +434,7 @@ pub struct PlatformFlat {
     pub to: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub least: f64,
 }
 
@@ -481,7 +481,7 @@ pub struct PlatformLow {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CorridorsWatered {
     pub corridor: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub least: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub flat_triangles: u32,

@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 
@@ -229,6 +230,7 @@ def main():
             "note": "scripts/fixtures/road_sheets_sections_cases.py yazar; görünümler road_section_command_cases.py'nin "
                     "başvurusundan, haritanın boyu şablonun dosyasından, dizilim ADR 0908 §11'den; KentOS kodu yok.",
             "setup": setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

@@ -16,6 +16,13 @@ use crate::road_alignments::{self as alignments, Built};
 use crate::road_terrains::fail;
 
 /// Only a road project has superelevation.
+/// A grade written as percent for a message: 0.08 is “8”, rounded to nine places so the conversion's last bit is not
+/// shown (docs/adr/0977: the sources hold grades, the words show percent).
+pub(crate) fn percent(grade: f64) -> String {
+    let p = (grade * 100.0 * 1e9).round() / 1e9;
+    format!("{}", if p == 0.0 { 0.0 } else { p })
+}
+
 pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())

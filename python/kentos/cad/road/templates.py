@@ -27,20 +27,20 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
     """``road.templates.edit`` v1. Tip kesiti düzenle: Yol projesinin tip kesitini
     (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden
     dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve
-    enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill
-    (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik
-    depth, taban bottom) yalnız yarmada. right verilmezse ya da mirror ile sağ yan solun
-    aynısıdır. pavement üstyapıdır (iki yanda aynı): layers yukarıdan aşağı tabakalar
-    (ad name, kalınlık thickness m, isteğe bağlı malzeme kodu material), bitmiş yüze
-    paralel; edge menteşede nasıl bittikleri: vertical dik, slope h ile menteşeden 1
-    düşeye h yatay inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun yüzü). Son
-    tabakanın tabanı formasyondur. removePavement üstyapıyı kaldırır. Değerleri KGM'nin
-    standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip
-    kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın
-    verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit
-    kalkar. Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project,
-    unknown_road_template, invalid_road_template, road_template_in_use,
-    invalid_revision, revision_conflict.
+    enine eğim (oran: −0,025 %−2,5'tir, dışa düşen eksi); uç koşulu yarma şevi cut ve
+    dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev
+    fore, derinlik depth, taban bottom) yalnız yarmada. right verilmezse ya da mirror
+    ile sağ yan solun aynısıdır. pavement üstyapıdır (iki yanda aynı): layers yukarıdan
+    aşağı tabakalar (ad name, kalınlık thickness m, isteğe bağlı malzeme kodu material),
+    bitmiş yüze paralel; edge menteşede nasıl bittikleri: vertical dik, slope h ile
+    menteşeden 1 düşeye h yatay inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun
+    yüzü). Son tabakanın tabanı formasyondur. removePavement üstyapıyı kaldırır.
+    Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı
+    yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı
+    gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar.
+    remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler:
+    not_a_road_project, unknown_road_template, invalid_road_template,
+    road_template_in_use, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.templates.edit"
@@ -70,20 +70,20 @@ class _RoadTemplatesEdit(LocalCommand[TemplatesEdit, TemplatesWritten, Templates
     ) -> TemplatesWritten:
         """Tip kesiti düzenle: Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa
         yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve
-        banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç
-        koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe
-        bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada.
-        right verilmezse ya da mirror ile sağ yan solun aynısıdır. pavement üstyapıdır (iki
-        yanda aynı): layers yukarıdan aşağı tabakalar (ad name, kalınlık thickness m, isteğe
-        bağlı malzeme kodu material), bitmiş yüze paralel; edge menteşede nasıl bittikleri:
-        vertical dik, slope h ile menteşeden 1 düşeye h yatay inen çizgiye kadar (h dolgu
-        şevi olunca kenar dolgunun yüzü). Son tabakanın tabanı formasyondur. removePavement
-        üstyapıyı kaldırır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar;
-        öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı
-        ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu
-        bir artar. remove: tip kesit kalkar. Tek geri alma adımı “Tip kesit”. Retler:
-        not_a_road_project, unknown_road_template, invalid_road_template,
-        road_template_in_use, invalid_revision, revision_conflict.
+        banket (shoulder), her biri genişlik (m) ve enine eğim (oran: −0,025 %−2,5'tir, dışa
+        düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 =
+        3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom)
+        yalnız yarmada. right verilmezse ya da mirror ile sağ yan solun aynısıdır. pavement
+        üstyapıdır (iki yanda aynı): layers yukarıdan aşağı tabakalar (ad name, kalınlık
+        thickness m, isteğe bağlı malzeme kodu material), bitmiş yüze paralel; edge
+        menteşede nasıl bittikleri: vertical dik, slope h ile menteşeden 1 düşeye h yatay
+        inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun yüzü). Son tabakanın tabanı
+        formasyondur. removePavement üstyapıyı kaldırır. Değerleri KGM'nin standardından ya
+        da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği
+        verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları
+        onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. Tek geri alma
+        adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template,
+        invalid_road_template, road_template_in_use, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.

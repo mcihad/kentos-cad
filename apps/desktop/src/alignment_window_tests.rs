@@ -275,14 +275,14 @@ fn reversing_carries_the_superelevation_schedules() {
     send(&mut app, W::Reverse);
     let doc = &app.document.as_ref().expect("a drawing").model;
     let d1 = doc.road_superelevations().iter().find(|d| d.id == "d-1").expect("d-1");
-    assert_eq!((d1.normal_left, d1.normal_right), (-3.0, -2.5));
+    assert_eq!((d1.normal_left, d1.normal_right), (-0.03, -0.025));
     assert_eq!(d1.pivot, Some(kentos_commands::SuperelevationPivot::RightEdge));
     let kentos_commands::SuperelevationMethod::Stations { rows } = &d1.method else { panic!("rows") };
-    assert_eq!((rows[0].left, rows[0].right), (-6.0, 6.0));
+    assert_eq!((rows[0].left, rows[0].right), (-0.06, 0.06));
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     assert_eq!(doc.undo().as_deref(), Some("Aksı düzenle"), "one step undoes both");
     let d1 = doc.road_superelevations().iter().find(|d| d.id == "d-1").expect("d-1");
-    assert_eq!((d1.normal_left, d1.normal_right), (-2.5, -3.0), "undone together");
+    assert_eq!((d1.normal_left, d1.normal_right), (-0.025, -0.03), "undone together");
 }
 
 /// The schedule's diagram before and after the alignment is turned round, wide and narrow, light and dark;

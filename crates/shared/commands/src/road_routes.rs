@@ -19,7 +19,7 @@ pub const ROAD_ROUTES_DRAW: &str = "road.routes.draw";
 pub const ROAD_ROUTES_DRAW_VERSION: u32 = 1;
 
 /// What a route is asked with: the terrain surface (id or name), the two places, the grid's cell and the margin
-/// around the places, the steepest step (percent), the cost of a metre risen or fallen (in metres of length), the
+/// around the places, the steepest step (a grade, 0.08 is 8 %), the cost of a metre risen or fallen (in metres of length), the
 /// layers whose areas are avoided and the plan tolerance the line is simplified within (none: every node).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -36,7 +36,7 @@ pub struct RouteAsk {
     pub cell: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub margin: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub climb: f64,
@@ -82,7 +82,7 @@ pub struct RoutePoint {
 
 /// Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes
 /// between, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest
-/// stretch (percent, between the points kept), its cost, the grid's nodes and those settled.
+/// stretch (a grade, between the points kept), its cost, the grid's nodes and those settled.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -94,7 +94,7 @@ pub struct RouteFound {
     pub length: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub climb: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub steepest: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub cost: f64,

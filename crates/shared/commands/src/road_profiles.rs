@@ -145,7 +145,7 @@ pub struct ProfileGradeRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub stations: [f64; 2],
     /// Rise over run (0.025 is 2.5 %).
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: f64,
 }
 
@@ -159,9 +159,9 @@ pub struct ProfileCurveRow {
     pub pvi: String,
     /// `parabola`, `asymmetric` or `circle`.
     pub kind: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub g_in: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub g_out: f64,
     /// Its start and end: station and elevation.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -285,7 +285,7 @@ pub struct ProfileAt {
     pub red: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: Option<f64>,
     /// The rate of change of grade there, z″ (docs/adr/0966; AASHTO's r = A/L on a parabola): negative on a crest;
     /// 0 on a straight grade; absent outside the profile.
@@ -633,7 +633,7 @@ pub struct ProfilesPropose {
     pub hold: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub most_grade: Option<f64>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
@@ -676,7 +676,7 @@ pub enum GradeLimit {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProposedGrade {
     pub between: [String; 2],
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

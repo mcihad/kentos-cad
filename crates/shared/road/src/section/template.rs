@@ -1,6 +1,6 @@
 //! A template's platform on a cross section and its slopes tied to the terrain (docs/adr/0903 §3–§5, ROAD-SEC-04, 05,
 //! 07; ROAD-COR-01…04, 10). Each side is built outward from the axis at the design elevation: its components (lanes,
-//! shoulders: a width and a cross slope in percent, falling outward negative) set the elevations to the hinge; there the
+//! shoulders: a width and a cross slope, a grade, falling outward negative) set the elevations to the hinge; there the
 //! terrain decides: above the hinge a cut, an optional ditch (its fore slope down to its depth, its bottom) then the cut
 //! slope up; otherwise a fill, the fill slope down. Where a slope first meets the terrain is the daylight point, exact
 //! (two lines' crossing); a slope that meets it nowhere on the swath leaves the side open. The cut and fill areas are
@@ -11,7 +11,7 @@ use super::sample::GroundPoint;
 /// A component of a side, outward from the axis.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Component {
-    /// A lane: its width and cross slope (percent, falling outward negative).
+    /// A lane: its width and cross slope (a grade, falling outward negative).
     Lane { width: f64, slope: f64 },
     /// A shoulder (banket).
     Shoulder { width: f64, slope: f64 },
@@ -46,7 +46,7 @@ pub struct Side {
 }
 
 /// A slope's benches (berme, docs/adr/0958; ROAD-GRADE-03): every `height` m up a cut slope or down a fill slope a
-/// bench `width` m wide whose surface falls `fall` percent outward.
+/// bench `width` m wide whose surface falls `fall` (a grade) outward.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SlopeBench {
     pub height: f64,
@@ -198,7 +198,7 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
     for c in &side.components {
         let (w, s) = c.parts();
         u += w;
-        z += w * s / 100.0;
+        z += w * s;
         pts.push([u, z]);
     }
     let hinge = [u, z];
@@ -264,7 +264,7 @@ fn walk(t: &[(f64, Option<f64>, bool)], pts: &mut Vec<[f64; 2]>, start: [f64; 2]
 }
 
 /// A benched slope's corners from `start` (docs/adr/0958): a face going `m` per metre outward (up in a cut, `m` > 0;
-/// down in a fill, `m` < 0) until it is `height` above or below its start, a bench `width` wide falling `fall` percent
+/// down in a fill, `m` < 0) until it is `height` above or below its start, a bench `width` wide falling `fall` (a grade)
 /// outward, again, until past `reach` outward (or [`MAX_BENCHES`] benches). The last corner is beyond `reach`.
 pub fn bench_path(start: [f64; 2], m: f64, b: SlopeBench, reach: f64) -> Vec<[f64; 2]> {
     let mut out = vec![start];
@@ -277,7 +277,7 @@ pub fn bench_path(start: [f64; 2], m: f64, b: SlopeBench, reach: f64) -> Vec<[f6
             return out;
         }
         u += b.width;
-        z -= b.width * b.fall / 100.0;
+        z -= b.width * b.fall;
         out.push([u, z]);
         if u > reach {
             return out;
@@ -318,7 +318,7 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
     for c in &side.components {
         let (w, s) = c.parts();
         u += w;
-        z += w * s / 100.0;
+        z += w * s;
     }
     let Some(g) = height(&t, u) else { return Daylight::Hinge };
     let cut = g > z;
@@ -510,7 +510,7 @@ pub fn build(template: &Template, axis: f64, ground: &[GroundPoint]) -> Result<S
 }
 
 /// The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
-/// percent under a fill, steps `height` (m) high are cut into it.
+/// (a grade) under a fill, steps `height` (m) high are cut into it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Bench {
     pub slope: f64,
@@ -555,7 +555,7 @@ pub fn earthwork(section: &Section, ground: &[GroundPoint], strip: f64, bench: O
         let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else { continue };
         covered += b - a;
         let Some(bn) = bench else { continue };
-        if ((gb - ga) / (b - a)).abs() * 100.0 < bn.slope {
+        if ((gb - ga) / (b - a)).abs() < bn.slope {
             continue;
         }
         let (fa, fb) = (line(a) - ga, line(b) - gb);

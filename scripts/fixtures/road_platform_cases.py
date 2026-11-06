@@ -19,6 +19,9 @@ import math
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
+
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
 W = 1e-6
 ANY = "$any"
@@ -420,7 +423,7 @@ def rules(p):
     if len(p["corners"]) < 3 or len(p["corners"]) > 1000:
         return "corners", "platformun sınırı 3 ile 1000 arası köşedir"
     if abs(p.get("grade", 0.0)) > 100:
-        return "grade", "platformun eğimi en çok %100 olur"
+        return "grade", "platformun eğimi oranla yazılır (0,02 %2'dir), en çok 1 (%100) olur"
     for field, top in (("cut", 100.0), ("fill", 100.0), ("step", 1000.0), ("reach", 10000.0)):
         if not (0 < p[field] <= top):
             return field, f"0'dan büyük, en çok {num(top)} olur"
@@ -720,6 +723,7 @@ def main():
     check = "--check" in sys.argv
     for name, data in files.items():
         path = OUT / f"{name}.json"
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         if check:
             if path.read_text(encoding="utf-8") != text:

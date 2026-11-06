@@ -4231,7 +4231,7 @@
          "fan": 15.0,
          "reach": 100.0,
          "surface": "t-1",
-         "grade": 2.0,
+         "grade": 0.02,
          "direction": 90.0
         }
        ]
@@ -4309,7 +4309,7 @@
         "fan": 15.0,
         "reach": 100.0,
         "surface": "t-1",
-        "grade": 2.0,
+        "grade": 0.02,
         "direction": 90.0
        }
       ]
@@ -5406,7 +5406,7 @@
          "fan": 15.0,
          "reach": 100.0,
          "surface": "t-1",
-         "grade": 1.0
+         "grade": 0.01
         }
        ]
       }
@@ -5483,7 +5483,7 @@
         "fan": 15.0,
         "reach": 100.0,
         "surface": "t-1",
-        "grade": 1.0
+        "grade": 0.01
        }
       ]
      }

@@ -2,7 +2,7 @@
 import type { SuperCritical } from "./SuperCritical";
 
 /**
- * A superelevation schedule as it is now: each side's break points (station, slope percent) and widening (station,
+ * A superelevation schedule as it is now: each side's break points (station, grade) and widening (station,
  * metres), the critical stations; why it no longer builds when it does not.
  */
 export type SuperelevationReport = { id: string, name: string, revision: number, alignment: string, 
@@ -11,7 +11,7 @@ export type SuperelevationReport = { id: string, name: string, revision: number,
  */
 stale: boolean, normalLeft: number, normalRight: number, 
 /**
- * (station, slope percent) pairs.
+ * (station, grade) pairs.
  */
 left: Array<[number, number]>, right: Array<[number, number]>, 
 /**

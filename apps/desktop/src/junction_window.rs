@@ -230,7 +230,8 @@ impl Window {
             None => {
                 let need =
                     |k: usize| number(&self.tie_fields[k], TIE_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", TIE_FIELDS[k]));
-                Some([need(0)?, need(1)?])
+                // The fields are percent, the command's cross slopes grades (docs/adr/0977).
+                Some([need(0)? / 100.0, need(1)? / 100.0])
             }
         };
         Ok(JunctionsTie {
@@ -239,7 +240,7 @@ impl Window {
             profiles,
             crossfall,
             superelevation: self.tie_super.clone(),
-            max_grade_change: number(&self.tie_fields[2], TIE_FIELDS[2])?,
+            max_grade_change: number(&self.tie_fields[2], TIE_FIELDS[2])?.map(|v| v / 100.0),
             expected_revision: None,
         })
     }
@@ -417,7 +418,7 @@ impl App {
         let result = road_junctions_tie::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             let most = out.changes.iter().fold(0.0_f64, |a, b| a.max(*b));
-            self.say(Level::Success, format!("“{}” boykesiti kavşağa bağlandı; en büyük eğim değişimi %{most:.2}.", out.profile));
+            self.say(Level::Success, format!("“{}” boykesiti kavşağa bağlandı; en büyük eğim değişimi %{:.2}.", out.profile, 100.0 * most));
         }
         self.refresh_junction();
         Task::none()
@@ -720,13 +721,13 @@ impl App {
                                             grouped(tie.station, 2),
                                             grouped(tie.elevation, 3),
                                             signed(tie.difference, 3),
-                                            format!("%{}", grouped(*change, 2)),
+                                            format!("%{}", grouped(100.0 * *change, 2)),
                                         ]
                                     })
                                     .collect(),
                                 "Bağlanan PVI yok",
                             ));
-                            let grades = t.grades.iter().map(|g| format!("%{g:+.2}")).collect::<Vec<_>>().join(" → ");
+                            let grades = t.grades.iter().map(|g| format!("%{:+.2}", 100.0 * g)).collect::<Vec<_>>().join(" → ");
                             let gone = if t.removed.is_empty() { "kalkan PVI yok".to_owned() } else { format!("kalkan: {}", t.removed.join(", ")) };
                             list = list.push(label::caption(format!("Eğimler {grades} · {gone}")).style(muted));
                             if !warnings.is_empty() {

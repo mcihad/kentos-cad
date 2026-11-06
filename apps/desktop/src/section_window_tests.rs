@@ -432,7 +432,7 @@ fn the_template_takes_a_cut_bench_and_its_slope_walks_over_it() {
     send(&mut app, W::Save);
     let t = model(&mut app).road_templates()[0].clone();
     let b = t.left.bench.expect("written");
-    assert_eq!((b.height, b.width, b.fall), (3.0, 2.0, 4.0));
+    assert_eq!((b.height, b.width, b.fall), (3.0, 2.0, 0.04), "the window's 4 % is the grade 0.04");
     let f = t.left.fill_bench.expect("written");
     assert_eq!((f.height, f.width, f.fall), (3.0, 2.0, 0.0), "no fall typed: level");
     assert!(t.right.is_none(), "the right is the left's mirror");

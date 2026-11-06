@@ -24,6 +24,7 @@ import road_alignment_cases as aref  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
 import road_curve_volume_cases as crv  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_pavement_cases as pvref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
@@ -735,7 +736,7 @@ def edit_cases():
     no("Çok kalın bitkisel toprak", {**base, "strip": [{"from": 0.0, "to": 200.0, "depth": 6.0}]},
        rulefail("bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur", "strip[0]"))
     no("Sıfır eğimli diş kazısı", {**base, "bench": {"slope": 0.0, "height": 0.5}},
-       rulefail("diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur", "bench"))
+       rulefail("diş kazısının eğimi oranla 0'dan büyük, en çok 10 (%1000); basamak yüksekliği 0'dan büyük, en çok 10 m olur", "bench"))
     a1 = approved(V1)
     no("Onaylı kübaj değişmez", {"operation": "set", "volume": "v-1", "name": "Kübaj A"},
        failed("volume_approved", "“Ana kübaj” kübajı onaylı; değiştirmek ya da silmek için önce onayı kaldırın.", "volume"),
@@ -974,6 +975,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = []
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         path = OUT / name
         if check:

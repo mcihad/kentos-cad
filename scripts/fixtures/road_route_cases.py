@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 
@@ -91,7 +92,7 @@ def find(ask, entities=None):
     if not 0 <= margin <= 100000:
         raise bad("margin", "Pay 0 ile 100 000 m arası olur.")
     if not 0 < grade <= 1000:
-        raise bad("grade", "En dik eğim 0'dan büyük, en çok %1000 olur.")
+        raise bad("grade", "En dik eğim oranla yazılır (0,08 %8'dir): 0'dan büyük, en çok 10 (%1000) olur.")
     if not 0 <= climb <= 1000:
         raise bad("climb", "Tırmanmanın ağırlığı 0 ile 1000 arası olur.")
     if ask.get("tolerance") is not None and not 0 <= ask["tolerance"] <= 1000:
@@ -350,6 +351,7 @@ def main():
     check = "--check" in sys.argv
     for name, data in files.items():
         path = OUT / f"{name}.json"
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         if check:
             if path.read_text(encoding="utf-8") != text:

@@ -5,7 +5,7 @@ import type { CulvertShapeDef } from "./CulvertShapeDef";
 /**
  * A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its
  * station and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and
- * its fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
+ * its fall (a grade, 0.02 is 2 %; docs/adr/0977) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
  * roughness (typed, kept).
  */
 export type CulvertDef = { id: string, name: string, corridor: string, corridorRevision?: number, revision?: number, station: number, skew?: number, shape: CulvertShapeDef, invert: number, slope: number, flow: CulvertFlow, extend?: number, cover?: number, material?: string, roughness?: number, };

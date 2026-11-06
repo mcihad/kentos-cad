@@ -181,12 +181,12 @@
        {
         "kind": "lane",
         "width": 3.5,
-        "slope": -2.5
+        "slope": -0.025
        },
        {
         "kind": "shoulder",
         "width": 1.0,
-        "slope": -4.0
+        "slope": -0.04
        }
       ],
       "cut": 1.0,
@@ -210,7 +210,7 @@
        {
         "kind": "lane",
         "width": 3.0,
-        "slope": 2.0
+        "slope": 0.02
        }
       ],
       "cut": 1.0,
@@ -278,14 +278,14 @@
      "alignment": "g-1",
      "alignmentRevision": 3,
      "revision": 1,
-     "normalLeft": -2.5,
-     "normalRight": -2.5,
+     "normalLeft": -0.025,
+     "normalRight": -0.025,
      "method": {
       "method": "curves",
       "curves": [
        {
         "pi": "p1",
-        "rate": 6.0,
+        "rate": 0.06,
         "runoff": 80.0,
         "onTangent": 0.0,
         "widening": 0.6
@@ -298,20 +298,20 @@
      "id": "d-2",
      "name": "Satırlarla",
      "alignment": "g-1",
-     "normalLeft": -2.0,
-     "normalRight": -2.0,
+     "normalLeft": -0.02,
+     "normalRight": -0.02,
      "method": {
       "method": "stations",
       "rows": [
        {
         "station": 100.0,
-        "left": -2.0,
-        "right": -2.0
+        "left": -0.02,
+        "right": -0.02
        },
        {
         "station": 200.0,
-        "left": 4.0,
-        "right": -4.0
+        "left": 0.04,
+        "right": -0.04
        }
       ]
      }
@@ -384,7 +384,7 @@
       }
      ],
      "bench": {
-      "slope": 20.0,
+      "slope": 0.2,
       "height": 0.5
      }
     },
@@ -551,7 +551,7 @@
       "cells": 2
      },
      "invert": 101.0,
-     "slope": 1.0,
+     "slope": 0.01,
      "flow": "right",
      "extend": 1.0,
      "cover": 0.5,
@@ -572,7 +572,7 @@
       "spacing": 0.5
      },
      "invert": 100.0,
-     "slope": 2.0,
+     "slope": 0.02,
      "flow": "left"
     }
    ],
@@ -628,7 +628,7 @@
       100.0,
       112.5
      ],
-     "grade": 1.0,
+     "grade": 0.01,
      "direction": 90.0,
      "cut": 1.5,
      "fill": 2.0,

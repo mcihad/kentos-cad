@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_haul_command_cases as hc  # noqa: E402
 import road_haul_fleet_cases as fleet  # noqa: E402
 import road_haul_plan_cases as hp  # noqa: E402
@@ -360,6 +361,7 @@ def main():
                    "boykesit ve arazi referanslarının, her gidiş zamanda RK4 (1 ms), yükleyici Markov zinciri; sonuçlar "
                    "boylarının 2·10⁻³'ü içinde (relative); KentOS kodu yok.",
            "setup": hc.setup(HAULS, hp.VOLUMES), "cases": found}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     path = OUT / "road.hauls.trucks.json"
     if "--check" in sys.argv:

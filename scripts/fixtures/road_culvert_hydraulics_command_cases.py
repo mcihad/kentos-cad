@@ -18,6 +18,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_culvert_cases as rc  # noqa: E402
 import road_culvert_hydraulics_cases as hy  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 import road_stakeout_cases as so  # noqa: E402
 
@@ -200,6 +201,7 @@ def main():
                     "road_culvert_cases.py'nin, hidrolik road_culvert_hydraulics_cases.py'nin 40 basamaklı mpmath "
                     "başvurusu (HDS-5, AIDR); KentOS kodu yok. Katsayılar ve debiler durumlarındır.",
             "setup": rc.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

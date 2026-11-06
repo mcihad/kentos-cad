@@ -91,7 +91,7 @@ fn on_a_slope_the_uphill_side_is_cut_and_the_downhill_side_fill() {
 #[test]
 fn a_sloping_pad_follows_its_plane() {
     let mut p = pad(12.0);
-    p.grade = 2.0;
+    p.grade = 0.02;
     p.direction = 90.0;
     let g = grading::grade(&p, &terrain(10.0, 0.0, 0.0), 0.0).expect("grades");
     let north = g.top.iter().find(|c| c[1] == 10.0).expect("a north corner");

@@ -193,7 +193,7 @@ pub struct DrainageCatchment {
     pub length: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub fall: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

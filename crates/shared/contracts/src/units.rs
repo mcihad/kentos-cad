@@ -89,6 +89,14 @@ pub const UNITS: &[(&str, &str)] = &[
         "Birimsiz sayı: çarpan, oran, büküm, saydamlık (0–1), ağırlık, öncelik, katsayı.",
     ),
     ("percent", "Yüzde (0–100)."),
+    (
+        "station-grade",
+        "Km (m) ve o km'deki eğim oranı çifti: dever çizelgesinin kırık noktaları.",
+    ),
+    (
+        "grade",
+        "Eğim oranı: düşey bölü yatay, birimsiz; 0,02 %2'dir. Boyuna eğim, enine eğim ve dever bununla yazılır, ekranda yüzdeye açıkça çevrilir (ADR 0977).",
+    ),
     ("ppm", "Milyonda bir."),
     (
         "pattern",

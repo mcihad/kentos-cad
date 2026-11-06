@@ -4,12 +4,12 @@
    "name": "Eksen etrafında: kalkış yok",
    "pivot": "centerline",
    "slopes": [
-    -6,
-    6
+    -0.06,
+    0.06
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -21,12 +21,12 @@
    "name": "İç kenar etrafında, sola dönen kurp",
    "pivot": "insideEdge",
    "slopes": [
-    -6,
-    6
+    -0.06,
+    0.06
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -38,12 +38,12 @@
    "name": "Dış kenar etrafında, sola dönen kurp",
    "pivot": "outsideEdge",
    "slopes": [
-    -6,
-    6
+    -0.06,
+    0.06
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -55,12 +55,12 @@
    "name": "İç kenar etrafında, sağa dönen kurp",
    "pivot": "insideEdge",
    "slopes": [
-    6,
-    -6
+    0.06,
+    -0.06
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -72,12 +72,12 @@
    "name": "Sol kenar etrafında, genişlemiş sol",
    "pivot": "leftEdge",
    "slopes": [
-    -6,
-    6
+    -0.06,
+    0.06
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     4.3,
@@ -89,12 +89,12 @@
    "name": "Sağ kenar etrafında",
    "pivot": "rightEdge",
    "slopes": [
-    -6,
-    6
+    -0.06,
+    0.06
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -106,12 +106,12 @@
    "name": "Normal eğimde iç kenar: kalkış yok",
    "pivot": "insideEdge",
    "slopes": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -123,12 +123,12 @@
    "name": "Düz eğimli dış yan, iç kenar",
    "pivot": "insideEdge",
    "slopes": [
-    -2.5,
-    0
+    -0.025,
+    0.0
    ],
    "normal": [
-    -2.5,
-    -2.5
+    -0.025,
+    -0.025
    ],
    "widths": [
     3.5,
@@ -145,25 +145,25 @@
     "leftSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       126.47058823529412,
-      -2.5
+      -0.025
      ],
      [
       160,
-      -6
+      -0.06
      ]
     ],
     "rightSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       160,
-      6
+      0.06
      ]
     ],
     "leftWidth": [
@@ -215,25 +215,25 @@
     "leftSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       126.47058823529412,
-      -2.5
+      -0.025
      ],
      [
       160,
-      -6
+      -0.06
      ]
     ],
     "rightSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       160,
-      6
+      0.06
      ]
     ],
     "leftWidth": [
@@ -285,25 +285,25 @@
     "leftSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       126.47058823529412,
-      -2.5
+      -0.025
      ],
      [
       160,
-      -6
+      -0.06
      ]
     ],
     "rightSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       160,
-      6
+      0.06
      ]
     ],
     "leftWidth": [
@@ -355,25 +355,25 @@
     "leftSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       126.47058823529412,
-      -2.5
+      -0.025
      ],
      [
       160,
-      -6
+      -0.06
      ]
     ],
     "rightSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       160,
-      6
+      0.06
      ]
     ],
     "leftWidth": [
@@ -425,25 +425,25 @@
     "leftSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       126.47058823529412,
-      -2.5
+      -0.025
      ],
      [
       160,
-      -6
+      -0.06
      ]
     ],
     "rightSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       160,
-      6
+      0.06
      ]
     ],
     "leftWidth": [
@@ -499,25 +499,25 @@
     "leftSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       126.47058823529412,
-      -2.5
+      -0.025
      ],
      [
       160,
-      -6
+      -0.06
      ]
     ],
     "rightSlope": [
      [
       100,
-      -2.5
+      -0.025
      ],
      [
       160,
-      6
+      0.06
      ]
     ],
     "leftWidth": [
@@ -612,29 +612,29 @@
  "toward": [
   {
    "name": "Sola dönen kurpta tam dever",
-   "left": -6,
-   "right": 6,
+   "left": -0.06,
+   "right": 0.06,
    "leftTurn": true,
    "e": 0.06
   },
   {
    "name": "Sağa dönen kurpta tam dever",
-   "left": 6,
-   "right": -6,
+   "left": 0.06,
+   "right": -0.06,
    "leftTurn": false,
    "e": 0.06
   },
   {
    "name": "Sola dönen kurpta normal eğim: dış yan ters",
-   "left": -2.5,
-   "right": -2.5,
+   "left": -0.025,
+   "right": -0.025,
    "leftTurn": true,
    "e": -0.025
   },
   {
    "name": "Sola dönen kurpta düz dış yan",
-   "left": -2.5,
-   "right": 0,
+   "left": -0.025,
+   "right": 0.0,
    "leftTurn": true,
    "e": 0.0
   }

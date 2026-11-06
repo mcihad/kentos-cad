@@ -2,7 +2,7 @@
 import type { TemplateComponentKind } from "./TemplateComponentKind";
 
 /**
- * A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward
- * negative).
+ * A component of a template's side, outward from the axis: its width and cross slope (a grade: rise over run, −0.025
+ * is −2.5 %; falling outward negative; docs/adr/0977).
  */
 export type TemplateComponentDef = { kind: TemplateComponentKind, width: number, slope: number, };

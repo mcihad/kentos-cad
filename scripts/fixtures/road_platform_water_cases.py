@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
 W = 1e-6
@@ -164,6 +165,7 @@ def main():
                    "düzleminin en dik eğimi, enine eğim eksenle c1 arasında, alçak nokta iki komşusundan alçak kenar "
                    "noktası; KentOS kodu olmadan.",
            "setup": ccmd.setup(), "cases": found}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     path = OUT / "road.corridors.water.json"
     if "--check" in sys.argv:

@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
 import road_haul_command_cases as hc  # noqa: E402
 import road_haul_plan_cases as pc  # noqa: E402
 import road_volume_command_cases as vcmd  # noqa: E402
@@ -167,6 +168,7 @@ def main():
                    "road_haul_plan_cases.py'nin (HiGHS, scipy linprog); onay planın o günkü sayılarını ve dayandığı "
                    "sürümleri yazar, biten onay geçmişe gider; KentOS kodu yok. `expect.road` projenin yol ayarlarıdır.",
            "setup": hc.setup(START, VOLUMES), "cases": found}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     path = OUT / "road.hauls.approve.json"
     if "--check" in sys.argv:

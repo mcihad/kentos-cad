@@ -32,7 +32,7 @@ pub fn runoff_for(runoff: f64, gradient: f64, most: f64) -> f64 {
     runoff * gradient / most
 }
 
-/// The runout of a runoff `runoff` turning the outside from its normal slope `normal` to the rate `rate` (percent).
+/// The runout of a runoff `runoff` turning the outside from its normal slope `normal` to the rate `rate` (grades).
 pub fn runout(runoff: f64, normal: f64, rate: f64) -> f64 {
     runoff * normal.abs() / rate
 }

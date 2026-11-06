@@ -7409,7 +7409,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_TEMPLATES_EDIT.into(),
             version: crate::ROAD_TEMPLATES_EDIT_VERSION,
             title: "Tip kesiti düzenle".into(),
-            summary: "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (yüzde, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. \
+            summary: "Yol projesinin tip kesitini (template: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Bir yan eksenden dışa bileşenlerdir: şerit (lane) ve banket (shoulder), her biri genişlik (m) ve enine eğim (oran: −0,025 %−2,5'tir, dışa düşen eksi); uç koşulu yarma şevi cut ve dolgu şevi fill (bir düşeye yatay, 1,5 = 3/2) ve isteğe bağlı hendek (ditch: iç şev fore, derinlik depth, taban bottom) yalnız yarmada. \
                       right verilmezse ya da mirror ile sağ yan solun aynısıdır. pavement üstyapıdır (iki yanda aynı): layers yukarıdan aşağı tabakalar (ad name, kalınlık thickness m, isteğe bağlı malzeme kodu material), bitmiş yüze paralel; edge menteşede nasıl bittikleri: vertical dik, slope h ile menteşeden 1 düşeye h yatay inen çizgiye kadar (h dolgu şevi olunca kenar dolgunun yüzü). Son tabakanın tabanı formasyondur. removePavement üstyapıyı kaldırır. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. set: yeni tip kesitin kimliği verilen ya da ilk boş tk-n, adı ve sol yanı gerekir; var olanın verilen alanları onunkinin yerini alır, revizyonu bir artar. remove: tip kesit kalkar. \
                       Tek geri alma adımı “Tip kesit”. Retler: not_a_road_project, unknown_road_template, invalid_road_template, road_template_in_use, invalid_revision, revision_conflict."
                 .into(),
@@ -7429,8 +7429,8 @@ pub fn catalog() -> CommandCatalog {
                 title: "İki şeritli tip kesit, simetrik, yarmada hendekli".into(),
                 input: json!({ "operation": "set", "name": "Tip 1", "left": {
                     "components": [
-                        { "kind": "lane", "width": 3.5, "slope": -2.5 },
-                        { "kind": "shoulder", "width": 1.0, "slope": -4.0 }
+                        { "kind": "lane", "width": 3.5, "slope": -0.025 },
+                        { "kind": "shoulder", "width": 1.0, "slope": -0.04 }
                     ],
                     "cut": 1.0, "fill": 1.5,
                     "ditch": { "fore": 2.0, "depth": 0.5, "bottom": 0.5 }
@@ -7522,7 +7522,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_SUPERELEVATIONS_EDIT.into(),
             version: crate::ROAD_SUPERELEVATIONS_EDIT_VERSION,
             title: "Deveri düzenle".into(),
-            summary: "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa yüzdedir, dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (yüzde), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. \
+            summary: "Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda eksenden dışa orandır (−0,025 %−2,5'tir; ADR 0977), dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp için oran rate (eğim oranı, 0,06 %6'dır), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları; aralarında doğrusal. \
                       Değerleri KGM'nin standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. \
                       Tek geri alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict."
                 .into(),
@@ -7540,9 +7540,9 @@ pub fn catalog() -> CommandCatalog {
             capabilities: None,
             examples: vec![CommandExample {
                 title: "Ana aksın p1 kurbunda %6 dever, 60 m geçiş klotoidde".into(),
-                input: json!({ "operation": "set", "name": "Ana aks deveri", "alignment": "Ana aks", "normalLeft": -2.5,
-                    "normalRight": -2.5, "method": { "method": "curves", "curves": [
-                        { "pi": "p1", "rate": 6.0, "runoff": 60.0, "onTangent": 0.0 } ] } }),
+                input: json!({ "operation": "set", "name": "Ana aks deveri", "alignment": "Ana aks", "normalLeft": -0.025,
+                    "normalRight": -0.025, "method": { "method": "curves", "curves": [
+                        { "pi": "p1", "rate": 0.06, "runoff": 60.0, "onTangent": 0.0 } ] } }),
                 output: None,
             }],
         },
@@ -7846,7 +7846,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::ROAD_VOLUMES_EDIT_VERSION,
             title: "Kübaj hesabını düzenle".into(),
             summary: "Yol projesinin kübaj hesabını (volume: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Kübaj bir koridorun (corridor) hacmidir; yöntem (method): endArea ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 (curve ile kurpta kesitlerin momentleriyle etkin alan A + κQ, Pappus; yalnız endArea), prismoidal iki kesitin ortasında kurulan kesitle L·(A₀ + 4Aₘ + A₁)/6, surfaces koridorun üst yüzeyiyle arazisi arasındaki hacim (üçgenler planda üst üste konur). Kazı ve dolgu ayrıdır. \
-                      factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. \
+                      factors km aralıklarına (from, to aksın istasyonu, m) kazının kabarma (cut) ve dolgunun sıkışma (fill) çarpanını verir; artan, birbirine binmeyen satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu orandan dikken; 0,2 %20'dir dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. \
                       Yeni hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project, unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["kubaj".into(), "kübaj".into()],
@@ -8358,7 +8358,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_CULVERTS_EDIT.into(),
             version: crate::ROAD_CULVERTS_EDIT_VERSION,
             title: "Menfezi düzenle".into(),
-            summary: "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (%), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. \
+            summary: "Yol projesinin menfezini (culvert: kimliği ya da adı; yoksa yeni) yazar, koridoruna yeniden bağlar ya da kaldırır. Menfez bir koridorun (corridor) km'sinde (station, aksın istasyonu) yolu kesen gövdedir: skew aksın dikinden sapma (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu, slope akış eğimi (oran, 0,02 %2'dir), flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. \
                       Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["menfez".into(), "culvert".into()],
@@ -8377,7 +8377,7 @@ pub fn catalog() -> CommandCatalog {
                 title: "Ana koridorda iki gözlü kutu menfez".into(),
                 input: json!({ "operation": "set", "name": "Km 1+380 menfezi", "corridor": "Ana koridor", "station": 380.0,
                     "shape": { "kind": "box", "width": 2.0, "height": 1.5, "thickness": 0.25, "slab": 0.3, "cells": 2 },
-                    "invert": 101.0, "slope": 1.0, "flow": "right", "extend": 1.0, "cover": 0.5 }),
+                    "invert": 101.0, "slope": 0.01, "flow": "right", "extend": 1.0, "cover": 0.5 }),
                 output: None,
             }],
         },
@@ -8816,7 +8816,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_PLATFORMS_EDIT.into(),
             version: crate::ROAD_PLATFORMS_EDIT_VERSION,
             title: "Platformu düzenle".into(),
-            summary: "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (%), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. \
+            summary: "Yol projesinin platformunu (platform: kimliği ya da adı; yoksa yeni) yazar ya da kaldırır. Platform kapalı bir sınırın (corners: köşeler, her iki yönde de) içindeki düzlemdir: base taban noktası (x, y, z), grade eğimi (oran, 0,02 %2'dir), direction yükseldiği yön (derece, +x'ten saat yönü tersine). Kazı (cut) ve dolgu (fill) şevi yatay bölü düşey; step kenar boyunca şev çizgilerinin aralığı, fan dışbükey köşedeki yelpazenin en geniş açısı (derece, en çok 90), reach şevin en uzun erimi; surface tesviye edildiği arazi yüzeyi. Değerler kullanıcının: KentOS öntanımlı şev, aralık ya da erim vermez. \
                       Yeni platformun kimliği verilen ya da ilk boş p-n. Kendini kesen ya da aynı yerde iki köşesi olan sınır reddedilir. Tek geri alma adımı “Platform”. Retler: not_a_road_project, unknown_platform, unknown_terrain, invalid_platform, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["platform".into(), "tesviye".into()],
@@ -8835,7 +8835,7 @@ pub fn catalog() -> CommandCatalog {
                 title: "Mevcut zemin üstünde 40 × 30 m platform".into(),
                 input: json!({ "operation": "set", "name": "Depo platformu",
                     "corners": [[100.0, 100.0], [140.0, 100.0], [140.0, 130.0], [100.0, 130.0]],
-                    "base": [100.0, 100.0, 112.5], "grade": 1.0, "direction": 90.0,
+                    "base": [100.0, 100.0, 112.5], "grade": 0.01, "direction": 90.0,
                     "cut": 1.5, "fill": 2.0, "step": 5.0, "fan": 15.0, "reach": 100.0, "surface": "Mevcut zemin" }),
                 output: None,
             }],
@@ -9028,7 +9028,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_ROUTES_FIND.into(),
             version: crate::ROAD_ROUTES_FIND_VERSION,
             title: "Ön güzergâh bul".into(),
-            summary: "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (yüzde) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. \
+            summary: "Yol projesinin arazi yüzeyinde (surface: kimliği ya da adı) iki yer (from, to) arasında en düşük maliyetli ön güzergâhı bulur; hiçbir şey yazmaz. Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten (oran, 0,08 %8'dir) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (oran), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. \
                       Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached."
                 .into(),
             aliases: vec!["onguzergah".into(), "routefind".into()],
@@ -9046,7 +9046,7 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "İki köy arasında, yasak alandan kaçarak".into(),
                 input: json!({ "surface": "Mevcut zemin", "from": { "x": 100.0, "y": 100.0 }, "to": { "x": 400.0, "y": 300.0 },
-                    "cell": 5.0, "margin": 50.0, "grade": 8.0, "climb": 10.0, "avoid": ["yasak"], "tolerance": 2.0 }),
+                    "cell": 5.0, "margin": 50.0, "grade": 0.08, "climb": 10.0, "avoid": ["yasak"], "tolerance": 2.0 }),
                 output: None,
             }],
         },
@@ -9072,7 +9072,7 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Ön güzergâhı çiz".into(),
                 input: json!({ "surface": "Mevcut zemin", "from": { "x": 100.0, "y": 100.0 }, "to": { "x": 400.0, "y": 300.0 },
-                    "cell": 5.0, "margin": 50.0, "grade": 8.0, "climb": 10.0, "layerId": "guzergah" }),
+                    "cell": 5.0, "margin": 50.0, "grade": 0.08, "climb": 10.0, "layerId": "guzergah" }),
                 output: None,
             }],
         },
@@ -9182,7 +9182,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_JUNCTIONS_TIE.into(),
             version: crate::ROAD_JUNCTIONS_TIE_VERSION,
             title: "Kavşağa bağla".into(),
-            summary: "Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; yüzde, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (yüzde) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. \
+            summary: "Hemzemin kavşakta tali yolun boykesitini ana yolun sırtına bağlar; ana yolun sırtı ve boykesiti olduğu gibi kalır (Civil 3D'nin Primary Road Crown Maintained'i). Tali yol boykesitine eğrisiz üç PVI yazılır: kesişimde (ana yolun boykesit kotu) ve tali yolun ekseninin ana yolun sol ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (oran) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. \
                       Uyarılar: junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler: not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile, invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie, invalid_revision, revision_conflict."
                 .into(),
             aliases: vec!["kavsakbagla".into(), "talibagla".into()],
@@ -9199,7 +9199,7 @@ pub fn catalog() -> CommandCatalog {
             capabilities: None,
             examples: vec![CommandExample {
                 title: "Ana yolun sırtı korunur, %2,5 enine eğim".into(),
-                input: json!({ "junction": "j-1", "primary": 0, "crossfall": [-2.5, -2.5], "maxGradeChange": 4.0 }),
+                input: json!({ "junction": "j-1", "primary": 0, "crossfall": [-0.025, -0.025], "maxGradeChange": 0.04 }),
                 output: None,
             }],
         },

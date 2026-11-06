@@ -22,6 +22,7 @@ from shapely.geometry import LineString, Polygon
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1/road.corridors.protected.json"
@@ -208,6 +209,7 @@ def main():
                     "road_corridor_command_cases.py'nin, alanlarla karşılaştırma GEOS'un (shapely); KentOS kodu yok. "
                     "Alanlar durumlarındır, ana koridorun kesitlerinden yerleştirildi.",
             "setup": setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

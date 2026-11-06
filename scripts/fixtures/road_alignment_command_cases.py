@@ -19,6 +19,7 @@ import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as ref  # noqa: E402
+import road_grades  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
@@ -1046,6 +1047,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
         path = OUT / name
         if check:

@@ -21,6 +21,7 @@ import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_superelevation_command_cases as sup  # noqa: E402
@@ -197,6 +198,7 @@ def main():
                     "(her aralıkta parabol), sürtünme nokta kütle dengesinin 40 basamakta referans aksın eğriliğiyle; "
                     "KentOS kodu yok.",
             "setup": sup.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if "--check" in sys.argv[1:]:
         if OUT.read_text("utf-8") != text:

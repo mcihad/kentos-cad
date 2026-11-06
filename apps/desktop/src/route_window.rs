@@ -96,7 +96,8 @@ impl Window {
             to: Vec2 { x: need(2)?, y: need(3)? },
             cell: need(4)?,
             margin: number(&self.fields[5], FIELDS[5])?.unwrap_or(0.0),
-            grade: need(6)?,
+            // The field is percent, the command's grade a ratio (docs/adr/0977).
+            grade: need(6)? / 100.0,
             climb: need(7)?,
             avoid: self.avoid.clone(),
             tolerance: number(&self.fields[8], FIELDS[8])?,
@@ -239,7 +240,7 @@ impl App {
                     "{:.2} m · kot farkı {:.2} m · en dik %{:.2} · maliyet {:.2} · {} nokta · {} düğümün {}'i yerleşti",
                     r.length,
                     r.climb,
-                    r.steepest,
+                    100.0 * r.steepest,
                     r.cost,
                     r.points.len(),
                     r.nodes,

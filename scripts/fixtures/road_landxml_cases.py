@@ -24,6 +24,7 @@ import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/file.export.landxml.json"
@@ -537,6 +538,7 @@ def main():
                     "Triangle'ın, boykesitler road_profile_command_cases.py'nin başvurusundandır; KentOS kodu yok. "
                     "Dosyanın içeriği --written ile xmllint (LandXML 1.2 şeması) ve başvurularla denetlenir.",
             "setup": SETUP, "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text or AKS.read_text(encoding="utf-8") != aks_xml():
@@ -551,6 +553,7 @@ def main():
             "note": "scripts/fixtures/road_landxml_cases.py yazar; aks.xml'i başvurunun 40 basamaklı elemanlarından KentOS "
                     "kodu olmadan yazar, beklenen PI'lar aksların tanımındakilerdir (±1e-6).",
             "setup": import_setup(), "cases": import_cases()}
+    data = road_grades.fixture(data)
     IMPORT_OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"{IMPORT_OUT.name}: {len(data['cases'])} durum")
 

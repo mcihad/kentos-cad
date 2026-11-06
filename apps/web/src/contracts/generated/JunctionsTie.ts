@@ -6,9 +6,9 @@
  * primary profile's elevation) and where its centreline crosses the primary road's edges (the primary elevation
  * plus the cross slope times the edge's width); the secondary PVIs between those edges taken off. `primary` is the
  * leg whose crown is kept (0 or 1); `profiles` the legs' profiles in the legs' order (absent: each leg's
- * alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, percent outward,
+ * alignment's only one). The primary road's cross slopes are either `crossfall` (left and right, grades outward,
  * falling negative) or `superelevation` (a schedule on its alignment), one of them; KentOS gives no slope.
- * `maxGradeChange` (percent) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
+ * `maxGradeChange` (a grade difference) warns where a tied PVI's grade change is larger. One undo step “Kavşağa bağla”.
  *
  * Refusals, in this order: `not_a_road_project`, `unknown_junction`, `invalid_junction` (it does not read, or it is
  * separated), `unknown_road_profile`, `invalid_road_profile` and `profile_curves_overlap` (a profile that does not
@@ -17,6 +17,6 @@
  */
 export type JunctionsTie = { junction: string, primary: number, profiles?: Array<string>, 
 /**
- * The primary road's cross slopes, left and right (percent, outward, falling negative).
+ * The primary road's cross slopes, left and right (grades, outward, falling negative).
  */
 crossfall?: [number, number], superelevation?: string, maxGradeChange?: number, expectedRevision?: string, };

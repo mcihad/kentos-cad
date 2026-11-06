@@ -769,12 +769,12 @@ class _RoadJunctionsTie(LocalCommand[JunctionsTie, JunctionsTied, JunctionsTied]
     ve sağ kenarını kestiği yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın
     genişliği); iki kenar arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0
     ya da 1); profiles kolların sırasıyla iki boykesit (yoksa aksların tek
-    boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; yüzde, dışa, düşen
-    eksi) ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez;
-    maxGradeChange (yüzde) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme,
-    eğim, kot, önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve
-    bağlardaki eğim değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar:
-    junction_stale, profile_stale, superelevation_stale, junction_grade_change. Retler:
+    boykesitleri); ana yolun enine eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi)
+    ya da superelevation (ana yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange
+    (oran) aşılırsa uyarı. Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot,
+    önceki kot, fark), kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim
+    değişimi. Tek geri alma adımı “Kavşağa bağla”. Uyarılar: junction_stale,
+    profile_stale, superelevation_stale, junction_grade_change. Retler:
     not_a_road_project, unknown_junction, invalid_junction, unknown_road_profile,
     invalid_road_profile, unknown_superelevation, invalid_superelevation, invalid_tie,
     invalid_revision, revision_conflict.
@@ -810,8 +810,8 @@ class _RoadJunctionsTie(LocalCommand[JunctionsTie, JunctionsTied, JunctionsTied]
         yerlerde (ana yolun o km'deki kotu + enine eğim × kenarın genişliği); iki kenar
         arasındaki eski PVI'lar kalkar. primary sırtı korunan kol (0 ya da 1); profiles
         kolların sırasıyla iki boykesit (yoksa aksların tek boykesitleri); ana yolun enine
-        eğimi ya crossfall (sol, sağ; yüzde, dışa, düşen eksi) ya da superelevation (ana
-        yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (yüzde) aşılırsa uyarı.
+        eğimi ya crossfall (sol, sağ; oran, dışa, düşen eksi) ya da superelevation (ana
+        yolun dever çizelgesi), KentOS eğim vermez; maxGradeChange (oran) aşılırsa uyarı.
         Cevap: bağlar (PVI, tali ve ana km, öteleme, eğim, kot, önceki kot, fark),
         kaldırılan PVI'lar, bağın çevresindeki eğimler ve bağlardaki eğim değişimi. Tek geri
         alma adımı “Kavşağa bağla”. Uyarılar: junction_stale, profile_stale,
@@ -824,9 +824,9 @@ class _RoadJunctionsTie(LocalCommand[JunctionsTie, JunctionsTied, JunctionsTied]
             doc: The drawing it works on.
             junction:
             primary: Unit: index.
-            crossfall: The primary road's cross slopes, left and right (percent, outward, falling negative). Unit: percent.
+            crossfall: The primary road's cross slopes, left and right (grades, outward, falling negative). Unit: grade.
             expected_revision:
-            max_grade_change: Unit: percent.
+            max_grade_change: Unit: grade.
             profiles:
             superelevation:
             request_id: Names this write: sent again with the same call it is answered as

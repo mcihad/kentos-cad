@@ -2,6 +2,6 @@
 
 /**
  * A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its
- * surface falling `fall` percent outward (absent: level). From the project's geotechnical report: KentOS gives none.
+ * surface falling `fall` outward (a grade, 0.04 is 4 %; absent: level; docs/adr/0977). From the project's geotechnical report: KentOS gives none.
  */
 export type TemplateBenchDef = { height: number, width: number, fall?: number, };

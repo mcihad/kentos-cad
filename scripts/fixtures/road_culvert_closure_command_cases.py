@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_culvert_cases as rc  # noqa: E402
 import road_culvert_closure_cases as cl  # noqa: E402
 import road_culvert_hydraulics_command_cases as hc  # noqa: E402
+import road_grades  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1/road.culverts.closure.json"
 completed, failed, step, case = rc.completed, rc.failed, rc.step, rc.case
@@ -199,6 +200,7 @@ def main():
                     "sırtta metre başına debi sınırı), hidrolik 40 basamaklı mpmath; KentOS kodu yok. Hidrograflar ve "
                     "katsayılar durumlarındır.",
             "setup": rc.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

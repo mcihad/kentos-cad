@@ -3,7 +3,7 @@ import type { JunctionTie } from "./JunctionTie";
 
 /**
  * Output of `road.junctions.tie` v1, and its plan: the junction, the primary leg, the secondary profile tied, its
- * three ties in station order, the PVIs taken off, the grades (percent) of the four segments around and between the
- * ties, the grade change at each tie (percent, absolute), and the revision.
+ * three ties in station order, the PVIs taken off, the grades of the four segments around and between the
+ * ties, the grade change at each tie (absolute), and the revision.
  */
 export type JunctionsTied = { junction: string, primary: number, profile: string, ties: Array<JunctionTie>, removed: Array<string>, grades: Array<number>, changes: Array<number>, revision: string, };

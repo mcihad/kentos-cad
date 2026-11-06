@@ -11,7 +11,7 @@ export type MapText = {
  * Frozen Unicode glyphs in paper millimetres, relative to `at`, y up.
  * No further font lookup, shaping or anchor adjustment is permitted.
  */
-glyphs?: GlyphText,
+glyphs?: GlyphText, 
 /**
  * `[east (Y), north (X)]`, metres.
  */

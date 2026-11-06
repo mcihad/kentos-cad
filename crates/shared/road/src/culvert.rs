@@ -60,11 +60,11 @@ pub struct Barrel {
 }
 
 /// The barrel between the cross's toes (`toes`: the left and right offsets), turned `skew` degrees, `extend` beyond
-/// each, its flow line `invert` under the axis falling `slope` percent toward the right (`flow_right`) or the left.
+/// each, its flow line `invert` under the axis falling `slope` (a grade) toward the right (`flow_right`) or the left.
 pub fn barrel(toes: [f64; 2], skew: f64, extend: f64, invert: f64, slope: f64, flow_right: bool) -> Barrel {
     let c = skew.to_radians().cos();
     let ends = [toes[0] / c - extend, toes[1] / c + extend];
-    let fall = slope / 100.0 * if flow_right { 1.0 } else { -1.0 };
+    let fall = slope * if flow_right { 1.0 } else { -1.0 };
     Barrel { ends, length: ends[1] - ends[0], inverts: ends.map(|d| invert - fall * d) }
 }
 
@@ -73,7 +73,7 @@ pub fn barrel(toes: [f64; 2], skew: f64, extend: f64, invert: f64, slope: f64, f
 /// is linear between the top's points, so its least is at one of them.
 pub fn cover(top: &[[f64; 2]], skew: f64, invert: f64, slope: f64, flow_right: bool, shape: &Shape) -> Option<(f64, f64)> {
     let c = skew.to_radians().cos();
-    let fall = slope / 100.0 * if flow_right { 1.0 } else { -1.0 };
+    let fall = slope * if flow_right { 1.0 } else { -1.0 };
     top.iter()
         .map(|p| (p[1] - (invert - fall * p[0] / c + shape.top()), p[0]))
         .min_by(|a, b| a.0.total_cmp(&b.0))
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn a_skewed_barrel_and_its_cover() {
-        let b = barrel([-12.0, 15.0], 60.0, 1.0, 100.0, 2.0, true);
+        let b = barrel([-12.0, 15.0], 60.0, 1.0, 100.0, 0.02, true);
         assert!((b.ends[0] + 25.0).abs() < 1e-9 && (b.ends[1] - 31.0).abs() < 1e-9, "{:?}", b.ends);
         assert!((b.length - 56.0).abs() < 1e-9);
         assert!((b.inverts[0] - 100.5).abs() < 1e-9 && (b.inverts[1] - 99.38).abs() < 1e-9);
@@ -93,7 +93,7 @@ mod tests {
         assert!((pipe.width() - 2.9).abs() < 1e-12);
         let top = [[-5.0, 104.0], [0.0, 104.1], [5.0, 104.0]];
         // At +5: 104 − (100 − 0.02·10 + 1.1) = 3.1; at −5: 104 − (100.2 + 1.1) = 2.7.
-        let (least, at) = cover(&top, 60.0, 100.0, 2.0, true, &pipe).expect("a cover");
+        let (least, at) = cover(&top, 60.0, 100.0, 0.02, true, &pipe).expect("a cover");
         assert!((least - 2.7).abs() < 1e-9 && at == -5.0, "{least} {at}");
         let boxed = Shape::Box { width: 2.0, height: 1.5, thickness: 0.25, slab: 0.3, cells: 2 };
         assert!((boxed.width() - 4.75).abs() < 1e-12);

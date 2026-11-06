@@ -310,7 +310,8 @@ impl Window {
             skew: Some(number(&self.fields[2], FIELDS[2])?.unwrap_or(0.0)),
             shape: Some(shape),
             invert: Some(need(3)?),
-            slope: Some(need(4)?),
+            // The field is percent, the culvert's fall a grade (docs/adr/0977).
+            slope: Some(need(4)? / 100.0),
             flow: Some(self.flow),
             extend: Some(number(&self.fields[5], FIELDS[5])?.unwrap_or(0.0)),
             cover: Some(number(&self.fields[6], FIELDS[6])?),
@@ -397,7 +398,7 @@ impl App {
                         f[1] = trimmed(c.station);
                         f[2] = if c.skew == 0.0 { String::new() } else { trimmed(c.skew) };
                         f[3] = trimmed(c.invert);
-                        f[4] = trimmed(c.slope);
+                        f[4] = crate::road_dialog::percent_text(c.slope);
                         f[5] = if c.extend == 0.0 { String::new() } else { trimmed(c.extend) };
                         f[6] = c.cover.map(trimmed).unwrap_or_default();
                         f[7] = c.material.clone().unwrap_or_default();

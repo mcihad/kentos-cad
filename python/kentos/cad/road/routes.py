@@ -71,7 +71,7 @@ class _RoadRoutesDraw(LocalCommand[RoutesDraw, RoutesDrawn, RoutesDrawn]):
             to: Unit: length.
             cell: Unit: m.
             margin: Unit: m.
-            grade: Unit: percent.
+            grade: Unit: grade.
             climb: Unit: 1.
             layer_id:
             avoid:
@@ -222,12 +222,13 @@ class _RoadRoutesFind(LocalCommand[RoutesFind, RouteFound, RouteFound]):
     düğümlerinde yüzeyin kotu okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve
     avoid katmanlarının alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz,
     çapraz ve at hamlesi) plan boyu artı climb × aştığı kot farkı tutar; grade'ten
-    (yüzde) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol
-    Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan
-    boyu, toplam kot farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen
-    düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks
-    değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. Retler:
-    not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached.
+    (oran, 0,08 %8'dir) dik adım atılmaz. Eşit maliyette önce bulunan yol kalır.
+    tolerance ile yol Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu
+    sorulan yerler), plan boyu, toplam kot farkı, en dik bölüm (oran), maliyet, düğüm
+    sayısı ve yerleşen düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez.
+    Bulunan yol aks değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur.
+    Retler: not_a_road_project, unknown_terrain, invalid_route, route_blocked,
+    route_unreached.
     """
     __slots__ = ()
     id = "road.routes.find"
@@ -260,13 +261,13 @@ class _RoadRoutesFind(LocalCommand[RoutesFind, RouteFound, RouteFound]):
         Yerlerin çevresinde margin payıyla cell aralıklı ızgaranın düğümlerinde yüzeyin kotu
         okunur (mikrometreye yuvarlanır); yüzeyin dışındaki ve avoid katmanlarının
         alanlarındaki düğümlere girilmez. Bir adım (16 komşu: düz, çapraz ve at hamlesi)
-        plan boyu artı climb × aştığı kot farkı tutar; grade'ten (yüzde) dik adım atılmaz.
-        Eşit maliyette önce bulunan yol kalır. tolerance ile yol Douglas–Peucker'la
-        sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan boyu, toplam kot
-        farkı, en dik bölüm (yüzde), maliyet, düğüm sayısı ve yerleşen düğümler. Sınırlar
-        kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks değildir: Aksı çizgiye
-        oturt (road.alignments.fit) ile aks olur. Retler: not_a_road_project,
-        unknown_terrain, invalid_route, route_blocked, route_unreached.
+        plan boyu artı climb × aştığı kot farkı tutar; grade'ten (oran, 0,08 %8'dir) dik
+        adım atılmaz. Eşit maliyette önce bulunan yol kalır. tolerance ile yol
+        Douglas–Peucker'la sadeleşir. Cevap: noktalar (başı ve sonu sorulan yerler), plan
+        boyu, toplam kot farkı, en dik bölüm (oran), maliyet, düğüm sayısı ve yerleşen
+        düğümler. Sınırlar kullanıcının; KentOS sınır değeri vermez. Bulunan yol aks
+        değildir: Aksı çizgiye oturt (road.alignments.fit) ile aks olur. Retler:
+        not_a_road_project, unknown_terrain, invalid_route, route_blocked, route_unreached.
 
         Args:
             doc: The drawing it works on.
@@ -275,7 +276,7 @@ class _RoadRoutesFind(LocalCommand[RoutesFind, RouteFound, RouteFound]):
             to: Unit: length.
             cell: Unit: m.
             margin: Unit: m.
-            grade: Unit: percent.
+            grade: Unit: grade.
             climb: Unit: 1.
             avoid:
             tolerance: Unit: m.

@@ -1,5 +1,5 @@
 //! Platform grading (plan/road.md Y14, docs/adr/0927; ROAD-GRADE-01…03, 08…10): a flat or sloping pad (a plane through
-//! a base point, rising `grade` percent towards `direction`) inside a closed boundary, its cut and fill slopes run out
+//! a base point, rising `grade` (rise over run) towards `direction`) inside a closed boundary, its cut and fill slopes run out
 //! to a terrain surface, as Civil 3D's grading from a footprint (target surface, cut and fill slopes, projection at
 //! corners) and Softree's grading platform (slope lines from the feature's points and between them, the daylight line
 //! where they meet the target surface) make them.
@@ -28,7 +28,7 @@ pub struct Platform {
     pub corners: Vec<[f64; 2]>,
     /// The plane's reference point (x, y, z).
     pub base: [f64; 3],
-    /// The plane's rise towards `direction`, percent.
+    /// The plane's rise towards `direction`, a grade (rise over run).
     pub grade: f64,
     /// Where it rises: degrees counterclockwise from +x.
     pub direction: f64,
@@ -114,7 +114,7 @@ impl std::fmt::Display for GradingError {
 /// The plane's height at (x, y), raised by `offset`.
 pub fn plane_z(p: &Platform, x: f64, y: f64, offset: f64) -> f64 {
     let d = p.direction.to_radians();
-    p.base[2] + offset + p.grade / 100.0 * ((x - p.base[0]) * d.cos() + (y - p.base[1]) * d.sin())
+    p.base[2] + offset + p.grade * ((x - p.base[0]) * d.cos() + (y - p.base[1]) * d.sin())
 }
 
 fn area2(ring: &[[f64; 2]]) -> f64 {

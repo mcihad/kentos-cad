@@ -241,7 +241,7 @@ impl Row {
                 })
                 .collect(),
             strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
-            bench: d.bench.as_ref().map_or_else(Default::default, |b| [trimmed(b.slope), trimmed(b.height)]),
+            bench: d.bench.as_ref().map_or_else(Default::default, |b| [crate::road_dialog::percent_text(b.slope), trimmed(b.height)]),
             approved: d.approved.clone(),
             history: d.history.clone(),
             rule: d.rule,
@@ -286,7 +286,8 @@ impl Row {
             };
             strip.push(VolumeStripDef { from: need(&f[0], "başı")?, to: need(&f[1], "sonu")?, depth: need(&f[2], "kalınlığı")? });
         }
-        let bench = match (number(&self.bench[0]), number(&self.bench[1])) {
+        // The slope's field is percent, the bench's slope a grade (docs/adr/0977).
+        let bench = match (crate::road_dialog::grade_of(&self.bench[0]), number(&self.bench[1])) {
             (Ok(None), Ok(None)) => None,
             (Ok(Some(slope)), Ok(Some(height))) => Some(VolumeBenchDef { slope, height }),
             _ => return Err("Diş kazısı için eğimi (%) ve basamak yüksekliğini sayı olarak birlikte yazın.".into()),

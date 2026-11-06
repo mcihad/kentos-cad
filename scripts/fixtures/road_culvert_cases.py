@@ -24,6 +24,7 @@ import mpmath as mp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 import road_stakeout_cases as so  # noqa: E402
 
@@ -204,7 +205,7 @@ def rule_problem(list_):
             if not 1 <= sh["cells"] <= 20:
                 no("shape.cells", "göz sayısı 1 ile 20 arası olur")
         if not 0 <= m["slope"] <= 100:
-            no("slope", "akış eğimi 0 ile %100 arası olur")
+            no("slope", "akış eğimi oranla 0 ile 1 (%0–100) arası olur")
         if not 0 <= m.get("extend", 0.0) <= 100:
             no("extend", "topuğun ötesine boy 0 ile 100 m arası olur")
         if m.get("cover") is not None and not 0 <= m["cover"] <= 100:
@@ -508,6 +509,7 @@ def main():
     check = "--check" in sys.argv
     for name, data in files.items():
         path = OUT / f"{name}.json"
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         if check:
             if path.read_text(encoding="utf-8") != text:

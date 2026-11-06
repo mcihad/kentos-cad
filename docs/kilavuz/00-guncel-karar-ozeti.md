@@ -57,6 +57,7 @@
   - **Kurpta kübaj (Y30):** ortalama alan kurpta sistematik sapar, sıklaştırma gidermez (R 60 m deneyde −%3,8 her
     aralıkta). Etkin alan A + κQ (Pappus) 10 m'de bile +%0,3. Düzeltme yalnız ortalama alanda, isteğe bağlı.
   - **Örnek proje:** `samples/yol_ornegi.py` Yol komutlarıyla `samples/yol-ornegi.kcad`'i yazar.
+  - **Eğimler oran (6 Kasım 2026, [ADR 0977](../../docs/adr/0977-road-grades-as-ratios.md)):** enine eğim, dever, menfez, platform ve diş kazısı eğimleri kaynakta ve komutlarda orandır (−0,025 = %−2,5, birim `grade`); KCAD şema 187 eski dosyanın yüzdesini 100'e bölerek okur; pencereler yüzde gösterir (`road_dialog::percent_text`/`grade_of`).
   - **Ölçüm:** 19 çekirdek ve 26 komut durumu bağımsız kesirli referanstan; 17091 ortak durum geçer. Ana dalda kalan iki
     Python hatası düzeltildi ya da ayrıldı: propose'un katalog örneği düzeltildi; pafta font ön denetimi bu makinenin
     font ortamından düşer ve bu işle ilgisizdir.

@@ -151,8 +151,24 @@ CASES = {
 }
 
 
+def written(cases):
+    """The cases as KentOS reads them (docs/adr/0977): this reference works with slopes in percent, KentOS's schedule
+    holds grades. The answers (a lift in metres, relative gradients and e per one) were never percent."""
+    out = json.loads(json.dumps(cases))  # through JSON: the cases share their lists
+    for c in out["lift"]:
+        c["slopes"] = [v / 100 for v in c["slopes"]]
+        c["normal"] = [v / 100 for v in c["normal"]]
+    for c in out["gradients"]:
+        for k in ("leftSlope", "rightSlope"):
+            c["way"][k] = [[p[0], p[1] / 100] for p in c["way"][k]]
+    for c in out["toward"]:
+        c["left"] /= 100
+        c["right"] /= 100
+    return out
+
+
 def main():
-    text = json.dumps(CASES, ensure_ascii=False, indent=1) + "\n"
+    text = json.dumps(written(CASES), ensure_ascii=False, indent=1) + "\n"
     n = sum(len(v) for v in CASES.values())
     if "--check" in sys.argv:
         if OUT.read_text() != text:

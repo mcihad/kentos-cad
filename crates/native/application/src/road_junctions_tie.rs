@@ -108,7 +108,7 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
         let foot = primary.alignment.core.locate([place.x, place.y]).nearest.ok_or_else(|| uncovered(chosen[p]))?;
         let slope = slopes(foot.at.station);
         let (slope, width) = if k == 0 { (slope.left, deck.left) } else { (slope.right, deck.right) };
-        let z = red(primary, foot.at.station).ok_or_else(|| uncovered(chosen[p]))? + slope / 100.0 * width;
+        let z = red(primary, foot.at.station).ok_or_else(|| uncovered(chosen[p]))? + slope * width;
         ties.push(JunctionTie {
             pvi: String::new(),
             station,
@@ -173,14 +173,19 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
         .chain(ties.iter().map(|t| (t.station, t.elevation)))
         .chain(next.map(|v| (v.station, v.elevation)))
         .collect();
-    let grades: Vec<f64> = points.windows(2).map(|w| (w[1].1 - w[0].1) / (w[1].0 - w[0].0) * 100.0).collect();
+    let grades: Vec<f64> = points.windows(2).map(|w| (w[1].1 - w[0].1) / (w[1].0 - w[0].0)).collect();
     let changes: Vec<f64> = grades.windows(2).map(|w| (w[1] - w[0]).abs()).collect();
     if let Some(most) = input.max_grade_change {
         for (t, c) in ties.iter().zip(&changes) {
             if *c > most {
                 warnings.push(CommandWarning {
                     code: codes::JUNCTION_GRADE_CHANGE.into(),
-                    message: format!("“{}” PVI'sinde eğim değişimi %{c:.3}, en çok %{most:.3} istendi.", t.pvi),
+                    message: format!(
+                        "“{}” PVI'sinde eğim değişimi %{:.3}, en çok %{:.3} istendi.",
+                        t.pvi,
+                        100.0 * c,
+                        100.0 * most
+                    ),
                     path: Some("maxGradeChange".into()),
                 });
             }

@@ -350,12 +350,12 @@ class _RoadCulvertsEdit(LocalCommand[CulvertsEdit, CulvertsWritten, CulvertsWrit
     shape boru (kind pipe: diameter iç çap, thickness et, count boru sayısı, spacing
     borular arası boşluk) ya da kutu (kind box: width ve height göz içi, thickness yan
     duvar, slab taban ve tavan, cells göz sayısı); invert aksın altındaki akış kotu,
-    slope akış eğimi (%), flow suyun aktığı yan (right ya da left); extend her uçta şev
-    topuğunun ötesine boy, cover istenen en az örtü (denetlenir), material ve roughness
-    (Manning n) tipli öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez.
-    Menfezin km'sinde kesitin iki yanı dolguda olmalı. null cover, material ve
-    roughness'ı kaldırır. Yeni menfezin kimliği verilen ya da ilk boş m-n; rebind
-    koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler:
+    slope akış eğimi (oran, 0,02 %2'dir), flow suyun aktığı yan (right ya da left);
+    extend her uçta şev topuğunun ötesine boy, cover istenen en az örtü (denetlenir),
+    material ve roughness (Manning n) tipli öznitelik. Ölçüler projenin; KentOS
+    öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda olmalı. null
+    cover, material ve roughness'ı kaldırır. Yeni menfezin kimliği verilen ya da ilk boş
+    m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı “Menfez”. Retler:
     not_a_road_project, unknown_culvert, unknown_corridor, invalid_culvert,
     invalid_revision, revision_conflict.
     """
@@ -397,13 +397,13 @@ class _RoadCulvertsEdit(LocalCommand[CulvertsEdit, CulvertsWritten, CulvertsWrit
         (derece, sağ ucu ileride artı, ±90'dan küçük), shape boru (kind pipe: diameter iç
         çap, thickness et, count boru sayısı, spacing borular arası boşluk) ya da kutu (kind
         box: width ve height göz içi, thickness yan duvar, slab taban ve tavan, cells göz
-        sayısı); invert aksın altındaki akış kotu, slope akış eğimi (%), flow suyun aktığı
-        yan (right ya da left); extend her uçta şev topuğunun ötesine boy, cover istenen en
-        az örtü (denetlenir), material ve roughness (Manning n) tipli öznitelik. Ölçüler
-        projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin iki yanı dolguda
-        olmalı. null cover, material ve roughness'ı kaldırır. Yeni menfezin kimliği verilen
-        ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri alma adımı
-        “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor,
+        sayısı); invert aksın altındaki akış kotu, slope akış eğimi (oran, 0,02 %2'dir),
+        flow suyun aktığı yan (right ya da left); extend her uçta şev topuğunun ötesine boy,
+        cover istenen en az örtü (denetlenir), material ve roughness (Manning n) tipli
+        öznitelik. Ölçüler projenin; KentOS öntanımlı ölçü vermez. Menfezin km'sinde kesitin
+        iki yanı dolguda olmalı. null cover, material ve roughness'ı kaldırır. Yeni menfezin
+        kimliği verilen ya da ilk boş m-n; rebind koridorun bugünkü sürümünü alır. Tek geri
+        alma adımı “Menfez”. Retler: not_a_road_project, unknown_culvert, unknown_corridor,
         invalid_culvert, invalid_revision, revision_conflict.
 
         Args:
@@ -421,7 +421,7 @@ class _RoadCulvertsEdit(LocalCommand[CulvertsEdit, CulvertsWritten, CulvertsWrit
             roughness: Its Manning roughness; null takes it off. Unit: 1.
             shape:
             skew: Unit: deg.
-            slope: Unit: percent.
+            slope: Unit: grade.
             station: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).

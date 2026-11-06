@@ -36,7 +36,7 @@ pub enum Pivot {
 /// Standard gravity (m/s²).
 pub const G: f64 = 9.80665;
 
-/// Which side a pivot holds at slopes `left`, `right` (percent): `Some(true)` the left, `Some(false)` the right, none the
+/// Which side a pivot holds at slopes `left`, `right` (grades): `Some(true)` the left, `Some(false)` the right, none the
 /// centreline.
 pub fn pivot_side(pivot: Pivot, left: f64, right: f64) -> Option<bool> {
     match pivot {
@@ -48,17 +48,17 @@ pub fn pivot_side(pivot: Pivot, left: f64, right: f64) -> Option<bool> {
     }
 }
 
-/// How much the axis rises over the profile grade at a station (m): `W·(n − s)/100` of the held side, 0 about the
-/// centreline. `slopes`, `normal` (left, right) in percent; `widths` (left, right) the traveled way's widths there.
+/// How much the axis rises over the profile grade at a station (m): `W·(n − s)` of the held side, 0 about the
+/// centreline. `slopes`, `normal` (left, right) grades; `widths` (left, right) the traveled way's widths there.
 pub fn axis_lift(pivot: Pivot, slopes: (f64, f64), normal: (f64, f64), widths: (f64, f64)) -> f64 {
     match pivot_side(pivot, slopes.0, slopes.1) {
         None => 0.0,
-        Some(true) => widths.0 * (normal.0 - slopes.0) / 100.0,
-        Some(false) => widths.1 * (normal.1 - slopes.1) / 100.0,
+        Some(true) => widths.0 * (normal.0 - slopes.0),
+        Some(false) => widths.1 * (normal.1 - slopes.1),
     }
 }
 
-/// A traveled way's description along the road: each side's slope (percent) and width (m), piecewise linear in the
+/// A traveled way's description along the road: each side's slope (a grade) and width (m), piecewise linear in the
 /// station; break points (station, value) in station order, a single point a constant, none the normal.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Way {
@@ -116,9 +116,9 @@ pub fn relative_gradients(way: &Way, pivot: Pivot, from: f64, to: f64) -> Vec<Gr
         if b <= a {
             continue;
         }
-        // d(W·s/100)/ds = (W'·s + W·s')/100: linear on the stretch, its largest size at an end.
+        // d(W·s)/ds = W'·s + W·s': linear on the stretch, its largest size at an end.
         let side = |slope: &[[f64; 2]], width: &[[f64; 2]], x: f64| {
-            (rate(width, a, b) * along(slope, x) + along(width, x) * rate(slope, a, b)) / 100.0
+            rate(width, a, b) * along(slope, x) + along(width, x) * rate(slope, a, b)
         };
         let left = |x: f64| side(&way.left_slope, &way.left_width, x);
         let right = |x: f64| side(&way.right_slope, &way.right_width, x);
@@ -148,13 +148,13 @@ pub fn friction(speed: f64, radius: f64, e: f64) -> f64 {
     (a - e) / (1.0 + e * a)
 }
 
-/// The superelevation toward the centre (per one) at slopes `left`, `right` (percent) on a curve turning left
+/// The superelevation toward the centre (per one) at slopes `left`, `right` (grades) on a curve turning left
 /// (`left_turn`) or right: the side with the least of it; an adverse crown is negative.
 pub fn toward_centre(left: f64, right: f64, left_turn: bool) -> f64 {
     // A left curve's centre is on the left: the left side falls toward it when its outward slope is negative, the right
     // side when its outward slope is positive.
     let (l, r) = if left_turn { (-left, right) } else { (left, -right) };
-    l.min(r) / 100.0
+    l.min(r)
 }
 
 /// A curve's side friction at a speed: where it asks for the most, the radius and superelevation there.

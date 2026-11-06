@@ -79,8 +79,8 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
     if !(finite(ask.margin) && (0.0..=100_000.0).contains(&ask.margin)) {
         return Err(bad("Pay 0 ile 100 000 m arası olur.".into(), "margin"));
     }
-    if !(finite(ask.grade) && ask.grade > 0.0 && ask.grade <= 1000.0) {
-        return Err(bad("En dik eğim 0'dan büyük, en çok %1000 olur.".into(), "grade"));
+    if !(finite(ask.grade) && ask.grade > 0.0 && ask.grade <= 10.0) {
+        return Err(bad("En dik eğim oranla yazılır (0,08 %8'dir): 0'dan büyük, en çok 10 (%1000) olur.".into(), "grade"));
     }
     if !(finite(ask.climb) && (0.0..=1000.0).contains(&ask.climb)) {
         return Err(bad("Tırmanmanın ağırlığı 0 ile 1000 arası olur.".into(), "climb"));
@@ -120,7 +120,7 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
         ),
         NoRoute::Unreached => fail(
             codes::ROUTE_UNREACHED,
-            format!("İki yer arasında %{} eğimi aşmayan yol yok.", ask.grade),
+            format!("İki yer arasında %{} eğimi aşmayan yol yok.", crate::road_superelevations::percent(ask.grade)),
             "grade",
         ),
     })?;
@@ -149,7 +149,7 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
         length += l;
         climb += rise;
         if l > 0.0 {
-            steepest = steepest.max(rise / l * 100.0);
+            steepest = steepest.max(rise / l);
         }
     }
     Ok(RouteFound {

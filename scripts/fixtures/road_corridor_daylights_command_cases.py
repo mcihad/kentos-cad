@@ -16,6 +16,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_daylight_cases as dref  # noqa: E402
+import road_grades  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1/road.corridors.daylights.json"
@@ -194,6 +195,7 @@ def main():
                     "ve deverli tip kesit kesitlerin başvurusundan; şev ucu road_daylight_cases.py'nin tam kesirli "
                     "başvurusu. KentOS kodu yok.",
             "setup": ccmd.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

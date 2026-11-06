@@ -523,25 +523,25 @@
       "alignment": "g-1",
       "alignmentRevision": 1,
       "revision": 1,
-      "normalLeft": -2.5,
-      "normalRight": -2.5,
+      "normalLeft": -0.025,
+      "normalRight": -0.025,
       "method": {
        "method": "stations",
        "rows": [
         {
          "station": 150.0,
-         "left": -2.5,
-         "right": -2.5
+         "left": -0.025,
+         "right": -0.025
         },
         {
          "station": 240.0,
-         "left": 3.0,
-         "right": -3.0
+         "left": 0.03,
+         "right": -0.03
         },
         {
          "station": 420.0,
-         "left": 3.0,
-         "right": -3.0
+         "left": 0.03,
+         "right": -0.03
         }
        ]
       }
@@ -552,15 +552,15 @@
       "alignment": "g-2",
       "alignmentRevision": 1,
       "revision": 1,
-      "normalLeft": -2.0,
-      "normalRight": -2.0,
+      "normalLeft": -0.02,
+      "normalRight": -0.02,
       "method": {
        "method": "stations",
        "rows": [
         {
          "station": 100.0,
-         "left": -2.0,
-         "right": -2.0
+         "left": -0.02,
+         "right": -0.02
         }
        ]
       }
@@ -570,15 +570,15 @@
       "name": "Eski dever",
       "alignment": "g-1",
       "revision": 1,
-      "normalLeft": -2.0,
-      "normalRight": -2.0,
+      "normalLeft": -0.02,
+      "normalRight": -0.02,
       "method": {
        "method": "stations",
        "rows": [
         {
          "station": 0.0,
-         "left": -2.0,
-         "right": -2.0
+         "left": -0.02,
+         "right": -0.02
         }
        ]
       }
@@ -589,20 +589,20 @@
       "alignment": "g-1",
       "alignmentRevision": 1,
       "revision": 1,
-      "normalLeft": -2.0,
-      "normalRight": -2.0,
+      "normalLeft": -0.02,
+      "normalRight": -0.02,
       "method": {
        "method": "stations",
        "rows": [
         {
          "station": 100.0,
-         "left": -2.0,
-         "right": -2.0
+         "left": -0.02,
+         "right": -0.02
         },
         {
          "station": 900.0,
-         "left": -2.0,
-         "right": -2.0
+         "left": -0.02,
+         "right": -0.02
         }
        ]
       }
@@ -2244,8 +2244,8 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -2260,7 +2260,7 @@
          "station": 195.0,
          "primaryStation": 250.0,
          "primaryOffset": 5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.725,
          "before": 100.38671875,
          "difference": 1.3382812499999943
@@ -2280,7 +2280,7 @@
          "station": 205.0,
          "primaryStation": 250.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.725,
          "before": 100.41796875,
          "difference": 1.3070312499999943
@@ -2290,15 +2290,15 @@
         "v2"
        ],
        "grades": [
-        3.6333333333333258,
-        2.5,
-        -2.5,
-        -2.9666666666666592
+        0.03633333333333326,
+        0.025,
+        -0.025,
+        -0.02966666666666659
        ],
        "changes": [
-        1.1333333333333258,
-        5.0,
-        0.46666666666665924
+        0.011333333333333258,
+        0.05,
+        0.0046666666666665925
        ],
        "revision": "$any"
       },
@@ -2822,25 +2822,25 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 150.0,
-            "left": -2.5,
-            "right": -2.5
+            "left": -0.025,
+            "right": -0.025
            },
            {
             "station": 240.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 420.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            }
           ]
          }
@@ -2851,15 +2851,15 @@
          "alignment": "g-2",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -2869,15 +2869,15 @@
          "name": "Eski dever",
          "alignment": "g-1",
          "revision": 1,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 0.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -2888,20 +2888,20 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 900.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -3419,25 +3419,25 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 150.0,
-            "left": -2.5,
-            "right": -2.5
+            "left": -0.025,
+            "right": -0.025
            },
            {
             "station": 240.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 420.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            }
           ]
          }
@@ -3448,15 +3448,15 @@
          "alignment": "g-2",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -3466,15 +3466,15 @@
          "name": "Eski dever",
          "alignment": "g-1",
          "revision": 1,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 0.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -3485,20 +3485,20 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 900.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -3524,10 +3524,10 @@
        "Tali kot"
       ],
       "crossfall": [
-       -2.0,
-       -3.0
+       -0.02,
+       -0.03
       ],
-      "maxGradeChange": 30.0
+      "maxGradeChange": 0.3
      },
      "result": {
       "status": "completed",
@@ -3541,7 +3541,7 @@
          "station": 195.0,
          "primaryStation": 250.0,
          "primaryOffset": 5.0,
-         "crossfall": -3.0,
+         "crossfall": -0.03,
          "elevation": 101.69999999999999,
          "before": 100.38671875,
          "difference": 1.3132812499999886
@@ -3561,7 +3561,7 @@
          "station": 205.0,
          "primaryStation": 250.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.0,
+         "crossfall": -0.02,
          "elevation": 101.75,
          "before": 100.41796875,
          "difference": 1.33203125
@@ -3571,15 +3571,15 @@
         "v2"
        ],
        "grades": [
-        3.599999999999985,
-        3.0000000000001137,
-        -1.9999999999998863,
-        -3.0
+        0.03599999999999985,
+        0.030000000000001137,
+        -0.019999999999998862,
+        -0.03
        ],
        "changes": [
-        0.5999999999998713,
-        5.0,
-        1.0000000000001137
+        0.005999999999998713,
+        0.05,
+        0.010000000000001136
        ],
        "revision": "$any"
       },
@@ -3608,10 +3608,10 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ],
-      "maxGradeChange": 1.0
+      "maxGradeChange": 0.01
      },
      "result": {
       "status": "completed",
@@ -3625,7 +3625,7 @@
          "station": 195.0,
          "primaryStation": 250.0,
          "primaryOffset": 5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.725,
          "before": 100.38671875,
          "difference": 1.3382812499999943
@@ -3645,7 +3645,7 @@
          "station": 205.0,
          "primaryStation": 250.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.725,
          "before": 100.41796875,
          "difference": 1.3070312499999943
@@ -3655,15 +3655,15 @@
         "v2"
        ],
        "grades": [
-        3.6333333333333258,
-        2.5,
-        -2.5,
-        -2.9666666666666592
+        0.03633333333333326,
+        0.025,
+        -0.025,
+        -0.02966666666666659
        ],
        "changes": [
-        1.1333333333333258,
-        5.0,
-        0.46666666666665924
+        0.011333333333333258,
+        0.05,
+        0.0046666666666665925
        ],
        "revision": "$any"
       },
@@ -3703,8 +3703,8 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -3719,7 +3719,7 @@
          "station": 195.0,
          "primaryStation": 250.0,
          "primaryOffset": 5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.725,
          "before": 100.38671875,
          "difference": 1.3382812499999943
@@ -3739,7 +3739,7 @@
          "station": 205.0,
          "primaryStation": 250.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.725,
          "before": 100.41796875,
          "difference": 1.3070312499999943
@@ -3749,15 +3749,15 @@
         "v2"
        ],
        "grades": [
-        3.6333333333333258,
-        2.5,
-        -2.5,
-        -2.9666666666666592
+        0.03633333333333326,
+        0.025,
+        -0.025,
+        -0.02966666666666659
        ],
        "changes": [
-        1.1333333333333258,
-        5.0,
-        0.46666666666665924
+        0.011333333333333258,
+        0.05,
+        0.0046666666666665925
        ],
        "revision": "$any"
       },
@@ -3799,7 +3799,7 @@
          "station": 195.0,
          "primaryStation": 250.0,
          "primaryOffset": 5.0,
-         "crossfall": -3.0,
+         "crossfall": -0.03,
          "elevation": 101.69999999999999,
          "before": 100.38671875,
          "difference": 1.3132812499999886
@@ -3819,7 +3819,7 @@
          "station": 205.0,
          "primaryStation": 250.0,
          "primaryOffset": -5.0,
-         "crossfall": 3.0,
+         "crossfall": 0.03,
          "elevation": 102.0,
          "before": 100.41796875,
          "difference": 1.58203125
@@ -3829,15 +3829,15 @@
         "v2"
        ],
        "grades": [
-        3.599999999999985,
-        3.0000000000001137,
-        3.0000000000001137,
-        -3.3333333333333335
+        0.03599999999999985,
+        0.030000000000001137,
+        0.030000000000001137,
+        -0.03333333333333333
        ],
        "changes": [
-        0.5999999999998713,
+        0.005999999999998713,
         0.0,
-        6.333333333333448
+        0.06333333333333448
        ],
        "revision": "$any"
       },
@@ -3879,7 +3879,7 @@
          "station": 195.0,
          "primaryStation": 250.0,
          "primaryOffset": 5.0,
-         "crossfall": -2.0,
+         "crossfall": -0.02,
          "elevation": 101.75,
          "before": 100.38671875,
          "difference": 1.36328125
@@ -3899,7 +3899,7 @@
          "station": 205.0,
          "primaryStation": 250.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.0,
+         "crossfall": -0.02,
          "elevation": 101.75,
          "before": 100.41796875,
          "difference": 1.33203125
@@ -3909,15 +3909,15 @@
         "v2"
        ],
        "grades": [
-        3.6666666666666665,
-        1.9999999999998863,
-        -1.9999999999998863,
-        -3.0
+        0.03666666666666667,
+        0.019999999999998862,
+        -0.019999999999998862,
+        -0.03
        ],
        "changes": [
-        1.6666666666667802,
-        3.9999999999997726,
-        1.0000000000001137
+        0.0166666666666678,
+        0.039999999999997725,
+        0.010000000000001136
        ],
        "revision": "$any"
       },
@@ -3948,8 +3948,8 @@
       "junction": "j-2",
       "primary": 1,
       "crossfall": [
-       -2.0,
-       -2.5
+       -0.02,
+       -0.025
       ]
      },
      "result": {
@@ -3964,7 +3964,7 @@
          "station": 132.93607486306985,
          "primaryStation": 243.99999999999923,
          "primaryOffset": 6.000000000000782,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.68584,
          "before": 100.86855810638889,
          "difference": 0.8172818936111099
@@ -3984,7 +3984,7 @@
          "station": 148.4924240491738,
          "primaryStation": 254.99999999999915,
          "primaryOffset": -4.999999999999147,
-         "crossfall": -2.0,
+         "crossfall": -0.02,
          "elevation": 101.7585,
          "before": 100.92687511431174,
          "difference": 0.8316248856882567
@@ -3994,15 +3994,15 @@
         "v1"
        ],
        "grades": [
-        2.0203996565766933,
-        1.934644153326091,
-        -1.294005409571549,
-        -1.317153717664451
+        0.02020399656576693,
+        0.01934644153326091,
+        -0.01294005409571549,
+        -0.01317153717664451
        ],
        "changes": [
-        0.08575550325060233,
-        3.22864956289764,
-        0.023148308092902026
+        0.0008575550325060232,
+        0.0322864956289764,
+        0.00023148308092902026
        ],
        "revision": "$any"
       },
@@ -4042,8 +4042,8 @@
        "b-5"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4058,7 +4058,7 @@
          "station": 25.0,
          "primaryStation": 100.0,
          "primaryOffset": 5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 100.675,
          "before": 100.66428571428571,
          "difference": 0.01071428571428612
@@ -4078,7 +4078,7 @@
          "station": 35.0,
          "primaryStation": 100.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 100.675,
          "before": 100.85,
          "difference": -0.17499999999999716
@@ -4086,15 +4086,15 @@
        ],
        "removed": [],
        "grades": [
-        1.8999999999999775,
-        2.5,
-        -2.5,
-        2.357142857142865
+        0.018999999999999774,
+        0.025,
+        -0.025,
+        0.023571428571428653
        ],
        "changes": [
-        0.6000000000000225,
-        5.0,
-        4.857142857142865
+        0.006000000000000225,
+        0.05,
+        0.04857142857142865
        ],
        "revision": "$any"
       },
@@ -4123,8 +4123,8 @@
        "b-1"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4139,7 +4139,7 @@
          "station": 115.0,
          "primaryStation": 400.0,
          "primaryOffset": -5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.275,
          "before": 100.98750000000001,
          "difference": 0.2874999999999943
@@ -4159,7 +4159,7 @@
          "station": 125.0,
          "primaryStation": 400.0,
          "primaryOffset": 5.0,
-         "crossfall": -2.5,
+         "crossfall": -0.025,
          "elevation": 101.275,
          "before": 100.94583333333334,
          "difference": 0.3291666666666657
@@ -4169,15 +4169,15 @@
         "v1"
        ],
        "grades": [
-        -1.4999999999999951,
-        2.5,
-        -2.5,
-        0.6304347826086907
+        -0.014999999999999951,
+        0.025,
+        -0.025,
+        0.006304347826086906
        ],
        "changes": [
-        3.999999999999995,
-        5.0,
-        3.130434782608691
+        0.03999999999999995,
+        0.05,
+        0.03130434782608691
        ],
        "revision": "$any"
       },
@@ -4206,8 +4206,8 @@
       ],
       "primary": 1,
       "crossfall": [
-       -2.0,
-       -2.0
+       -0.02,
+       -0.02
       ]
      },
      "result": {
@@ -4222,7 +4222,7 @@
          "station": 246.5,
          "primaryStation": 200.0,
          "primaryOffset": -3.5000000000000124,
-         "crossfall": -2.0,
+         "crossfall": -0.02,
          "elevation": 100.351875,
          "before": 101.842265,
          "difference": -1.4903899999999908
@@ -4242,7 +4242,7 @@
          "station": 253.5,
          "primaryStation": 200.0,
          "primaryOffset": 3.4999999999999876,
-         "crossfall": -2.0,
+         "crossfall": -0.02,
          "elevation": 100.351875,
          "before": 101.856265,
          "difference": -1.5043899999999866
@@ -4252,15 +4252,15 @@
         "v1"
        ],
        "grades": [
-        0.14274847870182833,
-        1.999999999999805,
-        -1.999999999999805,
-        0.26293103448275584
+        0.0014274847870182834,
+        0.01999999999999805,
+        -0.01999999999999805,
+        0.0026293103448275586
        ],
        "changes": [
-        1.8572515212979768,
-        3.99999999999961,
-        2.262931034482561
+        0.018572515212979767,
+        0.0399999999999961,
+        0.02262931034482561
        ],
        "revision": "$any"
       },
@@ -4285,8 +4285,8 @@
       "junction": "j-9",
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4316,8 +4316,8 @@
       "junction": "j-5",
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4351,8 +4351,8 @@
        "b-2"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4382,8 +4382,8 @@
       "junction": "j-3",
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4417,8 +4417,8 @@
        "b-1"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4452,8 +4452,8 @@
        "b-9"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4487,8 +4487,8 @@
        "b-1"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4522,8 +4522,8 @@
       ],
       "primary": 2,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4557,8 +4557,8 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ],
       "superelevation": "d-1"
      },
@@ -4720,10 +4720,10 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ],
-      "maxGradeChange": -1.0
+      "maxGradeChange": -0.01
      },
      "result": {
       "status": "failed",
@@ -4752,8 +4752,8 @@
       "junction": "j-4",
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4787,8 +4787,8 @@
        "b-6"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4822,8 +4822,8 @@
        "b-8"
       ],
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {
@@ -4857,8 +4857,8 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ],
       "expectedRevision": "on"
      },
@@ -4893,8 +4893,8 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ],
       "expectedRevision": "41"
      },
@@ -4930,8 +4930,8 @@
       ],
       "primary": 0,
       "crossfall": [
-       -2.5,
-       -2.5
+       -0.025,
+       -0.025
       ]
      },
      "result": {

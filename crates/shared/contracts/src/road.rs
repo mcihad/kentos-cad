@@ -204,6 +204,45 @@ pub struct RoadDrawingDef {
 }
 
 impl RoadSettings {
+    /// Whether a grade (rise over run) is held: a template's cross slopes, a superelevation schedule, a culvert's fall,
+    /// a pad's grade or a volume's benched ground slope (docs/adr/0977; KCAD schema 187 holds them as grades).
+    pub fn has_grades(&self) -> bool {
+        !(self.templates.is_empty() && self.superelevations.is_empty() && self.culverts.is_empty() && self.platforms.is_empty())
+            || self.volumes.iter().any(|v| v.bench.is_some())
+    }
+
+    /// A file written before schema 187 held these in percent (docs/adr/0977): each is divided by 100 as it is read,
+    /// so −2.5 becomes −0.025. Nothing else is touched (a side slope is horizontal per vertical, a share is a share).
+    pub fn grades_from_percent(&mut self) {
+        let p = |v: &mut f64| *v /= 100.0;
+        for t in &mut self.templates {
+            for side in std::iter::once(&mut t.left).chain(t.right.as_mut()) {
+                side.components.iter_mut().for_each(|c| p(&mut c.slope));
+                for b in side.bench.iter_mut().chain(side.fill_bench.iter_mut()) {
+                    p(&mut b.fall);
+                }
+            }
+        }
+        for d in &mut self.superelevations {
+            p(&mut d.normal_left);
+            p(&mut d.normal_right);
+            match &mut d.method {
+                SuperelevationMethod::Curves { curves } => curves.iter_mut().for_each(|c| p(&mut c.rate)),
+                SuperelevationMethod::Stations { rows } => rows.iter_mut().for_each(|r| {
+                    p(&mut r.left);
+                    p(&mut r.right);
+                }),
+            }
+        }
+        self.culverts.iter_mut().for_each(|c| p(&mut c.slope));
+        self.platforms.iter_mut().for_each(|x| p(&mut x.grade));
+        for v in &mut self.volumes {
+            if let Some(b) = &mut v.bench {
+                p(&mut b.slope);
+            }
+        }
+    }
+
     /// Whether it says nothing (and is not written).
     pub fn is_empty(&self) -> bool {
         self.surfaces.is_empty()
@@ -679,8 +718,8 @@ pub enum TemplateComponentKind {
     Shoulder,
 }
 
-/// A component of a template's side, outward from the axis: its width and cross slope (percent, falling outward
-/// negative).
+/// A component of a template's side, outward from the axis: its width and cross slope (a grade: rise over run, −0.025
+/// is −2.5 %; falling outward negative; docs/adr/0977).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -690,7 +729,7 @@ pub struct TemplateComponentDef {
     pub kind: TemplateComponentKind,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub width: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
 }
 
@@ -741,7 +780,7 @@ pub struct TemplateSideDef {
 }
 
 /// A slope's benches (docs/adr/0958): every `height` m up a cut slope or down a fill slope a bench `width` m wide, its
-/// surface falling `fall` percent outward (absent: level). From the project's geotechnical report: KentOS gives none.
+/// surface falling `fall` outward (a grade, 0.04 is 4 %; absent: level; docs/adr/0977). From the project's geotechnical report: KentOS gives none.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -754,7 +793,7 @@ pub struct TemplateBenchDef {
     pub width: f64,
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub fall: f64,
 }
 
@@ -923,7 +962,7 @@ pub struct SectionSetDef {
     pub clip: bool,
 }
 
-/// A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (percent), the runoff length (level crown to full
+/// A curve's superelevation (docs/adr/0904 §2): its PI, the full rate (a grade, 0.07 is 7 %), the runoff length (level crown to full
 /// rate), the share of the runoff before the curve (0–1) and the extra width on its inside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -932,7 +971,7 @@ pub struct SectionSetDef {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SuperCurveDef {
     pub pi: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub rate: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub runoff: f64,
@@ -954,9 +993,9 @@ pub struct SuperCurveDef {
 pub struct SuperRowDef {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub station: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub left: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub right: f64,
 }
 
@@ -974,7 +1013,7 @@ pub enum SuperelevationMethod {
 }
 
 /// A superelevation schedule (docs/adr/0904): on an alignment of its own PIs (its revision held), the normal cross
-/// slopes of the left and the right side (percent, outward; falling outward negative) and how it is had.
+/// slopes of the left and the right side (grades, outward; falling outward negative; docs/adr/0977) and how it is had.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -992,9 +1031,9 @@ pub struct SuperelevationDef {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_left: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub normal_right: f64,
     pub method: SuperelevationMethod,
     /// The line the traveled way turns about (docs/adr/0931 §1); absent: the centreline.
@@ -1227,14 +1266,14 @@ pub struct VolumeStripDef {
 }
 
 /// The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
-/// percent under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
+/// (a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct VolumeBenchDef {
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: f64,
@@ -1756,8 +1795,8 @@ fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
         if !(c.width.is_finite() && c.width > 0.0) {
             return fail(format!("{at}.components[{j}].width"), "bileşenin genişliği 0'dan büyük olmalı");
         }
-        if !c.slope.is_finite() || c.slope.abs() > 100.0 {
-            return fail(format!("{at}.components[{j}].slope"), "enine eğim en çok %100 olur");
+        if !c.slope.is_finite() || c.slope.abs() > 1.0 {
+            return fail(format!("{at}.components[{j}].slope"), "enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur");
         }
     }
     let positive = |v: f64| v.is_finite() && v > 0.0;
@@ -1774,9 +1813,9 @@ fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
     }
     for (b, path) in [(&s.bench, "bench"), (&s.fill_bench, "fillBench")] {
         if let Some(b) = b
-            && !(b.height.is_finite() && b.height > 0.0 && b.height <= 100.0 && b.width.is_finite() && b.width > 0.0 && b.width <= 50.0 && b.fall.is_finite() && (0.0..=50.0).contains(&b.fall))
+            && !(b.height.is_finite() && b.height > 0.0 && b.height <= 100.0 && b.width.is_finite() && b.width > 0.0 && b.width <= 50.0 && b.fall.is_finite() && (0.0..=0.5).contains(&b.fall))
         {
-            return fail(format!("{at}.{path}"), "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur");
+            return fail(format!("{at}.{path}"), "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi oranla 0–0,5 (%0–50) olur");
         }
     }
     None
@@ -1996,8 +2035,8 @@ fn superelevations_problem(road: &RoadSettings) -> Option<(String, String)> {
             _ => {}
         }
         for (field, v) in [("normalLeft", d.normal_left), ("normalRight", d.normal_right)] {
-            if !(v.is_finite() && v.abs() <= 100.0) {
-                return fail(at(field), "normal enine eğim en çok %100 olur");
+            if !(v.is_finite() && v.abs() <= 1.0) {
+                return fail(at(field), "normal enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur");
             }
         }
         match &d.method {
@@ -2279,7 +2318,7 @@ pub enum CulvertFlow {
 
 /// A culvert across a corridor (docs/adr/0909 §2): its corridor and that corridor's revision it was made from, its
 /// station and skew (degrees from the cross, positive ahead on the right), its barrel, its flow line under the axis and
-/// its fall (percent) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
+/// its fall (a grade, 0.02 is 2 %; docs/adr/0977) toward `flow`, the length added beyond each toe, the least cover asked, its material and Manning
 /// roughness (typed, kept).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -2307,7 +2346,7 @@ pub struct CulvertDef {
     pub shape: CulvertShapeDef,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub invert: f64,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: f64,
     pub flow: CulvertFlow,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
@@ -2384,8 +2423,8 @@ fn culverts_problem(road: &RoadSettings) -> Option<(String, String)> {
         if !(c.invert.is_finite() && c.invert.abs() <= 10_000.0) {
             return fail(at("invert"), "akış kotu sonlu, en çok 10 000 m olur");
         }
-        if !(c.slope.is_finite() && (0.0..=100.0).contains(&c.slope)) {
-            return fail(at("slope"), "akış eğimi 0 ile %100 arası olur");
+        if !(c.slope.is_finite() && (0.0..=1.0).contains(&c.slope)) {
+            return fail(at("slope"), "akış eğimi oranla 0 ile 1 (%0–100) arası olur");
         }
         if !(c.extend.is_finite() && (0.0..=100.0).contains(&c.extend)) {
             return fail(at("extend"), "topuğun ötesine boy 0 ile 100 m arası olur");
@@ -2551,7 +2590,7 @@ fn walls_problem(road: &RoadSettings) -> Option<(String, String)> {
 pub const MAX_PLATFORMS: usize = 1000;
 pub const MAX_PLATFORM_CORNERS: usize = 1000;
 
-/// A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` percent towards
+/// A graded pad (docs/adr/0927): its boundary's corners, the plane through `base` rising `grade` (0.02 is 2 %; docs/adr/0977) towards
 /// `direction` (degrees counterclockwise from +x), its cut and fill slopes (horizontal per vertical), the spacing of
 /// its slope lines along an edge, a corner's widest fan step (degrees), the longest slope line and the terrain it is
 /// graded to. The slopes are the user's: no soil's default is guessed (ROAD-GRADE-02).
@@ -2573,7 +2612,7 @@ pub struct PlatformDef {
     pub base: [f64; 3],
     #[serde(default, skip_serializing_if = "is_zero_f64")]
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub grade: f64,
     #[serde(default, skip_serializing_if = "is_zero_f64")]
     #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
@@ -2621,8 +2660,8 @@ fn platforms_problem(road: &RoadSettings) -> Option<(String, String)> {
         if !p.corners.iter().flatten().chain(p.base.iter()).all(|v| v.is_finite()) {
             return fail(at("corners"), "köşeler ve taban sonlu sayılar olmalı");
         }
-        if !(p.grade.is_finite() && p.grade.abs() <= 100.0) {
-            return fail(at("grade"), "platformun eğimi en çok %100 olur");
+        if !(p.grade.is_finite() && p.grade.abs() <= 1.0) {
+            return fail(at("grade"), "platformun eğimi oranla yazılır (0,02 %2'dir), en çok 1 (%100) olur");
         }
         if !(p.direction.is_finite() && (-360.0..=360.0).contains(&p.direction)) {
             return fail(at("direction"), "eğimin yönü −360 ile 360 derece arası olur");
@@ -3238,9 +3277,9 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
         }
         if let Some(b) = &v.bench
-            && !(b.slope.is_finite() && b.slope > 0.0 && b.slope <= 1000.0 && b.height.is_finite() && b.height > 0.0 && b.height <= 10.0)
+            && !(b.slope.is_finite() && b.slope > 0.0 && b.slope <= 10.0 && b.height.is_finite() && b.height > 0.0 && b.height <= 10.0)
         {
-            return fail(at("bench"), "diş kazısının eğimi 0'dan büyük, en çok %1000; basamak yüksekliği 0'dan büyük, en çok 10 m olur");
+            return fail(at("bench"), "diş kazısının eğimi oranla 0'dan büyük, en çok 10 (%1000); basamak yüksekliği 0'dan büyük, en çok 10 m olur");
         }
         let is_day = |d: &str| {
             let day = d.as_bytes();

@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import protocol_cases  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_culvert_cases as cv  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 import road_haul_command_cases as hc  # noqa: E402
 import road_junction_cases as jc  # noqa: E402
@@ -808,6 +809,7 @@ def files():
 def main():
     for name, content in files():
         path = OUT / name
+        content = road_grades.fixture(content)
         text = json.dumps(content, ensure_ascii=False, indent=1) + "\n"
         if "--check" in sys.argv:
             if path.read_text() != text:

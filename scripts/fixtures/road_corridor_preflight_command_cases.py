@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_command_cases as acmd  # noqa: E402
 import road_corridor_cases as cref  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 
@@ -375,6 +376,7 @@ def main():
                     "road_corridor_command_cases.py'nin, eğrilik aksın mpmath referansından, örtüşmeler GEOS'un "
                     "(shapely); KentOS kodu yok.",
             "setup": ccmd.setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text(encoding="utf-8") != text:

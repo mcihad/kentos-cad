@@ -239,10 +239,10 @@ fn an_at_grade_junction_ties_the_secondary_profile_to_the_crown() {
     send(&mut app, W::TieField(1, "-2.5".into()));
     let t = tied(&app).expect("reads");
     assert_eq!(t.ties.iter().map(|x| x.pvi.as_str()).collect::<Vec<_>>(), ["j-1.a", "j-1.x", "j-1.b"]);
-    assert!((t.changes[1] - 5.0).abs() < 1e-9, "{t:?}");
+    assert!((t.changes[1] - 0.05).abs() < 1e-9, "{t:?}");
     // The primary road's superelevation instead of the typed slopes.
     send(&mut app, W::TieSuper(Some("d-1".into())));
-    assert!((tied(&app).expect("reads").ties[2].crossfall - 3.0).abs() < 1e-9);
+    assert!((tied(&app).expect("reads").ties[2].crossfall - 0.03).abs() < 1e-9);
     assert_eq!(pvis(&app, "b-2"), ["a", "v1", "v2", "v3", "b"]);
     send(&mut app, W::Tie);
     assert_eq!(pvis(&app, "b-2"), ["a", "v1", "j-1.a", "j-1.x", "j-1.b", "v3", "b"]);

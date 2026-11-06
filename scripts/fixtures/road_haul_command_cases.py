@@ -18,6 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_haul_cases as href  # noqa: E402
 import road_volume_command_cases as vcmd  # noqa: E402
 
@@ -440,6 +441,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = []
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
         path = OUT / name
         if check:

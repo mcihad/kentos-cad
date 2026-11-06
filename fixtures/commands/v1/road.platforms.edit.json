@@ -1480,7 +1480,7 @@
       "reach": 100.0,
       "surface": "Eğimli arazi",
       "platform": "otopark",
-      "grade": 2.0,
+      "grade": 0.02,
       "direction": 90.0
      },
      "result": {
@@ -2535,7 +2535,7 @@
           0.0,
           115.0
          ],
-         "grade": 2.0,
+         "grade": 0.02,
          "direction": 90.0,
          "cut": 1.5,
          "fill": 2.0,

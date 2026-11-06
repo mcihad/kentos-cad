@@ -456,6 +456,23 @@ pub fn drop_cell<'a>(on_press: Message) -> Element<'a, Message> {
     kentos_ui::widget::Cell::padded(container(x).center_x(Fill)).into()
 }
 
+/// A grade (rise over run, as the sources hold it) as a percent field shows it (docs/adr/0977): −0.025 is “-2,5”, no
+/// trailing zeros, the conversion's last bit rounded off at six places.
+pub fn percent_text(grade: f64) -> String {
+    let s = format!("{:.6}", 100.0 * grade);
+    let s = s.trim_end_matches('0').trim_end_matches('.');
+    if s == "-0" { "0".into() } else { s.replace('.', ",") }
+}
+
+/// A percent field's text as the grade the sources hold (docs/adr/0977): “-2,5” is −0.025; empty is none.
+pub fn grade_of(text: &str) -> Result<Option<f64>, ()> {
+    let t = text.trim().replace(',', ".");
+    if t.is_empty() {
+        return Ok(None);
+    }
+    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(|v| Some(v / 100.0)).ok_or(())
+}
+
 /// A number in Turkish for a table: thousands with points, the fraction after a comma (1.289.851,02).
 pub fn grouped(v: f64, digits: usize) -> String {
     let text = format!("{:.digits$}", v.abs());

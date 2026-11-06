@@ -24,6 +24,7 @@ import mpmath as mp
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
+import road_grades  # noqa: E402
 import road_pavement_cases as pvref  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_cases as sref  # noqa: E402
@@ -565,7 +566,7 @@ def templates_cases():
        rule("bileşenin genişliği 0'dan büyük olmalı", "left.components[0].width"))
     no("Yüzde 100'den dik enine eğim",
        {"operation": "set", "name": "x", "left": {**plain, "components": [comp("lane", 3.0, -2.0), comp("shoulder", 1.0, 150.0)]}},
-       rule("enine eğim en çok %100 olur", "left.components[1].slope"))
+       rule("enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur", "left.components[1].slope"))
     no("Sıfır yarma şevi", {"operation": "set", "name": "x", "left": {**plain, "cut": 0.0}},
        rule("yarma şevi 0'dan büyük olmalı (bir düşeye yatay)", "left.cut"))
     no("Sağ yanda eksi dolgu şevi", {"operation": "set", "name": "x", "left": plain, "right": {**plain, "fill": -1.5}},
@@ -578,16 +579,16 @@ def templates_cases():
     ok("Basamaklı yarma şevli yeni tip kesit", {"operation": "set", "name": "Basamaklı", "left": {**plain, "bench": bench}},
        start + [{"id": "tk-3", "name": "Basamaklı", "revision": 1, "left": {**plain, "bench": bench}}], "tk-3")
     no("Genişliksiz basamak", {"operation": "set", "name": "x", "left": {**plain, "bench": {"height": 6.0, "width": 0.0}}},
-       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.bench"))
+       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi oranla 0–0,5 (%0–50) olur", "left.bench"))
     no("Dik basamak eğimi", {"operation": "set", "name": "x", "left": {**plain, "bench": {**bench, "fall": 80.0}}},
-       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.bench"))
+       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi oranla 0–0,5 (%0–50) olur", "left.bench"))
     # A fill slope's benches, alone or with the cut's.
     ok("Basamaklı dolgu şevli yeni tip kesit", {"operation": "set", "name": "Dolgu basamaklı",
                                                "left": {**plain, "bench": bench, "fillBench": {"height": 5.0, "width": 4.0}}},
        start + [{"id": "tk-3", "name": "Dolgu basamaklı", "revision": 1,
                  "left": {**plain, "bench": bench, "fillBench": {"height": 5.0, "width": 4.0}}}], "tk-3")
     no("Yüksekliksiz dolgu basamağı", {"operation": "set", "name": "x", "left": {**plain, "fillBench": {"height": 0.0, "width": 4.0}}},
-       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi %0–50 olur", "left.fillBench"))
+       rule("basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi oranla 0–0,5 (%0–50) olur", "left.fillBench"))
     no("Geçersiz beklenen sürüm", {"operation": "set", "template": "tk-1", "name": "Tip A", "expectedRevision": "on"},
        BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"operation": "set", "template": "tk-1", "name": "Tip A", "expectedRevision": "41"},
@@ -1014,6 +1015,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
         path = OUT / name
         if check:

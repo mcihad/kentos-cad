@@ -18,6 +18,7 @@ from itertools import combinations
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402  (docs/adr/0977: the grades are written as KentOS holds them)
 from road_template_cases import areas, bad, build_side, g, lane, shoulder, side  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "pavements.json"
@@ -299,8 +300,18 @@ CASES = [
 ]
 
 
+def written(cases):
+    """The cases as KentOS reads them (docs/adr/0977): this reference works in percent, KentOS's templates hold grades."""
+    out = [dict(c) for c in cases]
+    for c in out:
+        # A fresh copy each, through JSON: the cases share their templates and a template its sides.
+        c["template"] = json.loads(json.dumps(c["template"]))
+        road_grades.template(c["template"])
+    return out
+
+
 def main():
-    text = json.dumps({"cases": CASES}, ensure_ascii=False, indent=1) + "\n"
+    text = json.dumps({"cases": written(CASES)}, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text() != text:
             sys.exit(f"{OUT} is not what the reference writes")

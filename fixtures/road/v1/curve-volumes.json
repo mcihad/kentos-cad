@@ -8,12 +8,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -24,12 +24,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -66,12 +66,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -82,12 +82,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -124,12 +124,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -145,12 +145,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -192,12 +192,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -213,12 +213,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -260,12 +260,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -281,12 +281,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -333,12 +333,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -349,12 +349,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -426,12 +426,12 @@
       {
        "kind": "lane",
        "width": 4.0,
-       "slope": -3.125
+       "slope": -0.03125
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -6.25
+       "slope": -0.0625
       }
      ],
      "cut": 1.0,
@@ -442,12 +442,12 @@
       {
        "kind": "lane",
        "width": 4.0,
-       "slope": -3.125
+       "slope": -0.03125
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -6.25
+       "slope": -0.0625
       }
      ],
      "cut": 1.0,
@@ -484,12 +484,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -500,12 +500,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -542,12 +542,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -558,12 +558,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -600,12 +600,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -616,12 +616,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -673,7 +673,7 @@
       {
        "kind": "lane",
        "width": 3.0,
-       "slope": -2.0
+       "slope": -0.02
       }
      ],
      "cut": 2.0,
@@ -684,17 +684,17 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.5,
-       "slope": -5
+       "slope": -0.05
       }
      ],
      "cut": 0.5,
@@ -741,12 +741,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -783,12 +783,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 0.5,
@@ -799,12 +799,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 0.5,
@@ -846,7 +846,7 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": 4.0
+       "slope": 0.04
       }
      ],
      "cut": 1.0,
@@ -857,7 +857,7 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -4.0
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -894,12 +894,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -915,12 +915,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -972,12 +972,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -993,12 +993,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -1040,12 +1040,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -1056,12 +1056,12 @@
       {
        "kind": "lane",
        "width": 3.5,
-       "slope": -2.5
+       "slope": -0.025
       },
       {
        "kind": "shoulder",
        "width": 1.0,
-       "slope": -4
+       "slope": -0.04
       }
      ],
      "cut": 1.0,
@@ -1088,6 +1088,1123 @@
    "reach": [
     -4.5,
     7.30875
+   ]
+  },
+  {
+   "name": "Basamaklı yarma: yüksek yamaç, iki basamak",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     },
+     "bench": {
+      "height": 4,
+      "width": 3,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     },
+     "bench": {
+      "height": 4,
+      "width": 3,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 120,
+     "gap": false
+    },
+    {
+     "offset": -8,
+     "z": 111,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 97,
+     "gap": false
+    }
+   ],
+   "cut": 183.6515660158396,
+   "fill": 0.0,
+   "cutMoment": -2421.9963307687076,
+   "fillMoment": 0.0,
+   "reach": [
+    -35.242558139534886,
+    7.58503937007874
+   ]
+  },
+  {
+   "name": "Ortalama eğim araziden yatık: buluşmaz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "ditch": {
+      "fore": 2.0,
+      "depth": 0.8,
+      "bottom": 0.5
+     },
+     "bench": {
+      "height": 4,
+      "width": 3,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 140,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 97,
+     "gap": false
+    }
+   ],
+   "cut": 21.18981594488189,
+   "fill": 0.0,
+   "cutMoment": -77.98698418402671,
+   "fillMoment": 0.0,
+   "reach": [
+    -6.6,
+    4.844881889763779
+   ]
+  },
+  {
+   "name": "Basamak eğimli: dışa %5 düşer",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 0.5,
+     "fill": 1.5,
+     "bench": {
+      "height": 5,
+      "width": 4,
+      "fall": 0.05
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -80,
+     "z": 135,
+     "gap": false
+    },
+    {
+     "offset": -9,
+     "z": 118,
+     "gap": false
+    },
+    {
+     "offset": -5,
+     "z": 101,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "cut": 204.16918582378048,
+   "fill": 0.0,
+   "cutMoment": -3277.355431198194,
+   "fillMoment": 0.0,
+   "reach": [
+    -32.81482,
+    5.0024390243902435
+   ]
+  },
+  {
+   "name": "Basamağın üstünde buluşur",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "bench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 102,
+     "gap": false
+    },
+    {
+     "offset": -9.5,
+     "z": 102.0,
+     "gap": false
+    },
+    {
+     "offset": -8,
+     "z": 103.2,
+     "gap": false
+    },
+    {
+     "offset": -5.5,
+     "z": 103.0,
+     "gap": false
+    },
+    {
+     "offset": -4.5,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "cut": 8.910788205030492,
+   "fill": 0.0,
+   "cutMoment": -23.98999684264886,
+   "fillMoment": 0.0,
+   "reach": [
+    -8.409375000000002,
+    5.0024390243902435
+   ]
+  },
+  {
+   "name": "Basamak kırık araziyi keser",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 0.75,
+     "fill": 1.5,
+     "bench": {
+      "height": 2,
+      "width": 3,
+      "fall": 0.1
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 112,
+     "gap": false
+    },
+    {
+     "offset": -20,
+     "z": 106,
+     "gap": false
+    },
+    {
+     "offset": -12,
+     "z": 104.4,
+     "gap": false
+    },
+    {
+     "offset": -8,
+     "z": 104.6,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "cut": 28.169013159074595,
+   "fill": 0.0,
+   "cutMoment": -171.12209411487723,
+   "fillMoment": 0.0,
+   "reach": [
+    -14.759558823529416,
+    5.0024390243902435
+   ]
+  },
+  {
+   "name": "Basamaklı ama dolgu: basamak işlemez",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "bench": {
+      "height": 2,
+      "width": 2,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "bench": {
+      "height": 2,
+      "width": 2,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 103.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "cut": 0.0,
+   "fill": 38.855634375,
+   "cutMoment": 0.0,
+   "fillMoment": 0.0,
+   "reach": [
+    -8.80875,
+    8.80875
+   ]
+  },
+  {
+   "name": "Basamaklı yarma şeride sığmıyor: açık",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "bench": {
+      "height": 2,
+      "width": 2,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -14,
+     "z": 120,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100.5,
+     "gap": false
+    },
+    {
+     "offset": 14,
+     "z": 99,
+     "gap": false
+    }
+   ],
+   "cut": 18.0486491359447,
+   "fill": 0.0,
+   "cutMoment": -45.51914344065582,
+   "fillMoment": 0.0,
+   "reach": [
+    -4.5,
+    4.631290322580645
+   ]
+  },
+  {
+   "name": "Basamaklı dolgu: derin vadi, iki yanda basamak",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 80,
+     "gap": false
+    },
+    {
+     "offset": -8,
+     "z": 92,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 8,
+     "z": 92,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 80,
+     "gap": false
+    }
+   ],
+   "cut": 0.0,
+   "fill": 204.27677904411766,
+   "cutMoment": 0.0,
+   "fillMoment": 0.0,
+   "reach": [
+    -32.94279411764706,
+    32.94279411764706
+   ]
+  },
+  {
+   "name": "Dolgu basamağı dışa %4 düşer",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 2.0,
+     "fillBench": {
+      "height": 4,
+      "width": 3,
+      "fall": 0.04
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 101,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 6,
+     "z": 97,
+     "gap": false
+    },
+    {
+     "offset": 9,
+     "z": 90,
+     "gap": false
+    },
+    {
+     "offset": 100,
+     "z": 68.6,
+     "gap": false
+    }
+   ],
+   "cut": 0.0,
+   "fill": 237.76611734021157,
+   "cutMoment": 0.0,
+   "fillMoment": 5976.652757632072,
+   "reach": [
+    -4.875903614457831,
+    63.83599585062242
+   ]
+  },
+  {
+   "name": "Dolgu ortalama eğiminden dik düşen arazi: buluşmaz",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 4.5,
+     "z": 99.3,
+     "gap": false
+    },
+    {
+     "offset": 5,
+     "z": 95.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 65.25,
+     "gap": false
+    }
+   ],
+   "cut": 0.0,
+   "fill": 4.6407958860759555,
+   "cutMoment": 0.0,
+   "fillMoment": 0.49585218314374613,
+   "reach": [
+    -5.122784810126582,
+    4.5
+   ]
+  },
+  {
+   "name": "Aynı arazide basamaksız dolgu buluşur",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 4.5,
+     "z": 99.3,
+     "gap": false
+    },
+    {
+     "offset": 5,
+     "z": 95.5,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 65.25,
+     "gap": false
+    }
+   ],
+   "cut": 0.0,
+   "fill": 75.71457267179024,
+   "cutMoment": 0.0,
+   "fillMoment": 1162.568750588756,
+   "reach": [
+    -5.122784810126582,
+    39.621428571428574
+   ]
+  },
+  {
+   "name": "Dolgu basamağın üstünde buluşur",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -60,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 99.5,
+     "gap": false
+    },
+    {
+     "offset": 4.5,
+     "z": 99.0,
+     "gap": false
+    },
+    {
+     "offset": 8.7,
+     "z": 96.5,
+     "gap": false
+    },
+    {
+     "offset": 10,
+     "z": 97.3,
+     "gap": false
+    },
+    {
+     "offset": 10.5,
+     "z": 92,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 80,
+     "gap": false
+    }
+   ],
+   "cut": 0.0,
+   "fill": 8.49303533920095,
+   "cutMoment": 0.0,
+   "fillMoment": 23.37513295873781,
+   "reach": [
+    -5.122784810126582,
+    9.305312500000001
+   ]
+  },
+  {
+   "name": "Basamaklı dolgu ama yarma: dolgu basamağı işlemez",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 2,
+      "width": 2,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "fillBench": {
+      "height": 2,
+      "width": 2,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 98.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 40,
+     "z": 100,
+     "gap": false
+    }
+   ],
+   "cut": 23.04750625,
+   "fill": 0.0,
+   "cutMoment": 0.0,
+   "fillMoment": 0.0,
+   "reach": [
+    -6.6275,
+    6.6275
+   ]
+  },
+  {
+   "name": "Yarma ve dolgu basamağı birlikte",
+   "template": {
+    "left": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "bench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     },
+     "fillBench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    },
+    "right": {
+     "components": [
+      {
+       "kind": "lane",
+       "width": 3.5,
+       "slope": -0.025
+      },
+      {
+       "kind": "shoulder",
+       "width": 1.0,
+       "slope": -0.04
+      }
+     ],
+     "cut": 1.0,
+     "fill": 1.5,
+     "bench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     },
+     "fillBench": {
+      "height": 3,
+      "width": 2,
+      "fall": 0.0
+     }
+    }
+   },
+   "axis": 100.0,
+   "ground": [
+    {
+     "offset": -40,
+     "z": 116,
+     "gap": false
+    },
+    {
+     "offset": -8,
+     "z": 108,
+     "gap": false
+    },
+    {
+     "offset": -5,
+     "z": 101,
+     "gap": false
+    },
+    {
+     "offset": 0,
+     "z": 100,
+     "gap": false
+    },
+    {
+     "offset": 5,
+     "z": 99,
+     "gap": false
+    },
+    {
+     "offset": 8,
+     "z": 92,
+     "gap": false
+    },
+    {
+     "offset": 60,
+     "z": 77.14,
+     "gap": false
+    }
+   ],
+   "cut": 52.8777125,
+   "fill": 106.77735568832043,
+   "cutMoment": -615.3228932916667,
+   "fillMoment": 1890.596853484729,
+   "reach": [
+    -22.17,
+    40.04493436553349
    ]
   }
  ],
@@ -1453,12 +2570,12 @@
    "fill": 1136.90671875
   },
   {
-   "name": "Hendekli yarma: sol kol kurbun merkezini geçer",
-   "section": "Hendekli yarma",
-   "radius": 5.26375,
+   "name": "Basamaklı yarma: yüksek yamaç, iki basamak: sol kol kurbun merkezini geçer",
+   "section": "Basamaklı yarma: yüksek yamaç, iki basamak",
+   "radius": 17.621279069767443,
    "angle": 0.5,
    "left": true,
-   "length": 2.631875,
+   "length": 8.810639534883721,
    "past": true
   }
  ]

@@ -316,7 +316,7 @@ pub struct TerrainHeight {
     /// The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub slope: Option<f64>,
     /// The azimuth it falls towards, radians clockwise from north; none on a flat triangle.
     #[serde(default, skip_serializing_if = "Option::is_none")]

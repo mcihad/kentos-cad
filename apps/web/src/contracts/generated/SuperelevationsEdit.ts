@@ -5,8 +5,8 @@ import type { SuperelevationPivot } from "./SuperelevationPivot";
 
 /**
  * Input of `road.superelevations.edit` v1: the schedule by its id or name (absent: a new one). A new one needs `name`,
- * `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are percent,
- * outward from the axis, falling outward negative.
+ * `alignment`, `normalLeft`, `normalRight` and `method`; it holds its alignment's present revision. Slopes are grades
+ * (rise over run, −0.025 is −2.5 %; docs/adr/0977), outward from the axis, falling outward negative.
  *
  * Refusals, in this order: `not_a_road_project`, `unknown_superelevation` (remove or rebind one not in the project),
  * `unknown_alignment`, `invalid_superelevation` (a new one without its fields, set with nothing to set, the definition

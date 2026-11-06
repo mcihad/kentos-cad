@@ -25,6 +25,7 @@ from fractions import Fraction as F
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_grades  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
 import road_section_command_cases as scmd  # noqa: E402
 import road_superelevation_check_cases as chk  # noqa: E402
@@ -221,6 +222,7 @@ def main():
                     "road_superelevation_physics_cases.py'nin kurbun tek başına kurulan çizelgesinde; geçiş, klotoid, "
                     "runout ve teğet ADR 0940'ın kurallarıyla; KentOS kodu yok.",
             "setup": setup(), "cases": cases()}
+    data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if "--check" in sys.argv[1:]:
         if OUT.read_text("utf-8") != text:

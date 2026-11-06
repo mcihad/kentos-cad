@@ -28,6 +28,7 @@ from scipy.optimize import linprog
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_corridor_command_cases as ccmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_haul_command_cases as hc  # noqa: E402
 import road_haul_sorted_cases as sref  # noqa: E402
 import road_volume_command_cases as vcmd  # noqa: E402
@@ -780,6 +781,7 @@ def main():
                    "road_haul_command_cases.py'nin, plan HiGHS (scipy linprog) doğrusal programıdır; alanların kullanımı "
                    "teklik denetiminden sonra tam, akışlar kesirlerle; KentOS kodu yok.",
            "setup": hc.setup([H1, H2, H3], VOLUMES), "cases": found}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     path = OUT / "road.hauls.plan.json"
     if "--check" in sys.argv:

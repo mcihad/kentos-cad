@@ -27,6 +27,7 @@ from shapely.geometry import LineString, Point
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_command_cases as acmd  # noqa: E402
+import road_grades  # noqa: E402
 import road_guardrail_cases as grc  # noqa: E402
 import road_haul_command_cases as hc  # noqa: E402
 import road_profile_command_cases as pcmd  # noqa: E402
@@ -479,6 +480,7 @@ def main():
                    "road_haul_plan_cases.py'nin; yollar aksın bağımsız referansıyla (mpmath) km ve kaymaya kurulur, "
                    "uzaklıklar ve kesişmeler GEOS (shapely), en kısa yol Dijkstra; KentOS kodu yok.",
            "setup": setup([H1N, pc.H2, pc.H3], pc.VOLUMES), "cases": found}
+    doc = road_grades.fixture(doc)
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if not OUT.exists() or OUT.read_text() != text:

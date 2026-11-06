@@ -207,8 +207,8 @@ fn finish_of(components: &[Component], axis: f64) -> (Vec<[f64; 2]>, f64) {
             Component::Lane { width, slope } | Component::Shoulder { width, slope } => (width, slope),
         };
         u += w;
-        z += w * s / 100.0;
-        last = s / 100.0;
+        z += w * s;
+        last = s;
         pts.push([u, z]);
     }
     (pts, last)

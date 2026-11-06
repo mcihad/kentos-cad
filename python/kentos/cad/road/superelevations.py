@@ -94,7 +94,7 @@ class _RoadSuperelevationsCheck(LocalCommand[SuperelevationsCheck, Superelevatio
             superelevation:
             template:
             most_friction: Unit: 1.
-            most_relative: Unit: 1.
+            most_relative: Unit: grade.
             speed: Unit: km/h.
             step: How often a clothoid's friction is read (m); absent: 1. Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
@@ -203,18 +203,19 @@ check = _RoadSuperelevationsCheck()
 class _RoadSuperelevationsEdit(LocalCommand[SuperelevationsEdit, SuperelevationsWritten, SuperelevationsWritten]):
     """``road.superelevations.edit`` v1. Deveri düzenle: Yol projesinin dever çizelgesini
     (superelevation: kimliği ya da adı; yoksa yeni) yazar, aksına yeniden bağlar ya da
-    kaldırır. Enine eğim her yanda eksenden dışa yüzdedir, dışa düşen eksi; normalLeft
-    ve normalRight normal eğimdir. method curves: her kurp için oran rate (yüzde), geçiş
-    boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1, geçişin kurptan
-    önce kalan payı) ve iç yanda genişleme widening (m); orta eksen etrafında
-    döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime (RC), sonra
-    ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim satırları;
-    aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden kullanıcı yazar;
-    öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran, kurba sığmayan
-    tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir; sessiz çözüm
-    yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri alma adımı
-    “Dever”. Retler: not_a_road_project, unknown_superelevation, unknown_alignment,
-    invalid_superelevation, superelevation_in_use, invalid_revision, revision_conflict.
+    kaldırır. Enine eğim her yanda eksenden dışa orandır (−0,025 %−2,5'tir; ADR 0977),
+    dışa düşen eksi; normalLeft ve normalRight normal eğimdir. method curves: her kurp
+    için oran rate (eğim oranı, 0,06 %6'dır), geçiş boyu runoff (m, düz taçtan tam
+    devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda
+    genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz
+    taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method
+    stations: km, sol ve sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin
+    standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan
+    PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın
+    dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen
+    ya da ilk boş d-n. Tek geri alma adımı “Dever”. Retler: not_a_road_project,
+    unknown_superelevation, unknown_alignment, invalid_superelevation,
+    superelevation_in_use, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.superelevations.edit"
@@ -244,18 +245,19 @@ class _RoadSuperelevationsEdit(LocalCommand[SuperelevationsEdit, Superelevations
     ) -> SuperelevationsWritten:
         """Deveri düzenle: Yol projesinin dever çizelgesini (superelevation: kimliği ya da adı;
         yoksa yeni) yazar, aksına yeniden bağlar ya da kaldırır. Enine eğim her yanda
-        eksenden dışa yüzdedir, dışa düşen eksi; normalLeft ve normalRight normal eğimdir.
-        method curves: her kurp için oran rate (yüzde), geçiş boyu runoff (m, düz taçtan tam
-        devere), teğet payı onTangent (0–1, geçişin kurptan önce kalan payı) ve iç yanda
-        genişleme widening (m); orta eksen etrafında döndürülür: dış yan normalden (NC) düz
-        taca (LC), iç yanla aynı eğime (RC), sonra ikisi birlikte tam devere (FS). method
-        stations: km, sol ve sağ eğim satırları; aralarında doğrusal. Değerleri KGM'nin
-        standardından ya da projeden kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan
-        PI, normal eğimden küçük oran, kurba sığmayan tam dever, binen geçişler ve aksın
-        dışına taşan geçiş reddedilir; sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen
-        ya da ilk boş d-n. Tek geri alma adımı “Dever”. Retler: not_a_road_project,
-        unknown_superelevation, unknown_alignment, invalid_superelevation,
-        superelevation_in_use, invalid_revision, revision_conflict.
+        eksenden dışa orandır (−0,025 %−2,5'tir; ADR 0977), dışa düşen eksi; normalLeft ve
+        normalRight normal eğimdir. method curves: her kurp için oran rate (eğim oranı, 0,06
+        %6'dır), geçiş boyu runoff (m, düz taçtan tam devere), teğet payı onTangent (0–1,
+        geçişin kurptan önce kalan payı) ve iç yanda genişleme widening (m); orta eksen
+        etrafında döndürülür: dış yan normalden (NC) düz taca (LC), iç yanla aynı eğime
+        (RC), sonra ikisi birlikte tam devere (FS). method stations: km, sol ve sağ eğim
+        satırları; aralarında doğrusal. Değerleri KGM'nin standardından ya da projeden
+        kullanıcı yazar; öntanımlı sayı yoktur. Kurbu olmayan PI, normal eğimden küçük oran,
+        kurba sığmayan tam dever, binen geçişler ve aksın dışına taşan geçiş reddedilir;
+        sessiz çözüm yoktur. Yeni çizelgenin kimliği verilen ya da ilk boş d-n. Tek geri
+        alma adımı “Dever”. Retler: not_a_road_project, unknown_superelevation,
+        unknown_alignment, invalid_superelevation, superelevation_in_use, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -264,8 +266,8 @@ class _RoadSuperelevationsEdit(LocalCommand[SuperelevationsEdit, Superelevations
             expected_revision:
             method:
             name:
-            normal_left: Unit: percent.
-            normal_right: Unit: percent.
+            normal_left: Unit: grade.
+            normal_right: Unit: grade.
             pivot: The axis of rotation (docs/adr/0931 §2); `centerline` takes an edge's off.
             superelevation:
             request_id: Names this write: sent again with the same call it is answered as
@@ -570,7 +572,7 @@ class _RoadSuperelevationsTransitions(LocalCommand[SuperelevationsTransitions, S
             superelevation:
             template:
             comfort: Unit: m/s3.
-            most_relative: Unit: 1.
+            most_relative: Unit: grade.
             most_shift: Unit: m.
             on_tangent: Unit: 1.
             shift: Unit: m.

@@ -3141,26 +3141,26 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -3.0,
+                "normalLeft": -0.025,
+                "normalRight": -0.03,
                 "pivot": "leftEdge",
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.5,
-                      "right": -3.0
+                      "left": -0.025,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 4.0,
-                      "right": -4.0
+                      "left": 0.04,
+                      "right": -0.04
                     },
                     {
                       "station": 900.0,
-                      "left": 6.0,
-                      "right": -6.0
+                      "left": 0.06,
+                      "right": -0.06
                     }
                   ]
                 }
@@ -3171,15 +3171,15 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -3.0,
+                "normalLeft": -0.025,
+                "normalRight": -0.03,
                 "pivot": "insideEdge",
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 100.0,
                       "onTangent": 0.6,
                       "widening": 0.8
@@ -3193,15 +3193,15 @@
                 "alignment": "g-3",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 10.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -3627,26 +3627,26 @@
                   "alignment": "g-1",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -3.0,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.03,
+                  "normalRight": -0.025,
                   "pivot": "rightEdge",
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 389.36976836041936,
-                        "left": -6.0,
-                        "right": 6.0
+                        "left": -0.06,
+                        "right": 0.06
                       },
                       {
                         "station": 889.3697683604194,
-                        "left": -4.0,
-                        "right": 4.0
+                        "left": -0.04,
+                        "right": 0.04
                       },
                       {
                         "station": 1189.3697683604194,
-                        "left": -3.0,
-                        "right": -2.5
+                        "left": -0.03,
+                        "right": -0.025
                       }
                     ]
                   }
@@ -3657,15 +3657,15 @@
                   "alignment": "g-1",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -3.0,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.03,
+                  "normalRight": -0.025,
                   "pivot": "insideEdge",
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 100.0,
                         "onTangent": 0.6,
                         "widening": 0.8
@@ -3679,15 +3679,15 @@
                   "alignment": "g-3",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 10.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -3770,26 +3770,26 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -3.0,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.03,
                   "pivot": "leftEdge",
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.5,
-                        "right": -3.0
+                        "left": -0.025,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 4.0,
-                        "right": -4.0
+                        "left": 0.04,
+                        "right": -0.04
                       },
                       {
                         "station": 900.0,
-                        "left": 6.0,
-                        "right": -6.0
+                        "left": 0.06,
+                        "right": -0.06
                       }
                     ]
                   }
@@ -3800,15 +3800,15 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -3.0,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.03,
                   "pivot": "insideEdge",
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 100.0,
                         "onTangent": 0.6,
                         "widening": 0.8
@@ -3822,15 +3822,15 @@
                   "alignment": "g-3",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 10.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -3927,26 +3927,26 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -3.0,
+                "normalLeft": -0.025,
+                "normalRight": -0.03,
                 "pivot": "leftEdge",
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.5,
-                      "right": -3.0
+                      "left": -0.025,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 4.0,
-                      "right": -4.0
+                      "left": 0.04,
+                      "right": -0.04
                     },
                     {
                       "station": 900.0,
-                      "left": 6.0,
-                      "right": -6.0
+                      "left": 0.06,
+                      "right": -0.06
                     }
                   ]
                 }
@@ -3957,15 +3957,15 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -3.0,
+                "normalLeft": -0.025,
+                "normalRight": -0.03,
                 "pivot": "insideEdge",
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 100.0,
                       "onTangent": 0.6,
                       "widening": 0.8
@@ -3979,15 +3979,15 @@
                 "alignment": "g-3",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 10.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -4413,26 +4413,26 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -3.0,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.03,
                   "pivot": "leftEdge",
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.5,
-                        "right": -3.0
+                        "left": -0.025,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 4.0,
-                        "right": -4.0
+                        "left": 0.04,
+                        "right": -0.04
                       },
                       {
                         "station": 900.0,
-                        "left": 6.0,
-                        "right": -6.0
+                        "left": 0.06,
+                        "right": -0.06
                       }
                     ]
                   }
@@ -4443,15 +4443,15 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -3.0,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.03,
                   "pivot": "insideEdge",
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 100.0,
                         "onTangent": 0.6,
                         "widening": 0.8
@@ -4465,15 +4465,15 @@
                   "alignment": "g-3",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 10.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -4570,26 +4570,26 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -3.0,
+                "normalLeft": -0.025,
+                "normalRight": -0.03,
                 "pivot": "leftEdge",
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 100.0,
-                      "left": -2.5,
-                      "right": -3.0
+                      "left": -0.025,
+                      "right": -0.03
                     },
                     {
                       "station": 400.0,
-                      "left": 4.0,
-                      "right": -4.0
+                      "left": 0.04,
+                      "right": -0.04
                     },
                     {
                       "station": 900.0,
-                      "left": 6.0,
-                      "right": -6.0
+                      "left": 0.06,
+                      "right": -0.06
                     }
                   ]
                 }
@@ -4600,15 +4600,15 @@
                 "alignment": "g-1",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -3.0,
+                "normalLeft": -0.025,
+                "normalRight": -0.03,
                 "pivot": "insideEdge",
                 "method": {
                   "method": "curves",
                   "curves": [
                     {
                       "pi": "p1",
-                      "rate": 6.0,
+                      "rate": 0.06,
                       "runoff": 100.0,
                       "onTangent": 0.6,
                       "widening": 0.8
@@ -4622,15 +4622,15 @@
                 "alignment": "g-3",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.0,
-                "normalRight": -2.0,
+                "normalLeft": -0.02,
+                "normalRight": -0.02,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 10.0,
-                      "left": -2.0,
-                      "right": -2.0
+                      "left": -0.02,
+                      "right": -0.02
                     }
                   ]
                 }
@@ -5108,26 +5108,26 @@
                   "alignment": "g-1",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -3.0,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.03,
+                  "normalRight": -0.025,
                   "pivot": "rightEdge",
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 389.36976836041936,
-                        "left": -6.0,
-                        "right": 6.0
+                        "left": -0.06,
+                        "right": 0.06
                       },
                       {
                         "station": 889.3697683604194,
-                        "left": -4.0,
-                        "right": 4.0
+                        "left": -0.04,
+                        "right": 0.04
                       },
                       {
                         "station": 1189.3697683604194,
-                        "left": -3.0,
-                        "right": -2.5
+                        "left": -0.03,
+                        "right": -0.025
                       }
                     ]
                   }
@@ -5138,15 +5138,15 @@
                   "alignment": "g-1",
                   "alignmentRevision": 2,
                   "revision": 2,
-                  "normalLeft": -3.0,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.03,
+                  "normalRight": -0.025,
                   "pivot": "insideEdge",
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 100.0,
                         "onTangent": 0.6,
                         "widening": 0.8
@@ -5160,15 +5160,15 @@
                   "alignment": "g-3",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 10.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -5300,26 +5300,26 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -3.0,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.03,
                   "pivot": "leftEdge",
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 100.0,
-                        "left": -2.5,
-                        "right": -3.0
+                        "left": -0.025,
+                        "right": -0.03
                       },
                       {
                         "station": 400.0,
-                        "left": 4.0,
-                        "right": -4.0
+                        "left": 0.04,
+                        "right": -0.04
                       },
                       {
                         "station": 900.0,
-                        "left": 6.0,
-                        "right": -6.0
+                        "left": 0.06,
+                        "right": -0.06
                       }
                     ]
                   }
@@ -5330,15 +5330,15 @@
                   "alignment": "g-1",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -3.0,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.03,
                   "pivot": "insideEdge",
                   "method": {
                     "method": "curves",
                     "curves": [
                       {
                         "pi": "p1",
-                        "rate": 6.0,
+                        "rate": 0.06,
                         "runoff": 100.0,
                         "onTangent": 0.6,
                         "widening": 0.8
@@ -5352,15 +5352,15 @@
                   "alignment": "g-3",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.0,
-                  "normalRight": -2.0,
+                  "normalLeft": -0.02,
+                  "normalRight": -0.02,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 10.0,
-                        "left": -2.0,
-                        "right": -2.0
+                        "left": -0.02,
+                        "right": -0.02
                       }
                     ]
                   }
@@ -7777,15 +7777,15 @@
                 "alignment": "g-3",
                 "alignmentRevision": 1,
                 "revision": 1,
-                "normalLeft": -2.5,
-                "normalRight": -2.5,
+                "normalLeft": -0.025,
+                "normalRight": -0.025,
                 "method": {
                   "method": "stations",
                   "rows": [
                     {
                       "station": 10.0,
-                      "left": -2.5,
-                      "right": -2.5
+                      "left": -0.025,
+                      "right": -0.025
                     }
                   ]
                 }
@@ -7981,15 +7981,15 @@
                   "alignment": "g-3",
                   "alignmentRevision": 1,
                   "revision": 1,
-                  "normalLeft": -2.5,
-                  "normalRight": -2.5,
+                  "normalLeft": -0.025,
+                  "normalRight": -0.025,
                   "method": {
                     "method": "stations",
                     "rows": [
                       {
                         "station": 10.0,
-                        "left": -2.5,
-                        "right": -2.5
+                        "left": -0.025,
+                        "right": -0.025
                       }
                     ]
                   }

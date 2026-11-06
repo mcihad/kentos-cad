@@ -234,12 +234,12 @@
         {
          "kind": "lane",
          "width": 3.5,
-         "slope": -2.5
+         "slope": -0.025
         },
         {
          "kind": "shoulder",
          "width": 1.0,
-         "slope": -4.0
+         "slope": -0.04
         }
        ],
        "cut": 1.0,
@@ -260,12 +260,12 @@
         {
          "kind": "lane",
          "width": 3.0,
-         "slope": -2.0
+         "slope": -0.02
         },
         {
          "kind": "shoulder",
          "width": 1.5,
-         "slope": -4.0
+         "slope": -0.04
         }
        ],
        "cut": 1.5,
@@ -276,17 +276,17 @@
         {
          "kind": "lane",
          "width": 3.5,
-         "slope": -2.5
+         "slope": -0.025
         },
         {
          "kind": "lane",
          "width": 3.5,
-         "slope": -2.5
+         "slope": -0.025
         },
         {
          "kind": "shoulder",
          "width": 1.0,
-         "slope": -4.0
+         "slope": -0.04
         }
        ],
        "cut": 1.0,
@@ -342,14 +342,14 @@
       "alignment": "g-1",
       "alignmentRevision": 1,
       "revision": 1,
-      "normalLeft": -2.5,
-      "normalRight": -2.5,
+      "normalLeft": -0.025,
+      "normalRight": -0.025,
       "method": {
        "method": "curves",
        "curves": [
         {
          "pi": "p1",
-         "rate": 6.0,
+         "rate": 0.06,
          "runoff": 40.0,
          "onTangent": 0.0,
          "widening": 0.5
@@ -363,30 +363,30 @@
       "alignment": "g-2",
       "alignmentRevision": 2,
       "revision": 2,
-      "normalLeft": -2.0,
-      "normalRight": -2.0,
+      "normalLeft": -0.02,
+      "normalRight": -0.02,
       "method": {
        "method": "stations",
        "rows": [
         {
          "station": 100.0,
-         "left": -2.0,
-         "right": -2.0
+         "left": -0.02,
+         "right": -0.02
         },
         {
          "station": 200.0,
-         "left": 3.0,
-         "right": -3.0
+         "left": 0.03,
+         "right": -0.03
         },
         {
          "station": 400.0,
-         "left": 3.0,
-         "right": -3.0
+         "left": 0.03,
+         "right": -0.03
         },
         {
          "station": 500.0,
-         "left": -2.0,
-         "right": -2.0
+         "left": -0.02,
+         "right": -0.02
         }
        ]
       }
@@ -397,14 +397,14 @@
       "alignment": "g-1",
       "alignmentRevision": 1,
       "revision": 1,
-      "normalLeft": -2.5,
-      "normalRight": -2.5,
+      "normalLeft": -0.025,
+      "normalRight": -0.025,
       "method": {
        "method": "curves",
        "curves": [
         {
          "pi": "p9",
-         "rate": 6.0,
+         "rate": 0.06,
          "runoff": 40.0,
          "onTangent": 0.0
         }
@@ -522,7 +522,7 @@
        "cells": 2
       },
       "invert": 106.5,
-      "slope": 1.0,
+      "slope": 0.01,
       "flow": "right",
       "extend": 1.0,
       "cover": 0.5,
@@ -544,7 +544,7 @@
        "spacing": 0.5
       },
       "invert": 104.0,
-      "slope": 2.0,
+      "slope": 0.02,
       "flow": "left"
      }
     ]
@@ -2188,7 +2188,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -2475,12 +2475,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -2501,12 +2501,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -2517,17 +2517,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -2583,14 +2583,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -2604,30 +2604,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -2638,14 +2638,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -2763,7 +2763,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -2785,7 +2785,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         },
         {
@@ -2802,7 +2802,7 @@
           "count": 1
          },
          "invert": 104.2,
-         "slope": 1.5,
+         "slope": 0.015,
          "flow": "right"
         }
        ]
@@ -2829,7 +2829,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right",
       "culvert": "menfez-a",
       "skew": -15.0,
@@ -3119,12 +3119,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -3145,12 +3145,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -3161,17 +3161,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -3227,14 +3227,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -3248,30 +3248,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -3282,14 +3282,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -3407,7 +3407,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -3429,7 +3429,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         },
         {
@@ -3447,7 +3447,7 @@
           "count": 1
          },
          "invert": 104.2,
-         "slope": 1.5,
+         "slope": 0.015,
          "flow": "right",
          "extend": 2.0
         }
@@ -3477,7 +3477,7 @@
        "cells": 2
       },
       "invert": 103.0,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right",
       "cover": 0.3,
       "material": "Betonarme",
@@ -3767,12 +3767,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -3793,12 +3793,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -3809,17 +3809,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -3875,14 +3875,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -3896,30 +3896,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -3930,14 +3930,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -4055,7 +4055,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -4077,7 +4077,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         },
         {
@@ -4096,7 +4096,7 @@
           "cells": 2
          },
          "invert": 103.0,
-         "slope": 1.5,
+         "slope": 0.015,
          "flow": "right",
          "cover": 0.3,
          "material": "Betonarme",
@@ -4396,12 +4396,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -4422,12 +4422,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -4438,17 +4438,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -4504,14 +4504,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -4525,30 +4525,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -4559,14 +4559,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -4684,7 +4684,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "left",
          "extend": 1.0,
          "cover": 0.5,
@@ -4706,7 +4706,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -5003,12 +5003,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -5029,12 +5029,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -5045,17 +5045,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -5111,14 +5111,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -5132,30 +5132,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -5166,14 +5166,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -5291,7 +5291,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -5313,7 +5313,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -5610,12 +5610,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -5636,12 +5636,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -5652,17 +5652,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -5718,14 +5718,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -5739,30 +5739,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -5773,14 +5773,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -5898,7 +5898,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -5921,7 +5921,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -6225,12 +6225,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -6251,12 +6251,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -6267,17 +6267,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -6333,14 +6333,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -6354,30 +6354,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -6388,14 +6388,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -6513,7 +6513,7 @@
           "cells": 1
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -6535,7 +6535,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -6834,12 +6834,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -6860,12 +6860,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -6876,17 +6876,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -6942,14 +6942,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -6963,30 +6963,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -6997,14 +6997,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -7122,7 +7122,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0
         },
@@ -7141,7 +7141,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -7437,12 +7437,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -7463,12 +7463,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -7479,17 +7479,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -7545,14 +7545,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -7566,30 +7566,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -7600,14 +7600,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -7725,7 +7725,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -7747,7 +7747,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left",
          "corridorRevision": 2
         }
@@ -8003,12 +8003,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -8029,12 +8029,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -8045,17 +8045,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -8111,14 +8111,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -8132,30 +8132,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -8166,14 +8166,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -8291,7 +8291,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -8322,7 +8322,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -8609,12 +8609,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -8635,12 +8635,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -8651,17 +8651,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -8717,14 +8717,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -8738,30 +8738,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -8772,14 +8772,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -8897,7 +8897,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -8919,7 +8919,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -8946,7 +8946,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -9174,12 +9174,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -9200,12 +9200,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -9216,17 +9216,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -9282,14 +9282,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -9303,30 +9303,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -9337,14 +9337,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -9462,7 +9462,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -9484,7 +9484,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -9511,7 +9511,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -9798,12 +9798,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -9824,12 +9824,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -9840,17 +9840,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -9906,14 +9906,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -9927,30 +9927,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -9961,14 +9961,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -10086,7 +10086,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -10108,7 +10108,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         },
         {
@@ -10125,7 +10125,7 @@
           "count": 1
          },
          "invert": 104.2,
-         "slope": 1.5,
+         "slope": 0.015,
          "flow": "right"
         }
        ]
@@ -10352,12 +10352,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -10378,12 +10378,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -10394,17 +10394,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -10460,14 +10460,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -10481,30 +10481,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -10515,14 +10515,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -10640,7 +10640,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -10662,7 +10662,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -10689,7 +10689,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -12582,12 +12582,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -12608,12 +12608,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -12624,17 +12624,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -12690,14 +12690,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -12711,30 +12711,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -12745,14 +12745,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -12870,7 +12870,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -12892,7 +12892,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -12919,7 +12919,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -13150,12 +13150,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -13176,12 +13176,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -13192,17 +13192,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -13258,14 +13258,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -13279,30 +13279,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -13313,14 +13313,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -13438,7 +13438,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -13460,7 +13460,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -13487,7 +13487,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5
+      "slope": 0.015
      },
      "result": {
       "status": "failed",
@@ -13717,12 +13717,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -13743,12 +13743,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -13759,17 +13759,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -13825,14 +13825,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -13846,30 +13846,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -13880,14 +13880,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -14005,7 +14005,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -14027,7 +14027,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -14273,12 +14273,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -14299,12 +14299,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -14315,17 +14315,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -14381,14 +14381,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -14402,30 +14402,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -14436,14 +14436,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -14561,7 +14561,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -14583,7 +14583,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -14610,7 +14610,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -14841,12 +14841,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -14867,12 +14867,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -14883,17 +14883,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -14949,14 +14949,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -14970,30 +14970,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -15004,14 +15004,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -15129,7 +15129,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -15151,7 +15151,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -15178,7 +15178,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -15409,12 +15409,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -15435,12 +15435,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -15451,17 +15451,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -15517,14 +15517,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -15538,30 +15538,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -15572,14 +15572,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -15697,7 +15697,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -15719,7 +15719,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -15746,7 +15746,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -15977,12 +15977,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -16003,12 +16003,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -16019,17 +16019,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -16085,14 +16085,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -16106,30 +16106,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -16140,14 +16140,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -16265,7 +16265,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -16287,7 +16287,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -16314,7 +16314,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right",
       "skew": 90.0
      },
@@ -16546,12 +16546,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -16572,12 +16572,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -16588,17 +16588,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -16654,14 +16654,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -16675,30 +16675,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -16709,14 +16709,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -16834,7 +16834,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -16856,7 +16856,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -16883,7 +16883,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -17114,12 +17114,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -17140,12 +17140,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -17156,17 +17156,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -17222,14 +17222,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -17243,30 +17243,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -17277,14 +17277,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -17402,7 +17402,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -17424,7 +17424,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -17453,7 +17453,7 @@
        "cells": 0
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -17684,12 +17684,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -17710,12 +17710,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -17726,17 +17726,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -17792,14 +17792,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -17813,30 +17813,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -17847,14 +17847,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -17972,7 +17972,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -17994,7 +17994,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -18021,14 +18021,14 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": -1.0,
+      "slope": -0.01,
       "flow": "right"
      },
      "result": {
       "status": "failed",
       "error": {
        "code": "invalid_culvert",
-       "message": "Menfez kurallarına uymuyor: akış eğimi 0 ile %100 arası olur.",
+       "message": "Menfez kurallarına uymuyor: akış eğimi oranla 0 ile 1 (%0–100) arası olur.",
        "path": "slope"
       }
      },
@@ -18252,12 +18252,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -18278,12 +18278,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -18294,17 +18294,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -18360,14 +18360,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -18381,30 +18381,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -18415,14 +18415,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -18540,7 +18540,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -18562,7 +18562,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -18589,7 +18589,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right",
       "roughness": 2.0
      },
@@ -18821,12 +18821,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -18847,12 +18847,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -18863,17 +18863,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -18929,14 +18929,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -18950,30 +18950,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -18984,14 +18984,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -19109,7 +19109,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -19131,7 +19131,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -19158,7 +19158,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right"
      },
      "result": {
@@ -19389,12 +19389,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -19415,12 +19415,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -19431,17 +19431,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -19497,14 +19497,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -19518,30 +19518,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -19552,14 +19552,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -19677,7 +19677,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -19699,7 +19699,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -19726,7 +19726,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right",
       "expectedRevision": "on"
      },
@@ -19958,12 +19958,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -19984,12 +19984,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -20000,17 +20000,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -20066,14 +20066,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -20087,30 +20087,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -20121,14 +20121,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -20246,7 +20246,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -20268,7 +20268,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]
@@ -20295,7 +20295,7 @@
        "count": 1
       },
       "invert": 104.2,
-      "slope": 1.5,
+      "slope": 0.015,
       "flow": "right",
       "expectedRevision": "41"
      },
@@ -20528,12 +20528,12 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -20554,12 +20554,12 @@
            {
             "kind": "lane",
             "width": 3.0,
-            "slope": -2.0
+            "slope": -0.02
            },
            {
             "kind": "shoulder",
             "width": 1.5,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.5,
@@ -20570,17 +20570,17 @@
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "lane",
             "width": 3.5,
-            "slope": -2.5
+            "slope": -0.025
            },
            {
             "kind": "shoulder",
             "width": 1.0,
-            "slope": -4.0
+            "slope": -0.04
            }
           ],
           "cut": 1.0,
@@ -20636,14 +20636,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p1",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0,
             "widening": 0.5
@@ -20657,30 +20657,30 @@
          "alignment": "g-2",
          "alignmentRevision": 2,
          "revision": 2,
-         "normalLeft": -2.0,
-         "normalRight": -2.0,
+         "normalLeft": -0.02,
+         "normalRight": -0.02,
          "method": {
           "method": "stations",
           "rows": [
            {
             "station": 100.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            },
            {
             "station": 200.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 400.0,
-            "left": 3.0,
-            "right": -3.0
+            "left": 0.03,
+            "right": -0.03
            },
            {
             "station": 500.0,
-            "left": -2.0,
-            "right": -2.0
+            "left": -0.02,
+            "right": -0.02
            }
           ]
          }
@@ -20691,14 +20691,14 @@
          "alignment": "g-1",
          "alignmentRevision": 1,
          "revision": 1,
-         "normalLeft": -2.5,
-         "normalRight": -2.5,
+         "normalLeft": -0.025,
+         "normalRight": -0.025,
          "method": {
           "method": "curves",
           "curves": [
            {
             "pi": "p9",
-            "rate": 6.0,
+            "rate": 0.06,
             "runoff": 40.0,
             "onTangent": 0.0
            }
@@ -20816,7 +20816,7 @@
           "cells": 2
          },
          "invert": 106.5,
-         "slope": 1.0,
+         "slope": 0.01,
          "flow": "right",
          "extend": 1.0,
          "cover": 0.5,
@@ -20838,7 +20838,7 @@
           "spacing": 0.5
          },
          "invert": 104.0,
-         "slope": 2.0,
+         "slope": 0.02,
          "flow": "left"
         }
        ]

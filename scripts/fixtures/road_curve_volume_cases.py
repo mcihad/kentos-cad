@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_template_cases as tref  # noqa: E402
+import road_grades  # noqa: E402  (docs/adr/0977: the grades are written as KentOS holds them)
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures" / "road" / "v1" / "curve-volumes.json"
 
@@ -156,6 +157,12 @@ def main():
     radius = -widest[1][0] / 2
     swept.append({"name": f"{widest[2]['name']}: sol kol kurbun merkezini geçer", "section": widest[2]["name"],
                   "radius": float(radius), "angle": 0.5, "left": True, "length": float(radius / 2), "past": True})
+    # Docs/adr/0977: this reference works in percent, KentOS's templates hold grades.
+    sections = [dict(c) for c in sections]
+    for c in sections:
+        # A fresh copy each, through JSON: the cases share their templates and a template its sides.
+        c["template"] = json.loads(json.dumps(c["template"]))
+        road_grades.template(c["template"])
     text = json.dumps({"sections": sections, "swept": swept}, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
         if OUT.read_text() != text:

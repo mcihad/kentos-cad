@@ -335,9 +335,9 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
     öntanımlı katsayı vermez. Kesit yöntemlerinde strip km aralıklarına bitkisel toprak
     kalınlığı (depth, m) verir: kübaj zeminin kalınlık kadar indirilmiş hâline göre,
     bitkisel toprak hacmi ayrı kalem; bench diş kazısıdır (slope: arazinin enine eğimi
-    bu yüzdeden dikken dolgunun altında, height: basamak yüksekliği; hacmi genişlik ×
-    yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule
-    kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround
+    bu orandan dikken; 0,2 %20'dir dolgunun altında, height: basamak yüksekliği; hacmi
+    genişlik × yükseklik/2), ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır.
+    rule kübajın kuralıdır (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround
     Formasyon–Zemin, roadTopsoil Yol–Bitkisel Toprak, formationTopsoil
     Formasyon–Bitkisel Toprak; bitkisel topraklı kural strip ister, formasyon kuralı
     kesit yöntemi ve koridorun her tip kesitinde üstyapı ister; rule yoksa sıyırma varsa
@@ -390,16 +390,16 @@ class _RoadVolumesEdit(LocalCommand[VolumesEdit, VolumesWritten, VolumesWritten]
         satırlar, çarpan 0'dan büyük, en çok 10; KentOS öntanımlı katsayı vermez. Kesit
         yöntemlerinde strip km aralıklarına bitkisel toprak kalınlığı (depth, m) verir:
         kübaj zeminin kalınlık kadar indirilmiş hâline göre, bitkisel toprak hacmi ayrı
-        kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu yüzdeden dikken dolgunun
-        altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2), ayrı kalem, kazı
-        ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır (NETPRO'nun
-        adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin, roadTopsoil
-        Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak; bitkisel topraklı
-        kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her tip kesitinde
-        üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa Yol–Zemin.
-        Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka koridora
-        bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni hesabın
-        kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj
+        kalem; bench diş kazısıdır (slope: arazinin enine eğimi bu orandan dikken; 0,2
+        %20'dir dolgunun altında, height: basamak yüksekliği; hacmi genişlik × yükseklik/2),
+        ayrı kalem, kazı ve dolguya katılmaz; bench null kaldırır. rule kübajın kuralıdır
+        (NETPRO'nun adlarıyla): roadGround Yol–Zemin, formationGround Formasyon–Zemin,
+        roadTopsoil Yol–Bitkisel Toprak, formationTopsoil Formasyon–Bitkisel Toprak;
+        bitkisel topraklı kural strip ister, formasyon kuralı kesit yöntemi ve koridorun her
+        tip kesitinde üstyapı ister; rule yoksa sıyırma varsa Yol–Bitkisel Toprak, yoksa
+        Yol–Zemin. Sıyırma kazısı her kuralda ayrı kalemdir. Kübaj koridorunu izler, başka
+        koridora bağlanmaz, yeniden bağlanmaz. Sonuç saklanmaz, her okumada hesaplanır. Yeni
+        hesabın kimliği verilen ya da ilk boş v-n. Tek geri alma adımı “Kübaj”. Onaylı kübaj
         değiştirilmez ve silinmez (volume_approved); önce road.volumes.approve revoke. Bir
         Brüknerin kullandığı kübaj silinmez (volume_in_use). Retler: not_a_road_project,
         unknown_volume, volume_approved, volume_in_use, unknown_corridor, invalid_volume,
