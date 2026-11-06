@@ -127,6 +127,7 @@ fn uses(doc: &Document, lib: &StyleLibrary, id: &str) -> (usize, usize, usize) {
         .and_then(|(item, _)| item.value()["file"].as_str())
         .map_or(0, |file| {
             kentos_commands::shape_resource::uses(&doc.settings().line_types, file)
+                + kentos_commands::shape_resource::font_uses(&doc.settings().text_styles, file)
         });
     (
         objects,

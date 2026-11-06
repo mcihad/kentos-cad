@@ -32,7 +32,11 @@ fn flag(r: &mut Reader<'_>, name: &str) -> Result<bool, KcadError> {
     Ok(true)
 }
 
-pub(super) fn text_styles(r: &mut Reader<'_>) -> Result<Vec<TextStyleDef>, KcadError> {
+/// `big_fonts`: schema 184's `bigFontFile` (docs/adr/1120 §4).
+pub(super) fn text_styles(
+    r: &mut Reader<'_>,
+    big_fonts: bool,
+) -> Result<Vec<TextStyleDef>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut face) = (None, None, None);
@@ -46,6 +50,7 @@ pub(super) fn text_styles(r: &mut Reader<'_>) -> Result<Vec<TextStyleDef>, KcadE
             height: None,
             width_factor: None,
             font_file: None,
+            big_font_file: None,
         };
         map(r, |r, key| {
             match key {
@@ -58,6 +63,7 @@ pub(super) fn text_styles(r: &mut Reader<'_>) -> Result<Vec<TextStyleDef>, KcadE
                 "height" => style.height = Some(r.float()?),
                 "widthFactor" => style.width_factor = Some(r.float()?),
                 "fontFile" => style.font_file = Some(text(r)?),
+                "bigFontFile" if big_fonts => style.big_font_file = Some(text(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())

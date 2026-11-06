@@ -581,13 +581,23 @@ impl Placement<'_> {
             let mut plain = style.clone();
             plain.dash = None;
             plain.dash_offset = 0.;
+            // An SHX shape (cap 0) turns about its own origin; SHX text (cap 1,
+            // ADR 1120 §3) about the same midpoint as a filled text's glyphs.
             for path in &m.paths {
                 let points: Vec<_> = path
                     .iter()
                     .map(|p| {
+                        if m.cap == 0. {
+                            return Vec2::new(
+                                origin.x + height * (c * p.x - s * p.y),
+                                origin.y + height * (s * p.x + c * p.y),
+                            );
+                        }
+                        let x = p.x * height;
+                        let y = (p.y - m.cap * 0.5) * height;
                         Vec2::new(
-                            origin.x + height * (c * p.x - s * p.y),
-                            origin.y + height * (s * p.x + c * p.y),
+                            origin.x - sin(base) * m.cap * 0.5 * height + c * x - s * y,
+                            origin.y + cos(base) * m.cap * 0.5 * height + s * x + c * y,
                         )
                     })
                     .collect();
@@ -932,6 +942,54 @@ mod tests {
         assert_eq!(stroke["style"]["width"], 0.2);
         assert!((stroke["path"][0]["x"].as_f64().unwrap() - 2.5).abs() < 1e-12);
         assert!((stroke["path"][1]["x"].as_f64().unwrap() + 1.5).abs() < 1e-12);
+    }
+    /// SHX text strokes (cap 1) turn about the mid-cap point of filled glyphs (ADR 1120 §3).
+    #[test]
+    fn shx_text_strokes_turn_about_the_same_point_as_filled_glyphs() {
+        let aspects = HashMap::new();
+        let env = env(&aspects);
+        let ring = [[0., 0.], [1., 0.], [1., 1.]];
+        let read = |m: serde_json::Value| {
+            Marks::read(&Json::parse(&serde_json::json!({"period":4.,"marks":[m]}).to_string()).unwrap())
+                .unwrap()
+                .unwrap()
+        };
+        let text = read(serde_json::json!({"at":0.,"cap":1.,"height":2.,"x":0.5,"y":-0.25,"rotation":30.,
+            "polygons":[],"paths":[ring]}));
+        let fill = read(serde_json::json!({"at":0.,"cap":1.,"height":2.,"x":0.5,"y":-0.25,"rotation":30.,
+            "polygons":[[ring]]}));
+        let path = [Vec2::new(1., 2.), Vec2::new(3., 5.)];
+        let style = StrokeStyle {
+            color: "#123456".into(),
+            opacity: 1.,
+            width: 0.2,
+            unit: super::super::prim::PrimUnit::World,
+            dash: None,
+            dash_offset: 0.,
+            line_type_loss: None,
+            cap: "round".into(),
+            join: "miter".into(),
+            blur: 0.,
+            level: 0.,
+            ground: false,
+        };
+        let paint = |m: &Marks| {
+            let mut sink = PrimitiveList::default();
+            for p in m.placements(&path, false, 0., Unit::M, &env).unwrap() {
+                p.paint(&style, Unit::M, &env, &mut sink);
+            }
+            serde_json::from_str::<serde_json::Value>(&sink.json()).unwrap()
+        };
+        let strokes = paint(&text);
+        let fills = paint(&fill);
+        let stroke = strokes["strokes"][0]["path"].as_array().unwrap();
+        let fill = fills["fills"][0]["rings"][0].as_array().unwrap();
+        assert_eq!(stroke.len(), 3);
+        for (a, b) in stroke.iter().zip(fill) {
+            for k in ["x", "y"] {
+                assert!((a[k].as_f64().unwrap() - b[k].as_f64().unwrap()).abs() < 1e-12, "{a} {b}");
+            }
+        }
     }
     fn env<'a>(aspects: &'a HashMap<String, f64>) -> Env<'a> {
         Env {

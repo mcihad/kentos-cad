@@ -360,6 +360,14 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
     if let Err(error) = kentos_contracts::shape_resource::check_items(&styles.items) {
         return Err(r.fail(Code::BadValue, &error));
     }
+    if schema < crate::SCHEMA_WITH_SHX_FONTS
+        && styles.items.iter().any(kentos_contracts::shape_resource::is_font_form)
+    {
+        return Err(r.fail(
+            Code::BadValue,
+            "SHX unifont ve Big Font kaynakları belge şeması 184 gerektirir",
+        ));
+    }
     let (entities, uids) = required(r, entities, "entities")?;
     let settings = required(r, settings_, "settings")?;
     let active_layer = required(r, active_layer, "activeLayer")?;
@@ -1393,7 +1401,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             // Schema 146 (docs/adr/0783 §2): the project's view templates, read whole as the contract's JSON.
             "viewTemplates" if has.view_templates => view_templates = views::view_templates(r)?,
-            "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
+            "textStyles" if has.styles => text_styles = styles::text_styles(r, has.shx_fonts)?,
             // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
             "wallStyles" if has.walls => {
                 let (l, at): (Vec<kentos_contracts::WallStyleDef>, usize) =

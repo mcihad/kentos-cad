@@ -19,7 +19,8 @@ on their own, not from an implementation's output; the contract's rules
 - A text style's values: a slant (degrees) not finite, 0, or 85 or more
   either way; a height (paper mm) not over 0 or over 1000; a width factor not
   over 0, over 100, or 1 (one spelling: 1 is no width factor); an empty
-  font file.
+  font file; a Big Font file (docs/adr/1120 §4) empty, over 255 UTF-8 bytes,
+  with a control character or not ending in “.shx” (ASCII letters' case aside).
 - A dimension style's values: a height not over 0 or over 1000 mm; the
   arrowhead's size not over 0 (the gaps below 0), over 1000 mm, or over 100
   times the height; more than 8 decimals; a prefix or a suffix empty, over 32
@@ -59,6 +60,7 @@ on their own, not from an implementation's output; the contract's rules
 import json
 import math
 import sys
+import unicodedata
 from decimal import ROUND_HALF_UP, Decimal, getcontext
 from pathlib import Path
 
@@ -173,6 +175,12 @@ def text_style_problem(s):
         return f"“{name}” yazı stilinin genişlik çarpanı {num(w)}; sıfırdan büyük, en çok 100 ve 1'den farklı olmalı (1 yazılmaz)"
     if s.get("fontFile") == "":
         return f"“{name}” yazı stilinin yazı tipi dosyası boş"
+    big = s.get("bigFontFile")
+    if big is not None:
+        ascii_lower = "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in big)
+        if (big == "" or len(big.encode("utf-8")) > 255 or any(unicodedata.category(c) == "Cc" for c in big)
+                or not ascii_lower.endswith(".shx")):
+            return f"“{name}” yazı stilinin Big Font dosyası “{big}”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
     return None
 
 
@@ -442,6 +450,30 @@ def cases():
         ("Genişlik çarpanı 0", [dict(YOL, widthFactor=0.0)]),
         ("Yazı tipi dosyası boş", [dict(NOT, fontFile="")]),
         ("Yazı tipi dosyası", [dict(NOT, fontFile="romans.shx")]),
+        # The Big Font beside an SHX font (docs/adr/1120 §4).
+        ("Big Font dosyası", [dict(NOT, fontFile="txt.shx", bigFontFile="gbcbig.shx")]),
+        ("Big Font büyük harfli uzantı", [dict(NOT, bigFontFile="GBCBIG.SHX")]),
+        ("Big Font karışık harfli uzantı", [dict(NOT, bigFontFile="gbcbig.SHx")]),
+        ("Big Font yolu Windows yolu", [dict(NOT, bigFontFile="C:\\Fonts\\gbcbig.shx")]),
+        ("Big Font yalnız uzantı", [dict(NOT, bigFontFile=".shx")]),
+        ("Big Font boş", [dict(NOT, bigFontFile="")]),
+        ("Big Font TrueType", [dict(NOT, bigFontFile="gbcbig.ttf")]),
+        ("Big Font uzantısız", [dict(NOT, bigFontFile="gbcbig")]),
+        ("Big Font çift uzantı", [dict(NOT, bigFontFile="gbcbig.shx.ttf")]),
+        ("Big Font sonda boşluk", [dict(NOT, bigFontFile="gbcbig.shx ")]),
+        ("Big Font 255 bayt", [dict(NOT, bigFontFile="a" * 251 + ".shx")]),
+        ("Big Font 256 bayt", [dict(NOT, bigFontFile="a" * 252 + ".shx")]),
+        ("Big Font 254 bayt Türkçe", [dict(NOT, bigFontFile="ş" * 125 + ".shx")]),
+        ("Big Font 256 bayt Türkçe", [dict(NOT, bigFontFile="ş" * 126 + ".shx")]),
+        ("Big Font sekmeli", [dict(NOT, bigFontFile="\tgbcbig.shx")]),
+        ("Big Font satır sonlu", [dict(NOT, bigFontFile="gbc\nbig.shx")]),
+        ("Big Font sonunda NEL denetim karakteri", [dict(NOT, bigFontFile="gbcbig.shx\u0085")]),
+        ("Big Font TrueType yazı tipinin yanında (tablo kuralı değil, çizim kaybı)",
+         [dict(NOT, fontFile="arial.ttf", bigFontFile="gbcbig.shx")]),
+        ("Big Font hatası boş yazı tipinden sonra", [dict(NOT, fontFile="", bigFontFile="")]),
+        ("Big Font hatası genişlik çarpanından sonra", [dict(YOL, widthFactor=1.0, bigFontFile="")]),
+        ("İkinci stilin Big Font'u", [dict(ADA, bigFontFile="gbcbig.shx"), dict(NOT, bigFontFile="big5.ttf")]),
+        ("İki stil aynı Big Font", [dict(ADA, bigFontFile="gbcbig.shx"), dict(NOT, bigFontFile="GBCBIG.shx")]),
     ]:
         add(name, "textStylesProblem", {"styles": styles}, text_styles_problem(styles))
     for name, styles in [

@@ -50,6 +50,7 @@ fn text_styles() -> Vec<TextStyleDef> {
             height: Some(3.5),
             width_factor: Some(0.9),
             font_file: None,
+            big_font_file: None,
         },
         TextStyleDef {
             id: YOL.into(),
@@ -61,6 +62,7 @@ fn text_styles() -> Vec<TextStyleDef> {
             height: Some(3.0),
             width_factor: None,
             font_file: None,
+            big_font_file: None,
         },
         TextStyleDef {
             id: NOT.into(),
@@ -72,6 +74,7 @@ fn text_styles() -> Vec<TextStyleDef> {
             height: Some(2.0),
             width_factor: None,
             font_file: None,
+            big_font_file: None,
         },
     ]
 }

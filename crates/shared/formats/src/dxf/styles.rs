@@ -43,6 +43,8 @@ pub struct StyleRecord {
     pub name: String,
     /// Its typeface's file (3): `arial.ttf`, `romans.shx`.
     pub file: String,
+    /// Its Big Font file (4): `gbcbig.shx` beside an SHX font; empty none.
+    pub big_file: String,
     /// ACAD's family name and flags, when it has them.
     pub family: Option<String>,
     pub acad_flags: i64,
@@ -76,6 +78,7 @@ pub fn style_record(groups: &[Pair<'_>], dec: super::strings::Decoder) -> StyleR
     let mut r = StyleRecord {
         name: text(2),
         file: text(3),
+        big_file: text(4),
         height: real(40, 0.0),
         width: real(41, 1.0),
         oblique: real(50, 0.0),
@@ -194,6 +197,10 @@ pub fn text_style(
         width_factor: (r.width != 1.0 && kentos_contracts::width_factor_ok(r.width))
             .then_some(r.width),
         font_file: (!r.file.trim().is_empty()).then(|| r.file.clone()),
+        // A Big Font is an SHX file (docs/adr/1120 §4); another name is not one.
+        big_font_file: Some(r.big_file.trim())
+            .filter(|f| !f.is_empty() && f.len() <= 255 && f.to_ascii_lowercase().ends_with(".shx"))
+            .map(str::to_owned),
     };
     let unmapped = font.is_none().then(|| {
         if named.trim().is_empty() {
@@ -616,6 +623,30 @@ mod tests {
             [Some(0), Some(256), Some(5)].map(line_colour),
             [None, None, Some("#0000FF".into())]
         );
+    }
+
+    /// STYLE's group 4 is the Big Font beside an SHX font (docs/adr/1120 §4);
+    /// an empty or non-SHX group 4 is none.
+    #[test]
+    fn a_style_keeps_its_big_font_file() {
+        let dec = super::super::strings::Decoder {
+            enc: crate::text::Encoding::Utf8,
+        };
+        let style_of = |big: &str| {
+            let text = format!("2\nCJK\n70\n0\n40\n0\n41\n1\n50\n0\n3\ntxt.shx\n4\n{big}\n");
+            let mut lex = super::super::lexer::Lexer::new(text.as_bytes());
+            let mut groups = Vec::new();
+            while let Ok(Some(p)) = lex.next() {
+                groups.push(p);
+            }
+            let r = style_record(&groups, dec);
+            text_style(&r, "s".into(), DrawingFont::Barlow, &|x| x, 100.).0
+        };
+        let s = style_of("GBCBIG.SHX");
+        assert_eq!(s.font_file.as_deref(), Some("txt.shx"));
+        assert_eq!(s.big_font_file.as_deref(), Some("GBCBIG.SHX"));
+        assert_eq!(style_of("").big_font_file, None);
+        assert_eq!(style_of("arial.ttf").big_font_file, None);
     }
 
     /// An entity's own changes (ACAD's DSTYLE data) give its lines too: an

@@ -186,7 +186,15 @@ impl StyleNames {
 }
 
 /// One STYLE record's groups (after its head): name, flags, sizes, file.
-fn style_groups(out: &mut Out, name: &str, height: f64, width: f64, oblique: f64, file: &str) {
+fn style_groups(
+    out: &mut Out,
+    name: &str,
+    height: f64,
+    width: f64,
+    oblique: f64,
+    file: &str,
+    big: &str,
+) {
     out.str(2, name);
     out.int(70, 0);
     out.real(40, height);
@@ -195,7 +203,7 @@ fn style_groups(out: &mut Out, name: &str, height: f64, width: f64, oblique: f64
     out.int(71, 0);
     out.real(42, 2.5);
     out.str(3, file);
-    out.str(4, "");
+    out.str(4, big);
 }
 
 /// A STYLE record's extended data: ACAD's family and flags, KENTOS's style (or the mark of none).
@@ -240,7 +248,7 @@ pub fn style_table(
         super::template::STYLE_TABLE,
         "AcDbTextStyleTableRecord",
     );
-    style_groups(out, "Standard", 0.0, 1.0, 0.0, "arial.ttf");
+    style_groups(out, "Standard", 0.0, 1.0, 0.0, "arial.ttf", "");
     for s in styles {
         let Some(name) = names.text.get(&s.id) else {
             continue;
@@ -263,6 +271,7 @@ pub fn style_table(
             &s.font_file
                 .clone()
                 .unwrap_or_else(|| font_file(s.font, s.bold, s.italic)),
+            s.big_font_file.as_deref().unwrap_or(""),
         );
         let json = serde_json::to_string(s).unwrap_or_default();
         style_data(out, s.font, s.bold, s.italic, &json);
@@ -281,7 +290,7 @@ pub fn style_table(
             "AcDbTextStyleTableRecord",
         );
         // A styleless face's record: no style of the project (its KENTOS data says none).
-        style_groups(out, name, 0.0, 1.0, 0.0, &font_file(font, *bold, *italic));
+        style_groups(out, name, 0.0, 1.0, 0.0, &font_file(font, *bold, *italic), "");
         style_data(out, font, *bold, *italic, super::super::xdata::STYLELESS);
     }
     for file in shape_files {

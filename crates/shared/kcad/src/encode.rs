@@ -2148,6 +2148,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 184 (docs/adr/1120 §4): a Big Font beside a text style's font, an SHX unifont or Big Font resource.
+    if doc.settings.text_styles.iter().any(|s| s.big_font_file.is_some())
+        || doc.styles.items.iter().any(kentos_contracts::shape_resource::is_font_form)
+    {
+        return crate::SCHEMA_WITH_SHX_FONTS;
+    }
     // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
     if !doc.settings.approved_sheet_templates.is_empty() {
         return crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES;

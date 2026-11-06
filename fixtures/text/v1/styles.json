@@ -331,6 +331,314 @@
    "expect": null
   },
   {
+   "name": "Big Font dosyası",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "fontFile": "txt.shx",
+     "bigFontFile": "gbcbig.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font büyük harfli uzantı",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "GBCBIG.SHX"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font karışık harfli uzantı",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbcbig.SHx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font yolu Windows yolu",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "C:\\Fonts\\gbcbig.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font yalnız uzantı",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": ".shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font boş",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": ""
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font TrueType",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbcbig.ttf"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “gbcbig.ttf”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font uzantısız",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbcbig"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “gbcbig”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font çift uzantı",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbcbig.shx.ttf"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “gbcbig.shx.ttf”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font sonda boşluk",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbcbig.shx "
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “gbcbig.shx ”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font 255 bayt",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font 256 bayt",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.shx"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.shx”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font 254 bayt Türkçe",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "şşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşş.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font 256 bayt Türkçe",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "şşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşş.shx"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “şşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşşş.shx”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font sekmeli",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "\tgbcbig.shx"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “\tgbcbig.shx”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font satır sonlu",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbc\nbig.shx"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “gbc\nbig.shx”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font sonunda NEL denetim karakteri",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "gbcbig.shx"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “gbcbig.shx”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "Big Font TrueType yazı tipinin yanında (tablo kuralı değil, çizim kaybı)",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "fontFile": "arial.ttf",
+     "bigFontFile": "gbcbig.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
+   "name": "Big Font hatası boş yazı tipinden sonra",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "fontFile": "",
+     "bigFontFile": ""
+    }
+   ],
+   "expect": "“Not” yazı stilinin yazı tipi dosyası boş"
+  },
+  {
+   "name": "Big Font hatası genişlik çarpanından sonra",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+     "name": "Yol adı",
+     "font": "overpass",
+     "italic": true,
+     "oblique": 15.0,
+     "widthFactor": 1.0,
+     "bigFontFile": ""
+    }
+   ],
+   "expect": "“Yol adı” yazı stilinin genişlik çarpanı 1; sıfırdan büyük, en çok 100 ve 1'den farklı olmalı (1 yazılmaz)"
+  },
+  {
+   "name": "İkinci stilin Big Font'u",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5,
+     "bigFontFile": "gbcbig.shx"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "big5.ttf"
+    }
+   ],
+   "expect": "“Not” yazı stilinin Big Font dosyası “big5.ttf”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+  },
+  {
+   "name": "İki stil aynı Big Font",
+   "op": "textStylesProblem",
+   "styles": [
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+     "name": "Ada no",
+     "font": "arimo",
+     "bold": true,
+     "height": 3.5,
+     "bigFontFile": "gbcbig.shx"
+    },
+    {
+     "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0103",
+     "name": "Not",
+     "font": "barlow",
+     "bigFontFile": "GBCBIG.shx"
+    }
+   ],
+   "expect": null
+  },
+  {
    "name": "İki ölçü stili",
    "op": "dimensionStylesProblem",
    "styles": [

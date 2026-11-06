@@ -192,6 +192,7 @@ pub(crate) fn add_styles(
             height: wanted.height,
             width_factor: None,
             font_file: None,
+            big_font_file: None,
         });
         added.push(wanted.name.trim().into());
     }

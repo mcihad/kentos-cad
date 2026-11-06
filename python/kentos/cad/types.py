@@ -89361,6 +89361,8 @@ class TextStyleDef(_Model):
         id: One of its kind among the project's text styles (a UUIDv7).
         name: Its name: trimmed, one of its kind whatever its letters' case, never
             `STANDARD_STYLE`.
+        big_font_file: The Big Font (SHX) a DXF STYLE named beside its font (group 4), written
+            back as it came (docs/adr/1120 §4; KCAD schema 184).
         font_file: The typeface file a DXF named for it, written back as it came.
         height: The texts' height on paper, mm; absent: the tool's height. Unit: paper-mm.
         oblique: As a text's (`TextFace::oblique`). Unit: deg.
@@ -89369,6 +89371,7 @@ class TextStyleDef(_Model):
     id: str
     name: str
     font: DrawingFont | DrawingFontName
+    big_font_file: str | None | Unset = UNSET
     bold: bool | Unset = UNSET
     font_file: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
@@ -89381,6 +89384,8 @@ class TextStyleDef(_Model):
         out["id"] = self.id
         out["name"] = self.name
         out["font"] = _enum_out(self.font)
+        if self.big_font_file is not UNSET:
+            out["bigFontFile"] = self.big_font_file
         if self.bold is not UNSET:
             out["bold"] = self.bold
         if self.font_file is not UNSET:
@@ -89401,6 +89406,7 @@ class TextStyleDef(_Model):
             id=data["id"],
             name=data["name"],
             font=_enum_in(DrawingFont, data["font"]),
+            big_font_file=data.get("bigFontFile", UNSET),
             bold=data.get("bold", UNSET),
             font_file=data.get("fontFile", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),

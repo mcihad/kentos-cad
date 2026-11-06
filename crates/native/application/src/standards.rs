@@ -2278,6 +2278,7 @@ pub(crate) fn write(
                     height: t.height,
                     width_factor: None,
                     font_file: None,
+                    big_font_file: None,
                 });
                 fresh_at += 1;
                 out.text_styles.push(name.to_owned());

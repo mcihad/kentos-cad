@@ -3341,6 +3341,70 @@ fn numeric_shx_marks_write_real_anonymous_shape_styles_and_keep_units_and_uprigh
     assert_eq!(a.place.rotation, 30.);
 }
 
+/// A text style's Big Font is STYLE group 4 beside its SHX font in group 3 (docs/adr/1120 §4).
+#[test]
+fn a_text_styles_big_font_is_written_as_group_4_and_read_back() {
+    use kentos_contracts::{
+        DrawingFont, LineTypeDef, PatternElement, PatternPlace, PatternText, PatternUnit,
+        TextStyleDef,
+    };
+    let mut i = input(Vec::new());
+    i.text_styles = vec![TextStyleDef {
+        id: "cjk".into(),
+        name: "CJK".into(),
+        font: DrawingFont::Barlow,
+        bold: false,
+        italic: false,
+        oblique: None,
+        height: None,
+        width_factor: None,
+        font_file: Some("kentos-uni.shx".into()),
+        big_font_file: Some("kentos-big.shx".into()),
+    }];
+    let element = |length: f64, text: Option<PatternText>| PatternElement {
+        length,
+        text,
+        shape: None,
+    };
+    i.line_types = vec![LineTypeDef {
+        name: "SU".into(),
+        description: String::new(),
+        source: None,
+        unit: PatternUnit::Paper,
+        elements: vec![
+            element(5., None),
+            element(-2., None),
+            element(
+                0.,
+                Some(PatternText {
+                    text: "ŞU\\M+18140".into(),
+                    style: "CJK".into(),
+                    place: PatternPlace {
+                        scale: 2.,
+                        rotation: 0.,
+                        absolute: false,
+                        upright: false,
+                        x: 0.,
+                        y: -1.,
+                    },
+                }),
+            ),
+            element(-2., None),
+        ],
+    }];
+    let (text, _) = write(&i);
+    assert!(
+        text.contains("  3\r\nkentos-uni.shx\r\n  4\r\nkentos-big.shx\r\n"),
+        "group 4 beside group 3"
+    );
+    let back = read(&text);
+    let s = back.text_styles.iter().find(|s| s.name == "CJK").unwrap();
+    assert_eq!(s.big_font_file.as_deref(), Some("kentos-big.shx"));
+    let p = back.line_types.iter().find(|p| p.name == "SU").unwrap();
+    let t = p.elements.iter().find_map(|e| e.text.as_ref()).unwrap();
+    assert_eq!(t.text, "ŞU\\M+18140", "the \\M+ code stays the Big Font's");
+}
+
 #[test]
 fn complex_linetype_exports_its_actual_style_handle_fixed_height_and_degree_angle() {
     use kentos_contracts::{
@@ -3360,6 +3424,7 @@ fn complex_linetype_exports_its_actual_style_handle_fixed_height_and_degree_angl
         height: Some(4.),
         width_factor: Some(0.8),
         font_file: Some("Barlow-Regular.ttf".into()),
+        big_font_file: None,
     }];
     let make = |name: &str, style: &str| LineTypeDef {
         name: name.into(),

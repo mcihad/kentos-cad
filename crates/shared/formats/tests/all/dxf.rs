@@ -2299,6 +2299,7 @@ fn another_programs_styles_come_in_as_the_projects() {
         height: None,
         width_factor: None,
         font_file: None,
+        big_font_file: None,
     };
     assert_eq!(
         r.text_styles,
@@ -2307,6 +2308,7 @@ fn another_programs_styles_come_in_as_the_projects() {
                 font: DrawingFont::Arimo,
                 bold: true,
                 font_file: Some("arial.ttf".into()),
+                big_font_file: None,
                 ..text("dxf-text-1", "ADA")
             },
             // romans.shx is no typeface of KentOS's: the project's; 1.25 m at 1:500 is 2.5 mm.
@@ -2315,17 +2317,20 @@ fn another_programs_styles_come_in_as_the_projects() {
                 height: Some(2.5),
                 width_factor: Some(0.8),
                 font_file: Some("romans.shx".into()),
+                big_font_file: None,
                 ..text("dxf-text-2", "YOL")
             },
             TextStyleDef {
                 font: DrawingFont::CourierPrime,
                 italic: true,
                 font_file: Some("couri.ttf".into()),
+                big_font_file: None,
                 ..text("dxf-text-3", "NOT")
             },
             TextStyleDef {
                 bold: true,
                 font_file: Some("Barlow-Bold.ttf".into()),
+                big_font_file: None,
                 ..text("dxf-text-4", "Başlık")
             },
         ]
