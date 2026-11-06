@@ -1287,6 +1287,8 @@ impl GeometryStore {
                 area_edges,
                 map: None,
                 walls: None,
+                instancing: false,
+                curve_lod: false,
             },
             frame,
         )

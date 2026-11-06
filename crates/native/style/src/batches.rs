@@ -394,6 +394,89 @@ pub struct StyledBatch {
     pub weight_cap: f64,
     /// Source diagnostic attached to an actually emitted stroke.
     pub line_type_loss: Option<String>,
+    /// A curve's coarser chords for far views (docs/adr/1063 §3); none: its numbers draw at every scale.
+    pub lod: Option<Lod>,
+    /// Drawn instanced (docs/adr/1063 §2): its numbers are a block definition's (with its levels), then the
+    /// instances, each placing all of them; none: drawn as its numbers are.
+    pub instances: Option<Instances>,
+}
+
+/// A batch's detail levels (docs/adr/1063 §3), counts of numbers from the start of its range (of its definition's,
+/// for an instanced batch): `main` drawn at every scale, then level 0 (the fine chords of its curves) and the coarser
+/// levels; level `k + 1` drawn where the view's logical px per metre times [`Lod::scale`] is at most `ceilings[k]`,
+/// level 0 above the first ceiling.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Lod {
+    pub main: usize,
+    pub levels: Vec<usize>,
+    pub ceilings: [f64; 3],
+}
+
+impl Lod {
+    /// The level a view at `px_per_m` logical px a metre draws (an instanced batch's largest scale `scale` times).
+    pub fn level(&self, px_per_m: f64, scale: f64) -> usize {
+        let s = px_per_m * scale;
+        let mut level = 0;
+        for (k, c) in self.ceilings.iter().enumerate() {
+            if s <= *c && k + 1 < self.levels.len() {
+                level = k + 1;
+            }
+        }
+        level
+    }
+
+    /// The numbers drawn at `level`, from the start of the batch's (or its definition's) numbers: the main part's and
+    /// the level's.
+    pub fn ranges(&self, level: usize) -> [std::ops::Range<usize>; 2] {
+        let start: usize = self.main + self.levels.iter().take(level).sum::<usize>();
+        let len = self.levels.get(level).copied().unwrap_or(0);
+        [0..self.main, start..start + len]
+    }
+
+    /// All its numbers.
+    pub fn total(&self) -> usize {
+        self.main + self.levels.iter().sum::<usize>()
+    }
+}
+
+/// An instanced batch's instances (docs/adr/1063 §2): its first `mesh` numbers are its definition's (strokes or
+/// triangles, from the insert's base point; its levels as [`StyledBatch::lod`] says), then `count` instances of
+/// `kentos_style_core::style::batch::INSTANCE_FLOATS` numbers each; `scale` the largest instance's.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Instances {
+    pub mesh: usize,
+    pub count: u32,
+    pub scale: f64,
+}
+
+/// Numbers per instance of an instanced batch (the core's, docs/adr/1063 §2).
+pub const INSTANCE_FLOATS: usize = kentos_style_core::style::batch::INSTANCE_FLOATS;
+/// The curves' coarser levels' ceilings, logical px a metre (the core's, docs/adr/1063 §3).
+pub use kentos_style_core::style::batch::CURVE_LEVELS;
+
+/// A batch's detail levels as the core described them (`"lod"`), if it has them.
+fn lod_of(d: &Value) -> Option<Lod> {
+    let list = d.get("lod")?.as_array()?;
+    let mut lens = list.iter().map(|v| v.as_f64().unwrap_or(0.0).max(0.0) as usize);
+    let main = lens.next()?;
+    Some(Lod {
+        main,
+        levels: lens.collect(),
+        ceilings: kentos_style_core::style::batch::CURVE_LEVELS,
+    })
+}
+
+/// An instanced batch's instances as the core described them (`"inst"`), if it is one.
+fn instances_of(d: &Value) -> Option<Instances> {
+    let inst = d.get("inst")?;
+    let count = inst.get("count")?.as_f64()?.max(0.0) as u32;
+    let len = n(d, "len") as usize;
+    let mesh = len.checked_sub(count as usize * kentos_style_core::style::batch::INSTANCE_FLOATS)?;
+    Some(Instances {
+        mesh,
+        count,
+        scale: inst.get("k").and_then(Value::as_f64).unwrap_or(1.0),
+    })
 }
 
 /// A shadow as the page draws it (docs/adr/0226 §2): its offset (x right,
@@ -1219,6 +1302,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     effect: effect.clone(),
                     weight_cap: if paper(style) { held } else { 0.0 },
                     line_type_loss: line_type_loss(style),
+                    lod: lod_of(d),
+                    instances: instances_of(d),
                 }
             }
             "fill" => StyledBatch {
@@ -1238,6 +1323,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                 effect: effect.clone(),
                 weight_cap: if s(style, "kind") == "hatch" && paper(style) { held } else { 0.0 },
                 line_type_loss: (s(style, "kind") == "hatch").then(|| line_type_loss(style)).flatten(),
+                lod: lod_of(d),
+                instances: instances_of(d),
             },
             _ => {
                 let common = style.get("common").unwrap_or(&Value::Null);
@@ -1281,6 +1368,8 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     effect: effect.clone(),
                     weight_cap: 0.0,
                     line_type_loss: None,
+                    lod: lod_of(d),
+                    instances: instances_of(d),
                 }
             }
         };

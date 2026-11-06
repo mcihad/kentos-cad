@@ -397,6 +397,8 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
             effect: None,
             weight_cap: 0.0,
             line_type_loss: None,
+            lod: None,
+            instances: None,
         }],
         ..StyledLayer::default()
     };

@@ -60,6 +60,11 @@ pub struct Styles {
     user_file: user_library::UserLibrary,
     /// The project styles last loaded, so an unchanged drawing is not read again.
     project: Option<ProjectStyles>,
+    /// The drawing area's shortcuts (docs/adr/1063): blocks' inserts drawn instanced, curves with coarser levels far
+    /// away. Both draw what the plain build draws; off only to measure or compare them (`perf::large`,
+    /// `perf::stability`).
+    pub(crate) instancing: bool,
+    pub(crate) curve_lod: bool,
 }
 
 impl std::fmt::Debug for Styles {
@@ -90,6 +95,8 @@ impl Styles {
             svg_editor: None,
             user_file: user_library::UserLibrary::default(),
             project: None,
+            instancing: true,
+            curve_lod: true,
         }
     }
 
@@ -151,6 +158,8 @@ impl Styles {
                 map: None,
                 // A view of a split area puts its own walls in (docs/adr/0696's 29 October addendum).
                 walls: None,
+                instancing: self.instancing,
+                curve_lod: self.curve_lod,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

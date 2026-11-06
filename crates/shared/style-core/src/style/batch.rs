@@ -15,6 +15,7 @@
 //! (±32 km) nothing changes.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
@@ -73,23 +74,71 @@ struct Entry {
     effect: Option<String>,
     /// Its width measured on the ground (docs/adr/0793 §1).
     ground: bool,
+    /// The key it was asked for (before its scale, tile, group and band), so an instanced batch finds its sibling.
+    raw: String,
+    /// 0, or 1 for an instanced batch: it draws right after its sibling, the batch of the same style (docs/adr/1063 §2).
+    sub: u8,
+    /// An instanced batch: the definition and which of its batches; its `data` are then the instances, each
+    /// [`INSTANCE_FLOATS`] numbers (docs/adr/1063 §2).
+    inst: Option<(Arc<Def>, usize)>,
+    /// Largest uniform scale of its instances (an instanced batch's), for the curves' detail level.
+    kmax: f64,
+    /// A curve's strokes by detail level (docs/adr/1063 §3): level 0 the fine chords, then one per
+    /// [`CURVE_LEVELS`]; empty when no curve came with levels.
+    lods: Vec<Vec<f64>>,
+}
+
+/// Numbers per instance of an instanced batch: the placement's linear part by columns (x axis, y axis), its
+/// translation from the batch's tile, its uniform scale, 0 (docs/adr/1063 §2).
+pub const INSTANCE_FLOATS: usize = 8;
+
+/// The curves' coarser detail levels (docs/adr/1063 §3): level `k + 1` is drawn where the view's logical px per metre
+/// (times an instanced batch's largest scale) is at most `CURVE_LEVELS[k]`; above the first, level 0 (the fine chords,
+/// as before). Each level's chords keep within [`CURVE_TOLERANCE_PX`] of the curve at its ceiling.
+pub const CURVE_LEVELS: [f64; 3] = [4.0, 1.0, 0.25];
+/// Largest distance between a curve and a coarse level's chords at the level's ceiling, logical pixels (the drawing
+/// area's own tolerance, `RenderSettings::DEFAULT_CURVE_TOLERANCE_PX`).
+pub const CURVE_TOLERANCE_PX: f64 = 0.25;
+
+/// A block definition drawn once (docs/adr/1063 §2): its batches as a layer's would be, from its base point.
+#[derive(Debug)]
+pub struct Def {
+    pub id: usize,
+    batches: Vec<DefBatch>,
+}
+
+#[derive(Debug)]
+struct DefBatch {
+    kind: Kind,
+    raw: String,
+    style: String,
+    level: f64,
+    ground: bool,
+    data: Vec<f64>,
+    lods: Vec<Vec<f64>>,
+    bounds: [f64; 4],
+    w: f64,
+    h: f64,
 }
 
 impl Entry {
     fn grow(&mut self, x: f64, y: f64) {
-        let b = &mut self.bounds;
-        if x < b[0] {
-            b[0] = x;
-        }
-        if y < b[1] {
-            b[1] = y;
-        }
-        if x > b[2] {
-            b[2] = x;
-        }
-        if y > b[3] {
-            b[3] = y;
-        }
+        grow_box(&mut self.bounds, x, y);
+    }
+}
+
+fn grow_box(b: &mut [f64; 4], x: f64, y: f64) {
+    if x < b[0] {
+        b[0] = x;
+    }
+    if y < b[1] {
+        b[1] = y;
+    }
+    if x > b[2] {
+        b[2] = x;
+    }
+    if y > b[3] {
+        b[3] = y;
     }
 }
 
@@ -125,6 +174,11 @@ pub struct BatchSink {
     groups: HashMap<String, u32>,
     /// The draw order band of what follows (0 unless an object has its own order).
     band: i32,
+    /// A definition being drawn once (`recorder`): what an instance could not draw the same refuses it.
+    recording: bool,
+    refused: bool,
+    /// The detail level the strokes that follow go to (docs/adr/1063 §3); above 0 nothing else is kept.
+    lod: Option<usize>,
 }
 
 /// How many styles of a kind are remembered.
@@ -215,6 +269,135 @@ impl BatchSink {
             groups: HashMap::new(),
             band: 0,
             map: None,
+            recording: false,
+            refused: false,
+            lod: None,
+        }
+    }
+
+    /// A sink a block definition is drawn into once, from its base point (docs/adr/1063 §2): [`Self::into_def`] gives
+    /// its batches unless something of it would not draw the same placed by any similarity (a dash or line type, a
+    /// pattern, a marker, an effect, a scale range).
+    pub fn recorder() -> BatchSink {
+        let mut s = BatchSink::new(Vec2::new(0.0, 0.0));
+        s.recording = true;
+        s
+    }
+
+    /// Refuses the definition being recorded.
+    pub fn refuse(&mut self) {
+        self.refused = true;
+    }
+
+    /// The detail level of the strokes that follow (docs/adr/1063 §3): `Some(0)` the fine chords of a curve that
+    /// also comes coarser, `Some(k)` its level `k` (nothing but strokes kept), none what has no levels.
+    pub fn set_lod(&mut self, lod: Option<usize>) {
+        self.lod = lod;
+    }
+
+    /// The recorded definition's batches, in the order they were met; none when refused.
+    pub fn into_def(mut self, id: usize) -> Option<Def> {
+        if self.refused || self.group != 0 {
+            return None;
+        }
+        self.triangulate();
+        let mut batches = Vec::with_capacity(self.entries.len());
+        for e in self.entries {
+            let lods: usize = e.lods.iter().map(Vec::len).sum();
+            if e.data.len() + lods < 6 {
+                continue;
+            }
+            if e.tile != [0.0, 0.0] || e.kind == Kind::Marker || e.group != 0 || e.scale != Scale::default() {
+                return None;
+            }
+            batches.push(DefBatch {
+                kind: e.kind,
+                raw: e.raw,
+                style: e.style,
+                level: e.level,
+                ground: e.ground,
+                data: e.data,
+                lods: e.lods,
+                bounds: e.bounds,
+                w: e.w,
+                h: e.h,
+            });
+        }
+        Some(Def { id, batches })
+    }
+
+    /// An insert of a recorded definition, placed by the similarity `m` of uniform scale `k` (docs/adr/1063 §2):
+    /// each of the definition's batches gets an instance in the batch instanced from it, which draws right after the
+    /// batch of its style (where the insert's pieces would have gone).
+    /// False, and nothing drawn, inside an effect group or on a map of another system (the insert is then drawn
+    /// piece by piece).
+    pub fn instance(&mut self, def: &Arc<Def>, m: &[f64; 6], k: f64) -> bool {
+        if self.group != 0 || self.map.is_some() || self.recording {
+            return false;
+        }
+        // Its batches have no scale range, as the definition's had none.
+        let scale = std::mem::take(&mut self.scale);
+        self.place(def, m, k);
+        self.scale = scale;
+        true
+    }
+
+    fn place(&mut self, def: &Arc<Def>, m: &[f64; 6], k: f64) {
+        let t = Vec2::new(m[4], m[5]);
+        let tile = self.tile_of(t);
+        let (ox, oy) = (self.origin.x, self.origin.y);
+        for (j, b) in def.batches.iter().enumerate() {
+            let sibling = self.entry(&b.raw, b.kind, b.level, tile, b.ground, || b.style.clone());
+            let order = self.entries[sibling].order;
+            let key = format!(
+                "i{}#{j}|{}|{}|{}",
+                def.id,
+                number::to_string(tile[0]),
+                number::to_string(tile[1]),
+                self.band
+            );
+            let e = match self.index.get(&key) {
+                Some(&e) => e,
+                None => {
+                    let base = self.entries[sibling].base;
+                    self.entries.push(Entry {
+                        kind: b.kind,
+                        tile,
+                        base,
+                        style: b.style.clone(),
+                        scale: Scale::default(),
+                        level: b.level,
+                        band: self.band,
+                        order,
+                        data: Vec::new(),
+                        bounds: [
+                            f64::INFINITY,
+                            f64::INFINITY,
+                            f64::NEG_INFINITY,
+                            f64::NEG_INFINITY,
+                        ],
+                        w: b.w,
+                        h: b.h,
+                        group: 0,
+                        effect: None,
+                        ground: b.ground,
+                        raw: b.raw.clone(),
+                        sub: 1,
+                        inst: Some((def.clone(), j)),
+                        kmax: 0.0,
+                        lods: Vec::new(),
+                    });
+                    self.index.insert(key, self.entries.len() - 1);
+                    self.entries.len() - 1
+                }
+            };
+            let e = &mut self.entries[e];
+            e.data.extend([m[0], m[1], m[2], m[3], t.x - e.base.x, t.y - e.base.y, k, 0.0]);
+            e.kmax = js_max(e.kmax, k);
+            let [x0, y0, x1, y1] = b.bounds;
+            for (x, y) in [(x0, y0), (x1, y0), (x0, y1), (x1, y1)] {
+                e.grow(m[0] * x + m[2] * y + m[4] - ox, m[1] * x + m[3] * y + m[5] - oy);
+            }
         }
     }
 
@@ -283,6 +466,7 @@ impl BatchSink {
         ground: bool,
         style: impl FnOnce() -> String,
     ) -> usize {
+        let raw = key.to_owned();
         // A ground width and a paper one never share a batch, though their styles read alike (docs/adr/0793 §1).
         let key = if ground { format!("{key}|g") } else { key.to_owned() };
         let k = format!(
@@ -325,6 +509,11 @@ impl BatchSink {
             group: self.group,
             effect: (self.group > 0).then(|| self.group_json.clone()),
             ground,
+            raw,
+            sub: 0,
+            inst: None,
+            kmax: 0.0,
+            lods: Vec::new(),
         });
         self.index.insert(k, self.entries.len() - 1);
         self.entries.len() - 1
@@ -414,6 +603,7 @@ impl BatchSink {
                 .then(a.group.cmp(&b.group))
                 .then(a.kind.cmp(&b.kind))
                 .then(a.order.cmp(&b.order))
+                .then(a.sub.cmp(&b.sub))
         });
         let mut json = String::from("[");
         let mut data: Vec<f32> = Vec::new();
@@ -422,8 +612,10 @@ impl BatchSink {
         let mut placed = 0u32;
         for i in order {
             let e = &self.entries[i];
+            let lods: usize = e.lods.iter().map(Vec::len).sum();
             let enough = match e.kind {
-                Kind::Stroke | Kind::Fill => e.data.len() >= 6,
+                _ if e.inst.is_some() => !e.data.is_empty(),
+                Kind::Stroke | Kind::Fill => e.data.len() + lods >= 6,
                 Kind::Marker => e.data.len() >= 5,
             };
             if !enough {
@@ -444,10 +636,33 @@ impl BatchSink {
                 json.push_str(",\"maxScale\":");
                 num(&mut json, max);
             }
+            // An instanced batch's numbers are its definition's (its own levels with them), then its instances.
+            let empty: &[Vec<f64>] = &[];
+            let (main, levels, own): (&[f64], &[Vec<f64>], Option<&[f64]>) = match &e.inst {
+                Some((def, j)) => (def.batches[*j].data.as_slice(), def.batches[*j].lods.as_slice(), Some(e.data.as_slice())),
+                None => (e.data.as_slice(), if e.lods.is_empty() { empty } else { e.lods.as_slice() }, None),
+            };
+            let total = main.len() + levels.iter().map(Vec::len).sum::<usize>() + own.map_or(0, <[f64]>::len);
             json.push_str(",\"from\":");
             num(&mut json, data.len() as f64);
             json.push_str(",\"len\":");
-            num(&mut json, e.data.len() as f64);
+            num(&mut json, total as f64);
+            if !levels.is_empty() {
+                json.push_str(",\"lod\":[");
+                num(&mut json, main.len() as f64);
+                for l in levels {
+                    json.push(',');
+                    num(&mut json, l.len() as f64);
+                }
+                json.push(']');
+            }
+            if let Some(own) = own {
+                json.push_str(",\"inst\":{\"count\":");
+                num(&mut json, (own.len() / INSTANCE_FLOATS) as f64);
+                json.push_str(",\"k\":");
+                num(&mut json, e.kmax);
+                json.push('}');
+            }
             json.push_str(",\"bounds\":[");
             for (k, b) in e.bounds.iter().enumerate() {
                 if k > 0 {
@@ -475,9 +690,14 @@ impl BatchSink {
                 json.push_str(effect);
             }
             json.push('}');
-            data.extend(e.data.iter().map(|&x| x as f32));
+            let all = || {
+                main.iter()
+                    .chain(levels.iter().flatten())
+                    .chain(own.into_iter().flatten())
+            };
+            data.extend(all().map(|&x| x as f32));
             if self.position_low {
-                low.extend(e.data.iter().map(|&x| {
+                low.extend(all().map(|&x| {
                     let hi = x as f32;
                     if x.is_finite() && hi.is_finite() {
                         (x - f64::from(hi)) as f32
@@ -507,6 +727,13 @@ impl Sink for BatchSink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool) {
         if self.hide_strokes {
             return;
+        }
+        if self.recording
+            && (style.dash.is_some()
+                || style.line_type_loss.is_some()
+                || self.scale != Scale::default())
+        {
+            self.refused = true;
         }
         // On a map of another system the path is moved there, its edges split as they bend (docs/adr/0583 §3).
         if let Some(m) = self.map {
@@ -538,12 +765,26 @@ impl Sink for BatchSink {
         };
         // The numbers from the tile's origin; the box from the anchor.
         let (ox, oy) = (self.origin.x, self.origin.y);
+        let lod = self.lod;
         let e = &mut self.entries[e];
         let (tx, ty) = (e.base.x, e.base.y);
         e.w = js_max(e.w, style.width / 2.0 + style.blur);
         let n = path.len();
         let count = if closed { n } else { n.saturating_sub(1) };
         let mut d = 0.0;
+        // A curve's level goes to its own list (docs/adr/1063 §3); the box grows the same.
+        let Entry {
+            data, lods, bounds, ..
+        } = e;
+        let out = match lod {
+            Some(l) => {
+                if lods.len() <= l {
+                    lods.resize_with(l + 1, Vec::new);
+                }
+                &mut lods[l]
+            }
+            None => data,
+        };
         for i in 0..count {
             let a = path[i];
             let b = path[(i + 1) % n];
@@ -553,9 +794,8 @@ impl Sink for BatchSink {
             }
             let ends = if !closed && i == 0 { 1.0 } else { 0.0 }
                 + if !closed && i + 1 == count { 2.0 } else { 0.0 };
-            e.data
-                .extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, d, ends]);
-            e.grow(a.x - ox, a.y - oy);
+            out.extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, d, ends]);
+            grow_box(bounds, a.x - ox, a.y - oy);
             d += len;
         }
         // The last point of an open path is no segment's start.
@@ -566,6 +806,14 @@ impl Sink for BatchSink {
     }
 
     fn fill(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
+        if self.lod.is_some_and(|l| l > 0) {
+            return;
+        }
+        if self.recording
+            && (!matches!(paint, FillPaint::Solid { .. }) || self.scale != Scale::default())
+        {
+            self.refused = true;
+        }
         if let Some(m) = self.map {
             // A picture on a map of another system is a mesh moved node by node (docs/adr/0630 §2).
             if matches!(paint, FillPaint::Image { .. }) {
@@ -593,6 +841,9 @@ impl Sink for BatchSink {
     }
 
     fn reserve_cad_points(&mut self, points: usize) -> bool {
+        if self.recording {
+            self.refused = true;
+        }
         let count = self.cad_points.saturating_add(points);
         if count > 2_000_000 { return false; }
         self.cad_points = count;
@@ -600,7 +851,10 @@ impl Sink for BatchSink {
     }
 
     fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
-        if self.hide_strokes { return; }
+        if self.hide_strokes || self.lod.is_some_and(|l| l > 0) { return; }
+        if self.recording {
+            self.refused = true;
+        }
         let hidden = self.hide_fills;
         self.hide_fills = false;
         self.fill(paint, rings);
@@ -608,8 +862,11 @@ impl Sink for BatchSink {
     }
 
     fn cad_mark_mesh(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>], indices: &[u32]) {
-        if self.hide_strokes {
+        if self.hide_strokes || self.lod.is_some_and(|l| l > 0) {
             return;
+        }
+        if self.recording {
+            self.refused = true;
         }
         // A projection can densify/nonlinearly warp the boundary. Keep its
         // existing mapped-ring triangulation, not the source mesh connectivity.
@@ -636,6 +893,12 @@ impl Sink for BatchSink {
     }
 
     fn marker(&mut self, style: &MarkerStyle, at: Vec2, angle: f64) {
+        if self.lod.is_some_and(|l| l > 0) {
+            return;
+        }
+        if self.recording {
+            self.refused = true;
+        }
         let at = match self.map {
             None => at,
             Some(m) => match m.forward(at) {
@@ -651,6 +914,9 @@ impl Sink for BatchSink {
             self.group = 0;
             return;
         };
+        if self.recording {
+            self.refused = true;
+        }
         let json = spec.json();
         let next = self.groups.len() as u32 + 1;
         self.group = *self.groups.entry(group_key(&json, level)).or_insert(next);
@@ -662,6 +928,12 @@ impl BatchSink {
     /// An area whose ring is star-shaped from its first point (a pie's slice, docs/adr/0213 §2.5): its
     /// triangles are the fan from that point, made without the ear clipper's scans.
     pub fn fan(&mut self, paint: &FillPaint, ring: &[Vec2]) {
+        if self.lod.is_some_and(|l| l > 0) {
+            return;
+        }
+        if self.recording {
+            self.refused = true;
+        }
         if let Some(m) = self.map {
             let Some(moved) = m.path(ring, true) else {
                 return;

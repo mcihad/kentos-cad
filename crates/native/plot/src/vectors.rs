@@ -892,6 +892,8 @@ mod tests {
             effect: None,
             weight_cap: 0.0,
             line_type_loss: None,
+            lod: None,
+            instances: None,
         };
         let around = |x: f64, y: f64| Some([x - 50.0, y - 50.0, x + 50.0, y + 50.0]);
         assert!(batch_reaches(&batch, &o, around(583_670.0, 4_400_020.0)));
@@ -941,6 +943,8 @@ mod tests {
             effect: None,
             weight_cap: 0.0,
             line_type_loss: None,
+            lod: None,
+            instances: None,
         };
         let layer = StyledLayer {
             low: Vec::new(),
@@ -969,6 +973,8 @@ mod tests {
             origin: [0.,0.], reach: 0., reach_unit: Unit::World,
             min_scale: None, max_scale: None, group: 0, effect: None, weight_cap: 0.,
             line_type_loss: None,
+            lod: None,
+            instances: None,
         };
         let layer = StyledLayer { data, low, ..Default::default() };
         let shapes = fill_paths(&layer, &batch, &paint, &VectorScale { scale: 50., origin: [4_000_000_000.,1_000_000.] }).unwrap();

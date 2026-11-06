@@ -2597,6 +2597,16 @@ görünümde kaydırmada büyütülen yazıların değişmesi düzeltildi (çak�
 (10⁶'da p50 ~1,8 s; bloklar ve 72 kirişli stilli eğriler), uzak tekerlekte MİB (~35 ms), 10⁶'da ilk kare ve hepsini
 seç (~2,3–2,5 s), 2M kontur noktası için instancing. Madde `[~]`.
 
+**Blok örnekleme ve eğrilerin uzak düzeyleri (6 Kasım 2026, [ADR 1063](../docs/adr/1063-instanced-blocks-and-curve-detail-levels.md)):**
+Önce ölçüldü: uzak karenin GPU'su bellek bant genişliğinde değil, alt piksel kirişlerin aynı piksellere karışmasında
+(aynı 152 MB'ta 4× → 1× örnekleme 171 → 31 ms). Blok yerleşimleri benzerlikle yerleşebildiklerinde tanımdan bir kez
+kurulup örnekle çizilir (düzgün olmayan, kırpılmış, kesikli/desenli, tematik olanlar eskisi gibi; açık/kapalı görünür
+fark 0); daire, yay ve elips uzak görünüm için 0,25 px toleranslı seyrek kiriş düzeyleri taşır (1:950'den yakında eski
+72 kiriş, fark 0). 10⁵ uzak kaydırma GPU p50 221 → 45 ms, 10⁶ 1 772 → 409 ms; blok katmanının belleği 152 → 3 MB,
+10⁶'da görünümün tamponları 2,08 → 0,71 GB. **Tutmayan:** 10⁵'te 16,7 ms (kalan payın yarısı uzun çoklu çizgiler), uzakta
+küçük dairelerin mürekkep yoğunluğu değişti (eski 72 kiriş onları koyulaştırıyordu; sahibinin kararı), 10⁴'te imleç
+karesinin GPU'su 2,5 → 4–7 ms (açıklanamadı). Madde `[~]`.
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].

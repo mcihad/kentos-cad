@@ -1010,6 +1010,8 @@ impl StyledCache {
                     effect: None,
                     weight_cap: 0.0,
                     line_type_loss: None,
+                    lod: None,
+                    instances: None,
                 }],
                 ..StyledLayer::default()
             },

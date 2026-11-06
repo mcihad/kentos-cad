@@ -126,6 +126,8 @@ mod tests {
             effect: None,
             weight_cap: 0.,
             line_type_loss: None,
+            lod: None,
+            instances: None,
         };
         let mut layer = StyledLayer {
             data: vec![1.; 18],
