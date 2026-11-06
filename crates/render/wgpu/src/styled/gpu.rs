@@ -1429,6 +1429,9 @@ impl StyledGpu {
         }
         pass.set_bind_group(0, frame_bind, &[]);
         let mut current: Option<Pipe> = None;
+        // The last batch of a run of far hatches the next batch draws with it (docs/adr/1066 §2): the batch itself
+        // when it draws alone.
+        let run_end = std::cell::Cell::new(0usize);
         let mut batch = |layer: &GpuLayer, i: usize| {
             let Some(b) = layer.batches.get(i) else {
                 return;
@@ -1567,9 +1570,18 @@ impl StyledGpu {
                     (None, None) => pass.draw(0..placed.vertices, 0..placed.count),
                 }
             } else {
-                pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
+                // A run of far hatches drawn as one (docs/adr/1066 §2): their areas one after another in the buffer.
+                let end = run_end.get().max(i);
+                let (bytes, count) = match layer.batches.get(end).filter(|_| end > i) {
+                    Some(last) => (
+                        b.bytes.start..last.bytes.end,
+                        layer.batches[i..=end].iter().map(|g| g.count).sum(),
+                    ),
+                    None => (b.bytes.clone(), b.count),
+                };
+                pass.set_vertex_buffer(0, vertex.slice(bytes.clone()));
                 if let Some(low) = &layer.low {
-                    pass.set_vertex_buffer(1, low.slice(b.bytes.clone()));
+                    pass.set_vertex_buffer(1, low.slice(bytes));
                 }
                 match (lod, b.instanced) {
                     (Some(lod), true) => {
@@ -1585,7 +1597,7 @@ impl StyledGpu {
                         }
                     }
                     (_, true) => pass.draw(0..6, 0..b.count),
-                    (_, false) => pass.draw(0..b.count, 0..1),
+                    (_, false) => pass.draw(0..count, 0..1),
                 }
             }
             if picture.is_some() {
@@ -1605,10 +1617,54 @@ impl StyledGpu {
             }
             _ => batch(layer, i),
         };
-        for &(l, b) in pairs {
+        // Far hatches (docs/adr/1066 §2): where a pattern's lines are under three device pixels apart the hatch shader
+        // draws their averaged coverage, which reads only the colour, the lines' width and spacing, the unit, the tile
+        // and the paper width held (`hatchFs`); consecutive batches that agree on those, side by side in the buffer,
+        // draw the same pixels in one call as in theirs. The lens draws each as it is.
+        let (_, px_per_m, dpr, _, _) = view.frame_facts();
+        let far = |g: &GpuBatch| {
+            let k = if g.block.u[0] == 0 { px_per_m } else { dpr } as f32;
+            g.pipe == Pipe::Hatch
+                && g.visible
+                && g.count > 0
+                && !g.instanced
+                && g.own.is_none()
+                && g.picture.is_none()
+                && g.raster.is_none()
+                && g.service.is_none()
+                && g.cloud.is_none()
+                && g.vector.is_empty()
+                && g.block.f[22] * k < 3.0
+        };
+        let alike = |a: &GpuBatch, b: &GpuBatch| {
+            a.bytes.end == b.bytes.start
+                && a.block.f[0..4] == b.block.f[0..4]
+                && a.block.f[22..24] == b.block.f[22..24]
+                && a.block.u[0] == b.block.u[0]
+                && a.block.origin[0..3] == b.block.origin[0..3]
+        };
+        let mut k = 0;
+        while k < pairs.len() {
+            let (l, b) = pairs[k];
+            let mut end = k;
             if let Some(layer) = view.layers.get(l as usize) {
+                if seen.is_none() && layer.batches.get(b as usize).is_some_and(far) {
+                    while let Some(&(nl, nb)) = pairs.get(end + 1) {
+                        let (Some(last), Some(next)) = (layer.batches.get(pairs[end].1 as usize), layer.batches.get(nb as usize))
+                        else {
+                            break;
+                        };
+                        if nl != l || nb != pairs[end].1 + 1 || !far(next) || !alike(last, next) {
+                            break;
+                        }
+                        end += 1;
+                    }
+                }
+                run_end.set(pairs[end].1 as usize);
                 draw(layer, b as usize);
+                run_end.set(0);
             }
+            k = end + 1;
         }
     }
 }

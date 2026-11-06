@@ -426,3 +426,57 @@ fn a_piece_shows_only_while_its_own_layer_does() {
     assert_eq!(hits(&s), [true, true, true]);
     assert!(s.get(1.0).unwrap().veiled.is_none());
 }
+
+/// Putting many objects on several cores makes the same store as one by one (docs/adr/1066 §4): every object's shape,
+/// box, pieces and layer, in the same order, and the same hits.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn many_objects_put_on_several_cores_make_the_same_store() {
+    use crate::api::json::Json;
+    let mut text = String::from("[");
+    for i in 0..6000 {
+        if i > 0 {
+            text.push(',');
+        }
+        let (x, y) = (f64::from(i % 80) * 7.0, f64::from(i / 80) * 5.0);
+        text.push_str(&match i % 3 {
+            0 => format!(
+                r#"{{"id":{},"layerId":"a","kind":"insert","block":"r","p":{{"x":{x},"y":{y}}},"scale":{},"rotation":{}}}"#,
+                i + 1,
+                1.0 + f64::from(i % 5) * 0.25,
+                f64::from(i % 7) * 0.3
+            ),
+            1 => format!(
+                r#"{{"id":{},"layerId":"b","kind":"line","a":{{"x":{x},"y":{y}}},"b":{{"x":{},"y":{}}}}}"#,
+                i + 1,
+                x + 3.0,
+                y + 1.0
+            ),
+            _ => format!(r#"{{"id":{},"layerId":"a","kind":"point","p":{{"x":{x},"y":{y}}}}}"#, i + 1),
+        });
+    }
+    text.push(']');
+    let mut one = Store::new();
+    one.set_blocks_json(ROGAR).unwrap();
+    one.put_json(&text).unwrap();
+    let Ok(Json::Arr(list)) = Json::parse(&text) else {
+        panic!("json");
+    };
+    let items: Vec<_> = list.iter().map(|v| super::read_item(v).expect("an item")).collect();
+    let mut many = Store::new();
+    many.set_blocks_json(ROGAR).unwrap();
+    let n = many.put_many_parallel(items.iter().map(|(id, l, label, s)| (*id, l.as_str(), *label, s.clone())).collect(), 8);
+    assert_eq!(n, 6000);
+    assert_eq!(one.ids(), many.ids());
+    for id in one.ids() {
+        let (a, b) = (one.get(id).expect("one"), many.get(id).expect("many"));
+        assert_eq!(a.shape, b.shape, "{id}");
+        assert_eq!(a.bounds, b.bounds, "{id}");
+        assert_eq!(a.layer, b.layer, "{id}");
+        assert_eq!(a.expanded, b.expanded, "{id}");
+        assert_eq!(a.veiled, b.veiled, "{id}");
+    }
+    for at in [Vec2::new(101.0, 0.5), Vec2::new(350.0, 120.0), Vec2::new(14.5, 5.5)] {
+        assert_eq!(one.hits(at, 0.5), many.hits(at, 0.5), "{at:?}");
+    }
+}

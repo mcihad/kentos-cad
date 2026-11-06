@@ -2846,6 +2846,18 @@ yerleşim yine çizilir, kendi batch'inin renginde (ByBlock/ByLayer kuruluşta �
 kare değişmedi. **Tutmayan:** 10⁶'da uzak görünüm 60 Hz değil (121 ms), 10⁶ açılışın ilk karesi ve Hepsini seç ~2 s.
 Madde `[~]`.
 
+**Bir milyon nesnede tarama, Hepsini seç ve ilk kare (6 Kasım 2026, [ADR 1066](../docs/adr/1066-million-far-hatches-select-all-and-first-frame.md)):**
+Önce parçalarına ayrıldı (`perf::million` + macOS `sample`, katman katman GPU): 10⁶ uzak karede tarama katmanı 49 516
+ayrı çağrıydı; Hepsini seç'in yarısı vurgunun 3,1 milyon blok parçasını tek çekirdekte nesneye çevirmesi, yarısı
+Öznitelikler panosunun her değeri karşılaştırmak için metne yazmasıydı; ilk karenin ~0,9 s'si geometri deposunun tek
+çekirdekte kurulması, ~0,2 s'si bağlı dosya denetiminin her nesnenin UID'sini yazmasıydı. Kesildi: üç pikselden sık
+desenli, aynı rengi/aralığı/kalınlığı taşıyan art arda taramalar tek çağrıda (gölgelendirici o durumda açıyı okumaz;
+pikseller aynı), vurgunun parçaları ve deponun kayıt/parçaları çekirdeklerde (sonuç aynı, testli), pano değerleri yalnız
+farklı olanlar için yazılır, UID yalnız dosya bağlayan nesnede. Önce → sonra (10⁶): ilk kare MİB 2 255 → 1 478 ms,
+Hepsini seç 2 156 → 1 152 ms, uzak kaydırma GPU 118 → 108 ms; 10⁵: Hepsini seç 172 → 109, ilk kare 238 → 174 ms.
+İki ikilinin resimleri çizim alanında piksel piksel aynı, `perf::stability` sayı sayı aynı. **Tutmayan:** 10⁶'da uzak
+görünüm (108 ms), Hepsini seç (1,15 s), ilk kare (1,5 s) 60 Hz'de değil. Madde `[~]`.
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].

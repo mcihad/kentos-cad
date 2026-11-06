@@ -3142,9 +3142,21 @@ fn style_rows(
 /// “Değiştir”. On a locked layer they only show. The web's `textRows`.
 fn text_rows(texts: &[&kentos_commands::TextEntity], slots: &[Slot], locked: bool) -> Vec<Row> {
     const MIXED: &str = "Çeşitli";
+    // Every value below is written from a text's width factor and paragraph only: a text whose two are the first's
+    // writes the first's, so only the others are written out (docs/adr/1066 §3; a large selection's texts mostly share
+    // them; equal by value, ±0 aside, which no width or spacing takes). The text written decides, as before.
+    let first_input = (texts[0].width_factor.map(f64::to_bits), &texts[0].paragraph);
+    let as_first: Vec<bool> = texts
+        .iter()
+        .map(|t| t.width_factor.map(f64::to_bits) == first_input.0 && t.paragraph == *first_input.1)
+        .collect();
     let common = |of: &dyn Fn(&kentos_commands::TextEntity) -> String| {
         let first = of(texts[0]);
-        texts.iter().all(|t| of(t) == first).then_some(first)
+        texts
+            .iter()
+            .zip(&as_first)
+            .all(|(t, same)| *same || of(t) == first)
+            .then_some(first)
     };
     let align = texts
         .iter()
@@ -3833,14 +3845,23 @@ fn many_sections(
             Row::text("Kalınlık", weight_text(weight))
                 .editor(edit(weight_editor(&lined_ids, weight))),
         );
-        // The look's parts (docs/adr/0260): the shared value, else Çeşitli.
-        let same = |f: &dyn Fn(&Entity) -> String| lined.iter().all(|e| f(e) == f(lined[0]));
-        let line_type = same(&|e| format!("{:?}", e.base().look.line_type))
-            .then(|| lined[0].base().look.line_type);
-        let scale = same(&|e| format!("{:?}", e.base().look.line_type_scale))
-            .then(|| lined[0].base().look.line_type_scale);
-        let pattern = same(&|e| format!("{:?}", e.base().look.line_pattern))
-            .then(|| lined[0].base().look.line_pattern.as_deref());
+        // The look's parts (docs/adr/0260): the shared value, else Çeşitli. Compared as their written forms were: the
+        // line type and its pattern by value (no number in them), the scale by its bits, a value's written form being
+        // its bits' (docs/adr/1066 §3: a million objects were each written out three times).
+        let looks: Vec<_> = lined.iter().map(|e| &e.base().look).collect();
+        let first = looks[0];
+        let line_type = looks.iter().all(|l| l.line_type == first.line_type).then(|| first.line_type);
+        let scale = looks
+            .iter()
+            .all(|l| {
+                l.line_type_scale.map(f64::to_bits) == first.line_type_scale.map(f64::to_bits)
+                    || format!("{:?}", l.line_type_scale) == format!("{:?}", first.line_type_scale)
+            })
+            .then(|| first.line_type_scale);
+        let pattern = looks
+            .iter()
+            .all(|l| l.line_pattern == first.line_pattern)
+            .then(|| first.line_pattern.as_deref());
         rows.push(line_type_row(doc, &lined_ids, line_type, pattern).editor_if(!any_locked));
         rows.push(line_type_scale_row(&lined_ids, scale).editor_if(!any_locked));
     }

@@ -473,8 +473,60 @@ impl Store {
     /// Adds or replaces one object. The tree is not built again here: a host
     /// putting many objects calls `put_many` (or a packed form), which does.
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
+        let expansion = self.expansion_of(id, &shape);
+        self.put_expanded(id, layer_id, label, shape, expansion);
+    }
+
+    /// [`Store::put_many`] with the objects' pieces worked out on `threads` cores first (docs/adr/1066 §4: a
+    /// million objects' blocks, walls and spaces expanded on the opening's frame): the same store as `put_many`, the
+    /// objects put in their order. Native only; the browser's build has no threads.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn put_many_parallel<'a>(
+        &mut self,
+        items: Vec<(f64, &'a str, bool, Shape)>,
+        threads: usize,
+    ) -> usize {
+        let threads = threads.clamp(1, 16);
+        if threads == 1 || items.len() < 4096 {
+            return self.put_many(items);
+        }
+        self.reserve(items.len());
+        let chunk = items.len().div_ceil(threads);
+        let store = &*self;
+        let expansions: Vec<(Option<Arc<Expanded>>, Bounds)> = std::thread::scope(|scope| {
+            let handles: Vec<_> = items
+                .chunks(chunk)
+                .map(|part| {
+                    scope.spawn(move || {
+                        part.iter()
+                            .map(|(id, _, _, shape)| store.expansion_of(*id, shape))
+                            .collect::<Vec<_>>()
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .flat_map(|h| h.join().unwrap_or_else(|p| std::panic::resume_unwind(p)))
+                .collect()
+        });
+        let n = items.len();
+        for ((id, layer, label, shape), expansion) in items.into_iter().zip(expansions) {
+            self.put_expanded(id, layer, label, shape, expansion);
+        }
+        self.maybe_rebuild();
+        n
+    }
+
+    /// [`Store::put`] with its pieces and box already worked out (`expansion_of` of the same store).
+    fn put_expanded(
+        &mut self,
+        id: f64,
+        layer_id: &str,
+        label: bool,
+        shape: Shape,
+        (expanded, bounds): (Option<Arc<Expanded>>, Bounds),
+    ) {
         let layer = self.layer_index(layer_id);
-        let (expanded, bounds) = self.expansion_of(id, &shape);
         self.note_wall(id, matches!(shape, Shape::Wall { .. }).then_some(bounds));
         let veiled = expanded.as_deref().and_then(|x| self.veil(x));
         let key = id.to_bits();

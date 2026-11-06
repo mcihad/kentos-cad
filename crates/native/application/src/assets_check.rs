@@ -156,6 +156,13 @@ impl Walk<'_> {
     }
 }
 
+/// Whether `e` can link anything [`Walk::entity`] reports: a picture, a raster, a point cloud, a table read from a
+/// file, or an attachment.
+fn links_anything(e: &Entity) -> bool {
+    matches!(e, Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Table(_))
+        || !e.base().attachments.is_empty()
+}
+
 /// The drawing's linked files.
 pub fn check_in(doc: &Document, input: &AssetsCheck) -> AssetsChecked {
     let search = doc.settings().xref_paths.clone();
@@ -197,7 +204,9 @@ pub fn check_in(doc: &Document, input: &AssetsCheck) -> AssetsChecked {
         );
     }
     // The drawing's objects, then the blocks' (an external reference's content is its source's, not linked again).
-    for e in doc.entities() {
+    // An object's UID is written out only for one that links a file or an address (docs/adr/1066 §4): a large
+    // drawing's other objects would each format theirs for nothing.
+    for e in doc.entities().filter(|e| links_anything(e)) {
         let uid = doc.uid(Slot(e.base().id)).map(|u| u.to_string());
         w.entity(e, uid, None);
     }

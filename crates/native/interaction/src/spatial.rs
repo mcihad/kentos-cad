@@ -340,7 +340,32 @@ impl Spatial {
         self.tagged_spaces.clear();
         self.sync_tagged_spaces(doc);
         let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
-        self.store.put_many(doc.entities().filter_map(|e|kentos_native_application::viewport_scope::record_at(e,scale,doc.settings())));
+        // The objects' records and their pieces on the machine's cores (docs/adr/1066 §4), put in their order.
+        let threads = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8);
+        let all: Vec<&Entity> = doc.entities().collect();
+        let settings = doc.settings();
+        let records: Vec<_> = if all.len() >= 4096 && threads > 1 {
+            let chunk = all.len().div_ceil(threads);
+            std::thread::scope(|scope| {
+                let handles: Vec<_> = all
+                    .chunks(chunk)
+                    .map(|part| {
+                        scope.spawn(move || {
+                            part.iter()
+                                .filter_map(|e| kentos_native_application::viewport_scope::record_at(e, scale, settings))
+                                .collect::<Vec<_>>()
+                        })
+                    })
+                    .collect();
+                handles
+                    .into_iter()
+                    .flat_map(|h| h.join().unwrap_or_else(|p| std::panic::resume_unwind(p)))
+                    .collect()
+            })
+        } else {
+            all.iter().filter_map(|e| kentos_native_application::viewport_scope::record_at(e, scale, settings)).collect()
+        };
+        self.store.put_many_parallel(records, threads);
         self.store
             .set_hosts(kentos_native_application::geometry_store::opening_hosts(doc, doc.entities()));
         // The masks are picked by their boundary only (docs/adr/0310 §4).
@@ -1186,6 +1211,19 @@ impl Spatial {
         }
         let item = self.store.get(f64::from(e.base().id))?;
         item.expanded.as_ref().map(|x| piece_entities_shown(e, x, |i| item.piece_shown(i)))
+    }
+
+    /// What [`Self::pieces`] makes an insert's objects from: its pieces as the store placed them and which of them
+    /// show; none as for `pieces`. A large selection's inserts are made into objects on several cores from these
+    /// (docs/adr/1066 §3): the store stays on this thread.
+    pub fn pieces_source(&self, e: &Entity) -> Option<(std::sync::Arc<kentos_geometry_core::store::Expanded>, Vec<bool>)> {
+        if !matches!(e, Entity::Insert(_)) {
+            return None;
+        }
+        let item = self.store.get(f64::from(e.base().id))?;
+        let x = item.expanded.clone()?;
+        let shown = (0..x.shapes.len()).map(|i| item.piece_shown(i)).collect();
+        Some((x, shown))
     }
 
     /// The most specific visible object within `tol` world units of `at`
