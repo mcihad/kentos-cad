@@ -527,7 +527,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some())
             + usize::from(s.auto_select.is_some())
-            + usize::from(s.road.is_some());
+            + usize::from(s.road.is_some())
+            + usize::from(s.map_work.is_some());
         self.open(n, true)?;
         if let Some(u) = &s.ucs {
             self.key("ucs");
@@ -631,6 +632,23 @@ impl<'d> Encoder<'d> {
                 ));
             }
             self.w.uint(u64::from(srid));
+        }
+        // Schema 188 (docs/adr/1200 §2): a map project's work structure, as its JSON (after mapSrid); a map project's
+        // only.
+        if let Some(v) = &s.map_work {
+            self.key("mapWork");
+            self.at(Seg::Name("mapWork"), |e| {
+                if v.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş harita işi yazılmaz"));
+                }
+                if s.cad_work != Some(kentos_contracts::CadWork::Map) {
+                    return Err(e.fail(Code::BadValue, "harita işi yalnız harita projesinin olur (cadWork map)"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
+                }
+                e.json(&serde_json::to_value(v).unwrap_or_default())
+            })?;
         }
         // Schema 74 (docs/adr/0503): the layers bound to their sources, written whole and checked.
         if !s.sources.is_empty() {
@@ -1224,7 +1242,7 @@ impl<'d> Encoder<'d> {
                 Ok(())
             })?;
         }
-        // Schema 190 (docs/adr/1260 §2): the quality profile, its keys in the file's order.
+        // Schema 189 (docs/adr/1260 §2): the quality profile, its keys in the file's order.
         if let Some(p) = &t.profile {
             self.key("profile");
             self.at(Seg::Name("profile"), |e| {
@@ -1265,7 +1283,7 @@ impl<'d> Encoder<'d> {
                         e.at(Seg::Name("at"), |e| e.point(&x.at))?;
                         e.key("rule");
                         e.text(&x.rule)?;
-                        // Schema 190 (docs/adr/1260 §1): what it covers, why, what was decided, the rule's version.
+                        // Schema 189 (docs/adr/1260 §1): what it covers, why, what was decided, the rule's version.
                         if let Some(s) = x.scope {
                             e.key("scope");
                             e.w.text(match s {
@@ -2212,7 +2230,7 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
-    // Schema 190 (docs/adr/1260): the topology quality profile, an exception's review fields.
+    // Schema 189 (docs/adr/1260): the topology quality profile, an exception's review fields.
     if doc.settings.topology.as_ref().is_some_and(|t| {
         t.profile.is_some()
             || t.exceptions.iter().any(|x| {
@@ -2223,6 +2241,14 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
             })
     }) {
         return crate::SCHEMA_WITH_TOPOLOGY_REVIEWS;
+    }
+    // Schema 188 (docs/adr/1200 §2): a map project's work structure.
+    if doc.settings.map_work.is_some() {
+        return crate::SCHEMA_WITH_MAP_WORK;
+    }
+    // Schema 187 (docs/adr/1025): a leader style that names the text style of its note.
+    if doc.settings.leader_styles.iter().any(|s| s.text_style.is_some()) {
+        return crate::SCHEMA_WITH_LEADER_TEXT_STYLES;
     }
     // Schema 186 (docs/adr/1023): a dimension style that names the text style of its value.
     if doc.settings.dimension_styles.iter().any(|s| s.text_style.is_some()) {

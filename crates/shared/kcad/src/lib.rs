@@ -808,14 +808,18 @@ pub const SCHEMA_WITH_SHX_FONTS: u32 = 184;
 pub const SCHEMA_WITH_TABLE_STYLES: u32 = 185;
 /// Schema 186 (docs/adr/1023): the text style a dimension style writes its value in (`textStyle`, by name).
 pub const SCHEMA_WITH_DIMENSION_TEXT_STYLES: u32 = 186;
-/// Schema 190 (docs/adr/1260): the topology settings' quality `profile` and an exception's `decision`, `reason`,
-/// `ruleDigest` and `scope`. Temporary number on the MAP-07 branch: renumbered on merge.
-pub const SCHEMA_WITH_TOPOLOGY_REVIEWS: u32 = 190;
+/// Schema 187 (docs/adr/1025): the text style a leader style writes its note in (`textStyle`, by name).
+pub const SCHEMA_WITH_LEADER_TEXT_STYLES: u32 = 187;
+/// Schema 188 (docs/adr/1200 §2): a map project's work structure (`settings.mapWork`).
+pub const SCHEMA_WITH_MAP_WORK: u32 = 188;
+/// Schema 189 (docs/adr/1260): the topology settings' quality `profile` and an exception's `decision`, `reason`,
+/// `ruleDigest` and `scope`.
+pub const SCHEMA_WITH_TOPOLOGY_REVIEWS: u32 = 189;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 185] = [
+pub const SCHEMAS: [u32; 187] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1000,6 +1004,8 @@ pub const SCHEMAS: [u32; 185] = [
     SCHEMA_WITH_SHX_FONTS,
     SCHEMA_WITH_TABLE_STYLES,
     SCHEMA_WITH_DIMENSION_TEXT_STYLES,
+    SCHEMA_WITH_LEADER_TEXT_STYLES,
+    SCHEMA_WITH_MAP_WORK,
     SCHEMA_WITH_TOPOLOGY_REVIEWS,
 ];
 

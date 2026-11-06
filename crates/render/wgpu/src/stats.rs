@@ -28,4 +28,7 @@ pub struct FrameStats {
     /// shows changed, so the scene was not drawn again, only the overlays
     /// over it (`FrameInput::keep_picture`). The counts above are the picture's.
     pub picture_kept: bool,
+    /// The frame moved the kept picture by the pan's whole pixels and drew only the strips it uncovered
+    /// (`FrameInput::moving`, docs/adr/1067).
+    pub picture_moved: bool,
 }

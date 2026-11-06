@@ -153,12 +153,64 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 2.1
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -264,12 +316,64 @@
         "displayStep": 0.001,
         "transformation": 2.1,
         "transformationVertical": 2.1
+       },
+       "chain": {
+        "source": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -375,12 +479,64 @@
         "displayStep": 0.001,
         "transformation": 2.1,
         "transformationVertical": 2.1
+       },
+       "chain": {
+        "source": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -428,7 +584,7 @@
        "points": [
         {
          "x": 29.0665,
-         "y": 40.1826,
+         "y": 40.182599999999994,
          "z": 1043.25
         }
        ],
@@ -474,9 +630,61 @@
         "displayStep": 0.001,
         "transformation": 1.0,
         "transformationVertical": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -554,6 +762,50 @@
         "displayStep": 0.001,
         "transformation": 0.0,
         "transformationVertical": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 32635,
+         "name": "WGS 84 / UTM 35N",
+         "family": "transverseMercator",
+         "datum": "WGS84",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "en",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact"
+        ],
+        "grids": [],
+        "status": "complete",
+        "reasons": [],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": []
@@ -654,12 +906,70 @@
         "displayStep": 0.001,
         "transformation": 2.1,
         "transformationVertical": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -754,6 +1064,52 @@
         "displayStep": 0.001,
         "transformation": 0.0,
         "transformationVertical": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5714,
+          "name": "MSL height",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 8050,
+          "name": "MSL height (ft)",
+          "unit": "ft"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "exact",
+         "exact"
+        ],
+        "grids": [],
+        "status": "complete",
+        "reasons": [],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": []
@@ -947,6 +1303,41 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "heights_unchanged"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
@@ -954,6 +1345,11 @@
         "code": "heights_unchanged",
         "message": "Kotların ne olduğu iki tarafta da söylenmedi; kotlar değişmeden kaldı. Elipsoit yüksekliğiyse datum değişince değişirdi: yüksekliği söyleyin (heights).",
         "path": "points"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların ne olduğu söylenmedi, değişmeden kaldı.",
+        "path": "to"
        }
       ]
      },
@@ -1032,6 +1428,44 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "exact"
+        ],
+        "grids": [],
+        "status": "complete",
+        "reasons": [],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": []
@@ -1120,7 +1554,7 @@
        "points": [
         {
          "x": 29.0665,
-         "y": 40.1826,
+         "y": 40.182599999999994,
          "z": 1043.25
         }
        ],
@@ -1168,6 +1602,54 @@
         "displayStep": 0.001,
         "transformation": 1.0,
         "transformationVertical": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epoch": 2023.5,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epoch": 2023.5,
+         "epochSource": "given"
+        },
+        "bases": [
+         "exact",
+         "epsg"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
@@ -1175,6 +1657,11 @@
         "code": "epoch_not_applied",
         "message": "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı.",
         "path": "from.epoch"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
        }
       ]
      },
@@ -1253,6 +1740,43 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epoch": 2023.5,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epoch": 2023.5,
+         "epochSource": "carried"
+        },
+        "bases": [
+         "exact",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "epoch_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
@@ -1260,6 +1784,11 @@
         "code": "epoch_not_applied",
         "message": "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı.",
         "path": "from.epoch"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: yalnız bir yanın epoku söylendi; öbürünün aynı epokta olduğu varsayıldı.",
+        "path": "to"
        }
       ]
      },
@@ -1373,12 +1902,64 @@
         "transformationVertical": 2.1,
         "combined": 2.101,
         "combinedVertical": 2.1
+       },
+       "chain": {
+        "source": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -1465,9 +2046,62 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 3857,
+         "name": "WGS 84 / Pseudo-Mercator",
+         "family": "pseudoMercator",
+         "datum": "WGS84",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "en",
+         "ensembleAccuracy": 2.0,
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1555,6 +2189,53 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "points_outside",
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
@@ -1562,6 +2243,11 @@
         "code": "points_outside",
         "message": "1 noktanın hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında); yerleri boş.",
         "path": "points"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bazı noktalar izdüşümün ya da ızgaranın kapsamı dışında; WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
        }
       ]
      },

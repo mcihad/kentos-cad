@@ -7,7 +7,7 @@
 //! at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=paralel-kaydir,paralel-kaydir-alan,paralel-kaydir-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=paralel-kaydir,paralel-kaydir-alan,paralel-kaydir-yazildi,paralel-kaydir-yay,paralel-kaydir-yay-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -35,11 +35,19 @@ fn ground() -> Objects {
         &[[0.0, 10.0], [10.0, 10.0], [10.0, 20.0], [20.0, 20.0]],
         false,
     );
+    // docs/adr/1024: a parcel whose east edge is a curved kerb (right of the other scenes' view).
+    let kerb = o.path("parsel", &[[34.0, -10.0], [48.0, -10.0], [48.0, 10.0], [34.0, 10.0]], true);
+    o.fields(kerb, serde_json::json!({"bulges": [0.0, 0.3, 0.0, 0.0]}));
     o
 }
 
 /// The drawing in a CAD project at 1:500, Paralel kaydır running.
 fn opened(app: &mut App) {
+    opened_over(app, [-36.0, -16.0, 26.0, 26.0]);
+}
+
+/// As [`opened`], the view over `b` (west, south, east, north from the origin).
+fn opened_over(app: &mut App, b: [f64; 4]) {
     open(app, ground());
     make_cad(app);
     {
@@ -52,10 +60,10 @@ fn opened(app: &mut App) {
     app.command_expanded = false;
     app.viewport.camera.fit(
         &kentos_render_wgpu::Bounds {
-            min_x: E - 36.0,
-            min_y: N - 16.0,
-            max_x: E + 26.0,
-            max_y: N + 26.0,
+            min_x: E + b[0],
+            min_y: N + b[1],
+            max_x: E + b[2],
+            max_y: N + b[3],
         },
         24.0,
     );
@@ -91,8 +99,25 @@ fn written(app: &mut App) {
     hover(app, [24.0, -6.0]);
 }
 
+/// docs/adr/1024: the kerb's arc picked, the cursor 2 m out: the arc grows on its own circle, its straight
+/// neighbours slide.
+fn arc_shown(app: &mut App) {
+    opened_over(app, [26.0, -16.0, 60.0, 16.0]);
+    click(app, [51.0, 0.0]);
+    hover(app, [53.0, 0.0]);
+}
+
+/// The kerb 2 m out, written: one step, its arc still an arc.
+fn arc_written(app: &mut App) {
+    arc_shown(app);
+    typed(app, "2");
+    hover(app, [58.0, -14.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("paralel-kaydir-yay", arc_shown),
+        ("paralel-kaydir-yay-yazildi", arc_written),
         ("paralel-kaydir", shown),
         ("paralel-kaydir-alan", area),
         ("paralel-kaydir-yazildi", written),

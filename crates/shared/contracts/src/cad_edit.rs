@@ -671,6 +671,17 @@ pub enum EntityGeometry {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         fields: Option<Vec<crate::CellField>>,
+        /// The table style it follows, by its id among the project's (`ProjectSettings.table_styles`, docs/adr/1127
+        /// §3); null: none. Absent in an edit: the table's kept.
+        #[serde(
+            default,
+            rename = "tableStyle",
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional, rename = "tableStyle"))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+        table_style: Option<Option<String>>,
     },
     /// A picture (docs/adr/0192 §1): its lower left corner `p`, its width
     /// and height (metres, over 0), turned by `rotation` (radians,

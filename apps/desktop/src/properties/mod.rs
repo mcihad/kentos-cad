@@ -185,6 +185,8 @@ pub enum Event {
     /// to the objects; none, Standart.
     TextStyle(Vec<Slot>, Option<String>),
     DimensionStyle(Vec<Slot>, Option<String>),
+    /// Tablo stili ▾ (docs/adr/1127 §3): the tables made to follow the table style; none, no style.
+    TableStyle(Vec<Slot>, Option<String>),
 }
 
 /// A grid's, column's, stair's or ramp's field a cell edits (docs/adr/0343 §5): words, a length in the project's
@@ -524,6 +526,15 @@ impl App {
                 info.push(Row::text("Görünür renk", displayed));
             }
             panel.sections.insert(0, rows::Section {id:"picked-piece".into(),title:"Seçilen blok parçası".into(),rows:info});
+        }
+        // One object of a map project's work: where it comes from (docs/adr/1200 §4); a map's programs'.
+        if let [slot] = selected.as_slice()
+            && self.shows_property_rows(crate::module_surfaces::PropertyRows::MapWork)
+            && let Some(section) = map_work_section(doc, *slot)
+        {
+            // Right under the object's own rows, where it is seen without scrolling.
+            let at = panel.sections.len().min(1);
+            panel.sections.insert(at, section);
         }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
@@ -1065,6 +1076,7 @@ impl App {
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }
+            Event::TableStyle(slots, id) => properties::apply_table_style(model, &slots, id.as_deref()),
             Event::LeaderArrow(slots, arrow) => properties::change_leaders(model, &slots, |l| {
                 (l.arrow != arrow).then(|| LeaderEntity { arrow, ..l.clone() })
             }),
@@ -2527,4 +2539,41 @@ impl App {
             CommandResult::Cancelled | CommandResult::Queued { .. } | CommandResult::NeedsInput { .. } => {}
         }
     }
+}
+
+/// Kaynağı (docs/adr/1200 §4): the object's role in the map's work, its item, the source it was derived from, the
+/// source's revision then (its first 12 hex digits), the operation and whether it is up to date; none outside a map
+/// project's work structure.
+fn map_work_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
+    let uid = doc.model.uid(slot)?.to_string();
+    let found = kentos_native_application::map_work::source_of(&doc.model, &uid)?;
+    let work = doc.model.map_work()?;
+    let name = |id: &Option<String>| {
+        id.as_deref().map(|i| work.item(i).map_or_else(|| i.to_owned(), |w| format!("{} ({i})", w.name)))
+    };
+    let role = match found.role {
+        kentos_commands::WorkObjectRole::Source => "Kaynak veri",
+        kentos_commands::WorkObjectRole::Derived => "Kaynaktan türetildi",
+        kentos_commands::WorkObjectRole::Free => "Bağımsız çizim",
+    };
+    let mut out = vec![rows::Row::text("Rol", role)];
+    if let Some(item) = name(&found.item) {
+        out.push(rows::Row::text("İş öğesi", item));
+    }
+    if found.role == kentos_commands::WorkObjectRole::Derived
+        && let Some(source) = name(&found.source)
+    {
+        out.push(rows::Row::text("Kaynağı", source));
+    }
+    if let Some(r) = &found.revision {
+        out.push(rows::Row::text("Kaynak revizyonu", r.chars().take(12).collect::<String>()));
+    }
+    if let Some(op) = &found.operation {
+        out.push(rows::Row::text("Üretim işlemi", op.clone()));
+    }
+    if let Some(current) = found.current {
+        out.push(rows::Row::text("Güncellik", if current { "Güncel" } else { "Güncel değil: kaynağı değişti" }));
+    }
+    out.push(rows::Row::text("Kimlik", uid));
+    Some(rows::Section { id: "mapWork".into(), title: "Kaynağı".into(), rows: out })
 }

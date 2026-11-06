@@ -3866,7 +3866,7 @@
       "id": "cad.entities.edit",
       "version": 1,
       "title": "Nesneleri düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Tam elipste ellipseAxis değişikliği uid, index (0:+major, 1:+minor, 2:-major, 3:-minor) ve dünya metre at hedefini alır; yalnız operation=grip. Çekirdek geometriyi üretir, geçici hedef yalnız sürüklenen ekseni tutar; diğer yarıçap mevcut ölçüyü sağlayabilir. İndeks kaynak elipsindir; eksen sırası değişimi komut içinde eşlenir. Bu kalıcı eksen bağı değildir. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Tam elipste ellipseAxis değişikliği uid, index (0:+major, 1:+minor, 2:-major, 3:-minor) ve dünya metre at hedefini alır; yalnız operation=grip. Çekirdek geometriyi üretir, geçici hedef yalnız sürüklenen ekseni tutar; diğer yarıçap mevcut ölçüyü sağlayabilir. İndeks kaynak elipsindir; eksen sırası değişimi komut içinde eşlenir. Bu kalıcı eksen bağı değildir. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. Tablonun geometrisindeki tableStyle izlediği tablo stilinin kimliğidir (docs/adr/1127 §3): verilmezse tablonunki kalır, null stili kaldırır, projede olmayan kimlik unknown_style ile reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -54415,6 +54415,368 @@
       ]
     },
     {
+      "id": "map.work.query",
+      "version": 1,
+      "title": "Harita işini sorgula",
+      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi, tasarım, denetim sonucu, teslim paketi) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (kampanya ya da referans katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. Retler: not_a_map_project, invalid_uid, entity_not_found.",
+      "aliases": [
+        "haritaisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).\n`uid` also says where that object comes from.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "MapWorkQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,\nhow many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing\nobjects), whether it was deep, and the revision read.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "derivations": {
+            "items": {
+              "$ref": "#/$defs/WorkDerivationRow"
+            },
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/WorkRow"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WorkObjectSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problems": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "items",
+          "derivations",
+          "stale",
+          "problems",
+          "deep",
+          "revision"
+        ],
+        "title": "MapWorkTree",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,\nhow many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing\nobjects), whether it was deep, and the revision read.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          },
+          "derivations": {
+            "items": {
+              "$ref": "#/$defs/WorkDerivationRow"
+            },
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/WorkRow"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WorkObjectSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problems": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "items",
+          "derivations",
+          "stale",
+          "problems",
+          "deep",
+          "revision"
+        ],
+        "title": "MapWorkTree",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_map_project",
+          "invalid_uid",
+          "entity_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosyaları okuyarak, bir noktanın kaynağıyla",
+          "input": {
+            "deep": true,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        }
+      ]
+    },
+    {
+      "id": "map.work.edit",
+      "version": 1,
+      "title": "Harita işini düzenle",
+      "summary": "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked, work_full.",
+      "aliases": [
+        "haritaisiduzenle"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh\nor derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an\nobject another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked\nlayer), `work_full`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/MapWorkOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "MapWorkEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken\naway with an item, how many derivations are out of date after, and the drawing's revision.",
+        "properties": {
+          "derivation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "released": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "relinked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "stale",
+          "revision"
+        ],
+        "title": "MapWorkEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken\naway with an item, how many derivations are out of date after, and the drawing's revision.",
+        "properties": {
+          "derivation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "released": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "relinked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "stale",
+          "revision"
+        ],
+        "title": "MapWorkEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "not_a_map_project",
+          "unknown_work_item",
+          "unknown_derivation",
+          "invalid_work_text",
+          "layer_not_found",
+          "layer_in_work_item",
+          "nothing_to_set",
+          "invalid_file_path",
+          "file_not_found",
+          "work_item_no_file",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "already_derived",
+          "approval_stale",
+          "layer_locked",
+          "work_full"
+        ],
+        "warnings": [
+          "source_content_changed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "GNSS kampanyası, dosyasıyla",
+          "input": {
+            "operation": {
+              "file": "/veri/kampanya.nmea",
+              "kind": "campaign",
+              "layers": [
+                "gnss"
+              ],
+              "name": "GNSS 2026-10",
+              "op": "add"
+            }
+          }
+        },
+        {
+          "title": "Taşınan ortofotoyu yeniden bağla",
+          "input": {
+            "operation": {
+              "file": "/arsiv/ortofoto.tif",
+              "item": "is-2",
+              "op": "relink"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
@@ -64773,7 +65135,7 @@
       "id": "cad.styles.edit",
       "version": 1,
       "title": "Yazı ve ölçü stilleri",
-      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791).",
+      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791). Tablo stili (kind table, docs/adr/1127 §2) başlık, sütun başı ve veri hücre stilleriyle tablosunu kendi değeri olmayan yerde çizdirir: update ve rename tablo yazmaz; remove stilin tablolarının bağını tek adımda (“Tablo stili”) kaldırır. Yazı stili yeniden adlandırılınca tablo stillerinin hücre stilleri onu yeni adıyla anar.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -64788,7 +65150,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step;\n- `export`: `styles` (absent: every style of the kind), in the table's\n  order, as a `kentos.annotation-styles` file's text in `library`;\n  nothing is written;\n- `import`: `library`, a `kentos.annotation-styles` file's text of the\n  same kind; each of its styles by name (Turkish case folded, trimmed):\n  a new name is added (its id kept when the table has none such, else a\n  new one), a name the table has is kept as it is (`skipped`), or with\n  `replace` updated in its place (its id and name kept, its objects following as\n  `update` makes them).\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space), `no_library` (import without `library`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`style_not_found` (update's id, rename's and remove's `style`, each of\nexport's `styles`), `duplicate_style` (create's given id the table has),\n`invalid_library` (import's text not such a file, or of the other kind);\n`invalid_style` (the table it would leave, by `text_styles_problem` or\n`dimension_styles_problem`: the names, then each style's values).",
+        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step;\n- `export`: `styles` (absent: every style of the kind), in the table's\n  order, as a `kentos.annotation-styles` file's text in `library`;\n  nothing is written;\n- `import`: `library`, a `kentos.annotation-styles` file's text of the\n  same kind; each of its styles by name (Turkish case folded, trimmed):\n  a new name is added (its id kept when the table has none such, else a\n  new one), a name the table has is kept as it is (`skipped`), or with\n  `replace` updated in its place (its id and name kept, its objects following as\n  `update` makes them).\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space), `no_library` (import without `library`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`style_not_found` (update's id, rename's and remove's `style`, each of\nexport's `styles`), `duplicate_style` (create's given id the table has),\n`invalid_library` (import's text not such a file, or of the other kind);\n`invalid_style` (the table it would leave, by `text_styles_problem`,\n`dimension_styles_problem` or for table styles `table_style_defs_problem`:\nthe names, then each style's values).\n\nA text style renamed renames it in the table styles' cell styles that name it (its letters' case aside, as\nline types' texts follow it), so a table style keeps its text style (docs/adr/1127 §2).",
         "properties": {
           "dimension": {
             "anyOf": [
@@ -64863,6 +65225,17 @@
               "array",
               "null"
             ]
+          },
+          "table": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TableStyleDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw\nit as they are, none is written."
           },
           "text": {
             "anyOf": [
@@ -65063,6 +65436,26 @@
               "height": 3.5,
               "id": "",
               "name": "Ada no"
+            }
+          }
+        },
+        {
+          "title": "CETVEL tablo stili: veri hücreleri sağa, 2,5 mm, sütun başı 0,5 mm kenarla",
+          "input": {
+            "kind": "table",
+            "operation": "create",
+            "table": {
+              "data": {
+                "align": "right",
+                "height": 2.5,
+                "horizontalMargin": 1.5
+              },
+              "header": {
+                "align": "center",
+                "borderWeight": 0.5
+              },
+              "id": "",
+              "name": "CETVEL"
             }
           }
         },
@@ -81638,7 +82031,7 @@
       "id": "cad.crs.transform",
       "version": 1,
       "title": "Koordinat dönüştür",
-      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  Zincir (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı zincir hassas dönüşüm değildir (chain_limited). Projenin kayıtlı kodu KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "koordinat-donustur",
         "cs2cs"
@@ -81657,7 +82050,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.crs.transform` v1.\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`\n(a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side\nis the project's and the project has none), `invalid_heights` (a side's heights against their rules),\n`invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:\n`no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is\na grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other\nnot), `geoid_required` (between ellipsoidal and orthometric heights: KentOS has no geoid engine),\n`vertical_unsupported` (between two vertical datums), `epoch_unsupported` (two different epochs: KentOS has no\ntime-dependent transformation). Warnings: `heights_unchanged` (heights given, neither side says what they are:\nthey stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),\n`unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some\npoints have no value in the target: outside a projection or a grid).",
+        "description": "Input of `cad.crs.transform` v1.\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`\n(a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side\nis the project's and the project has none), `unsupported_srid` (a side is the project's and its stored EPSG code\nis not one the registry resolves, docs/adr/1230 §1), `invalid_heights` (a side's heights against their rules),\n`invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:\n`no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is\na grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other\nnot), `geoid_required` (between ellipsoidal and orthometric heights: KentOS has no geoid engine),\n`vertical_unsupported` (between two vertical datums), `epoch_unsupported` (two different epochs: KentOS has no\ntime-dependent transformation). Warnings: `heights_unchanged` (heights given, neither side says what they are:\nthey stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),\n`unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some\npoints have no value in the target: outside a projection or a grid).",
         "properties": {
           "from": {
             "anyOf": [
@@ -81715,8 +82108,11 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record and the report.",
+        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record, the report and the coordinate chain (docs/adr/1230).",
         "properties": {
+          "chain": {
+            "$ref": "#/$defs/CrsChain"
+          },
           "operation": {
             "$ref": "#/$defs/CrsOperation"
           },
@@ -81747,15 +82143,19 @@
           "points",
           "unreached",
           "operation",
-          "report"
+          "report",
+          "chain"
         ],
         "title": "CrsTransformed",
         "type": "object"
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record and the report.",
+        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record, the report and the coordinate chain (docs/adr/1230).",
         "properties": {
+          "chain": {
+            "$ref": "#/$defs/CrsChain"
+          },
           "operation": {
             "$ref": "#/$defs/CrsOperation"
           },
@@ -81786,7 +82186,8 @@
           "points",
           "unreached",
           "operation",
-          "report"
+          "report",
+          "chain"
         ],
         "title": "CrsTransformed",
         "type": "object"
@@ -81797,6 +82198,7 @@
           "not_finite",
           "unknown_srid",
           "no_system",
+          "unsupported_srid",
           "invalid_heights",
           "invalid_epoch",
           "invalid_uncertainty",
@@ -81813,7 +82215,8 @@
           "heights_unchanged",
           "epoch_not_applied",
           "unofficial_operation",
-          "points_outside"
+          "points_outside",
+          "chain_limited"
         ]
       },
       "examples": [
@@ -92717,6 +93120,66 @@
       "meaning": "Bu komut yalnız yol projesinde (KentOS Yol, cadWork road) çalışır."
     },
     {
+      "code": "not_a_map_project",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işi yalnız harita projesinde (KentOS Harita, cadWork map) olur."
+    },
+    {
+      "code": "unknown_work_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işinde bu kimlikte öğe yok."
+    },
+    {
+      "code": "unknown_derivation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işinde bu kimlikte türetme kaydı yok."
+    },
+    {
+      "code": "invalid_work_text",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin adı ya da üretim işlemi boşlukla başlamayan ve bitmeyen 1–200 karakter olmalı."
+    },
+    {
+      "code": "layer_in_work_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman harita işinin başka bir öğesinde ya da iki kez verilmiş; bir katman tek öğenin olur."
+    },
+    {
+      "code": "work_item_no_file",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da türetmenin kaynağı olur."
+    },
+    {
+      "code": "already_derived",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne başka bir türetme kaydında; önce o kaydı silin."
+    },
+    {
+      "code": "approval_stale",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın."
+    },
+    {
+      "code": "work_full",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur."
+    },
+    {
+      "code": "source_content_changed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil."
+    },
+    {
       "code": "invalid_terrain",
       "kind": "failed",
       "retryable": false,
@@ -95285,6 +95748,12 @@
       "meaning": "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin."
     },
     {
+      "code": "unsupported_srid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin kayıtlı EPSG kodu KentOS'un çözdüğü sistemler arasında yok; projeye kayıttaki bir sistemi atayın ya da tarafın sistemini EPSG koduyla verin."
+    },
+    {
       "code": "invalid_uncertainty",
       "kind": "failed",
       "retryable": false,
@@ -95367,6 +95836,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında)."
+    },
+    {
+      "code": "chain_limited",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dönüşüm zinciri sınırlı: bir adımın doğruluğu, epok, kot ya da kapsam eksik; sonuç hassas dönüşüm değil."
     },
     {
       "code": "no_operations",
@@ -99744,6 +100219,16 @@
         }
       ]
     },
+    "AccuracyBasis": {
+      "description": "What a step's accuracy rests on (docs/adr/1230 §2): exact (a conversion, a unit change), EPSG's registry, the\nproject's own statement (its Helmert or grid), or nothing (a geoid model, a velocity grid).",
+      "enum": [
+        "exact",
+        "epsg",
+        "project",
+        "unknown"
+      ],
+      "type": "string"
+    },
     "AccuracyReport": {
       "description": "The four numbers a calculation's report keeps apart (docs/adr/0519 §4): the source's uncertainty (what the caller\ngave), the transformation's stated accuracy, their root sum of squares when both are known (an estimate), the\nproject's topology tolerance (when points count as one, not an error) and the decimals and step lengths are shown\nwith (not an accuracy). Metres.",
       "properties": {
@@ -101737,6 +102222,11 @@
         {
           "const": "wall",
           "description": "A wall style (docs/adr/0339 §2): its walls take its components, ends and fill.",
+          "type": "string"
+        },
+        {
+          "const": "table",
+          "description": "A table style (docs/adr/1126, 1127 §2): its tables draw it where they set nothing themselves, so an update\nwrites no table; a removed one's tables lose the link in one undo step, “Tablo stili”.",
           "type": "string"
         }
       ]
@@ -107902,6 +108392,163 @@
       ],
       "type": "object"
     },
+    "ChainGrid": {
+      "description": "A grid the chain read (docs/adr/1230 §2): what it does, its name, its file's SHA-256 (its version: another file\nis another grid), the box its nodes cover (degrees; a point beyond has no value) and the accuracy the project\nstates for it (none: not stated; a geoid's and a velocity grid's are not known here).",
+      "properties": {
+        "accuracy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "extent": {
+          "$ref": "#/$defs/DegreeBox"
+        },
+        "kind": {
+          "$ref": "#/$defs/GridKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "sha256",
+        "extent"
+      ],
+      "type": "object"
+    },
+    "ChainSide": {
+      "description": "One side of the chain (docs/adr/1230 §1): its horizontal system (EPSG code when the registry's, name, family,\ndatum, unit, the order KentOS reads x and y in and the order EPSG gives the axes), the datum ensemble's accuracy\nwhen the datum is one (WGS 84: EPSG says 2 m), what its heights rest on, and its epoch with where it came from.",
+      "properties": {
+        "axes": {
+          "description": "The order x and y are: “east,north” or “longitude,latitude” (CLAUDE.md §5; whatever EPSG's order).",
+          "type": "string"
+        },
+        "datum": {
+          "description": "`TUREF`, `ED50`, `WGS84`, or the project's datum's name.",
+          "type": "string"
+        },
+        "ensembleAccuracy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "epochSource": {
+          "$ref": "#/$defs/EpochSource"
+        },
+        "epsgAxes": {
+          "description": "The order EPSG gives the axes: “ne”, “en” or “latlon”; none for the project's definition.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family": {
+          "$ref": "#/$defs/CrsFamily"
+        },
+        "name": {
+          "type": "string"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "epsg"
+        },
+        "unit": {
+          "description": "“m” on a grid, “deg” on a geographic system.",
+          "type": "string"
+        },
+        "vertical": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChainVertical"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "family",
+        "datum",
+        "unit",
+        "axes",
+        "epochSource"
+      ],
+      "type": "object"
+    },
+    "ChainStatus": {
+      "description": "Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights\ncarried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.",
+      "enum": [
+        "complete",
+        "limited"
+      ],
+      "type": "string"
+    },
+    "ChainVertical": {
+      "description": "What a side's heights rest on, as the chain records it: their kind, the vertical system (EPSG code, name and\nunit; an ellipsoidal height's is the horizontal datum's ellipsoid, in metres) and the geoid model.",
+      "properties": {
+        "geoid": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeoidModel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/HeightKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "epsg"
+        },
+        "unit": {
+          "description": "“m”, “ft”.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "unit"
+      ],
+      "type": "object"
+    },
     "ChangedObject": {
       "description": "An object that is in both and differs.",
       "properties": {
@@ -112689,6 +113336,51 @@
       },
       "type": "object"
     },
+    "CrsChain": {
+      "description": "The coordinate chain of a call (docs/adr/1230): the two sides, the basis of each step's accuracy (in the\noperation's steps' order), the grids read, the verdict and its reasons (in a fixed order: `points_outside`,\n`accuracy_unknown`, `height_accuracy_unknown`, `heights_unchanged`, `epoch_unknown`, `datum_ensemble`,\n`unofficial_operation`) and the numeric budget.",
+      "properties": {
+        "bases": {
+          "items": {
+            "$ref": "#/$defs/AccuracyBasis"
+          },
+          "type": "array"
+        },
+        "budget": {
+          "$ref": "#/$defs/NumericBudget"
+        },
+        "grids": {
+          "items": {
+            "$ref": "#/$defs/ChainGrid"
+          },
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source": {
+          "$ref": "#/$defs/ChainSide"
+        },
+        "status": {
+          "$ref": "#/$defs/ChainStatus"
+        },
+        "target": {
+          "$ref": "#/$defs/ChainSide"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "bases",
+        "grids",
+        "status",
+        "reasons",
+        "budget"
+      ],
+      "type": "object"
+    },
     "CrsDefinition": {
       "description": "A coordinate system the project defines (docs/adr/0168 §1): its name\nand what it is.",
       "properties": {
@@ -112704,6 +113396,31 @@
         "system"
       ],
       "type": "object"
+    },
+    "CrsFamily": {
+      "description": "The families of horizontal systems KentOS's engine resolves (docs/adr/1230 §1). A system outside them, or an EPSG\ncode the registry does not hold, is refused by name: a stored code is not assumed resolvable.",
+      "oneOf": [
+        {
+          "const": "geographic",
+          "description": "Latitude and longitude on a datum's ellipsoid.",
+          "type": "string"
+        },
+        {
+          "const": "transverseMercator",
+          "description": "A transverse Mercator grid: the TM3 zones, UTM, or the project's own.",
+          "type": "string"
+        },
+        {
+          "const": "pseudoMercator",
+          "description": "WGS 84 / Pseudo-Mercator (EPSG:3857).",
+          "type": "string"
+        },
+        {
+          "const": "local",
+          "description": "A local system bound to a base system by a plane transform (the project's definition).",
+          "type": "string"
+        }
+      ]
     },
     "CrsMove": {
       "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
@@ -115274,6 +115991,38 @@
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "DegreeBox": {
+      "description": "A box in degrees: west, south, east, north.",
+      "properties": {
+        "east": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "north": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "south": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "west": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        }
+      },
+      "required": [
+        "west",
+        "south",
+        "east",
+        "north"
       ],
       "type": "object"
     },
@@ -122594,6 +123343,13 @@
                 "null"
               ]
             },
+            "tableStyle": {
+              "description": "The table style it follows, by its id among the project's (`ProjectSettings.table_styles`, docs/adr/1127\n§3); null: none. Absent in an edit: the table's kept.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "textStyle": {
               "description": "The project's text style it follows, by its id; absent: Standart.",
               "type": [
@@ -122674,6 +123430,16 @@
     "EntityId": {
       "format": "uuid",
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "type": "string"
+    },
+    "EpochSource": {
+      "description": "Where a side's coordinate epoch came from: the call, the project's settings, the other side (the target takes\nthe source's when it states none), or nowhere.",
+      "enum": [
+        "given",
+        "project",
+        "carried",
+        "none"
+      ],
       "type": "string"
     },
     "EventLink": {
@@ -127587,6 +128353,15 @@
         "to"
       ],
       "type": "object"
+    },
+    "GridKind": {
+      "description": "What a grid of the chain does: an NTv2 datum shift, a geoid model, a velocity grid.",
+      "enum": [
+        "horizontal",
+        "geoid",
+        "velocity"
+      ],
+      "type": "string"
     },
     "GridOrigin": {
       "description": "Where a ceiling grid's lines start.",
@@ -136054,6 +136829,13 @@
         "name": {
           "description": "As a text style's.",
           "type": "string"
+        },
+        "textStyle": {
+          "description": "The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an\nembedded SHX file, the font draws the note. Schema 187.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -137311,6 +138093,212 @@
         "reason"
       ],
       "type": "object"
+    },
+    "MapWork": {
+      "additionalProperties": false,
+      "description": "A map project's work structure.",
+      "properties": {
+        "derivations": {
+          "items": {
+            "$ref": "#/$defs/WorkDerivation"
+          },
+          "type": "array"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/WorkItem"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "MapWorkOperation": {
+      "description": "What `map.work.edit` does.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A new item `is-N`: its kind, name, layers (each in no other item) and, for a file the project rests on, the\nfile (an absolute path; its SHA-256 is its revision).",
+          "properties": {
+            "file": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "$ref": "#/$defs/WorkKind"
+            },
+            "layers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "name": {
+              "type": "string"
+            },
+            "op": {
+              "const": "add",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the\nstatus is the office's record, never an institution's approval.",
+          "properties": {
+            "item": {
+              "type": "string"
+            },
+            "layers": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "set",
+              "type": "string"
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WorkStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item taken out, with the derivations made from it (their objects stay, the user's own drawing).",
+          "properties": {
+            "item": {
+              "type": "string"
+            },
+            "op": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that\nshowed the old file, in one step; the new file's content is the item's revision (other content than before:\nwarning `source_content_changed`, its derivations out of date).",
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "item": {
+              "type": "string"
+            },
+            "op": {
+              "const": "relink",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "item",
+            "file"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The item's file as it is now accepted as its revision; its derivations made from before are out of date.",
+          "properties": {
+            "item": {
+              "type": "string"
+            },
+            "op": {
+              "const": "refresh",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now.",
+          "properties": {
+            "op": {
+              "const": "derive",
+              "type": "string"
+            },
+            "operation": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "op",
+            "source",
+            "uids",
+            "operation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A derivation's record taken away; its objects stay, the user's own drawing.",
+          "properties": {
+            "derivation": {
+              "type": "string"
+            },
+            "op": {
+              "const": "forget",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "derivation"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "MaplibreData": {
       "description": "A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.",
@@ -142998,6 +143986,26 @@
           "x-unit": "value"
         }
       },
+      "type": "object"
+    },
+    "NumericBudget": {
+      "description": "The engine's numeric budget for the call (docs/adr/1230 §4): how far its numbers may lie from an independent\nengine's (PROJ) for the same operation — the target's horizontal units (metres on a grid, degrees on a geographic\nsystem) and metres of height. Not an accuracy: the transformation's is the report's.",
+      "properties": {
+        "horizontal": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "vertical": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "horizontal",
+        "vertical"
+      ],
       "type": "object"
     },
     "NurbsBy": {
@@ -160091,6 +161099,17 @@
           ],
           "x-unit": "epsg"
         },
+        "mapWork": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MapWork"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were\nderived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188)."
+        },
         "namedUcs": {
           "description": "The project's named UCSs, in the order they were kept.",
           "items": {
@@ -174187,7 +175206,7 @@
           "type": "string"
         },
         "uses": {
-          "description": "Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet\ntemplates: the sheets made from that template, which are never changed.",
+          "description": "Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet\ntemplates: the sheets made from that template, which are never changed; table styles: the tables of the drawing\nand of its block definitions that follow the drawing's style of that name (docs/adr/1127 §1).",
           "format": "uint32",
           "minimum": 0,
           "type": "integer",
@@ -182099,7 +183118,7 @@
               "type": "null"
             }
           ],
-          "description": "What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed\nerror to be put right. Schema 190."
+          "description": "What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed\nerror to be put right. Schema 189."
         },
         "digest": {
           "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
@@ -182116,7 +183135,7 @@
           "type": "array"
         },
         "reason": {
-          "description": "Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 190.",
+          "description": "Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 189.",
           "type": [
             "string",
             "null"
@@ -182127,7 +183146,7 @@
           "type": "string"
         },
         "ruleDigest": {
-          "description": "The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked\nbefore schema 190): kept whatever the rule. Schema 190.",
+          "description": "The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked\nbefore schema 189): kept whatever the rule. Schema 189.",
           "type": [
             "string",
             "null"
@@ -182142,7 +183161,7 @@
               "type": "null"
             }
           ],
-          "description": "What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects\nin this order wherever it is. Schema 190."
+          "description": "What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects\nin this order wherever it is. Schema 189."
         }
       },
       "required": [
@@ -182733,7 +183752,7 @@
               "type": "null"
             }
           ],
-          "description": "The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 190): its name, the storage\nprecision of the coordinates and the acceptance threshold, apart from the check's tolerance above."
+          "description": "The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 189): its name, the storage\nprecision of the coordinates and the acceptance threshold, apart from the check's tolerance above."
         },
         "rules": {
           "description": "The rules, in the order they are checked and listed.",
@@ -187842,6 +188861,378 @@
         "frame"
       ],
       "type": "object"
+    },
+    "WorkDerivation": {
+      "additionalProperties": false,
+      "description": "Objects made from an item: the item, its revision then, the operation that made them and the objects.",
+      "properties": {
+        "id": {
+          "description": "`tr-N`.",
+          "type": "string"
+        },
+        "operation": {
+          "description": "What made them: a command's id or a step's name, 1–200 characters.",
+          "type": "string"
+        },
+        "revision": {
+          "description": "The item's revision when they were made (64 lower-case hex digits).",
+          "type": "string"
+        },
+        "source": {
+          "description": "The item they came from: one with a file.",
+          "type": "string"
+        },
+        "uids": {
+          "description": "The objects, each in one derivation at most.",
+          "items": {
+            "$ref": "#/$defs/EntityId"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "revision",
+        "operation",
+        "uids"
+      ],
+      "type": "object"
+    },
+    "WorkDerivationRow": {
+      "description": "A derivation as it stands: its id, source item, operation, the source's revision it was made from, how many of its\nobjects the drawing holds of how many, its state and why.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "recorded": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/WorkState"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "operation",
+        "revision",
+        "objects",
+        "recorded",
+        "state"
+      ],
+      "type": "object"
+    },
+    "WorkFile": {
+      "additionalProperties": false,
+      "description": "The file an item is: where it is and the content the project last accepted.",
+      "properties": {
+        "path": {
+          "description": "An absolute path.",
+          "type": "string"
+        },
+        "revision": {
+          "description": "The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "WorkFileRow": {
+      "description": "An item's file: where, the revision the project accepted, how it stands.",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/WorkFileState"
+        }
+      },
+      "required": [
+        "path",
+        "revision",
+        "state"
+      ],
+      "type": "object"
+    },
+    "WorkFileState": {
+      "description": "How an item's file stands: there (looked for only), the same content as its revision, other content, not there.",
+      "enum": [
+        "found",
+        "current",
+        "changed",
+        "missing"
+      ],
+      "type": "string"
+    },
+    "WorkItem": {
+      "additionalProperties": false,
+      "description": "An item of the map's work.",
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "`is-N`.",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/WorkKind"
+        },
+        "layers": {
+          "description": "Layer or group ids; a layer is in one item at most.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "1–200 characters, no space at either end.",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/WorkStatus"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorkKind": {
+      "description": "What an item is in the map's work.",
+      "oneOf": [
+        {
+          "const": "campaign",
+          "description": "A survey campaign: GNSS, total station or scan data gathered in the field.",
+          "type": "string"
+        },
+        {
+          "const": "reference",
+          "description": "A reference source taken as it is: an orthophoto, a CAD reference, a base map.",
+          "type": "string"
+        },
+        {
+          "const": "working",
+          "description": "The working data drawn and edited in the project.",
+          "type": "string"
+        },
+        {
+          "const": "design",
+          "description": "A design: a surface, a plan, an infrastructure layout.",
+          "type": "string"
+        },
+        {
+          "const": "check",
+          "description": "The results of a check (topology, quality, preflight).",
+          "type": "string"
+        },
+        {
+          "const": "delivery",
+          "description": "A delivery package.",
+          "type": "string"
+        }
+      ]
+    },
+    "WorkObjectRole": {
+      "description": "What an object is in the map's work.",
+      "oneOf": [
+        {
+          "const": "source",
+          "description": "Source data: on a campaign's or a reference's layer, not derived.",
+          "type": "string"
+        },
+        {
+          "const": "derived",
+          "description": "Made from a source item: a derivation names it.",
+          "type": "string"
+        },
+        {
+          "const": "free",
+          "description": "The user's own drawing.",
+          "type": "string"
+        }
+      ]
+    },
+    "WorkObjectSource": {
+      "description": "Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the\nitem it came from, the revision it was made from, the operation and whether it is up to date; a source object's\nsource is its own item and its revision that item's.",
+      "properties": {
+        "current": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "derivation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "item": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "$ref": "#/$defs/WorkObjectRole"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "role"
+      ],
+      "type": "object"
+    },
+    "WorkRow": {
+      "description": "An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state\nand why in sentences.",
+      "properties": {
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkFileRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/WorkKind"
+        },
+        "layers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "state": {
+          "$ref": "#/$defs/WorkState"
+        },
+        "status": {
+          "$ref": "#/$defs/WorkStatus"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "status",
+        "objects",
+        "state"
+      ],
+      "type": "object"
+    },
+    "WorkState": {
+      "description": "How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it\n(deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A\nderivation: up to date, out of date (its source moved on), some of its objects gone.",
+      "enum": [
+        "current",
+        "missing",
+        "changed",
+        "incomplete",
+        "stale"
+      ],
+      "type": "string"
+    },
+    "WorkStatus": {
+      "description": "Where an item's work stands, as the office records it.",
+      "oneOf": [
+        {
+          "const": "draft",
+          "description": "Taslak.",
+          "type": "string"
+        },
+        {
+          "const": "review",
+          "description": "Denetlenecek: handed over to be checked.",
+          "type": "string"
+        },
+        {
+          "const": "approved",
+          "description": "Onaylı teslim revizyonu: the office approved it for delivery; not an institution's approval.",
+          "type": "string"
+        }
+      ]
     },
     "WorkflowStep": {
       "additionalProperties": false,

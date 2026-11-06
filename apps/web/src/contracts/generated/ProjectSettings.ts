@@ -21,6 +21,7 @@ import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { LineageRecord } from "./LineageRecord";
+import type { MapWork } from "./MapWork";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -269,4 +270,9 @@ coordinateEpoch?: number,
  * A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
  * project drawn for a road has them (`.kcad` schema 158).
  */
-road?: RoadSettings, };
+road?: RoadSettings, 
+/**
+ * A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
+ * derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
+ */
+mapWork?: MapWork, };

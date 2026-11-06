@@ -234,6 +234,7 @@ fn panel_of_key(key: &str) -> Panel {
         "sources" => Panel::Sources,
         "navigator" => Panel::Navigator,
         "roadProject" => Panel::RoadProject,
+        "mapWork" => Panel::MapWork,
         _ => Panel::Layers,
     }
 }
@@ -392,6 +393,7 @@ impl App {
             Some(Panel::Sources) => "sources",
             Some(Panel::Navigator) => "navigator",
             Some(Panel::RoadProject) => "roadProject",
+            Some(Panel::MapWork) => "mapWork",
             _ => "layers",
         };
         if !(others_panel && front == "layers") {

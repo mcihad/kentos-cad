@@ -16,6 +16,14 @@
 //! centred), their baseline `DROP` heights under its middle; a merged range's
 //! words are its top left cell's, in its whole box.
 //!
+//! A cell style may give its words their own height and its own horizontal margin in place of `PAD` heights, and its
+//! borders their own weight and colour (a table style's, docs/adr/1127 §1): a cell's words then stand in from its
+//! sides by that margin, at that height; a line between cells takes the look of the cell above it (its bottom border)
+//! or left of it (its right border), the outline's top and left the first row's and column's, and a run of edges on
+//! one grid line ends where the look changes. Such lines are [`TableGeom::borders`], the others
+//! [`TableGeom::plain_lines`]; [`TableGeom::lines`] are both. A table whose cell styles set none of these lays out as
+//! before, line for line and bit for bit.
+//!
 //! A cell's words may hold line breaks (docs/adr/1030 §7): each line is placed apart (`CellPlace::line`), `LINE`
 //! heights under the one before, the lines' block centred on the box's middle. A table with `breaks` is drawn in
 //! parts ([`TableGeom::parts`]): each at most `height` deep, the next `gap` along its rows from the one before, the
@@ -70,6 +78,20 @@ pub struct CellFill {
 }
 
 crate::json_struct!(out CellFill { corners, fill });
+
+/// A line of a table drawn in its cell style's border look (docs/adr/1127 §1): its weight on the paper (mm, 0 the
+/// thinnest; none: the table's) and its colour (`#rrggbb`; none: the table's).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TableBorder {
+    pub line: [Vec2; 2],
+    pub weight: Option<f64>,
+    pub color: Option<String>,
+}
+
+crate::json_struct!(out TableBorder { line, weight, color });
+
+/// A border's look: its weight and colour; none for a line drawn as the table's.
+type Look = Option<(Option<f64>, Option<String>)>;
 
 /// Where a table's parts go.
 #[derive(Clone, Debug, PartialEq)]
@@ -321,9 +343,9 @@ impl TableGeom<'_> {
         self.frame.filter(|_| self.grid != Some("none"))
     }
 
-    /// The lines it draws, in its axes, part after part: along each grid line, the runs of edges drawn, each run one
-    /// line; the outline's only without a band.
-    fn axis_lines(&self) -> Vec<[(f64, f64); 2]> {
+    /// The lines it draws, in its axes, part after part, each with its look: along each grid line, the runs of edges
+    /// drawn in one look, each run one line; the outline's only without a band.
+    fn axis_lines(&self) -> Vec<([(f64, f64); 2], Look)> {
         let (inner_rows, inner_columns) = match self.grid {
             Some("none") => return Vec::new(),
             Some("outer") => (false, false),
@@ -332,6 +354,14 @@ impl TableGeom<'_> {
         };
         let banded = self.band().is_some();
         let m = self.columns.len();
+        // Without a border in any cell style every edge is plain, as the table was before (docs/adr/1127 §1).
+        let bordered = self
+            .styles
+            .iter()
+            .any(|s| s.border_weight.is_some() || s.border_color.is_some());
+        let look = |row: usize, col: usize| -> Look {
+            if bordered { self.border_at(row, col) } else { None }
+        };
         let mut out = Vec::new();
         for part in self.parts() {
             let rows = &part.rows;
@@ -347,16 +377,23 @@ impl TableGeom<'_> {
                 if (!outer && !inner_rows) || (outer && banded) {
                     continue;
                 }
-                let mut run: Option<usize> = None;
+                // An edge takes the look of the cell above it, the top line the first row's.
+                let above = if k == 0 { 0 } else { k - 1 };
+                let mut run: Option<(usize, Look)> = None;
                 for j in 0..=m {
                     let drawn = j < m && (outer || !self.joined((rows[k - 1], j), (rows[k], j)));
-                    match (drawn, run) {
-                        (true, None) => run = Some(j),
-                        (false, Some(start)) => {
-                            out.push([(xs[start], ys[k]), (xs[j], ys[k])]);
-                            run = None;
+                    let here = drawn.then(|| rows.get(above).and_then(|&r| look(r, j)));
+                    match (here, run.take()) {
+                        (Some(l), None) => run = Some((j, l)),
+                        (Some(l), Some((start, was))) if l == was => run = Some((start, was)),
+                        (Some(l), Some((start, was))) => {
+                            out.push(([(xs[start], ys[k]), (xs[j], ys[k])], was));
+                            run = Some((j, l));
                         }
-                        _ => {}
+                        (None, Some((start, was))) => {
+                            out.push(([(xs[start], ys[k]), (xs[j], ys[k])], was));
+                        }
+                        (None, None) => {}
                     }
                 }
             }
@@ -366,16 +403,23 @@ impl TableGeom<'_> {
                 if (!outer && !inner_columns) || (outer && banded) {
                     continue;
                 }
-                let mut run: Option<usize> = None;
+                // An edge takes the look of the cell left of it, the left line the first column's.
+                let left = if k == 0 { 0 } else { k - 1 };
+                let mut run: Option<(usize, Look)> = None;
                 for i in 0..=n {
                     let drawn = i < n && (outer || !self.joined((rows[i], k - 1), (rows[i], k)));
-                    match (drawn, run) {
-                        (true, None) => run = Some(i),
-                        (false, Some(start)) => {
-                            out.push([(xs[k], ys[start]), (xs[k], ys[i])]);
-                            run = None;
+                    let here = drawn.then(|| if left < m { look(rows[i], left) } else { None });
+                    match (here, run.take()) {
+                        (Some(l), None) => run = Some((i, l)),
+                        (Some(l), Some((start, was))) if l == was => run = Some((start, was)),
+                        (Some(l), Some((start, was))) => {
+                            out.push(([(xs[k], ys[start]), (xs[k], ys[i])], was));
+                            run = Some((i, l));
                         }
-                        _ => {}
+                        (None, Some((start, was))) => {
+                            out.push(([(xs[k], ys[start]), (xs[k], ys[i])], was));
+                        }
+                        (None, None) => {}
                     }
                 }
             }
@@ -435,12 +479,42 @@ impl TableGeom<'_> {
         })
     }
 
-    /// The lines it draws, placed.
+    /// The lines it draws, placed: its plain lines and its borders alike.
     pub fn lines(&self) -> Vec<[Vec2; 2]> {
         self.axis_lines()
             .into_iter()
-            .map(|[a, b]| [self.point(a.0, a.1), self.point(b.0, b.1)])
+            .map(|([a, b], _)| [self.point(a.0, a.1), self.point(b.0, b.1)])
             .collect()
+    }
+
+    /// The lines it draws in the table's own look, placed: every line but its [`TableGeom::borders`].
+    pub fn plain_lines(&self) -> Vec<[Vec2; 2]> {
+        self.axis_lines()
+            .into_iter()
+            .filter(|(_, look)| look.is_none())
+            .map(|([a, b], _)| [self.point(a.0, a.1), self.point(b.0, b.1)])
+            .collect()
+    }
+
+    /// The lines its cell styles give a border look (docs/adr/1127 §1), placed, in the order of [`TableGeom::lines`].
+    pub fn borders(&self) -> Vec<TableBorder> {
+        self.axis_lines()
+            .into_iter()
+            .filter_map(|([a, b], look)| {
+                let (weight, color) = look?;
+                Some(TableBorder {
+                    line: [self.point(a.0, a.1), self.point(b.0, b.1)],
+                    weight,
+                    color,
+                })
+            })
+            .collect()
+    }
+
+    /// The border look of the cell at `row`, `col`: none when its style sets no border weight nor colour.
+    fn border_at(&self, row: usize, col: usize) -> Look {
+        let s = self.style_at(row, col);
+        (s.border_weight.is_some() || s.border_color.is_some()).then_some((s.border_weight, s.border_color))
     }
 
     /// Its frame's band, placed, part by part: the top and bottom strips the whole width, the left and right ones
@@ -559,7 +633,13 @@ impl TableGeom<'_> {
         // A start lies within DROP heights of its band, its lines' block about the middle more; a millimetre more
         // for the turn back's rounding.
         let spread = (self.most_lines().saturating_sub(1)) as f64 / 2.0 * LINE;
-        let pad = (DROP.abs() + spread) * self.height.abs() + 1e-3;
+        // The tallest words a cell style gives (docs/adr/1127 §1), the table's without one.
+        let tallest = self
+            .styles
+            .iter()
+            .filter_map(|s| s.height)
+            .fold(self.height.abs(), |a, b| js_max(a, b.abs()));
+        let pad = (DROP.abs() + spread) * tallest + 1e-3;
         let lo = ds.iter().copied().fold(f64::INFINITY, js_min) - pad;
         let hi = ds.iter().copied().fold(f64::NEG_INFINITY, js_max) + pad;
         let mut picked: Vec<(usize, usize)> = Vec::new();
@@ -637,7 +717,6 @@ impl TableGeom<'_> {
         if words.is_empty() {
             return;
         }
-        let h = self.height;
         // A merged range's other cells are empty; its top left cell spans its box.
         let (rows, cols) = match self.merge_at(i, j) {
             Some(r) if (r.row, r.col) == (i, j) => (r.rows, r.cols),
@@ -652,6 +731,9 @@ impl TableGeom<'_> {
         let (x0, x1) = (x0 + part.x, x1 + part.x);
         let heading = self.header && i == 0;
         let style = self.style_at(i, j);
+        // Its cell style's height and margin, else the table's (docs/adr/1127 §1).
+        let h = style.height.unwrap_or(self.height);
+        let pad = style.margin.unwrap_or(PAD * h);
         let bold = style.bold.unwrap_or(heading || self.face.is_bold());
         let align = match style.align.as_deref() {
             Some(a) => a,
@@ -670,8 +752,8 @@ impl TableGeom<'_> {
             let width = width_em_in(text, typeface, bold) * h;
             let x = match align {
                 "center" => (x0 + x1) / 2.0 - width / 2.0,
-                "right" => x1 - PAD * h - width,
-                _ => x0 + PAD * h,
+                "right" => x1 - pad - width,
+                _ => x0 + pad,
             };
             let y = (y0 + y1) / 2.0 + DROP * h + (line as f64 - (count - 1.0) / 2.0) * LINE * h;
             out.push(CellPlace {
@@ -698,6 +780,11 @@ impl TableGeom<'_> {
             color: None,
             fill: None,
             decimals: None,
+            height: None,
+            margin: None,
+            vmargin: None,
+            border_weight: None,
+            border_color: None,
         };
         for s in self.styles.iter().filter(|s| s.holds(row, col)) {
             if s.align.is_some() {
@@ -714,6 +801,21 @@ impl TableGeom<'_> {
             }
             if s.decimals.is_some() {
                 out.decimals = s.decimals;
+            }
+            if s.height.is_some() {
+                out.height = s.height;
+            }
+            if s.margin.is_some() {
+                out.margin = s.margin;
+            }
+            if s.vmargin.is_some() {
+                out.vmargin = s.vmargin;
+            }
+            if s.border_weight.is_some() {
+                out.border_weight = s.border_weight;
+            }
+            if s.border_color.is_some() {
+                out.border_color = s.border_color.clone();
             }
         }
         out
@@ -761,11 +863,11 @@ impl TableGeom<'_> {
 
     /// The cells whose words do not fit their box (Sığmayan hücreler, docs/adr/1030 §7): a line wider than the box
     /// less `PAD` heights each side, or lines deeper than the box (one height for the first, `LINE` heights for each
-    /// further one). A merged range's box is its whole range's.
+    /// further one). A merged range's box is its whole range's. A cell style's height and margins stand for the
+    /// table's (docs/adr/1127 §1): its horizontal margin for `PAD` heights, its vertical margin above and below.
     pub fn overflowing(&self, font: Font) -> Vec<(usize, usize)> {
         let typeface = self.face.font_or(font);
         let (xs, ys) = (edges(self.columns), edges(self.rows));
-        let h = self.height;
         let mut out = Vec::new();
         for (i, row) in self.cells.iter().enumerate() {
             for (j, words) in row.iter().enumerate() {
@@ -782,15 +884,19 @@ impl TableGeom<'_> {
                 else {
                     continue;
                 };
-                let bold = self
-                    .style_at(i, j)
-                    .bold
-                    .unwrap_or((self.header && i == 0) || self.face.is_bold());
+                let style = self.style_at(i, j);
+                let bold = style.bold.unwrap_or((self.header && i == 0) || self.face.is_bold());
+                let h = style.height.unwrap_or(self.height);
+                let pad = style.margin.unwrap_or(PAD * h);
                 let lines: Vec<&str> = words.split('\n').collect();
                 let wide = lines.iter().any(|l| {
-                    width_em_in(l, typeface, bold) * h + 2.0 * PAD * h > (x1 - x0) * (1.0 + 1e-9)
+                    width_em_in(l, typeface, bold) * h + 2.0 * pad > (x1 - x0) * (1.0 + 1e-9)
                 });
-                let deep = (lines.len() as f64 - 1.0) * LINE * h + h > (y1 - y0) * (1.0 + 1e-9);
+                let block = (lines.len() as f64 - 1.0) * LINE * h + h;
+                let deep = match style.vmargin {
+                    Some(v) => block + 2.0 * v > (y1 - y0) * (1.0 + 1e-9),
+                    None => block > (y1 - y0) * (1.0 + 1e-9),
+                };
                 if wide || deep {
                     out.push((i, j));
                 }
@@ -803,6 +909,16 @@ impl TableGeom<'_> {
 /// The lines a table shape draws; none for any other shape.
 pub fn lines_of(s: &Shape) -> Vec<[Vec2; 2]> {
     table_geom(s).map(|t| t.lines()).unwrap_or_default()
+}
+
+/// The lines a table shape draws in its own look, its borders aside (docs/adr/1127 §1); none for any other shape.
+pub fn plain_lines_of(s: &Shape) -> Vec<[Vec2; 2]> {
+    table_geom(s).map(|t| t.plain_lines()).unwrap_or_default()
+}
+
+/// The lines a table shape's cell styles give a border look (docs/adr/1127 §1); none for any other shape.
+pub fn borders_of(s: &Shape) -> Vec<TableBorder> {
+    table_geom(s).map(|t| t.borders()).unwrap_or_default()
 }
 
 /// The strips of a table shape's frame band; none for any other shape.

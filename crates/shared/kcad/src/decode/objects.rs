@@ -282,6 +282,10 @@ pub(super) struct Features {
     pub(super) table_styles: bool,
     /// Schema 186 (docs/adr/1023): a dimension style's text style.
     pub(super) dimension_text_styles: bool,
+    /// Schema 187 (docs/adr/1025): a leader style's text style.
+    pub(super) leader_text_styles: bool,
+    /// Schema 188 (docs/adr/1200 §2): a map project's work structure.
+    pub(super) map_work: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -301,7 +305,7 @@ pub(super) struct Features {
     pub(super) layer_geometry: bool,
     /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
     pub(super) exception_digests: bool,
-    /// Schema 190: the topology quality profile and an exception's review fields (docs/adr/1260).
+    /// Schema 189: the topology quality profile and an exception's review fields (docs/adr/1260).
     pub(super) topology_reviews: bool,
     /// Schema 100: a georeference record's `crs` (docs/adr/0594 §1).
     pub(super) georef_crs: bool,
@@ -586,6 +590,8 @@ impl Features {
             shx_fonts: schema >= crate::SCHEMA_WITH_SHX_FONTS,
             table_styles: schema >= crate::SCHEMA_WITH_TABLE_STYLES,
             dimension_text_styles: schema >= crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES,
+            leader_text_styles: schema >= crate::SCHEMA_WITH_LEADER_TEXT_STYLES,
+            map_work: schema >= crate::SCHEMA_WITH_MAP_WORK,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

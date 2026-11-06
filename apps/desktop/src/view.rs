@@ -130,6 +130,7 @@ impl App {
                     // Gezgin's sections scroll with the pane (navigator.rs).
                     (Panel::Navigator, _) => pane.scrollable(),
                     (Panel::RoadProject, _) => pane.scrollable(),
+                    (Panel::MapWork, _) => pane.scrollable(),
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
                         Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,
@@ -1071,6 +1072,8 @@ impl App {
             // Gezgin: the project's tree (navigator.rs, docs/adr/0778).
             Panel::Navigator => self.navigator_view(),
             Panel::RoadProject => self.road_project_view(),
+            // Harita işi: a map project's work structure (map_work_panel.rs, docs/adr/1200 §4).
+            Panel::MapWork => self.map_work_view(),
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.architecture_properties_view(doc),
         }
@@ -2073,6 +2076,7 @@ impl App {
             Asking::FormAudit => self.form_audit_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::WallStyles => self.wall_styles_view(),
+            Asking::TableStyleDefs => self.table_style_window_view(),
             Asking::ArchTemplate => self.architecture_template_view(),
             Asking::WallJoins => self.wall_joins_view(),
             Asking::OpeningTypes => self.opening_types_view(),

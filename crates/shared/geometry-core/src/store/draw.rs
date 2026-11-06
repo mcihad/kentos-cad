@@ -280,9 +280,10 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             }
         }
         // Its lines, then its frame's band, four strips each a ring of its own; its words are
-        // labels (docs/adr/0184 §2).
+        // labels (docs/adr/0184 §2). The lines its cell styles give a border look are drawn with
+        // its words, in their own weight and colour (docs/adr/1127 §1).
         Shape::Table { .. } => {
-            let lines = crate::geom::table::lines_of(s);
+            let lines = crate::geom::table::plain_lines_of(s);
             let band = crate::geom::table::band_of(s);
             if lines.is_empty() && band.is_empty() {
                 out.push(NONE);

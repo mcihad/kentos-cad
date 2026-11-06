@@ -3,4 +3,4 @@
 /**
  * The named resources Denetle removes when nothing uses them.
  */
-export type AuditPurge = "textStyles" | "dimensionStyles";
+export type AuditPurge = "textStyles" | "dimensionStyles" | "tableStyles";

@@ -25,4 +25,9 @@ arrow?: LeaderArrow,
 /**
  * Times the note's height; absent: 1.
  */
-arrowSize?: number, mask?: boolean, };
+arrowSize?: number, mask?: boolean, 
+/**
+ * The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an
+ * embedded SHX file, the font draws the note. Schema 187.
+ */
+textStyle?: string, };

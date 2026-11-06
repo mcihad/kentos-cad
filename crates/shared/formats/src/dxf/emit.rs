@@ -3176,9 +3176,11 @@ impl<'l> Emitter<'l> {
         for x in &b.entities {
             self.emit(x, &child);
         }
+        // An ACAD_TABLE is a table, the others dimensions (docs/adr/1128 §4).
+        let as_what = if what.starts_with("Tablo") { "tablosu" } else { "ölçüsü" };
         self.note(
             what,
-            "çizgi ve yazılara patlatılarak alındı (KentOS ölçüsü olarak düzenlenemez)",
+            &format!("çizgi ve yazılara patlatılarak alındı (KentOS {as_what} olarak düzenlenemez)"),
             e.line,
         );
     }

@@ -1078,6 +1078,7 @@ impl App {
                 self.dialog = Some(Dialog::WallStyles);
             }
             Some(Dialog::WallStyles) => self.wall_styles = None,
+            Some(Dialog::TableStyleDefs) => self.table_style_window = None,
             Some(Dialog::WallJoins) => self.wall_joins = None,
             Some(Dialog::OpeningTypes) => self.opening_types = None,
             Some(Dialog::Materials) => self.materials = None,

@@ -111,7 +111,7 @@ fn each_program_has_its_own_bottom_tabs() {
     assert_eq!(started(None).bottom_tabs(), BottomTab::ALL);
     assert_eq!(
         started(MIMARI).bottom_tabs(),
-        [History, Coords, Search, Audit, Messages, Python]
+        [History, Coords, Search, Audit, CadInspection, Messages, Python]
     );
     assert_eq!(
         started(HARITA).bottom_tabs(),
@@ -124,14 +124,16 @@ fn each_program_has_its_own_bottom_tabs() {
             Search,
             Address,
             Topology,
+            CadInspection,
             ServiceInfo,
             Messages,
             Python
         ]
     );
+    // CAD denetimi (the hatch boundary diagnosis, 183defaa6) is the CAD programs', not a GIS's.
     let gis = started(GIS).bottom_tabs();
-    assert_eq!(gis.len(), BottomTab::ALL.len() - 1);
-    assert!(!gis.contains(&Audit) && gis.contains(&Chart));
+    assert_eq!(gis.len(), BottomTab::ALL.len() - 2);
+    assert!(!gis.contains(&Audit) && !gis.contains(&CadInspection) && gis.contains(&Chart));
     // Komut geçmişi, Koordinat listesi, Uyarılar and Python are every program's.
     for program in PROGRAMS {
         let app = started(program);
@@ -252,7 +254,7 @@ fn each_program_docks_its_own_panels() {
         (MIMARI, &[Layers, Blocks, Templates, Navigator, Properties]),
         (
             HARITA,
-            &[Layers, Processing, Blocks, Templates, Sources, Properties],
+            &[Layers, Processing, Blocks, Templates, Sources, MapWork, Properties],
         ),
         (GIS, &[Layers, Processing, Templates, Sources, Properties]),
     ];

@@ -603,6 +603,13 @@
         "cad.styles.edit"
       ]
     },
+    "style.tableStyles": {
+      "level": "semantic",
+      "via": [
+        "cad.styles.edit"
+      ],
+      "note": "Tablo stili türü (table); silinen stilin tabloları tek adımda bağını yitirir (ADR 1127 §2)."
+    },
     "style.manager": {
       "level": "host"
     },

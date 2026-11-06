@@ -365,6 +365,8 @@ def settings(s):
                 "tableStyles": (opaque, False),
                 # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
                 "reviewNotes": (opaque, False),
+                # Schema 188 (docs/adr/1200 §2): a map project's work structure, as its JSON.
+                "mapWork": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2449,8 +2451,14 @@ def document(d):
         schema = max(schema, 186)
     topo = d["settings"].get("topology", {})
     if "profile" in topo or any(k in x for x in topo.get("exceptions", []) for k in ("decision", "reason", "ruleDigest", "scope")):
-        # The topology quality profile, an exception's review fields (docs/adr/1260). Temporary number (MAP-07).
-        schema = max(schema, 190)
+        # The topology quality profile, an exception's review fields (docs/adr/1260).
+        schema = max(schema, 189)
+    if "mapWork" in d["settings"]:
+        # A map project's work structure (docs/adr/1200 §2).
+        schema = max(schema, 188)
+    if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
+        # A leader style that names the text style of its note (docs/adr/1025).
+        schema = max(schema, 187)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3396,7 +3404,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-191.kcad"] = container(root(cmap(parts), version=uint(191)))
+    files["schema-version-190.kcad"] = container(root(cmap(parts), version=uint(190)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5693,15 +5701,15 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
-    # Schema 190 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
+    # Schema 189 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
     # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
     # reason and an unknown decision are refused.
     reviewed = load("topology-reviews.json")
     reviewed_data = document(reviewed)
-    assert reviewed_data.count(b"\x67version\x18\xbe") == 1, "the topology reviews are schema 190"
+    assert reviewed_data.count(b"\x67version\x18\xbd") == 1, "the topology reviews are schema 189"
     out["topology-reviews.kcad"] = container(reviewed_data)
-    out["broken/topology-reviews-in-schema-186.kcad"] = container(
-        reviewed_data.replace(b"\x67version\x18\xbe", b"\x67version\x18\xba"))
+    out["broken/topology-reviews-in-schema-188.kcad"] = container(
+        reviewed_data.replace(b"\x67version\x18\xbd", b"\x67version\x18\xbc"))
     assert reviewed_data.count(text("precision") + finite(0.0001)) == 1
     narrow_data = reviewed_data.replace(text("precision") + finite(0.0001), text("precision") + finite(0.002))
     out["broken/topology-profile-tolerance-below-precision.kcad"] = container(narrow_data)
@@ -5710,6 +5718,36 @@ def build():
     out["broken/topology-review-reason-blank.kcad"] = container(reviewed_data.replace(text(why), text("   ")))
     assert reviewed_data.count(text("error")) == 1
     out["broken/topology-review-decision-unknown.kcad"] = container(reviewed_data.replace(text("error"), text("maybe")))
+    # Schema 187 (docs/adr/1025): a leader style naming its note's text style; schema 186 refuses the field, an empty
+    # name is refused.
+    led = load("leader-text-style.json")
+    led_data = document(led)
+    assert led_data.count(b"\x67version\x18\xbb") == 1, "a leader style's text style is schema 187"
+    out["leader-text-style.kcad"] = container(led_data)
+    out["broken/leader-text-style-in-schema-186.kcad"] = container(
+        led_data.replace(b"\x67version\x18\xbb", b"\x67version\x18\xba"))
+    bad_led = copy.deepcopy(led)
+    bad_led["settings"]["leaderStyles"][0]["textStyle"] = ""
+    out["broken/leader-text-style-empty.kcad"] = container(document(bad_led))
+    # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
+    # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
+    # item without a file, an object in two derivations and a draft status written are refused.
+    mapped = load("map-work.json")
+    mapped_data = document(mapped)
+    assert mapped_data.count(b"\x67version\x18\xbc") == 1, "a map's work structure is schema 188"
+    out["map-work.kcad"] = container(mapped_data)
+    out["broken/map-work-in-schema-187.kcad"] = container(
+        mapped_data.replace(b"\x67version\x18\xbc", b"\x67version\x18\xbb"))
+    for name, change in (
+            ("not-map", lambda d: d["settings"].update({"cadWork": "architecture"})),
+            ("shared-layer", lambda d: d["settings"]["mapWork"]["items"][2].update({"layers": ["gnss"]})),
+            ("no-file-source", lambda d: d["settings"]["mapWork"]["derivations"][0].update({"source": "is-3"})),
+            ("object-twice", lambda d: d["settings"]["mapWork"]["derivations"].append(
+                {**d["settings"]["mapWork"]["derivations"][0], "id": "tr-2"})),
+            ("draft-written", lambda d: d["settings"]["mapWork"]["items"][0].update({"status": "draft"}))):
+        broken_work = copy.deepcopy(mapped)
+        change(broken_work)
+        out[f"broken/map-work-{name}.kcad"] = container(document(broken_work))
     # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
     # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
     dimmed = load("dimension-text-style.json")

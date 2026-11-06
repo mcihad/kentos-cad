@@ -36,7 +36,7 @@ pub struct TopologySettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TopologyException>>", optional))]
     pub exceptions: Vec<TopologyException>,
-    /// The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 190): its name, the storage
+    /// The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 189): its name, the storage
     /// precision of the coordinates and the acceptance threshold, apart from the check's tolerance above.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -240,21 +240,21 @@ pub struct TopologyException {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub digest: Option<String>,
     /// What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed
-    /// error to be put right. Schema 190.
+    /// error to be put right. Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub decision: Option<TopologyDecision>,
-    /// Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 190.
+    /// Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub reason: Option<String>,
     /// The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked
-    /// before schema 190): kept whatever the rule. Schema 190.
+    /// before schema 189): kept whatever the rule. Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule_digest: Option<String>,
     /// What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects
-    /// in this order wherever it is. Schema 190.
+    /// in this order wherever it is. Schema 189.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub scope: Option<TopologyScope>,

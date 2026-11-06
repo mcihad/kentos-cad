@@ -1447,6 +1447,22 @@
       "status": "implemented"
     },
     {
+      "id": "style.tableStyles",
+      "title": "Tablo stilleri",
+      "short": "Tablo stilleri",
+      "icon": "table",
+      "description": "Projenin tablo stillerini açar: başlık, sütun başı ve veri hücrelerinin yazı stili, yüksekliği, hizası, renkleri, yatay ve dikey boşlukları ile kenar çizgisinin kalınlığı ve rengi (kâğıtta, mm); örnek tablo çizimin çizdiği gibi. Kaydet stilleri tek adımda yazar; silinen stilin tabloları bağını yitirir (cad.styles.edit, tür table).",
+      "aliases": [
+        "TABLOSTILI",
+        "TABLOSTİLİ",
+        "TABLESTYLE",
+        "TS"
+      ],
+      "shortcuts": [],
+      "category": "Tablo",
+      "status": "implemented"
+    },
+    {
       "id": "data.tableStyles",
       "title": "Koşullu biçim",
       "short": "Koşullu biçim",

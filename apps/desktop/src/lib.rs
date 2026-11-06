@@ -19,6 +19,8 @@ mod acceptance_tests;
 #[cfg(test)]
 mod measure_probe_tests;
 #[cfg(test)]
+mod coordinate_chain_tests;
+#[cfg(test)]
 mod semantic_tool_tests;
 #[cfg(test)]
 mod annotative_sheet_tests;
@@ -70,6 +72,7 @@ mod architecture_ribbon;
 mod architecture_template;
 mod quantities;
 mod wall_styles;
+mod table_style_window;
 mod app;
 mod app_menu;
 mod appearance;
@@ -128,6 +131,7 @@ mod blocks_library;
 mod blocks_panel;
 mod navigator;
 mod road_project_panel;
+mod map_work_panel;
 mod bottom;
 mod calc;
 mod catalog;
@@ -305,6 +309,8 @@ mod junction_window_tests;
 mod scene3d_window_tests;
 #[cfg(test)]
 mod road_project_panel_tests;
+#[cfg(test)]
+mod map_work_panel_tests;
 #[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]

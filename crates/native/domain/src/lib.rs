@@ -105,6 +105,7 @@ pub use view_area::ViewArea;
 pub mod arch_options;
 mod source_steps;
 mod lineage;
+mod map_work;
 
 pub use calls::{REFUSED_CALLS, RefusedAs, RefusedCall};
 pub use changes::{ChangeMark, Changes};

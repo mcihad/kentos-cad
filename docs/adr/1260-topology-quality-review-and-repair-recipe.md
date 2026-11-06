@@ -5,7 +5,7 @@
   (`cad.topology.check`, istisnanın geometri bağı, düzeltmenin önizlemesi), ADR 0756 (iş olarak denetim ve durdurma),
   ADR 1012 (`cad.drawing.repair`'in tarifi), ADR 0160 (topolojik düzenleme), ADR 0047 (kilitli katman).
 - **Web:** ertelendi (ADR 0228), TODOS.md §0.2.
-- **Şema:** `.kcad` 190 (dalda geçici numara; birleşmede yeniden numaralanır).
+- **Şema:** `.kcad` 189 (MAP-01'in 188'inden sonra).
 
 ## 1. Kaynaklar ve KentOS kararı
 
@@ -56,11 +56,11 @@ gerekçe, `unmark`'ta gerekçe, `mark` dışında kapsam `invalid_input`'tur. Ku
 `rule_digest(rule)`: SHA-256(“kentos.topology-rule/1”, tür, katman, öbür katman, yürürlükteki değerin IEEE 754 bitleri
 16 onaltılık hane ya da `-`), her parça sıfır baytla kapanır; ilk 8 bayt. `1` kuralların motor sürümüdür
 (`TOPOLOGY_RULES_ENGINE`): bir türün bulduğu değişirse artar ve eski işaretler yeniden değerlendirilir. Değeri değişen,
-başka katmana taşınan kural başka kuraldır. Şema 190'dan önceki işaretlerin sürümü yoktur, kural değişince düşmez.
+başka katmana taşınan kural başka kuraldır. Şema 189'dan önceki işaretlerin sürümü yoktur, kural değişince düşmez.
 
 ## 4. Kalite profili ve onarım tarifi
 
-**Profil** (`topology.profile`, şema 190): `name`, isteğe bağlı `edition`, `precision` (0,000000001–0,5 m) ve
+**Profil** (`topology.profile`, şema 189): `name`, isteğe bağlı `edition`, `precision` (0,000000001–0,5 m) ve
 `acceptance` (en az `precision`). Topoloji toleransı `2 × precision`'dan küçükse profil geçersizdir. Kural penceresi
 Tolerans'ın yanında Kalite profili, Depolama hassasiyeti ve Kabul eşiği alanlarını gösterir; adı boş profil yoktur.
 
@@ -103,7 +103,7 @@ plan, şerit tarifin etkisini söyler; Uygula tek adımda yazar, Vazgeç bırak�
   her yerde geçerli istisna: her düzenlemeden sonra artımlı ve tam denetim aynı; `shift`'in bilinen değerleri.
 - `topology_repair::tests`: durdurulan plan ve uygulama kaynak geometriyi, sürümü, kirliliği ve geri alma zincirini
   değiştirmez.
-- `.kcad` şema 190: `topology-reviews.json/.kcad` ve dört bozuk örnek; `kcad_v2_reference.py` ve `tools/kcad/kcad.py`
+- `.kcad` şema 189: `topology-reviews.json/.kcad` ve dört bozuk örnek; `kcad_v2_reference.py` ve `tools/kcad/kcad.py`
   birlikte.
 
 ## 6. Sınırlar

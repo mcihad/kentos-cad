@@ -826,11 +826,16 @@ fn check_resolved(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop>
                         styles,
                         formulas,
                         fields,
+                        table_style,
                         ..
                     } = geometry
                     {
                         if styles.is_none() {
                             now.styles = was.styles.clone();
+                        }
+                        // Its table style too (docs/adr/1127 §3); null takes it away.
+                        if table_style.is_none() {
+                            now.table_style = was.table_style.clone();
                         }
                         if formulas.is_none() {
                             now.formulas = was.formulas.clone();
@@ -1758,6 +1763,21 @@ pub(crate) fn check_styles<'a>(
 ) -> Result<(), Stop> {
     let settings = doc.settings();
     for (i, g) in geometries {
+        // A table's style is the project's too (docs/adr/1127 §3).
+        if let EntityGeometry::Table {
+            table_style: Some(Some(id)),
+            ..
+        } = g
+            && !settings.table_styles.iter().any(|s| s.id == *id)
+        {
+            return Err(Stop::failed(error(
+                codes::UNKNOWN_STYLE,
+                format!(
+                    "“{id}” kimlikli tablo stili projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir tablo stilinin kimliğini verin ya da null ile stili kaldırın (Standart)."
+                ),
+                Some(format!("{list}[{i}].geometry.tableStyle")),
+            )));
+        }
         let (id, known, what, field) = match g {
             EntityGeometry::Text { face, .. } | EntityGeometry::Table { face, .. } => {
                 match &face.text_style {

@@ -622,6 +622,26 @@ codes! {
     EVENTS_DIRTY = "events_dirty", Warning, false, "Olay bağı olayları rotalarında tutuyor ama bu yazma bazılarını yerine koyamadı (rota yok, ölçü sayı değil ya da rotanın dışında, katman kilitli); Olay kaymasını denetle nedenleri söyler.";
     /// A road command in a project that is not a road project (plan/road.md Y2.3).
     NOT_A_ROAD_PROJECT = "not_a_road_project", Failed, false, "Bu komut yalnız yol projesinde (KentOS Yol, cadWork road) çalışır.";
+    /// A map work command in a project that is not a map project (plan/map-cad.md MAP-01, docs/adr/1200).
+    NOT_A_MAP_PROJECT = "not_a_map_project", Failed, false, "Harita işi yalnız harita projesinde (KentOS Harita, cadWork map) olur.";
+    /// An item of the map's work the project does not have.
+    UNKNOWN_WORK_ITEM = "unknown_work_item", Failed, false, "Harita işinde bu kimlikte öğe yok.";
+    /// A derivation record the project does not have.
+    UNKNOWN_DERIVATION = "unknown_derivation", Failed, false, "Harita işinde bu kimlikte türetme kaydı yok.";
+    /// An item's name or a derivation's operation against its rule.
+    INVALID_WORK_TEXT = "invalid_work_text", Failed, false, "Öğenin adı ya da üretim işlemi boşlukla başlamayan ve bitmeyen 1–200 karakter olmalı.";
+    /// A layer another item of the map's work holds, or one given twice.
+    LAYER_IN_WORK_ITEM = "layer_in_work_item", Failed, false, "Katman harita işinin başka bir öğesinde ya da iki kez verilmiş; bir katman tek öğenin olur.";
+    /// Relink, refresh or derive from an item that is not a file.
+    WORK_ITEM_NO_FILE = "work_item_no_file", Failed, false, "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da türetmenin kaynağı olur.";
+    /// An object another derivation already names.
+    ALREADY_DERIVED = "already_derived", Failed, false, "Nesne başka bir türetme kaydında; önce o kaydı silin.";
+    /// Approving an item that holds derived objects whose source moved on.
+    APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
+    /// The map's work would pass its most items or derivations.
+    WORK_FULL = "work_full", Failed, false, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.";
+    /// A relinked source's new file holds other content: what was derived from it is out of date.
+    SOURCE_CONTENT_CHANGED = "source_content_changed", Warning, false, "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil.";
     /// A terrain surface's definition, or the project's surfaces with it, against their rules.
     INVALID_TERRAIN = "invalid_terrain", Failed, false, "Yüzeyin tanımı ya da onunla projenin yüzeyleri kurallarına uymuyor.";
     /// `set` without the surface, or a query's places without the surface they are on.
@@ -1531,6 +1551,8 @@ codes! {
     NOTHING_TO_TRANSFORM = "nothing_to_transform", Failed, false, "Dönüştürülecek nokta yok ya da 100 000'den çok.";
     /// A side is the project's system and the project has none.
     NO_SYSTEM = "no_system", Failed, false, "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin.";
+    /// A side is the project's system and its stored EPSG code is not one the registry resolves (docs/adr/1230 §1).
+    UNSUPPORTED_SRID = "unsupported_srid", Failed, false, "Projenin kayıtlı EPSG kodu KentOS'un çözdüğü sistemler arasında yok; projeye kayıttaki bir sistemi atayın ya da tarafın sistemini EPSG koduyla verin.";
     /// A source uncertainty not 0 or more.
     INVALID_UNCERTAINTY = "invalid_uncertainty", Failed, false, "Kaynağın belirsizliği 0 ya da büyük sonlu bir sayı olmalı.";
     /// A datum of the project's without a way to WGS 84.
@@ -1559,6 +1581,8 @@ codes! {
     VERTICAL_CRS = "vertical_crs", Warning, false, "Dosya kotların düşey sistemini söylüyor; kotlar olduğu gibi alındı.";
     /// Some points have no value in the target.
     POINTS_OUTSIDE = "points_outside", Warning, false, "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında).";
+    /// The coordinate chain is limited: not a precise transformation (docs/adr/1230 §3).
+    CHAIN_LIMITED = "chain_limited", Warning, false, "Dönüşüm zinciri sınırlı: bir adımın doğruluğu, epok, kot ya da kapsam eksik; sonuç hassas dönüşüm değil.";
 
     // ── The sheet book (docs/adr/0252 §2) and the sheet core's refusals ─
     /// No operation given.

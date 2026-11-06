@@ -8,4 +8,8 @@ export type StandardProvenance = { rules: StandardOrigin, layers: { [key in stri
 /**
  * Office tool palettes by id (docs/adr/1014).
  */
-toolPalettes?: { [key in string]: StandardOrigin }, };
+toolPalettes?: { [key in string]: StandardOrigin }, 
+/**
+ * Table styles by name (docs/adr/1126 §6).
+ */
+tableStyleDefinitions?: { [key in string]: StandardOrigin }, };

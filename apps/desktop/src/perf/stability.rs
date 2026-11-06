@@ -218,6 +218,47 @@ fn stability() {
         println!("kaydırma {row}");
         out.push(row);
     }
+    // A pan's moved picture (docs/adr/1067). Today's frame: the view panned by whole pixels without moving, drawn
+    // whole (`today`). The same pan while moving: the kept picture moved and the strips drawn (`moved`), against the
+    // same view drawn whole while moving (`whole`: the styled parts built again, so nothing is held to move); then the
+    // view settled, drawn whole again (`settled`), against today's. The same views before each (the grid's part and
+    // the labels' placing follow where the view has been).
+    for (name, c, s) in views {
+        let target = [c[0] - dx as f64 / s, c[1] + dy as f64 / s];
+        shot(&mut app, &mut h, c, s);
+        let today = shot(&mut app, &mut h, target, s);
+        shot(&mut app, &mut h, c, s);
+        app.viewport.hold_moving(true);
+        app.viewport.camera.center.x = target[0];
+        app.viewport.camera.center.y = target[1];
+        h.frame(&mut app, &[]);
+        let was_moved = app.viewport.status().stats.picture_moved;
+        let moved = shot(&mut app, &mut h, target, s);
+        app.viewport.hold_moving(false);
+        h.frame(&mut app, &[]);
+        let stats = app.viewport.status().stats;
+        let settled_whole = !stats.picture_kept && !stats.picture_moved;
+        let settled = shot(&mut app, &mut h, target, s);
+        // The moved picture against the view drawn whole while moving: the parts built again, the same view.
+        shot(&mut app, &mut h, c, s);
+        app.viewport.hold_moving(true);
+        shot(&mut app, &mut h, target, s);
+        app.styles.block_proxy = false;
+        h.frame(&mut app, &[]);
+        app.styles.block_proxy = true;
+        let whole = shot(&mut app, &mut h, target, s);
+        app.viewport.hold_moving(false);
+        shot(&mut app, &mut h, target, s);
+        keep(&format!("kaydirirken-{}", name.split(' ').next().unwrap_or(name)), &moved, &whole, 0, 0);
+        keep(&format!("durunca-{}", name.split(' ').next().unwrap_or(name)), &settled, &today, 0, 0);
+        let row = json!({
+            "view": name, "pxPerM": s, "pictureMoved": was_moved, "settledDrawnWhole": settled_whole,
+            "movedAgainstWhole": compare(&moved, &whole, r, 0, 0),
+            "settledAgainstToday": compare(&settled, &today, r, 0, 0),
+        });
+        println!("kaydırırken {row}");
+        out.push(row);
+    }
     // Detail steps: across the curves' band and the styled quarter octave near 1:200, against a step inside one.
     let tol = RenderSettings::new(kentos_render_wgpu::Rgba8([0, 0, 0, 255])).curve_tolerance_px;
     let near = 1.0 / (200.0 * 0.000_264_58);
@@ -400,6 +441,15 @@ fn stability() {
             if row["pxPerM"].as_f64().is_some_and(|s| s >= 1.0) {
                 assert_eq!(row["onAgainstOff"]["visible"], 0, "near, the blocks draw as before: {row}");
             }
+            continue;
+        }
+        // A pan's moved picture (docs/adr/1067): the frame did move the kept picture; nothing visibly apart from the
+        // view drawn whole; settled, the view is drawn whole again, pixel for pixel as drawn whole from elsewhere.
+        if row.get("movedAgainstWhole").is_some() {
+            assert_eq!(row["pictureMoved"], true, "a pan by whole pixels moves the picture: {row}");
+            assert_eq!(row["movedAgainstWhole"]["visible"], 0, "the moved picture shows the view: {row}");
+            assert_eq!(row["settledDrawnWhole"], true, "settled, the view is drawn whole: {row}");
+            assert_eq!(row["settledAgainstToday"]["different"], 0, "settled, the frame is today's: {row}");
             continue;
         }
         if row["shortcut"] == "çizgi düzeyleri" {

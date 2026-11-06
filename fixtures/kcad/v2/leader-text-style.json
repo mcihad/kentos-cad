@@ -1,0 +1,33 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kılavuz yazı stili",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0,
+    "textStyles": [
+      {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1025", "name": "A-NOT", "font": "barlow", "fontFile": "romans.shx"}
+    ],
+    "leaderStyles": [
+      {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1026", "name": "Ofis not", "height": 2.5, "textStyle": "A-NOT"},
+      {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1027", "name": "Yazısız", "height": 2.0}
+    ]
+  },
+  "origin": {"x": 500000.0, "y": 4400000.0},
+  "layers": [
+    {"id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true,
+     "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {"kind": "leader", "id": 1, "layerId": "0", "attrs": {}, "pts": [{"x": 500000.0, "y": 4400000.0},
+     {"x": 500004.0, "y": 4400003.0}], "text": "SUS", "height": 0.25, "rotation": 0.0,
+     "leaderStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1026"}
+  ],
+  "uids": ["0192f5a1-1025-7000-8000-000000000001"],
+  "styles": {"items": [], "categories": []}
+}

@@ -101,8 +101,9 @@ impl EdgeShift {
     /// The point's distance from the picked edge along its normal; none
     /// with no edge picked.
     fn distance_at(&self, p: Vec2) -> Option<f64> {
+        // From the edge's middle (an arc's offset is radial there, docs/adr/1024).
         let k = &self.edge.as_ref()?.picked;
-        Some((p.x - k.a.x) * k.normal.x + (p.y - k.a.y) * k.normal.y)
+        Some((p.x - k.mid.x) * k.normal.x + (p.y - k.mid.y) * k.normal.y)
     }
 
     /// Writes the edge moved `d` and says so; the tool waits for the next
@@ -112,10 +113,11 @@ impl EdgeShift {
             return false;
         };
         let k = &picking.picked;
-        // The picked edge's middle names it; the command picks the same nearest straight edge (docs/adr/0622 §9).
+        // The picked edge's middle names it (an arc's on the arc); the command picks the same nearest edge
+        // (docs/adr/0622 §9, 1024).
         let work = ShapeWork::EdgeShift {
             id: edge::uid(cx.doc, picking.slot),
-            at: points::wire(Vec2::new((k.a.x + k.b.x) / 2.0, (k.a.y + k.b.y) / 2.0)),
+            at: points::wire(k.mid),
             distance: Some(d),
             area: None,
         };
@@ -304,11 +306,14 @@ impl Tool for EdgeShift {
         };
         let k = &picking.picked;
         // The edge as it is, then the shape moved to the cursor.
-        out.strokes.push(
-            Stroke::solid(vec![k.a, k.b], false)
-                .width(2.0)
-                .tone(Tone::Snap),
+        // An arc edge drawn as its arc (docs/adr/1024).
+        let edge_pts = kentos_geometry_core::geom::bulge::bulge_path_outline(
+            &[k.a, k.b],
+            Some(&[k.bulge]),
+            false,
+            std::f64::consts::PI / 90.0,
         );
+        out.strokes.push(Stroke::solid(edge_pts, false).width(2.0).tone(Tone::Snap));
         let Some((at, d, moved)) = &self.at else {
             return out;
         };

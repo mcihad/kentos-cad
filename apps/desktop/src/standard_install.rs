@@ -90,6 +90,7 @@ fn uses_words(kind: Kind, uses: u32) -> String {
     match (kind, uses) {
         (_, 0) => "—".into(),
         (Kind::SheetTemplate, n) => format!("{n} pafta"),
+        (Kind::TableStyle, n) => format!("{n} tablo"),
         (_, n) => format!("{n} yerleştirme"),
     }
 }

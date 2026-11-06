@@ -3,6 +3,7 @@ import type { AnnotationStyleKind } from "./AnnotationStyleKind";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { StyleEditOperation } from "./StyleEditOperation";
+import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { WallStyleDef } from "./WallStyleDef";
 
@@ -42,8 +43,12 @@ import type { WallStyleDef } from "./WallStyleDef";
  * `style_not_found` (update's id, rename's and remove's `style`, each of
  * export's `styles`), `duplicate_style` (create's given id the table has),
  * `invalid_library` (import's text not such a file, or of the other kind);
- * `invalid_style` (the table it would leave, by `text_styles_problem` or
- * `dimension_styles_problem`: the names, then each style's values).
+ * `invalid_style` (the table it would leave, by `text_styles_problem`,
+ * `dimension_styles_problem` or for table styles `table_style_defs_problem`:
+ * the names, then each style's values).
+ *
+ * A text style renamed renames it in the table styles' cell styles that name it (its letters' case aside, as
+ * line types' texts follow it), so a table style keeps its text style (docs/adr/1127 §2).
  */
 export type StylesEdit = { kind: AnnotationStyleKind, operation: StyleEditOperation, 
 /**
@@ -71,6 +76,11 @@ leader?: LeaderStyleDef,
  * the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
  */
 wall?: WallStyleDef, 
+/**
+ * Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw
+ * it as they are, none is written.
+ */
+table?: TableStyleDef, 
 /**
  * Export's styles, by id; absent: every style of the kind.
  */
