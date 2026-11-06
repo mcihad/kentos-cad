@@ -112,15 +112,18 @@ def lay(input_, sets=()):
         raise Refused(bad("to", f"{num(to)} m aksın üstünde değil: {span}."))
     if to <= frm:
         raise Refused(bad("to", "Aralığın sonu başından sonra olmalı."))
-    if profile is not None and input_["layerId"] == "kilitli":
+    if (profile is not None or input_.get("matchLines")) and input_.get("layerId") == "kilitli":
         raise Refused(failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka "
                                              "bir katmanı etkinleştirin.", "layerId"))
-    if profile is not None and input_["layerId"] == "yok":
+    if (profile is not None or input_.get("matchLines")) and input_.get("layerId") == "yok":
         raise Refused(failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
                              "layerId"))
-    if profile is not None and input_["layerId"] == "grup":
+    if (profile is not None or input_.get("matchLines")) and input_.get("layerId") == "grup":
         raise Refused(failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir "
                                             "katman seçin.", "layerId"))
+    # Docs/adr/0998: match lines are drawn objects; they need a layer.
+    if input_.get("matchLines") and "layerId" not in input_:
+        raise Refused(bad("layerId", "Eşleşme çizgileri bir katmana çizilir; layerId verin."))
     default = "sys:yol-plan-boykesit-kgm" if input_.get("bands") == "kgm" else "sys:yol-plan-boykesit"
     source = input_.get("source", {"type": "system", "id": default})
     items, plan_item, profile_item, page = KGM if source["id"] == "sys:yol-plan-boykesit-kgm" else (ITEMS, PLAN, PROFILE, PAGE)
@@ -224,6 +227,9 @@ def lay(input_, sets=()):
                          "message": f"{len(outside)} paftada aks ya da boykesit görünümü haritanın dışına taşıyor "
                                     f"({', '.join(str(k) for k in outside)}. pafta); ölçeği büyütün ya da şablonun "
                                     "haritasını genişletin."})
+    # Docs/adr/0998: a match line between each two sheets: its line and a text on each side.
+    if input_.get("matchLines"):
+        objects += 3 * (len(sheets) - 1)
     out = {"set": set_id, "name": name, "alignment": a["id"], "scale": scale, "length": width, "height": height,
            "sheets": sheets}
     if profile is not None:
@@ -310,6 +316,10 @@ def cases():
         ok("1:1000, 10 kat abartma: boykesit kot taşımayla haritaya sığar", {**pro, "scale": 1000}),
         ok("Boykesitle 1:500: görünümler haritaya sığmaz, uyarıyla", pro),
         ok("Km 100–400, 20 m bindirme", {"alignment": "g-1", "from": 100.0, "to": 400.0, "overlap": 20.0}),
+        # Docs/adr/0998: match lines, at the middle of each overlap.
+        ok("Eşleşme çizgileri, 20 m bindirme", {**pro, "scale": 1000, "exaggeration": 5.0, "overlap": 20.0,
+                                                "matchLines": True}),
+        ok("Yalnız plan, eşleşme çizgileri katmana", {"alignment": "g-1", "layerId": "0", "matchLines": True}),
         ok("Kısmi boykesit: yalnız onun aralığı", {"alignment": "g-1", "profile": "Kısmi kot", "layerId": "yol-boykesit",
                                                     "at": [800.0, 0.0], "scale": 1000, "exaggeration": 2.0}),
         ok("Yan aks, eskiyen boykesit uyarıyla", {"alignment": "Yan aks", "profile": "b-2", "layerId": "0",
@@ -325,6 +335,7 @@ def cases():
                                                  "first": "Y-201"}),
         no("Olmayan katman", {**pro, "layerId": "yok"}),
         no("Katman grubu", {**pro, "layerId": "grup"}),
+        no("Eşleşme çizgileri katmansız", {"alignment": "g-1", "matchLines": True}),
         no("Olmayan şablon", {"alignment": "Ana aks", "source": {"type": "system", "id": "sys:yok"}}),
         no("Tek haritalı şablonda boykesit", {**pro, "source": {"type": "system", "id": "sys:cad-teknik"}}),
         no("Seçeneklerde ad", {"alignment": "Ana aks", "options": {"name": "Pafta"}}),

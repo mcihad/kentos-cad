@@ -57,6 +57,8 @@ pub struct Window {
     pub(crate) corridor: Option<String>,
     /// The mass haul diagram whose earthwork rows go under the views (docs/adr/0995).
     pub(crate) haul: Option<String>,
+    /// Match lines between the sheets (docs/adr/0998).
+    pub(crate) match_lines: bool,
     pub(crate) preview: Preview,
 }
 
@@ -76,6 +78,8 @@ pub enum Event {
     Corridor(Option<String>),
     /// The mass haul diagram KGM's earthwork rows read (its id); none: no rows (docs/adr/0995).
     Haul(Option<String>),
+    /// Match lines between the sheets or none (docs/adr/0998).
+    MatchLines(bool),
     Make,
     Close,
 }
@@ -131,6 +135,7 @@ impl Window {
             superelevation: if self.profile.is_some() && self.kgm { self.dever.clone() } else { None },
             corridor: if self.profile.is_some() && self.kgm { self.corridor.clone() } else { None },
             haul: if self.profile.is_some() && self.kgm { self.haul.clone() } else { None },
+            match_lines: (self.profile.is_some() && self.match_lines).then_some(true),
             scale,
             overlap: number(&self.fields[3])?,
             source: None,
@@ -169,6 +174,7 @@ impl App {
             dever: None,
             corridor: None,
             haul: None,
+            match_lines: false,
             preview: Preview::default(),
         }));
         self.dialog = Some(Dialog::RoadSheets);
@@ -211,6 +217,7 @@ impl App {
             Event::Dever(id) => w.dever = id,
             Event::Corridor(id) => w.corridor = id,
             Event::Haul(id) => w.haul = id,
+            Event::MatchLines(on) => w.match_lines = on,
             Event::Field(k, t) => w.fields[k.min(5)] = t,
             Event::Make => return self.make_road_sheets(),
             Event::Close => {
@@ -341,7 +348,15 @@ impl App {
             let bands = Select::new(["KentOS", "KGM 2019"].into_iter().map(Choice::new), Some(usize::from(w.kgm)), |i| {
                 msg(Event::Kgm(i == 1))
             });
-            let mut second = row![words::field("Bantlar", container(bands).width(130), None)].spacing(10);
+            // Docs/adr/0998: Civil 3D's match lines; KGM's sheets have none.
+            let lines = Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(w.match_lines)), |i| {
+                msg(Event::MatchLines(i == 1))
+            });
+            let mut second = row![
+                words::field("Eşleşme çizgisi", container(lines).width(110), None),
+                words::field("Bantlar", container(bands).width(130), None),
+            ]
+            .spacing(10);
             if w.kgm {
                 let schedules: Vec<(String, String)> = self
                     .document

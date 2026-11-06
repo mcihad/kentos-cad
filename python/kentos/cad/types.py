@@ -74497,6 +74497,9 @@ class RoadSheetsPlan(_Model):
         exaggeration: Unit: 1.
         from_: Unit: m.
         haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
+        match_lines: Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+            middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
+            sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
         options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
         overlap: Unit: m.
         scale: Unit: scale.
@@ -74513,6 +74516,7 @@ class RoadSheetsPlan(_Model):
     from_: float | None | Unset = UNSET
     haul: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
+    match_lines: bool | None | Unset = UNSET
     name: str | None | Unset = UNSET
     options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
     overlap: float | None | Unset = UNSET
@@ -74543,6 +74547,8 @@ class RoadSheetsPlan(_Model):
             out["haul"] = self.haul
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
+        if self.match_lines is not UNSET:
+            out["matchLines"] = self.match_lines
         if self.name is not UNSET:
             out["name"] = self.name
         out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
@@ -74573,6 +74579,7 @@ class RoadSheetsPlan(_Model):
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
             haul=data.get("haul", UNSET),
             layer_id=data.get("layerId", UNSET),
+            match_lines=data.get("matchLines", UNSET),
             name=data.get("name", UNSET),
             options=data["options"] if "options" in data else dict(),
             overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),

@@ -374,7 +374,7 @@ fn object(geometry: EntityGeometry, color: Option<&str>, weight: Option<f64>) ->
     }
 }
 
-fn line(a: [f64; 2], b: [f64; 2], color: Option<&str>, weight: Option<f64>) -> NewObject {
+pub(crate) fn line(a: [f64; 2], b: [f64; 2], color: Option<&str>, weight: Option<f64>) -> NewObject {
     object(
         EntityGeometry::Line {
             a: Vec2 { x: a[0], y: a[1] },
@@ -408,7 +408,7 @@ fn text(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Optio
 }
 
 /// A text turned `rotation` degrees counterclockwise (up the band: 90; the contract's unit).
-fn turned(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>, rotation: f64) -> NewObject {
+pub(crate) fn turned(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>, rotation: f64) -> NewObject {
     object(
         EntityGeometry::Text {
             layout: None,
@@ -432,7 +432,7 @@ fn turned(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Opt
 }
 
 /// A text with a mask under it, so the lines it sits on do not run through it.
-fn masked(mut words: NewObject) -> NewObject {
+pub(crate) fn masked(mut words: NewObject) -> NewObject {
     if let EntityGeometry::Text { mask, .. } = &mut words.geometry {
         *mask = true;
     }

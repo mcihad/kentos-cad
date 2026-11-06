@@ -119,9 +119,13 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
     }
     let (from, to) = (from.clamp(0.0, length), to.clamp(0.0, length));
     if let Some(p) = &input.layer_id
-        && profile.is_some()
+        && (profile.is_some() || input.match_lines == Some(true))
     {
         checks::layer(doc, p)?;
+    }
+    // Docs/adr/0998: match lines are drawn objects; they need a layer.
+    if input.match_lines == Some(true) && input.layer_id.is_none() {
+        return Err(bad("layerId", "Eşleşme çizgileri bir katmana çizilir; layerId verin.".into()));
     }
     let template = template_of(input.source.as_ref(), input.bands == Some(kentos_commands::ProfileBands::Kgm))?;
     let options: template::InstanceOptions = serde_json::from_value(input.options.clone()).map_err(|e| {
@@ -332,6 +336,17 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         l.sheet = m.sheet.clone();
         l.number = m.number.clone();
     }
+    // Docs/adr/0998: a match line between each two sheets, at the middle of their overlap.
+    if input.match_lines == Some(true) {
+        let h = 2.5 * f64::from(scale) / 1000.0;
+        for w in laid.windows(2) {
+            let s = 0.5 * (w[0].to + w[1].from);
+            let Some(p) = core.at(s) else { continue };
+            let (t, n) = ([p.direction.cos(), p.direction.sin()], [-p.direction.sin(), p.direction.cos()]);
+            let reach = 0.45 * height;
+            out_lines(&mut objects, [p.x, p.y], t, n, reach, h, w[0].rotation, &km_text(built.km(s), 2), [&w[1].number, &w[0].number]);
+        }
+    }
     let edit = SheetsEdit {
         ops: made.ops.iter().map(|op| serde_json::to_value(op).unwrap_or_default()).collect(),
         pictures: made
@@ -377,7 +392,38 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         uids: Vec::new(),
         revision: doc.revision().to_string(),
     };
-    Ok(Laid { set, edit, objects, layer: profile.map(|p| p.1), out, warnings })
+    let layer = profile.map(|p| p.1).or_else(|| input.layer_id.clone().filter(|_| input.match_lines == Some(true)));
+    Ok(Laid { set, edit, objects, layer, out, warnings })
+}
+
+/// A match line at `p` (docs/adr/0998): across the alignment (`n`, its normal; `t`, its tangent) `reach` each way, and
+/// along it on each side "EŞLEŞME ÇİZGİSİ KM : km · PAFTA …", the side before naming the sheet after and the side after
+/// the sheet before, `h` high, masked, readable on a map turned `turn` degrees.
+#[allow(clippy::too_many_arguments)]
+fn out_lines(
+    out: &mut Vec<NewObject>,
+    p: [f64; 2],
+    t: [f64; 2],
+    n: [f64; 2],
+    reach: f64,
+    h: f64,
+    turn: f64,
+    km: &str,
+    numbers: [&str; 2],
+) {
+    use kentos_commands::TextAlign;
+    let at = |a: f64, b: f64| [p[0] + n[0] * a + t[0] * b, p[1] + n[1] * a + t[1] * b];
+    out.push(road_profiles_draw::line(at(-reach, 0.0), at(reach, 0.0), None, Some(0.5)));
+    let degrees = n[1].atan2(n[0]).to_degrees();
+    let (on_paper, _) = crate::road_plan_axes::readable(degrees - turn, TextAlign::MiddleCenter);
+    // Turned to read, the words' foot faces one side of the line or the other: each sits off its own side.
+    let flipped = (on_paper + turn - degrees).rem_euclid(360.0) > 90.0 && (on_paper + turn - degrees).rem_euclid(360.0) < 270.0;
+    for (side, number) in [(-1.0, numbers[0]), (1.0, numbers[1])] {
+        let foot = if (side < 0.0) != flipped { TextAlign::BottomCenter } else { TextAlign::TopCenter };
+        let q = at(0.5 * reach, side * 0.4 * h);
+        let words = format!("EŞLEŞME ÇİZGİSİ KM : {km} · PAFTA {number}");
+        out.push(road_profiles_draw::masked(road_profiles_draw::turned(q, words, h, foot, None, on_paper + turn)));
+    }
 }
 
 pub(crate) fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<RoadSheetsLaid> {

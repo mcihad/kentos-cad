@@ -69,6 +69,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         from_: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        match_lines: bool | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
@@ -113,6 +114,9 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             from_: Unit: m.
             haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
             layer_id:
+            match_lines: Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+                middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
+                sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
             name:
             options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
             overlap: Unit: m.
@@ -144,6 +148,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             from_=from_,
             haul=haul,
             layer_id=layer_id,
+            match_lines=match_lines,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             overlap=overlap,
@@ -169,6 +174,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         from_: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        match_lines: bool | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
@@ -192,6 +198,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             from_=from_,
             haul=haul,
             layer_id=layer_id,
+            match_lines=match_lines,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             overlap=overlap,
@@ -217,6 +224,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         from_: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        match_lines: bool | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
@@ -240,6 +248,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             from_=from_,
             haul=haul,
             layer_id=layer_id,
+            match_lines=match_lines,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             overlap=overlap,
@@ -265,6 +274,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         from_: float | None | Unset = UNSET,
         haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
+        match_lines: bool | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
@@ -293,6 +303,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             from_=from_,
             haul=haul,
             layer_id=layer_id,
+            match_lines=match_lines,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             overlap=overlap,

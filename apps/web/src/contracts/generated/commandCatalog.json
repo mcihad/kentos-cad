@@ -56099,6 +56099,13 @@
               "null"
             ]
           },
+          "matchLines": {
+            "description": "Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the\nmiddle of their overlap, a line across the alignment and on each side \"EŞLEŞME ÇİZGİSİ KM : …\" with the other\nsheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "name": {
             "type": [
               "string",

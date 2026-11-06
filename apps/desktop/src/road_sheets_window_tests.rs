@@ -613,3 +613,39 @@ fn screens_dky_row() {
     std::fs::write(&file, pdf.bytes).expect("writes the PDF");
     println!("{}", file.display());
 }
+
+/// Y92's picture (docs/adr/0998): match lines between the sheets, Ana aks at 1:1000 with 20 m of overlap; the window and
+/// the book's PDF.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_match_lines -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_match_lines() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y92");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = kgm_app();
+    let mut snapshot = Snapshot::new(Size::new(1100.0, 650.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let _ = app.update(Message::Run("road.sheets"));
+    send(&mut app, W::Field(1, "1000".into()));
+    send(&mut app, W::Field(3, "20".into()));
+    send(&mut app, W::Profile(Some("b-1".into())));
+    send(&mut app, W::MatchLines(true));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("y92-pencere.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+    send(&mut app, W::Make);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+    let file = out.join("y92-pafta.pdf");
+    std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+    println!("{}", file.display());
+}
