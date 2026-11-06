@@ -81,6 +81,12 @@ fn screens() {
             let path = out.join(format!("yol-y25-oneri-{file}-{name}.png"));
             snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
             println!("{}", path.display());
+            // The grades as KGM's 2019 specification writes them: signed, three decimals (docs/adr/0978).
+            send(&mut app, W::Detail(crate::propose_window::Detail::Grades));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("yol-y25-oneri-{file}-egimler-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+            println!("{}", path.display());
         }
     }
 }

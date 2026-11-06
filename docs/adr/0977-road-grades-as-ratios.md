@@ -189,7 +189,7 @@ Python başvuruları kendi modellerini mühendisin yazdığı gibi yüzdeyle kur
 - **Arazi analizi:** Eğim sınıfları ve ızgara-üçgen karşılaştırması yüzdedir (ROAD-NUM-11).
 - **`superelevation.json` derlemi:** Çizelgenin değerlerini yüzde sayılarıyla tutar. Çizelge doğrusal olduğu için birim
   sonucu değiştirmez, ama derlemin kendisi birim söylemez.
-- **Boykesit paftasının eğim yazısı:** Bugün iki ondalıklı yazılıyor (`road.profiles.draw`'un `%{:.2}`'si). KGM 2019
-  şartnamesi üç ondalık ister. Bu iş sıradaki madde olarak plana yazıldı.
+- **Boykesit paftasının eğim yazısı:** İki ondalıklı yazılıyordu; KGM 2019 şartnamesi üç ondalık ister. ADR 0978'de
+  (Y71) düzeltildi.
 - **LandXML ile dever alışverişi:** Henüz yok. Geldiğinde `FullSuperelev` yüzdesi okurken 100'e bölünecek, yazarken
   100 ile çarpılacak.

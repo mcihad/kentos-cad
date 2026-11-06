@@ -428,7 +428,11 @@ impl App {
                 let km = red.as_ref().map_or_else(String::new, |p| p.km_text.clone());
                 // The length in space from the first PVI (docs/adr/0968), apart from the km's horizontal one.
                 let along = red.as_ref().and_then(|p| p.along3d).map_or_else(String::new, |a| format!(" · ilk PVI'dan 3B {} m", comma(a, 3)));
-                format!("{said} · km {km}: kırmızı kot {} · eğim %{} · {bend}{along}", comma(z, 2), comma(100.0 * g, 2))
+                format!(
+                    "{said} · km {km}: kırmızı kot {} · eğim {} · {bend}{along}",
+                    comma(z, 2),
+                    kentos_road::profile::grade_text(g).replace('.', ",")
+                )
             }
             None => said,
         };

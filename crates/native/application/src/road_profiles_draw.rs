@@ -403,7 +403,7 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
         let g = (zb - za) / (sb - sa);
         out.push(text(
             [x(0.5 * (sa.max(s0) + sb.min(s1))), mid(4)],
-            format!("%{:.2} L={:.2}", 100.0 * g, sb - sa),
+            format!("{} L={:.2}", kentos_road::profile::grade_text(g), sb - sa),
             h,
             TextAlign::MiddleCenter,
             None,

@@ -333,7 +333,8 @@ impl App {
                             .map(|g| {
                                 vec![
                                     format!("{} – {}", g.between[0], g.between[1]),
-                                    format!("{:.3}", 100.0 * g.grade),
+                                    // KGM 2019: signed, three decimals (docs/adr/0978); the column says %.
+                                    kentos_road::profile::grade_text(g.grade).replace('%', "").replace('.', ","),
                                     match g.limit {
                                         Some(GradeLimit::Rise) => "en büyük çıkış".into(),
                                         Some(GradeLimit::Fall) => "en büyük iniş".into(),

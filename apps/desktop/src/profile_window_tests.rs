@@ -84,6 +84,22 @@ fn the_window_makes_a_profile_on_the_terrain_and_rebinds_a_stale_one() {
     send(&mut app, W::Draw);
     let doc = &mut app.document.as_mut().expect("doc").model;
     assert!(doc.entities().count() > before + 50, "the frame, grid, lines and bands are drawn");
+    // The grades' band as KGM's 2019 specification writes them (docs/adr/0978): the sign before %, three decimals.
+    let grades: Vec<String> = doc
+        .entities()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) if t.text.contains(" L=") && t.text.contains('%') => Some(t.text.clone()),
+            _ => None,
+        })
+        .collect();
+    assert!(!grades.is_empty(), "the grades' band is written");
+    for g in &grades {
+        let head = g.split(" L=").next().unwrap_or_default();
+        let ok = head == "%0.000"
+            || ((head.starts_with("+%") || head.starts_with("-%"))
+                && head[2..].split_once('.').is_some_and(|(_, d)| d.len() == 3 && d.chars().all(|c| c.is_ascii_digit())));
+        assert!(ok, "{g}: KGM writes +%5.241, -%3.202");
+    }
     assert_eq!(doc.undo().as_deref(), Some("Boykesit çiz"));
 }
 

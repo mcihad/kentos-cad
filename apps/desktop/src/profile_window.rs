@@ -1720,7 +1720,7 @@ impl canvas::Program<Message> for Chart<'_> {
             }
             word(
                 &mut frame,
-                format!("%{} L={}", comma(100.0 * g, 2), comma(s1 - s0, 1)),
+                format!("{} L={}", kentos_road::profile::grade_text(g).replace('.', ","), comma(s1 - s0, 1)),
                 Point::new(x(0.5 * (s0 + s1)), grade_top + 3.0),
                 t.text,
                 true,
