@@ -619,6 +619,24 @@ pub struct AlignmentDef {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub design_speed: Option<f64>,
+    /// Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name
+    /// on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start_place: Option<String>,
+    /// Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end_place: Option<String>,
+}
+
+/// The longest place name an alignment's end takes (docs/adr/1000): a sheet's arrow label, not a description.
+pub const MAX_PLACE_CHARS: usize = 80;
+
+/// Whether `name` is a place name an alignment's end takes: trimmed, not empty, at most [`MAX_PLACE_CHARS`] characters,
+/// no control character.
+pub fn place_ok(name: &str) -> bool {
+    name == name.trim() && !name.is_empty() && name.chars().count() <= MAX_PLACE_CHARS && !name.chars().any(char::is_control)
 }
 
 /// A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
@@ -3566,6 +3584,9 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
                 if a.design_speed.is_some() {
                     return fail(at("designSpeed"), "paralel aksın proje hızı kaynağınındır");
                 }
+                if a.start_place.is_some() || a.end_place.is_some() {
+                    return fail(at("startPlace"), "paralel aksın gittiği yerler kaynağınındır");
+                }
                 let source = list.iter().find(|b| b.id == o.alignment);
                 match source {
                     None => return fail(at("offsetOf.alignment"), "kaynak aks projede yok"),
@@ -3606,6 +3627,11 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
         }
         if a.design_speed.is_some_and(|v| !speed_ok(v)) {
             return fail(at("designSpeed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
+        }
+        for (field, place) in [("startPlace", &a.start_place), ("endPlace", &a.end_place)] {
+            if place.as_deref().is_some_and(|n| !place_ok(n)) {
+                return fail(at(field), &format!("yer adı boş olmayan, kenarında boşluk olmayan, en çok {MAX_PLACE_CHARS} harf olmalı"));
+            }
         }
         if let Some(st) = &a.stationing {
             if !st.start.is_finite() {
@@ -3760,6 +3786,8 @@ mod tests {
             offset_of: None,
             stationing: None,
             design_speed: None,
+            start_place: None,
+            end_place: None,
         };
         let side = AlignmentDef {
             id: "g-2".into(),

@@ -91,6 +91,8 @@ pub struct Row {
     parallel: Option<(String, String)>,
     /// The design speed's text, km/h (docs/adr/0985); empty: none.
     speed: String,
+    /// Where the road leads beyond its start and its end, as typed (docs/adr/1000); empty: none.
+    places: [String; 2],
 }
 
 fn text(v: f64) -> String {
@@ -148,6 +150,7 @@ impl Row {
                 .collect(),
             parallel: d.offset_of.as_ref().map(|o| (o.alignment.clone(), trimmed(o.offset))),
             speed: text(d.design_speed.unwrap_or(0.0)),
+            places: [d.start_place.clone().unwrap_or_default(), d.end_place.clone().unwrap_or_default()],
         }
     }
 
@@ -220,6 +223,9 @@ impl Row {
             offset_of,
             stationing,
             design_speed,
+            // Docs/adr/1000: a parallel axis has its source's.
+            start_place: Some(self.places[0].trim().to_owned()).filter(|n| !n.is_empty() && self.parallel.is_none()),
+            end_place: Some(self.places[1].trim().to_owned()).filter(|n| !n.is_empty() && self.parallel.is_none()),
         })
     }
 }
@@ -252,6 +258,8 @@ pub enum Event {
     Start(String),
     /// The design speed typed (docs/adr/0985).
     Speed(String),
+    /// Where the road leads beyond its start (0) or its end (1), as typed (docs/adr/1000).
+    Place(usize, String),
     PiChoose(usize),
     Pi(usize, usize, String),
     /// The PI's ove to the next curve turned on or off (docs/adr/0979).
@@ -530,6 +538,7 @@ impl App {
                     equations: Vec::new(),
                     parallel: source.filter(|_| parallel).map(|s| (s, "7,5".to_owned())),
                     speed: String::new(),
+                    places: Default::default(),
                 });
                 w.chosen = Some(w.rows.len() - 1);
                 w.pi = None;
@@ -560,6 +569,11 @@ impl App {
             Event::Speed(t) => {
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     r.speed = t;
+                }
+            }
+            Event::Place(k, t) => {
+                if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
+                    r.places[k.min(1)] = t;
                 }
             }
             Event::PiChoose(j) => w.pi = Some(j),
@@ -792,6 +806,8 @@ impl App {
             stationing: None,
             offset: None,
             design_speed: None,
+            start_place: None,
+            end_place: None,
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {
@@ -865,6 +881,8 @@ impl App {
                 stationing: None,
                 offset: None,
                 design_speed: None,
+                start_place: None,
+                end_place: None,
                 expected_revision: None,
             };
             if !self.alignment_write(|cx| road_alignments_edit::execute(cx, edit)) {
@@ -887,6 +905,9 @@ impl App {
                         offset: d.offset_of.as_ref().filter(|_| k.offset_of != d.offset_of).map(|o| o.offset),
                         // 0 clears it (docs/adr/0985).
                         design_speed: (k.design_speed != d.design_speed).then(|| d.design_speed.unwrap_or(0.0)),
+                        // "" clears one (docs/adr/1000).
+                        start_place: (k.start_place != d.start_place).then(|| d.start_place.clone().unwrap_or_default()),
+                        end_place: (k.end_place != d.end_place).then(|| d.end_place.clone().unwrap_or_default()),
                         expected_revision: None,
                     };
                     if !self.alignment_write(|cx| road_alignments_edit::execute(cx, edit)) {
@@ -901,6 +922,8 @@ impl App {
                         offset_of: d.offset_of.clone(),
                         stationing: d.stationing.clone(),
                         design_speed: d.design_speed,
+                        start_place: d.start_place.clone(),
+                        end_place: d.end_place.clone(),
                         expected_revision: None,
                     };
                     if !self.alignment_write(|cx| road_alignments_create::execute(cx, create)) {
@@ -1045,6 +1068,16 @@ impl App {
                     ]
                     .spacing(12),
                 );
+                // Docs/adr/1000: the places named on the plan's arrows (KGM 2024: "← KAMAN").
+                let before = kentos_ui::widget::text_field("Kaman", &r.places[0]).on_input(|t| msg(Event::Place(0, t)));
+                let after = kentos_ui::widget::text_field("Ankara–Niğde Otoyolu", &r.places[1]).on_input(|t| msg(Event::Place(1, t)));
+                col = col.push(
+                    row![
+                        words::field("Başında gidilen yer", before, None),
+                        words::field("Sonunda gidilen yer", after, None),
+                    ]
+                    .spacing(12),
+                );
                 let pis = &r.pis;
                 let fill = |title| road_dialog::Col { title, width: None, number: true };
                 let table = road_dialog::edit_table(
@@ -1161,6 +1194,8 @@ impl App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Başlangıç km (m)", text) => Some(msg(Event::Start(text.to_owned()))),
             Control::Fill("Proje hızı (km/sa)", text) => Some(msg(Event::Speed(text.to_owned()))),
+            Control::Fill("Başında gidilen yer", text) => Some(msg(Event::Place(0, text.to_owned()))),
+            Control::Fill("Sonunda gidilen yer", text) => Some(msg(Event::Place(1, text.to_owned()))),
             Control::Fill("Noktanın km'si", text) => Some(msg(Event::Point(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

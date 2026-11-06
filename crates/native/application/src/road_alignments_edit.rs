@@ -54,10 +54,13 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                 && input.stationing.is_none()
                 && input.offset.is_none()
                 && input.design_speed.is_none()
+                && input.start_place.is_none()
+                && input.end_place.is_none()
             {
                 return Err(fail(
                     codes::INVALID_ALIGNMENT,
-                    "Değiştirilecek bir şey yok: name, pis, stationing, offset ya da designSpeed verin.".into(),
+                    "Değiştirilecek bir şey yok: name, pis, stationing, offset, designSpeed, startPlace ya da endPlace verin."
+                        .into(),
                     "",
                 ));
             }
@@ -80,6 +83,13 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
             }
             if let Some(v) = input.design_speed {
                 def.design_speed = (v != 0.0).then_some(v);
+            }
+            // Docs/adr/1000: trimmed; "" clears it.
+            if let Some(n) = &input.start_place {
+                def.start_place = Some(n.trim().to_owned()).filter(|n| !n.is_empty());
+            }
+            if let Some(n) = &input.end_place {
+                def.end_place = Some(n.trim().to_owned()).filter(|n| !n.is_empty());
             }
             if let Some(d) = input.offset {
                 match &mut def.offset_of {

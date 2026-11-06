@@ -270,10 +270,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         *,
         name: str,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -308,10 +310,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
             doc: The drawing it works on.
             name:
             design_speed: The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve. Unit: km/h.
+            end_place:
             expected_revision:
             id:
             offset_of:
             pis:
+            start_place: Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.
             stationing:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -328,10 +332,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         return self.execute_input(doc, AlignmentsCreate(
             name=name,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), request_id=request_id, expected=expected)
 
@@ -342,10 +348,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         *,
         name: str,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> AlignmentsWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -354,10 +362,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         return self.plan_input(doc, AlignmentsCreate(
             name=name,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -368,10 +378,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         *,
         name: str,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -380,10 +392,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         return self.validate_input(doc, AlignmentsCreate(
             name=name,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -394,10 +408,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         *,
         name: str,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -411,10 +427,12 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         return self.answer_input(doc, AlignmentsCreate(
             name=name,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -458,10 +476,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -487,10 +507,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             alignment:
             operation:
             design_speed: The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays. Unit: km/h.
+            end_place:
             expected_revision:
             name:
             offset: A parallel axis's offset, m, right positive. Unit: m.
             pis:
+            start_place: Where the road leads beyond its start, beyond its end (docs/adr/1000); "" clears one. Not the geometry: the
+                revision stays.
             stationing: The km; an empty one (no start, no equation) clears it.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -508,10 +531,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             alignment=alignment,
             operation=operation,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), request_id=request_id, expected=expected)
 
@@ -523,10 +548,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> AlignmentsWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -536,10 +563,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             alignment=alignment,
             operation=operation,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -551,10 +580,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -564,10 +595,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             alignment=alignment,
             operation=operation,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -579,10 +612,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
         design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -597,10 +632,12 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             alignment=alignment,
             operation=operation,
             design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), op=op, request_id=request_id, expected=expected)
 

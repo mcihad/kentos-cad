@@ -218,3 +218,35 @@ fn the_box_writes_the_curves_design_speed() {
     setup["settings"]["road"]["alignments"][0]["pis"][1]["speed"] = serde_json::json!(62.5);
     assert_eq!(v_line(&setup), vec!["V = 62.5".to_owned()], "the curve's own speed stands for it");
 }
+
+#[test]
+fn the_places_beyond_the_ends_are_named_on_the_map() {
+    // Docs/adr/1000; KGM's 2024 sheets: "← KAMAN" at the plan's end toward it. A map that shows the road names both
+    // places once, red, beside the road; a map elsewhere and an alignment without places name none.
+    use kentos_native_application::road_plan_axes::{Room, with_axes_on};
+    let (_, mut setup) = sample();
+    let alignment = &mut setup["settings"]["road"]["alignments"][0];
+    alignment["startPlace"] = serde_json::json!("Kaman");
+    alignment["endPlace"] = serde_json::json!("Ankara–Niğde Otoyolu");
+    let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
+    let pi = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
+    let doc = Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(setup.clone()).unwrap()).unwrap();
+    let named = |room: Room| -> Vec<(String, Option<String>)> {
+        let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(room)).expect("a copy");
+        copy.entities()
+            .filter_map(|e| match e {
+                Entity::Text(t) if t.text == "Kaman" || t.text == "Ankara–Niğde Otoyolu" => {
+                    Some((t.text.clone(), e.base().color.clone()))
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    let all = named(Room { center: pi, half: [5000.0, 5000.0] });
+    assert_eq!(all.len(), 2, "{all:?}");
+    assert!(all.iter().all(|(_, c)| c.as_deref() == Some("#d62828")), "red: {all:?}");
+    assert!(named(Room { center: [pi[0], pi[1] - 100_000.0], half: [300.0, 100.0] }).is_empty(), "a map elsewhere");
+    let (plain, _) = sample();
+    let copy = with_axes_on(plain.reading_copy(), 1000.0, 0.0, Some(Room { center: pi, half: [5000.0, 5000.0] })).expect("a copy");
+    assert!(copy.entities().all(|e| !matches!(e, Entity::Text(t) if t.text == "Kaman")), "no places, no names");
+}

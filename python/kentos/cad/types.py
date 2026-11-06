@@ -12874,17 +12874,22 @@ class AlignmentDef(_Model):
             and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
             seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
             has its source's. Unit: km/h.
+        end_place: Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
         offset_of: A parallel axis's source; absent for an alignment of its own.
         pis: Its start, PIs and end; empty for a parallel axis.
         revision: Grows by one with every change of its geometry or km; absent: 0. Unit: version.
+        start_place: Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name
+            on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
         stationing: Its km; absent: from 0 with no equation. A parallel axis has its source's.
     """
     id: str
     name: str
     design_speed: float | None | Unset = UNSET
+    end_place: str | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
     pis: list[AlignmentPi] | Unset = UNSET
     revision: int | Unset = UNSET
+    start_place: str | None | Unset = UNSET
     stationing: AlignmentStationing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -12893,12 +12898,16 @@ class AlignmentDef(_Model):
         out["name"] = self.name
         if self.design_speed is not UNSET:
             out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
+        if self.end_place is not UNSET:
+            out["endPlace"] = self.end_place
         if self.offset_of is not UNSET:
             out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
         if self.pis is not UNSET:
             out["pis"] = [e0.to_json() for e0 in self.pis]
         if self.revision is not UNSET:
             out["revision"] = self.revision
+        if self.start_place is not UNSET:
+            out["startPlace"] = self.start_place
         if self.stationing is not UNSET:
             out["stationing"] = None if self.stationing is None else self.stationing.to_json()
         return out
@@ -12909,9 +12918,11 @@ class AlignmentDef(_Model):
             id=data["id"],
             name=data["name"],
             design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
+            end_place=data.get("endPlace", UNSET),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
             pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
             revision=data.get("revision", UNSET),
+            start_place=data.get("startPlace", UNSET),
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
         )
 
@@ -13741,13 +13752,16 @@ class AlignmentsCreate(_Model):
     a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
     Attributes:
         design_speed: The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve. Unit: km/h.
+        start_place: Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.
     """
     name: str
     design_speed: float | None | Unset = UNSET
+    end_place: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     id: str | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
     pis: list[AlignmentPi] | Unset = UNSET
+    start_place: str | None | Unset = UNSET
     stationing: AlignmentStationing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13755,6 +13769,8 @@ class AlignmentsCreate(_Model):
         out["name"] = self.name
         if self.design_speed is not UNSET:
             out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
+        if self.end_place is not UNSET:
+            out["endPlace"] = self.end_place
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.id is not UNSET:
@@ -13763,6 +13779,8 @@ class AlignmentsCreate(_Model):
             out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
         if self.pis is not UNSET:
             out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.start_place is not UNSET:
+            out["startPlace"] = self.start_place
         if self.stationing is not UNSET:
             out["stationing"] = None if self.stationing is None else self.stationing.to_json()
         return out
@@ -13772,10 +13790,12 @@ class AlignmentsCreate(_Model):
         return cls(
             name=data["name"],
             design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
+            end_place=data.get("endPlace", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             id=data.get("id", UNSET),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
             pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
+            start_place=data.get("startPlace", UNSET),
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
         )
 
@@ -13792,15 +13812,19 @@ class AlignmentsEdit(_Model):
     Attributes:
         design_speed: The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays. Unit: km/h.
         offset: A parallel axis's offset, m, right positive. Unit: m.
+        start_place: Where the road leads beyond its start, beyond its end (docs/adr/1000); "" clears one. Not the geometry: the
+            revision stays.
         stationing: The km; an empty one (no start, no equation) clears it.
     """
     alignment: str
     operation: AlignmentsEditOperation | AlignmentsEditOperationName
     design_speed: float | None | Unset = UNSET
+    end_place: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     pis: list[AlignmentPi] | None | Unset = UNSET
+    start_place: str | None | Unset = UNSET
     stationing: AlignmentStationing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -13809,6 +13833,8 @@ class AlignmentsEdit(_Model):
         out["operation"] = _enum_out(self.operation)
         if self.design_speed is not UNSET:
             out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
+        if self.end_place is not UNSET:
+            out["endPlace"] = self.end_place
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.name is not UNSET:
@@ -13817,6 +13843,8 @@ class AlignmentsEdit(_Model):
             out["offset"] = None if self.offset is None else float(self.offset)
         if self.pis is not UNSET:
             out["pis"] = None if self.pis is None else [e0.to_json() for e0 in self.pis]
+        if self.start_place is not UNSET:
+            out["startPlace"] = self.start_place
         if self.stationing is not UNSET:
             out["stationing"] = None if self.stationing is None else self.stationing.to_json()
         return out
@@ -13827,10 +13855,12 @@ class AlignmentsEdit(_Model):
             alignment=data["alignment"],
             operation=_enum_in(AlignmentsEditOperation, data["operation"]),
             design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
+            end_place=data.get("endPlace", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             name=data.get("name", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             pis=UNSET if "pis" not in data else None if data["pis"] is None else [AlignmentPi.from_json(e0) for e0 in data["pis"]],
+            start_place=data.get("startPlace", UNSET),
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
         )
 

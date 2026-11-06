@@ -377,6 +377,9 @@ pub fn objects(doc: &Document, scale: f64, turn: f64, room: Option<Room>) -> Vec
         let schedule = schedule_for(doc, &def.id, &b);
         curves(&mut out, &def, &b, schedule.as_ref(), room, &roads, Paper { m, h, turn });
         ends(&mut out, &b, m, h, turn, room);
+        if let Some(room) = room {
+            places(&mut out, &def, &b, m, h, turn, room);
+        }
     }
     out
 }
@@ -696,6 +699,65 @@ fn curves(
         if let Some(ix) = ix {
             out.push(rule(top - 0.2 * h - pitch * ix as f64));
         }
+    }
+}
+
+/// The places the road leads to beyond its ends (docs/adr/1000; KGM's June 2024 sample sheets: "← KAMAN" and
+/// "ANKARA-NİĞDE OTOYOLU →" in red at the plan's ends, on every sheet): at the first and the last of the alignment the map
+/// shows, 4 mm in from its edge, a red arrow 15 mm along the road pointing out, 4 mm beside it, and the name over it.
+fn places(out: &mut Vec<NewObject>, def: &kentos_commands::AlignmentDef, b: &Built, m: f64, h: f64, turn: f64, room: Room) {
+    if def.start_place.is_none() && def.end_place.is_none() {
+        return;
+    }
+    let inset = Room { center: room.center, half: [room.half[0] - 4.0 * m, room.half[1] - 4.0 * m] };
+    if inset.half[0] <= 0.0 || inset.half[1] <= 0.0 {
+        return;
+    }
+    let n = ((b.length() / (0.5 * h)).ceil() as usize).clamp(2, 200_000);
+    let shown: Vec<f64> = (0..=n)
+        .map(|i| b.length() * i as f64 / n as f64)
+        .filter(|s| b.place(*s).is_some_and(|p| inset.holds([p.x, p.y], turn)))
+        .collect();
+    let (Some(&first), Some(&last)) = (shown.first(), shown.last()) else { return };
+    let (len, head, beside) = (15.0 * m, 3.0 * m, 4.0 * m);
+    for (place, s, out_dir) in [(&def.start_place, first, -1.0), (&def.end_place, last, 1.0)] {
+        let Some(name) = place else { continue };
+        let Some(p) = b.place(s) else { continue };
+        let (t, nrm) = frame(p.direction);
+        // Pointing out of the map along the road: back at the start, ahead at the end.
+        let dir = [t[0] * out_dir, t[1] * out_dir];
+        let base = [p.x + nrm[0] * beside, p.y + nrm[1] * beside];
+        let tip = base;
+        let tail = [tip[0] - dir[0] * len, tip[1] - dir[1] * len];
+        let neck = [tip[0] - dir[0] * head, tip[1] - dir[1] * head];
+        out.push(path(&[tail, neck], Some(RED), 0.35, None));
+        let wing = 0.4 * head;
+        let arrow = [
+            [tip[0], tip[1]],
+            [neck[0] + nrm[0] * wing, neck[1] + nrm[1] * wing],
+            [neck[0] - nrm[0] * wing, neck[1] - nrm[1] * wing],
+            [tip[0], tip[1]],
+        ];
+        out.push(object(
+            EntityGeometry::Hatch {
+                ring: arrow.iter().map(|q| Vec2 { x: q[0], y: q[1] }).collect(),
+                holes: None,
+                pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
+                assoc: None,
+                boundary: None,
+                annotative: None,
+            },
+            Some(RED),
+            None,
+            None,
+        ));
+        let mid = [0.5 * (tail[0] + tip[0]) + nrm[0] * 0.9 * h, 0.5 * (tail[1] + tip[1]) + nrm[1] * 0.9 * h];
+        let degrees = p.direction.to_degrees();
+        let mut words = text(mid, name.clone(), h, degrees, turn, TextAlign::MiddleCenter, Some(RED));
+        if let EntityGeometry::Text { mask, .. } = &mut words.geometry {
+            *mask = true;
+        }
+        out.push(words);
     }
 }
 

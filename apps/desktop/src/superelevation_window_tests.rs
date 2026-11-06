@@ -311,6 +311,8 @@ fn screens_own_speed() {
             stationing: None,
             offset: None,
             design_speed: Some(70.0),
+            start_place: None,
+            end_place: None,
             expected_revision: None,
         };
         let done = kentos_native_application::road_alignments_edit::execute(

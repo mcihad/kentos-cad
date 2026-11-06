@@ -47,6 +47,8 @@ fn a_reversed_alignment_keeps_every_edge_s_slope() {
         stationing: None,
         offset: None,
         design_speed: None,
+        start_place: None,
+        end_place: None,
         expected_revision: None,
     };
     let mut cx = ExecutionContext::new(&mut doc);
@@ -105,6 +107,8 @@ fn a_reversed_alignment_keeps_the_grade_line() {
         stationing: None,
         offset: None,
         design_speed: None,
+        start_place: None,
+        end_place: None,
         expected_revision: None,
     };
     let CommandResult::Completed { output, .. } = road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc), input) else {

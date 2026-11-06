@@ -258,6 +258,8 @@ fn screens_design_speed() {
             stationing: None,
             offset: None,
             design_speed: Some(80.0),
+            start_place: None,
+            end_place: None,
             expected_revision: None,
         };
         let done = kentos_native_application::road_alignments_edit::execute(
@@ -648,4 +650,47 @@ fn screens_match_lines() {
     let file = out.join("y92-pafta.pdf");
     std::fs::write(&file, pdf.bytes).expect("writes the PDF");
     println!("{}", file.display());
+}
+
+/// Y94's pictures (docs/adr/1000): the places beyond the road's ends typed in Güzergâh, then the plan sheets with KGM's
+/// arrows at their ends; the window wide and narrow, and the book's PDF.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_place_arrows -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_place_arrows() {
+    use crate::alignment_window::Event as A;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y94");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (size, name) in [(Size::new(1440.0, 900.0), "genis"), (Size::new(1100.0, 650.0), "dar")] {
+        let mut app = kgm_app();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::Run("alignment.editor"));
+        let _ = app.update(Message::Alignments(A::Choose(0)));
+        let _ = app.update(Message::Alignments(A::Place(0, "KAMAN".into())));
+        let _ = app.update(Message::Alignments(A::Place(1, "ANKARA-NİĞDE OTOYOLU".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y94-guzergah-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::Alignments(A::Save));
+        if name == "genis" {
+            let _ = app.update(Message::Run("road.sheets"));
+            send(&mut app, W::Field(1, "1000".into()));
+            send(&mut app, W::Make);
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+            let file = out.join("y94-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
 }

@@ -37766,6 +37766,12 @@
             ],
             "x-unit": "km/h"
           },
+          "endPlace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -37797,6 +37803,13 @@
               "$ref": "#/$defs/AlignmentPi"
             },
             "type": "array"
+          },
+          "startPlace": {
+            "description": "Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "stationing": {
             "anyOf": [
@@ -38026,6 +38039,12 @@
             ],
             "x-unit": "km/h"
           },
+          "endPlace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -38057,6 +38076,13 @@
             },
             "type": [
               "array",
+              "null"
+            ]
+          },
+          "startPlace": {
+            "description": "Where the road leads beyond its start, beyond its end (docs/adr/1000); \"\" clears one. Not the geometry: the\nrevision stays.",
+            "type": [
+              "string",
               "null"
             ]
           },
@@ -101677,6 +101703,13 @@
           ],
           "x-unit": "km/h"
         },
+        "endPlace": {
+          "description": "Where the road leads beyond its end (\"ANKARA-NİĞDE OTOYOLU →\"); as `start_place`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "id": {
           "description": "Unique in the project; what a profile, a corridor or a parallel axis names.",
           "type": "string"
@@ -101709,6 +101742,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "version"
+        },
+        "startPlace": {
+          "description": "Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name\non a red arrow at the plan's end toward it (\"← KAMAN\"). At most 80 characters. A parallel axis has its source's.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "stationing": {
           "anyOf": [

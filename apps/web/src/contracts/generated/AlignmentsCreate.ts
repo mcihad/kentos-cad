@@ -18,4 +18,8 @@ export type AlignmentsCreate = { name: string, id?: string, pis?: Array<Alignmen
 /**
  * The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve.
  */
-designSpeed?: number, expectedRevision?: string, };
+designSpeed?: number, 
+/**
+ * Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.
+ */
+startPlace?: string, endPlace?: string, expectedRevision?: string, };

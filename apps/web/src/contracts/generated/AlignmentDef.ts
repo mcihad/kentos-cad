@@ -37,4 +37,13 @@ stationing?: AlignmentStationing,
  * seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
  * has its source's.
  */
-designSpeed?: number, };
+designSpeed?: number, 
+/**
+ * Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name
+ * on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
+ */
+startPlace?: string, 
+/**
+ * Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
+ */
+endPlace?: string, };

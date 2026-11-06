@@ -668,6 +668,11 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
+/// Whether road settings carry schema 194's fields: an alignment's places beyond its ends (docs/adr/1000).
+pub(crate) fn road_has_places(road: &kentos_contracts::RoadSettings) -> bool {
+    road.alignments.iter().any(|a| a.start_place.is_some() || a.end_place.is_some())
+}
+
 /// Whether road settings carry schema 193's fields: an alignment's design speed or a PI's own (docs/adr/0985).
 pub(crate) fn road_has_speed(road: &kentos_contracts::RoadSettings) -> bool {
     road.alignments.iter().any(|a| a.design_speed.is_some() || a.pis.iter().any(|p| p.speed.is_some()))
@@ -1507,6 +1512,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_speed && road_has_speed(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "aksın proje hızı şema 193 ister"));
+                }
+                if !has.road_places && road_has_places(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "aksın uçlarında gidilen yerler şema 194 ister"));
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 167 ister"));

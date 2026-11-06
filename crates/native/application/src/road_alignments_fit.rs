@@ -163,6 +163,8 @@ fn check(doc: &Document, input: &AlignmentsFit) -> Result<Checked, Stop> {
         offset_of: None,
         stationing: (start != 0.0).then(|| AlignmentStationing { start, equations: Vec::new() }),
         design_speed: None,
+        start_place: None,
+        end_place: None,
     };
     list.push(def.clone());
     let built = alignments::build(&list, &def, "").map_err(|stop| {

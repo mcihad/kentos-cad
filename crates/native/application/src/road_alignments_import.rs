@@ -201,6 +201,8 @@ fn check(doc: &Document, input: &AlignmentsImport) -> Result<Checked, Stop> {
             offset_of: None,
             stationing: stationing(a),
             design_speed: None,
+            start_place: None,
+            end_place: None,
         };
         let mut with = list.clone();
         with.push(def.clone());
