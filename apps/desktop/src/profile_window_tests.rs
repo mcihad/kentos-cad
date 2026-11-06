@@ -381,7 +381,7 @@ fn screens_kgm() {
 
 /// Çizime yaz with a Kot aralığı (docs/adr/0990): 12 m splits the profile in four as the command's cases say (datums
 /// 100, 104, 106, 108), so the last part's top height 120.00 is written, which the frame as high as the lines (top 119)
-/// never writes; the frame is 12 m × 10 high.
+/// never writes.
 #[test]
 fn a_span_splits_the_drawn_profile() {
     let mut app = kgm_app();
@@ -399,7 +399,8 @@ fn a_span_splits_the_drawn_profile() {
             _ => None,
         })
         .collect();
-    assert_eq!(texts.iter().filter(|t| *t == "120.00").count(), 1, "the last part's top");
+    // Beside its split and on the frame's right edge (docs/adr/0993).
+    assert_eq!(texts.iter().filter(|t| *t == "120.00").count(), 2, "the last part's top");
 }
 
 /// Kot aralığı in the window and the split profile drawn, light and dark; `.run/gui-evidence/yol-y84/`:

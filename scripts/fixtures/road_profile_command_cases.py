@@ -839,6 +839,8 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, 
              + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(grades))
     # Docs/adr/0987: each end of the design line in the view, its leader and three words (PROJE BAŞI/SONU, KM, KOT).
     n += 4 * sum(1 for e in (pvis[0], pvis[-1]) if s0 - 1e-9 <= e["station"] <= s1 + 1e-9)
+    # Docs/adr/0993: the last part's heights on the frame's right edge too.
+    n += len(heights) if parts is None else len(heights_of(parts[-1][2]))
     if parts is not None:
         # Docs/adr/0990: each part its own grid's lines and heights; at each split a line and the part before's heights
         # again; the terrain's runs and the design line once in each part they cross (counted once above).

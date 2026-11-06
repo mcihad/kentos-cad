@@ -479,6 +479,14 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             }
         }
     }
+    // The last part's heights on the frame's right edge too (docs/adr/0993; KGM's 2024 sample sheets write the scale on
+    // both sides, the last part's after a split).
+    if let Some(last) = c.parts.last() {
+        let i = c.parts.len() - 1;
+        for v in heights(last.datum) {
+            out.push(text([x1 + h, yi(i, v)], format!("{v:.2}"), h, TextAlign::MiddleLeft, None));
+        }
+    }
     // A line in station and elevation drawn in each part it crosses.
     let pieces = |pts: &[[f64; 2]]| -> Vec<Vec<[f64; 2]>> {
         c.parts
