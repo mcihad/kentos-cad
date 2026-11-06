@@ -81399,7 +81399,7 @@
       "id": "cad.crs.transform",
       "version": 1,
       "title": "Koordinat dönüştür",
-      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  Zincir (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı zincir hassas dönüşüm değildir (chain_limited). Projenin kayıtlı kodu KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir.",
       "aliases": [
         "koordinat-donustur",
         "cs2cs"
@@ -81418,7 +81418,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.crs.transform` v1.\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`\n(a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side\nis the project's and the project has none), `invalid_heights` (a side's heights against their rules),\n`invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:\n`no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is\na grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other\nnot), `geoid_required` (between ellipsoidal and orthometric heights: KentOS has no geoid engine),\n`vertical_unsupported` (between two vertical datums), `epoch_unsupported` (two different epochs: KentOS has no\ntime-dependent transformation). Warnings: `heights_unchanged` (heights given, neither side says what they are:\nthey stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),\n`unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some\npoints have no value in the target: outside a projection or a grid).",
+        "description": "Input of `cad.crs.transform` v1.\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`\n(a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side\nis the project's and the project has none), `unsupported_srid` (a side is the project's and its stored EPSG code\nis not one the registry resolves, docs/adr/1230 §1), `invalid_heights` (a side's heights against their rules),\n`invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:\n`no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is\na grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other\nnot), `geoid_required` (between ellipsoidal and orthometric heights: KentOS has no geoid engine),\n`vertical_unsupported` (between two vertical datums), `epoch_unsupported` (two different epochs: KentOS has no\ntime-dependent transformation). Warnings: `heights_unchanged` (heights given, neither side says what they are:\nthey stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),\n`unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some\npoints have no value in the target: outside a projection or a grid).",
         "properties": {
           "from": {
             "anyOf": [
@@ -81476,8 +81476,11 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record and the report.",
+        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record, the report and the coordinate chain (docs/adr/1230).",
         "properties": {
+          "chain": {
+            "$ref": "#/$defs/CrsChain"
+          },
           "operation": {
             "$ref": "#/$defs/CrsOperation"
           },
@@ -81508,15 +81511,19 @@
           "points",
           "unreached",
           "operation",
-          "report"
+          "report",
+          "chain"
         ],
         "title": "CrsTransformed",
         "type": "object"
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record and the report.",
+        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record, the report and the coordinate chain (docs/adr/1230).",
         "properties": {
+          "chain": {
+            "$ref": "#/$defs/CrsChain"
+          },
           "operation": {
             "$ref": "#/$defs/CrsOperation"
           },
@@ -81547,7 +81554,8 @@
           "points",
           "unreached",
           "operation",
-          "report"
+          "report",
+          "chain"
         ],
         "title": "CrsTransformed",
         "type": "object"
@@ -81558,6 +81566,7 @@
           "not_finite",
           "unknown_srid",
           "no_system",
+          "unsupported_srid",
           "invalid_heights",
           "invalid_epoch",
           "invalid_uncertainty",
@@ -81574,7 +81583,8 @@
           "heights_unchanged",
           "epoch_not_applied",
           "unofficial_operation",
-          "points_outside"
+          "points_outside",
+          "chain_limited"
         ]
       },
       "examples": [
@@ -95046,6 +95056,12 @@
       "meaning": "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin."
     },
     {
+      "code": "unsupported_srid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin kayıtlı EPSG kodu KentOS'un çözdüğü sistemler arasında yok; projeye kayıttaki bir sistemi atayın ya da tarafın sistemini EPSG koduyla verin."
+    },
+    {
       "code": "invalid_uncertainty",
       "kind": "failed",
       "retryable": false,
@@ -95128,6 +95144,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında)."
+    },
+    {
+      "code": "chain_limited",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dönüşüm zinciri sınırlı: bir adımın doğruluğu, epok, kot ya da kapsam eksik; sonuç hassas dönüşüm değil."
     },
     {
       "code": "no_operations",
@@ -99492,6 +99514,16 @@
           "type": "string"
         }
       ]
+    },
+    "AccuracyBasis": {
+      "description": "What a step's accuracy rests on (docs/adr/1230 §2): exact (a conversion, a unit change), EPSG's registry, the\nproject's own statement (its Helmert or grid), or nothing (a geoid model, a velocity grid).",
+      "enum": [
+        "exact",
+        "epsg",
+        "project",
+        "unknown"
+      ],
+      "type": "string"
     },
     "AccuracyReport": {
       "description": "The four numbers a calculation's report keeps apart (docs/adr/0519 §4): the source's uncertainty (what the caller\ngave), the transformation's stated accuracy, their root sum of squares when both are known (an estimate), the\nproject's topology tolerance (when points count as one, not an error) and the decimals and step lengths are shown\nwith (not an accuracy). Metres.",
@@ -107656,6 +107688,163 @@
       ],
       "type": "object"
     },
+    "ChainGrid": {
+      "description": "A grid the chain read (docs/adr/1230 §2): what it does, its name, its file's SHA-256 (its version: another file\nis another grid), the box its nodes cover (degrees; a point beyond has no value) and the accuracy the project\nstates for it (none: not stated; a geoid's and a velocity grid's are not known here).",
+      "properties": {
+        "accuracy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "extent": {
+          "$ref": "#/$defs/DegreeBox"
+        },
+        "kind": {
+          "$ref": "#/$defs/GridKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "sha256",
+        "extent"
+      ],
+      "type": "object"
+    },
+    "ChainSide": {
+      "description": "One side of the chain (docs/adr/1230 §1): its horizontal system (EPSG code when the registry's, name, family,\ndatum, unit, the order KentOS reads x and y in and the order EPSG gives the axes), the datum ensemble's accuracy\nwhen the datum is one (WGS 84: EPSG says 2 m), what its heights rest on, and its epoch with where it came from.",
+      "properties": {
+        "axes": {
+          "description": "The order x and y are: “east,north” or “longitude,latitude” (CLAUDE.md §5; whatever EPSG's order).",
+          "type": "string"
+        },
+        "datum": {
+          "description": "`TUREF`, `ED50`, `WGS84`, or the project's datum's name.",
+          "type": "string"
+        },
+        "ensembleAccuracy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "epochSource": {
+          "$ref": "#/$defs/EpochSource"
+        },
+        "epsgAxes": {
+          "description": "The order EPSG gives the axes: “ne”, “en” or “latlon”; none for the project's definition.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "family": {
+          "$ref": "#/$defs/CrsFamily"
+        },
+        "name": {
+          "type": "string"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "epsg"
+        },
+        "unit": {
+          "description": "“m” on a grid, “deg” on a geographic system.",
+          "type": "string"
+        },
+        "vertical": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChainVertical"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "family",
+        "datum",
+        "unit",
+        "axes",
+        "epochSource"
+      ],
+      "type": "object"
+    },
+    "ChainStatus": {
+      "description": "Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights\ncarried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.",
+      "enum": [
+        "complete",
+        "limited"
+      ],
+      "type": "string"
+    },
+    "ChainVertical": {
+      "description": "What a side's heights rest on, as the chain records it: their kind, the vertical system (EPSG code, name and\nunit; an ellipsoidal height's is the horizontal datum's ellipsoid, in metres) and the geoid model.",
+      "properties": {
+        "geoid": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GeoidModel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/HeightKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "epsg"
+        },
+        "unit": {
+          "description": "“m”, “ft”.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "unit"
+      ],
+      "type": "object"
+    },
     "ChangedObject": {
       "description": "An object that is in both and differs.",
       "properties": {
@@ -112443,6 +112632,51 @@
       },
       "type": "object"
     },
+    "CrsChain": {
+      "description": "The coordinate chain of a call (docs/adr/1230): the two sides, the basis of each step's accuracy (in the\noperation's steps' order), the grids read, the verdict and its reasons (in a fixed order: `points_outside`,\n`accuracy_unknown`, `height_accuracy_unknown`, `heights_unchanged`, `epoch_unknown`, `datum_ensemble`,\n`unofficial_operation`) and the numeric budget.",
+      "properties": {
+        "bases": {
+          "items": {
+            "$ref": "#/$defs/AccuracyBasis"
+          },
+          "type": "array"
+        },
+        "budget": {
+          "$ref": "#/$defs/NumericBudget"
+        },
+        "grids": {
+          "items": {
+            "$ref": "#/$defs/ChainGrid"
+          },
+          "type": "array"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source": {
+          "$ref": "#/$defs/ChainSide"
+        },
+        "status": {
+          "$ref": "#/$defs/ChainStatus"
+        },
+        "target": {
+          "$ref": "#/$defs/ChainSide"
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "bases",
+        "grids",
+        "status",
+        "reasons",
+        "budget"
+      ],
+      "type": "object"
+    },
     "CrsDefinition": {
       "description": "A coordinate system the project defines (docs/adr/0168 §1): its name\nand what it is.",
       "properties": {
@@ -112458,6 +112692,31 @@
         "system"
       ],
       "type": "object"
+    },
+    "CrsFamily": {
+      "description": "The families of horizontal systems KentOS's engine resolves (docs/adr/1230 §1). A system outside them, or an EPSG\ncode the registry does not hold, is refused by name: a stored code is not assumed resolvable.",
+      "oneOf": [
+        {
+          "const": "geographic",
+          "description": "Latitude and longitude on a datum's ellipsoid.",
+          "type": "string"
+        },
+        {
+          "const": "transverseMercator",
+          "description": "A transverse Mercator grid: the TM3 zones, UTM, or the project's own.",
+          "type": "string"
+        },
+        {
+          "const": "pseudoMercator",
+          "description": "WGS 84 / Pseudo-Mercator (EPSG:3857).",
+          "type": "string"
+        },
+        {
+          "const": "local",
+          "description": "A local system bound to a base system by a plane transform (the project's definition).",
+          "type": "string"
+        }
+      ]
     },
     "CrsMove": {
       "description": "How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two\nsystems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when\nonly the projection changed), its accuracy in metres (none when a step's is not written), whether an operation\nthat is not the official transformation was used, the same as a sentence, and what the move left out.",
@@ -115028,6 +115287,38 @@
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "DegreeBox": {
+      "description": "A box in degrees: west, south, east, north.",
+      "properties": {
+        "east": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "north": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "south": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "west": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        }
+      },
+      "required": [
+        "west",
+        "south",
+        "east",
+        "north"
       ],
       "type": "object"
     },
@@ -122437,6 +122728,16 @@
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       "type": "string"
     },
+    "EpochSource": {
+      "description": "Where a side's coordinate epoch came from: the call, the project's settings, the other side (the target takes\nthe source's when it states none), or nowhere.",
+      "enum": [
+        "given",
+        "project",
+        "carried",
+        "none"
+      ],
+      "type": "string"
+    },
     "EventLink": {
       "additionalProperties": false,
       "description": "A link: the events of one layer on the routes of some others.",
@@ -127348,6 +127649,15 @@
         "to"
       ],
       "type": "object"
+    },
+    "GridKind": {
+      "description": "What a grid of the chain does: an NTv2 datum shift, a geoid model, a velocity grid.",
+      "enum": [
+        "horizontal",
+        "geoid",
+        "velocity"
+      ],
+      "type": "string"
     },
     "GridOrigin": {
       "description": "Where a ceiling grid's lines start.",
@@ -142766,6 +143076,26 @@
           "x-unit": "value"
         }
       },
+      "type": "object"
+    },
+    "NumericBudget": {
+      "description": "The engine's numeric budget for the call (docs/adr/1230 §4): how far its numbers may lie from an independent\nengine's (PROJ) for the same operation — the target's horizontal units (metres on a grid, degrees on a geographic\nsystem) and metres of height. Not an accuracy: the transformation's is the report's.",
+      "properties": {
+        "horizontal": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "vertical": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "horizontal",
+        "vertical"
+      ],
       "type": "object"
     },
     "NurbsBy": {

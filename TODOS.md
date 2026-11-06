@@ -1290,6 +1290,8 @@ Liste:
   gelince geoit ve hız ızgaralarının cihaz kitaplığı (IndexedDB `kentos.grids`'in yanında; GTX ve GeoTIFF), çekirdeğin
   `crs::geoid`'i WASM'a; `DeclaredCrs.vertical` ve `vertical_crs` uyarısı web'in içe aktarma pencerelerinde (TS türleri üretildi:
   `DeclaredVertical`, `VelocityModel`, `StepKind`, `HeightMethod`); bileşik `.prj` ve GeoJSON URN'ü biçim çekirdeğinde ortak.
+- [ ] `MAP-02` koordinat zinciri (ADR 1230, 6 Kasım): web'de gerekenler: `cad.crs.transform`'un web işleyicisi gelince çıktının
+  `chain`'i (taraflar, ızgaraların kutusu, dayanaklar, karar, bütçe), `unsupported_srid` ve `chain_limited`; TS türleri üretilmedi.
 - [ ] `CBS-07` harita sisteminde rasterler, resimler ve bulutlar (ADR 0630, 25 Ekim): web'de gerekenler: ADR 0583'ün harita
   sistemi web'e gelince raster geçişinde karoların ağı (`MapProjection::grid_cells` ve `grid` WASM'a), resim partisinin
   `"warped":true` x, y, u, v sayıları (stil çekirdeği ortak; WebGPU ve WebGL2'de raster boru hattıyla resmin dokusu), nokta bulutu

@@ -201,6 +201,19 @@ başvuruyla sınansın. Zoom/pan, render orijini değişimi ve save–reopen öl
 sonucunu değiştirmesin. Sayısal bütçe her işlem için tanımlansın; sadece f64
 kullanılmış olması doğruluk kanıtı sayılmasın.
 
+**6 Kasım 2026 ilerlemesi ([ADR 1230](../docs/adr/1230-coordinate-chain-epoch-grids-and-budget.md)), madde açık:**
+`cad.crs.transform`'un cevabı koordinat zincirini taşır: iki tarafın yatay sistemi (kod, aile, datum, birim, KentOS'un
+ve EPSG'nin eksen sırası, WGS 84 datum topluluğunun 2 m'si), düşey sistemi, epoku ve epokun nereden geldiği; okunan
+ızgaraların türü, SHA-256'sı, düğüm kutusu ve projenin doğruluğu; her adımın doğruluk dayanağı; `complete`/`limited`
+kararı ve nedenleri (`chain_limited` uyarısı); sayısal bütçe (1e-6 m, 1e-9°, 1e-6 m kot). Kayıtta olmayan proje kodu
+`unsupported_srid` ile reddedilir. Kanıtlananlar: E=500 000/N=4 400 000'de milimetre, Edirne–Hakkari, yerel → gerçek,
+hız ızgarasıyla epok, geoit ve ızgara dışı, tek yanda epok PROJ'a karşı 21 yeni ve 53 genişlemiş ortak durumla
+(`crs_chain_cases.py`, `crs_vertical_cases.py`, `geoid_cases.py`); zoom/pan, çizim orijini değişimi ve `.kcad`
+kaydet–aç ölçüyü ve İçine tıkla halkasını bit bit değiştirmez (masaüstü `coordinate_chain_tests`); işlem başına bütçe
+tablosu ADR 1230 §4'te. Açık: ölçek anlatımının tek özeti ve içe aktarmada birimin bir kez uygulandığının sınaması;
+sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması; önizlemede nokta başına fark; geoit ve hız modelinin doğruluğu;
+zamana bağlı Helmert ve resmî TUREF hız alanı; web.
+
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 
 **Öncelik:** P0 veri modeli; P1 çevrimdışı işleme. **Kod:** [K09]–[K12], [K03].

@@ -66,6 +66,10 @@ Bu belge onları birbirine bağlar. Kural değiştiren her iş buraya da yazıl�
 | Kenet ve seçim | ekranda piksel | yalnız neyin tutulduğunu seçer; yeri kaynaktan gelir |
 | Kayıtlı ölçü denetimi | proje ayarı | ADR 0180 |
 
+- Koordinat dönüşümünün sayısal bütçesi (ADR 1230 §4): motor PROJ'dan ızgara hedefte en çok 10⁻⁶ m, coğrafi hedefte
+  10⁻⁹°, kotta 10⁻⁶ m ayrılır; dönüşümün cevabı bütçeyi `chain.budget`'ta söyler. Bütçe doğruluk değildir: doğruluk
+  EPSG'nin ya da projenin söylediğidir (`report.transformation`), dayanağı `chain.bases`'tadır. Doğruluğu bilinmeyen,
+  kapsamı aşan ya da epoku bir yanda söylenmiş dönüşüm `chain.status: limited`'dır, hassas dönüşüm sayılmaz.
 - Yön, içerme ve boş çember gibi kararlar kesin öngörülerle verilir (`predicates::orient2d`, `incircle`).
 - Tolerans büyütülerek hata örtülmez. Eşiği kesen belirsiz durum `needs_review` ya da ret olur (CLAUDE.md §23.3).
 
@@ -91,6 +95,10 @@ Bu belge onları birbirine bağlar. Kural değiştiren her iş buraya da yazıl�
     - alan ve çevre köşelerin float64 farklarından hesaplananla aynı (10⁻¹⁸ m², 10⁻¹⁵ m);
     - Buda'nın kesişimi 1 nm içinde;
     - `.kcad` ve DXF gidiş dönüşünde her sayı bit bit aynı.
+  - TUREF / TM30'da E ≈ 500 000, N ≈ 4 400 000 m'de 2,001 × 1,999 m'lik parsel ve 1 mm'lik kare (masaüstünün
+    `coordinate_chain_tests`'i, ADR 1230 §5): düzlem, elipsoit ve zemin ölçüleri üç yakınlaştırma ve kaydırmada, 7 km
+    öteye taşınmış çizim orijininde ve `.kcad` kaydet–aç'ta bit bit aynı; analitik alanın köşelerin float64
+    yuvarlaması içinde (4·10⁻⁹ m², 2·10⁻¹² m²).
   - Çizimin konumları (çizim hattının `styled_precision` testleri, ADR 0157;
     `a_millimetre_detail_is_off_by_no_more_than_its_float32_step_on_screen`): 1 mm'lik kenar en derin yakınlıkta (1 mm = 10 px)
     çapanın yakınında boyunu pikselin ellide biri içinde korur, uzakta en çok konumun float32 adımı kadar sapar.

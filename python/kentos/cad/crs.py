@@ -46,8 +46,14 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
     varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden
     kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın
     belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin
-    toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi
-    değiştirmez; plan aynı cevabı verir.
+    toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  Zincir
+    (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası,
+    datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği;
+    okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı;
+    karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi.
+    Sınırlı zincir hassas dönüşüm değildir (chain_limited). Projenin kayıtlı kodu
+    KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan
+    aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.crs.transform"
@@ -93,8 +99,14 @@ class _CrsTransform(LocalCommand[CrsTransform, CrsTransformed, CrsTransformed]):
         varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden
         kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın
         belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin
-        toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi
-        değiştirmez; plan aynı cevabı verir.
+        toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  Zincir
+        (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası,
+        datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği;
+        okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı;
+        karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi.
+        Sınırlı zincir hassas dönüşüm değildir (chain_limited). Projenin kayıtlı kodu
+        KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan
+        aynı cevabı verir.
 
         Args:
             doc: The drawing it works on.

@@ -9,6 +9,10 @@
 //! A side is the project's own system unless it names one: an EPSG code of the registry, with its heights and epoch.
 //! Points are the side's own units: metres east and north on a grid, degrees longitude and latitude on a
 //! geographic system; heights in the side's vertical unit.
+//!
+//! The answer also carries the coordinate chain (docs/adr/1230): each side's horizontal and vertical system, axes,
+//! unit and epoch with where it came from, the grids read with their extents, what each step's accuracy rests on,
+//! whether the chain is complete or limited and why, and the engine's numeric budget against PROJ.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -85,7 +89,8 @@ pub struct SourceUncertainty {
 ///
 /// Refusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`
 /// (a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side
-/// is the project's and the project has none), `invalid_heights` (a side's heights against their rules),
+/// is the project's and the project has none), `unsupported_srid` (a side is the project's and its stored EPSG code
+/// is not one the registry resolves, docs/adr/1230 §1), `invalid_heights` (a side's heights against their rules),
 /// `invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:
 /// `no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is
 /// a grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other
@@ -308,7 +313,7 @@ pub struct UnreachedPoint {
 }
 
 /// Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
-/// the operation's record and the report.
+/// the operation's record, the report and the coordinate chain (docs/adr/1230).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -319,4 +324,215 @@ pub struct CrsTransformed {
     pub unreached: Vec<UnreachedPoint>,
     pub operation: CrsOperation,
     pub report: AccuracyReport,
+    pub chain: CrsChain,
+}
+
+/// The families of horizontal systems KentOS's engine resolves (docs/adr/1230 §1). A system outside them, or an EPSG
+/// code the registry does not hold, is refused by name: a stored code is not assumed resolvable.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CrsFamily {
+    /// Latitude and longitude on a datum's ellipsoid.
+    Geographic,
+    /// A transverse Mercator grid: the TM3 zones, UTM, or the project's own.
+    TransverseMercator,
+    /// WGS 84 / Pseudo-Mercator (EPSG:3857).
+    PseudoMercator,
+    /// A local system bound to a base system by a plane transform (the project's definition).
+    Local,
+}
+
+/// Where a side's coordinate epoch came from: the call, the project's settings, the other side (the target takes
+/// the source's when it states none), or nowhere.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum EpochSource {
+    Given,
+    Project,
+    Carried,
+    None,
+}
+
+/// What a side's heights rest on, as the chain records it: their kind, the vertical system (EPSG code, name and
+/// unit; an ellipsoidal height's is the horizontal datum's ellipsoid, in metres) and the geoid model.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ChainVertical {
+    pub kind: crate::heights::HeightKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: Option<u32>,
+    pub name: String,
+    /// “m”, “ft”.
+    pub unit: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geoid: Option<crate::heights::GeoidModel>,
+}
+
+/// One side of the chain (docs/adr/1230 §1): its horizontal system (EPSG code when the registry's, name, family,
+/// datum, unit, the order KentOS reads x and y in and the order EPSG gives the axes), the datum ensemble's accuracy
+/// when the datum is one (WGS 84: EPSG says 2 m), what its heights rest on, and its epoch with where it came from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ChainSide {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: Option<u32>,
+    pub name: String,
+    pub family: CrsFamily,
+    /// `TUREF`, `ED50`, `WGS84`, or the project's datum's name.
+    pub datum: String,
+    /// “m” on a grid, “deg” on a geographic system.
+    pub unit: String,
+    /// The order x and y are: “east,north” or “longitude,latitude” (CLAUDE.md §5; whatever EPSG's order).
+    pub axes: String,
+    /// The order EPSG gives the axes: “ne”, “en” or “latlon”; none for the project's definition.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub epsg_axes: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub ensemble_accuracy: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub vertical: Option<ChainVertical>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
+    pub epoch_source: EpochSource,
+}
+
+/// What a grid of the chain does: an NTv2 datum shift, a geoid model, a velocity grid.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum GridKind {
+    Horizontal,
+    Geoid,
+    Velocity,
+}
+
+/// A box in degrees: west, south, east, north.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DegreeBox {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub west: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub south: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub east: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub north: f64,
+}
+
+/// A grid the chain read (docs/adr/1230 §2): what it does, its name, its file's SHA-256 (its version: another file
+/// is another grid), the box its nodes cover (degrees; a point beyond has no value) and the accuracy the project
+/// states for it (none: not stated; a geoid's and a velocity grid's are not known here).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ChainGrid {
+    pub kind: GridKind,
+    pub name: String,
+    pub sha256: String,
+    pub extent: DegreeBox,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub accuracy: Option<f64>,
+}
+
+/// What a step's accuracy rests on (docs/adr/1230 §2): exact (a conversion, a unit change), EPSG's registry, the
+/// project's own statement (its Helmert or grid), or nothing (a geoid model, a velocity grid).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AccuracyBasis {
+    Exact,
+    Epsg,
+    Project,
+    Unknown,
+}
+
+/// Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights
+/// carried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ChainStatus {
+    Complete,
+    Limited,
+}
+
+/// The engine's numeric budget for the call (docs/adr/1230 §4): how far its numbers may lie from an independent
+/// engine's (PROJ) for the same operation — the target's horizontal units (metres on a grid, degrees on a geographic
+/// system) and metres of height. Not an accuracy: the transformation's is the report's.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NumericBudget {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub horizontal: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub vertical: f64,
+}
+
+/// The coordinate chain of a call (docs/adr/1230): the two sides, the basis of each step's accuracy (in the
+/// operation's steps' order), the grids read, the verdict and its reasons (in a fixed order: `points_outside`,
+/// `accuracy_unknown`, `height_accuracy_unknown`, `heights_unchanged`, `epoch_unknown`, `datum_ensemble`,
+/// `unofficial_operation`) and the numeric budget.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CrsChain {
+    pub source: ChainSide,
+    pub target: ChainSide,
+    pub bases: Vec<AccuracyBasis>,
+    pub grids: Vec<ChainGrid>,
+    pub status: ChainStatus,
+    pub reasons: Vec<String>,
+    pub budget: NumericBudget,
+}
+
+/// The engine's horizontal budget on a grid (m), on a geographic system (degrees), and of heights (m).
+pub const CRS_BUDGET_METRES: f64 = 1e-6;
+pub const CRS_BUDGET_DEGREES: f64 = 1e-9;
+pub const CRS_BUDGET_HEIGHT: f64 = 1e-6;
+
+/// The datum ensembles of the registry and their accuracy (m) as EPSG states it: WGS 84's (EPSG:6326) 2 m.
+pub fn ensemble_accuracy(datum: &str) -> Option<f64> {
+    (datum == "WGS84").then_some(2.0)
 }
