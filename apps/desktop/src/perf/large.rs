@@ -200,7 +200,7 @@ fn adapter() -> Value {
 fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec<Parts>)> {
     let area = app.viewport.bounds;
     let center = area.center();
-    // `KENTOS_PERF_TRACE_VIEW` (a diagnosis, docs/adr/1064 §5): what the view did for each pointer frame.
+    // `KENTOS_PERF_TRACE_VIEW` (a diagnosis, docs/adr/1064 §5): what the view did for each pointer and wheel frame.
     let tell = std::env::var("KENTOS_PERF_TRACE_VIEW").is_ok();
     let hovering = path(area, hover)
         .into_iter()
@@ -225,7 +225,20 @@ fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec
     for _ in 0..2 {
         for lines in [1.0, -1.0] {
             for _ in 0..8 {
-                wheels.push(h.frame(app, &[wheel(lines)]));
+                let f = h.frame(app, &[wheel(lines)]);
+                if tell {
+                    let s = app.viewport.status().stats;
+                    println!(
+                        "tekerlek: GPU {:.2} ms, MİB {:?}, ölçeklendi {}, tutuldu {}, yüklenen {} B, çizim çağrısı {}",
+                        f.gpu_ms(),
+                        f.split().map(|x| (x * 10.0).round() / 10.0),
+                        s.picture_zoomed,
+                        s.picture_kept,
+                        s.uploaded_bytes,
+                        s.draw_calls
+                    );
+                }
+                wheels.push(f);
             }
         }
         // Screen-sized symbols and labels settle after the wheel stops (150 ms).

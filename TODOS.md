@@ -71,6 +71,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yerleştiği boyda tutulması (masaüstünde `labels.rs` `held_grown`) web'in kaplamasında da gerekir.
 - CAD-ADV-19 / ADR 1065: stil çekirdeğinin `View::block_proxy` seçeneği (örnekli tanımın uzak vekili, `"inst"`'in
   `"proxy"` alanı); web örnekli batch kurmadığı için ikisini birlikte almalı (ADR 1063'ün örnekli boru hattıyla).
+- CAD-ADV-19 / ADR 1067, 1068: kaydırırken taşınan ve tekerlek dönerken ölçeklenen resim yalnız masaüstü çizicisinde
+  (`kentos-render-wgpu`: `Targets::scratch`/`wide`, `zoomed.rs`, `FrameInput::drawing`); web'in WebGPU çizim alanı her
+  karede bütün çizer. Web açıldığında aynı kurallar (tam piksel kayma, iki oktav, geniş resim, duruşta bütün çizim) ve
+  ev sahibinin çizim anahtarı gerekir.
 
 - CAD-ADV-13 / ADR 1030: `cad.extract` işleyicisi, tablo parçaları ve satır sonu (`io/kcad.ts` şema 182, `columns.ts`, WASM
   `tableLayout.line`), paket türü 38, `FORMATS_VERSION` 107, Veri çıkarımı penceresi.

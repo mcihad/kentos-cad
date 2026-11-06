@@ -152,6 +152,12 @@ pub struct Status {
     pub scale_factor: f32,
 }
 
+thread_local! {
+    /// Whether a zoom while the wheel turns may scale the last sharp picture (docs/adr/1068); off only in a test's
+    /// control.
+    static ZOOM_SCALED: std::cell::Cell<bool> = const { std::cell::Cell::new(true) };
+}
+
 /// What the drawing area draws the styled layers with (docs/adr/0090): the
 /// geometry store they are built next to, the style library and its
 /// pictures, and the view's symbol settings.
@@ -691,6 +697,18 @@ impl Viewport {
         } else {
             Arc::default()
         };
+        // What the picture shows apart from the camera (docs/adr/1068): a zoom while the wheel turns scales the last
+        // sharp picture only while this stays. The hovered object is drawn over the picture, so it is not in it; the
+        // view modes and the style library change in dialogs, never while the wheel turns.
+        let drawing = {
+            use std::hash::{Hash, Hasher};
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            (doc.session, doc.model.generation(), selection.version(), self.grid_shown).hash(&mut h);
+            (palette.background.0, accent.0, settings.samples, settings.hi_dpi).hash(&mut h);
+            settings.highlight_width.to_bits().hash(&mut h);
+            styling.map(|s| (s.screen_symbols, s.line_weights)).hash(&mut h);
+            ZOOM_SCALED.with(std::cell::Cell::get).then(|| h.finish())
+        };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
             document: doc.session,
@@ -709,6 +727,7 @@ impl Viewport {
                 .and_then(|_| self.settling())
                 .max(self.moved_until()),
             moving: self.moving(),
+            drawing,
             other: self.other,
             passive: self.passive,
         })
@@ -951,6 +970,12 @@ impl Viewport {
             .try_borrow_mut()
             .map(|mut c| c.take_dropped())
             .unwrap_or_default()
+    }
+
+    /// A test's zoom without the scaled picture (docs/adr/1068 §4's control): every zoom frame drawn whole.
+    #[cfg(test)]
+    pub(crate) fn set_zoom_scaled(on: bool) {
+        ZOOM_SCALED.with(|z| z.set(on));
     }
 
     /// A test's pan held on (until `false`): the view counts as moving as a pan makes it (docs/adr/1067).
@@ -1386,6 +1411,8 @@ struct Program {
     settle_at: Option<Instant>,
     /// The view is being panned or zoomed (docs/adr/1067): the kept picture may be moved by a pan's whole pixels.
     moving: bool,
+    /// What the picture shows apart from the camera (`FrameInput::drawing`, docs/adr/1068).
+    drawing: Option<u64>,
     /// The inactive view of a split area (docs/adr/0285 §3).
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
@@ -1526,6 +1553,7 @@ impl shader::Program<Message> for Program {
             images: self.images.clone(),
             lens: false,
             moving: self.moving,
+            drawing: self.drawing,
         }
     }
 
@@ -1727,6 +1755,8 @@ pub struct Frame {
     lens: bool,
     /// The view is being panned or zoomed (`FrameInput::moving`, docs/adr/1067).
     moving: bool,
+    /// What the picture shows apart from the camera (`FrameInput::drawing`, docs/adr/1068); none in Büyüteç's window.
+    drawing: Option<u64>,
 }
 
 impl fmt::Debug for Frame {
@@ -1790,6 +1820,7 @@ impl shader::Primitive for Frame {
                         keep_picture: true,
                         overlays: 1,
                         moving: self.moving,
+                        drawing: self.drawing,
                     },
                 );
                 // The styled layers after the plain parts of the same frame (docs/adr/0090).
@@ -1892,6 +1923,7 @@ impl shader::Program<Message> for Lens {
             images: None,
             lens: true,
             moving: false,
+            drawing: None,
         }
     }
 }

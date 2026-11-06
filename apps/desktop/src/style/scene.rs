@@ -371,12 +371,22 @@ impl StyledCache {
         let generation = doc.generation();
         let q = quarter_scale(px_per_m);
         let walls = walls.unwrap_or_else(|| store.wall_view());
+        // The construction lines' box left behind with none built: only the box follows (a zoom past 20 views'
+        // width rebuilt a 10⁶ drawing's scene for nothing, docs/adr/1068 §5).
+        let clipped = match self.clip {
+            Some(c) if !clip_stale(view, &c) => true,
+            Some(_) if !self.layers.values().any(|l| l.parts.values().any(|p| p.construction)) => {
+                self.clip = Some(construction_clip(view));
+                true
+            }
+            _ => false,
+        };
         if self.drawing == Some(drawing)
             && self.generation == Some(generation)
             && self.look.as_ref() == Some(look)
             && self.library == library.version()
             && self.scene.under == under
-            && self.clip.is_some_and(|c| !clip_stale(view, &c))
+            && clipped
             && self.window == store.time_window()
             && self.wall_view == Some(walls)
             && self.theme.as_ref() == theme

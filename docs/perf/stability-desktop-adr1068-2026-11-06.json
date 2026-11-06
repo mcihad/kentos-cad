@@ -1,0 +1,887 @@
+{
+  "objects": 10000,
+  "rows": [
+    {
+      "pan": {
+        "compared": 330128,
+        "different": 607,
+        "ink": 199431,
+        "largest": 2,
+        "visible": 0
+      },
+      "panOfWholeCells": {
+        "compared": 328062,
+        "different": 623,
+        "ink": 198893,
+        "largest": 2,
+        "visible": 0
+      },
+      "pxPerM": 0.7037069789051323,
+      "sameViewAgain": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 213832,
+        "largest": 0,
+        "visible": 0
+      },
+      "view": "uzak"
+    },
+    {
+      "pan": {
+        "compared": 330128,
+        "different": 1716,
+        "ink": 80426,
+        "largest": 1,
+        "visible": 0
+      },
+      "panOfWholeCells": {
+        "compared": 328062,
+        "different": 1624,
+        "ink": 79519,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 18.89787587875123,
+      "sameViewAgain": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 90854,
+        "largest": 0,
+        "visible": 0
+      },
+      "view": "yakın 1:200"
+    },
+    {
+      "pan": {
+        "compared": 330128,
+        "different": 1716,
+        "ink": 64421,
+        "largest": 1,
+        "visible": 0
+      },
+      "panOfWholeCells": {
+        "compared": 328062,
+        "different": 1268,
+        "ink": 63533,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 188.9787587875123,
+      "sameViewAgain": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 71657,
+        "largest": 0,
+        "visible": 0
+      },
+      "view": "milimetrik 1:20"
+    },
+    {
+      "movedAgainstWhole": {
+        "compared": 364518,
+        "different": 634,
+        "ink": 213810,
+        "largest": 2,
+        "visible": 0
+      },
+      "pictureMoved": true,
+      "pxPerM": 0.7037069789051323,
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 213811,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "uzak"
+    },
+    {
+      "movedAgainstWhole": {
+        "compared": 364518,
+        "different": 1912,
+        "ink": 88291,
+        "largest": 1,
+        "visible": 0
+      },
+      "pictureMoved": true,
+      "pxPerM": 18.89787587875123,
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 88290,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "yakın 1:200"
+    },
+    {
+      "movedAgainstWhole": {
+        "compared": 364518,
+        "different": 1963,
+        "ink": 70962,
+        "largest": 1,
+        "visible": 0
+      },
+      "pictureMoved": true,
+      "pxPerM": 188.9787587875123,
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 70962,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "milimetrik 1:20"
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 1.0995421545392694,
+      "ringFromWide": false,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 190135,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 57683,
+        "ink": 190135,
+        "largest": 190,
+        "visible": 22299
+      },
+      "settledDrawnWhole": true,
+      "view": "uzak",
+      "zoom": "içeri",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 289334,
+        "ink": 289375,
+        "largest": 184,
+        "visible": 55514
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 0.45037246649928475,
+      "ringFromWide": false,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 149263,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 71778,
+        "ink": 149263,
+        "largest": 198,
+        "visible": 27158
+      },
+      "settledDrawnWhole": true,
+      "view": "uzak",
+      "zoom": "dışarı",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 188451,
+        "ink": 179727,
+        "largest": 190,
+        "visible": 35018
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 0.45037246649928475,
+      "ringFromWide": true,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 149267,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 71768,
+        "ink": 149267,
+        "largest": 198,
+        "visible": 27168
+      },
+      "settledDrawnWhole": true,
+      "view": "uzak",
+      "zoom": "geniş",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 204222,
+        "ink": 186475,
+        "largest": 190,
+        "visible": 35029
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 29.527931060548795,
+      "ringFromWide": false,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 100704,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 100704,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "yakın 1:200",
+      "zoom": "içeri",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 147012,
+        "ink": 117371,
+        "largest": 140,
+        "visible": 4581
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 12.094640562400787,
+      "ringFromWide": false,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 84659,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 1177,
+        "ink": 84659,
+        "largest": 182,
+        "visible": 499
+      },
+      "settledDrawnWhole": true,
+      "view": "yakın 1:200",
+      "zoom": "dışarı",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 102916,
+        "ink": 110328,
+        "largest": 182,
+        "visible": 5451
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 12.094640562400787,
+      "ringFromWide": true,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 84659,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 1177,
+        "ink": 84659,
+        "largest": 182,
+        "visible": 499
+      },
+      "settledDrawnWhole": true,
+      "view": "yakın 1:200",
+      "zoom": "geniş",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 123048,
+        "ink": 118670,
+        "largest": 182,
+        "visible": 5777
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 295.279310605488,
+      "ringFromWide": false,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 89382,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 89382,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "milimetrik 1:20",
+      "zoom": "içeri",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 132433,
+        "ink": 98000,
+        "largest": 84,
+        "visible": 276
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 120.9464056240079,
+      "ringFromWide": false,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 57213,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 57213,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "milimetrik 1:20",
+      "zoom": "dışarı",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 82632,
+        "ink": 85801,
+        "largest": 80,
+        "visible": 53
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "controlZoomed": false,
+      "pxPerM": 120.9464056240079,
+      "ringFromWide": true,
+      "settledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 57213,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledAgainstToday": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 57213,
+        "largest": 0,
+        "visible": 0
+      },
+      "settledDrawnWhole": true,
+      "view": "milimetrik 1:20",
+      "zoom": "geniş",
+      "zoomedAgainstToday": {
+        "compared": 364518,
+        "different": 97454,
+        "ink": 92149,
+        "largest": 80,
+        "visible": 61
+      },
+      "zoomedOnce": true,
+      "zoomedTwice": true
+    },
+    {
+      "longSettledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 110809,
+        "largest": 0,
+        "visible": 0
+      },
+      "longZoomed": true,
+      "pxPerM": 4.7148367586643865,
+      "ringFromWide": true,
+      "view": "uzak",
+      "zoom": "uzun"
+    },
+    {
+      "longSettledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 53235,
+        "largest": 0,
+        "visible": 0
+      },
+      "longZoomed": true,
+      "pxPerM": 126.61576838763324,
+      "ringFromWide": true,
+      "view": "yakın 1:200",
+      "zoom": "uzun"
+    },
+    {
+      "longSettledAgainstControl": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 53235,
+        "largest": 0,
+        "visible": 0
+      },
+      "longZoomed": true,
+      "pxPerM": 1266.1576838763324,
+      "ringFromWide": true,
+      "view": "milimetrik 1:20",
+      "zoom": "uzun"
+    },
+    {
+      "across": {
+        "compared": 364518,
+        "different": 29,
+        "ink": 78194,
+        "largest": 1,
+        "visible": 0
+      },
+      "bands": [
+        -8,
+        -9
+      ],
+      "inside": {
+        "compared": 364518,
+        "different": 78,
+        "ink": 78194,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 32.0,
+      "quarters": [
+        32.0,
+        32.0
+      ],
+      "step": "eğri bandı"
+    },
+    {
+      "across": {
+        "compared": 364518,
+        "different": 499,
+        "ink": 96924,
+        "largest": 1,
+        "visible": 0
+      },
+      "bands": [
+        -8,
+        -8
+      ],
+      "inside": {
+        "compared": 364518,
+        "different": 4635,
+        "ink": 96924,
+        "largest": 2,
+        "visible": 0
+      },
+      "pxPerM": 17.448123722644123,
+      "quarters": [
+        16.0,
+        19.027313840043536
+      ],
+      "step": "çeyrek oktav"
+    },
+    {
+      "across": {
+        "compared": 364518,
+        "different": 10873,
+        "ink": 116217,
+        "largest": 179,
+        "visible": 1421
+      },
+      "bands": [
+        -5,
+        -6
+      ],
+      "inside": {
+        "compared": 364518,
+        "different": 2824,
+        "ink": 116136,
+        "largest": 179,
+        "visible": 901
+      },
+      "pxPerM": 4.0,
+      "quarters": [
+        4.0,
+        4.0
+      ],
+      "step": "eğri düzeyi"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 376,
+        "ink": 214126,
+        "largest": 4,
+        "visible": 0
+      },
+      "pxPerM": 0.7037069789051323,
+      "shortcut": "blok örnekleme",
+      "view": "uzak (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 136,
+        "ink": 90854,
+        "largest": 5,
+        "visible": 0
+      },
+      "pxPerM": 18.89787587875123,
+      "shortcut": "blok örnekleme",
+      "view": "yakın 1:200 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 71657,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 188.9787587875123,
+      "shortcut": "blok örnekleme",
+      "view": "milimetrik 1:20 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 425,
+        "ink": 116243,
+        "largest": 3,
+        "visible": 0
+      },
+      "pxPerM": 3.9999996,
+      "shortcut": "blok örnekleme",
+      "view": "düzey-alti (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 424,
+        "ink": 116136,
+        "largest": 4,
+        "visible": 0
+      },
+      "pxPerM": 4.0000004,
+      "shortcut": "blok örnekleme",
+      "view": "düzey-ustu (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 35,
+        "ink": 52337,
+        "largest": 5,
+        "visible": 0
+      },
+      "pxPerM": 0.125,
+      "shortcut": "blok örnekleme",
+      "view": "en-uzak-düzey (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 21620,
+        "ink": 213955,
+        "largest": 193,
+        "visible": 2483
+      },
+      "pxPerM": 0.7037069789051323,
+      "shortcut": "eğri düzeyleri",
+      "view": "uzak (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 90854,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 18.89787587875123,
+      "shortcut": "eğri düzeyleri",
+      "view": "yakın 1:200 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 71657,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 188.9787587875123,
+      "shortcut": "eğri düzeyleri",
+      "view": "milimetrik 1:20 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 6848,
+        "ink": 116239,
+        "largest": 133,
+        "visible": 663
+      },
+      "pxPerM": 3.9999996,
+      "shortcut": "eğri düzeyleri",
+      "view": "düzey-alti (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 49,
+        "ink": 116136,
+        "largest": 2,
+        "visible": 0
+      },
+      "pxPerM": 4.0000004,
+      "shortcut": "eğri düzeyleri",
+      "view": "düzey-ustu (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 2214,
+        "ink": 52333,
+        "largest": 156,
+        "visible": 73
+      },
+      "pxPerM": 0.125,
+      "shortcut": "eğri düzeyleri",
+      "view": "en-uzak-düzey (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 27683,
+        "ink": 213832,
+        "largest": 98,
+        "visible": 626
+      },
+      "pxPerM": 0.7037069789051323,
+      "shortcut": "çizgi düzeyleri",
+      "view": "uzak (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 90854,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 18.89787587875123,
+      "shortcut": "çizgi düzeyleri",
+      "view": "yakın 1:200 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 71657,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 188.9787587875123,
+      "shortcut": "çizgi düzeyleri",
+      "view": "milimetrik 1:20 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 3714,
+        "ink": 116217,
+        "largest": 80,
+        "visible": 44
+      },
+      "pxPerM": 3.9999996,
+      "shortcut": "çizgi düzeyleri",
+      "view": "düzey-alti (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 287,
+        "ink": 116136,
+        "largest": 1,
+        "visible": 0
+      },
+      "pxPerM": 4.0000004,
+      "shortcut": "çizgi düzeyleri",
+      "view": "düzey-ustu (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 3852,
+        "ink": 52313,
+        "largest": 149,
+        "visible": 284
+      },
+      "pxPerM": 0.125,
+      "shortcut": "çizgi düzeyleri",
+      "view": "en-uzak-düzey (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 213832,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 0.7037069789051323,
+      "shortcut": "blok vekili",
+      "view": "uzak (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 90854,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 18.89787587875123,
+      "shortcut": "blok vekili",
+      "view": "yakın 1:200 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 71657,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 188.9787587875123,
+      "shortcut": "blok vekili",
+      "view": "milimetrik 1:20 (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 116217,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 3.9999996,
+      "shortcut": "blok vekili",
+      "view": "düzey-alti (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 0,
+        "ink": 116136,
+        "largest": 0,
+        "visible": 0
+      },
+      "pxPerM": 4.0000004,
+      "shortcut": "blok vekili",
+      "view": "düzey-ustu (kısayol)"
+    },
+    {
+      "onAgainstOff": {
+        "compared": 364518,
+        "different": 1487,
+        "ink": 52313,
+        "largest": 49,
+        "visible": 0
+      },
+      "pxPerM": 0.125,
+      "shortcut": "blok vekili",
+      "view": "en-uzak-düzey (kısayol)"
+    }
+  ],
+  "seed": 19,
+  "snaps": [
+    {
+      "hits": [
+        [
+          486411.60056219745,
+          4420420.202095919
+        ],
+        [
+          486411.60056219745,
+          4420420.202095919
+        ],
+        [
+          486411.60056219745,
+          4420420.202095919
+        ]
+      ],
+      "offRadius": 1.3903678208748715e-10,
+      "sameToTheBit": true,
+      "snap": "daire, en yakın"
+    },
+    {
+      "hits": [
+        [
+          486411.026,
+          4420421.677
+        ],
+        [
+          486411.026,
+          4420421.677
+        ],
+        [
+          486411.026,
+          4420421.677
+        ]
+      ],
+      "offRadius": null,
+      "sameToTheBit": true,
+      "snap": "çizgi ucu"
+    },
+    {
+      "hits": [
+        [
+          486876.625,
+          4420402.789
+        ],
+        [
+          486876.625,
+          4420402.789
+        ],
+        [
+          486876.625,
+          4420402.789
+        ]
+      ],
+      "offRadius": null,
+      "sameToTheBit": true,
+      "snap": "uzun çizginin köşesi"
+    }
+  ]
+}

@@ -265,6 +265,7 @@ pub(super) fn frame(
                 settings,
                 keep_picture: true,
                 moving: false,
+                drawing: None,
                 overlays: 0,
             },
         )

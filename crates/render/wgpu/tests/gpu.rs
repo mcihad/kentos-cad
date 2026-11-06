@@ -148,6 +148,7 @@ impl Gpu {
                     settings,
                     keep_picture: self.keep,
                     moving: false,
+                    drawing: None,
                     overlays: self.overlays,
                 },
             )

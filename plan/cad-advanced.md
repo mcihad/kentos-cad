@@ -2872,7 +2872,7 @@ iptal: masaüstü kaydının her aşamada durdurulması önceki dosyayı ve kayd
 tekrar kullanılan salt okunur denetim: ADR 1009. Ayrı kurtarma kopyası ve katı okuyucudan ayrı kısmi okuma: ADR 1013.
 Açık kalan (maddeyi kapatmayı engellemez): çoklu çizgi kenarının açı onarımı, bir blok tanımının içini bölen kurtarma.
 
-### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [~]
+### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [x]
 
 **Öncelik:** P0; diğer maddeler boyunca uygulanır. **Kod:** [C05], [C13], [C31].
 **Dayanak:** QCAD kaynak kodundaki blok başına uzamsal dizin ve işlem
@@ -2970,6 +2970,43 @@ açılışın ilk karesi 60 Hz'de değil. Madde `[~]`.
 25 000 nesneyi aşan seçimde Öznitelikler yalnız sayıyı ve türleri, 20 000'i aşan seçimde vurgu seçimin kutusunu
 gösterir (AutoCAD PROPOBJLIMIT/SELECTIONPREVIEWLIMIT varsayılanları); tutamaç sınırı zaten 150. İki test ve resim.
 10⁶ Tümünü seç ölçümü yakınlaştırmada resim yeniden kullanma işiyle birlikte alınacak (sahip “Evet, büyüt” dedi).
+
+**Tekerlek dönerken ölçeklenen resim ve maddenin kapanışı (6 Kasım 2026, [ADR 1068](../docs/adr/1068-zoomed-picture-while-the-wheel-turns.md); sahibin kararı “Evet, büyüt”):**
+Görünüm hareket ederken bir zoom karesi resmi bütün çizmez, son keskin resmi ölçekler (en çok dört kat). Uzaklaşırken
+açılan halka, daha önce daha uzaktan çizilmiş geniş resimden gelir, yoksa şeritlerle çizilir. Resmin aynı çizimi
+gösterdiğini ev sahibinin anahtarı söyler (belge nesli, seçim, görünüş). Görünüm durunca kare bütün çizilir ve ölçekleme
+kapalıyken çizilecek kareyle piksel piksel aynıdır (`perf::stability`, 12 satır). Ölçüm sırasında bulunan bir şey de
+düzeltildi: yapı çizgisi olmayan bir çizimde stilli sahnenin uzak yakınlaşmada boşuna yeniden kurulması (10⁶'da 20 ms'lik
+arayüz karesi). Aynı izle, ADR 1067 → bu dal: 10⁶ uzak tekerlek GPU p50 65,0 → 7,0 ms, MİB p99 22,9 → 1,8 ms, bütçeyi
+aşan arayüz karesi 2 → 0; 10⁵ 15,3 → 2,8 ms. Hepsini seç 10⁶'da 1 131 → 271 ms (ADR 1027'nin sınırları).
+
+Kabul satırlarının kanıtı:
+
+- **Tek küçük düzenleme:** 10⁶'da bir düzenleme 1 470 parçadan birini yeniden kurar; MİB ~21 ms (ADR 1062, 1066 komut
+  tablosu).
+- **Pan/zoom ve LOD kararlılığı:** kaydırma, ayrıntı geçişi ve kısayol satırları ile kenetler sayı sayı aynı (ADR
+  1062–1068, `perf::stability`); kenet ve seçim kaynak geometridir.
+- **Yoğun blok, linetype ve tarama:** örnekleme, eğri ve çizgi düzeyleri, blok vekili, art arda taramalar (ADR
+  1063–1066).
+- **Ekran, kaynak ve PDF ayrı:** düzeyler ve vekil yalnız çizim alanında; kâğıt, kenet ve seçim kaynakta (ADR 1063–1065).
+- **Sabit veri setleri ve rapor:** 10⁴/10⁵/10⁶ (`perf::mixed`); açılış, ilk etkileşim, p95/p99, yazı girişi, komut,
+  RAM/VRAM ve iptal ayrı raporlanır (`perf::large`).
+- **Hedefler (Apple M5, 1440×900):**
+  - Hafif etkileşim (imleç, tekerlek, kaydırma): üç koşuda 10⁴–10⁶ GPU p50 ≤ 13,7 ms, bütçeyi aşan arayüz karesi 0.
+  - Tuş yankısı: 10⁶'da en kötüsü 16,8 ms (≤ 50).
+  - İptal: Esc'nin karesi 7 ms, pencere o karede kapanır (≤ 100).
+- **Kabul:** önce/sonra aynı izle, özellik açık/kapalı karşılaştırması, gerçek GPU'da yakın/uzak resimler, MİB ve GPU
+  ayrı.
+
+**Açık kalan ve ölçülen sınırlar:**
+
+- 10⁶ yakın kaydırmanın p95'i 15–17 ms, bütçenin sınırında.
+- Uzaklaşırken halkayı kaplayan geniş resim yoksa 10⁶'nın yoğun bölgesinde zoom karesi 40–95 ms tutar.
+- 10⁶'da açılışın ilk karesi ~1,4 s, Hepsini seç ~0,27 s (kare bütçesi hedefi değil, ayrıca raporlanır).
+- Uzakta küçük dairelerin ve uzun çizgilerin mürekkep yoğunluğu değişti (sahibin kararı).
+- Tekerlek dönerken resim ölçeklenmiş ve bulanıktır, durunca keskindir.
+
+Madde `[x]`.
 
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 

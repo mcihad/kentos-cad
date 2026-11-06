@@ -292,6 +292,7 @@ impl shader::Primitive for Frame {
             settings: &settings,
             keep_picture: false,
             moving: false,
+            drawing: None,
             overlays: 0,
         };
         if renderer
