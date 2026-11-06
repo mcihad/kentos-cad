@@ -140,6 +140,7 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("road.terrains.repair","terrain_unbuildable","Bırakılacak yer yüzeyin bir nokta kaydı olmalı; kaydı olan ama kurulamayan yüzey (aynı yerde farklı kotlar, kesişen kırık hatlar) road.terrains.query ve .create'in durumlarında sınanır (ADR 0900 §11); onarım onu aynı kodla reddeder (ADR 0916 §6)."),
     ("road.drainage.query","invalid_culvert","Menfezin girişi koridorundan okunur; koridoru okunamayan menfezin reddi road.culverts.query'nin durumlarında sınanır (ADR 0909 §2)."),
     ("road.terrains.cloud","too_many_cloud_points","Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun bulutu bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552)."),
+    ("map.work.edit","work_full","Harita işi en çok 1000 öğe ve 10 000 türetme kaydı tutar; sınır sözleşmenin map_work_problem kuralındadır; 1000 öğelik çizim ortak durumda taşınmaz (ADR 1200 §1)."),
     ("road.project.rebuild","road_drawings_full","Yeniden üretme kaydı yerinde yazar, sayıyı artırmaz; sınır sözleşmenin a_drawing_record_is_judged testinde (ADR 0911 §3)."),
     ("road.alignments.label","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
     ("road.profiles.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),

@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- MAP-01 / ADR 1200: `map.work.query` ve `map.work.edit`'in web işleyicisi, `io/kcad.ts` şema 188 (`mapWork`), Harita
+  işi paneli ve Öznitelikler'in Kaynağı bölümü.
 - CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
   `unavailable`, `library`, `uses`), `kentos-ofis` kitaplığının web'de okunması, `io/kcad.ts` şema 183
   (`approvedSheetTemplates`), Standart kaynaklarını kur penceresinin Kitaplık/Kullanım sütunları ve Öznitelikler'in

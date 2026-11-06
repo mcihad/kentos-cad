@@ -7881,6 +7881,88 @@ WideningMethodName = Literal["standard", "simple"]
 """The names of :class:`WideningMethod`, for a plain string."""
 
 
+class WorkFileState(_StrEnum):
+    """How an item's file stands: there (looked for only), the same content as its revision, other content, not there."""
+    FOUND = "found"
+    CURRENT = "current"
+    CHANGED = "changed"
+    MISSING = "missing"
+
+
+WorkFileStateName = Literal["found", "current", "changed", "missing"]
+"""The names of :class:`WorkFileState`, for a plain string."""
+
+
+class WorkKind(_StrEnum):
+    """What an item is in the map's work.
+
+    - ``campaign``: A survey campaign: GNSS, total station or scan data gathered in the field.
+    - ``reference``: A reference source taken as it is: an orthophoto, a CAD reference, a base map.
+    - ``working``: The working data drawn and edited in the project.
+    - ``design``: A design: a surface, a plan, an infrastructure layout.
+    - ``check``: The results of a check (topology, quality, preflight).
+    - ``delivery``: A delivery package.
+    """
+    CAMPAIGN = "campaign"
+    REFERENCE = "reference"
+    WORKING = "working"
+    DESIGN = "design"
+    CHECK = "check"
+    DELIVERY = "delivery"
+
+
+WorkKindName = Literal["campaign", "reference", "working", "design", "check", "delivery"]
+"""The names of :class:`WorkKind`, for a plain string."""
+
+
+class WorkObjectRole(_StrEnum):
+    """What an object is in the map's work.
+
+    - ``source``: Source data: on a campaign's or a reference's layer, not derived.
+    - ``derived``: Made from a source item: a derivation names it.
+    - ``free``: The user's own drawing.
+    """
+    SOURCE = "source"
+    DERIVED = "derived"
+    FREE = "free"
+
+
+WorkObjectRoleName = Literal["source", "derived", "free"]
+"""The names of :class:`WorkObjectRole`, for a plain string."""
+
+
+class WorkState(_StrEnum):
+    """How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it
+    (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A
+    derivation: up to date, out of date (its source moved on), some of its objects gone.
+    """
+    CURRENT = "current"
+    MISSING = "missing"
+    CHANGED = "changed"
+    INCOMPLETE = "incomplete"
+    STALE = "stale"
+
+
+WorkStateName = Literal["current", "missing", "changed", "incomplete", "stale"]
+"""The names of :class:`WorkState`, for a plain string."""
+
+
+class WorkStatus(_StrEnum):
+    """Where an item's work stands, as the office records it.
+
+    - ``draft``: Taslak.
+    - ``review``: Denetlenecek: handed over to be checked.
+    - ``approved``: Onaylı teslim revizyonu: the office approved it for delivery; not an institution's approval.
+    """
+    DRAFT = "draft"
+    REVIEW = "review"
+    APPROVED = "approved"
+
+
+WorkStatusName = Literal["draft", "review", "approved"]
+"""The names of :class:`WorkStatus`, for a plain string."""
+
+
 class Workspace(_StrEnum):
     """A project's type (`app/workspaces.ts`, docs/adr/0165): CAD or CBS, each
     with its own scene, axes and ribbon; every command still runs in both.
@@ -9575,6 +9657,32 @@ class LengthenChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> LengthenChange:
         return _variant(_LENGTHEN_CHANGE, "LengthenChange", "kind", data).from_json(data)
+
+
+class MapWorkOperation(_Union):
+    """What `map.work.edit` does.
+
+    One of:
+
+    - :class:`AddMapWorkOperation` (``op: add``)
+    - :class:`SetMapWorkOperation` (``op: set``)
+    - :class:`RemoveMapWorkOperation` (``op: remove``)
+    - :class:`RelinkMapWorkOperation` (``op: relink``)
+    - :class:`RefreshMapWorkOperation` (``op: refresh``)
+    - :class:`DeriveMapWorkOperation` (``op: derive``)
+    - :class:`ForgetMapWorkOperation` (``op: forget``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "op"
+
+    @property
+    def op(self) -> str:
+        """The name of the variant (``op`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkOperation:
+        return _variant(_MAP_WORK_OPERATION, "MapWorkOperation", "op", data).from_json(data)
 
 
 class MaterialTarget(_Union):
@@ -50454,6 +50562,175 @@ class LostPin(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MapWork(_Model):
+    """A map project's work structure."""
+    derivations: list[WorkDerivation] | Unset = UNSET
+    items: list[WorkItem] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.derivations is not UNSET:
+            out["derivations"] = [e0.to_json() for e0 in self.derivations]
+        if self.items is not UNSET:
+            out["items"] = [e0.to_json() for e0 in self.items]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWork:
+        return cls(
+            derivations=[WorkDerivation.from_json(e0) for e0 in data["derivations"]] if "derivations" in data else UNSET,
+            items=[WorkItem.from_json(e0) for e0 in data["items"]] if "items" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkEdit(_Model):
+    """Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,
+    “Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
+    `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
+    space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
+    `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
+    or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
+    object another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked
+    layer), `work_full`.
+    """
+    operation: MapWorkOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkEdit:
+        return cls(
+            operation=MapWorkOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkEdited(_Model):
+    """Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
+    (its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken
+    away with an item, how many derivations are out of date after, and the drawing's revision.
+    Attributes:
+        stale: Unit: count.
+        released: Unit: count.
+        relinked: Unit: count.
+    """
+    stale: int
+    revision: str
+    derivation: str | None | Unset = UNSET
+    file_revision: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+    released: int | Unset = UNSET
+    relinked: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stale"] = self.stale
+        out["revision"] = self.revision
+        if self.derivation is not UNSET:
+            out["derivation"] = self.derivation
+        if self.file_revision is not UNSET:
+            out["fileRevision"] = self.file_revision
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.released is not UNSET:
+            out["released"] = self.released
+        if self.relinked is not UNSET:
+            out["relinked"] = self.relinked
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkEdited:
+        return cls(
+            stale=data["stale"],
+            revision=data["revision"],
+            derivation=data.get("derivation", UNSET),
+            file_revision=data.get("fileRevision", UNSET),
+            item=data.get("item", UNSET),
+            released=data.get("released", UNSET),
+            relinked=data.get("relinked", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkQuery(_Model):
+    """Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
+    and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
+    `uid` also says where that object comes from.
+
+    Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+    """
+    deep: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.deep is not UNSET:
+            out["deep"] = self.deep
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkQuery:
+        return cls(
+            deep=data.get("deep", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkTree(_Model):
+    """Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,
+    how many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing
+    objects), whether it was deep, and the revision read.
+    Attributes:
+        stale: Unit: count.
+        problems: Unit: count.
+    """
+    items: list[WorkRow]
+    derivations: list[WorkDerivationRow]
+    stale: int
+    problems: int
+    deep: bool
+    revision: str
+    object: WorkObjectSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["items"] = [e0.to_json() for e0 in self.items]
+        out["derivations"] = [e0.to_json() for e0 in self.derivations]
+        out["stale"] = self.stale
+        out["problems"] = self.problems
+        out["deep"] = self.deep
+        out["revision"] = self.revision
+        if self.object is not UNSET:
+            out["object"] = None if self.object is None else self.object.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkTree:
+        return cls(
+            items=[WorkRow.from_json(e0) for e0 in data["items"]],
+            derivations=[WorkDerivationRow.from_json(e0) for e0 in data["derivations"]],
+            stale=data["stale"],
+            problems=data["problems"],
+            deep=data["deep"],
+            revision=data["revision"],
+            object=UNSET if "object" not in data else None if data["object"] is None else WorkObjectSource.from_json(data["object"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MaplibreData(_Model):
     """A GeoJSON file `file.export.maplibre` wrote (or with `plan` would write) beside the style.
     Attributes:
@@ -67688,6 +67965,8 @@ class ProjectSettings(_Model):
         linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
         map_srid: The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
             the project's own. Changing it changes no coordinate. Unit: epsg.
+        map_work: A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
+            derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -67757,6 +68036,7 @@ class ProjectSettings(_Model):
     lineage: list[LineageRecord] | Unset = UNSET
     linear_events: list[EventLink] | Unset = UNSET
     map_srid: int | None | Unset = UNSET
+    map_work: MapWork | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -67840,6 +68120,8 @@ class ProjectSettings(_Model):
             out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
         if self.map_srid is not UNSET:
             out["mapSrid"] = self.map_srid
+        if self.map_work is not UNSET:
+            out["mapWork"] = None if self.map_work is None else self.map_work.to_json()
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -67921,6 +68203,7 @@ class ProjectSettings(_Model):
             lineage=[LineageRecord.from_json(e0) for e0 in data["lineage"]] if "lineage" in data else UNSET,
             linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
             map_srid=data.get("mapSrid", UNSET),
+            map_work=UNSET if "mapWork" not in data else None if data["mapWork"] is None else MapWork.from_json(data["mapWork"]),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -96350,6 +96633,268 @@ class Wipeout(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkDerivation(_Model):
+    """Objects made from an item: the item, its revision then, the operation that made them and the objects.
+    Attributes:
+        id: `tr-N`.
+        source: The item they came from: one with a file.
+        revision: The item's revision when they were made (64 lower-case hex digits).
+        operation: What made them: a command's id or a step's name, 1–200 characters.
+        uids: The objects, each in one derivation at most.
+    """
+    id: str
+    source: str
+    revision: str
+    operation: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["source"] = self.source
+        out["revision"] = self.revision
+        out["operation"] = self.operation
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkDerivation:
+        return cls(
+            id=data["id"],
+            source=data["source"],
+            revision=data["revision"],
+            operation=data["operation"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkDerivationRow(_Model):
+    """A derivation as it stands: its id, source item, operation, the source's revision it was made from, how many of its
+    objects the drawing holds of how many, its state and why.
+    Attributes:
+        objects: Unit: count.
+        recorded: Unit: count.
+    """
+    id: str
+    source: str
+    operation: str
+    revision: str
+    objects: int
+    recorded: int
+    state: WorkState | WorkStateName
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["source"] = self.source
+        out["operation"] = self.operation
+        out["revision"] = self.revision
+        out["objects"] = self.objects
+        out["recorded"] = self.recorded
+        out["state"] = _enum_out(self.state)
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkDerivationRow:
+        return cls(
+            id=data["id"],
+            source=data["source"],
+            operation=data["operation"],
+            revision=data["revision"],
+            objects=data["objects"],
+            recorded=data["recorded"],
+            state=_enum_in(WorkState, data["state"]),
+            why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkFile(_Model):
+    """The file an item is: where it is and the content the project last accepted.
+    Attributes:
+        path: An absolute path.
+        revision: The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.
+    """
+    path: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkFile:
+        return cls(
+            path=data["path"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkFileRow(_Model):
+    """An item's file: where, the revision the project accepted, how it stands."""
+    path: str
+    revision: str
+    state: WorkFileState | WorkFileStateName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["revision"] = self.revision
+        out["state"] = _enum_out(self.state)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkFileRow:
+        return cls(
+            path=data["path"],
+            revision=data["revision"],
+            state=_enum_in(WorkFileState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkItem(_Model):
+    """An item of the map's work.
+    Attributes:
+        id: `is-N`.
+        name: 1–200 characters, no space at either end.
+        layers: Layer or group ids; a layer is in one item at most.
+    """
+    id: str
+    kind: WorkKind | WorkKindName
+    name: str
+    file: WorkFile | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    status: WorkStatus | WorkStatusName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.status is not UNSET:
+            out["status"] = _enum_out(self.status)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkItem:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(WorkKind, data["kind"]),
+            name=data["name"],
+            file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkObjectSource(_Model):
+    """Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the
+    item it came from, the revision it was made from, the operation and whether it is up to date; a source object's
+    source is its own item and its revision that item's.
+    """
+    uid: str
+    role: WorkObjectRole | WorkObjectRoleName
+    current: bool | None | Unset = UNSET
+    derivation: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+    operation: str | None | Unset = UNSET
+    revision: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["role"] = _enum_out(self.role)
+        if self.current is not UNSET:
+            out["current"] = self.current
+        if self.derivation is not UNSET:
+            out["derivation"] = self.derivation
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.operation is not UNSET:
+            out["operation"] = self.operation
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkObjectSource:
+        return cls(
+            uid=data["uid"],
+            role=_enum_in(WorkObjectRole, data["role"]),
+            current=data.get("current", UNSET),
+            derivation=data.get("derivation", UNSET),
+            item=data.get("item", UNSET),
+            operation=data.get("operation", UNSET),
+            revision=data.get("revision", UNSET),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkRow(_Model):
+    """An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state
+    and why in sentences.
+    Attributes:
+        objects: Unit: count.
+    """
+    id: str
+    kind: WorkKind | WorkKindName
+    name: str
+    status: WorkStatus | WorkStatusName
+    objects: int
+    state: WorkState | WorkStateName
+    file: WorkFileRow | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["status"] = _enum_out(self.status)
+        out["objects"] = self.objects
+        out["state"] = _enum_out(self.state)
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkRow:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(WorkKind, data["kind"]),
+            name=data["name"],
+            status=_enum_in(WorkStatus, data["status"]),
+            objects=data["objects"],
+            state=_enum_in(WorkState, data["state"]),
+            file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkflowStep(_Model):
     """One step of a workflow.
     Attributes:
@@ -105579,6 +106124,171 @@ class DynamicLengthenChange(LengthenChange):
     def from_json(cls, data: Mapping[str, Any]) -> DynamicLengthenChange:
         return cls(
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddMapWorkOperation(MapWorkOperation):
+    """A new item `is-N`: its kind, name, layers (each in no other item) and, for a file the project rests on, the
+    file (an absolute path; its SHA-256 is its revision).
+    """
+    TAG_VALUE: ClassVar[str] = "add"
+    kind: WorkKind | WorkKindName
+    name: str
+    file: str | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "add"}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddMapWorkOperation:
+        return cls(
+            kind=_enum_in(WorkKind, data["kind"]),
+            name=data["name"],
+            file=data.get("file", UNSET),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetMapWorkOperation(MapWorkOperation):
+    """An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the
+    status is the office's record, never an institution's approval.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    item: str
+    layers: list[str] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    status: WorkStatus | WorkStatusName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "set"}
+        out["item"] = self.item
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetMapWorkOperation:
+        return cls(
+            item=data["item"],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            name=data.get("name", UNSET),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(WorkStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveMapWorkOperation(MapWorkOperation):
+    """An item taken out, with the derivations made from it (their objects stay, the user's own drawing)."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    item: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "remove"}
+        out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveMapWorkOperation:
+        return cls(
+            item=data["item"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelinkMapWorkOperation(MapWorkOperation):
+    """An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that
+    showed the old file, in one step; the new file's content is the item's revision (other content than before:
+    warning `source_content_changed`, its derivations out of date).
+    """
+    TAG_VALUE: ClassVar[str] = "relink"
+    item: str
+    file: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "relink"}
+        out["item"] = self.item
+        out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelinkMapWorkOperation:
+        return cls(
+            item=data["item"],
+            file=data["file"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshMapWorkOperation(MapWorkOperation):
+    """The item's file as it is now accepted as its revision; its derivations made from before are out of date."""
+    TAG_VALUE: ClassVar[str] = "refresh"
+    item: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "refresh"}
+        out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshMapWorkOperation:
+        return cls(
+            item=data["item"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeriveMapWorkOperation(MapWorkOperation):
+    """Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now."""
+    TAG_VALUE: ClassVar[str] = "derive"
+    source: str
+    uids: list[str]
+    operation: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "derive"}
+        out["source"] = self.source
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeriveMapWorkOperation:
+        return cls(
+            source=data["source"],
+            uids=list(data["uids"]),
+            operation=data["operation"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ForgetMapWorkOperation(MapWorkOperation):
+    """A derivation's record taken away; its objects stay, the user's own drawing."""
+    TAG_VALUE: ClassVar[str] = "forget"
+    derivation: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "forget"}
+        out["derivation"] = self.derivation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ForgetMapWorkOperation:
+        return cls(
+            derivation=data["derivation"],
         )
 
 
@@ -116228,6 +116938,9 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
+_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation}
+
+
 _MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
 
 
@@ -116486,6 +117199,7 @@ __all__ = [
     "AddGuidePaperOp",
     "AddIslandsHatchEdit",
     "AddItemsPaperOp",
+    "AddMapWorkOperation",
     "AddMasterPaperOp",
     "AddMembersModulesOperation",
     "AddMembersOptionsOperation",
@@ -117184,6 +117898,7 @@ __all__ = [
     "DerivationStatusName",
     "DerivationTable",
     "DeriveElevationsOperation",
+    "DeriveMapWorkOperation",
     "DeriveWork",
     "DerivedEntitiesPlan",
     "DesignFinding",
@@ -117582,6 +118297,7 @@ __all__ = [
     "FontMatchName",
     "FontsReport",
     "FontsReported",
+    "ForgetMapWorkOperation",
     "FormBody",
     "FormBreaking",
     "FormChange",
@@ -118195,6 +118911,12 @@ __all__ = [
     "LostPin",
     "MapPaperItemKind",
     "MapValuesMigrationStep",
+    "MapWork",
+    "MapWorkEdit",
+    "MapWorkEdited",
+    "MapWorkOperation",
+    "MapWorkQuery",
+    "MapWorkTree",
     "MaplibreData",
     "MaplibreExported",
     "MaplibreImported",
@@ -119117,6 +119839,7 @@ __all__ = [
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
     "RefreshElevationsOperation",
+    "RefreshMapWorkOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
     "RegionsLedgerBy",
@@ -119151,6 +119874,7 @@ __all__ = [
     "ReleaseCaseworkChange",
     "ReleaseElevationsOperation",
     "RelinkImagesOperation",
+    "RelinkMapWorkOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
@@ -119169,6 +119893,7 @@ __all__ = [
     "RemoveIslandsHatchEdit",
     "RemoveItemsPaperOp",
     "RemoveJoinsOp",
+    "RemoveMapWorkOperation",
     "RemoveMasterPaperOp",
     "RemoveMaterialsOperation",
     "RemoveMembersModulesOperation",
@@ -119415,6 +120140,7 @@ __all__ = [
     "SetInsertsClipOperation",
     "SetItemPropsPaperOp",
     "SetItemsPaperOp",
+    "SetMapWorkOperation",
     "SetOpeningsOperation",
     "SetOrderPaperOp",
     "SetPagePaperOp",
@@ -120208,6 +120934,23 @@ __all__ = [
     "Wipeout",
     "WithdrawFormsOp",
     "WktCsvGeometryIn",
+    "WorkDerivation",
+    "WorkDerivationRow",
+    "WorkFile",
+    "WorkFileRow",
+    "WorkFileState",
+    "WorkFileStateName",
+    "WorkItem",
+    "WorkKind",
+    "WorkKindName",
+    "WorkObjectRole",
+    "WorkObjectRoleName",
+    "WorkObjectSource",
+    "WorkRow",
+    "WorkState",
+    "WorkStateName",
+    "WorkStatus",
+    "WorkStatusName",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",
