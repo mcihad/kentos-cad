@@ -9,6 +9,10 @@ export type ExtractNotes = {
  */
 hidden: number, 
 /**
+ * Of those, the pieces a dynamic block's visibility state hides (an array action's copies of them too).
+ */
+hiddenStates: number, 
+/**
  * External references not loaded, by block name.
  */
 unloaded: Array<string>, 

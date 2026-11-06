@@ -83146,12 +83146,18 @@ class StandardsConflictsReport(_Model):
 class StandardsInstall(_Model):
     """Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
     choices; a block reference is read from the first block library that holds its publication, a sheet template
-    revision is recorded as approved (docs/adr/1100). Refusals, in order: `no_standard`, `invalid_standard`,
+    revision is recorded as approved (docs/adr/1100). Refusals, in order: `invalid_file_path`, `file_not_found`,
+    `block_library_unreadable` (a `libraries` path, docs/adr/1019), `no_standard`, `invalid_standard`,
     `standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,
     `revision_conflict`, `block_refused`.
+    Attributes:
+        libraries: A project's or office's block libraries (`kentos.blocks`, absolute paths ending `.kblok`, at most 16 MiB
+            each), searched in this order before KentOS's own; each is named by its file stem in a row's `library`. Read
+            at each call, never written to the drawing (docs/adr/1019).
     """
     choices: list[StandardInstallChoice] | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    libraries: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83159,6 +83165,8 @@ class StandardsInstall(_Model):
             out["choices"] = [e0.to_json() for e0 in self.choices]
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.libraries is not UNSET:
+            out["libraries"] = list(self.libraries)
         return out
 
     @classmethod
@@ -83166,6 +83174,7 @@ class StandardsInstall(_Model):
         return cls(
             choices=[StandardInstallChoice.from_json(e0) for e0 in data["choices"]] if "choices" in data else UNSET,
             expected_revision=data.get("expectedRevision", UNSET),
+            libraries=list(data["libraries"]) if "libraries" in data else UNSET,
         )
 
 

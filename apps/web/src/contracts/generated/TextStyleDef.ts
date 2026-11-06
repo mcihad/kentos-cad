@@ -29,4 +29,9 @@ widthFactor?: number,
 /**
  * The typeface file a DXF named for it, written back as it came.
  */
-fontFile?: string, };
+fontFile?: string, 
+/**
+ * The Big Font (SHX) a DXF STYLE named beside its font (group 4), written
+ * back as it came (docs/adr/1120 §4; KCAD schema 184).
+ */
+bigFontFile?: string, };

@@ -12,6 +12,13 @@ The libraries are read as data: KentOS's block library files (`catalog/v1/blocks
 another release of the type, `units` when only the unit differs. A template reference resolves when a library lists
 its id (case aside) at its revision; otherwise `unavailable`, with `revision` when another revision is listed.
 
+An input's `libraries` (docs/adr/1019) are absolute `.kblok` paths read in the order given, before KentOS's; a row's
+`library` is the file's stem. The project libraries here are written by this script to
+fixtures/commands/v1/standards-libraries/: `proje` holds BILINMEYEN's publication and a KAPI release 2 in metres
+that differs from kentos-ofis's (one line more), `ikinci` another BILINMEYEN. A path not absolute or not `.kblok` is
+`invalid_file_path`, a missing file `file_not_found`, a file that is not `kentos.blocks` `block_library_unreadable`;
+the path of each is `libraries[i]`, and nothing is read past the first refused.
+
 A resolved block is missing, same or differs against the drawing's block of the reference's name (case aside); the
 comparison leaves out the id, the name, the description and the card but the card's publication; an insert inside is
 compared by its block's name. A resolved template is missing, same or differs (`revision`) against the drawing's
@@ -33,6 +40,7 @@ OUT = ROOT / "fixtures/commands/v1/cad.standards.install.library.json"
 STEP = "Standart kaynaklarını kur"
 STYLE = {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}
 
+LIBRARY_DIR = ROOT / "fixtures/commands/v1/standards-libraries"
 LIBRARIES = [(name, json.loads((ROOT / f"catalog/v1/blocks/{name}.kblok").read_text("utf-8"))["blocks"])
              for name in ("kentos-temel", "kentos-ofis")]
 TEMPLATES = [json.loads(p.read_text("utf-8"))["meta"] for p in sorted((ROOT / "crates/shared/sheet/templates").glob("*.json"))]
@@ -45,6 +53,37 @@ LEVEL = {"familyId": "0192f5b1-0000-7000-8000-0000000f0002", "typeId": "0192f5b1
          "typeName": "Kot işareti"}
 UNKNOWN = {"familyId": "0192f5b1-0000-7000-8000-0000000f0009", "typeId": "0192f5b1-0000-7000-8000-0000000e0009",
            "typeName": "Bilinmeyen tip"}
+
+def project_libraries():
+    """The libraries this script writes, by stem: (stem, file text)."""
+    door = copy.deepcopy(next(b for b in json.loads((ROOT / "catalog/v1/blocks/kentos-ofis.kblok").read_text("utf-8"))["blocks"]
+                              if (b.get("card") or {}).get("publication", {}).get("release") == 2
+                              and b["card"]["publication"]["typeId"] == DOOR["typeId"]))
+    door["id"] = "0192f5b1-0000-7000-8000-0000000000a2"
+    door["name"] = "Proje kapı 90 · yayın 2"
+    door["entities"].append({"kind": "line", "id": 99, "layerId": "", "attrs": {}, "a": {"x": 0.0, "y": 0.9},
+                             "b": {"x": 0.9, "y": 0.9}})
+    unknown = lambda id_, name, shape: {"id": id_, "name": name, "base": {"x": 0.0, "y": 0.0}, "entities": [shape],
+                                        "card": {"publication": dict(UNKNOWN, release=1), "version": 1}}
+    proje = [unknown("0192f5b1-0000-7000-8000-0000000000a1", "Proje bilinmeyen",
+                     {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 1.0, "y": 0.0}}),
+             door]
+    ikinci = [unknown("0192f5b1-0000-7000-8000-0000000000b1", "İkinci bilinmeyen",
+                      {"kind": "circle", "id": 1, "layerId": "", "attrs": {}, "c": {"x": 0.0, "y": 0.0}, "r": 0.5})]
+    text = lambda blocks: json.dumps({"format": "kentos.blocks", "version": 2, "blocks": blocks}, ensure_ascii=False, indent=1) + "\n"
+    return {"proje": text(proje), "ikinci": text(ikinci),
+            "bozuk": json.dumps({"format": "kentos.document", "version": 2}) + "\n"}
+
+
+def given(stems):
+    """The libraries `stems` names, as the library search reads them: (name, blocks)."""
+    made = project_libraries()
+    return [(stem, json.loads(made[stem])["blocks"]) for stem in stems]
+
+
+def path_of(stem):
+    return f"$fixture:commands/v1/standards-libraries/{stem}.kblok"
+
 
 D_KAPI = "0192f5a0-0000-7000-8000-00000000d001"
 D_KUZEY = "0192f5a0-0000-7000-8000-00000000d002"
@@ -76,10 +115,10 @@ def fold(name):
     return name.replace("I", "ı").replace("İ", "i").lower()
 
 
-def library_block(r):
-    """(library, block, its library's blocks) or (None, fields)."""
+def library_block(r, extra=()):
+    """(library, block, its library's blocks) or (None, fields); `extra`: the given libraries' stems, first."""
     p, nearest = r["publication"], None
-    for name, blocks in LIBRARIES:
+    for name, blocks in given(extra) + LIBRARIES:
         for b in blocks:
             q = (b.get("card") or {}).get("publication")
             if not q or q["familyId"] != p["familyId"] or q["typeId"] != p["typeId"]:
@@ -207,7 +246,7 @@ def uses_of(blocks, entities, id_):
     return sum(1 for e in every if e["kind"] == "insert" and e["block"] == id_)
 
 
-def rows(s=None):
+def rows(s=None, extra=()):
     s = s or setup()
     blocks, templates = first_resources()
     names = {b["id"]: b["name"] for b in s["blocks"]}
@@ -215,7 +254,7 @@ def rows(s=None):
     for r, origin in blocks:
         local = next((b for b in s["blocks"] if fold(b["name"]) == fold(r["name"])), None)
         row = {"kind": "block", "name": r["name"], "status": "unavailable", "action": "keepLocal", "source": origin}
-        found = library_block(r)
+        found = library_block(r, extra)
         if found[0] is None:
             if found[1]:
                 row["fields"] = found[1]
@@ -257,8 +296,8 @@ def rows(s=None):
     return out
 
 
-def chosen(choices, s=None):
-    out = rows(s)
+def chosen(choices, s=None, extra=()):
+    out = rows(s, extra)
     for c in choices:
         for r in out:
             if r["kind"] == c["kind"] and r["name"].lower() == c["name"].lower():
@@ -275,7 +314,7 @@ def answer(rs):
             "unavailable": sum(1 for r in rs if r["status"] == "unavailable"), "revision": "$current"}
 
 
-def installed(rs, s=None):
+def installed(rs, s=None, extra=()):
     """The drawing's blocks (without ids, inserts by `$blockOf:`), their ids and approved templates after `rs`."""
     s = s or setup()
     blocks = copy.deepcopy(s["blocks"])
@@ -285,7 +324,7 @@ def installed(rs, s=None):
     for r in rs:
         if r["kind"] != "block" or r["status"] in ("same", "unavailable") or r["action"] == "keepLocal":
             continue
-        _, lib, _ = library_block(blocks_of[r["name"]])
+        _, lib, _ = library_block(blocks_of[r["name"]], extra)
         new = copy.deepcopy(lib)
         if r["action"] == "replace":
             i = next(i for i, b in enumerate(blocks) if fold(b["name"]) == fold(r["name"]))
@@ -341,12 +380,14 @@ def writes(rs):
     return any(r["status"] not in ("same", "unavailable") and r["action"] != "keepLocal" for r in rs)
 
 
-def run(choices, op="execute", s=None, case_setup=None):
-    rs = chosen(choices, case_setup)
+def run(choices, op="execute", s=None, case_setup=None, libraries=()):
+    rs = chosen(choices, case_setup, libraries)
     step = {"op": op, "input": {"choices": choices} if choices else {}}
+    if libraries:
+        step["input"]["libraries"] = [path_of(stem) for stem in libraries]
     step["result"] = done(None) if op == "validate" else done(answer(rs))
     if op == "execute" and writes(rs):
-        blocks, ids, approved = installed(rs, case_setup)
+        blocks, ids, approved = installed(rs, case_setup, libraries)
         step["expect"] = {"revision": "changed", "canUndo": True, "blocks": blocks, "blockIds": ids,
                           "settings": {"approvedSheetTemplates": approved}}
     else:
@@ -356,9 +397,12 @@ def run(choices, op="execute", s=None, case_setup=None):
     return step
 
 
-def refused(choices, code, message, path):
+def refused(choices, code, message, path, libraries=None):
     blocks, _, approved = installed([])
-    return {"op": "execute", "input": {"choices": choices},
+    step_input = {"choices": choices} if choices else {}
+    if libraries is not None:
+        step_input["libraries"] = libraries
+    return {"op": "execute", "input": step_input,
             "result": {"status": "failed", "error": {"code": code, "message": message, "path": path}},
             "expect": {"revision": "same", "canUndo": False, "blocks": blocks,
                        "settings": {"approvedSheetTemplates": approved}}}
@@ -428,6 +472,29 @@ def cases():
         "Bağlı standartlarda “sys:yok” adlı pafta şablonu yok. Kaynağı standartların listesinden seçin.", "choices[0].name")])
     case("Aynı bloğa iki seçim: ret", [refused([choice("block", "KAPI", "replace"), choice("block", "kapi", "keepLocal")],
         "invalid_install_choice", "“kapi” blok için iki seçim verildi; her kaynağa bir seçim verin.", "choices[1]")])
+    # docs/adr/1019: the project's own libraries, given in the input.
+    case("Proje kitaplığı verilince kitaplıkta olmayan BILINMEYEN eksik olur ve eklenir; satırın kitaplığı “proje”", [
+        run([], libraries=["proje"])])
+    case("Proje kitaplığı KentOS'unkinden önce aranır: KAPI'nın 2. yayını projeninkidir", [
+        run([], op="plan", libraries=["proje"])])
+    case("Verilen kitaplıklar verilen sırayla aranır: önce ikinci", [
+        run([choice("block", "KAPI", "keepLocal")] + SKIP_DEFAULTS, libraries=["ikinci", "proje"])])
+    case("Verilen kitaplıklar verilen sırayla aranır: önce proje", [
+        run([choice("block", "KAPI", "keepLocal")] + SKIP_DEFAULTS, libraries=["proje", "ikinci"])])
+    case("Proje kitaplığındaki KAPI yerinde değiştirilir", [
+        run([choice("block", "KAPI", "replace")] + SKIP_DEFAULTS, libraries=["proje"])])
+    case("Kitaplıkla doğrulama yazmaz", [run([], op="validate", libraries=["proje"])])
+    case("Kitaplık yolu göreli: ret", [refused([], "invalid_file_path",
+        "“proje.kblok” bir blok kitaplığının (.kblok) mutlak yolu değil; tam yolu verin.", "libraries[0]", ["proje.kblok"])])
+    wrong = "$fixture:commands/v1/standards-libraries/proje.json"
+    case("Kitaplık .kblok değil: ret", [refused([], "invalid_file_path",
+        f"“{wrong}” bir blok kitaplığının (.kblok) mutlak yolu değil; tam yolu verin.", "libraries[1]",
+        [path_of("proje"), wrong])])
+    missing = path_of("yok")
+    case("Kitaplık yok: ret", [refused([], "file_not_found", f"“{missing}” yok; kitaplığın yolunu denetleyin.",
+                                       "libraries[0]", [missing])])
+    case("Kitaplık kentos.blocks değil: ret", [refused([], "block_library_unreadable",
+        f"“{path_of('bozuk')}” okunamadı: biçimi kentos.blocks değil.", "libraries[0]", [path_of("bozuk")])])
     return out
 
 
@@ -440,12 +507,18 @@ def build():
 
 def main():
     text = json.dumps(build(), ensure_ascii=False, indent=1) + "\n"
+    made = project_libraries()
     if "--check" in sys.argv[1:]:
-        if not OUT.exists() or OUT.read_text("utf-8") != text:
+        stale = [stem for stem, t in made.items()
+                 if not (LIBRARY_DIR / f"{stem}.kblok").exists() or (LIBRARY_DIR / f"{stem}.kblok").read_text("utf-8") != t]
+        if not OUT.exists() or OUT.read_text("utf-8") != text or stale:
             print(f"{OUT.relative_to(ROOT)} güncel değil; betiği --check olmadan çalıştırıp farkı okuyun.")
             return 1
         print(f"{OUT.relative_to(ROOT)}: güncel.")
         return 0
+    LIBRARY_DIR.mkdir(parents=True, exist_ok=True)
+    for stem, t in made.items():
+        (LIBRARY_DIR / f"{stem}.kblok").write_text(t, "utf-8")
     OUT.write_text(text, "utf-8")
     print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(build()['cases'])} durum)")
     return 0

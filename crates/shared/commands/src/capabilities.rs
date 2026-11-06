@@ -5290,6 +5290,9 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.standards.install",
         refusals: &[&[
+            "invalid_file_path",
+            "file_not_found",
+            "block_library_unreadable",
             "no_standard",
             "invalid_standard",
             "standard_resource_not_found",

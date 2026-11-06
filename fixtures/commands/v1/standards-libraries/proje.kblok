@@ -1,0 +1,149 @@
+{
+ "format": "kentos.blocks",
+ "version": 2,
+ "blocks": [
+  {
+   "id": "0192f5b1-0000-7000-8000-0000000000a1",
+   "name": "Proje bilinmeyen",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 1.0,
+      "y": 0.0
+     }
+    }
+   ],
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0009",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0009",
+     "typeName": "Bilinmeyen tip",
+     "release": 1
+    },
+    "version": 1
+   }
+  },
+  {
+   "id": "0192f5b1-0000-7000-8000-0000000000a2",
+   "name": "Proje kapı 90 · yayın 2",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "line",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.9
+     }
+    },
+    {
+     "kind": "arc",
+     "id": 2,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.9,
+     "a0": 0.0,
+     "a1": 1.5707963267948966
+    },
+    {
+     "kind": "line",
+     "id": 3,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.0,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 4,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.9,
+      "y": -0.1
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.0
+     }
+    },
+    {
+     "kind": "line",
+     "id": 5,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": -0.05
+     },
+     "b": {
+      "x": 0.9,
+      "y": -0.05
+     }
+    },
+    {
+     "kind": "line",
+     "id": 99,
+     "layerId": "",
+     "attrs": {},
+     "a": {
+      "x": 0.0,
+      "y": 0.9
+     },
+     "b": {
+      "x": 0.9,
+      "y": 0.9
+     }
+    }
+   ],
+   "description": "Tek kanatlı 90 cm kapı; taban noktası menteşe, duvar x boyunca. Yayın 2: eşik çizgisi eklendi.",
+   "units": "m",
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0001",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0001",
+     "typeName": "Tek kanatlı kapı 90",
+     "release": 2
+    },
+    "category": "Mimari/Kapılar",
+    "tags": [
+     "kapı",
+     "tek kanat",
+     "ofis"
+    ],
+    "version": 1
+   }
+  }
+ ]
+}

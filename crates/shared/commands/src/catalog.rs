@@ -10873,7 +10873,8 @@ pub fn catalog() -> CommandCatalog {
             summary: "Projeye bağlı ofis standartlarının adlandırılmış kaynaklarını (çizgi tipi, tarama deseni, yazı, ölçü ve kılavuz stili; cad.standards.resolve'un ilk kaynak önceliğiyle) çizime kurar; tek geri alma adımı, adı “Standart kaynaklarını kur”. \
                       Her kaynak çizimdeki aynı adlıyla karşılaştırılır: missing (yok), same (görünüşü aynı), differs (farklı; farklı alanlar fields'ta). Varsayılan: eksik olan eklenir, farklı olan çizimdeki olarak kalır; aynı adlı farklı kaynak seçim olmadan asla ezilmez. \
                       choices: kind, name ve action — add (eksikse), replace (farklıysa yerinde; çizimdeki ad ve yerel kimlik korunur, onu kullananlar izler), keepLocal, renameIncoming (farklıysa standarttakini newName ile ekler). Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden verir. \
-                      Retler: no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice, duplicate_name, invalid_revision, revision_conflict."
+                      libraries: projenin ya da ofisin .kblok blok kitaplıklarının mutlak yolları; verilen sırayla KentOS'un kitaplıklarından önce aranır, çizime yazılmaz (docs/adr/1019). \
+                      Retler: invalid_file_path, file_not_found, block_library_unreadable (kitaplık yolu), no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice, duplicate_name, invalid_revision, revision_conflict, block_refused."
                 .into(),
             aliases: vec!["standartkur".into()],
             effect: CommandEffect::Document,

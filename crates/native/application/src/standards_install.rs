@@ -290,9 +290,52 @@ fn fresh() -> kentos_commands::BlockId {
 
 /// The rows and the blocks they would write, every refusal checked.
 fn checked(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Result<(StandardsResolved, Rows, library::BlockWrite), Stop> {
-    let (resolved, rows) = rows(doc, input, libraries)?;
+    let libraries = given_libraries(input, libraries)?;
+    let (resolved, rows) = rows(doc, input, &libraries)?;
     let blocks = library::plan_blocks(doc, &rows, fresh)?;
     Ok((resolved, rows, blocks))
+}
+
+/// The largest block library file an install reads.
+const LIBRARY_LIMIT: u64 = 16 * 1024 * 1024;
+
+/// `libraries` with the input's own block libraries in front, the first given searched first (docs/adr/1019): each
+/// an absolute `.kblok` path, read now; refused by the first that is not one, is missing or does not read.
+fn given_libraries(input: &StandardsInstall, libraries: &Libraries) -> Result<Libraries, Stop> {
+    let mut out = libraries.clone();
+    let fail = |code: &str, message: String, i: usize| Stop::failed(error(code, message, Some(format!("libraries[{i}]"))));
+    let mut read = Vec::new();
+    for (i, path) in input.libraries.iter().enumerate() {
+        let at = std::path::Path::new(path);
+        if !at.is_absolute() || at.extension().is_none_or(|e| !e.eq_ignore_ascii_case("kblok")) {
+            return Err(fail(
+                codes::INVALID_FILE_PATH,
+                format!("“{path}” bir blok kitaplığının (.kblok) mutlak yolu değil; tam yolu verin."),
+                i,
+            ));
+        }
+        let meta = match std::fs::metadata(at) {
+            Ok(m) if m.is_file() => m,
+            _ => return Err(fail(codes::FILE_NOT_FOUND, format!("“{path}” yok; kitaplığın yolunu denetleyin."), i)),
+        };
+        if meta.len() > LIBRARY_LIMIT {
+            return Err(fail(
+                codes::BLOCK_LIBRARY_UNREADABLE,
+                format!("“{path}” 16 MiB'tan büyük; kitaplığı bölün."),
+                i,
+            ));
+        }
+        let name = at.file_stem().map_or_else(|| path.clone(), |s| s.to_string_lossy().into_owned());
+        let library = std::fs::read_to_string(at)
+            .map_err(|e| e.to_string())
+            .and_then(|text| crate::standard_libraries::read_block_library(&name, &text))
+            .map_err(|why| fail(codes::BLOCK_LIBRARY_UNREADABLE, format!("“{path}” okunamadı: {why}."), i))?;
+        read.push(library);
+    }
+    for library in read.into_iter().rev() {
+        out = out.with_blocks(library);
+    }
+    Ok(out)
 }
 
 /// A local id `id` does not clash with: `id`, else `id-2`, `id-3` …

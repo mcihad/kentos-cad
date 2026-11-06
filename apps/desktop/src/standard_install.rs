@@ -87,18 +87,9 @@ fn uses_words(kind: Kind, uses: u32) -> String {
 #[derive(Debug, Default)]
 pub(crate) struct Window {
     pub choices: BTreeMap<(Kind, String), (Action, String)>,
-    /// Block libraries the user added (a project's or an office's `.kblok`, docs/adr/1017), searched before KentOS's own.
-    pub libraries: Vec<kentos_native_application::standard_libraries::BlockLibrary>,
-}
-
-impl Window {
-    fn libraries(&self) -> kentos_native_application::standard_libraries::Libraries {
-        // The last added is searched first.
-        self.libraries
-            .iter()
-            .cloned()
-            .fold(kentos_native_application::standard_libraries::Libraries::builtin(), |l, b| l.with_blocks(b))
-    }
+    /// Block libraries the user added (a project's or an office's `.kblok`, docs/adr/1017), by path and name; the
+    /// command reads them before KentOS's own (its `libraries`, docs/adr/1019), so the journal's call repeats.
+    pub libraries: Vec<(std::path::PathBuf, String)>,
 }
 
 impl Window {
@@ -114,6 +105,8 @@ impl Window {
                     new_name: (*action == Action::RenameIncoming).then(|| new_name.clone()),
                 })
                 .collect(),
+            // The last added is searched first.
+            libraries: self.libraries.iter().rev().map(|(path, _)| path.display().to_string()).collect(),
             expected_revision: None,
         }
     }
@@ -140,7 +133,7 @@ impl App {
             return Err(String::new());
         };
         let mut copy = doc.model.reading_copy();
-        match standards_install::plan_with(&ExecutionContext::new(&mut copy), &w.input(), &w.libraries()) {
+        match standards_install::plan(&ExecutionContext::new(&mut copy), &w.input()) {
             CommandResult::Completed { output, .. } => Ok(output),
             CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
             _ => Err("Önizleme hazırlanamadı.".into()),
@@ -172,13 +165,13 @@ impl App {
                     self.warn(locked);
                     return Task::none();
                 }
-                let Some((input, libraries)) = self.standard_install.as_ref().map(|w| (w.input(), w.libraries())) else {
+                let Some(input) = self.standard_install.as_ref().map(Window::input) else {
                     return Task::none();
                 };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                let result = standards_install::execute_with(&mut ExecutionContext::new(&mut doc.model), input, &libraries);
+                let result = standards_install::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if let Some(done) = self.answered(result) {
                     self.say(
                         Level::Success,
@@ -208,7 +201,7 @@ impl App {
                     async {
                         let file = rfd::AsyncFileDialog::new()
                             .set_title("Blok kitaplığı ekle")
-                            .add_filter("KentOS blok kitaplığı (.kblok)", &["kblok", "json"])
+                            .add_filter("KentOS blok kitaplığı (.kblok)", &["kblok"])
                             .pick_file()
                             .await?;
                         Some(file.path().to_path_buf())
@@ -225,7 +218,7 @@ impl App {
                 match (read, self.standard_install.as_mut()) {
                     (Ok(library), Some(w)) => {
                         let n = library.blocks.len();
-                        w.libraries.push(library);
+                        w.libraries.push((path.clone(), library.name));
                         self.say(Level::Success, format!("“{name}” kitaplığı eklendi ({n} blok); KentOS kitaplıklarından önce aranır."));
                     }
                     (Err(e), _) => self.warn(format!("“{}” blok kitaplığı olarak okunamadı: {e}", path.display())),
@@ -331,7 +324,7 @@ impl App {
         } else {
             format!(
                 "Bloklar önce {} kitaplığında, sonra KentOS kitaplıklarında aranır.",
-                w.libraries.iter().rev().map(|l| format!("“{}”", l.name)).collect::<Vec<_>>().join(", ")
+                w.libraries.iter().rev().map(|(_, name)| format!("“{name}”")).collect::<Vec<_>>().join(", ")
             )
         };
         let body = body.push(label::muted(libraries));

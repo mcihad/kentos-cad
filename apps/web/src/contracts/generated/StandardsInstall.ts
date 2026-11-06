@@ -4,8 +4,15 @@ import type { StandardInstallChoice } from "./StandardInstallChoice";
 /**
  * Input of `cad.standards.install` v1: the bound standards' named resources installed into the drawing by the
  * choices; a block reference is read from the first block library that holds its publication, a sheet template
- * revision is recorded as approved (docs/adr/1100). Refusals, in order: `no_standard`, `invalid_standard`,
+ * revision is recorded as approved (docs/adr/1100). Refusals, in order: `invalid_file_path`, `file_not_found`,
+ * `block_library_unreadable` (a `libraries` path, docs/adr/1019), `no_standard`, `invalid_standard`,
  * `standard_resource_not_found`, `invalid_install_choice`, `duplicate_name`, `invalid_revision`,
  * `revision_conflict`, `block_refused`.
  */
-export type StandardsInstall = { choices?: Array<StandardInstallChoice>, expectedRevision?: string, };
+export type StandardsInstall = { choices?: Array<StandardInstallChoice>, 
+/**
+ * A project's or office's block libraries (`kentos.blocks`, absolute paths ending `.kblok`, at most 16 MiB
+ * each), searched in this order before KentOS's own; each is named by its file stem in a row's `library`. Read
+ * at each call, never written to the drawing (docs/adr/1019).
+ */
+libraries?: Array<string>, expectedRevision?: string, };

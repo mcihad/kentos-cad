@@ -451,8 +451,12 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
     action — add (eksikse), replace (farklıysa yerinde; çizimdeki ad ve yerel kimlik
     korunur, onu kullananlar izler), keepLocal, renameIncoming (farklıysa standarttakini
     newName ile ekler). Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden
-    verir. Retler: no_standard, invalid_standard, standard_resource_not_found,
-    invalid_install_choice, duplicate_name, invalid_revision, revision_conflict.
+    verir. libraries: projenin ya da ofisin .kblok blok kitaplıklarının mutlak yolları;
+    verilen sırayla KentOS'un kitaplıklarından önce aranır, çizime yazılmaz
+    (docs/adr/1019). Retler: invalid_file_path, file_not_found, block_library_unreadable
+    (kitaplık yolu), no_standard, invalid_standard, standard_resource_not_found,
+    invalid_install_choice, duplicate_name, invalid_revision, revision_conflict,
+    block_refused.
     """
     __slots__ = ()
     id = "cad.standards.install"
@@ -470,6 +474,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         *,
         choices: Sequence[StandardInstallChoice] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        libraries: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> StandardsInstalled:
@@ -482,14 +487,20 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         kaynak seçim olmadan asla ezilmez. choices: kind, name ve action — add (eksikse),
         replace (farklıysa yerinde; çizimdeki ad ve yerel kimlik korunur, onu kullananlar
         izler), keepLocal, renameIncoming (farklıysa standarttakini newName ile ekler).
-        Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden verir. Retler:
+        Hiçbir kaynak silinmez. Plan aynı cevabı çizimi değiştirmeden verir. libraries:
+        projenin ya da ofisin .kblok blok kitaplıklarının mutlak yolları; verilen sırayla
+        KentOS'un kitaplıklarından önce aranır, çizime yazılmaz (docs/adr/1019). Retler:
+        invalid_file_path, file_not_found, block_library_unreadable (kitaplık yolu),
         no_standard, invalid_standard, standard_resource_not_found, invalid_install_choice,
-        duplicate_name, invalid_revision, revision_conflict.
+        duplicate_name, invalid_revision, revision_conflict, block_refused.
 
         Args:
             doc: The drawing it works on.
             choices:
             expected_revision:
+            libraries: A project's or office's block libraries (`kentos.blocks`, absolute paths ending `.kblok`, at most 16 MiB
+                each), searched in this order before KentOS's own; each is named by its file stem in a row's `library`. Read
+                at each call, never written to the drawing (docs/adr/1019).
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -505,6 +516,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         return self.execute_input(doc, StandardsInstall(
             choices=_opt(choices, lambda x: list(x)),
             expected_revision=expected_revision,
+            libraries=_opt(libraries, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -514,6 +526,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         *,
         choices: Sequence[StandardInstallChoice] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        libraries: Sequence[str] | Unset = UNSET,
     ) -> StandardsInstalled:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -521,6 +534,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         return self.plan_input(doc, StandardsInstall(
             choices=_opt(choices, lambda x: list(x)),
             expected_revision=expected_revision,
+            libraries=_opt(libraries, lambda x: list(x)),
         ))
 
     def validate(
@@ -530,6 +544,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         *,
         choices: Sequence[StandardInstallChoice] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        libraries: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -537,6 +552,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         return self.validate_input(doc, StandardsInstall(
             choices=_opt(choices, lambda x: list(x)),
             expected_revision=expected_revision,
+            libraries=_opt(libraries, lambda x: list(x)),
         ))
 
     def answer(
@@ -546,6 +562,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         *,
         choices: Sequence[StandardInstallChoice] | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        libraries: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -558,6 +575,7 @@ class _StandardsInstall(LocalCommand[StandardsInstall, StandardsInstalled, Stand
         return self.answer_input(doc, StandardsInstall(
             choices=_opt(choices, lambda x: list(x)),
             expected_revision=expected_revision,
+            libraries=_opt(libraries, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

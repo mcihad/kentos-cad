@@ -1,0 +1,36 @@
+{
+ "format": "kentos.blocks",
+ "version": 2,
+ "blocks": [
+  {
+   "id": "0192f5b1-0000-7000-8000-0000000000b1",
+   "name": "İkinci bilinmeyen",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.5
+    }
+   ],
+   "card": {
+    "publication": {
+     "familyId": "0192f5b1-0000-7000-8000-0000000f0009",
+     "typeId": "0192f5b1-0000-7000-8000-0000000e0009",
+     "typeName": "Bilinmeyen tip",
+     "release": 1
+    },
+    "version": 1
+   }
+  }
+ ]
+}

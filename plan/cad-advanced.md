@@ -2138,6 +2138,11 @@ katmanınkini (ByLayer) çizdiğini ve bu yerleştirmeden çizilen değerleri s�
 Uygulama testi ve gerçek penceredeki `deger-kokeni-blok` resmi doğrulandı. İç içe blokların parçaları tek seviyede
 açılmaz.
 
+**Python ve MCP'den kitaplık (6 Kasım 2026, ADR 1019):** `cad.standards.install` girdisi `libraries` ile projenin ya da
+ofisin `.kblok` dosyalarını verilen sırayla KentOS'unkilerden önce okur; pencere de aynı alanı kullanır, günlükteki
+çağrı kitaplığıyla yinelenir. Bağımsız başvurudan on yeni ortak vaka (34) ve masaüstü testi geçti. CAD-ADV-12'de açık
+kalan: tablo stili kaynağı ve bulut kitaplığının doğrudan okunması.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].
