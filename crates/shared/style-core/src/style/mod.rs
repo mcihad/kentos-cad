@@ -16,6 +16,7 @@ pub mod generate;
 pub mod groups;
 pub mod heat;
 pub mod inverted;
+mod line_lod;
 pub mod model;
 pub mod place;
 pub mod prim;

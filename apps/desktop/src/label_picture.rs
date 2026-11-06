@@ -2,7 +2,10 @@
 //! glyphs and its underline filled by tiny-skia with exact coverage, then laid on the drawing area's pixel grid as
 //! an image. Iced's canvas turns a turned text into paths and smooths their edges with four samples only: the
 //! letters' edges had four shades and the halo's rim showed beside the ground (the owner's 17 October pictures).
-//! Pictures are kept by what they show and where they fall inside a pixel, so a pan finds them again.
+//! Pictures are kept by what they show and where they fall inside a pixel, so a pan finds them again. While the view
+//! moves (the wheel, docs/adr/1064 §6) a text whose picture for its quarter pixel is not kept takes the one kept for
+//! another quarter, laid on the nearest whole pixel (at most half a device pixel off); the view, once settled, draws
+//! it exactly again.
 
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -29,6 +32,10 @@ thread_local! {
     static DEVICE: Cell<f32> = const { Cell::new(1.0) };
     /// The labels are drawn turned by the view's twist: they stay paths.
     static TWISTED: Cell<bool> = const { Cell::new(false) };
+    /// The view is moving (docs/adr/1064 §6): a text may take its picture kept for another quarter pixel.
+    static MOVING: Cell<bool> = const { Cell::new(false) };
+    /// Whether it does (always but to measure it, `perf::large`'s `KENTOS_PERF_SHORTCUTS`).
+    static NEAREST_WHILE_MOVING: Cell<bool> = const { Cell::new(true) };
     static KEPT_PICTURES: RefCell<Kept> = RefCell::new(Kept::default());
     /// The marks' last picture only: they follow the view, a pan makes a new one each frame.
     static LAST_MARKS: RefCell<Option<(Key, Rc<Picture>)>> = const { RefCell::new(None) };
@@ -46,12 +53,25 @@ pub(crate) fn counts() -> (usize, usize) {
 #[derive(Default)]
 struct Kept {
     pictures: HashMap<Key, Rc<Picture>>,
+    /// The latest picture of each text's look (its key without the quarter pixel), for a moving view.
+    latest: HashMap<Key, Rc<Picture>>,
     bytes: usize,
 }
 
 /// The window's device pixels per logical pixel for the pictures to come.
 pub(crate) fn set_device_scale(scale: f64) {
     DEVICE.with(|d| d.set(if scale > 0.0 { scale as f32 } else { 1.0 }));
+}
+
+/// Whether the view the pictures to come are drawn for is moving.
+pub(crate) fn set_moving(moving: bool) {
+    MOVING.with(|m| m.set(moving));
+}
+
+/// Whether a moving view takes a text's picture kept for another quarter pixel (docs/adr/1064 §6); on but to measure.
+#[cfg(test)]
+pub(crate) fn set_nearest_while_moving(on: bool) {
+    NEAREST_WHILE_MOVING.with(|m| m.set(on));
 }
 
 /// Whether the pictures to come are turned by the view's twist.
@@ -86,6 +106,9 @@ pub(crate) struct Local {
 
 struct Picture {
     handle: Handle,
+    /// Where its anchor falls inside its pixel, device pixels (its quarter pixel).
+    fx: f32,
+    fy: f32,
     /// Its top left corner from the anchor's pixel, in device pixels.
     left: i32,
     top: i32,
@@ -135,8 +158,10 @@ fn drawn(
         ((dy - dy.floor()) * STEPS).round() / STEPS,
     );
     let mut key = key;
-    key.numbers
-        .extend([angle.to_bits(), scale.to_bits(), fx.to_bits(), fy.to_bits()]);
+    key.numbers.extend([angle.to_bits(), scale.to_bits()]);
+    let look = (!marks).then(|| key.clone());
+    key.numbers.extend([fx.to_bits(), fy.to_bits()]);
+    let moving = MOVING.with(Cell::get) && NEAREST_WHILE_MOVING.with(Cell::get);
     let found = if marks {
         LAST_MARKS.with(|m| {
             m.borrow()
@@ -145,7 +170,14 @@ fn drawn(
                 .map(|(_, p)| p.clone())
         })
     } else {
-        KEPT_PICTURES.with(|k| k.borrow().pictures.get(&key).cloned())
+        KEPT_PICTURES.with(|k| {
+            let k = k.borrow();
+            k.pictures.get(&key).cloned().or_else(|| {
+                look.as_ref()
+                    .filter(|_| moving)
+                    .and_then(|l| k.latest.get(l).cloned())
+            })
+        })
     };
     let picture = match found {
         Some(p) => p,
@@ -164,18 +196,24 @@ fn drawn(
                     if k.pictures.len() >= KEPT || k.bytes + bytes > KEPT_BYTES {
                         CLEARED.with(|c| c.set(c.get() + 1));
                         k.pictures.clear();
+                        k.latest.clear();
                         k.bytes = 0;
                     }
                     k.bytes += bytes;
                     k.pictures.insert(key, p.clone());
+                    if let Some(look) = look {
+                        k.latest.insert(look, p.clone());
+                    }
                 });
             }
             p
         }
     };
+    // Its own quarter pixel's picture on the anchor's pixel; another's on the whole pixel nearest to where it puts the
+    // anchor (the same pixel when the quarters agree).
     let (px, py) = (
-        dx.floor() as i32 + picture.left,
-        dy.floor() as i32 + picture.top,
+        (dx - picture.fx).round() as i32 + picture.left,
+        (dy - picture.fy).round() as i32 + picture.top,
     );
     frame.draw_image(
         Rectangle::new(
@@ -353,6 +391,8 @@ fn paint(
     // it, not towards black.
     let ground = painted.first().map(|op| op.color);
     Some(Picture {
+        fx,
+        fy,
         handle: Handle::from_rgba(w, h, straight(&out, ground)),
         left,
         top,

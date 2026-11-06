@@ -248,7 +248,9 @@ fn stability() {
     // The drawing area's shortcuts against the plain build (docs/adr/1063), one at a time, view by view (near and far,
     // on both sides of the curves' first level's ceiling, the farthest level): blocks' inserts drawn instanced must
     // show what the plain build shows (asserted below); the curves' coarser levels are measured and reported, their
-    // far views drawing small circles with fewer overlapping chords (§4).
+    // far views drawing small circles with fewer overlapping chords (§4); the long strokes' levels (docs/adr/1064 §2)
+    // likewise, on top of the other two (the app's own drawing with and without them): measured and reported, near
+    // views asserted unchanged below.
     let shortcut_views: Vec<(&str, [f64; 2], f64)> = views
         .iter()
         .copied()
@@ -258,22 +260,25 @@ fn stability() {
             ("en-uzak-düzey", mid, kentos_native_style::batches::CURVE_LEVELS[2] * 0.5),
         ])
         .collect();
-    for (shortcut, on_off) in [("blok örnekleme", [true, false]), ("eğri düzeyleri", [false, true])] {
+    // Each shortcut: what is on with it and without it (instancing, curve levels, line levels), and its pictures' name.
+    for (shortcut, with, without, tag) in [
+        ("blok örnekleme", [true, false, false], [false; 3], "örnekleme"),
+        ("eğri düzeyleri", [false, true, false], [false; 3], "düzeyleri"),
+        ("çizgi düzeyleri", [true, true, true], [true, true, false], "cizgi-düzeyleri"),
+    ] {
         for &(name, c, s) in &shortcut_views {
             let set = |app: &mut App, on: bool| {
-                app.styles.instancing = on_off[0] && on;
-                app.styles.curve_lod = on_off[1] && on;
+                let [i, l, line] = if on { with } else { without };
+                app.styles.instancing = i;
+                app.styles.curve_lod = l;
+                app.styles.line_lod = line;
             };
             set(&mut app, true);
             let on = shot(&mut app, &mut h, c, s);
             set(&mut app, false);
             let off = shot(&mut app, &mut h, c, s);
             keep(
-                &format!(
-                    "kisayol-{}-{}",
-                    shortcut.split(' ').next_back().unwrap_or(shortcut),
-                    name.replace(' ', "-")
-                ),
+                &format!("kisayol-{tag}-{}", name.replace(' ', "-")),
                 &on,
                 &off,
                 0,
@@ -287,6 +292,7 @@ fn stability() {
     }
     app.styles.instancing = true;
     app.styles.curve_lod = true;
+    app.styles.line_lod = true;
     // Snaps at source points from each view, 10 px apart.
     let (_, circle) = middle(&app, 6);
     let (_, line) = middle(&app, 0);
@@ -380,6 +386,14 @@ fn stability() {
         // reported (§4).
         if row["shortcut"] == "blok örnekleme" {
             assert_eq!(row["onAgainstOff"]["visible"], 0, "instanced blocks draw the same: {row}");
+            continue;
+        }
+        // The long strokes' levels draw level 0 above the first ceiling: nearer than 1:950 nothing changes
+        // (docs/adr/1064 §4); farther the change is reported.
+        if row["shortcut"] == "çizgi düzeyleri" {
+            if row["pxPerM"].as_f64().is_some_and(|s| s > kentos_native_style::batches::CURVE_LEVELS[0]) {
+                assert_eq!(row["onAgainstOff"]["visible"], 0, "near, the long strokes draw as before: {row}");
+            }
             continue;
         }
         // The curves' level's step is reported: at its ceiling (4 px a metre) its control, a zoom inside level 0,
