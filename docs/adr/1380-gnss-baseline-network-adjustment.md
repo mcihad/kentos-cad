@@ -59,7 +59,7 @@ bölümlü büyük ağ ve seçili kovaryans MAP-05'in kalanıdır; ölçüm rapo
 
 ```python
 from kentos import cad
-doc = cad.Document.new()
+doc = cad.Document.new(srid=5254)
 r = cad.survey.baselines(doc, text=open("ankara-ag.txt").read(), scale=1.0)
 print(r.m0, r.passed, r.baselines[r.worst].from_, r.baselines[r.worst].to)
 ```
