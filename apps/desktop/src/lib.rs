@@ -314,6 +314,8 @@ mod map_work_panel_tests;
 #[cfg(test)]
 mod map_work_tools_tests;
 #[cfg(test)]
+mod scale_summary_tests;
+#[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]
 mod pay_window_tests;

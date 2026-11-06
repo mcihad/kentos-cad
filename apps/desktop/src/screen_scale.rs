@@ -110,14 +110,30 @@ impl App {
 }
 
 /// The selector's menu: the type's scales, then Ölçek yaz….
-pub(crate) fn scale_menu(scales: &[f64]) -> Menu<Message> {
-    scales
+pub(crate) fn scale_menu(scales: &[f64], summary: &[kentos_interaction::scale_summary::ScaleRow]) -> Menu<Message> {
+    let menu = scales
         .iter()
         .fold(Menu::new().header("Görünümün ölçeği"), |menu, &n| {
             menu.item(scale_text(n), event(Event::Choose(n)))
         })
         .separator()
-        .item("Ölçek yaz…", event(Event::Type))
+        .item("Ölçek yaz…", event(Event::Type));
+    crate::annotation_scale::with_summary(menu, summary)
+}
+
+impl App {
+    /// Ölçeklerin özeti at the screen's middle (docs/adr/1231): a project with a coordinate system's (a map's, a road's,
+    /// a GIS's); none for a building on its own coordinates.
+    pub(crate) fn scale_summary(&self) -> Vec<kentos_interaction::scale_summary::ScaleRow> {
+        let Some(doc) = &self.document else { return Vec::new() };
+        let settings = doc.settings();
+        if kentos_project::systems::own(settings).is_none() {
+            return Vec::new();
+        }
+        let cam = &self.viewport.camera;
+        let center = cam.screen_to_world(cam.width / 2.0, cam.height / 2.0);
+        kentos_interaction::scale_summary::rows(settings, center, Some(cam.screen_scale()))
+    }
 }
 
 #[cfg(test)]

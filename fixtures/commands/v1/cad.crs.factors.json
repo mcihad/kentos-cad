@@ -1,0 +1,1948 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.crs.factors",
+ "commandVersion": 1,
+ "title": "Ölçek çarpanları",
+ "note": "ADR 1231. Bağımsız başvuru scripts/fixtures/crs_factors_cases.py: projeksiyon ölçeği PROJ'un get_factors'ı (pyproj 3.7.2, PROJ 9.8.1), yükseklik çarpanı N/(N + h) elle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ölçek çarpanları",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map",
+   "survey": {
+    "groundHeight": 850.0
+   }
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "TM30'un orta meridyeninde ölçek 1, 850 m'de yükseklik çarpanı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        500000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 0.9999999999521185,
+         "heightFactor": 0.9998669420458777,
+         "combined": 0.9998669419980025
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Orta meridyenden 50 km doğuda: +30,8 ppm",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 0.9998669420340565,
+         "combined": 0.9998976943216265
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Batıda simetrik: aynı ölçek",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        450000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799264,
+         "heightFactor": 0.9998669420340565,
+         "combined": 0.9998976943216016
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Üç nokta birlikte, sırayla",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        500000.0,
+        4540000.0
+       ],
+       [
+        525000.0,
+        4550000.0
+       ],
+       [
+        575000.0,
+        4520000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 0.9999999999521185,
+         "heightFactor": 0.9998669420458777,
+         "combined": 0.9998669419980025
+        },
+        {
+         "scale": 1.0000076888682512,
+         "heightFactor": 0.9998669427380881,
+         "combined": 0.9998746305832795
+        },
+        {
+         "scale": 1.0000692052556877,
+         "heightFactor": 0.9998669406300275,
+         "combined": 0.9999361366773074
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Güneyde (Hakkari enlemi) 100 km doğuda",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 1800.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        600000.0,
+        4150000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0001231267908726,
+         "heightFactor": 0.9997182152675497,
+         "combined": 0.9998413073631724
+        }
+       ],
+       "revision": "$current",
+       "height": 1800.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Verilen yükseklik projeninkinin yerine geçer: 0 m'de çarpan 1",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ],
+      "height": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 1.0,
+         "combined": 1.0000307563799513
+        }
+       ],
+       "revision": "$current",
+       "height": 0.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Deniz altında (−200 m) çarpan 1'den büyük",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ],
+      "height": -200.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 1.0000313129034606,
+         "combined": 1.0000620702464835
+        }
+       ],
+       "revision": "$current",
+       "height": -200.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Sınırda yükseklik 9000 m",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ],
+      "height": 9000.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 0.9985929460557122,
+         "combined": 0.9986236591597778
+        }
+       ],
+       "revision": "$current",
+       "height": 9000.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Yükseklik yoksa yalnız projeksiyon ölçeği",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Uzunlukları projeksiyona indiren proje: reducesToGrid",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0,
+      "reduceToGrid": true
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": true,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 0.9998669420340565,
+         "combined": 0.9998976943216265
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "İndirme açık ama yükseklik yok: indirmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "reduceToGrid": true
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "TM33'te aynı yer",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5255,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM33 (EPSG:5255)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563798938,
+         "heightFactor": 0.9998669420340565,
+         "combined": 0.9998976943215689
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "UTM 35N'de orta meridyende k₀ = 0,9996",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 32635,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        500000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "WGS 84 / UTM 35N (EPSG:32635)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 0.9995999999521277,
+         "heightFactor": 0.9998669421721491,
+         "combined": 0.9994669953474143
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "UTM 35N'de orta meridyenden 200 km uzakta ölçek 1'i geçer",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 32635,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        700000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "WGS 84 / UTM 35N (EPSG:32635)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000923363041379,
+         "heightFactor": 0.9998669419828522,
+         "combined": 0.9999592660009045
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "ED50 / UTM 35N: Hayford elipsoidinin N'si",
+   "note": "Yükseklik çarpanı sistemin elipsoidiyle (International 1924) hesaplanır.",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 23035,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "ED50 / UTM 35N (EPSG:23035)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 0.9996307662784907,
+         "heightFactor": 0.9998669482027362,
+         "combined": 0.9994977636084372
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Sistemin ulaşmadığı nokta (50 000 km doğu): çarpansız, uyarıyla; öbürü verilir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ],
+       [
+        50000000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 0.9998669420340565,
+         "combined": 0.9998976943216265
+        },
+        {}
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": [
+       {
+        "code": "point_beyond_system",
+        "path": "points[1]",
+        "message": "2. nokta TUREF / TM30 (EPSG:5254) sisteminin ulaştığı yerin dışında; çarpanları verilmedi."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Plan aynı cevabı verir, yazmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "system": "TUREF / TM30 (EPSG:5254)",
+       "reducesToGrid": false,
+       "points": [
+        {
+         "scale": 1.0000307563799513,
+         "heightFactor": 0.9998669420340565,
+         "combined": 0.9998976943216265
+        }
+       ],
+       "revision": "$current",
+       "height": 850.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "survey": {
+      "groundHeight": 850.0
+     }
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Yerel proje: sistem yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        0.0,
+        0.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_system",
+       "message": "Proje kendi koordinatlarında (yerel); projeksiyon ölçeği yok. Projeye bir koordinat sistemi atayın.",
+       "path": "points"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Coğrafi sistem: bir noktanın tek ölçeği yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 4326,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        30.0,
+        40.0
+       ]
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_point_scale",
+       "message": "WGS 84 (EPSG:4326): bu sistemde bir noktanın tek ölçeği yok (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem).",
+       "path": "points"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Pseudo-Mercator: bir noktanın tek ölçeği yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 3857,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        3339584.7,
+        4865942.3
+       ]
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_point_scale",
+       "message": "WGS 84 / Pseudo-Mercator (EPSG:3857): bu sistemde bir noktanın tek ölçeği yok (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem).",
+       "path": "points"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1 ile 10000 arasında nokta verin; 0 verildi.",
+       "path": "points"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yükseklik aralık dışında",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ],
+      "height": -600.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Yükseklik -600 m olamaz; −500 ile 9000 m arasında bir ortalama elipsoit yüksekliği verin.",
+       "path": "height"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yükseklik 9000 m'yi aşıyor",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ölçek çarpanları",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       [
+        550000.0,
+        4540000.0
+       ]
+      ],
+      "height": 9000.5
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Yükseklik 9000.5 m olamaz; −500 ile 9000 m arasında bir ortalama elipsoit yüksekliği verin.",
+       "path": "height"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -2363,6 +2363,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
         targets: none,
     },
+    // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
+    Entry {
+        id: "cad.crs.factors",
+        refusals: &[&["invalid_input", "no_system", "no_point_scale"]],
+        warnings: &["point_beyond_system"],
+        targets: none,
+    },
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
     Entry {
         id: "map.work.query",

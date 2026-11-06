@@ -1591,19 +1591,21 @@ impl App {
             if self.work_mode() == kentos_commands::Workspace::Cad {
                 let scale = settings.plot_scale;
                 let unit = settings.unit();
+                let summary = self.scale_summary();
                 bar = bar.separator().push(
                     Readout::new(label::strong(kentos_project::wizard::scale_text(scale)))
                         .icon(crate::icons::from_web(Some("plotScale")))
                         .tip(Tip::new("Çizim ölçeği").body(
                             "Yazılar ve ölçüler kâğıtta bu ölçekte okunacak boyda çizilir; çizimin kendisi gerçek boyundadır. Değiştirmek için tıklayın.",
                         ))
-                        .menu(move || crate::annotation_scale::plot_scale_menu(scale, unit)),
+                        .menu(move || crate::annotation_scale::plot_scale_menu(scale, unit, &summary)),
                 );
             } else {
                 let cell: Element<'_, Message> = match self.scale_field_view() {
                     Some(field) => field,
                     None => {
                         let scales = self.offered_scales();
+                        let summary = self.scale_summary();
                         Readout::new(label::strong(format!(
                             "1:{}",
                             thousands(self.viewport.camera.screen_scale())
@@ -1612,7 +1614,7 @@ impl App {
                         .tip(
                             Tip::new("Ölçek").body("Görünümün ölçeği. Listeden seçin ya da yazın."),
                         )
-                        .menu(move || crate::screen_scale::scale_menu(&scales))
+                        .menu(move || crate::screen_scale::scale_menu(&scales, &summary))
                         .into()
                     }
                 };

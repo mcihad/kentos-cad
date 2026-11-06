@@ -28,6 +28,9 @@
   yükleyen dış başvurunun da geçmesi, `release` (Bağımsız yap), bağlamsal sekmelerde yalnız Harita'nın **Harita işi**
   paneli (Kaynağını göster, Bağımsız yap) ve panelde Seçimi türet. Bağlı GeoPackage'ın bağı geri alma dışında kaldığı için
   yeniden bağlamaya katılmaz, uyarılır.
+- **Ölçeklerin özeti ve `cad.crs.factors` (6 Kasım 2026; MAP-02, [ADR 1231](../../docs/adr/1231-scale-summary-and-crs-factors.md)).**
+  Durum çubuğunun ölçek menüsünde (CAD ve CBS) alt menü: çizim ölçeği, ekran, projeksiyon/yükseklik/birleşik çarpan;
+  yerel projede yok. Python/MCP için salt okunur `cad.crs.factors`.
 - **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](../../plan/road.md), [ADR 0900](../../docs/adr/0900-road-terrain-surface.md)–[0911](../../docs/adr/0911-road-project-tree-views-and-rebuild.md)).**
   Ayrı ürün modülü (`CadWork::Road`, `Module::Road`, `kentos-yol`; dal `road-01-yuzey`'den birleşti). Hesap
   `crates/shared/road` (`kentos-road`: kısıtlı Delaunay `kentos.cdt/1`, aks ve km denklemleri, düşey kurplar, tip kesit

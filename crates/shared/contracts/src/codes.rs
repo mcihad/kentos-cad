@@ -1555,6 +1555,10 @@ codes! {
     NOTHING_TO_TRANSFORM = "nothing_to_transform", Failed, false, "Dönüştürülecek nokta yok ya da 100 000'den çok.";
     /// A side is the project's system and the project has none.
     NO_SYSTEM = "no_system", Failed, false, "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin.";
+    /// A system without one scale at a point (geographic, Pseudo-Mercator, affine local plane; docs/adr/1231).
+    NO_POINT_SCALE = "no_point_scale", Failed, false, "Projenin sisteminde bir noktanın tek ölçeği yok (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem); ölçek çarpanı verilemez.";
+    /// A point the project's system does not reach: its factors are not given (docs/adr/1231).
+    POINT_BEYOND_SYSTEM = "point_beyond_system", Warning, false, "Bir nokta projenin sisteminin ulaştığı yerin dışında; çarpanları verilmedi.";
     /// A side is the project's system and its stored EPSG code is not one the registry resolves (docs/adr/1230 §1).
     UNSUPPORTED_SRID = "unsupported_srid", Failed, false, "Projenin kayıtlı EPSG kodu KentOS'un çözdüğü sistemler arasında yok; projeye kayıttaki bir sistemi atayın ya da tarafın sistemini EPSG koduyla verin.";
     /// A source uncertainty not 0 or more.

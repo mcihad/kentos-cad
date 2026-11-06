@@ -9304,6 +9304,31 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_CRS_FACTORS.into(),
+            version: crate::CAD_CRS_FACTORS_VERSION,
+            title: "Ölçek çarpanları".into(),
+            summary: "Projenin haritasında verilen noktalarda (doğu, kuzey; m) ölçülen bir uzunluğun zemin, elipsoit ve harita arasında geçtiği çarpanları okur; hiçbir şey yazmaz: projeksiyonun nokta ölçeği (scale: haritadaki uzunluk = elipsoitteki × scale), yükseklik çarpanı R/(R + h) doğu yönünde (heightFactor; R doğu yönündeki Euler yarıçapı, yani birinci düşey eğrilik yarıçapı N) ve ikisinin çarpımı birleşik çarpan (combined: zemindeki uzunluk × combined = haritadaki uzunluk). height verilmezse projenin ortalama elipsoit yüksekliği (Proje ayarları › Ölçme); ikisi de yoksa yalnız scale. Cevap sistemin adını, kullanılan yüksekliği ve ölçme pencerelerinin uzunlukları projeksiyona indirip indirmediğini (reducesToGrid) de verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez (ADR 1231). Sistemin ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. \
+                      Retler: invalid_input (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da yükseklik, yükseklik −500…9000 m dışında), no_system (proje yerel koordinatlarda), no_point_scale (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem)."
+                .into(),
+            aliases: vec!["olcekcarpani".into(), "scalefactor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CrsFactors>(),
+            output: schema::<crate::CrsFactorsRead>(),
+            plan: Some(schema::<crate::CrsFactorsRead>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "TUREF / TM30'da iki nokta, 850 m yükseklikle".into(),
+                input: json!({ "points": [[550000.0, 4540000.0], [500000.0, 4540000.0]], "height": 850.0 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::MAP_WORK_QUERY.into(),
             version: crate::MAP_WORK_QUERY_VERSION,
             title: "Harita işini sorgula".into(),
@@ -15652,6 +15677,7 @@ mod tests {
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdit>(e.input.clone()).map(|_| ()),
+                    crate::CAD_CRS_FACTORS => serde_json::from_value::<crate::CrsFactors>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
@@ -16588,6 +16614,7 @@ mod tests {
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),
+                        crate::CAD_CRS_FACTORS => serde_json::from_value::<crate::CrsFactorsRead>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

@@ -59,6 +59,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-01 / ADR 1201: `io/kcad.ts` şema 193 (öğe dosyasının `relative`'i), `map.work.query drawing`/`via`, `release`,
   yeniden bağlamada dış başvurunun geçmesi, bağlamsal sekmelerin Harita işi paneli (`map.workSource`, `map.workRelease`)
   ve panelin Seçimi türet satırı.
+- MAP-02 / ADR 1231: `cad.crs.factors`'ın web işleyicisi ve durum çubuğu ölçek menüsünün Ölçeklerin özeti alt menüsü.
 - CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
   `unavailable`, `library`, `uses`), `kentos-ofis` kitaplığının web'de okunması, `io/kcad.ts` şema 183
   (`approvedSheetTemplates`), Standart kaynaklarını kur penceresinin Kitaplık/Kullanım sütunları ve Öznitelikler'in

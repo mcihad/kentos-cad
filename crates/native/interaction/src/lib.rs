@@ -158,6 +158,7 @@ pub mod gnss;
 pub mod grip_edit;
 pub mod grip_menu;
 pub mod ground;
+pub mod scale_summary;
 pub mod hatch;
 pub mod hatch_options;
 pub mod hatch_selected;

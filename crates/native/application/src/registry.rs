@@ -52,6 +52,7 @@ use crate::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 
 use crate::entities_select::isolation as entities_isolation;
 use crate::addresses_check;
+use crate::crs_factors;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -508,6 +509,9 @@ macro_rules! by_command {
             }
             kentos_commands::MAP_WORK_EDIT => {
                 $then!(map_work_edit, kentos_commands::MapWorkEdit)
+            }
+            kentos_commands::CAD_CRS_FACTORS => {
+                $then!(crs_factors, kentos_commands::CrsFactors)
             }
             kentos_commands::ROAD_STAKEOUT_QUERY => {
                 $then!(road_stakeout, kentos_commands::StakeoutQuery)

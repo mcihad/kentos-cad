@@ -46,6 +46,7 @@ COMMANDS: dict[str, Any] = {
     "cad.constraints.edit": constraints.edit,
     "cad.constraints.query": constraints.query,
     "cad.constructions.create": constructions.create,
+    "cad.crs.factors": crs.factors,
     "cad.crs.transform": crs.transform,
     "cad.curves.construct": curves.construct,
     "cad.curves.edit": curves.edit,

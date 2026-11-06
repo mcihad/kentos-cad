@@ -249,6 +249,16 @@ tablosu ADR 1230 §4'te. Açık: ölçek anlatımının tek özeti ve içe aktar
 sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması; önizlemede nokta başına fark; geoit ve hız modelinin doğruluğu;
 zamana bağlı Helmert ve resmî TUREF hız alanı; web.
 
+**6 Kasım 2026 — MAP-02.2 ([ADR 1231](../docs/adr/1231-scale-summary-and-crs-factors.md)): ölçek anlatımının tek özeti.**
+Kapsam işareti: **Harita + CBS** (Yol da; Mimari'nin yerel projesinde yok). Araştırma: Civil 3D'nin Units and Zone /
+Transformation ayrımı ve birleşik çarpanı, Trimble Access'in zemin ölçek çarpanı. Kanıtlanan: durum çubuğunun ölçek
+menüsünde (CAD'de çizim ölçeği, CBS'de görünüm ölçeği) **Ölçeklerin özeti ▸** alt menüsü — çizim ölçeği, ekran, ekranın
+ortasında projeksiyon ölçeği, yükseklik ve birleşik çarpan (ppm ile), uzunlukların indirilip indirilmediği; satır değeri
+panoya kopyalar; zoom yalnız ekran satırını değiştirir. Python/MCP için salt okunur `cad.crs.factors` (24 ortak durum,
+PROJ'un `get_factors`'ına karşı 10⁻⁹). Açık: içe aktarmada birimin kot ve iç içe blokta bir kez uygulandığının sınaması,
+ölçme pencerelerinin çarpanı bu komuttan okuması, sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması, nokta başına
+fark önizlemesi, geoit/hız modeli doğruluğu, zamana bağlı Helmert.
+
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 
 **Öncelik:** P0 veri modeli; P1 çevrimdışı işleme. **Kod:** [K09]–[K12], [K03].

@@ -23751,6 +23751,71 @@ class CrsDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CrsFactors(_Model):
+    """Input of `cad.crs.factors` v1: points in the project's coordinates (east, north; metres) and, when given, the mean
+    ellipsoidal height to use instead of the project's (Proje ayarları › Ölçme).
+
+    Refusals, in this order: `invalid_input` (no point, more than 10 000, a coordinate or the height not finite, a height
+    outside −500…9000 m), `no_system` (a project on its own coordinates), `no_point_scale` (a geographic
+    system, the Pseudo-Mercator or an affine local plane: no one scale at a point).
+    Attributes:
+        points: Unit: m.
+        height: Unit: m.
+    """
+    points: list[list[float]]
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsFactors:
+        return cls(
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsFactorsRead(_Model):
+    """Output of `cad.crs.factors` v1: the project's system as a sentence names it, the height used (none without one),
+    whether the survey windows take measured lengths to the grid, each point's factors in the input's order, and the
+    drawing's revision.
+    Attributes:
+        height: Unit: m.
+    """
+    system: str
+    reduces_to_grid: bool
+    points: list[PointFactors]
+    revision: str
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["system"] = self.system
+        out["reducesToGrid"] = self.reduces_to_grid
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["revision"] = self.revision
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsFactorsRead:
+        return cls(
+            system=data["system"],
+            reduces_to_grid=data["reducesToGrid"],
+            points=[PointFactors.from_json(e0) for e0 in data["points"]],
+            revision=data["revision"],
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrsMove(_Model):
     """How a file's coordinates were moved into the project's system, and how sure that is (docs/adr/0222 §2): the two
     systems' EPSG codes (the project's is 0 when it is its own definition), the datum shift's operations (empty when
@@ -63226,6 +63291,38 @@ class PointEntity(Entity):
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointFactors(_Model):
+    """One point's factors: none where the system does not reach the point (warning `point_beyond_system`); the height's
+    and the combined only with a height.
+    Attributes:
+        combined: Unit: 1.
+        height_factor: Unit: 1.
+        scale: Unit: 1.
+    """
+    combined: float | None | Unset = UNSET
+    height_factor: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.combined is not UNSET:
+            out["combined"] = None if self.combined is None else float(self.combined)
+        if self.height_factor is not UNSET:
+            out["heightFactor"] = None if self.height_factor is None else float(self.height_factor)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointFactors:
+        return cls(
+            combined=UNSET if "combined" not in data else None if data["combined"] is None else float(data["combined"]),
+            height_factor=UNSET if "heightFactor" not in data else None if data["heightFactor"] is None else float(data["heightFactor"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -118656,6 +118753,8 @@ __all__ = [
     "CrsBase",
     "CrsChain",
     "CrsDefinition",
+    "CrsFactors",
+    "CrsFactorsRead",
     "CrsFamily",
     "CrsFamilyName",
     "CrsMove",
@@ -120396,6 +120495,7 @@ __all__ = [
     "PointCreated",
     "PointEntity",
     "PointEntityGeometry",
+    "PointFactors",
     "PointHatchOrigin",
     "PointHatchRegion",
     "PointLabelMode",

@@ -301,6 +301,7 @@ pub mod road_project_query;
 pub mod road_project_rebuild;
 pub mod road_project_edit;
 pub mod map_work;
+pub mod crs_factors;
 pub mod map_work_edit;
 pub mod road_corridors_draw;
 pub mod road_corridors_edit;
@@ -1411,6 +1412,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
     (kentos_commands::MAP_WORK_QUERY, kentos_commands::MAP_WORK_QUERY_VERSION),
     (kentos_commands::MAP_WORK_EDIT, kentos_commands::MAP_WORK_EDIT_VERSION),
+    // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
+    (kentos_commands::CAD_CRS_FACTORS, kentos_commands::CAD_CRS_FACTORS_VERSION),
     (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
     (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
     (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),

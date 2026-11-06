@@ -35,6 +35,8 @@ pub enum Event {
     /// Tamam or Enter: a scale that holds is set.
     Submit,
     Close,
+    /// Ölçeklerin özeti's row: its value to the clipboard (docs/adr/1231).
+    CopyValue(String, String),
 }
 
 fn event(e: Event) -> Message {
@@ -52,8 +54,9 @@ pub fn typed_plot_scale(text: &str) -> Option<f64> {
 pub(crate) fn plot_scale_menu(
     current: f64,
     unit: kentos_commands::DrawingUnit,
+    summary: &[kentos_interaction::scale_summary::ScaleRow],
 ) -> kentos_ui::widget::Menu<Message> {
-    kentos_project::wizard::project_scales(true, unit, current)
+    let menu = kentos_project::wizard::project_scales(true, unit, current)
         .into_iter()
         .fold(
             kentos_ui::widget::Menu::new().header(TITLE),
@@ -66,7 +69,32 @@ pub(crate) fn plot_scale_menu(
             },
         )
         .separator()
-        .item("Ölçek yaz…", event(Event::Open))
+        .item("Ölçek yaz…", event(Event::Open));
+    with_summary(menu, summary)
+}
+
+/// Ölçeklerin özeti ▸ under a scale menu (plan/map-cad.md MAP-02, docs/adr/1231): each scale a row of its own (pressed,
+/// its value is copied), its value beside its name and what it does and does not change under it; nothing for a project
+/// without a coordinate system (a building's).
+pub(crate) fn with_summary(
+    menu: kentos_ui::widget::Menu<Message>,
+    summary: &[kentos_interaction::scale_summary::ScaleRow],
+) -> kentos_ui::widget::Menu<Message> {
+    if summary.is_empty() {
+        return menu;
+    }
+    // A submenu: the scale menu stays short (the owner wants no space-hungry stacks).
+    menu.separator().submenu("Ölçeklerin özeti", summary_menu(summary))
+}
+
+/// The summary's own menu: a row for each scale, what it does under it; a row pressed copies its value.
+pub(crate) fn summary_menu(summary: &[kentos_interaction::scale_summary::ScaleRow]) -> kentos_ui::widget::Menu<Message> {
+    summary.iter().fold(kentos_ui::widget::Menu::new().header("Ölçeklerin özeti"), |menu, r| {
+        // Pressed, the value goes to the clipboard (a factor to paste into a calculation); it changes nothing.
+        let number = r.value.split(" (").next().unwrap_or(&r.value).to_owned();
+        menu.item(format!("{}: {}", r.label, r.value), event(Event::CopyValue(r.label.to_owned(), number)))
+            .detail(r.detail.clone())
+    })
 }
 
 impl App {
@@ -143,6 +171,10 @@ impl App {
 
     pub(crate) fn plot_scale_event(&mut self, e: Event) -> Task<Message> {
         match e {
+            Event::CopyValue(label, value) => {
+                self.say(Level::Info, format!("{label} panoya kopyalandı: {value}"));
+                return iced::clipboard::write(value);
+            }
             Event::Open => {
                 let Some(doc) = &self.document else {
                     self.output("Açık çizim yok.");
