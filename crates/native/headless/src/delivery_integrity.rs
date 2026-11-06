@@ -154,6 +154,8 @@ pub(crate) fn replay_row(row: &kentos_commands::CallRecord) -> kentos_commands::
             scope: Vec::new(),
             pages: Vec::new(),
             resumed: Vec::new(),
+            previous: None,
+            carried: Vec::new(),
         };
         verify(&report)
     })();

@@ -464,6 +464,7 @@ pub mod viewmarks;
 pub mod spaces_finish;
 pub mod navigator;
 pub mod sheets_set;
+pub mod sheets_sources;
 pub mod pdf_underlay;
 pub mod xrefs;
 mod xrefs_bind;

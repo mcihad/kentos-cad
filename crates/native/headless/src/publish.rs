@@ -290,6 +290,7 @@ pub(crate) fn page_of(a: &kentos_sheet::pdf::PageAudit, file: &str, digest: &str
         sheet: a.sheet.clone(),
         file: file.into(),
         digest: digest.into(),
+        date: None,
         strokes: a.strokes,
         fills: a.fills,
         even_odd_fills: a.even_odd_fills,
@@ -339,6 +340,7 @@ fn work(
     op: CallOp,
     progress: Option<&Progress>,
 ) -> Result<(SheetsPublished, Option<FileEffect>), Refused> {
+    let previous = crate::publish_update::read(input, Path::new(&input.path))?;
     let target = crate::package::target(&input.path)?;
     stopped(progress)?;
     let source = pin(doc)?;
@@ -393,6 +395,8 @@ fn work(
             ));
         }
     }
+    // The book as kept: its sheets' records are what a later status compares (docs/adr/1320 §2).
+    let kept_book = book.clone();
     if let Some(dpi) = input.dpi {
         if !(36..=1200).contains(&dpi) {
             return Err(refuse(
@@ -422,6 +426,8 @@ fn work(
                 scope,
                 pages: Vec::new(),
                 resumed: Vec::new(),
+                previous: previous.map(|p| p.report),
+                carried: Vec::new(),
             },
             None,
         ));
@@ -517,6 +523,7 @@ fn work(
     let mut files = Vec::new();
     let mut pages: Vec<SheetPublishedPage> = Vec::new();
     let mut resumed = Vec::new();
+    let mut carried: Vec<String> = Vec::new();
     let save = |files: &[SheetPublishedFile], pages: &[SheetPublishedPage], issues: &[SheetPublishIssue], reason: &str, at: Option<&Path>| {
         if let (true, Some(dir)) = (resumable, at) {
             let j = serde_json::json!({"format":JOURNAL_FORMAT,"path":input.path,"user":user,"date":date,"source":source,"options":journal_options(input),"sheets":chosen,"files":files,"pages":pages,"issues":issues,"reason":reason});
@@ -533,6 +540,8 @@ fn work(
     }
     let digest_of = digests(&captured, &chosen, input.geo, input.layers, progress.map(|p| p.span(0, chosen.len() as u64, total_work)).as_ref())
         .inspect_err(|_| save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path())))?;
+    // Pages are carried only into an output made the earlier delivery's way.
+    let carrying = previous.as_ref().filter(|p| p.same_output(input, &source));
     let digest_for = |id: &str| digest_of.iter().find(|(s, _)| s == id).and_then(|(_, d)| d.as_ref().ok()).cloned().unwrap_or_default();
     let base = chosen.len() as u64;
     for (n, (name, sheets)) in planned.iter().enumerate() {
@@ -549,6 +558,24 @@ fn work(
                 resumed.extend(sheets.iter().cloned());
                 continue;
             }
+        }
+        // An update carries a page that draws what the earlier delivery's did, its bytes and date unchanged.
+        if let Some(c) = carrying.and_then(|p| match sheets.as_slice() {
+            [one] => p.carry(name, one, &digest_for(one)),
+            _ => None,
+        }) {
+            if let Some(stage) = &staging {
+                crate::files::write_bytes(&c.bytes, &stage.path.join(name))
+                    .map_err(|e| refuse("file_unwritable", e.message, "path"))?;
+            }
+            files.push(c.file);
+            pages.push(c.page);
+            issues.extend(c.issues);
+            carried.extend(sheets.iter().cloned());
+            if let Some(p) = progress {
+                p.set(base + (n + 1) as u64, total_work);
+            }
+            continue;
         }
         let opts = kentos_sheet::pdf::PdfOptions {
             sheets: sheets.clone(),
@@ -609,7 +636,13 @@ fn work(
                 }
                 for a in &pdf.pages {
                     let own = scope.iter().find(|s| s.sheet == a.sheet);
-                    pages.push(page_of(a, name, &digest_for(&a.sheet), own));
+                    let digest = digest_for(&a.sheet);
+                    let mut page = page_of(a, name, &digest, own);
+                    page.date = Some(date.clone());
+                    pages.push(page);
+                    if let Some(note) = previous.as_ref().and_then(|p| p.revision_note(&a.sheet, &digest, own)) {
+                        issues.push(note);
+                    }
                 }
                 files.push(SheetPublishedFile {
                     name: name.clone(),
@@ -673,7 +706,7 @@ fn work(
         return Err(e);
     }
     let ready = !issues.iter().any(|i| i.error);
-    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues,"previous":previous.as_ref().map(|p|&p.report),"carried":carried,"sources":if matches!(op,CallOp::Execute){crate::publish_update::source_record(doc,&kept_book,&chosen)}else{serde_json::Value::Null}})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
         resources,
         path: input.path.clone(),
@@ -687,6 +720,8 @@ fn work(
         scope: scope.clone(),
         pages,
         resumed,
+        previous: previous.map(|p| p.report),
+        carried,
     };
     if let Some(stage) = &mut staging {
         if !ready {

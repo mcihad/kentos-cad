@@ -103,6 +103,11 @@ fn work(
         } else {
             digests(&captured, &present, geo, layers, progress)?
         };
+        // What each page's sources did since the delivery (docs/adr/1320 §2).
+        let resources = published
+            .as_ref()
+            .is_some_and(|p| p.resources_sha256.is_some() && p.resources_sha256 != current.resources_sha256);
+        let changes = crate::publish_update::changes(doc, &book, &m["sources"], &present, resources);
         let name_of = |id: &str| {
             m["drawingSet"]
                 .as_array()
@@ -113,11 +118,8 @@ fn work(
         };
         for id in &ids {
             let file = files.iter().find(|f| f.sheets.contains(id));
-            let was = pages
-                .iter()
-                .find(|p| &p.sheet == id)
-                .map(|p| p.digest.clone())
-                .filter(|d| !d.is_empty());
+            let page = pages.iter().find(|p| &p.sheet == id);
+            let was = page.map(|p| p.digest.clone()).filter(|d| !d.is_empty());
             let digest = now.iter().find(|(s, _)| s == id).map(|(_, d)| d.clone());
             let mut row = SheetPublishStatus {
                 sheet: id.clone(),
@@ -129,6 +131,10 @@ fn work(
                 published: was.clone(),
                 digest: digest.as_ref().and_then(|d| d.as_ref().ok().cloned()),
                 issue: None,
+                date: page
+                    .and_then(|p| p.date.clone())
+                    .or_else(|| m["date"].as_str().map(str::to_owned)),
+                changes: changes.iter().find(|(s, _)| s == id).map(|(_, c)| c.clone()),
             };
             row.state = if book.sheet(id).is_none() {
                 SheetPublishState::Removed
@@ -176,6 +182,8 @@ fn work(
                     published: None,
                     digest: None,
                     issue: None,
+                    date: None,
+                    changes: None,
                 });
             }
         }

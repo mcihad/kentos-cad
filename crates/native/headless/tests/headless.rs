@@ -2972,6 +2972,9 @@ mod sheet_sets;
 #[path = "headless/sheet_delivery.rs"]
 mod sheet_delivery;
 
+#[path = "headless/sheet_update.rs"]
+mod sheet_update;
+
 #[path = "headless/sheet_preflight.rs"]
 mod sheet_preflight;
 

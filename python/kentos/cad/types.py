@@ -63618,6 +63618,37 @@ class PreflightSheets(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PreviousPublication(_Model):
+    """The earlier delivery a publication updates (docs/adr/1320 §3).
+    Attributes:
+        sha256: Its `yayin.json`'s SHA-256 when it was read.
+        date: Its publication date.
+        source: Its source.
+    """
+    path: str
+    sha256: str
+    date: str
+    source: SheetPublishPin
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["sha256"] = self.sha256
+        out["date"] = self.date
+        out["source"] = self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PreviousPublication:
+        return cls(
+            path=data["path"],
+            sha256=data["sha256"],
+            date=data["date"],
+            source=SheetPublishPin.from_json(data["source"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProcessingBatch(_Model):
     """Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,
     through the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`
@@ -68664,6 +68695,10 @@ class PublishSheets(_Model):
         name: One PDF's leaf name; .pdf is appended when missing.
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
+        previous: An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
+            whose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has
+            its bytes is copied byte for byte with its own publication date; the rest are made again with today's. The
+            earlier folder is left as it is. Separate PDFs only; not with `resume`.
         resources: Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
         resumable: Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a
             journal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.
@@ -68681,6 +68716,7 @@ class PublishSheets(_Model):
     name: str | None | Unset = UNSET
     naming: str = "{index}-{sheet}"
     pin: SheetPublishPin | None | Unset = UNSET
+    previous: str | None | Unset = UNSET
     resources: bool = False
     resumable: bool | Unset = UNSET
     resume: bool | Unset = UNSET
@@ -68701,6 +68737,8 @@ class PublishSheets(_Model):
         out["naming"] = self.naming
         if self.pin is not UNSET:
             out["pin"] = None if self.pin is None else self.pin.to_json()
+        if self.previous is not UNSET:
+            out["previous"] = self.previous
         out["resources"] = self.resources
         if self.resumable is not UNSET:
             out["resumable"] = self.resumable
@@ -68722,6 +68760,7 @@ class PublishSheets(_Model):
             name=data.get("name", UNSET),
             naming=data["naming"] if "naming" in data else "{index}-{sheet}",
             pin=UNSET if "pin" not in data else None if data["pin"] is None else SheetPublishPin.from_json(data["pin"]),
+            previous=data.get("previous", UNSET),
             resources=data["resources"] if "resources" in data else False,
             resumable=data.get("resumable", UNSET),
             resume=data.get("resume", UNSET),
@@ -77679,12 +77718,17 @@ class SheetPublishScope(_Model):
 class SheetPublishStatus(_Model):
     """
     Attributes:
+        changes: What changed in its sources since the delivery (docs/adr/1320 §2); none when the delivery did not list them
+            (made before, or a page with an atlas or unplaced viewport) or the sheet is gone.
+        date: The date its delivered page was made with.
         digest: The digest now.
         published: The digest published.
     """
     sheet: str
     name: str
     state: SheetPublishState | SheetPublishStateName
+    changes: SheetSourceChanges | None | Unset = UNSET
+    date: str | None | Unset = UNSET
     digest: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
     issue: SheetPublishIssue | None | Unset = UNSET
@@ -77695,6 +77739,10 @@ class SheetPublishStatus(_Model):
         out["sheet"] = self.sheet
         out["name"] = self.name
         out["state"] = _enum_out(self.state)
+        if self.changes is not UNSET:
+            out["changes"] = None if self.changes is None else self.changes.to_json()
+        if self.date is not UNSET:
+            out["date"] = self.date
         if self.digest is not UNSET:
             out["digest"] = self.digest
         if self.file is not UNSET:
@@ -77711,6 +77759,8 @@ class SheetPublishStatus(_Model):
             sheet=data["sheet"],
             name=data["name"],
             state=_enum_in(SheetPublishState, data["state"]),
+            changes=UNSET if "changes" not in data else None if data["changes"] is None else SheetSourceChanges.from_json(data["changes"]),
+            date=data.get("date", UNSET),
             digest=data.get("digest", UNSET),
             file=data.get("file", UNSET),
             issue=UNSET if "issue" not in data else None if data["issue"] is None else SheetPublishIssue.from_json(data["issue"]),
@@ -77765,6 +77815,8 @@ class SheetPublishedPage(_Model):
         raster_maps: Unit: count.
         placeholders: Unit: count.
         findings: The page's audit findings (none an error by itself: the preflight's errors block publication).
+        date: The date its bytes were made with (the title context's): an update's carried page keeps its earlier one
+            (docs/adr/1320 §3). None in publications made before.
         min_stroke_mm: Unit: paper-mm.
     """
     sheet: str
@@ -77783,6 +77835,7 @@ class SheetPublishedPage(_Model):
     raster_maps: int
     placeholders: int
     findings: list[SheetPublishIssue]
+    date: str | None | Unset = UNSET
     min_stroke_mm: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -77803,6 +77856,8 @@ class SheetPublishedPage(_Model):
         out["rasterMaps"] = self.raster_maps
         out["placeholders"] = self.placeholders
         out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.date is not UNSET:
+            out["date"] = self.date
         if self.min_stroke_mm is not UNSET:
             out["minStrokeMm"] = None if self.min_stroke_mm is None else float(self.min_stroke_mm)
         return out
@@ -77826,6 +77881,7 @@ class SheetPublishedPage(_Model):
             raster_maps=data["rasterMaps"],
             placeholders=data["placeholders"],
             findings=[SheetPublishIssue.from_json(e0) for e0 in data["findings"]],
+            date=data.get("date", UNSET),
             min_stroke_mm=UNSET if "minStrokeMm" not in data else None if data["minStrokeMm"] is None else float(data["minStrokeMm"]),
         )
 
@@ -77856,6 +77912,43 @@ class SheetSeries(_Model):
             series=data["series"],
             sheets=list(data["sheets"]),
             title=data.get("title", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetSourceChanges(_Model):
+    """A published page's sources against the drawing now (docs/adr/1320 §2), by persistent id in drawing order: the
+    objects it drew whose content changed, the ones it draws now and did not, the ones it drew and does not now
+    (deleted, moved out, hidden), whether the sheet's own record changed, and which project parts every page draws
+    with changed. All empty when nothing it reads changed.
+    Attributes:
+        sheet: The sheet's own items, page or drawing information.
+        parts: Of `blocks`, `book` (masters, templates, profiles), `layers`, `resources` (linked pictures), `settings`,
+            `styles`, in this order.
+    """
+    changed: list[str]
+    added: list[str]
+    removed: list[str]
+    sheet: bool
+    parts: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["added"] = list(self.added)
+        out["removed"] = list(self.removed)
+        out["sheet"] = self.sheet
+        out["parts"] = list(self.parts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetSourceChanges:
+        return cls(
+            changed=list(data["changed"]),
+            added=list(data["added"]),
+            removed=list(data["removed"]),
+            sheet=data["sheet"],
+            parts=list(data["parts"]),
         )
 
 
@@ -78210,6 +78303,8 @@ class SheetsPublished(_Model):
     Attributes:
         ready: True after full output/source checks; validate-only deliberately leaves this false.
         pages: Each written page's audit and content digest (docs/adr/1090 §4), in the published order.
+        previous: With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the
+            published order (the others were made again).
         resumed: With `resume`: the sheets whose finished pages were kept from the stopped publication.
         scope: What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer
             states, the plot profile.
@@ -78222,7 +78317,9 @@ class SheetsPublished(_Model):
     ready: bool
     manifest: str
     sha256: str
+    carried: list[str] | Unset = UNSET
     pages: list[SheetPublishedPage] | Unset = UNSET
+    previous: PreviousPublication | None | Unset = UNSET
     resources: SheetDeliveryResources | None | Unset = UNSET
     resumed: list[str] | Unset = UNSET
     scope: list[SheetPublishScope] | Unset = UNSET
@@ -78237,8 +78334,12 @@ class SheetsPublished(_Model):
         out["ready"] = self.ready
         out["manifest"] = self.manifest
         out["sha256"] = self.sha256
+        if self.carried is not UNSET:
+            out["carried"] = list(self.carried)
         if self.pages is not UNSET:
             out["pages"] = [e0.to_json() for e0 in self.pages]
+        if self.previous is not UNSET:
+            out["previous"] = None if self.previous is None else self.previous.to_json()
         if self.resources is not UNSET:
             out["resources"] = None if self.resources is None else self.resources.to_json()
         if self.resumed is not UNSET:
@@ -78258,7 +78359,9 @@ class SheetsPublished(_Model):
             ready=data["ready"],
             manifest=data["manifest"],
             sha256=data["sha256"],
+            carried=list(data["carried"]) if "carried" in data else UNSET,
             pages=[SheetPublishedPage.from_json(e0) for e0 in data["pages"]] if "pages" in data else UNSET,
+            previous=UNSET if "previous" not in data else None if data["previous"] is None else PreviousPublication.from_json(data["previous"]),
             resources=UNSET if "resources" not in data else None if data["resources"] is None else SheetDeliveryResources.from_json(data["resources"]),
             resumed=list(data["resumed"]) if "resumed" in data else UNSET,
             scope=[SheetPublishScope.from_json(e0) for e0 in data["scope"]] if "scope" in data else UNSET,
@@ -119936,6 +120039,7 @@ __all__ = [
     "PolylinePlan",
     "PredefinedPaperAtlasScale",
     "PreflightSheets",
+    "PreviousPublication",
     "PrimaryOptionsOperation",
     "ProcessingBatch",
     "ProcessingBatched",
@@ -120536,6 +120640,7 @@ __all__ = [
     "SheetResourceKind",
     "SheetResourceKindName",
     "SheetSeries",
+    "SheetSourceChanges",
     "SheetTemplateSource",
     "SheetsCreate",
     "SheetsDetailed",

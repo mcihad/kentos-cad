@@ -801,6 +801,20 @@ zoom boyunca yazı/ölçü, grid ve çizgi konumu gözle denetlensin. Bir
 yüzey/parsel revizyonu yalnız ilgili sayfaları güncellesin. PDF'deki
 koordinat/ölçü bağımsız okuyucuda sınansın; resmî profil onaysızken genel çıktı çalışabilsin.
 
+**6 Kasım 2026, ilk dilim (ADR 1320, dal `map-18-pafta-teslim`):** her yayın `yayin.json`'a sayfaların kaynak
+dökümünü yazar (görünüm penceresinin bastığı, tablosunun okuduğu nesneler kalıcı kimlikleriyle; her nesnenin yuva
+kimliği olmadan içerik özeti; pafta kaydının ve katman/stil/blok/ayar/kitap parçalarının özetleri).
+`file.publish.status` her sayfanın teslim tarihini ve kaynak değişimini verir (değişen, giren, çıkan nesneler; pafta
+düzeni; değişen parçalar). `file.publish.sheets {previous}` önceki teslimin güncellemesini yeni klasöre kurar: sayfası
+aynı çizen ve PDF'i sağlam pafta baytı baytına ve kendi tarihiyle kopyalanır, değişenler bugünün tarihiyle yeniden
+üretilir, revizyonu ilerletilmemiş değişen paftaya `revision_unchanged` uyarısı; önceki teslim değişmez. Masaüstü
+yayın penceresinde Durum satırları ve Güncelle. Kanıt: 25 bağımsız ortak durum (`sheet_update_cases.py`); aynı 60
+parsel 1:500/1:1000/1:5000'de, 20 m kenar 40/20/4 mm, çerçeve köşeleri GDAL'ın GeoPDF okumasında 1 mm içinde, bir
+parselin değişimi yalnız onu gösteren sayfaları yeniden üretiyor. **Kalan:** atlas sayfalarının kaynak dökümü, tek
+PDF ve devam ettirilebilir güncelleme; anotasyon/tabloların kaynak kimliği ve revizyonuna bağlanması, CAD gerçek boylu
+yazı ile GIS dinamik etiketin ayrılması, datum/epok/kalite notları ve kurum eksen adları, resmî profil kapısı, eksik
+kaynak/okunmayan anotasyon bulguları. Madde açık kalır.
+
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 
 **Öncelik:** P1 çevrimdışı karşılaştırma; canlı cihaz işi donanım kapısında.
