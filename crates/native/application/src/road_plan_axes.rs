@@ -55,6 +55,13 @@ impl Room {
         let ground = |um: i32| f64::from(um) / 1e6 * scale;
         Room { center, half: [0.5 * ground(width_um), 0.5 * ground(height_um)] }
     }
+
+    /// Whether the map shows the ground point `p`, its content turned `turn` degrees.
+    pub fn holds(&self, p: [f64; 2], turn: f64) -> bool {
+        let r = turn.to_radians();
+        let d = [p[0] - self.center[0], p[1] - self.center[1]];
+        (d[0] * r.cos() + d[1] * r.sin()).abs() <= self.half[0] && (-d[0] * r.sin() + d[1] * r.cos()).abs() <= self.half[1]
+    }
 }
 
 /// Whether the drawing has an alignment a map would draw.
@@ -369,7 +376,7 @@ pub fn objects(doc: &Document, scale: f64, turn: f64, room: Option<Room>) -> Vec
         hectometres(&mut out, &b, m, h, turn);
         let schedule = schedule_for(doc, &def.id, &b);
         curves(&mut out, &def, &b, schedule.as_ref(), room, &roads, Paper { m, h, turn });
-        ends(&mut out, &b, m, h, turn);
+        ends(&mut out, &b, m, h, turn, room);
     }
     out
 }
@@ -573,12 +580,13 @@ fn curves(
         // to the right when the outside is to the right. KGM 2024's frame: a box, a double rule along the left, a rule
         // under the name and one over X, Y. A line is at most WIDE h a character (Barlow's figures measured 0.465 h).
         let corner = [pt[0] + u[0] * 4.0 * m, pt[1] + u[1] * 4.0 * m];
-        // Only a map that shows the PI places its box: another map of the drawing (the profile's, on the same sheet)
-        // pulled a box it does not show into its own frame (Y78's picture); there the box stays by its PI, cut away.
-        let room = room.filter(|r| {
-            let d = [pt[0] - r.center[0], pt[1] - r.center[1]];
-            (d[0] * ex[0] + d[1] * ex[1]).abs() <= r.half[0] && (d[0] * ey[0] + d[1] * ey[1]).abs() <= r.half[1]
-        });
+        // Only a map that shows the PI has its box: another map of the drawing (the profile's, on the same sheet)
+        // pulled a box it does not show into its own frame (Y78's picture); left by its PI, the box still hung into
+        // the profile map's rows under the plan (Y85's picture, docs/adr/0992). KGM's sheets: the box is on the sheet
+        // that holds its PI.
+        if room.is_some_and(|r| !r.holds(pt, turn)) {
+            continue;
+        }
         let pitch = 1.6 * h;
         let height = pitch * lines.len() as f64 + 0.4 * h;
         let width = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f64 * WIDE * h + 2.2 * h;
@@ -691,9 +699,14 @@ fn curves(
     }
 }
 
-fn ends(out: &mut Vec<NewObject>, b: &Built, m: f64, h: f64, turn: f64) {
+fn ends(out: &mut Vec<NewObject>, b: &Built, m: f64, h: f64, turn: f64, room: Option<Room>) {
     for (s, words) in [(0.0, "PROJE BAŞI"), (b.length(), "PROJE SONU")] {
         let Some(p) = b.place(s) else { continue };
+        // Only a map that shows the end has its words (docs/adr/0992): beside an end off the map they ran into the
+        // profile map under the plan (Y85's picture).
+        if room.is_some_and(|r| !r.holds([p.x, p.y], turn)) {
+            continue;
+        }
         let (_, n) = frame(p.direction);
         let len = MAIN_MM * m;
         out.push(path(

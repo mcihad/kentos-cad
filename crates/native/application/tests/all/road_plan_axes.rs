@@ -178,23 +178,29 @@ fn the_curve_data_stays_inside_the_map() {
 }
 
 #[test]
-fn a_map_that_does_not_show_the_pi_leaves_its_box_by_the_pi() {
-    // The profile's map on the same sheet shows another part of the drawing: it does not pull S - 1's box into itself
-    // (docs/adr/0984; Y78's picture had a second box under the plan).
+fn a_map_that_does_not_show_the_pi_has_no_box() {
+    // The profile's map on the same sheet shows another part of the drawing: it neither pulls S - 1's box into itself
+    // (docs/adr/0984; Y78's picture had a second box under the plan) nor leaves it by the PI, where it hung into the
+    // profile map's rows (docs/adr/0992; Y85's picture); the project's ends' words likewise. The plan's map, which
+    // shows them, keeps them.
     use kentos_native_application::road_plan_axes::{Room, with_axes_on};
     let (doc, setup) = sample();
     let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
     let pi = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
     let far = Room { center: [pi[0], pi[1] - 1000.0], half: [300.0, 100.0] };
-    let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(far)).expect("a copy");
-    for e in copy.entities() {
-        if let Entity::Text(t) = e
-            && ["D =", "S-Y ="].iter().any(|w| t.text.starts_with(w))
-        {
-            assert!((t.p.y - far.center[1]).abs() > far.half[1], "{} drawn in the far map at {:?}", t.text, t.p);
-            assert!((t.p.y - pi[1]).abs() < 100.0, "{} stays by its PI: {:?}", t.text, t.p);
-        }
-    }
+    let words = |room: Room| -> Vec<String> {
+        let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(room)).expect("a copy");
+        copy.entities()
+            .filter_map(|e| match e {
+                Entity::Text(t) if ["D =", "S-Y =", "PROJE"].iter().any(|w| t.text.starts_with(w)) => Some(t.text.clone()),
+                _ => None,
+            })
+            .collect()
+    };
+    assert!(words(far).is_empty(), "the far map writes {:?}", words(far));
+    let all = Room { center: pi, half: [5000.0, 5000.0] };
+    let near = words(all);
+    assert!(near.iter().any(|w| w.starts_with("S-Y =")) && near.iter().any(|w| w.starts_with("PROJE BAŞI")), "{near:?}");
 }
 
 #[test]
