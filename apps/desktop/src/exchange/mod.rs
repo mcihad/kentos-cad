@@ -70,7 +70,7 @@ pub(crate) mod pdf_import;
 mod gpkg_tests;
 #[cfg(test)]
 mod kml_tests;
-pub(super) mod package;
+pub(crate) mod package;
 #[cfg(test)]
 mod package_tests;
 pub(crate) mod photo_import;

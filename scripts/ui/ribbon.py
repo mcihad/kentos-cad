@@ -216,7 +216,7 @@ def output_tab(cad):
     panels = [
         # A level's plan sheets are a building's, an atlas a map's (docs/adr/0802).
         P("Pafta", "sheet", [L("sheet.new"), S("sheet.fromTemplate"), S("sheet.drawingSet")]
-          + ([S("sheet.levels", ARCHITECTURE)] if cad else [])),
+          + ([S("sheet.details"), S("sheet.levels", ARCHITECTURE)] if cad else [])),
         P("Yayınla", "print", [L("file.publish.sheets"), S("file.preflight.sheets"),
             S("file.export.atlas", MAP if cad else ())]),
     ]

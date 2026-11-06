@@ -4129,6 +4129,19 @@
       "status": "implemented"
     },
     {
+      "id": "sheet.details",
+      "title": "Detay paftaları…",
+      "short": "Detay paftaları",
+      "icon": "viewDetail",
+      "description": "Aynı modelin genel 2B detaylarını kesin oranlarla (1:1, 1:5, 1:20, 2:1 …) bir pafta setine yerleştiren pencere: kapsam seçimden ya da bölünmüş tablonun parçasından, detay başına katman durumu, yalnız o pencerede dondurulan katmanlar ve açıklama temsili, kilitli görünüm. Önizleme her detayın kâğıttaki yerini yazmadan gösterir; Paftaları kur seti tek geri alma adımında yazar. Mimari kat verisi gerekmez.",
+      "aliases": [
+        "DETAYPAFTALARI"
+      ],
+      "shortcuts": [],
+      "category": "Pafta",
+      "status": "implemented"
+    },
+    {
       "id": "file.preflight.sheets",
       "title": "Baskı öncesi tam denetim…",
       "icon": "check",

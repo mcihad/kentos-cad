@@ -2,6 +2,7 @@
 import type { DrawingFont } from "./DrawingFont";
 import type { PackageEmbedded } from "./PackageEmbedded";
 import type { PackageLeft } from "./PackageLeft";
+import type { PackageResource } from "./PackageResource";
 import type { PackagedFile } from "./PackagedFile";
 
 /**
@@ -28,6 +29,11 @@ manifest: string, manifestSha256: string,
  * The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
  */
 faces?: Array<DrawingFont>, 
+/**
+ * Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,
+ * and how the package has each (docs/adr/1111): kind, then name.
+ */
+resources?: Array<PackageResource>, 
 /**
  * Every byte written: the project file, the manifest and the copies.
  */

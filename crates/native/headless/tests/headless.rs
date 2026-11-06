@@ -49,6 +49,8 @@ mod own_file;
 mod exchange_set;
 #[path = "headless/package_cases.rs"]
 mod package_cases;
+#[path = "headless/package_resources.rs"]
+mod package_resources;
 #[path = "headless/xref_network.rs"]
 mod xref_network;
 

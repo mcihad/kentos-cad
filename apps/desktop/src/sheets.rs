@@ -1491,12 +1491,14 @@ impl App {
                 }
             }),
             // The layers a coordinate list may read (docs/adr/0206 §2).
+            // By their paths: an external reference's Duvar (`Dış başvuru: Plan / Mimari / Duvar`) is told from the
+            // drawing's own when a map's own override names it (docs/adr/1110 §4).
             layers: doc.map_or_else(Vec::new, |d| {
                 d.model
                     .layers()
                     .leaves()
                     .into_iter()
-                    .map(|l| (l.id.clone(), l.name.clone()))
+                    .map(|l| (l.id.clone(), crate::properties::layer_path(d.model.layers(), &l.id)))
                     .collect()
             }),
             // How much ground the drawing area shows (Görünüme sığdır, docs/adr/0206 §1).

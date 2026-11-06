@@ -54,8 +54,15 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
     excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz.
     Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup
     SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur;
-    path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan
-    yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.
+    path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın
+    resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX
+    şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla
+    söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında),
+    carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok),
+    substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve
+    nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır,
+    paket.json'a da yazılır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
+    geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.package"
@@ -107,8 +114,15 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz.
         Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup
         SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur;
-        path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan
-        yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.
+        path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın
+        resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX
+        şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla
+        söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında),
+        carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok),
+        substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve
+        nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır,
+        paket.json'a da yazılır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
+        geri alma adımı değildir.
 
         Args:
             doc: The drawing it works on.

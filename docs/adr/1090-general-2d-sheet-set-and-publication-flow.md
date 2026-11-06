@@ -55,7 +55,8 @@ durumu + tablo etkisi, PDF sayfa denetimi ve içerik özeti, `file.publish.sheet
 Devam et. Yeni `.kcad` şeması gerekmez: detay tarifi görünüm penceresinin saklanan alanlarından okunur; yayın kaydı
 teslim klasöründedir (AutoCAD'in DST'si gibi çizimin dışında).
 
-Kapsam dışı (sınır, §9): masaüstünde detay seti kuran ayrı bir pencere (komut Python/MCP/komut satırından), ikili
+Kapsam dışı (sınır, §9): masaüstünde detay seti kuran ayrı bir pencere (komut Python/MCP/komut satırından; sonra ADR
+1112), ikili
 CTB/STB, dönen detay kapsamı, AutoCAD/Acrobat ile karşı denetim.
 
 ### 2. Detay paftaları (`cad.sheets.details` v1, `kentos_sheet::details`)

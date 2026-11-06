@@ -214,13 +214,17 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
     current), ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın
     kendisi, cached kaynak yok ya da başka revizyon, son yüklenen kopya; none
     boşaltılmış), getirdikleri (brings), katmanlarını adlandıran katman durumları
-    (layerStates) ve bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun,
-    göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512
-    dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış
-    ya da yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday
-    kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu
-    olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe
-    dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.
+    (layerStates), pafta pencerelerinin katmanları için kendi ezmeleri
+    (viewportOverrides: pafta, harita öğesinin kimliği ve adı, katmanın ağaçtaki yolu,
+    dondurma, yazdırma, renk, çizgi tipi, desen, kalınlık µm; hiçbir dış başvuru işlemi,
+    Katmanları kaynağa döndür de, onlara dokunmaz, docs/adr/1110) ve bulunamayan ya da
+    değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve çizimin klasörü,
+    arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya başına 512 MB)
+    adaylar: içerik özeti aynı olan (match content: taşınmış ya da yeniden
+    adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday kendiliğinden
+    bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu olmayan kaynağın
+    yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe dosyanın adı)
+    yalnız son yüklenen baytlarsa kaynaktır.
     """
     __slots__ = ()
     id = "cad.xrefs.list"
@@ -252,14 +256,17 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki current),
         ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın kendisi,
         cached kaynak yok ya da başka revizyon, son yüklenen kopya; none boşaltılmış),
-        getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates) ve
-        bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve
-        çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya
-        başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış ya da
-        yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday
-        kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu
-        olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe
-        dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.
+        getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates), pafta
+        pencerelerinin katmanları için kendi ezmeleri (viewportOverrides: pafta, harita
+        öğesinin kimliği ve adı, katmanın ağaçtaki yolu, dondurma, yazdırma, renk, çizgi
+        tipi, desen, kalınlık µm; hiçbir dış başvuru işlemi, Katmanları kaynağa döndür de,
+        onlara dokunmaz, docs/adr/1110) ve bulunamayan ya da değişen için izinli yerlerdeki
+        (kayıtlı yolun, göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere
+        inilmez, en çok 512 dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan
+        (match content: taşınmış ya da yeniden adlandırılmış) önce, aynı adlı başka içerik
+        (match name) sonra. Aday kendiliğinden bağlanmaz; Yolu değiştir (repath) ile
+        bağlanır. Kayıtlı mutlak yolu olmayan kaynağın yedekleri (göreli yol, arama yolları,
+        sonunda çizimin klasöründe dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.
 
         Args:
             doc: The drawing it works on.

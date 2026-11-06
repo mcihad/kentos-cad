@@ -71,6 +71,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-ADV-17 / ADR 1061: 2B düzleme indir penceresi; dışa aktarmanın `replaceSource` seçeneği. TS türleri üretildi.
 - CAD-ADV-11/12 / ADR 1001–1002: `.kcad` şema 181 uzun desen codec'i ve web çizicisinin 12'den uzun deseni; Standart
   kaynaklarını kur penceresi `cad.standards.install`'a bağlanmalı.
+- CAD-ADV-14 / ADR 1110: `cad.xrefs.list` incelemesinin `viewportOverrides`'ı (pafta penceresinin dış başvuru katmanı
+  ezmesi) web'in Dış başvurular penceresinde, “Bu değer nereden geliyor?”un dondurma ve “Dış başvuru katmanları”
+  parçası; ADR 1111: `file.package` cevabının ve `paket.json`'un `resources` raporu ile `package_resources` uyarısı
+  web'in Paketle iletisinde. TS türleri üretildi.
+- CAD-ADV-16 / ADR 1112: masaüstündeki Detay paftaları penceresinin (`sheet.details`) web karşılığı — detay listesi,
+  kesin oran, seçimden %5 paylı kapsam, tablo parçaları, detay başına katman durumu/dondurma/açıklama, kâğıt önizlemesi;
+  `cad.sheets.set.table.json` ortak durumlarının web oynatıcısı.
 - CAD-ADV-14 / ADR 1060: Dış başvurular penceresinin inceleme, aday ve önizleme kartı; `resetLayers`; subref'in
   `piece_gone` kuralının web oynatıcısı (`fixtures/subref/v1`) ve WASM yeniden derlemesi (TS türleri üretildi).
 - CAD-ADV-15 / ADR 1000: `.kcad` şema 180 `settings.reviewNotes`, `cad.review.notes.edit/list` ve

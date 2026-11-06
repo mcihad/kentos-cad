@@ -2112,6 +2112,7 @@ impl App {
             Asking::TableInsert => self.table_insert_view(),
             Asking::TableEditor => self.table_editor_view(),
             Asking::Extract => self.extract_view(),
+            Asking::SheetDetails => self.sheet_details_view(),
             Asking::PointBatch => self.point_batch_view(),
         }
     }

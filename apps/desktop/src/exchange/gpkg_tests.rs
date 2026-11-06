@@ -589,6 +589,7 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
         manifest: "/teslim/paket/paket.json".into(),
         manifest_sha256: "0".repeat(64),
         faces: Vec::new(),
+        resources: Vec::new(),
         bytes: 10,
     };
     let warning = kentos_commands::CommandWarning {

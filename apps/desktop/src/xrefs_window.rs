@@ -388,7 +388,7 @@ impl App {
         }
     }
 
-    fn say_warnings(&mut self, warnings: &[CommandWarning]) {
+    pub(crate) fn say_warnings(&mut self, warnings: &[CommandWarning]) {
         for w in warnings {
             self.warn(format!("{TITLE}: {}", w.message));
         }
@@ -618,7 +618,7 @@ impl App {
                             format!("“{}” katmanları zaten kaynağınki gibi.", done.name)
                         } else {
                             format!(
-                                "“{}” katmanları kaynağa döndü: {}. Katman durumları (paftaların görünüşü) değişmedi.",
+                                "“{}” katmanları kaynağa döndü: {}. Katman durumları ve pafta pencerelerinin kendi ezmeleri değişmedi.",
                                 done.name,
                                 done.reset.join(", ")
                             )

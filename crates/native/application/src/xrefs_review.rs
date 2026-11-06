@@ -13,6 +13,7 @@ use kentos_commands::encoding::sha256_reader_hex;
 use kentos_commands::{
     BlockDefinition, BlockId, Entity, LayerNode, MAX_CANDIDATE_BYTES, XrefCandidate, XrefContent,
     XrefDiff, XrefFollowEffect, XrefFollower, XrefFollowerKind, XrefMatch, XrefSource, XrefState,
+    XrefViewportOverride,
 };
 use kentos_domain::{Document, Slot};
 use serde_json::Value;
@@ -26,6 +27,7 @@ pub(crate) struct Review {
     pub brings: Vec<String>,
     pub layer_states: Vec<String>,
     pub candidates: Vec<XrefCandidate>,
+    pub viewport_overrides: Vec<XrefViewportOverride>,
 }
 
 /// The review of the reference `b` (its source `x`, its state, where its file was found) from the open drawing's
@@ -81,7 +83,96 @@ pub(crate) fn review(
         brings,
         layer_states: layer_states(doc, x.group.as_deref()),
         candidates,
+        viewport_overrides: viewport_overrides(doc, x.group.as_deref()),
     }
+}
+
+/// The nodes under the layer group `group` (the group too), each its id and its path in the drawing's tree
+/// (`Dış başvuru: Plan / Mimari / Duvar`), in the tree's order.
+pub fn group_paths(doc: &Document, group: &str) -> Vec<(String, String)> {
+    fn walk(nodes: &[LayerNode], here: &str, group: &str, inside: bool, out: &mut Vec<(String, String)>) {
+        for n in nodes {
+            let path = if here.is_empty() {
+                n.name.clone()
+            } else {
+                format!("{here} / {}", n.name)
+            };
+            let inside = inside || n.id == group;
+            if inside {
+                out.push((n.id.clone(), path.clone()));
+            }
+            walk(&n.children, &path, group, inside, out);
+        }
+    }
+    let mut out = Vec::new();
+    walk(doc.layers().nodes(), "", group, false, &mut out);
+    out
+}
+
+/// The sheet viewports' own overrides of the layers under `group` (docs/adr/1110 §2): each map item's
+/// `layerOverrides` row naming one of them, in the book's order of sheets, items and rows. The drawing's own look of
+/// the layers (what `resetLayers` sets back) is not among them.
+pub fn viewport_overrides(doc: &Document, group: Option<&str>) -> Vec<XrefViewportOverride> {
+    let Some(group) = group.filter(|g| doc.layers().get(g).is_some()) else {
+        return Vec::new();
+    };
+    let Some(Ok((book, _))) = doc.sheets().map(kentos_sheet::project::read_project_sheets) else {
+        return Vec::new();
+    };
+    let paths: std::collections::HashMap<String, String> = group_paths(doc, group).into_iter().collect();
+    let mut out = Vec::new();
+    for sheet in &book.sheets {
+        for item in &sheet.items {
+            let kentos_sheet::kinds::ItemKind::Map(map) = &item.kind else {
+                continue;
+            };
+            for o in &map.layer_overrides {
+                let Some(path) = paths.get(&o.layer) else {
+                    continue;
+                };
+                out.push(XrefViewportOverride {
+                    sheet: sheet.name.clone(),
+                    item: item.id.clone(),
+                    viewport: item.name.clone(),
+                    layer: path.clone(),
+                    frozen: o.frozen,
+                    plot: o.plot,
+                    color: o.color.clone(),
+                    line_type: o.line_type.clone(),
+                    line_pattern: o.line_pattern.clone(),
+                    line_weight: o.line_weight,
+                });
+            }
+        }
+    }
+    out
+}
+
+/// An override's words: `dondurulmuş, renk #FF0000, kalınlık 0,7 mm` (docs/adr/1110 §3).
+pub fn override_words(o: &XrefViewportOverride) -> String {
+    let mut out = Vec::new();
+    if o.frozen {
+        out.push("dondurulmuş".to_owned());
+    }
+    if let Some(p) = o.plot {
+        out.push(if p { "yazdırılır" } else { "yazdırılmaz" }.to_owned());
+    }
+    if let Some(c) = &o.color {
+        out.push(format!("renk {c}"));
+    }
+    if let Some(t) = o.line_pattern.as_ref().or(o.line_type.as_ref()) {
+        out.push(format!("çizgi tipi {t}"));
+    }
+    if let Some(w) = o.line_weight {
+        out.push(format!(
+            "kalınlık {} mm",
+            (f64::from(w) / 1000.0).to_string().replace('.', ",")
+        ));
+    }
+    if out.is_empty() {
+        out.push("ezme yok".to_owned());
+    }
+    out.join(", ")
 }
 
 /// The project's layer states naming a node under `group` (the group too), by name in the project's order.

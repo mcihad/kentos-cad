@@ -16637,7 +16637,7 @@
       "id": "cad.xrefs.list",
       "version": 1,
       "title": "Dış başvurular",
-      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir. review: true kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki current), ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın kendisi, cached kaynak yok ya da başka revizyon, son yüklenen kopya; none boşaltılmış), getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates) ve bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış ya da yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.",
+      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir. review: true kaynak ağını inceler: kullanılan revizyon (digest, değiştiyse dosyanınki current), ağdaki derinlik (depth), çizimin gösterdiği (content: source kaynağın kendisi, cached kaynak yok ya da başka revizyon, son yüklenen kopya; none boşaltılmış), getirdikleri (brings), katmanlarını adlandıran katman durumları (layerStates), pafta pencerelerinin katmanları için kendi ezmeleri (viewportOverrides: pafta, harita öğesinin kimliği ve adı, katmanın ağaçtaki yolu, dondurma, yazdırma, renk, çizgi tipi, desen, kalınlık µm; hiçbir dış başvuru işlemi, Katmanları kaynağa döndür de, onlara dokunmaz, docs/adr/1110) ve bulunamayan ya da değişen için izinli yerlerdeki (kayıtlı yolun, göreli yolun ve çizimin klasörü, arama yolları; alt klasörlere inilmez, en çok 512 dosya, dosya başına 512 MB) adaylar: içerik özeti aynı olan (match content: taşınmış ya da yeniden adlandırılmış) önce, aynı adlı başka içerik (match name) sonra. Aday kendiliğinden bağlanmaz; Yolu değiştir (repath) ile bağlanır. Kayıtlı mutlak yolu olmayan kaynağın yedekleri (göreli yol, arama yolları, sonunda çizimin klasöründe dosyanın adı) yalnız son yüklenen baytlarsa kaynaktır.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -82173,7 +82173,7 @@
       "id": "file.package",
       "version": 1,
       "title": "Paketle",
-      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında), carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok), substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır, paket.json'a da yazılır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "paketle",
         "package"
@@ -82307,6 +82307,13 @@
           },
           "projectSha256": {
             "type": "string"
+          },
+          "resources": {
+            "description": "Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,\nand how the package has each (docs/adr/1111): kind, then name.",
+            "items": {
+              "$ref": "#/$defs/PackageResource"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -82382,6 +82389,13 @@
           },
           "projectSha256": {
             "type": "string"
+          },
+          "resources": {
+            "description": "Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,\nand how the package has each (docs/adr/1111): kind, then name.",
+            "items": {
+              "$ref": "#/$defs/PackageResource"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -82408,7 +82422,8 @@
           "file_unwritable"
         ],
         "warnings": [
-          "package_left"
+          "package_left",
+          "package_resources"
         ]
       },
       "examples": [
@@ -95769,6 +95784,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı."
+    },
+    {
+      "code": "package_resources",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Çizimin ya da dış başvurularının kullandığı bazı çizgi tipi, SHX şekil dosyası, tarama deseni, yazı stili ya da baskı stili pakette tanımlı değil ya da yalnız dış başvurunun kaynak dosyasında var; yanıtın resources bölümü hangileri olduğunu ve kimin kullandığını söyler. Eksikleri projeye ekleyip yeniden paketleyin."
     },
     {
       "code": "several_shapefiles",
@@ -145638,6 +145659,115 @@
       ],
       "type": "object"
     },
+    "PackageResource": {
+      "description": "One resource the drawing and its references draw with, and how the package has it (docs/adr/1111 §1).",
+      "properties": {
+        "file": {
+          "description": "The file it names: a typeface's file or family, an SHX file.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "how": {
+          "$ref": "#/$defs/PackageResourceHow"
+        },
+        "kind": {
+          "$ref": "#/$defs/PackageResourceKind"
+        },
+        "name": {
+          "description": "Its name: the text style's, the shape file's, the line type's (`continuous`, a pattern's name), the hatch\npattern's (`solid`, `ANSI31`), the plot profile's (`profil / stil` for a named style in it).",
+          "type": "string"
+        },
+        "note": {
+          "description": "Why, for a finding or a resource carried another way.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objects": {
+          "description": "The objects drawn with it (the drawing's and its blocks' and references' pieces).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "users": {
+          "description": "Who needs it, sorted: `stil:Ad`, `katman:Yol / Ad`, `çizgi tipi:Ad`, `pafta:Ad`, `xref:Ad`, `profil:Ad`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "how"
+      ],
+      "type": "object"
+    },
+    "PackageResourceHow": {
+      "description": "How the package has a resource (docs/adr/1111 §1).",
+      "oneOf": [
+        {
+          "const": "builtIn",
+          "description": "It comes with KentOS itself (its own faces, the built-in line types, solid/line/gradient fills): nothing to carry.",
+          "type": "string"
+        },
+        {
+          "const": "embedded",
+          "description": "Inside the package's project file: the project's line types and hatch patterns, an SHX shape file kept in the\nlibrary, a plot profile of the sheet book, a hatch's own pattern lines.",
+          "type": "string"
+        },
+        {
+          "const": "carried",
+          "description": "Only in a file the package carries, an external reference's source copied under `veri/`: the source defines it,\nthis drawing has none of that name and draws without it (a finding).",
+          "type": "string"
+        },
+        {
+          "const": "substituted",
+          "description": "A typeface KentOS does not have: its texts are drawn in a substitute face (a finding, also in `left`).",
+          "type": "string"
+        },
+        {
+          "const": "missing",
+          "description": "Nothing defines it, neither the project nor a reference's source: a finding, never dropped.",
+          "type": "string"
+        }
+      ]
+    },
+    "PackageResourceKind": {
+      "description": "What kind of drawing resource a package's resource row is (docs/adr/1111 §1).",
+      "oneOf": [
+        {
+          "const": "font",
+          "description": "A text style's typeface.",
+          "type": "string"
+        },
+        {
+          "const": "shapeFile",
+          "description": "An SHX shape file a line type's pattern places shapes of.",
+          "type": "string"
+        },
+        {
+          "const": "lineType",
+          "description": "A line type: a built-in one or a project's pattern by its name.",
+          "type": "string"
+        },
+        {
+          "const": "hatchPattern",
+          "description": "A hatch's pattern.",
+          "type": "string"
+        },
+        {
+          "const": "plotStyle",
+          "description": "A plot style table (a sheet's plot profile) or a named style in it.",
+          "type": "string"
+        }
+      ]
+    },
     "PackageWay": {
       "description": "How a bound layer's source goes into a package (docs/adr/0596 §1).",
       "oneOf": [
@@ -186037,6 +186167,13 @@
           "$ref": "#/$defs/AssetVia",
           "description": "Where its source was found (docs/adr/0349 §1)."
         },
+        "viewportOverrides": {
+          "description": "`review`: the sheet viewports' own overrides of its layers (docs/adr/1110 §2), in the book's order of sheets,\ntheir items and the overrides.",
+          "items": {
+            "$ref": "#/$defs/XrefViewportOverride"
+          },
+          "type": "array"
+        },
         "views": {
           "description": "The named views whose window meets its inserts, by name (`affected`).",
           "items": {
@@ -186183,6 +186320,71 @@
           "type": "string"
         }
       ]
+    },
+    "XrefViewportOverride": {
+      "description": "A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2; AutoCAD's VP Freeze, VP Color …):\nthat map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes\nit: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.",
+      "properties": {
+        "color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frozen": {
+          "description": "Not drawn in that viewport.",
+          "type": "boolean"
+        },
+        "item": {
+          "description": "The map item's id (what `cad.sheets.edit`'s `setViewport` takes).",
+          "type": "string"
+        },
+        "layer": {
+          "description": "The layer (or group) by its path in the drawing's layer tree: `Dış başvuru: Plan / Mimari / Duvar`.",
+          "type": "string"
+        },
+        "linePattern": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineWeight": {
+          "description": "On the paper, micrometres.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "paper-um"
+        },
+        "plot": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sheet": {
+          "description": "The sheet, by its name.",
+          "type": "string"
+        },
+        "viewport": {
+          "description": "The map item, by its name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sheet",
+        "item",
+        "viewport",
+        "layer"
+      ],
+      "type": "object"
     },
     "XrefsOperation": {
       "description": "What `cad.xrefs.edit` does.",

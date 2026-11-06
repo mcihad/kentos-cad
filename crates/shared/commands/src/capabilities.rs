@@ -6492,7 +6492,7 @@ const ENTRIES: &[Entry] = &[
             "input_too_large",
             "file_unwritable",
         ]],
-        warnings: &["package_left"],
+        warnings: &["package_left", "package_resources"],
         targets: none,
     },
     Entry {

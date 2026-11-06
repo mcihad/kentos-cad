@@ -192,12 +192,15 @@ tablo nesnelerinin JSON'u adımdan önce ve sonra bir kez karşılaştırılır.
 ### 12. Kapsam dışı ve açık sınırlar
 
 - **Pafta nesnesinin kendi katman override'ı:** KentOS'ta pafta başına katman görünüşü katman durumu + görünüş
-  tarifidir; ayrı “viewport freeze” veri modeli yoktur ve bu işte kurulmadı.
+  tarifidir; ayrı “viewport freeze” veri modeli yoktur ve bu işte kurulmadı. **Sonra (6 Kasım 2026, ADR 1110):** bu
+  söz eksikti; ADR 0314'ün harita `layerOverrides`'ı pencerenin kendi ezmesidir ve dış başvuru katmanlarına da
+  uygulanır; kalıcılığı, incelemesi ve değerin kaynağı ADR 1110'dadır.
 - **Revizyon farkının görsel karşılaştırması** (eski ve yeni içeriği üst üste çizme) CAD-ADV-15'in işidir; burada
   fark sayılar ve bağlarla söylenir.
 - **Pakette stil/desen ayrıntısı:** stiller, çizgi tipleri, tarama desenleri, kitaplık ve gömülü resimler proje
   dosyasının içinde taşınır (ADR 0350 §4); dış başvurunun çizimde karşılığı olmayan yazı/ölçü stilini bırakması
-  (ADR 0348 §2'nin kuralı) yüklemede ayrı uyarı olarak söylenmiyor: sonraki iş.
+  (ADR 0348 §2'nin kuralı) yüklemede ayrı uyarı olarak söylenmiyor: sonraki iş. **Sonra (ADR 1111):** paketin
+  `resources` raporu bu stili ve kaynakta tanımlı ama çizimde olmayan çizgi tipini `carried` bulgusu olarak söyler.
 - **Raster/resim altlığı:** kırpma, soldurma ve arama ADR 0350/0351'de; bu iş resim için yeni davranış eklemedi.
 - **Sunucu/bulut proje varlığına bağlı kaynak** ve kaynağı bulut revizyonuyla eşleme ADR 0349'daki gibi sonraki işler.
 - **Web:** web dururken yazılmadı.

@@ -1442,6 +1442,112 @@ add(list_cases, "inceleme: plan aynı cevabı verir", [
 ], setup=LOADED)
 
 
+# ── a sheet viewport's own override of a reference's layers (ADR 1110 §2) ──
+
+
+def vp_frame(item, name, overrides, left=20000):
+    """A map frame whose own `layerOverrides` (ADR 0314 §1) are `overrides`."""
+    kind = {"clipToAtlasFeature": False, "grids": [], "labelBand": 0, "layers": {"type": "all"},
+            "overviewFrame": {"cap": "butt", "color": "#d0021b", "dash": [], "join": "miter", "width": 500},
+            "type": "map", "view": {"center": P(0, 0), "rotation": 0, "scale": 100, "type": "fixed"}}
+    if overrides:
+        kind["layerOverrides"] = overrides
+    return {"bindings": [], "constraints": {"h": "left", "relativeTo": "margins", "v": "top"},
+            "frame": {"height": 120000, "left": left, "top": 10000, "width": 180000}, "hidden": False, "id": item,
+            "kind": kind, "locked": False, "name": name, "opacity": 100, "padding": 0, "printable": True, "rotation": 0}
+
+
+def vp_sheet(id, name, items):
+    return {"export": {"dpi": 300, "fileName": "[% @pafta_adi %]", "format": "png"}, "guides": [], "id": id,
+            "items": items, "name": name,
+            "page": {"margins": {"bottom": 10000, "left": 20000, "right": 10000, "top": 10000}, "orientation": "landscape",
+                     "paper": "a3", "size": {"height": 297000, "width": 420000}},
+            "snapGrid": {"enabled": False, "spacing": 5000, "visible": False}, "variables": [], "variants": []}
+
+
+def vp_book(*sheets):
+    return {"op": "execute", "command": "cad.sheets.edit", "note": "pafta kitabı: kurulum kitap vermez",
+            "input": {"ops": [{"op": "addSheet", "sheet": s} for s in sheets]},
+            "result": {"status": "completed", "output": "$any", "warnings": "$any"}, "expect": {"revision": "changed"}}
+
+
+def vp_listed(sheet, item, viewport, layer, **fields):
+    """A listed override (ADR 1110 §2): the sheet's and the frame's names, the layer's path in the drawing's tree."""
+    return {"sheet": sheet, "item": item, "viewport": viewport, "layer": layer, **fields}
+
+
+def with_overrides(item, overrides):
+    out = copy.deepcopy(item)
+    if overrides:
+        out["viewportOverrides"] = list(overrides)
+    return out
+
+
+PLAN_GROUPED = reviewed(info("Plan", B0, "attach", F["plan.kcad"], "loaded", inserts=1, objects=1,
+                             group="Dış başvuru: Plan"), DIGEST["plan.kcad"])
+DUVAR = "Dış başvuru: Plan / Duvar"
+FROZEN_PLAN = vp_book(vp_sheet("a-101", "A-101 Plan", [vp_frame("plan", "Plan", [{"layer": "xr-d", "frozen": True}])]))
+add(list_cases, "inceleme: pafta penceresinin dış başvuru katmanını dondurması kendi ezmesi olarak söylenir", [
+    FROZEN_PLAN,
+    {"op": "execute", "input": {"review": True},
+     "result": listed(with_overrides(PLAN_GROUPED, [vp_listed("A-101 Plan", "plan", "Plan", DUVAR, frozen=True)]))},
+], setup=GROUPED, note="ADR 1110 §2: AutoCAD'in VP Freeze'i; çizimin katmanı görünür kalır, yalnız bu pencere çizmez.")
+add(list_cases, "inceleme: pencerenin rengi, çizgi tipi, kalınlığı ve yazdırması ayrı ayrı", [
+    vp_book(vp_sheet("a-101", "A-101 Plan", [vp_frame("plan", "Plan", [
+        {"layer": "xr-d", "color": "#FF0000", "lineType": "dashed", "lineWeight": 700, "plot": False}])])),
+    {"op": "execute", "input": {"review": True},
+     "result": listed(with_overrides(PLAN_GROUPED, [vp_listed("A-101 Plan", "plan", "Plan", DUVAR, plot=False,
+                                                              color="#FF0000", lineType="dashed", lineWeight=700)]))},
+], setup=GROUPED)
+add(list_cases, "inceleme: projenin desenli çizgi tipiyle ezme deseniyle söylenir", [
+    vp_book(vp_sheet("a-101", "A-101 Plan", [vp_frame("plan", "Plan", [{"layer": "xr-d", "linePattern": "GAZ"}])])),
+    {"op": "execute", "input": {"review": True},
+     "result": listed(with_overrides(PLAN_GROUPED, [vp_listed("A-101 Plan", "plan", "Plan", DUVAR, linePattern="GAZ")]))},
+], setup=GROUPED)
+add(list_cases, "inceleme: çizimin kendi katmanının ve olmayan katmanın ezmesi dış başvurunun değildir", [
+    vp_book(vp_sheet("a-101", "A-101 Plan", [vp_frame("plan", "Plan", [
+        {"layer": "cizim", "frozen": True}, {"layer": "duvar", "color": "#00FF00"}, {"layer": "yok-katman", "frozen": True}])])),
+    {"op": "execute", "input": {"review": True}, "result": listed(PLAN_GROUPED)},
+], setup=GROUPED, note="Mimari / Duvar çizimin kendi katmanı; aynı adlı dış başvuru katmanı grubun altındadır.")
+add(list_cases, "inceleme: grubun kendisini donduran pencere ve iki pafta kitabın sırasıyla", [
+    vp_book(vp_sheet("a-501", "A-501 Detay", [vp_frame("detay", "Detay", [{"layer": "xr-d", "lineWeight": 180}]),
+                                             vp_frame("anahtar", "Anahtar", [{"layer": "xr", "frozen": True}], left=210000)]),
+            vp_sheet("a-101", "A-101 Plan", [vp_frame("plan", "Plan", [{"layer": "xr-d", "frozen": True}])])),
+    {"op": "execute", "input": {"review": True},
+     "result": listed(with_overrides(PLAN_GROUPED, [
+         vp_listed("A-501 Detay", "detay", "Detay", DUVAR, lineWeight=180),
+         vp_listed("A-501 Detay", "anahtar", "Anahtar", "Dış başvuru: Plan", frozen=True),
+         vp_listed("A-101 Plan", "plan", "Plan", DUVAR, frozen=True)]))},
+], setup=GROUPED)
+add(list_cases, "inceleme istenmezse pencere ezmeleri söylenmez", [
+    FROZEN_PLAN,
+    {"op": "execute", "input": {},
+     "result": listed(info("Plan", B0, "attach", F["plan.kcad"], "loaded", inserts=1, objects=1, group="Dış başvuru: Plan"))},
+], setup=GROUPED)
+add(list_cases, "inceleme: plan pencere ezmelerini de aynı verir", [
+    FROZEN_PLAN,
+    {"op": "plan", "input": {"review": True},
+     "result": listed(with_overrides(PLAN_GROUPED, [vp_listed("A-101 Plan", "plan", "Plan", DUVAR, frozen=True)])),
+     "expect": {"revision": "same"}},
+], setup=GROUPED)
+add(list_cases, "katmanları kaynağa döndürmek pafta penceresinin kendi ezmesine dokunmaz", [
+    FROZEN_PLAN,
+    {"op": "execute", "command": "cad.xrefs.edit", "input": {"operation": {"kind": "resetLayers", "name": "Plan"}},
+     "result": {"status": "completed", "output": "$any", "warnings": "$any"}},
+    {"op": "execute", "input": {"review": True},
+     "result": listed(with_overrides(PLAN_GROUPED, [vp_listed("A-101 Plan", "plan", "Plan", DUVAR, frozen=True)]))},
+], setup=GROUPED, note="ADR 1060 §5'in üç düzeyi: çizim geneli (resetLayers döndürür), pafta penceresi ve katman durumu (dokunmaz).")
+UNLOADED_PLAN = reviewed(info("Plan", B0, "attach", F["plan.kcad"], "unloaded", inserts=1, objects=0,
+                              group="Dış başvuru: Plan"), DIGEST["plan.kcad"], content="none")
+add(list_cases, "boşaltılan dış başvurunun katmanları ve pencere ezmeleri kalır", [
+    FROZEN_PLAN,
+    {"op": "execute", "command": "cad.xrefs.edit", "input": {"operation": {"kind": "unload", "name": "Plan"}},
+     "result": {"status": "completed", "output": "$any", "warnings": "$any"}},
+    {"op": "execute", "input": {"review": True},
+     "result": listed(with_overrides(UNLOADED_PLAN, [vp_listed("A-101 Plan", "plan", "Plan", DUVAR, frozen=True)]))},
+], setup=GROUPED, note="Boşalt katmanları silmez (ADR 0348 §2): ezme katmanın kimliğine bağlıdır, yeniden yüklemede yerindedir.")
+
+
 def resolved(v):
     """None fields dropped, but a result's `output` (a validation's is null)."""
     if isinstance(v, list):

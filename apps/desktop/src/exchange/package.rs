@@ -215,12 +215,34 @@ impl App {
                     0 => {}
                     n => extra += &format!(", {n} veritabanı tablosunun kopyası"),
                 }
-                let embedded = match out.embedded.len() {
+                let mut embedded = match out.embedded.len() {
                     0 => String::new(),
                     n => format!(" {n} bağlı katman projeye gömüldü."),
                 };
+                // The resources' report (docs/adr/1111): how many, and the findings among them.
+                let findings = out
+                    .resources
+                    .iter()
+                    .filter(|r| {
+                        matches!(
+                            r.how,
+                            kentos_commands::PackageResourceHow::Missing
+                                | kentos_commands::PackageResourceHow::Carried
+                        )
+                    })
+                    .count();
+                if !out.resources.is_empty() {
+                    embedded += &format!(
+                        " Yazı tipi, SHX, çizgi tipi, tarama deseni ve baskı stili raporu: {} kaynak{}.",
+                        out.resources.len(),
+                        match findings {
+                            0 => String::new(),
+                            n => format!(", {n} tanesi pakette tanımlı değil"),
+                        }
+                    );
+                }
                 self.announce(
-                    if out.left.is_empty() { Level::Success } else { Level::Warn },
+                    if out.left.is_empty() && findings == 0 { Level::Success } else { Level::Warn },
                     format!(
                         "Paket yapıldı: {} ve {} dosya ({mb:.1} MB{extra}); içindekiler paket.json'da.{embedded} Klasör başka bilgisayarda açılınca dış başvurular, bağlı dosyalar ve katmanlar kaynaklarını bulur.",
                         out.project,

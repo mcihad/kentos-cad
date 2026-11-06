@@ -2,6 +2,7 @@
 import type { AddressLocator } from "./AddressLocator";
 import type { AngleUnit } from "./AngleUnit";
 import type { AnnotationHeights } from "./AnnotationHeights";
+import type { ApprovedSheetTemplate } from "./ApprovedSheetTemplate";
 import type { ArchSettings } from "./ArchSettings";
 import type { AreaUnit } from "./AreaUnit";
 import type { CadWork } from "./CadWork";
@@ -239,6 +240,11 @@ profileFiles?: Array<ProjectProfileFile>,
  * entries take precedence; choosing a standard does not apply it.
  */
 standardDocs?: Array<ProjectStandardDocument>, 
+/**
+ * The sheet template revisions the bound office standards approved, as `cad.standards.install` recorded them
+ * (docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.
+ */
+approvedSheetTemplates?: Array<ApprovedSheetTemplate>, 
 /**
  * Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
  * plotted or measured. Numbered; their stamps say which state of an object each was written for.

@@ -293,6 +293,8 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
     let mut left: Vec<PackageLeft> = Vec::new();
     let from_ref = from.as_deref();
     let search = doc.settings().xref_paths.clone();
+    // The references' sources the package copies, for the resources they define (docs/adr/1111 §1).
+    let mut sources_found: Vec<(String, PathBuf)> = Vec::new();
     // Objects, the drawing's (named by their lasting ids) and the blocks' (by the block's id).
     let uids: Vec<String> = snapshot.uids.iter().map(ToString::to_string).collect();
     if let Some(Value::Array(list)) = value.get_mut("entities") {
@@ -325,7 +327,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
                             objects: None,
                         });
                     } else {
-                        xref(x, &name, from_ref, &search, &target, &mut copies, &mut left);
+                        xref(x, &name, from_ref, &search, &target, &mut copies, &mut left, &mut sources_found);
                     }
                 }
                 continue;
@@ -538,6 +540,9 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
             path: None,
         });
     }
+    // Every typeface, shape file, line type, hatch pattern and plot style, and how the package has it (docs/adr/1111).
+    let (resources, missing) = crate::package_resources::report(doc, &sources_found);
+    warnings.extend(missing);
     let project_path = target.join(&name);
     let project_sha256 = sha256_hex(&project);
     let manifest = manifest_of(
@@ -548,6 +553,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
         &left,
         &embedded,
         &fonts.faces,
+        &resources,
     );
     bytes += manifest.len() as u64;
     Ok(Planned {
@@ -562,6 +568,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
             manifest: target.join(MANIFEST).display().to_string(),
             manifest_sha256: sha256_hex(&manifest),
             faces: fonts.faces,
+            resources,
             bytes,
         },
         warnings,
@@ -620,6 +627,7 @@ fn profile_files(from: Option<&Path>, copies: &mut Copies, left: &mut Vec<Packag
 
 /// `paket.json` (docs/adr/0350 §4): the project file, every copy and every link left out, the faces drawn; keys in a
 /// fixed order, no time, so the same drawing gives the same manifest.
+#[allow(clippy::too_many_arguments)]
 fn manifest_of(
     name: &str,
     bytes: u64,
@@ -628,6 +636,7 @@ fn manifest_of(
     left: &[PackageLeft],
     embedded: &[PackageEmbedded],
     faces: &[kentos_commands::DrawingFont],
+    resources: &[kentos_commands::PackageResource],
 ) -> Vec<u8> {
     let mut manifest = serde_json::json!({
         "format": MANIFEST_FORMAT,
@@ -636,6 +645,10 @@ fn manifest_of(
         "left": left,
         "faces": faces,
     });
+    // The resources' report (docs/adr/1111 §1), only when there are any: a package of none keeps its manifest.
+    if !resources.is_empty() {
+        manifest["resources"] = serde_json::json!(resources);
+    }
     // The links embedded (docs/adr/0596 §1), only when there are any: a package of none keeps its manifest.
     if !embedded.is_empty() {
         manifest["embedded"] = serde_json::json!(embedded);
@@ -647,6 +660,7 @@ fn manifest_of(
 
 /// An external reference's source (its block's `xref`), copied byte for byte (its digest holds) and its link made the
 /// copy: `path` the copy in the package, `relative` `veri/…`; or left out, missing.
+#[allow(clippy::too_many_arguments)]
 fn xref(
     x: &mut Value,
     name: &str,
@@ -655,6 +669,7 @@ fn xref(
     target: &Path,
     copies: &mut Copies,
     left: &mut Vec<PackageLeft>,
+    found: &mut Vec<(String, PathBuf)>,
 ) {
     let path = x
         .get("path")
@@ -667,6 +682,7 @@ fn xref(
     // are the ones last loaded, never another drawing that happens to share the name.
     match kentos_native_application::xrefs::found_source_in(&path, relative.as_deref(), &digest, from, search).at {
         Some(at) => {
+            found.push((name.to_owned(), at.clone()));
             let rel = copies.take(&at, PackagedKind::Xref);
             let abs = rel
                 .split('/')

@@ -207,6 +207,80 @@ pub struct PackageEmbedded {
     pub objects: u32,
 }
 
+/// What kind of drawing resource a package's resource row is (docs/adr/1111 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PackageResourceKind {
+    /// A text style's typeface.
+    Font,
+    /// An SHX shape file a line type's pattern places shapes of.
+    ShapeFile,
+    /// A line type: a built-in one or a project's pattern by its name.
+    LineType,
+    /// A hatch's pattern.
+    HatchPattern,
+    /// A plot style table (a sheet's plot profile) or a named style in it.
+    PlotStyle,
+}
+
+/// How the package has a resource (docs/adr/1111 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PackageResourceHow {
+    /// It comes with KentOS itself (its own faces, the built-in line types, solid/line/gradient fills): nothing to carry.
+    BuiltIn,
+    /// Inside the package's project file: the project's line types and hatch patterns, an SHX shape file kept in the
+    /// library, a plot profile of the sheet book, a hatch's own pattern lines.
+    Embedded,
+    /// Only in a file the package carries, an external reference's source copied under `veri/`: the source defines it,
+    /// this drawing has none of that name and draws without it (a finding).
+    Carried,
+    /// A typeface KentOS does not have: its texts are drawn in a substitute face (a finding, also in `left`).
+    Substituted,
+    /// Nothing defines it, neither the project nor a reference's source: a finding, never dropped.
+    Missing,
+}
+
+/// One resource the drawing and its references draw with, and how the package has it (docs/adr/1111 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PackageResource {
+    pub kind: PackageResourceKind,
+    /// Its name: the text style's, the shape file's, the line type's (`continuous`, a pattern's name), the hatch
+    /// pattern's (`solid`, `ANSI31`), the plot profile's (`profil / stil` for a named style in it).
+    pub name: String,
+    pub how: PackageResourceHow,
+    /// The file it names: a typeface's file or family, an SHX file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<String>,
+    /// Who needs it, sorted: `stil:Ad`, `katman:Yol / Ad`, `çizgi tipi:Ad`, `pafta:Ad`, `xref:Ad`, `profil:Ad`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub users: Vec<String>,
+    /// The objects drawn with it (the drawing's and its blocks' and references' pieces).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub objects: u32,
+    /// Why, for a finding or a resource carried another way.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
 /// What `file.package` made, or with `plan` would make.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -236,6 +310,11 @@ pub struct ProjectPackaged {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DrawingFont>>", optional))]
     pub faces: Vec<crate::DrawingFont>,
+    /// Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,
+    /// and how the package has each (docs/adr/1111): kind, then name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PackageResource>>", optional))]
+    pub resources: Vec<PackageResource>,
     /// Every byte written: the project file, the manifest and the copies.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,

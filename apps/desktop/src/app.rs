@@ -435,6 +435,8 @@ pub enum Dialog {
     TableEditor,
     /// Veri çıkarımı (tables/extract.rs, docs/adr/1030 §8); the window is `App::extract`.
     Extract,
+    /// Detay paftaları (docs/adr/1112).
+    SheetDetails,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -819,6 +821,7 @@ pub enum Message {
     TableExport(crate::tables::export::Event),
     /// Veri çıkarımı (tables/extract.rs, docs/adr/1030 §8).
     Extract(crate::tables::extract::Event),
+    SheetDetails(crate::sheet_details_window::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
@@ -1457,6 +1460,8 @@ pub struct App {
     pub(crate) table_editor: Option<crate::tables::editor::Editor>,
     /// Veri çıkarımı's recipe, kept while the program runs (docs/adr/1030 §8).
     pub(crate) extract: Option<crate::tables::extract::Extract>,
+    /// Detay paftaları' window (docs/adr/1112).
+    pub(crate) sheet_details: Option<crate::sheet_details_window::DetailSet>,
     /// Tabloyu güncelle waiting for its files (tables/update.rs).
     pub(crate) table_update: Option<crate::tables::update::Run>,
     /// Genel bakış and Büyüteç's session state (navigation_cards.rs, docs/adr/0181).
@@ -1882,6 +1887,7 @@ impl App {
             table_insert: Default::default(),
             table_editor: None,
             extract: None,
+            sheet_details: None,
             table_update: None,
             navigation: Default::default(),
             lens_spots: Default::default(),
@@ -2642,6 +2648,7 @@ impl App {
             Message::TableUpdate(event) => return self.table_update_event(event),
             Message::TableExport(event) => return self.table_export_event(event),
             Message::Extract(event) => return self.extract_event(event),
+            Message::SheetDetails(event) => return self.sheet_details_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::ImageFile(file) => self.image_file_given(file),
@@ -3325,6 +3332,7 @@ impl App {
             "table.export" => return self.export_selected_table(),
             // Veri çıkarımı (docs/adr/1030 §8).
             "table.extract" => self.open_extract(),
+            "sheet.details" => self.open_sheet_details(),
             // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
             "table.link" => return self.link_table(),
             "table.blockSchedule" => self.place_block_schedule(),
