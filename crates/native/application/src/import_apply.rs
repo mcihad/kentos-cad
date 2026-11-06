@@ -1616,6 +1616,7 @@ mod tests {
             height: Some(3.0),
             width_factor: None,
             font_file: Some("arialbd.ttf".into()),
+            big_font_file: None,
         }
     }
 

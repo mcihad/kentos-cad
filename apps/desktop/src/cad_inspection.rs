@@ -658,6 +658,7 @@ fn finding_title(code: &str) -> &'static str {
         "text_layout_unsupported" => "Yazı yerleşimi üretilemedi",
         "text_font_fallback" => "Paketli tamamlayıcı font kullanılıyor",
         "text_font_substituted" => "Özgün font yerine başka font",
+        "text_shx_unsupported" => "SHX fontuyla çizilemeyen yazı",
         _ => "Sınırı inceleyin",
     }
 }

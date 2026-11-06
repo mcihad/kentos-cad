@@ -15,6 +15,7 @@
 //! desktop.
 
 mod content;
+pub mod dots;
 mod fonts;
 mod geo;
 mod images;

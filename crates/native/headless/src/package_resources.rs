@@ -134,18 +134,27 @@ pub(crate) fn report(
     // Typefaces: each text style's, as the font report resolves it (docs/adr/0324 §5).
     let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());
     for f in &fonts.styles {
-        let substituted = matches!(f.how, FontMatch::Shx | FontMatch::Missing);
+        // A style whose SHX font the project embeds is drawn from it (ADR 1125): embedded, not substituted.
+        let substituted = matches!(f.how, FontMatch::Shx | FontMatch::Missing) && !f.embedded;
         // `style` is the style's id, `name` its name; the file it named, else KentOS's face it is drawn in.
         let r = rows.row(
             Kind::Font,
             &f.name,
-            if substituted { How::Substituted } else { How::BuiltIn },
+            if f.embedded {
+                How::Embedded
+            } else if substituted {
+                How::Substituted
+            } else {
+                How::BuiltIn
+            },
         );
         r.file = Some(f.file.clone().unwrap_or_else(|| f.face.id().to_owned()));
         r.users.insert(format!("stil:{}", f.name));
         r.objects += f.texts;
         if substituted {
             r.note = Some("KentOS'ta bu yazı tipi yok; yazıları yerine başka yüzle çizilir".into());
+        } else if f.embedded {
+            r.note = Some("projeye gömülü SHX yazı fontuyla çizilir".into());
         }
     }
     // A reference's own text style the drawing has none of: its texts came in drawn in the drawing's default.
@@ -232,6 +241,26 @@ pub(crate) fn report(
             if !have {
                 r.note = Some("projenin kitaplığında yok; çizgi tipinin şekilleri çizilemez".into());
             }
+        }
+    }
+    // The SHX fonts and Big Fonts the text styles embed (ADR 1125 §5): in the project file, as a line type's shapes.
+    for style in &settings.text_styles {
+        let font = style.font_file.as_deref().filter(|_| kentos_native_application::shx_text::is_shx(style));
+        let big = style.big_font_file.as_deref().filter(|f| f.to_ascii_lowercase().ends_with(".shx"));
+        for named in [font, big].into_iter().flatten() {
+            let file = shape_resource::source_name(named);
+            let id = shape_resource::id(file);
+            let have = doc
+                .styles()
+                .items
+                .iter()
+                .any(|i| shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str()));
+            if !have {
+                continue;
+            }
+            let r = rows.row(Kind::ShapeFile, &file.to_lowercase(), How::Embedded);
+            r.file = Some(file.to_owned());
+            r.users.insert(format!("stil:{}", style.name));
         }
     }
     // Hatch patterns: the project's own, and each hatch's.

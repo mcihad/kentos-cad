@@ -203,6 +203,7 @@ pub mod roads_edit;
 pub mod survey_adjust;
 pub mod survey_points;
 pub mod shape_edits;
+pub mod shx_text;
 mod shape_split;
 pub mod text_curves;
 mod annotation_labels;

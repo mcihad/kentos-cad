@@ -60,6 +60,7 @@ fn label(layer: &str, font: DrawingFont) -> MapLabel {
         stroke: None,
         width_factor: 1.,
         lean: 0.,
+        shx: None,
     }
 }
 
@@ -79,6 +80,20 @@ fn face(l: &mut MapLabel, f: &TextFace, legacy_italic: bool) {
     {
         l.lean += 0.25;
     }
+}
+
+/// An object's line weight on the paper (mm): its own, else its layer's (0 the thinnest line).
+fn weight_of(entity: &Entity, layer: f64) -> f64 {
+    entity.base().line_weight.unwrap_or(layer).max(0.)
+}
+
+/// `l` as its SHX strokes: its words are these lines (ADR 1125); its mask, when it has one, the text's box.
+fn shx(l: &mut MapLabel, p: &kentos_native_application::shx_text::Placed, weight: f64, masked: bool) {
+    l.shx = Some((
+        p.paths.iter().map(|line| line.iter().map(|q| [q.x, q.y]).collect()).collect(),
+        weight,
+    ));
+    l.mask = masked.then(|| p.outline.iter().map(|q| [q.x, q.y]).collect());
 }
 
 fn ring(at: Vec2, rotation: f64, width: f64, height: f64, lean: f64) -> Vec<[f64; 2]> {
@@ -223,6 +238,9 @@ pub fn labels_in_view(
     );
     let format = Format::of(doc.settings());
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
+    let shx_of = |t: &kentos_contracts::TextEntity| {
+        kentos_native_application::shx_text::place_cached(doc.settings(), doc.styles(), t)
+    };
     let mut out = Vec::new();
     let mut placed: Option<(Slot, kentos_contracts::LabelStyle)> = None;
     let mut filled = std::collections::HashSet::new();
@@ -334,6 +352,11 @@ pub fn labels_in_view(
                 l.width_factor = *width_factor;
                 l.text = t.text.clone();
                 face(&mut l, &t.face, true);
+                // In its style's embedded SHX font (ADR 1125): the font's strokes, its mask its own box.
+                if let Some(Ok(p)) = shx_of(t).as_deref() {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), t.mask);
+                    ground_mask = 0.;
+                }
             }
             (
                 LabelSpot::Text {
@@ -451,6 +474,18 @@ pub fn labels_in_view(
                             .map(|f| kentos_native_application::geometry::contract_face(f.clone()))
                             .unwrap_or_default(),
                     ),
+                    // An SHX text whole at its first line's place (ADR 1125).
+                    (None, Entity::Text(t)) if shx_of(t).is_some_and(|p| p.is_ok()) => {
+                        if *start == 0
+                            && let Some(Ok(p)) = shx_of(t).as_deref()
+                        {
+                            l.text = t.text.clone();
+                            l.size = kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(*height);
+                            shx(&mut l, p, weight_of(entity, layer.style.line_weight), false);
+                            out.push(l);
+                        }
+                        continue;
+                    }
                     (None, Entity::Text(t)) => (
                         t.text.clone(),
                         kentos_native_application::geometry::core_runs(&t.paragraph.runs)
@@ -477,7 +512,15 @@ pub fn labels_in_view(
                 },
                 _,
             ) => {
-                l.fill = Some(ring(*at, *rotation, *width, *height, *lean));
+                // An SHX text's mask is its own box (ADR 1125).
+                let own = match entity {
+                    Entity::Text(t) => shx_of(t),
+                    _ => None,
+                };
+                l.fill = Some(match own.as_deref() {
+                    Some(Ok(p)) => p.outline.iter().map(|q| [q.x, q.y]).collect(),
+                    _ => ring(*at, *rotation, *width, *height, *lean),
+                });
                 l.color = "#ffffff".into();
                 out.push(l);
                 continue;

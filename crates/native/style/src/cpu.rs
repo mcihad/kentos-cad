@@ -244,6 +244,12 @@ fn smoothstep(e0: f64, e1: f64, x: f64) -> f64 {
 
 /// `dashCover`: `s` along the line in picture pixels.
 fn dash_cover(d: &[f64], s: f64, k: f64, total_raw: f64, on_share: f64, offset_raw: f64) -> f64 {
+    dash_cover_of(d, s, k, (total_raw, on_share, offset_raw), true)
+}
+
+/// `dashCover`, or a stroke's `strokeDash` without its dots (`with_dots` false): those are `dot_cover`'s, round
+/// (ADR 1124), so the segment that does not own a dot adds no pixel of it.
+fn dash_cover_of(d: &[f64], s: f64, k: f64, (total_raw, on_share, offset_raw): (f64, f64, f64), with_dots: bool) -> f64 {
     let total = total_raw * k;
     if total <= 0.0 {
         return 1.0;
@@ -263,7 +269,7 @@ fn dash_cover(d: &[f64], s: f64, k: f64, total_raw: f64, on_share: f64, offset_r
     let mut found = false;
     for (i, raw) in d.iter().enumerate() {
         let l = raw * k;
-        if i % 2 == 0 && l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
+        if i % 2 == 0 && l < 1.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) && (with_dots || *raw != 0.0) {
             let e = (t - (acc + 0.5 * l)).abs();
             a = a.max(clamp01(1.0 - e.min(total - e)));
         }
@@ -274,6 +280,51 @@ fn dash_cover(d: &[f64], s: f64, k: f64, total_raw: f64, on_share: f64, offset_r
             }
         }
         acc += l;
+    }
+    a
+}
+
+/// `dotCover` (ADR 1124): a zero-length dash before a gap is a round dot of the line's weight, `half_w` its radius,
+/// centred on its place along the line. The segment its centre lies on draws it (`x` along that segment, `y` across,
+/// picture pixels; a path's last segment its end too), so a dot at a corner is drawn once and whole. A pattern
+/// shorter than four pixels keeps `dash_cover`'s mean.
+/// How far (picture pixels) a dot's centre may lie past a segment's start and still be that segment's, so a centre
+/// the rounding puts on a joint is drawn by one segment only (`dotCover`'s `0.015625`).
+const JOINT: f64 = 1.0 / 64.0;
+
+#[allow(clippy::too_many_arguments)]
+fn dot_cover(
+    d: &[f64],
+    s: f64,
+    (x, y): (f64, f64),
+    (len, last): (f64, bool),
+    k: f64,
+    total_raw: f64,
+    offset_raw: f64,
+    disc: impl Fn(f64) -> f64,
+) -> f64 {
+    let total = total_raw * k;
+    if total < 4.0 {
+        return 0.0;
+    }
+    let t = fmod(s + offset_raw * k, total);
+    let mut acc = 0.0;
+    let mut a: f64 = 0.0;
+    for (i, raw) in d.iter().enumerate() {
+        if i % 2 == 0 && *raw == 0.0 && d.get(i + 1).is_some_and(|g| *g > 0.0) {
+            let mut e = t - acc;
+            if e > 0.5 * total {
+                e -= total;
+            } else if e < -0.5 * total {
+                e += total;
+            }
+            let centre = x - e;
+            // A sixty-fourth of a pixel decides a centre the rounding puts on a joint: the next segment draws it.
+            if centre >= -JOINT && (centre < len - JOINT || (last && centre <= len + JOINT)) {
+                a = a.max(disc(e.hypot(y)));
+            }
+        }
+        acc += raw * k;
     }
     a
 }
@@ -419,7 +470,18 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
             } else {
                 cover(half_w - y)
             };
-            cov *= dash_cover(dashes, s0 + x, k, st.a[1], st.a[2], st.a[3]);
+            cov *= dash_cover_of(dashes, s0 + x, k, (st.a[1], st.a[2], st.a[3]), false);
+            // Its dots round, the line's weight across (ADR 1124), over the pixel `dash_cover` gives them.
+            cov = cov.max(dot_cover(
+                dashes,
+                s0 + x,
+                (x, y),
+                (len, ends & 2 != 0),
+                k,
+                st.a[1],
+                st.a[3],
+                |r| cover(half_w - r),
+            ));
             if cov >= 0.004 {
                 lit.push((px, py, cov));
             }
@@ -1450,6 +1512,57 @@ mod tests {
         assert!(near > far && far > 0, "a fading edge: {near} {far}");
         // A butt cap: nothing before the line's start.
         assert_eq!(px(&hard, 3, 20)[3], 0);
+    }
+
+    /// ADR 1124: a zero-length dash is a round dot of the line's weight, not a one-pixel bar across it. A 6 m wide
+    /// line from (2, 20) to (38, 20) with dots every 12 m (phase 6: the first dot at x = 8) and a dot on a corner.
+    #[test]
+    fn a_dot_is_round_and_the_line_weight_across() {
+        let dotted = |data: Vec<f32>| StyledLayer {
+            data,
+            batches: vec![batch(
+                BatchKind::Stroke {
+                    color: [1.0, 0.0, 0.0, 1.0],
+                    width: 6.0,
+                    unit: Unit::World,
+                    dash: Some(vec![0.0, 12.0]),
+                    dash_offset: 6.0,
+                    cap: Cap::Butt,
+                    blur: 0.0,
+                },
+                0..6,
+            )],
+            ..StyledLayer::default()
+        };
+        let img = shot(&dotted(vec![2.0, 20.0, 38.0, 20.0, 0.0, 3.0]));
+        let lit = |x: usize, y: usize| px(&img, x, y)[3] > 128;
+        for c in [8, 20, 32] {
+            // Its centre, 2 m along and across it: inside the 3 m radius.
+            assert!(lit(c, 20) && lit(c - 2, 20) && lit(c + 2, 20) && lit(c, 18) && lit(c, 22), "{c}");
+            // A pixel 2.5 m along and 2.5 m across (3.5 m out): in a square of the weight, outside the round dot.
+            assert!(!lit(c + 2, 22) && !lit(c - 3, 17), "{c}");
+        }
+        // Between dots nothing.
+        assert!(!lit(14, 20) && !lit(26, 20));
+        // A dot on the corner of a two-segment path is drawn once: its centre is not darker than a lone dot's.
+        let corner = shot(&StyledLayer {
+            data: vec![2.0, 20.0, 20.0, 20.0, 0.0, 1.0, 20.0, 20.0, 20.0, 38.0, 18.0, 2.0],
+            batches: vec![batch(
+                BatchKind::Stroke {
+                    color: [1.0, 0.0, 0.0, 0.5],
+                    width: 6.0,
+                    unit: Unit::World,
+                    dash: Some(vec![0.0, 12.0]),
+                    dash_offset: 6.0,
+                    cap: Cap::Butt,
+                    blur: 0.0,
+                },
+                0..12,
+            )],
+            ..StyledLayer::default()
+        });
+        let at = px(&corner, 20, 20)[3];
+        assert!((100..=140).contains(&at), "a half-transparent dot once: {at}");
     }
 
     /// A shape marker: its distance field filled at the point, turned and anchored.

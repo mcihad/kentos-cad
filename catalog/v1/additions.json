@@ -1090,7 +1090,7 @@
       "title": "Yazı tipleri",
       "short": "Yazı tipleri",
       "icon": "textFonts",
-      "description": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini, KentOS'un hangi yazı tipiyle çizdiğini ve nasıl (kendisi, eşdeğeri, SHX ya da yok) gösterir; paftanın PDF'inin gömdüğü yazı tipleri (cad.fonts.report). Yerine başka yazı tipiyle çizilen stil uyarıyla söylenir.",
+      "description": "Çizimin yazı stillerinin adlandırdığı yazı tiplerini, KentOS'un hangi yazı tipiyle çizdiğini ve nasıl (kendisi, eşdeğeri, SHX ya da yok) gösterir; paftanın PDF'inin gömdüğü yazı tipleri (cad.fonts.report). Yerine başka yazı tipiyle çizilen stil uyarıyla söylenir; SHX fontu (ve Big Font'u) projeye gömülü stil o fontun çizgileriyle çizilir ve embedded olarak gösterilir (ADR 1125).",
       "aliases": [
         "FONTREPORT",
         "YAZITIPLERI"

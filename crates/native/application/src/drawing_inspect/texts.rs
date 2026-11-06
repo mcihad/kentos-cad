@@ -33,7 +33,29 @@ fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) ->
         finding(uid, &sources, code, severity, vec![text.p], message, repair)
     };
 
-    if let Some(style) = text
+    // A style's embedded SHX font draws its texts (ADR 1125): no substitute; one it cannot draw is an error.
+    let shx = crate::shx_text::style_of(doc.settings(), text)
+        .map(|s| (s, crate::shx_text::Fonts::of(s, doc.styles())));
+    // A block's text is drawn in its style's face for now, embedded SHX font or not: said, never silently.
+    if !owns_uid && let Some((style, _)) = &shx {
+        out.push(emit("text_font_substituted", InspectionSeverity::Warning,
+            format!("Özgün font: {} · Çizilen font: {}. Blok içindeki yazı SHX fontuyla çizilmiyor.",
+                style.font_file.as_deref().unwrap_or_default(), style.font.label()),
+            "Yazıyı bloktan çıkarın ya da yazı stilini değiştirin; blok yazısının SHX ile çizimi ayrı iştir (ADR 1125 §7)."));
+    } else if let Some((style, Ok(fonts))) = &shx
+        && let Err(why) = crate::shx_text::lay_out(fonts, text)
+    {
+        out.push(emit("text_shx_unsupported", InspectionSeverity::Error,
+            format!("“{}” yazı stilinin gömülü SHX fontuyla bu yazı çizilemiyor: {why} Ekranda yerine {} ile çizilir; çıktı teslim edilmez.",
+                style.name, style.font.label()),
+            "Eksik karakteri ya da biçimi düzeltin, karakteri içeren SHX kaynağını ekleyin veya yazı stilini değiştirin; yazı sessizce başka fonta çevrilmez."));
+    } else if let Some((style, Err(why))) = &shx {
+        out.push(emit("text_font_substituted", InspectionSeverity::Warning,
+            format!("Özgün font: {} · Çizilen font: {}. SHX fontu çizilemiyor: {why}",
+                style.font_file.as_deref().unwrap_or_default(), style.font.label()),
+            "SHX kaynağını Çizgi tipleri › SHX ekle… ya da cad.library.edit ile projeye ekleyin; yazılar o zaman özgün fontla çizilir."));
+    } else if shx.is_none()
+        && let Some(style) = text
         .face
         .text_style
         .as_ref()

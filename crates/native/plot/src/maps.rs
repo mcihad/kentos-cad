@@ -66,6 +66,9 @@ pub struct MapLabel {
     /// A text's width factor and slant's tangent (docs/adr/0324 §6): 1 and 0 for any other label.
     pub width_factor: f64,
     pub lean: f64,
+    /// A text in its style's embedded SHX font (ADR 1125): the font's strokes on the ground, drawn in `color`, and
+    /// their weight on the paper (mm, 0 the thinnest line): its words are these lines, not `text` in a face.
+    pub shx: Option<(Vec<Vec<[f64; 2]>>, f64)>,
 }
 
 /// A label as the PDF writes it (the web's pdfExport.ts `coreText`).
@@ -764,6 +767,25 @@ pub fn collect_vector_clipped(
                             fill: None,
                         })
                     }))
+                    // An SHX text's strokes (ADR 1125), round-ended as Autodesk advises for SHX text.
+                    .chain(mine.iter().flat_map(|t| {
+                        t.shx.iter().flat_map(move |(lines, weight)| {
+                            lines.iter().map(move |line| MapPath {
+                                points: line.clone(),
+                                closed: false,
+                                holes: Vec::new(),
+                                stroke: Some(kentos_sheet::pdf::MapStroke {
+                                    color: t.color.clone(),
+                                    width: *weight,
+                                    dash: Vec::new(),
+                                    dash_offset: None,
+                                    cap: kentos_sheet::LineCap::Round,
+                                    join: kentos_sheet::LineJoin::Round,
+                                }),
+                                fill: None,
+                            })
+                        })
+                    }))
                     .chain(mine.iter().filter_map(|t| {
                         t.underline.as_deref().map(|bar| MapPath {
                             points: bar.to_vec(),
@@ -777,7 +799,7 @@ pub fn collect_vector_clipped(
                 // A multi-line text's mask has no words (docs/adr/0182 §3).
                 texts: mine
                     .iter()
-                    .filter(|t| !t.text.is_empty())
+                    .filter(|t| !t.text.is_empty() && t.shx.is_none())
                     .map(|t| text_of(t, font))
                     .collect(),
             })

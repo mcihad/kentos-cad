@@ -124191,7 +124191,7 @@
         },
         {
           "const": "shx",
-          "description": "An AutoCAD SHX line font, not read: drawn in the style's face.",
+          "description": "An AutoCAD SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).",
           "type": "string"
         },
         {
@@ -174708,6 +174708,10 @@
     "StyleFont": {
       "description": "A text style's typeface.",
       "properties": {
+        "embedded": {
+          "description": "Its SHX font, and its Big Font when it names one, are embedded in the project and read (ADR 1125): its\ntexts are drawn in the font's own strokes, not in `face`, and it is no `font_substituted`. Absent: false.",
+          "type": "boolean"
+        },
         "face": {
           "$ref": "#/$defs/DrawingFont",
           "description": "The face it is drawn in."

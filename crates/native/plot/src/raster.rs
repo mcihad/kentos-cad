@@ -333,6 +333,22 @@ fn draw_labels(
                 None,
             );
         }
+        // A text in its embedded SHX font (ADR 1125): the font's strokes at the object's weight, as in the PDF.
+        if let Some((lines, weight)) = &l.shx {
+            let w = style.and_then(|s| s.line_weight).map_or(*weight, |w| f64::from(w) / 1000.);
+            let pen = Stroke {
+                width: if w == 0. { 1. } else { (w * px_mm) as f32 },
+                line_cap: LineCap::Round,
+                line_join: LineJoin::Round,
+                ..Default::default()
+            };
+            for line in lines {
+                if let Some(p) = path(line, false) {
+                    pixmap.stroke_path(&p, &ink(&l.color), &pen, Transform::identity(), None);
+                }
+            }
+            continue;
+        }
         if l.unicode.is_some() {
             draw_unicode(pixmap,view,origin,l,scale)?;
             continue;

@@ -887,6 +887,7 @@ impl Collect<'_> {
         Some((
             ground,
             MapLabel {
+            shx: None,
                 unicode:None,
                 layer,
                 text: String::new(),
@@ -952,6 +953,7 @@ impl Ink for Collect<'_> {
             .collect()
         });
         self.labels.push(MapLabel {
+            shx: None,
             unicode:None,
             layer,
             text: piece.text.to_owned(),
@@ -1007,6 +1009,7 @@ impl Ink for Collect<'_> {
     fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {
         if let Some(label) = self.shape(ring, color, of) {
             self.labels.push(MapLabel {
+            shx: None,
                 fill: Some(label.0),
                 ..label.1
             });
@@ -1016,6 +1019,7 @@ impl Ink for Collect<'_> {
     fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, of: Option<Slot>) {
         if let Some(label) = self.shape(pts, color, of) {
             self.labels.push(MapLabel {
+            shx: None,
                 stroke: Some((label.0, closed)),
                 ..label.1
             });
@@ -1040,6 +1044,7 @@ impl Ink for Collect<'_> {
             .screen_to_world(f64::from(quad[0].x), f64::from(quad[0].y));
         // A mask without words: the PDF fills it in the paper's colour, under the layer's texts.
         self.labels.push(MapLabel {
+            shx: None,
             unicode:None,
             layer,
             text: String::new(),
@@ -1203,6 +1208,40 @@ impl Labels<'_> {
             .and_then(|colors| colors.get(&layer.id))
             .map(String::as_str)
             .or(Some(layer.style.color.as_str()))
+    }
+
+    /// A text in its style's embedded SHX font (ADR 1125): its mask, then the font's own strokes, the PDF's and the
+    /// CPU picture's lines. False when it is no such text or the font cannot draw it: it is drawn as before, in its
+    /// style's face, and the inspection's `text_shx_unsupported` or `text_font_substituted` says so.
+    fn shx_text(&self, frame: &mut impl Ink, slot: Slot, t: &kentos_commands::TextEntity, color: Color) -> bool {
+        let Some(placed) =
+            kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
+        else {
+            return false;
+        };
+        let Ok(placed) = placed.as_ref() else {
+            return false;
+        };
+        if let Some(fence) = &self.fence
+            && !fence.holds(self.screen(Vec2::new(t.p.x, t.p.y)))
+        {
+            return true;
+        }
+        // A word of the level drawn faint under the active one (docs/adr/0715 §2), as `draw` fades it.
+        let color = if self.faded.contains(&slot.0) {
+            Color { a: color.a * (1.0 - kentos_commands::PHASE_FADED as f32), ..color }
+        } else {
+            color
+        };
+        if t.mask {
+            let ring: Vec<Point> = placed.outline.iter().map(|p| self.screen(*p)).collect();
+            frame.fill_ring(&ring, Color { a: 1.0, ..self.colors.halo }, Some(slot));
+        }
+        for path in &placed.paths {
+            let pts: Vec<Point> = path.iter().map(|p| self.screen(*p)).collect();
+            frame.stroke_line(&pts, false, color, Some(slot));
+        }
+        true
     }
 
     fn screen(&self, p: Vec2) -> Point {
@@ -1657,6 +1696,10 @@ impl Labels<'_> {
                         },
                         Entity::Text(t),
                     ) => {
+                        let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                        if self.shx_text(frame, slot, t, ink) {
+                            continue;
+                        }
                         // Its face (docs/adr/0183 §2), else the project's typeface, italic.
                         let (font, lean) = face_font(&t.face, self.font, true, None);
                         self.draw(
@@ -1891,8 +1934,15 @@ impl Labels<'_> {
                             lean,
                             ..
                         },
-                        _,
+                        entity,
                     ) => {
+                        // An SHX text's mask is its own box, drawn with its strokes (ADR 1125).
+                        if let Entity::Text(t) = entity
+                            && kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
+                                .is_some_and(|p| p.is_ok())
+                        {
+                            continue;
+                        }
                         let r = rotation.to_radians();
                         let (u, v) = (Vec2::new(r.cos(), r.sin()), Vec2::new(-r.sin(), r.cos()));
                         let corner = |x: f64, y: f64| {
@@ -1939,6 +1989,14 @@ impl Labels<'_> {
                                     face.as_ref().map(contract_face).unwrap_or_default(),
                                 ),
                                 (None, Entity::Text(t)) => {
+                                    // An SHX text is drawn whole at its first line's place (ADR 1125).
+                                    let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                                    if (*start > 0 || self.shx_text(frame, slot, t, ink))
+                                        && kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
+                                            .is_some_and(|p| p.is_ok())
+                                    {
+                                        continue;
+                                    }
                                     own = core_runs(&t.paragraph.runs).unwrap_or_default();
                                     (&t.text, &own, t.face.clone())
                                 }

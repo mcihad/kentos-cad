@@ -2010,6 +2010,10 @@
   Sütunlar, düzenleyicide Kesir ve Liste ▾ (`list_lines`); MTEXT `\p`, `^I` ve `\S` iki yönde, sütunlar KENTOS verisinde; tek yazı tipi
   çözüm kuralı (`text::fonts::resolve`: kendisi, eşdeğeri, SHX, yok), salt okunur `cad.fonts.report` ve Yazı tipleri penceresi, stilin
   yerine çizilen yazı tipi `font_substituted`; paftanın PDF'i yazının genişlik çarpanını ve yatıklığını yazar (`MapText`) (ADR 0324);
+  stili projeye gömülü `.shx` (ve Big Font) adlandıran yazı nesnesi fontun çizgileriyle çizilir (ekran, PDF, CPU;
+  `shx_text`), çizilemeyen `text_shx_unsupported` hatası ve PDF reddi, Unicode → Big Font çevrilmez (kod sayfası yok),
+  `cad.fonts.report`'ta `embedded`, DXF/DWG aktarımı gömülü yazı fontlarını yanına yazar; çizgi tipinin noktası çizgi
+  kalınlığında yuvarlak basılır (ADR 1124, 1125);
   alanlar ve yazının komutları: yazının `fields`'ı (harflerden bir aralık; kaynağı nesnenin alanı, çevresi, uzunluğu, katmanı, etiketi,
   özniteliği, yazısı ya da yeri, ya da projenin adı, ölçeği, birimi, sistemi, değişkeni; biçimi; `.kcad` şema 66, `FORMATS_VERSION` 75),
   belge kayıttan önce yeniler (`kentos_domain::text_fields`: kaynağı değişen, elle düzenlenen, döngü ve kopuk `####`), `cad.fields.edit`

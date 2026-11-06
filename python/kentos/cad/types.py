@@ -2298,7 +2298,7 @@ class FontMatch(_StrEnum):
 
     - ``own``: One of KentOS's own faces (a style naming no file is its own face).
     - ``equivalent``: A metric twin: Arial, Helvetica, Liberation Sans as Arimo, Courier as Courier Prime.
-    - ``shx``: An AutoCAD SHX line font, not read: drawn in the style's face.
+    - ``shx``: An AutoCAD SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
     - ``missing``: A face KentOS does not have: drawn in the style's face.
     """
     OWN = "own"
@@ -83678,6 +83678,8 @@ class StyleFont(_Model):
     Attributes:
         face: The face it is drawn in.
         texts: How many texts of the drawing take the style. Unit: count.
+        embedded: Its SHX font, and its Big Font when it names one, are embedded in the project and read (ADR 1125): its
+            texts are drawn in the font's own strokes, not in `face`, and it is no `font_substituted`. Absent: false.
         file: The file it named (a DXF's STYLE), when it named one.
     """
     style: str
@@ -83685,6 +83687,7 @@ class StyleFont(_Model):
     face: DrawingFont | DrawingFontName
     how: FontMatch | FontMatchName
     texts: int
+    embedded: bool | Unset = UNSET
     file: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -83694,6 +83697,8 @@ class StyleFont(_Model):
         out["face"] = _enum_out(self.face)
         out["how"] = _enum_out(self.how)
         out["texts"] = self.texts
+        if self.embedded is not UNSET:
+            out["embedded"] = self.embedded
         if self.file is not UNSET:
             out["file"] = self.file
         return out
@@ -83706,6 +83711,7 @@ class StyleFont(_Model):
             face=_enum_in(DrawingFont, data["face"]),
             how=_enum_in(FontMatch, data["how"]),
             texts=data["texts"],
+            embedded=data.get("embedded", UNSET),
             file=data.get("file", UNSET),
         )
 

@@ -136,80 +136,30 @@ fn polygons(ops: Vec<OutlineOp>) -> Result<Vec<Vec<Vec<[f64; 2]>>>, String> {
         .collect())
 }
 
-/// An attached SHX resource's bytes by the file a definition names (only its
-/// basename; never a disk or network lookup, ADR 0930).
-fn attached(
-    resources: &kentos_contracts::ProjectStyles,
-    file: &str,
-    what: &str,
-) -> Result<Vec<u8>, String> {
-    let file = kentos_contracts::shape_resource::source_name(file);
-    let id = kentos_contracts::shape_resource::id(file);
-    let mut items = resources.items.iter().filter(|i| {
-        kentos_contracts::shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str())
-    });
-    let item = items
-        .next()
-        .ok_or_else(|| format!("{what} için “{file}” kaynağı projeye eklenmemiş."))?;
-    if items.next().is_some() {
-        return Err(format!("“{file}” SHX kaynağı yinelenmiş."));
-    }
-    kentos_contracts::shape_resource::read(item)
-}
+use kentos_native_application::shx_text::attached;
 
 /// A linetype text in an SHX font (and its Big Font): open strokes in capital
 /// heights, the style's width factor and slant applied (ADR 1120 §3). Every
-/// character resolves or the whole text fails: no character becomes a gap.
+/// character resolves or the whole text fails: no character becomes a gap. The
+/// fonts are read as an ordinary text's are (`shx_text`, ADR 1125).
 fn shx_text(
     style: &kentos_contracts::TextStyleDef,
-    font_file: &str,
     text: &str,
     resources: &kentos_contracts::ProjectStyles,
 ) -> Result<Vec<Vec<[f64; 2]>>, String> {
-    use kentos_geometry_core::text::shx::{ShapeFile, TextChar, draw_text, text_chars};
-    let what = format!("“{}” yazı stilinin SHX yazı fontu", style.name);
-    let primary_bytes = attached(resources, font_file, &what)?;
-    let primary = ShapeFile::read(&primary_bytes).map_err(|e| format!("{what}: {e}"))?;
-    let big_bytes = match style.big_font_file.as_deref() {
-        Some(file) => Some(attached(
-            resources,
-            file,
-            &format!("“{}” yazı stilinin Big Font'u", style.name),
-        )?),
-        None => None,
-    };
-    let big = match &big_bytes {
-        Some(b) => Some(ShapeFile::read(b).map_err(|e| format!("Big Font: {e}"))?),
-        None => None,
-    };
-    let mut run = Vec::new();
-    for c in text_chars(text) {
-        match c {
-            TextChar::Char(ch) => run.push((&primary, primary.glyph(ch).map_err(|e| format!("{what}: {e}"))?)),
-            TextChar::Big(code) => {
-                let big = big.as_ref().ok_or_else(|| {
-                    format!(
-                        "“{}” yazı stilinin Big Font'u yok; \\M+ kodlu {code:04X} karakteri çizilemez.",
-                        style.name
-                    )
-                })?;
-                run.push((big, big.big_glyph(code)?));
-            }
-        }
-    }
-    let paths = draw_text(&run).map_err(|e| format!("{what}: {e}"))?;
+    let fonts = kentos_native_application::shx_text::Fonts::of(style, resources)?;
+    let paths = fonts.run(text)?.paths;
     if paths.is_empty() {
-        return Err(format!("{what}: yazının çizilebilir konturu yok."));
+        return Err(format!(
+            "“{}” yazı stilinin SHX yazı fontu: yazının çizilebilir konturu yok.",
+            style.name
+        ));
     }
     let width = style.width_factor.unwrap_or(1.);
     let lean = tan(style.oblique.unwrap_or(0.).to_radians());
     Ok(paths
         .into_iter()
-        .map(|p| {
-            p.into_iter()
-                .map(|v| [(v.x + v.y * lean) * width, v.y])
-                .collect()
-        })
+        .map(|p| p.into_iter().map(|[x, y]| [(x + y * lean) * width, y]).collect())
         .collect())
 }
 
@@ -281,10 +231,9 @@ pub(super) fn prepare(
                 |h| h * settings.plot_scale / plot_scale * p.scale,
             );
         if let Some(s) = style
-            && let Some(file) = s.font_file.as_deref()
-            && fonts::resolve(file).1 == fonts::FontMatch::Shx
+            && kentos_native_application::shx_text::is_shx(s)
         {
-            let paths = shx_text(s, file, &text.text, resources)?;
+            let paths = shx_text(s, &text.text, resources)?;
             marks.push(json!({"at":at,"cap":1.,"height":height,"x":paper(p.x),"y":paper(p.y),
                 "rotation":p.rotation,"absolute":p.absolute,"upright":p.upright,"polygons":[],"paths":paths}));
             continue;

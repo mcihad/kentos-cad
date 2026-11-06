@@ -89,6 +89,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yazısının SHX yolu `cap: 1`). Web'in stil yapısı `View::cad_phase`'i açmıyor: eğride CAD tiresi web'de hâlâ
   kiriş toplamıyla ölçülür; açılınca `fixtures/style/v1/batches.json` web kaydı yenilenmeli (masaüstü ile aynı
   parçalar). Noktalı geniş bandın kesitleri ve `drawn_point` (ADR 1123) çekirdekte; TS türleri üretilmedi.
+- CAD-ADV-11 / ADR 1124, 1125: web WebGPU'su native `dotCover`/`strokeDash`'i almadı (ortak `stroke.wgsl` değişmedi,
+  web'de nokta bir piksellik çubuk); web PDF'i `kentos_sheet::pdf::dots` bölmesini WASM yeniden derlemesiyle alır.
+  Web'in yazı katmanı gömülü SHX fontlu yazıyı çizmez: `shx_text::place` (WASM'a taşınabilir, DOM'suz) ile Canvas/
+  WebGPU çizgileri, `cad.fonts.report`'un `embedded` alanı (TS türü üretilmedi), `text_shx_unsupported` bulgusunun
+  inceleme başlığı ve DXF aktarımının yanına yazılan SHX yazı fontları web'de yok.
 - CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
   `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
   stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya

@@ -1,6 +1,7 @@
 //! `cad.fonts.report` v1 (docs/adr/0324 §5): which typeface each text style names and which of KentOS's faces it is
 //! drawn in, and how; the faces a sheet's PDF embeds. Read only. KentOS draws, measures and embeds only its own seven
 //! faces; a style naming another (an SHX line font, Times …) is drawn in a substitute and said here, never silently.
+//! A style whose SHX font (and Big Font) the project embeds is drawn in that font's strokes instead (ADR 1125).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -40,7 +41,7 @@ pub enum FontMatch {
     Own,
     /// A metric twin: Arial, Helvetica, Liberation Sans as Arimo, Courier as Courier Prime.
     Equivalent,
-    /// An AutoCAD SHX line font, not read: drawn in the style's face.
+    /// An AutoCAD SHX line font: drawn in the style's face unless the project embeds it (`StyleFont::embedded`).
     Shx,
     /// A face KentOS does not have: drawn in the style's face.
     Missing,
@@ -62,6 +63,11 @@ pub struct StyleFont {
     /// The face it is drawn in.
     pub face: DrawingFont,
     pub how: FontMatch,
+    /// Its SHX font, and its Big Font when it names one, are embedded in the project and read (ADR 1125): its
+    /// texts are drawn in the font's own strokes, not in `face`, and it is no `font_substituted`. Absent: false.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub embedded: bool,
     /// How many texts of the drawing take the style.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub texts: u32,

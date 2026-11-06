@@ -12,7 +12,10 @@ and Special Codes, the Unicode font description and Big Font description) into
 
 and writes `expected.json`: what this script's own reader (no KentOS code)
 draws for a few text runs, in capital heights (each glyph scaled by its font's
-`above`). Rust compares its reader with it (crates/native/style line types).
+`above`), and (ADR 1125) for text objects in these fonts placed on the ground
+by their alignment, turn, width factor, slant, lines and box. Rust compares its
+reader (crates/native/style line types) and its text layout
+(crates/native/application `shx_text`) with it.
 
 Layouts (ADR 1120 §2): unifont = signature, u32 record count (with the
 definition record), u16 definition size, definition (name NUL above below
@@ -27,6 +30,7 @@ records. A unifont's subshape operand is two bytes, high first.
 """
 
 import json
+import math
 import struct
 import sys
 from pathlib import Path
@@ -236,6 +240,138 @@ def runs(uni, big):
     return {text: draw(run) for text, run in cases.items()}
 
 
+def draw_advance(run):
+    """`draw` and where the pen ends: the run's advance in capital heights."""
+    pen = Pen()
+    for font, number in run:
+        pen.flush()
+        pen.down = True
+        pen.scale = 1.0 / font["above"]
+        pen.run(font, number)
+    pen.flush()
+    return [[list(p) for p in path] for path in pen.paths], pen.at[0]
+
+
+def chars(uni, big, text):
+    """A line's glyphs: `\\M+cXXXX` (c 1–5) a Big Font code, any other character the unifont's own number."""
+    out, i = [], 0
+    while i < len(text):
+        w = text[i:i + 8]
+        if len(w) == 8 and w[:3].lower() == "\\m+" and w[3] in "12345" and all(c in "0123456789abcdefABCDEF" for c in w[4:]):
+            code = int(w[4:], 16)
+            assert any(a <= code >> 8 <= b for a, b in big["ranges"]) and code in big["programs"]
+            out.append((big, code))
+            i += 8
+        else:
+            assert ord(text[i]) in uni["programs"], text[i]
+            out.append((uni, ord(text[i])))
+            i += 1
+    return out
+
+
+# ADR 0145 §1: where `p` is along a text (a share of its box's width) and up from its first baseline (of its height).
+ALONG = {"baselineCenter": 0.5, "baselineRight": 1, "bottomLeft": 0, "bottomCenter": 0.5, "bottomRight": 1,
+         "middleLeft": 0, "middleCenter": 0.5, "middleRight": 1, "topLeft": 0, "topCenter": 0.5, "topRight": 1}
+UP = {"baselineCenter": 0, "baselineRight": 0, "bottomLeft": -0.2, "bottomCenter": -0.2, "bottomRight": -0.2,
+      "middleLeft": 0.5, "middleCenter": 0.5, "middleRight": 0.5, "topLeft": 1, "topCenter": 1, "topRight": 1}
+
+
+def placed(uni, big, t):
+    """A text in the SHX fonts on the ground (ADR 1125 §2), by the rules of ADR 0145 and 0182, no KentOS code: its
+    breaks, then (in a box) a word put on the next line when the line up to it would pass the box (the first line
+    from the paragraph's start, each next from its word; a line's trailing spaces take no room); lines 5/3 of the
+    height times the spacing apart; each line along its box by the alignment's share; `p` the alignment's point;
+    the slant leaning the text's own frame."""
+    h, wf = t["height"], t.get("widthFactor", 1.0)
+    k = math.tan(math.radians(t.get("oblique", 0.0)))
+    box = t.get("boxWidth")
+
+    def run(s):
+        return draw_advance(chars(uni, big, s))
+
+    lines = []
+    for para in t["text"].split("\n"):
+        para = para[:-1] if para.endswith("\r") else para
+        if box is None:
+            lines.append(run(para.rstrip(" ")))
+            continue
+        start, filled, i = 0, None, 0
+        while True:
+            while i < len(para) and para[i] == " ":
+                i += 1
+            if i >= len(para):
+                break
+            word = i
+            while i < len(para) and para[i] != " ":
+                i += 1
+            if filled is not None and run(para[start:i])[1] * h * wf > box:
+                lines.append(run(para[start:filled].rstrip(" ")))
+                start = word
+            filled = i
+        lines.append(run(para[start:].rstrip(" ")))
+    widths = [adv * h * wf for _, adv in lines]
+    width = box if box is not None else max(widths)
+    pitch = 5.0 / 3.0 * h * t.get("lineSpacing", 1.0)
+    n = len(lines)
+    align = t.get("align")
+    along = ALONG[align] if align else 0.0
+    up = UP[align] if align else 0.0
+    below = (n - 1) * pitch
+    rise = up * h - below if up < 0 else (up * h - below / 2 if 0 < up < 1 else up * h)
+    r = math.radians(t["rotation"])
+    u, v = (math.cos(r), math.sin(r)), (-math.sin(r), math.cos(r))
+    px, py = t["p"]["x"], t["p"]["y"]
+    ox = px - u[0] * along * width - v[0] * rise
+    oy = py - u[1] * along * width - v[1] * rise
+
+    def at(x, y):
+        x = x + y * k
+        return [ox + u[0] * x + v[0] * y, oy + u[1] * x + v[1] * y]
+
+    paths = []
+    for i, ((strokes, _), w) in enumerate(zip(lines, widths)):
+        shift = along * (width - w)
+        for path in strokes:
+            paths.append([at(shift + q[0] * h * wf, -i * pitch + q[1] * h) for q in path])
+    return {"width": width, "paths": paths}
+
+
+def texts(uni, big):
+    """The shared cases of an SHX text's place (ADR 1125 §6): each the text object's fields and what it draws."""
+    base = {"p": {"x": 10.0, "y": 20.0}, "height": 2.5, "rotation": 0.0}
+    cases = [
+        ("Sol taban", {"text": "SU"}),
+        ("30° döndürülmüş", {"text": "SU", "rotation": 30.0}),
+        ("−90° döndürülmüş", {"text": "S-U", "rotation": -90.0}),
+        ("Taban ortası", {"text": "SU", "align": "baselineCenter"}),
+        ("Taban sağı", {"text": "S U", "align": "baselineRight"}),
+        ("Orta orta", {"text": "SU", "align": "middleCenter"}),
+        ("Üst sol", {"text": "US", "align": "topLeft"}),
+        ("Alt sağ", {"text": "SUS", "align": "bottomRight"}),
+        ("Genişlik çarpanı 0,8", {"text": "SU", "widthFactor": 0.8}),
+        ("Eğiklik 15°", {"text": "SU", "oblique": 15.0}),
+        ("Çarpan, eğiklik ve dönüş birlikte", {"text": "Ş-U", "widthFactor": 1.25, "oblique": -10.0, "rotation": 45.0,
+                                               "align": "middleRight"}),
+        ("İki satır", {"text": "SU\nUS"}),
+        ("İki satır orta orta", {"text": "SU\nS", "align": "middleCenter"}),
+        ("Üç satır, aralık 1,5, üst sağ", {"text": "S\nSU\nSUS", "lineSpacing": 1.5, "align": "topRight"}),
+        ("Kutuya sözcük kaydırma", {"text": "S U SU US", "boxWidth": 4.5}),
+        ("Kutuya kaydırma, ortalı", {"text": "SU US S", "boxWidth": 5.0, "align": "topCenter"}),
+        ("Big Font karakteri", {"text": "Ş\\M+18140U"}),
+        ("Sondaki boşluk yer tutmaz (sağa hizalı)", {"text": "SU  ", "align": "baselineRight"}),
+        ("Kutuda baştaki boşluk ilk satırda kalır", {"text": "  S U", "boxWidth": 2.0}),
+        ("Büyük koordinat", {"text": "SU", "p": {"x": 500123.25, "y": 4400456.75}, "rotation": 12.5}),
+        ("Boş satır", {"text": "S\n\nU", "align": "bottomLeft"}),
+        ("Küçük yazı ters dönmüş", {"text": "US-S", "height": 0.1, "rotation": 180.0, "align": "bottomCenter"}),
+        ("Satır sonu CR LF", {"text": "S\r\nU"}),
+    ]
+    out = []
+    for name, fields in cases:
+        t = dict(base, **fields)
+        out.append({"name": name, "text": t, **placed(uni, big, t)})
+    return out
+
+
 def main():
     files = {
         "kentos-uni.shx": unifont(0),
@@ -248,6 +384,7 @@ def main():
     expected = {
         "note": "scripts/fixtures/shx_font_reference.py: text runs in capital heights (ADR 1120)",
         "runs": runs(uni, big),
+        "texts": texts(uni, big),
     }
     files["expected.json"] = (json.dumps(expected, ensure_ascii=False, indent=1) + "\n").encode()
     check = "--check" in sys.argv[1:]

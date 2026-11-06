@@ -122,10 +122,13 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
                 }
                 None => (Some(s.font.id()), FontMatch::Own),
             };
+            // Its embedded SHX font draws it (ADR 1125): not a substitute.
+            let embedded = how == FontMatch::Shx
+                && crate::shx_text::Fonts::of(s, doc.styles()).is_ok();
             // Drawn in another face than the one named: said, never silently.
-            if named != Some(s.font.id()) {
+            if named != Some(s.font.id()) && !embedded {
                 let what = match how {
-                    FontMatch::Shx => "AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz",
+                    FontMatch::Shx => "AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor",
                     FontMatch::Missing => "KentOS'ta yok",
                     FontMatch::Own | FontMatch::Equivalent => {
                         "stil başka bir yazı tipine çevrilmiş"
@@ -148,6 +151,7 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
                 file: s.font_file.clone(),
                 face: s.font,
                 how,
+                embedded,
                 texts: used.get(s.id.as_str()).copied().unwrap_or(0),
             }
         })

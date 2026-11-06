@@ -321,10 +321,13 @@ pub(super) fn emit(
     }
     let period: f64 = dash.iter().sum();
     let h = period * 1e-3;
+    // The dot's pattern is a whole period long (ADR 1124): its one dot at the stroke's middle, and a pattern the
+    // renderers measure in pixels as the line's own, so the GPU and the CPU draw the round dot of the line's weight
+    // wherever the line's dashes are drawn, and PDF paints it round whatever the line's ends.
     for (p, d) in &ink.dots {
         let mut dot = style.clone();
-        dot.dash = Some(vec![0., 4. * h]);
-        dot.dash_offset = 3. * h;
+        dot.dash = Some(vec![0., period]);
+        dot.dash_offset = period - h;
         sink.stroke(
             &dot,
             &[

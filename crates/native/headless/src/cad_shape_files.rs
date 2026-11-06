@@ -58,25 +58,42 @@ pub(crate) fn plan(doc: &Document, target: &Path) -> Result<Vec<Source>, Refused
     let mut out = Vec::new();
     let mut seen = BTreeSet::new();
     let mut total = 0usize;
-    for shape in doc
+    let resource_of = |id: &str| {
+        doc.styles()
+            .items
+            .iter()
+            .find(|i| shape_resource::is_resource(i) && i["id"].as_str() == Some(id))
+    };
+    // The SHX fonts and Big Fonts of the drawing's text styles (ADR 1125 §5): every one the project embeds goes
+    // beside the drawing its STYLE table names it in. One not embedded is the receiver's font, as before: not a loss
+    // of this export, and not looked up on disk.
+    let fonts: Vec<&str> = doc
+        .settings()
+        .text_styles
+        .iter()
+        .flat_map(|s| {
+            let font = s.font_file.as_deref().filter(|_| kentos_native_application::shx_text::is_shx(s));
+            let big = s.big_font_file.as_deref().filter(|f| f.to_ascii_lowercase().ends_with(".shx"));
+            [font, big]
+        })
+        .flatten()
+        .filter(|f| resource_of(&shape_resource::id(shape_resource::source_name(f))).is_some())
+        .collect();
+    let shapes = doc
         .settings()
         .line_types
         .iter()
         .flat_map(|p| &p.elements)
         .filter_map(|e| e.shape.as_ref())
-    {
-        let id = shape_resource::id(shape_resource::source_name(&shape.file));
+        .map(|s| s.file.as_str());
+    for named in shapes.chain(fonts) {
+        let id = shape_resource::id(shape_resource::source_name(named));
         if !seen.insert(id.clone()) {
             continue;
         }
-        let resource = doc
-            .styles()
-            .items
-            .iter()
-            .find(|i| shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str()));
-        let Some(resource) = resource else {
+        let Some(resource) = resource_of(&id) else {
             out.push(Source {
-                file: shape.file.clone(),
+                file: named.to_owned(),
                 path: PathBuf::new(),
                 bytes: None,
                 reused: false,
@@ -193,6 +210,43 @@ mod tests {
         snap.settings.line_types=serde_json::from_value(json!([{"name":"P","unit":"paper","elements":[{"length":5.},{"length":-1.},{"length":0.,"shape":{"name":"FENCE","file":"FENCE.SHX"}},{"length":-2.}]}])).unwrap();
         Document::from_snapshot_v2(snap).unwrap()
     }
+    /// ADR 1125 §5: a text style's embedded SHX font and Big Font go beside the drawing, byte for byte; a style
+    /// naming a font the project does not embed adds nothing (the receiver's font, never a disk lookup).
+    #[test]
+    fn a_text_styles_embedded_shx_fonts_are_written_beside_the_drawing() {
+        let mut snap: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/shx-fonts.json")).unwrap();
+        snap.settings.text_styles.push(
+            serde_json::from_value(json!({"id":"rom","name":"Romans","font":"barlow","fontFile":"romans.shx"}))
+                .unwrap(),
+        );
+        let doc = Document::from_snapshot_v2(snap).unwrap();
+        let root = std::env::temp_dir().join(format!("kentos-shx-fonts-{}", kentos_domain::Uuid::now_v7()));
+        fs::create_dir(&root).unwrap();
+        let target = root.join("out.dxf");
+        let sources = plan(&doc, &target).unwrap();
+        let report = report(&sources);
+        let files: Vec<_> = report.as_array().unwrap().iter().map(|s| s["file"].as_str().unwrap()).collect();
+        assert_eq!(files, ["kentos-uni.shx", "kentos-big.shx"], "{report}");
+        assert!(report.as_array().unwrap().iter().all(|s| s["available"] == true && s["reused"] == false));
+        assert_eq!(fs::read_dir(&root).unwrap().count(), 0, "a plan writes nothing");
+        commit(&sources, || {
+            files::write_bytes_with_overwrite(b"CAD", &target, false)
+                .map(|_| ())
+                .map_err(|e| refuse(e.code, e.message, "path"))
+        })
+        .unwrap();
+        for name in ["kentos-uni.shx", "kentos-big.shx"] {
+            let want = std::fs::read(
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/shx/v1").join(name),
+            )
+            .unwrap();
+            assert_eq!(fs::read(root.join(name)).unwrap(), want, "{name}");
+        }
+        assert!(!root.join("romans.shx").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
+
     #[test]
     fn source_transaction_is_read_only_until_commit_and_rolls_back_only_new_files() {
         let root = std::env::temp_dir().join(format!(

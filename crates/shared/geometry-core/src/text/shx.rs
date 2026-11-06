@@ -468,8 +468,16 @@ pub fn text_chars(text: &str) -> Vec<TextChar> {
 /// Every glyph starts with the pen down and its own font's scale, so the
 /// result is in capital heights: 1 is the text height (ADR 1120 §3).
 pub fn draw_text<'a, 'b>(run: &[(&'a ShapeFile<'b>, u16)]) -> Result<Vec<Vec<Vec2>>, String> {
+    draw_text_advance(run).map(|(paths, _)| paths)
+}
+
+/// [`draw_text`] and where the pen stands after the run: its advance, in capital heights (a text's width before its
+/// width factor, ADR 1125 §2).
+pub fn draw_text_advance<'a, 'b>(
+    run: &[(&'a ShapeFile<'b>, u16)],
+) -> Result<(Vec<Vec<Vec2>>, Vec2), String> {
     let Some(&(first, _)) = run.first() else {
-        return Ok(Vec::new());
+        return Ok((Vec::new(), Vec2::new(0., 0.)));
     };
     let mut vm = Vm {
         file: first,
@@ -497,7 +505,7 @@ pub fn draw_text<'a, 'b>(run: &[(&'a ShapeFile<'b>, u16)]) -> Result<Vec<Vec<Vec
         }
     }
     vm.flush();
-    Ok(vm.paths)
+    Ok((vm.paths, vm.at))
 }
 
 struct Vm<'a, 'b> {

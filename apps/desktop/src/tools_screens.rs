@@ -609,6 +609,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::long_pattern_scenes::scenes());
     all.extend(crate::linetype_font_scenes::scenes());
     all.extend(crate::curve_dash_scenes::scenes());
+    all.extend(crate::shx_text_scenes::scenes());
     all.extend(crate::profile_scenes::scenes());
     all.extend(crate::address_compare_scenes::scenes());
     all.extend(crate::line_type_scenes::scenes());
