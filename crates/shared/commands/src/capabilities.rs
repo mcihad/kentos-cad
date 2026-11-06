@@ -1738,7 +1738,11 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.profiles.draw",
-        refusals: &[&["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label"], LAYER, REVISION],
+        refusals: &[
+            &["road_drawings_full", "not_a_road_project", "unknown_road_profile", "invalid_label", "unknown_superelevation"],
+            LAYER,
+            REVISION,
+        ],
         warnings: &["layer_hidden", "profile_stale", "profile_surface_gone"],
         targets: none,
     },

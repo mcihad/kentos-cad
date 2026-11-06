@@ -251,6 +251,9 @@ def exceptions_cases():
             "no_standard", "Standardı adıyla (name: mimari-ofis) ya da kendisini (standard) verin.", "name")
     refused("Yerleşik standart yok: ret", {**accept(COLOR), "standard": None, "name": "yok"}, "standard_not_found",
             "“yok” adlı yerleşik standart yok; bunlardan birini verin: mimari-ofis.", "name")
+    # The standard given is read as cad.standards.check reads it (standards_cases.py's "standart geçersiz: adı boş").
+    refused("Geçersiz standart: ret", {**accept(COLOR), "standard": {**STANDARD, "name": " "}}, "invalid_standard",
+            "Standart geçersiz: Standardın adı boş.", "standard")
     refused("Bugünkü denetimde olmayan bulgu: ret", accept({"kind": "layerColor", "subject": "A-KAPI"}),
             "finding_not_found",
             "Çizimin bugünkü denetiminde “A-KAPI” için layerColor bulgusu yok; önce cad.standards.check ile aynı "

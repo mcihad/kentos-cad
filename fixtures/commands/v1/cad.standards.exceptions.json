@@ -14725,6 +14725,549 @@
    ]
   },
   {
+   "name": "Geçersiz standart: ret",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katman ağacı",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingFont": "quicksand",
+     "textStyles": [
+      {
+       "id": "0192f5a0-0000-7000-8000-000000000001",
+       "name": "A-Yazı",
+       "font": "quicksand",
+       "height": 2.5
+      },
+      {
+       "id": "0192f5a0-0000-7000-8000-000000000002",
+       "name": "Eski yazı",
+       "font": "arimo"
+      },
+      {
+       "id": "0192f5a0-0000-7000-8000-000000000003",
+       "name": "El yazısı",
+       "font": "architects-daughter"
+      }
+     ],
+     "dimensionStyles": [
+      {
+       "id": "0192f5a0-0000-7000-8000-000000000011",
+       "name": "Eski ölçü",
+       "height": 3
+      }
+     ]
+    },
+    "origin": {
+     "x": 500000,
+     "y": 4400000
+    },
+    "layers": [
+     {
+      "id": "mimari",
+      "name": "Mimari",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "duvar",
+        "name": "A-DUVAR",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#E5484D",
+         "lineType": "continuous",
+         "lineWeight": 0.5
+        },
+        "children": []
+       },
+       {
+        "id": "eksen",
+        "name": "a-eksen",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "#e06c75",
+         "lineType": "dashed",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yazi",
+        "name": "A-YAZI",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.18
+        },
+        "children": [],
+        "plot": false
+       }
+      ]
+     },
+     {
+      "id": "wall",
+      "name": "Wall",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.5
+      },
+      "children": []
+     },
+     {
+      "id": "kapi-eski",
+      "name": "kapı_eski",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "anot",
+      "name": "A-NOT",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kat1",
+      "name": "Kat1",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizgi",
+      "name": "Noktalı çizgiler",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#8A94A6",
+       "lineType": "dotted",
+       "lineWeight": 0.13
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "OpenStreetMap",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "service": {
+       "kind": "xyz",
+       "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+       "maxZoom": 19
+      }
+     }
+    ],
+    "activeLayer": "kat1",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500000,
+        "y": 4400000
+       },
+       {
+        "x": 500005,
+        "y": 4400000
+       },
+       {
+        "x": 500005,
+        "y": 4400005
+       },
+       {
+        "x": 500000,
+        "y": 4400005
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "wall",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010,
+        "y": 4400000
+       },
+       {
+        "x": 500015,
+        "y": 4400000
+       },
+       {
+        "x": 500015,
+        "y": 4400005
+       },
+       {
+        "x": 500010,
+        "y": 4400005
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "wall",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500020,
+        "y": 4400000
+       },
+       {
+        "x": 500025,
+        "y": 4400000
+       },
+       {
+        "x": 500025,
+        "y": 4400005
+       },
+       {
+        "x": 500020,
+        "y": 4400005
+       }
+      ],
+      "color": "#FF0000"
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kapi-eski",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500030,
+        "y": 4400000
+       },
+       {
+        "x": 500035,
+        "y": 4400000
+       },
+       {
+        "x": 500035,
+        "y": 4400005
+       },
+       {
+        "x": 500030,
+        "y": 4400005
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "kat1",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500040,
+        "y": 4400000
+       },
+       {
+        "x": 500045,
+        "y": 4400000
+       },
+       {
+        "x": 500045,
+        "y": 4400005
+       },
+       {
+        "x": 500040,
+        "y": 4400005
+       }
+      ],
+      "lineType": "dotted"
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "kat1",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500050,
+        "y": 4400000
+       },
+       {
+        "x": 500055,
+        "y": 4400000
+       },
+       {
+        "x": 500055,
+        "y": 4400005
+       },
+       {
+        "x": 500050,
+        "y": 4400005
+       }
+      ],
+      "lineWeight": 0.35
+     },
+     {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "anot",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500060,
+        "y": 4400000
+       },
+       {
+        "x": 500065,
+        "y": 4400000
+       },
+       {
+        "x": 500065,
+        "y": 4400005
+       },
+       {
+        "x": 500060,
+        "y": 4400005
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "eksen",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500070,
+        "y": 4400000
+       },
+       {
+        "x": 500075,
+        "y": 4400000
+       },
+       {
+        "x": 500075,
+        "y": 4400005
+       },
+       {
+        "x": 500070,
+        "y": 4400005
+       }
+      ]
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2101",
+      "name": "Ağaç",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 1.5
+       }
+      ]
+     },
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2102",
+      "name": "Lamba",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.25
+       }
+      ]
+     }
+    ]
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "standard": {
+       "name": " ",
+       "layers": [
+        {
+         "name": "A-DUVAR",
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.5,
+         "from": "duvar*,wall*"
+        },
+        {
+         "name": "A-KAPI",
+         "color": "#C8A165",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "from": "kapı*,kapi*"
+        },
+        {
+         "name": "A-EKSEN",
+         "color": "#E06C75",
+         "lineType": "dashdot",
+         "lineWeight": 0.18,
+         "from": "aks*"
+        },
+        {
+         "name": "A-YAZI",
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.18
+        },
+        {
+         "name": "A-YARDIMCI",
+         "color": "fg-dim",
+         "lineType": "dashed",
+         "lineWeight": 0.13,
+         "plot": false
+        }
+       ],
+       "naming": [
+        "A-*"
+       ],
+       "fonts": [
+        "barlow",
+        "arimo"
+       ],
+       "textStyles": [
+        {
+         "name": "A-Yazı",
+         "font": "barlow",
+         "height": 2.5
+        },
+        {
+         "name": "A-Başlık",
+         "font": "barlow",
+         "height": 5
+        }
+       ],
+       "dimensionStyles": [
+        {
+         "name": "A-Ölçü",
+         "height": 2.5
+        }
+       ],
+       "lineTypes": [
+        "continuous",
+        "dashed",
+        "dashdot"
+       ],
+       "byLayer": true
+      },
+      "operation": "accept",
+      "findings": [
+       {
+        "kind": "layerColor",
+        "subject": "A-DUVAR",
+        "layer": "duvar"
+       }
+      ],
+      "reason": "Müşteri duvarların kırmızı basılmasını istedi."
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_standard",
+       "message": "Standart geçersiz: Standardın adı boş.",
+       "path": "standard"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "standardExceptions": null
+      }
+     }
+    }
+   ]
+  },
+  {
    "name": "Bugünkü denetimde olmayan bulgu: ret",
    "setup": {
     "format": "kentos.document",

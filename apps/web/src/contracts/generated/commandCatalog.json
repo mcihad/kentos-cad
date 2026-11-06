@@ -40034,6 +40034,7 @@
           "not_a_road_project",
           "unknown_road_profile",
           "invalid_label",
+          "unknown_superelevation",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
