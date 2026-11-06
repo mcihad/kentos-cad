@@ -2868,6 +2868,16 @@ Hepsini seç 2 156 → 1 152 ms, uzak kaydırma GPU 118 → 108 ms; 10⁵: Hepsi
 İki ikilinin resimleri çizim alanında piksel piksel aynı, `perf::stability` sayı sayı aynı. **Tutmayan:** 10⁶'da uzak
 görünüm (108 ms), Hepsini seç (1,15 s), ilk kare (1,5 s) 60 Hz'de değil. Madde `[~]`.
 
+**Kaydırırken tutulan resmin taşınması (6 Kasım 2026, [ADR 1067](../docs/adr/1067-moved-picture-while-panning.md)):**
+Görünüm kaydırılırken kamera yalnız tam cihaz pikseli kadar yer değiştirdiyse ve resmin gösterdiği başka hiçbir şey
+değişmediyse, kare tutulan resmi o kadar taşır ve yalnız açılan şeritleri çizer (her şeritte yalnız ona erişen
+batch'ler); kesirli kayma, ölçek değişimi, döndürülmüş görünüm, raster/servis karosu, nokta bulutu, efekt grubu ve
+ekrana bağlı desende eskisi gibi bütün çizilir, resim hiç yeniden örneklenmez. Görünüm durunca kare bütün çizilir ve
+bugünkü kareyle piksel piksel aynıdır (`perf::stability` doğrular); kaydırırken taşınan bölüm bütün çizimden en çok
+2/255 ayrılır, görünür fark yok. Aynı izle, önce → sonra: uzak kaydırma GPU p50 10⁶'da 110,7 → 8,9 ms, 10⁵'te
+10,8 → 2,8 ms; bellek görünüm başına bir resim (~3 MB). **Tutmayan:** 10⁶'da uzak tekerlek (65 ms), Hepsini seç ve
+açılışın ilk karesi 60 Hz'de değil. Madde `[~]`.
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].
