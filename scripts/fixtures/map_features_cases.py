@@ -333,7 +333,7 @@ def cases():
     ]
     out.append({"name": "Olmayan profil", "setup": base, "steps": [{"op": "execute", "input": {"name": "yok"}, "result": {
         "status": "failed", "error": {"code": "unknown_profile", "message":
-                                      "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.",
+                                      "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani.",
                                       "path": "name"}}, "expect": SAME}]})
     out.append({"name": "Boş alan adı", "setup": base, "steps": [{"op": "execute", "input": {"name": "harita-varliklari",
                 "field": " "}, "result": {"status": "failed", "error": {"code": "invalid_input", "message":

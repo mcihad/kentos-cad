@@ -9328,6 +9328,29 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // İmar planı denetimi (plan/map-cad.md MAP-09, docs/adr/1420).
+        CommandDescriptor {
+            id: crate::CAD_ZONING_CHECK.into(),
+            version: crate::CAD_ZONING_CHECK_VERSION,
+            title: "İmar planı denetimi".into(),
+            summary: "İmar planını sembolden değil KentOS'un imar-plani profilinin tipli nesnelerinden denetler: plan sınırı (kademe, üst plan), karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu (no, kapsam). \
+                      Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing, levelOrder (üst plan üst kademede değil), noPlan, noUse, unknownUse, missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım), outside (karar plan dışına taşıyor), noteMissing, noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. \
+                      Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance)."
+                .into(),
+            aliases: vec!["imardenetim".into(), "plandenetim".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ZoningCheck>(),
+            output: schema::<crate::ZoningChecked>(),
+            plan: Some(schema::<crate::ZoningChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample { title: "Çizimin imar planı".into(), input: json!({}), output: None }],
+        },
         // Parsel alan denetimi (plan/map-cad.md MAP-08, docs/adr/1400).
         CommandDescriptor {
             id: crate::CAD_PARCELS_CHECK.into(),
@@ -15875,6 +15898,7 @@ mod tests {
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16819,6 +16843,7 @@ mod tests {
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),

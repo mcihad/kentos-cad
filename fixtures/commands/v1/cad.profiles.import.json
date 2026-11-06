@@ -332,6 +332,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -538,6 +547,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "park-bahce",
                   "title": "Park ve bahçeler profili",
@@ -681,6 +699,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {
@@ -1096,6 +1123,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {
@@ -1809,6 +1845,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {
@@ -2971,6 +3016,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 }
               ],
@@ -5758,6 +5812,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -5962,6 +6025,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {
@@ -7085,6 +7157,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {
@@ -8785,6 +8866,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -9012,6 +9102,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {

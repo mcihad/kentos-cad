@@ -860,7 +860,7 @@ INVALID = [
      "“Bağ” ilişkisinin alanı “KayitliAlan”, “Yeşil alan” sınıfının metin alanı olmalı."),
 ]
 
-UNKNOWN = "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari."
+UNKNOWN = "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani."
 NONE_GIVEN = "Profili adıyla (name: tucbs-temel) ya da kendisini (profile) verin."
 
 
@@ -1136,7 +1136,7 @@ def no_mapping_in_folder(name="yok"):
 
 
 def no_profile_in_folder(name="yok"):
-    return f"“{name}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin “profiller” klasöründe de “{name}.profil.json” yok."
+    return f"“{name}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani; çizimin “profiller” klasöründe de “{name}.profil.json” yok."
 
 
 def bad_mapping(**change):

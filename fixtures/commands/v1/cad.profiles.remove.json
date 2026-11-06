@@ -191,6 +191,15 @@
                   "migrations": 0
                 },
                 {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
+                  "migrations": 0
+                },
+                {
                   "kind": "mapping",
                   "source": "drawing",
                   "name": "sivas-bel",
@@ -320,7 +329,7 @@
             "status": "failed",
             "error": {
               "code": "unknown_profile",
-              "message": "“peyzaj” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.",
+              "message": "“peyzaj” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani.",
               "path": "name"
             }
           },
@@ -1147,6 +1156,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {
@@ -2476,6 +2494,15 @@
                   "title": "Harita varlıkları (saha kodlu)",
                   "release": 1,
                   "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "imar-plani",
+                  "title": "İmar planı (tipli karar)",
+                  "release": 1,
+                  "classes": 4,
                   "migrations": 0
                 },
                 {

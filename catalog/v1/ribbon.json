@@ -861,6 +861,16 @@
       ]
      },
      {
+      "label": "İmar planı",
+      "icon": "zoningCheck",
+      "items": [
+       {
+        "command": "zoning.check",
+        "size": "small"
+       }
+      ]
+     },
+     {
       "label": "Alan işlemleri",
       "icon": "areaUnion",
       "items": [
@@ -3672,6 +3682,10 @@
       "items": [
        {
         "command": "profile.window",
+        "size": "small"
+       },
+       {
+        "command": "zoning.check",
         "size": "small"
        }
       ],

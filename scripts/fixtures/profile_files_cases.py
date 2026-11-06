@@ -230,11 +230,13 @@ def builtin_item():
 
 # KentOS's second profile (docs/adr/1360 §3): Harita's field-coded assets; listed after tucbs-temel.
 HARITA = json.loads((ROOT / "catalog/v1/profiles/harita-varliklari.json").read_text("utf-8"))
+# The third (docs/adr/1420): the zoning plan's typed decisions.
+IMAR = json.loads((ROOT / "catalog/v1/profiles/imar-plani.json").read_text("utf-8"))
 
 
 def builtin_items():
-    return [builtin_item(), {"kind": "profile", "source": "builtin", "name": HARITA["name"], "title": HARITA["title"],
-                             "release": 1, "classes": len(HARITA["classes"]), "migrations": 0}]
+    return [builtin_item()] + [{"kind": "profile", "source": "builtin", "name": p["name"], "title": p["title"],
+                                "release": 1, "classes": len(p["classes"]), "migrations": 0} for p in (HARITA, IMAR)]
 
 
 def list_item(f, name, kind, content, others):
@@ -1612,14 +1614,14 @@ def migrate_cases():
     cases.append(c)
     # Refusals.
     cases.append(migrate_refusal("bilinmeyen profil", doc, {"name": "yok", "from": 1}, "unknown_profile",
-                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.", "name"))
+                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani.", "name"))
     cases.append(migrate_refusal("bilinmeyen profil: çizimin taşıdıkları da söylenir", carry(doc, ("profile", "park-bahce", KURUM)),
                                  {"name": "yok", "from": 1}, "unknown_profile",
-                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin içindeki profiller: park-bahce.", "name"))
+                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani; çizimin içindeki profiller: park-bahce.", "name"))
     f = folder()
     cases.append(migrate_refusal("bilinmeyen profil: çizimdekiler ve klasör", carry(doc, ("profile", "park-bahce", KURUM)),
                                  {"name": "yok", "from": 1, "drawing": tmp(f)}, "unknown_profile",
-                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin içindeki profiller: park-bahce; "
+                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani; çizimin içindeki profiller: park-bahce; "
                                  "çizimin “profiller” klasöründe de “yok.profil.json” yok.", "name", before=[place_drawing(f)]))
     f = folder()
     cases.append(migrate_refusal("projenin klasöründe de yok", doc, {"name": "yok", "from": 1, "drawing": tmp(f)}, "unknown_profile",
@@ -1711,7 +1713,7 @@ def remove_cases():
     cases.append(remove_case("Son kopya çıkınca alan hiç kalmaz; adıyla artık bulunmaz", [p], {"kind": "profile", "name": "peyzaj"},
                              removed("profile", "peyzaj", small), [],
                              after=[step("execute", {"name": "peyzaj"},
-                                         failed("unknown_profile", "“peyzaj” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.", "name"),
+                                         failed("unknown_profile", "“peyzaj” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani.", "name"),
                                          command=PC.CHECK)]))
     cases.append(remove_case("Eşleme çıkarılır, aynı adlı profil kalır", [p, ("mapping", "peyzaj", own_map)],
                              {"kind": "mapping", "name": "peyzaj"}, removed("mapping", "peyzaj", own_map), [("profile", "peyzaj")]))

@@ -15847,6 +15847,23 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
+  },
+  {
+   "id": "zoning.check",
+   "kind": "command",
+   "title": "İmar planı denetimi…",
+   "level": "query",
+   "via": [
+    "cad.zoning.check",
+    "cad.profiles.apply"
+   ],
+   "operation": null,
+   "python": "kentos.cad.zoning.check, kentos.cad.profiles.apply",
+   "mcp": "cad.zoning.check, cad.profiles.apply",
+   "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   }
  ]
 }

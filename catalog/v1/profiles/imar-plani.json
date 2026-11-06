@@ -1,0 +1,476 @@
+{
+ "format": "kentos.data-profile",
+ "version": 1,
+ "name": "imar-plani",
+ "title": "İmar planı (tipli karar)",
+ "description": "İmar planı sembolle değil tipli nesneyle: plan sınırı (seviye, durum, sürüm, onay, üst plan, dayanak belge), karar alanı (kullanım, yapı nizamı, TAKS, KAKS/emsal, kat adedi, Hmax, çekme mesafeleri, plan notları, planda verilmeyen değerler), plan notu (numarası, metni, kapsamı) ve yol aksı (genişlik). Parsel imar planı denetimi (cad.zoning.check) bu sınıfları okur; sembol ve renk kararın kendisi değildir.",
+ "basis": "KentOS çalışma profili, sürüm 1. Kavramlar Mekânsal Planlar Yapım Yönetmeliği'nin plan kademeleri (mekânsal strateji, çevre düzeni, nazım, uygulama) ve Planlı Alanlar İmar Yönetmeliği'nin tanımları (TAKS, KAKS/emsal, yapı nizamı, çekme mesafesi) üzerinedir. Bakanlığın MPYY/PlanGML uygulama şeması (1.1.7) ve kod listesi değildir: edinilip sürümü sabitlenmeden, alan adları ve kodlar kurumun şemasıyla eşlenip doğrulanmadan şemaya ya da mevzuata uygunluk iddia edilmez.",
+ "domains": [
+  {
+   "id": "plan-seviye",
+   "name": "Plan kademesi",
+   "kind": "text",
+   "values": [
+    {
+     "code": "msp",
+     "label": "Mekânsal strateji planı"
+    },
+    {
+     "code": "cdp",
+     "label": "Çevre düzeni planı"
+    },
+    {
+     "code": "nip",
+     "label": "Nazım imar planı"
+    },
+    {
+     "code": "uip",
+     "label": "Uygulama imar planı"
+    }
+   ]
+  },
+  {
+   "id": "plan-durum",
+   "name": "Plan durumu",
+   "kind": "text",
+   "values": [
+    {
+     "code": "taslak",
+     "label": "Taslak"
+    },
+    {
+     "code": "askida",
+     "label": "Askıda"
+    },
+    {
+     "code": "onayli",
+     "label": "Onaylı"
+    },
+    {
+     "code": "yururlukte",
+     "label": "Yürürlükte"
+    },
+    {
+     "code": "iptal",
+     "label": "İptal"
+    }
+   ]
+  },
+  {
+   "id": "plan-kullanim",
+   "name": "Plan kararı (kullanım)",
+   "kind": "text",
+   "values": [
+    {
+     "code": "konut",
+     "label": "Konut alanı"
+    },
+    {
+     "code": "ticaret",
+     "label": "Ticaret alanı"
+    },
+    {
+     "code": "ticaret-konut",
+     "label": "Ticaret + konut alanı"
+    },
+    {
+     "code": "sanayi",
+     "label": "Sanayi alanı"
+    },
+    {
+     "code": "egitim",
+     "label": "Eğitim tesisi alanı"
+    },
+    {
+     "code": "saglik",
+     "label": "Sağlık tesisi alanı"
+    },
+    {
+     "code": "dini",
+     "label": "Dini tesis alanı"
+    },
+    {
+     "code": "sosyal",
+     "label": "Sosyal tesis alanı"
+    },
+    {
+     "code": "kultur",
+     "label": "Kültürel tesis alanı"
+    },
+    {
+     "code": "spor",
+     "label": "Spor alanı"
+    },
+    {
+     "code": "resmi",
+     "label": "Resmî kurum alanı"
+    },
+    {
+     "code": "teknik",
+     "label": "Teknik altyapı alanı"
+    },
+    {
+     "code": "otopark",
+     "label": "Otopark alanı"
+    },
+    {
+     "code": "park",
+     "label": "Park"
+    },
+    {
+     "code": "yesil",
+     "label": "Yeşil alan"
+    },
+    {
+     "code": "meydan",
+     "label": "Meydan"
+    },
+    {
+     "code": "yol",
+     "label": "Yol"
+    }
+   ]
+  },
+  {
+   "id": "yapi-nizami",
+   "name": "Yapı nizamı",
+   "kind": "text",
+   "values": [
+    {
+     "code": "A",
+     "label": "Ayrık"
+    },
+    {
+     "code": "I",
+     "label": "İkiz"
+    },
+    {
+     "code": "B",
+     "label": "Bitişik"
+    },
+    {
+     "code": "BL",
+     "label": "Blok"
+    }
+   ]
+  },
+  {
+   "id": "plan-deger",
+   "name": "Planda verilmeyen değer",
+   "kind": "text",
+   "values": [
+    {
+     "code": "TAKS",
+     "label": "TAKS"
+    },
+    {
+     "code": "KAKS",
+     "label": "KAKS (emsal)"
+    },
+    {
+     "code": "KatAdedi",
+     "label": "Kat adedi"
+    },
+    {
+     "code": "Hmax",
+     "label": "Hmax"
+    },
+    {
+     "code": "Cekme",
+     "label": "Çekme mesafeleri"
+    }
+   ]
+  },
+  {
+   "id": "not-kapsam",
+   "name": "Plan notunun kapsamı",
+   "kind": "text",
+   "values": [
+    {
+     "code": "genel",
+     "label": "Bütün plan"
+    },
+    {
+     "code": "alan",
+     "label": "Andığı karar alanları"
+    }
+   ]
+  },
+  {
+   "id": "yol-tur",
+   "name": "Yol türü",
+   "kind": "text",
+   "values": [
+    {
+     "code": "tasit",
+     "label": "Taşıt yolu"
+    },
+    {
+     "code": "yaya",
+     "label": "Yaya yolu"
+    },
+    {
+     "code": "bisiklet",
+     "label": "Bisiklet yolu"
+    },
+    {
+     "code": "servis",
+     "label": "Servis yolu"
+    }
+   ]
+  }
+ ],
+ "classes": [
+  {
+   "id": "plan-siniri",
+   "title": "Plan sınırı",
+   "theme": "İmar planı",
+   "layer": [
+    "İmar planı",
+    "Plan sınırı"
+   ],
+   "color": "#1F2937",
+   "geometry": "area",
+   "key": "PlanKimlik",
+   "fields": [
+    {
+     "name": "PlanKimlik",
+     "alias": "Plan kimliği",
+     "kind": "text",
+     "length": 40,
+     "required": true
+    },
+    {
+     "name": "PlanAdi",
+     "alias": "Plan adı",
+     "kind": "text",
+     "length": 200
+    },
+    {
+     "name": "Seviye",
+     "alias": "Plan kademesi",
+     "kind": "text",
+     "domain": "plan-seviye",
+     "required": true
+    },
+    {
+     "name": "Durum",
+     "kind": "text",
+     "domain": "plan-durum",
+     "required": true
+    },
+    {
+     "name": "Surum",
+     "alias": "Sürüm",
+     "kind": "integer",
+     "min": "1"
+    },
+    {
+     "name": "OnayTarihi",
+     "alias": "Onay tarihi",
+     "kind": "date"
+    },
+    {
+     "name": "Olcek",
+     "alias": "Ölçek (1/…)",
+     "kind": "integer",
+     "min": "500",
+     "max": "1000000"
+    },
+    {
+     "name": "UstPlan",
+     "alias": "Üst plan (kimliği)",
+     "kind": "text",
+     "length": 40
+    },
+    {
+     "name": "Dayanak",
+     "alias": "Dayanak belge",
+     "kind": "text",
+     "length": 400
+    }
+   ]
+  },
+  {
+   "id": "karar-alani",
+   "title": "Karar alanı",
+   "theme": "İmar planı",
+   "layer": [
+    "İmar planı",
+    "Karar alanları"
+   ],
+   "color": "#AB4ABA",
+   "geometry": "area",
+   "key": "KararKimlik",
+   "fields": [
+    {
+     "name": "KararKimlik",
+     "alias": "Karar kimliği",
+     "kind": "text",
+     "length": 40,
+     "required": true
+    },
+    {
+     "name": "Plan",
+     "alias": "Plan (kimliği)",
+     "kind": "text",
+     "length": 40
+    },
+    {
+     "name": "Kullanim",
+     "alias": "Kullanım",
+     "kind": "text",
+     "domain": "plan-kullanim",
+     "required": true
+    },
+    {
+     "name": "Nizam",
+     "alias": "Yapı nizamı",
+     "kind": "text",
+     "domain": "yapi-nizami"
+    },
+    {
+     "name": "TAKS",
+     "alias": "TAKS",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "1"
+    },
+    {
+     "name": "KAKS",
+     "alias": "KAKS (emsal)",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "20"
+    },
+    {
+     "name": "KatAdedi",
+     "alias": "Kat adedi",
+     "kind": "integer",
+     "min": "0",
+     "max": "100"
+    },
+    {
+     "name": "Hmax",
+     "alias": "Hmax (m)",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "500"
+    },
+    {
+     "name": "OnCekme",
+     "alias": "Ön çekme (m)",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "100"
+    },
+    {
+     "name": "YanCekme",
+     "alias": "Yan çekme (m)",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "100"
+    },
+    {
+     "name": "ArkaCekme",
+     "alias": "Arka çekme (m)",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "100"
+    },
+    {
+     "name": "Belirtilmeyen",
+     "alias": "Planda verilmeyen",
+     "kind": "text",
+     "domain": "plan-deger",
+     "multiple": true
+    },
+    {
+     "name": "PlanNotlari",
+     "alias": "Plan notları (no)",
+     "kind": "text",
+     "length": 200
+    }
+   ]
+  },
+  {
+   "id": "plan-notu",
+   "title": "Plan notu",
+   "theme": "İmar planı",
+   "layer": [
+    "İmar planı",
+    "Plan notları"
+   ],
+   "color": "#0F766E",
+   "geometry": "point",
+   "key": "NotNo",
+   "fields": [
+    {
+     "name": "NotNo",
+     "alias": "Not no",
+     "kind": "text",
+     "length": 20,
+     "required": true
+    },
+    {
+     "name": "Plan",
+     "alias": "Plan (kimliği)",
+     "kind": "text",
+     "length": 40
+    },
+    {
+     "name": "Metin",
+     "kind": "text",
+     "length": 4000,
+     "required": true
+    },
+    {
+     "name": "Kapsam",
+     "kind": "text",
+     "domain": "not-kapsam",
+     "required": true
+    }
+   ]
+  },
+  {
+   "id": "yol-aksi",
+   "title": "Yol aksı",
+   "theme": "İmar planı",
+   "layer": [
+    "İmar planı",
+    "Yollar"
+   ],
+   "color": "#6B7280",
+   "geometry": "line",
+   "key": "YolKimlik",
+   "fields": [
+    {
+     "name": "YolKimlik",
+     "alias": "Yol kimliği",
+     "kind": "text",
+     "length": 40
+    },
+    {
+     "name": "Tur",
+     "alias": "Tür",
+     "kind": "text",
+     "domain": "yol-tur"
+    },
+    {
+     "name": "Genislik",
+     "alias": "Genişlik (m)",
+     "kind": "decimal",
+     "scale": 2,
+     "min": "0",
+     "max": "200"
+    }
+   ]
+  }
+ ]
+}

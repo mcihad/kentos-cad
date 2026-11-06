@@ -7100,7 +7100,7 @@
       "status": "failed",
       "error": {
        "code": "unknown_profile",
-       "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.",
+       "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani.",
        "path": "name"
       }
      },

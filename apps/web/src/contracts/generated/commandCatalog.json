@@ -54635,6 +54635,171 @@
       ]
     },
     {
+      "id": "cad.zoning.check",
+      "version": 1,
+      "title": "İmar planı denetimi",
+      "summary": "İmar planını sembolden değil KentOS'un imar-plani profilinin tipli nesnelerinden denetler: plan sınırı (kademe, üst plan), karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu (no, kapsam). Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing, levelOrder (üst plan üst kademede değil), noPlan, noUse, unknownUse, missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım), outside (karar plan dışına taşıyor), noteMissing, noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance).",
+      "aliases": [
+        "imardenetim",
+        "plandenetim"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.zoning.check` v1: the tolerance (metres, a piece of an overlap or of a gap narrower than it is not\ncounted, docs/adr/0202 §2; none: 0.01). Refusal: `invalid_input` (`tolerance` not finite or under 0.000001).",
+        "properties": {
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "title": "ZoningCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.zoning.check` v1: the profile, the tolerance, how many plan boundaries, decision areas and plan\nnotes there are, the findings (by kind in the list's order, then by their first object's place in the drawing) and\ntheir count by kind.",
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "object",
+            "x-unit": "count"
+          },
+          "decisions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/ZoningFinding"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "plans": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "profile",
+          "tolerance",
+          "plans",
+          "decisions",
+          "notes",
+          "findings",
+          "counts"
+        ],
+        "title": "ZoningChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.zoning.check` v1: the profile, the tolerance, how many plan boundaries, decision areas and plan\nnotes there are, the findings (by kind in the list's order, then by their first object's place in the drawing) and\ntheir count by kind.",
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "object",
+            "x-unit": "count"
+          },
+          "decisions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/ZoningFinding"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "plans": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "profile",
+          "tolerance",
+          "plans",
+          "decisions",
+          "notes",
+          "findings",
+          "counts"
+        ],
+        "title": "ZoningChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimin imar planı",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.parcels.check",
       "version": 1,
       "title": "Parsel alan denetimi",
@@ -195421,6 +195586,37 @@
           "type": "string"
         }
       ]
+    },
+    "ZoningFinding": {
+      "description": "A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,\n`overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,\n`levelOrder`), its objects' persistent ids in the drawing's order, the area it measures (square metres) when it\nmeasures one, and what it says.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "uids",
+        "message"
+      ],
+      "type": "object"
     }
   }
 }

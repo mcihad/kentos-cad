@@ -583,6 +583,15 @@ profilli kaynağı eşle. Sembol değişikliği plan kararını değiştirmesin.
 Desteklenen resmî profil için bağımsız doğrulayıcıyla sonuç karşılaştırılsın;
 edinilmeyen veya doğrulanmayan profil “uyumlu” diye listelenmesin.
 
+**6 Kasım 2026 — İmar planı denetimi ([ADR 1420](../docs/adr/1420-zoning-plan-typed-check.md)).** Kapsam işareti:
+**Harita + CBS**. Araştırma: Bakanlığın plan standartları sayfası (MPYY ekleri, PlanGML doğrulama projesi; XSD
+edinilemedi), QGIS planx_mpyy_studio (MPYY 1.1.7 alanları ve denetimleri, ikincil), Netcad Planet, PAİY tanımları.
+Kanıtlanan: tipli plan nesneleri — yerleşik `imar-plani` profili (plan sınırı: kademe/durum/sürüm/üst plan/dayanak;
+karar alanı: kullanım, nizam, birimli TAKS/KAKS/kat/Hmax/çekme, planda verilmeyen değerler, plan notları; plan notu;
+yol aksı) ve `cad.zoning.check` (15 bulgu türü: boş ≠ 0 ≠ verilmeyen, karar çelişkisi, kararsız kısım, plan dışı,
+eksik/anılmayan not, üst/alt plan kademesi; 28 ortak durum), pencere Seç ve göster ile sahnede. Açık: resmî şema ve
+eşleme, plan değişikliği taslağı, üst plan sınırı kapsaması, yol devamlılığı, sembolün karardan seçilmesi.
+
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K21], [K30], [K31], [K40].

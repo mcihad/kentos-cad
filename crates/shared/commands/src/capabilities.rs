@@ -2381,6 +2381,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // İmar planı denetimi (plan/map-cad.md MAP-09, docs/adr/1420).
+    Entry {
+        id: "cad.zoning.check",
+        refusals: &[&["invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
     // Parsel alan denetimi (plan/map-cad.md MAP-08, docs/adr/1400).
     Entry {
         id: "cad.parcels.check",

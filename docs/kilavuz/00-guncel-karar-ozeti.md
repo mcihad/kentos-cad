@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **İmar planı denetimi (6 Kasım 2026; MAP-09, [ADR 1420](../../docs/adr/1420-zoning-plan-typed-check.md)).**
+  Yerleşik `imar-plani` profili ve `cad.zoning.check` (Harita + CBS, salt okunur); karar renkten değil tipli değerden;
+  MPYY/PlanGML uygunluğu iddia edilmez.
 - **Parsel alan denetimi (6 Kasım 2026; MAP-08, [ADR 1400](../../docs/adr/1400-parcel-area-check-and-identity.md)).**
   `cad.parcels.check` (Harita + CBS, salt okunur): hesap alanı ↔ tapu alanı, 2022 Yönetmeliği Madde 8(2) yanılma
   sınırı; parsel kimliği il/ilçe/mahalle/ada/parsel birlikte (`cad.parcels.create` de numarayı adada arar).

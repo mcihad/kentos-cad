@@ -211,6 +211,8 @@ pub const BUILTIN_PROFILES: &[(&str, &str)] = &[
     ("tucbs-temel", include_str!("../../../../catalog/v1/profiles/tucbs-temel.json")),
     // Harita's field-coded assets (docs/adr/1360 §3).
     ("harita-varliklari", include_str!("../../../../catalog/v1/profiles/harita-varliklari.json")),
+    // The zoning plan's typed decisions (docs/adr/1420).
+    ("imar-plani", include_str!("../../../../catalog/v1/profiles/imar-plani.json")),
 ];
 
 /// A built-in profile by its name (case aside); none for a name KentOS has not.

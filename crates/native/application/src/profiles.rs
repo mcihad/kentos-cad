@@ -51,12 +51,12 @@ pub(crate) fn profile_only(
                         codes::UNKNOWN_PROFILE,
                         match crate::profile_files::folder_of(shelf.drawing) {
                             Some(_) => format!(
-                                "“{n}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari{carried}; çizimin “{}” klasöründe de “{n}{}” yok.",
+                                "“{n}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani{carried}; çizimin “{}” klasöründe de “{n}{}” yok.",
                                 kentos_commands::PROFILE_FOLDER,
                                 kentos_commands::PROFILE_SUFFIX
                             ),
                             None => format!(
-                                "“{n}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari{carried}."
+                                "“{n}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari, imar-plani{carried}."
                             ),
                         },
                         "name",

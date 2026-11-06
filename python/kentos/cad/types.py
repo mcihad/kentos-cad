@@ -100709,6 +100709,105 @@ class XyzExported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ZoningCheck(_Model):
+    """Input of `cad.zoning.check` v1: the tolerance (metres, a piece of an overlap or of a gap narrower than it is not
+    counted, docs/adr/0202 §2; none: 0.01). Refusal: `invalid_input` (`tolerance` not finite or under 0.000001).
+    Attributes:
+        tolerance: Unit: length.
+    """
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningCheck:
+        return cls(
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningChecked(_Model):
+    """Output of `cad.zoning.check` v1: the profile, the tolerance, how many plan boundaries, decision areas and plan
+    notes there are, the findings (by kind in the list's order, then by their first object's place in the drawing) and
+    their count by kind.
+    Attributes:
+        tolerance: Unit: length.
+        plans: Unit: count.
+        decisions: Unit: count.
+        notes: Unit: count.
+        counts: Unit: count.
+    """
+    profile: str
+    tolerance: float
+    plans: int
+    decisions: int
+    notes: int
+    findings: list[ZoningFinding]
+    counts: dict[str, int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["tolerance"] = float(self.tolerance)
+        out["plans"] = self.plans
+        out["decisions"] = self.decisions
+        out["notes"] = self.notes
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["counts"] = dict(self.counts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningChecked:
+        return cls(
+            profile=data["profile"],
+            tolerance=float(data["tolerance"]),
+            plans=data["plans"],
+            decisions=data["decisions"],
+            notes=data["notes"],
+            findings=[ZoningFinding.from_json(e0) for e0 in data["findings"]],
+            counts=dict(data["counts"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningFinding(_Model):
+    """A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,
+    `overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,
+    `levelOrder`), its objects' persistent ids in the drawing's order, the area it measures (square metres) when it
+    measures one, and what it says.
+    Attributes:
+        area: Unit: area.
+    """
+    kind: str
+    uids: list[str]
+    message: str
+    area: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["uids"] = list(self.uids)
+        out["message"] = self.message
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningFinding:
+        return cls(
+            kind=data["kind"],
+            uids=list(data["uids"]),
+            message=data["message"],
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HorizontalAdjustWork(AdjustWork):
     """Yatay ağ dengelemesi: direction series and horizontal distances."""
     TAG_VALUE: ClassVar[str] = "horizontal"
@@ -124818,4 +124917,7 @@ __all__ = [
     "XyzVerticesName",
     "XyzWithoutZ",
     "XyzWithoutZName",
+    "ZoningCheck",
+    "ZoningChecked",
+    "ZoningFinding",
 ]
