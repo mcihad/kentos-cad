@@ -4743,10 +4743,12 @@ class _EntitiesStretch(LocalCommand[EntitiesStretch, EntitiesStretched, Entities
     görünen nesneler. Kilitli katmandakiler locked_skipped uyarısıyla atlanır; hiçbiri
     kalmazsa nothing_to_stretch. topology verilirse (Topolojik düzenleme) taşınan
     köşeleri paylaşan görünen komşular aynı adımda izler; points noktaları da köşe
-    sayar. Kilitli ya da geçersiz kalacak komşu uyarıyla değişmez. Yer değiştirme
-    sıfırsa hiçbir şey yazılmaz. Yeni şekilleri paylaşılan geometri çekirdeği bulur:
-    Esnet aracı, Python ve ajan aynı isteğe aynı şekilleri alır. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    sayar. Kilitli ya da geçersiz kalacak komşu uyarıyla değişmez; topology.stopOnLocked
+    ile kilitli komşu bütün düzenlemeyi reddeder, ortak sınır ayrılmaz
+    (shared_boundary_locked, ADR 1261). Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni
+    şekilleri paylaşılan geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı
+    isteğe aynı şekilleri alır. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.entities.stretch"
@@ -4782,10 +4784,12 @@ class _EntitiesStretch(LocalCommand[EntitiesStretch, EntitiesStretched, Entities
         Kilitli katmandakiler locked_skipped uyarısıyla atlanır; hiçbiri kalmazsa
         nothing_to_stretch. topology verilirse (Topolojik düzenleme) taşınan köşeleri
         paylaşan görünen komşular aynı adımda izler; points noktaları da köşe sayar. Kilitli
-        ya da geçersiz kalacak komşu uyarıyla değişmez. Yer değiştirme sıfırsa hiçbir şey
-        yazılmaz. Yeni şekilleri paylaşılan geometri çekirdeği bulur: Esnet aracı, Python ve
-        ajan aynı isteğe aynı şekilleri alır. expectedRevision verilmişse ve çizim o sürümde
-        değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        ya da geçersiz kalacak komşu uyarıyla değişmez; topology.stopOnLocked ile kilitli
+        komşu bütün düzenlemeyi reddeder, ortak sınır ayrılmaz (shared_boundary_locked, ADR
+        1261). Yer değiştirme sıfırsa hiçbir şey yazılmaz. Yeni şekilleri paylaşılan
+        geometri çekirdeği bulur: Esnet aracı, Python ve ajan aynı isteğe aynı şekilleri
+        alır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
+        sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -5280,8 +5284,9 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
     (artı: kenarın sağına) geçen yay yapar, yay kenarı da yeniden biçimler; Kenar
     genişliği (width) çoklu çizginin kenarına başlangıç ve bitiş genişliği verir;
     çizgiye köşe eklenince çoklu çizgi olur. Alanın delikleri ve öbür parçaları kalır;
-    topology ile ortak köşe ve kenarları olan komşular aynı adımda izler. Tek geri alma
-    adımı.
+    topology ile ortak köşe ve kenarları olan komşular aynı adımda izler;
+    topology.stopOnLocked ile kilitli komşu düzenlemeyi reddeder
+    (shared_boundary_locked, ADR 1261). Tek geri alma adımı.
     """
     __slots__ = ()
     id = "cad.entities.vertex"
@@ -5317,7 +5322,8 @@ class _EntitiesVertex(LocalCommand[EntitiesVertex, EntitiesVertexed, EntitiesVer
         kenarı da yeniden biçimler; Kenar genişliği (width) çoklu çizginin kenarına
         başlangıç ve bitiş genişliği verir; çizgiye köşe eklenince çoklu çizgi olur. Alanın
         delikleri ve öbür parçaları kalır; topology ile ortak köşe ve kenarları olan
-        komşular aynı adımda izler. Tek geri alma adımı.
+        komşular aynı adımda izler; topology.stopOnLocked ile kilitli komşu düzenlemeyi
+        reddeder (shared_boundary_locked, ADR 1261). Tek geri alma adımı.
 
         Args:
             doc: The drawing it works on.

@@ -290,6 +290,9 @@ pub struct Draft {
     pub topology: bool,
     /// Points count as shared corners too (Noktalar da, `drafting.topologyPoints`).
     pub topology_points: bool,
+    /// A neighbour on a locked layer stops the edit (Kilitli komşuda durdur, `drafting.topologyStopOnLocked`,
+    /// docs/adr/1261) instead of the shared boundary splitting.
+    pub topology_stop_on_locked: bool,
     /// The overlap control (`drafting.overlap`, docs/adr/0162 §1): a new
     /// area drawn by its outline loses what overlaps its neighbours.
     pub overlap: Overlap,
@@ -405,6 +408,7 @@ impl Default for Draft {
             tracking: true,
             topology: false,
             topology_points: false,
+            topology_stop_on_locked: false,
             overlap: Overlap::Allow,
             color: None,
             line_type: None,

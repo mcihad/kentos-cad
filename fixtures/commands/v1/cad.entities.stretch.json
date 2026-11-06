@@ -968,6 +968,46 @@
       ]
     },
     {
+      "name": "Topoloji, kilitli komşuda durdur: ortak sınır kilitli komşuyla paylaşılıyor, hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487029,
+                "y": 4420009
+              },
+              "max": {
+                "x": 487031,
+                "y": 4420011
+              }
+            },
+            "dx": 2,
+            "dy": 0,
+            "uids": [
+              "$uidOf:12"
+            ],
+            "topology": {
+              "stopOnLocked": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "shared_boundary_locked",
+              "message": "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.",
+              "path": "topology"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "canUndo": false
+          }
+        }
+      ]
+    },
+    {
       "name": "Pencerede kilitli nesne locked_skipped uyarısıyla atlanır, öbürü esner",
       "steps": [
         {

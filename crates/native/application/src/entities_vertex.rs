@@ -415,6 +415,13 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         }
         (None, _) => None,
     };
+    // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; nothing is written.
+    if let (Some(t), Some(n)) = (input.topology, &follow)
+        && t.stop_on_locked
+        && n.locked > 0
+    {
+        return Err(refuse(codes::SHARED_BOUNDARY_LOCKED, crate::stretch::shared_locked(n.locked), "topology"));
+    }
     let geometry = edit_geometry(edited).ok_or_else(no_place)?;
     let mut changes = vec![EntityEdit::Update {
         uid: input.uid.clone(),

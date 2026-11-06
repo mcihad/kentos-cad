@@ -65,6 +65,13 @@ pub fn neighbours_in(
     topology_follow::neighbours(doc, spatial.store(), points, edits)
 }
 
+/// Why an edit that stops at a locked neighbour wrote nothing (docs/adr/1261): the commands' words.
+pub fn stopped(locked: usize) -> String {
+    format!(
+        "Ortak sınır kilitli katmandaki {locked} komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın."
+    )
+}
+
 /// Says what the neighbours did, once the edit is written: how many changed
 /// with it, how many could not (the web's `sayNeighbours`).
 pub(crate) fn say(n: Option<&Neighbours>, cx: &mut Context<'_>) {

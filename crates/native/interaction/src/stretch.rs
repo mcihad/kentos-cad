@@ -127,6 +127,7 @@ impl Stretch {
             uids,
             topology: cx.draft.topology.then_some(StretchTopology {
                 points: cx.draft.topology_points,
+                stop_on_locked: cx.draft.topology_stop_on_locked,
             }),
             expected_revision: None,
         }

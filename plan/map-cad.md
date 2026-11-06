@@ -446,6 +446,12 @@ değiştirmemesi (`topology_repair::tests`); yeniden açılan projede aynı tari
 satırının değiştiği artımlı denetimin uygulama düzeyinde (band) sınanması; GIS Processing/veri formu yolu; GUI'de
 gerçek fare/klavye ile tarif akışı kanıtı ve büyük veri ölçümü. Madde açık kalır.
 
+**6 Kasım 2026 — kilitli komşuda durdur ([ADR 1261](../docs/adr/1261-topological-editing-stops-at-a-locked-neighbour.md)).**
+Kapsam işareti: **Harita + CBS**. Araştırma: QGIS ve ArcGIS Pro'da topolojik düzenleme yalnız düzenlenebilir katmanları
+taşır (kilitli komşu ayrılır). KentOS ikisini de sunar: ilk değer bugünkü ayırma; **Kilitli komşuda durdur** açıkken
+tutamaç, Köşe tablosu, Esnet ve `cad.entities.vertex` kilitli komşuyla paylaşılan sınırı hiç yazmaz
+(`shared_boundary_locked`). Açık: yetkisiz komşu, önizlemede kilitli komşunun vurgusu, yay/delik/üçlü birleşim.
+
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
 **Öncelik:** P1 teknik veri modeli; resmî işlemler son aşama kapısında.

@@ -250,11 +250,13 @@ def followers(moved, edited_ids, points=False):
 
 
 NEIGHBOUR_LOCKED = "Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı."
+# ADR 1261: with topology.stopOnLocked a locked neighbour refuses the whole edit (the shared boundary would split).
+SHARED_LOCKED = "Ortak sınır kilitli katmandaki {} komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın."
 NEIGHBOUR_INVALID = "{} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe)."
 NOTHING_TO_STRETCH = "Pencerede köşesi olan düzenlenebilir nesne yok. Pencereyi taşınacak köşelerin üstüne verin."
 
 
-def stretch_case(name, w, dx, dy, uids=None, topology=False, extra=()):
+def stretch_case(name, w, dx, dy, uids=None, topology=False, extra=(), stop=False):
     inp = {"window": window_input(w), "dx": num(dx), "dy": num(dy)}
     warnings = []
     if uids is None:
@@ -275,12 +277,16 @@ def stretch_case(name, w, dx, dy, uids=None, topology=False, extra=()):
             else:
                 targets.append(e)
     if topology:
-        inp["topology"] = {}
+        inp["topology"] = {"stopOnLocked": True} if stop else {}
     new = [stretched(e, w, dx, dy) for e in targets]
     follow = []
     if topology:
         moved = [(p, (p[0] + dx, p[1] + dy)) for e in targets for p in pts_of(e) if inside(p, w)]
         follow, nl, ni = followers(moved, {e["id"] for e in targets})
+        if nl and stop:
+            return {"name": name, "steps": [{"op": "execute", "input": inp,
+                                             "result": failed("shared_boundary_locked", SHARED_LOCKED.format(nl), "topology"),
+                                             "expect": {"revision": "same", "canUndo": False}}]}
         if nl:
             warnings.append(warning("neighbour_locked", NEIGHBOUR_LOCKED.format(nl)))
         if ni:
@@ -305,6 +311,8 @@ def stretch_cases():
         stretch_case("Seçim yalnız onları esnetir; pencerede köşesi olmayan outside_window uyarısıyla atlanır", corner, 1, -1, uids=[12, 10]),
         stretch_case("Topoloji: ortak köşeli komşular izler (iki ucu buluşan çizgi de, köşe sayısı değişmez); kilitli komşu uyarıyla değişmez",
                      top, 2, 0, uids=[12], topology=True),
+        stretch_case("Topoloji, kilitli komşuda durdur: ortak sınır kilitli komşuyla paylaşılıyor, hiçbir şey yazılmaz",
+                     ((X + 29, Y + 9), (X + 31, Y + 11)), 2, 0, uids=[12], topology=True, stop=True),
         stretch_case("Pencerede kilitli nesne locked_skipped uyarısıyla atlanır, öbürü esner", ((X + 9, Y + 39), (X + 11, Y + 41)), 0, 1),
         stretch_case("Pencerenin köşeleri ters verilse de aynı pencere", ((X + 11, Y + 1), (X + 9, Y - 1)), 2, 0),
         stretch_case("Nokta penceredeyse taşınır", ((X + 49, Y - 1), (X + 51, Y + 1)), -1, 2),

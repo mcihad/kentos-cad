@@ -84876,19 +84876,25 @@ class StretchTopology(_Model):
     moved vertex go with the stretched ones, in the same step.
     Attributes:
         points: Noktalar da: a point is a corner too.
+        stop_on_locked: Kilitli komşuda durdur (docs/adr/1261): a neighbour on a locked layer refuses the whole edit
+            (`shared_boundary_locked`) instead of staying behind with the shared boundary split.
     """
     points: bool | Unset = UNSET
+    stop_on_locked: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.points is not UNSET:
             out["points"] = self.points
+        if self.stop_on_locked is not UNSET:
+            out["stopOnLocked"] = self.stop_on_locked
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> StretchTopology:
         return cls(
             points=data.get("points", UNSET),
+            stop_on_locked=data.get("stopOnLocked", UNSET),
         )
 
 

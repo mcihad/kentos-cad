@@ -2771,6 +2771,20 @@
    "tests": 1
   },
   {
+   "id": "draft.topologyStopOnLocked",
+   "kind": "command",
+   "title": "Topolojik düzenlemede kilitli komşuda durdur",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Çizim yardımcıları oturumun durumu.",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "draft.trackPoint",
    "kind": "command",
    "title": "Geçici izleme noktası",

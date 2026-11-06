@@ -386,6 +386,91 @@ fn with_topology_a_shared_vertex_takes_its_neighbour_along() {
     assert_eq!(corner(&app, 5, 3), (486760.0, 4420195.0));
 }
 
+/// Kilitli komşuda durdur (docs/adr/1261): the neighbour's layer locked, a shared vertex typed in the table writes
+/// nothing and says why; turned off, the edit goes through and the boundary splits (the locked one stays).
+#[test]
+fn with_stop_on_locked_a_locked_neighbour_stops_the_table() {
+    use super::{Event, Walk};
+    use crate::app::Message;
+    let mut app = app_with_vertices();
+    let _ = app.update(Message::Run("draft.topology"));
+    let _ = app.update(Message::Run("draft.topologyStopOnLocked"));
+    assert!(app.draft.topology && app.draft.topology_stop_on_locked);
+    // Parcel 13 on a layer of its own, locked.
+    {
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        let layer = model.add_layer(kentos_domain::NewLayer::layer("Komşu"), None, false).expect("a layer");
+        let mut thirteen = model.get(Slot(5)).cloned().expect("13");
+        thirteen.base_mut().layer_id = layer.clone();
+        model.update(Slot(5), thirteen);
+        model.set_layer_locked(&layer, true);
+    }
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("view.coords"));
+    let corner = |app: &crate::app::App, slot: u32, i: usize| match app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.get(Slot(slot)))
+    {
+        Some(kentos_commands::Entity::Polygon(a)) => (a.pts[i].x, a.pts[i].y),
+        _ => panic!("a parcel"),
+    };
+    let before = corner(&app, 1, 1);
+    ev(&mut app, Event::Edit(1, Column::East));
+    ev(&mut app, Event::Input("486761.5".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Down)));
+    assert_eq!(corner(&app, 1, 1), before, "nothing written");
+    assert!(app.log.lines().any(|l| l.text.starts_with("Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor")));
+    ev(&mut app, Event::Cancel);
+    // Off again: the parcel's corner moves, the locked neighbour's stays (the boundary splits, said).
+    let _ = app.update(Message::Run("draft.topologyStopOnLocked"));
+    ev(&mut app, Event::Edit(1, Column::East));
+    ev(&mut app, Event::Input("486761.5".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Down)));
+    assert_eq!(corner(&app, 1, 1), (486761.5, 4420195.0));
+    assert_eq!(corner(&app, 5, 3), (486760.0, 4420195.0));
+    assert!(app.log.lines().any(|l| l.text.starts_with("Kilitli katmandaki 1 komşu nesne değişmedi")));
+}
+
+/// Kilitli komşuda durdur's picture (docs/adr/1261): the table open on parcel 12, its shared vertex typed, the edit
+/// refused and said; `.run/gui-evidence/kilitli-komsu-1261/`.
+#[test]
+#[ignore = "writes pictures: cargo test -p kentos-desktop vertices::tests::stop_on_locked_screens -- --ignored --nocapture"]
+fn stop_on_locked_screens() {
+    use super::{Event, Walk};
+    use crate::app::{App, Message};
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kilitli-komsu-1261");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let mut app = app_with_vertices();
+    let size = Size::new(1280.0, 800.0);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("draft.topology"));
+    let _ = app.update(Message::Run("draft.topologyStopOnLocked"));
+    {
+        let model = &mut app.document.as_mut().expect("a drawing").model;
+        let layer = model.add_layer(kentos_domain::NewLayer::layer("Komşu"), None, false).expect("a layer");
+        let mut thirteen = model.get(Slot(5)).cloned().expect("13");
+        thirteen.base_mut().layer_id = layer.clone();
+        model.update(Slot(5), thirteen);
+        model.set_layer_locked(&layer, true);
+    }
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("view.coords"));
+    ev(&mut app, Event::Edit(1, Column::East));
+    ev(&mut app, Event::Input("486761.5".into()));
+    ev(&mut app, Event::Finish(Some(Walk::Down)));
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("kilitli-komsuda-durdu.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+}
+
 /// Köşe tablosu's pictures (docs/adr/0172), the web's `shots.mjs
 /// vertextable`: the parcel's table with a row selected and its vertex
 /// ringed, a Y written with Enter (the row below open), a radius refused,

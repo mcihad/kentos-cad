@@ -231,6 +231,14 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Noktalar da",
                 "Topolojik düzenlemede nokta nesneleri de ortak köşe sayılır ve köşeyle birlikte taşınır; kapalıyken ölçü noktaları yerinde kalır.",
             ),
+        // docs/adr/1261: a locked neighbour stops the edit instead of the boundary splitting.
+        boolean("drafting.topologyStopOnLocked", false)
+            .scope(SettingScope::Session)
+            .hosts(&[Desktop])
+            .text(
+                "Kilitli komşuda durdur",
+                "Ortak köşe ya da kenar kilitli katmandaki bir nesneyle paylaşılıyorsa düzenleme yapılmaz ve nedeni söylenir; kapalıyken kilitli komşu yerinde kalır, ortak sınır ayrılır.",
+            ),
         // The overlap control (docs/adr/0162 §1): Serbest at the start of every session.
         choice(
             "drafting.overlap",

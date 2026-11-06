@@ -122,6 +122,7 @@ type Key = (u64, u64, Slot);
 struct TopologyOn {
     on: bool,
     points: bool,
+    stop_on_locked: bool,
 }
 
 impl TopologyOn {
@@ -130,6 +131,7 @@ impl TopologyOn {
         self.on.then_some(edit::Topology {
             spatial,
             points: self.points,
+            stop_on_locked: self.stop_on_locked,
         })
     }
 }
@@ -530,6 +532,7 @@ impl App {
         Some(TopologyOn {
             on: self.draft.topology,
             points: self.draft.topology_points,
+            stop_on_locked: self.draft.topology_stop_on_locked,
         })
     }
 

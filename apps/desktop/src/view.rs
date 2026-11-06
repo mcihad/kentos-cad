@@ -1709,15 +1709,13 @@ impl App {
         // Topolojik düzenleme's option, Noktalar da, on the cell's right-click menu (docs/adr/0160 §1).
         if id == "draft.topology" {
             return ContextMenu::new(toggle, move |_| {
-                let points = "draft.topologyPoints";
-                match catalog().get(points) {
-                    Some(command) => Menu::new().check(
-                        "Noktalar da",
-                        self.checked(points).unwrap_or(false),
-                        enabled(command),
-                    ),
-                    None => Menu::new(),
+                let mut menu = Menu::new();
+                for (id, words) in [("draft.topologyPoints", "Noktalar da"), ("draft.topologyStopOnLocked", "Kilitli komşuda durdur")] {
+                    if let Some(command) = catalog().get(id) {
+                        menu = menu.check(words, self.checked(id).unwrap_or(false), enabled(command));
+                    }
                 }
+                menu
             })
             .into();
         }

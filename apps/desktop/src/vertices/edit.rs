@@ -101,6 +101,8 @@ pub struct Outcome {
 pub struct Topology<'a> {
     pub spatial: &'a Spatial,
     pub points: bool,
+    /// Kilitli komşuda durdur (docs/adr/1261).
+    pub stop_on_locked: bool,
 }
 
 /// Satır ekle's row: its cells as typed.
@@ -383,6 +385,13 @@ fn written(
         let after = shape(&entity_of(&geometry, e.base().clone()));
         neighbours_in(doc, t.spatial, t.points, &[(slot, shape(&e), after)])
     });
+    // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; nothing is written.
+    if let Some(n) = follow.as_ref().filter(|n| topology.is_some_and(|t| t.stop_on_locked) && n.locked > 0) {
+        return Outcome {
+            said: vec![kentos_interaction::neighbours::stopped(n.locked)],
+            ..Outcome::default()
+        };
+    }
     let uid = uid.to_string();
     let change = if Some(edited.kind) == kind_of(&e) {
         EntityEdit::Update { uid, geometry }

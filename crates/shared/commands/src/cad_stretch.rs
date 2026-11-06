@@ -46,6 +46,11 @@ pub struct StretchTopology {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub points: bool,
+    /// Kilitli komşuda durdur (docs/adr/1261): a neighbour on a locked layer refuses the whole edit
+    /// (`shared_boundary_locked`) instead of staying behind with the shared boundary split.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub stop_on_locked: bool,
 }
 
 /// Input of `cad.entities.stretch` v1: the vertices inside `window` move by
@@ -165,7 +170,7 @@ mod tests {
             "dx": 1.0, "dy": 0.0, "topology": {}
         }))
         .expect("reads");
-        assert_eq!(input.topology, Some(StretchTopology { points: false }));
+        assert_eq!(input.topology, Some(StretchTopology { points: false, stop_on_locked: false }));
         assert!(input.uids.is_none());
     }
 }

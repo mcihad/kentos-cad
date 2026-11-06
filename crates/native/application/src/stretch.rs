@@ -199,6 +199,13 @@ struct Checked {
     warnings: Vec<CommandWarning>,
 }
 
+/// Why a topological edit that stops at a locked neighbour wrote nothing (docs/adr/1261); Köşe düzenle says the same.
+pub(crate) fn shared_locked(n: usize) -> String {
+    format!(
+        "Ortak sınır kilitli katmandaki {n} komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın."
+    )
+}
+
 fn warning(code: &str, message: String, path: Option<String>) -> CommandWarning {
     CommandWarning {
         code: code.into(),
@@ -405,6 +412,14 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesStretch) -> Resu
     if let Some(topology) = input.topology
         && let Some(n) = topology_follow::neighbours(doc, store, topology.points, &edits)
     {
+        // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; nothing is written.
+        if topology.stop_on_locked && n.locked > 0 {
+            return Err(Stop::failed(error(
+                codes::SHARED_BOUNDARY_LOCKED,
+                shared_locked(n.locked),
+                Some("topology".into()),
+            )));
+        }
         changes.extend(n.changes);
         if n.locked > 0 {
             warnings.push(warning(

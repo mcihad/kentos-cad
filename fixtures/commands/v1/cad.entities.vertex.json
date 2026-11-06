@@ -2937,6 +2937,61 @@
       ]
     },
     {
+      "name": "Topoloji, kilitli komşuda durdur: kilitli komşu ortak kenarı paylaştığı için hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "arc",
+            "place": {
+              "kind": "mid",
+              "part": 0,
+              "ring": 0,
+              "index": 2
+            },
+            "topology": {
+              "stopOnLocked": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "shared_boundary_locked",
+              "message": "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.",
+              "path": "topology"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Topoloji: köşesi silinince geçersiz kalacak üçgen komşu değişmez, neighbour_invalid uyarısıyla sayılır",
       "steps": [
         {

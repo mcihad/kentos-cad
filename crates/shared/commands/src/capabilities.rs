@@ -4473,6 +4473,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_uid",
                 "entity_not_found",
                 "nothing_to_stretch",
+                "shared_boundary_locked",
             ],
             REVISION,
         ],
@@ -6506,6 +6507,7 @@ const ENTRIES: &[Entry] = &[
             "no_such_place",
             "too_few_corners",
             "too_few_points",
+            "shared_boundary_locked",
         ]],
         warnings: &["neighbour_locked", "neighbour_invalid"],
         targets: || {

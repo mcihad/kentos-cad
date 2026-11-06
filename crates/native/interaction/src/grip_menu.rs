@@ -287,6 +287,7 @@ pub fn request(menu: GripMenu, action: GripAction, cx: &Context<'_>) -> Option<E
         widths: None,
         topology: cx.draft.topology.then_some(StretchTopology {
             points: cx.draft.topology_points,
+            stop_on_locked: cx.draft.topology_stop_on_locked,
         }),
         expected_revision: None,
     })

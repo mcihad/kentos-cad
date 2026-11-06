@@ -150,6 +150,8 @@ WRONG_EDGE = ("Köşe eklemenin yeri bir kenarın ortası (mid) ya da kenar üze
 HOLE_EDIT = "Deliğin köşe ve kenarları bu işlemle değişmez; deliği tutamacıyla sürükleyin ya da Patlat'la düzenleyin."
 NO_PLACE = "Nesnede verilen yer yok: parça, köşe ya da kenar sırası nesnenin dışında."
 NEIGHBOUR_LOCKED = "Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı."
+# ADR 1261: with topology.stopOnLocked a locked neighbour refuses the whole edit.
+SHARED_LOCKED = "Ortak sınır kilitli katmandaki {} komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın."
 NEIGHBOUR_INVALID = "{} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe)."
 LABELS = {"remove": "Köşe sil", "insert": "Köşe ekle", "straighten": "Düz kenar yap", "arc": "Yaya dönüştür",
           "width": "Kenar genişliği"}
@@ -529,12 +531,14 @@ def adr_0288_cases():
     return out
 
 
-def case(name, i, action, place, index=None, part=0, topology=False, extra=(), undo=False):
+def case(name, i, action, place, index=None, part=0, topology=False, extra=(), undo=False, stop=False):
     t = place.get("t")
     inp = {"uid": UID(i), "action": action, "place": place}
     if topology:
-        inp["topology"] = {}
+        inp["topology"] = {"stopOnLocked": True} if stop else {}
     changed, locked, invalid = edited(i, action, place["index"] if index is None else index, part, topology, t)
+    if stop and locked:
+        return refused(name, inp, "shared_boundary_locked", SHARED_LOCKED.format(locked), "topology")
     warnings = [warning("neighbour_locked", NEIGHBOUR_LOCKED.format(locked))] if locked else []
     warnings += [warning("neighbour_invalid", NEIGHBOUR_INVALID.format(invalid))] if invalid else []
     ids = [c["id"] for c in changed]
@@ -578,6 +582,8 @@ def cases():
         case("Yaya dönüştür: açık yolun kenarı yolun sağına (+0,5)", 3, "arc", mid(1)),
         case("Topoloji: ortak kenarın yayı komşuya da; ters yönde giden komşuda eksi işaretle", 1, "arc", mid(1), topology=True),
         case("Topoloji: kilitli komşu değişmez, neighbour_locked uyarısıyla sayılır; öbür komşu izler", 1, "arc", mid(2), topology=True),
+        case("Topoloji, kilitli komşuda durdur: kilitli komşu ortak kenarı paylaştığı için hiçbir şey yazılmaz", 1, "arc", mid(2),
+             topology=True, stop=True),
         case("Topoloji: köşesi silinince geçersiz kalacak üçgen komşu değişmez, neighbour_invalid uyarısıyla sayılır", 15, "remove", vertex(1),
              topology=True),
     ]

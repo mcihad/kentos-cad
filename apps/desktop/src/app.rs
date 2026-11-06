@@ -2909,6 +2909,7 @@ impl App {
             tracking: s.bool("drafting.tracking"),
             topology: s.bool("drafting.topology"),
             topology_points: s.bool("drafting.topologyPoints"),
+            topology_stop_on_locked: s.bool("drafting.topologyStopOnLocked"),
             overlap: kentos_interaction::Overlap::parse(&s.text("drafting.overlap")),
             // The session's, not settings: kept through a settings change.
             color: self.draft.color,
@@ -3288,6 +3289,10 @@ impl App {
             "draft.topologyPoints" => self.toggle_session(
                 "drafting.topologyPoints",
                 "Topolojik düzenlemede noktalar da",
+            ),
+            "draft.topologyStopOnLocked" => self.toggle_session(
+                "drafting.topologyStopOnLocked",
+                "Topolojik düzenlemede kilitli komşuda durdur",
             ),
             "draft.overlap" => self.toggle_overlap(),
             // The digitizing locks (docs/adr/0166 §6), on the running command.
@@ -3911,6 +3916,7 @@ impl App {
             "draft.tracking" => self.draft.tracking,
             "draft.topology" => self.draft.topology,
             "draft.topologyPoints" => self.draft.topology_points,
+            "draft.topologyStopOnLocked" => self.draft.topology_stop_on_locked,
             "draft.overlap" => self.draft.overlap != kentos_interaction::Overlap::Allow,
             "edit.selectFilter" => self.draft.select_kinds.is_some(),
             "edit.autoSelect" => self.auto_select_on(),

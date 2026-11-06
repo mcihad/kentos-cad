@@ -1098,6 +1098,8 @@ codes! {
     NOTHING_TO_STRETCH = "nothing_to_stretch", Failed, false, "Pencerede köşesi olan düzenlenebilir nesne yok.";
     /// A neighbour on a locked layer that could not follow (Topolojik düzenleme).
     NEIGHBOUR_LOCKED = "neighbour_locked", Warning, false, "Kilitli katmandaki komşu nesne değişmedi; ortak sınır ayrıldı.";
+    /// Topological editing that stops at a locked neighbour (docs/adr/1261): the shared boundary would split.
+    SHARED_BOUNDARY_LOCKED = "shared_boundary_locked", Failed, false, "Ortak sınır kilitli katmandaki bir komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.";
     /// A neighbour that following would leave invalid (Topolojik düzenleme).
     NEIGHBOUR_INVALID = "neighbour_invalid", Warning, false, "Komşu nesne geçersiz kalacağı için değişmedi.";
     /// An object of a kind Kır does not break.

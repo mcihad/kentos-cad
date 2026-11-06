@@ -720,6 +720,11 @@ impl Select {
             return;
         }
         if let Some((input, follow)) = grip_input(&moved, copy, &grips, dx, dy, cx) {
+            // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; the grip stays where it was.
+            if let Some(n) = follow.as_ref().filter(|n| cx.draft.topology_stop_on_locked && n.locked > 0) {
+                cx.say(Level::Warn, neighbours::stopped(n.locked));
+                return;
+            }
             let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
             if points::written(result, cx).is_some() {
                 neighbours::say(follow.as_ref(), cx);

@@ -8,4 +8,9 @@ export type StretchTopology = {
 /**
  * Noktalar da: a point is a corner too.
  */
-points?: boolean, };
+points?: boolean, 
+/**
+ * Kilitli komşuda durdur (docs/adr/1261): a neighbour on a locked layer refuses the whole edit
+ * (`shared_boundary_locked`) instead of staying behind with the shared boundary split.
+ */
+stopOnLocked?: boolean, };
