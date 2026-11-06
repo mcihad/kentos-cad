@@ -1684,6 +1684,7 @@ mod tests {
                 text_style("dxf-text-3", "Standart"),
             ],
             dimension: Vec::new(),
+            table: Vec::new(),
         };
         let applied = apply_styled_import(
             &mut doc,
