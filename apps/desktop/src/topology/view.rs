@@ -17,12 +17,17 @@ use kentos_ui::widget::{Elided, Menu, MenuButton, Tip, horizontal_divider, tip};
 
 use super::Event;
 use super::plan::{self, COLUMNS, Filter, texts};
+use super::review::state_text;
 use crate::app::{App, Message};
 use crate::icons::from_web;
 
 /// The widest the bar needs on one line (logical pixels at the default text size):
 /// its start, the count with İstisnayı kaldır at its end, and the gaps.
-const BAR_WIDTH: f32 = 1060.0;
+const BAR_WIDTH: f32 = 1560.0;
+
+/// The widest the bar's end needs on its own line: the count, Düzelt ▾, Tarifle onar, Gerekçe, Hata işaretle and
+/// İstisna yap; narrower, the review's words and marks go on a third line.
+const END_WIDTH: f32 = 960.0;
 
 fn msg(e: Event) -> Message {
     Message::Topology(e)
@@ -165,11 +170,12 @@ impl App {
                 1 => Length::FillPortion(3),
                 2 => Length::FillPortion(5),
                 3 => Length::FillPortion(4),
-                4 => Length::FillPortion(4),
+                4 => Length::FillPortion(5),
+                5 => Length::FillPortion(3),
                 _ => Length::FillPortion(3),
             };
             let column = TableColumn::new(*title).width(width);
-            if i == 0 || i == 5 {
+            if i == 0 || i == 6 {
                 column.align_right()
             } else {
                 column
@@ -207,6 +213,7 @@ impl App {
                             name(&r.layer),
                             plan::rule_text(r, name),
                             plan::problem_text(f, c.g.lapsed(f)),
+                            state_text(c, f),
                             plan::objects_text(f, &ids),
                             plan::measure_text(f, &format),
                         ],
@@ -237,7 +244,8 @@ impl App {
                     cell(cells[1].clone(), quiet, false),
                     problem.into(),
                     cell(cells[3].clone(), quiet, false),
-                    container(words(cells[4].clone(), quiet, false))
+                    cell(cells[4].clone(), quiet, false),
+                    container(words(cells[5].clone(), quiet, false))
                         .align_right(Fill)
                         .into(),
                 ])
@@ -271,9 +279,38 @@ impl App {
             .padding([4, 10])
             .width(Fill)
         });
+        // The recipe planned (docs/adr/1260 §4): what it would do, Uygula and Vazgeç.
+        let recipe = self.topology_recipe().map(|r| {
+            container(
+                row![
+                    icon(from_web(Some("topologyFix"))).size(14.0),
+                    container(label::body(self.topology_recipe_text(r))).width(Fill),
+                    bar_button("close", texts::DROP, texts::DROP_HINT, Some(msg(Event::Drop))),
+                    tip(
+                        button(label::body(texts::APPLY))
+                            .style(style::button::primary)
+                            .padding(kentos_ui::theme::metrics::action())
+                            .on_press(msg(Event::Apply)),
+                        Tip::new(texts::APPLY).body(texts::APPLY_HINT),
+                        iced::widget::tooltip::Position::Top,
+                    ),
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .padding([4, 10])
+            .width(Fill)
+            .style(|theme: &iced::Theme| container::Style {
+                background: Some(Background::Color(Tokens::of(theme).accent.scale_alpha(0.10))),
+                ..container::Style::default()
+            })
+        });
         let mut out = Column::new().push(bar);
         if let Some(running) = running {
             out = out.push(running);
+        }
+        if let Some(recipe) = recipe {
+            out = out.push(recipe);
         }
         if let Some(banner) = banner {
             out = out.push(banner);
@@ -429,19 +466,56 @@ impl App {
         ]
         .spacing(10)
         .align_y(Center);
-        let end = row![label::muted(count), fix, mark]
-            .spacing(10)
-            .align_y(Center);
+        let some = !chosen.is_empty() && !stale && checked.is_some();
+        let error = bar_button(
+            "warning",
+            texts::ERROR,
+            texts::ERROR_HINT,
+            some.then(|| msg(Event::Error)),
+        );
+        let recipe = bar_button(
+            "topologyFix",
+            texts::RECIPE,
+            texts::RECIPE_HINT,
+            some.then(|| msg(Event::Recipe)),
+        );
+        let reason = tip(
+            container(
+                kentos_ui::widget::text_field(texts::REASON, &self.topology.reason)
+                    .on_input(|t| msg(Event::Reason(t))),
+            )
+            .width(Length::Fixed(typography::scaled(200.0))),
+            Tip::new(texts::REASON).body(texts::REASON_HINT),
+            iced::widget::tooltip::Position::Top,
+        );
         let bar: Element<'_, Message> = if width >= typography::from_default(BAR_WIDTH) {
+            let end = row![label::muted(count), fix, recipe, reason, error, mark]
+                .spacing(10)
+                .align_y(Center);
             row![start, space::horizontal(), end]
                 .spacing(10)
                 .align_y(Center)
                 .into()
-        } else {
+        } else if width >= typography::from_default(END_WIDTH) {
+            let end = row![label::muted(count), fix, recipe, reason, error, mark]
+                .spacing(10)
+                .align_y(Center);
             Column::new()
                 .spacing(6)
                 .push(start)
                 .push(row![space::horizontal(), end].align_y(Center))
+                .into()
+        } else {
+            // Narrow: the review's words and marks on a line of their own.
+            let fixing = row![label::muted(count), fix, recipe]
+                .spacing(10)
+                .align_y(Center);
+            let marking = row![reason, error, mark].spacing(10).align_y(Center);
+            Column::new()
+                .spacing(6)
+                .push(start)
+                .push(row![space::horizontal(), fixing].align_y(Center))
+                .push(row![space::horizontal(), marking].align_y(Center))
                 .into()
         };
         container(bar).padding([6, 10]).width(Fill).into()
