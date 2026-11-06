@@ -1830,6 +1830,11 @@ tablo yazısı açık.
 listesindeki sıfır boylu tire PDF'de ve SVG'de yuvarlak, çizgi kalınlığında nokta basılır (yol iki kez: tireler, sonra
 noktalar). PDF akışı ve SVG testleriyle; ifraz altın PDF'i değişmedi; 600 dpi resme bakıldı.
 
+**Sıra, maske, saydamlık, saç teli ve tema (6 Kasım 2026, [ADR 1021](../docs/adr/1021-draw-order-mask-transparency-hairline-in-print.md)):**
+Aynı çizim 1:50 ve 1:20 görünüm pencerelerinde vektör PDF'te çizim sırasını, kenarsız maskenin kâğıt beyazını, 0
+kalınlıklı saç telini, yarı saydam mürekkebi ve aynı kâğıt tiresini korur; CPU baskı resmi maskeyi aynı sırayla
+uygular. Dört ekran temasında pafta takımının PDF'i bayt bayt aynı, çizim değişmez. Üç test ve PDF resmi.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

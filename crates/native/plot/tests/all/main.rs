@@ -35,6 +35,7 @@ mod drawing_set;
 
 mod source_snapshot;
 
+mod line_look_order;
 mod line_types;
 mod curve_dashes;
 mod dots;

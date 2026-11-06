@@ -2278,6 +2278,25 @@ fn desktop_pdf_refuses_an_impossible_model_curve_without_a_gray_raster_fallback(
     );
 }
 
+/// plan/cad-advanced.md CAD-ADV-11: “Ekran temasını değiştirmek çizimin atanmış veya basılacak rengini
+/// değiştirmesin.” The same set printed under each of the four themes is the same PDF, byte for byte, and the drawing
+/// (its colours with it) is the same; the screen's palette never reaches the paper (kentos-plot's paper palette).
+#[test]
+fn the_screen_theme_changes_neither_the_drawing_nor_the_printed_pdf() {
+    use kentos_ui::theme::Mode;
+    let mut app = multipage_set_app("light", 13);
+    sheet(&mut app, Sheet::Tab(3));
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let printed = |app: &App| app.sheet_native_pdf().expect("prints").bytes;
+    let light = printed(&app);
+    for mode in [Mode::Dark, Mode::Night, Mode::HighContrast, Mode::Light] {
+        app.set_theme(mode);
+        assert_eq!(app.mode, mode);
+        assert!(printed(&app) == light, "{mode:?}: the PDF is the light theme's");
+        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before, "{mode:?}: the drawing is untouched");
+    }
+}
+
 #[test]
 fn sheet23_real_save_and_print_use_the_same_native_pdf() {
     let mut app = multipage_set_app("light", 13);
