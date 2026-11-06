@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `186`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-187.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `190`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-191.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -832,6 +832,13 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
 
+**Şema 190** (ADR 1260; MAP-07, dalda geçici numara): topoloji ayarlarının kalite `profile`'ı ve istisnanın
+`decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 190'ı yalnız profil ya da bu alanlardan biri
+varken seçer; öncesi alanları `unknown_field` sayar (`broken/topology-reviews-in-schema-186.kcad`). Örnek
+`topology-reviews.json/.kcad`; bozuklar: hassasiyetin iki katından küçük tolerans
+(`broken/topology-profile-tolerance-below-precision.kcad`), boş gerekçe (`broken/topology-review-reason-blank.kcad`),
+bilinmeyen karar (`broken/topology-review-decision-unknown.kcad`), hepsi `bad_value`.
+
 **Şema 186** (ADR 1023; CAD-ADV-11): ölçü stilinin `textStyle`'ı (değerin yazıldığı proje yazı stili, adıyla; boş
 olmayan, kenarı boşluksuz, en çok 256 bayt metin; yoksa `bad_value`). Yazıcı 186'yı yalnız bir ölçü stili `textStyle`
 taşıyınca seçer; 185 ve öncesi alanı `unknown_field` sayar (`broken/dimension-text-style-in-schema-185.kcad`). Örnek
@@ -1098,13 +1105,23 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 
 #### 6.4.5 Topoloji kuralları
 
-Şema 27'de (ADR 0202). Harita, anahtarları kodlanmış sırasıyla `rules` < `tolerance` < `exceptions`; üçü de isteğe bağlıdır ama harita boş olamaz (`broken/topology-empty.kcad`). Bütünü denetlenir (`bad_value`).
+Şema 27'de (ADR 0202). Harita, anahtarları kodlanmış sırasıyla `rules` < `profile` < `tolerance` < `exceptions`; hepsi isteğe bağlıdır ama harita boş olamaz (`broken/topology-empty.kcad`). Bütünü denetlenir (`bad_value`).
 
 | Anahtar | Tür | Değerler |
 |---|---|---|
 | `rules` | dizi | kurallar, denetlenecekleri ve listelenecekleri sırayla; boş dizi yazılmaz |
+| `profile` | harita | şema 190'da (ADR 1260 §2): kurumun ya da işin kalite profili, aşağıda |
 | `tolerance` | float | metre, 0,000001 ile 1 arası (`broken/topology-tolerance-range.kcad`); yokluğu 0,001 |
-| `exceptions` | dizi | bilerek bırakılan bulgular; boş dizi yazılmaz |
+| `exceptions` | dizi | bilerek bırakılan ya da hata diye onaylanan bulgular; boş dizi yazılmaz |
+
+**Profil** haritadır, anahtarları `name` < `edition` < `precision` < `acceptance`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `name` | metin | evet | boş olmayan, en çok 200 karakter |
+| `edition` | metin | | profilin sahibinin yazdığı sürüm, boş olmayan, en çok 50 karakter |
+| `precision` | float | evet | koordinatların depolama hassasiyeti, metre, 0,000000001 ile 0,5 arası; tolerans en az iki katı (`broken/topology-profile-tolerance-below-precision.kcad`) |
+| `acceptance` | float | evet | kurumun kabul eşiği, metre, sonlu ve `precision`'dan küçük değil: hiçbir onarım kaynak köşeyi bundan uzağa taşımaz |
 
 **Kural** haritadır, anahtarları `id` < `kind` < `layer` < `other` < `value`:
 
@@ -1116,7 +1133,7 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 | `other` | metin | | katmanlar arası kuralda zorunlu, başkasında yazılamaz (`broken/topology-rule-without-other.kcad`, `broken/topology-rule-other-on-one-layer.kcad`); boş ya da `layer` ile aynı olamaz (`broken/topology-rule-other-itself.kcad`) |
 | `value` | float | | yalnız değer alan türde (`mustNotHaveSlivers`, `mustNotHaveShortEdges` metre; `mustNotHaveSmallAngles` radyan, dik açıdan küçük; `broken/topology-rule-value-not-taken.kcad`, `broken/topology-rule-angle-too-large.kcad`); sıfırdan büyük; yokluğu türün varsayılanı (0,1 m, 0,05 m, 5°) |
 
-**İstisna** haritadır, anahtarları `at` < `rule` < `digest` < `objects`:
+**İstisna** haritadır, anahtarları `at` < `rule` < `scope` < `digest` < `reason` < `objects` < `decision` < `ruleDigest`:
 
 | Anahtar | Tür | Zorunlu | Değerler |
 |---|---|---|---|
@@ -1124,6 +1141,10 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 | `rule` | metin | evet | kuralın kimliği; listede olmayan kural `bad_value` (`broken/topology-exception-unknown-rule.kcad`) |
 | `digest` | metin | hayır | şema 99'da (ADR 0589 §3): istisna yapıldığında nesnelerin geometrisinin özeti, 16 küçük onaltılık rakam; başka biçim `bad_value` (`broken/topology-digest-*.kcad`). Geometri değişince istisna düşer |
 | `objects` | dizi: kimlik | evet | bulgunun nesnelerinin kalıcı kimlikleri (§6.3), bulgunun sırasıyla; boş olamaz. Çizimde olmayan nesnenin kimliği geçerlidir: istisna bir bulguya uymaz |
+| `scope` | numaralı metin | | şema 190'da: `finding` (yokluğu; yerindeki bulgu) ya da `objects` (aynı nesneler arasındaki kuralın her bulgusu) |
+| `reason` | metin | | şema 190'da: gerekçe, boş olmayan, en çok 500 karakter (`broken/topology-review-reason-blank.kcad`) |
+| `decision` | numaralı metin | | şema 190'da: `exception` (yokluğu) ya da `error` (hata diye onaylandı, düzeltilecek); başkası `bad_value` (`broken/topology-review-decision-unknown.kcad`) |
+| `ruleDigest` | metin | | şema 190'da: işaretlendiğindeki kural sürümü (ADR 1260 §3), 16 küçük onaltılık rakam. Kural değişince işaret düşer |
 
 Bilinmeyen anahtar `unknown_field`'dır.
 

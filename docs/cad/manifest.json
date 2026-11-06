@@ -14696,14 +14696,16 @@
    "id": "topology.check",
    "kind": "command",
    "title": "Topolojiyi denetle",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.topology.check"
+    "cad.topology.check",
+    "cad.topology.exceptions",
+    "cad.topology.repair"
    ],
    "operation": null,
-   "python": "kentos.cad.topology.check",
-   "mcp": "cad.topology.check",
-   "note": "Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap ve İstisnayı kaldır cad.topology.exceptions ile yazar, istisna nesnelerinin geometrisine bağlıdır (ADR 0589).",
+   "python": "kentos.cad.topology.check, kentos.cad.topology.exceptions, kentos.cad.topology.repair",
+   "mcp": "cad.topology.check, cad.topology.exceptions, cad.topology.repair",
+   "note": "Sekme cad.topology.check'in çekirdeğinden okur (topology_check::gather, run); bağlı parçanın bandındaki satırlar komşudur, okunamayan band denetimi eksik bırakır; Düzelt ▾ düzeltmenin önizlemesini söyler. İstisna yap, Hata işaretle ve İstisnayı kaldır cad.topology.exceptions ile Gerekçe'yle yazar, işaret nesnelerinin geometrisine ve kuralın sürümüne bağlıdır (ADR 0589, 1260); Durum sütunu bulgunun yaşam döngüsünü söyler. Tarifle onar seçili bulguların tarifini cad.topology.repair'in planıyla önizler, Uygula tek adımda yazar (ADR 1260).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1

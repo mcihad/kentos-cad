@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- MAP-07 / ADR 1260: web'in Topoloji paneli ve `io/kcad.ts` şema 190 (kalite `profile`'ı; istisnanın `decision`,
+  `reason`, `ruleDigest`, `scope`'u), bulgunun `state`/`reason`'ı, `cad.topology.exceptions`'ın `error`/`reason`/`scope`'u
+  ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).
 - CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
   `unavailable`, `library`, `uses`), `kentos-ofis` kitaplığının web'de okunması, `io/kcad.ts` şema 183
   (`approvedSheetTemplates`), Standart kaynaklarını kur penceresinin Kitaplık/Kullanım sütunları ve Öznitelikler'in

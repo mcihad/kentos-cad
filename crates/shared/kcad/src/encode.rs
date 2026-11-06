@@ -37,7 +37,8 @@ use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
     DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, HeightKind, HeightReference,
     LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
-    LengthStyle, MigrationSource, ProjectSettings, SurveySettings, TopologySettings, Vec2,
+    LengthStyle, MigrationSource, ProjectSettings, SurveySettings, TopologyDecision, TopologyScope,
+    TopologySettings, Vec2,
     Workspace, layer_fields_problem, layer_states_problem,
 };
 use serde_json::Value;
@@ -1186,6 +1187,7 @@ impl<'d> Encoder<'d> {
         }
         self.open(
             usize::from(!t.rules.is_empty())
+                + usize::from(t.profile.is_some())
                 + usize::from(t.tolerance.is_some())
                 + usize::from(!t.exceptions.is_empty()),
             true,
@@ -1222,6 +1224,25 @@ impl<'d> Encoder<'d> {
                 Ok(())
             })?;
         }
+        // Schema 190 (docs/adr/1260 §2): the quality profile, its keys in the file's order.
+        if let Some(p) = &t.profile {
+            self.key("profile");
+            self.at(Seg::Name("profile"), |e| {
+                e.open(3 + usize::from(p.edition.is_some()), true)?;
+                e.key("name");
+                e.text(&p.name)?;
+                if let Some(ed) = &p.edition {
+                    e.key("edition");
+                    e.text(ed)?;
+                }
+                e.key("precision");
+                e.at(Seg::Name("precision"), |e| e.float(p.precision))?;
+                e.key("acceptance");
+                e.at(Seg::Name("acceptance"), |e| e.float(p.acceptance))?;
+                e.close();
+                Ok(())
+            })?;
+        }
         if let Some(tol) = t.tolerance {
             self.key("tolerance");
             self.at(Seg::Name("tolerance"), |e| e.float(tol))?;
@@ -1232,14 +1253,33 @@ impl<'d> Encoder<'d> {
                 e.open(t.exceptions.len(), false)?;
                 for (i, x) in t.exceptions.iter().enumerate() {
                     e.at(Seg::Index(i), |e| {
-                        e.open(3 + usize::from(x.digest.is_some()), true)?;
+                        e.open(
+                            3 + usize::from(x.digest.is_some())
+                                + usize::from(x.decision.is_some())
+                                + usize::from(x.reason.is_some())
+                                + usize::from(x.rule_digest.is_some())
+                                + usize::from(x.scope.is_some()),
+                            true,
+                        )?;
                         e.key("at");
                         e.at(Seg::Name("at"), |e| e.point(&x.at))?;
                         e.key("rule");
                         e.text(&x.rule)?;
+                        // Schema 190 (docs/adr/1260 §1): what it covers, why, what was decided, the rule's version.
+                        if let Some(s) = x.scope {
+                            e.key("scope");
+                            e.w.text(match s {
+                                TopologyScope::Finding => "finding",
+                                TopologyScope::Objects => "objects",
+                            });
+                        }
                         if let Some(d) = &x.digest {
                             e.key("digest");
                             e.text(d)?;
+                        }
+                        if let Some(why) = &x.reason {
+                            e.key("reason");
+                            e.text(why)?;
                         }
                         e.key("objects");
                         e.at(Seg::Name("objects"), |e| {
@@ -1250,6 +1290,17 @@ impl<'d> Encoder<'d> {
                             e.close();
                             Ok(())
                         })?;
+                        if let Some(d) = x.decision {
+                            e.key("decision");
+                            e.w.text(match d {
+                                TopologyDecision::Exception => "exception",
+                                TopologyDecision::Error => "error",
+                            });
+                        }
+                        if let Some(d) = &x.rule_digest {
+                            e.key("ruleDigest");
+                            e.text(d)?;
+                        }
                         e.close();
                         Ok(())
                     })?;
@@ -2161,6 +2212,18 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 190 (docs/adr/1260): the topology quality profile, an exception's review fields.
+    if doc.settings.topology.as_ref().is_some_and(|t| {
+        t.profile.is_some()
+            || t.exceptions.iter().any(|x| {
+                x.decision.is_some()
+                    || x.reason.is_some()
+                    || x.rule_digest.is_some()
+                    || x.scope.is_some()
+            })
+    }) {
+        return crate::SCHEMA_WITH_TOPOLOGY_REVIEWS;
+    }
     // Schema 186 (docs/adr/1023): a dimension style that names the text style of its value.
     if doc.settings.dimension_styles.iter().any(|s| s.text_style.is_some()) {
         return crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES;

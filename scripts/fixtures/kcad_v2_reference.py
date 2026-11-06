@@ -511,12 +511,18 @@ def topology(t):
     exceptions = []
     for x in t.get("exceptions", []):
         assert x["rule"] in ids and x["objects"], x
-        assert set(x) <= {"at", "rule", "objects", "digest"}, x
+        assert set(x) <= {"at", "rule", "objects", "digest", "decision", "reason", "ruleDigest", "scope"}, x
         # Schema 99 (docs/adr/0589 §3): the objects' geometry when marked, 16 lowercase hexadecimal digits.
-        assert "digest" not in x or (len(x["digest"]) == 16 and all(c in "0123456789abcdef" for c in x["digest"])), x
+        hex16 = lambda d: len(d) == 16 and all(c in "0123456789abcdef" for c in d)  # noqa: E731
+        assert "digest" not in x or hex16(x["digest"]), x
+        # Schema 190 (docs/adr/1260 §1): what was decided, why, the rule's version, what it covers.
+        assert "ruleDigest" not in x or hex16(x["ruleDigest"]), x
+        assert "reason" not in x or (x["reason"].strip() and len(x["reason"]) <= 500), x
+        assert x.get("decision", "exception") in ("exception", "error") and x.get("scope", "finding") in ("finding", "objects"), x
         exc = {"at": point(x["at"]), "rule": text(x["rule"]), "objects": array([blob(uid_bytes(u)) for u in x["objects"]])}
-        if "digest" in x:
-            exc["digest"] = text(x["digest"])
+        for k in ("digest", "decision", "reason", "ruleDigest", "scope"):
+            if k in x:
+                exc[k] = text(x[k])
         exceptions.append(cmap(exc))
     out = {}
     if rules:
@@ -525,7 +531,20 @@ def topology(t):
         out["tolerance"] = finite(t["tolerance"])
     if exceptions:
         out["exceptions"] = array(exceptions)
-    assert set(t) <= {"rules", "tolerance", "exceptions"}, t
+    if "profile" in t:
+        # Schema 190 (docs/adr/1260 §2): a name, an edition, the storage precision within [1e-9, 0.5] m (the tolerance at
+        # least twice it) and an acceptance threshold not below it.
+        p = t["profile"]
+        assert set(p) <= {"name", "edition", "precision", "acceptance"}, p
+        assert p["name"].strip() and len(p["name"]) <= 200, p
+        assert "edition" not in p or (p["edition"].strip() and len(p["edition"]) <= 50), p
+        assert 1e-9 <= p["precision"] <= 0.5 and t.get("tolerance", 0.001) >= 2 * p["precision"], p
+        assert p["acceptance"] >= p["precision"], p
+        prof = {"name": text(p["name"]), "precision": finite(p["precision"]), "acceptance": finite(p["acceptance"])}
+        if "edition" in p:
+            prof["edition"] = text(p["edition"])
+        out["profile"] = cmap(prof)
+    assert set(t) <= {"rules", "tolerance", "exceptions", "profile"}, t
     return cmap(out)
 
 
@@ -2428,6 +2447,10 @@ def document(d):
     if any("textStyle" in st for st in d["settings"].get("dimensionStyles", [])):
         # A dimension style that names the text style of its value (docs/adr/1023).
         schema = max(schema, 186)
+    topo = d["settings"].get("topology", {})
+    if "profile" in topo or any(k in x for x in topo.get("exceptions", []) for k in ("decision", "reason", "ruleDigest", "scope")):
+        # The topology quality profile, an exception's review fields (docs/adr/1260). Temporary number (MAP-07).
+        schema = max(schema, 190)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3373,7 +3396,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-187.kcad"] = container(root(cmap(parts), version=uint(187)))
+    files["schema-version-191.kcad"] = container(root(cmap(parts), version=uint(191)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5670,6 +5693,23 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 190 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
+    # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
+    # reason and an unknown decision are refused.
+    reviewed = load("topology-reviews.json")
+    reviewed_data = document(reviewed)
+    assert reviewed_data.count(b"\x67version\x18\xbe") == 1, "the topology reviews are schema 190"
+    out["topology-reviews.kcad"] = container(reviewed_data)
+    out["broken/topology-reviews-in-schema-186.kcad"] = container(
+        reviewed_data.replace(b"\x67version\x18\xbe", b"\x67version\x18\xba"))
+    assert reviewed_data.count(text("precision") + finite(0.0001)) == 1
+    narrow_data = reviewed_data.replace(text("precision") + finite(0.0001), text("precision") + finite(0.002))
+    out["broken/topology-profile-tolerance-below-precision.kcad"] = container(narrow_data)
+    why = reviewed["settings"]["topology"]["exceptions"][0]["reason"]
+    assert reviewed_data.count(text(why)) == 1
+    out["broken/topology-review-reason-blank.kcad"] = container(reviewed_data.replace(text(why), text("   ")))
+    assert reviewed_data.count(text("error")) == 1
+    out["broken/topology-review-decision-unknown.kcad"] = container(reviewed_data.replace(text("error"), text("maybe")))
     # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
     # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
     dimmed = load("dimension-text-style.json")

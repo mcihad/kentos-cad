@@ -366,6 +366,22 @@ değişimiyle artımlı/tam denetim sonuçları eşleşsin. İptal kaynak geomet
 değiştirmesin. Bir onarım tarifi yeniden açılan projede aynı bulgulara
 uygulandığında aynı değişiklik kümesini üretsin.
 
+**İlerleme (6 Kasım 2026, dal `map-07-topoloji-kalite`, [ADR 1260](../docs/adr/1260-topology-quality-review-and-repair-recipe.md)):**
+kanıtlanan alt maddeler: bulgunun yaşam döngüsü (`state`: değerlendirilmedi, hata, istisna, yeniden değerlendir) ve
+`cad.topology.exceptions`'ın `error`/`reason`/`scope`'u; işaretin nesne kimliği, geometri özeti, kural sürümü
+(`ruleDigest`), gerekçesi ve kapsamı, geometri ya da kural değişince düşmesi; kurum/iş kalite profili (ad, depolama
+hassasiyeti, kabul eşiği; tolerans hassasiyetin en az iki katı) ve profilin gerekçe istemesi; `cad.topology.repair`
+onarım tarifi (adım sırası ve düzeltmesi, adım öncesi yeniden denetim, nesne başına alan önce/sonra, bit bit yerinde
+kalan ve taşınan kaynak köşe, en uzak/toplam taşınma, alan farkı, önce/sonra açık bulgu; istisna, kilitli komşu ve kabul
+eşiği retleri; tek geri alma adımı); `.kcad` şema 190 (geçici); masaüstü Durum sütunu, Gerekçe, Hata işaretle, Tarifle
+onar ve kural penceresinde profil. Kabulün üç satırı: yaylı komşu, delikli alan ve yeniden okunan komşu ile artımlı/tam
+denetim eşitliği (`topology_quality.rs`; kilitli komşu tarif retiyle ortak durumda); iptalin kaynak geometriyi
+değiştirmemesi (`topology_repair::tests`); yeniden açılan projede aynı tarifin aynı değişiklik kümesi (ortak durum
+`reopen`). **Açık:** ortak sınırın bütün yetkili komşularda atomik düzenlenmesi ve kilitli/yetkisiz komşu, yay, delik,
+üçlü birleşim, çoklu köşe için açıklanabilir ret; büyük toplu snap/temizliğin (ADR 0148) taşınma raporu; bağlı kaynak
+satırının değiştiği artımlı denetimin uygulama düzeyinde (band) sınanması; GIS Processing/veri formu yolu; GUI'de
+gerçek fare/klavye ile tarif akışı kanıtı ve büyük veri ölçümü. Madde açık kalır.
+
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
 **Öncelik:** P1 teknik veri modeli; resmî işlemler son aşama kapısında.
