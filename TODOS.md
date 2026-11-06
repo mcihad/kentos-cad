@@ -99,6 +99,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Web'in yazı katmanı gömülü SHX fontlu yazıyı çizmez: `shx_text::place` (WASM'a taşınabilir, DOM'suz) ile Canvas/
   WebGPU çizgileri, `cad.fonts.report`'un `embedded` alanı (TS türü üretilmedi), `text_shx_unsupported` bulgusunun
   inceleme başlığı ve DXF aktarımının yanına yazılan SHX yazı fontları web'de yok.
+- CAD-ADV-12 / ADR 1126: `.kcad` şema 185 (`settings.tableStyles`, tablonun `tableStyle`'ı) web codec'inde ve sütun
+  aktarımında (`apps/web/src/io/columns.ts`'in tablo JSON yan kanalı) yok; web tablo çizimi `styled`'ı almaz (WASM
+  yeniden derlemesi), standart penceresi `tableStyle` satırlarını ve `tableStyleDefinition` bulgularını göstermez. TS türleri
+  (`TableStyleDef`, `TableCellStyleDef`) üretildi, web kodu onları kullanmıyor.
 - CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
   `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
   stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya

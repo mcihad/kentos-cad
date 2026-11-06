@@ -1,4 +1,4 @@
-//! The project's style tables (text, dimension, leader and wall styles) as an undo step keeps them: style by
+//! The project's style tables (text, dimension, leader, wall and table styles) as an undo step keeps them: style by
 //! style, by id (docs/adr/0699). A `cad.styles.edit` write records the change with the objects that followed
 //! the style, so one undo gives both back, even when only a name changed and no object moved.
 //!
@@ -8,8 +8,9 @@
 
 use crate::{Document, history::Op};
 use kentos_contracts::{
-    DimensionStyleDef, LeaderStyleDef, ProjectSettings, TextStyleDef, WallStyleDef,
-    dimension_styles_problem, leader_styles_problem, text_styles_problem, wall_styles_problem,
+    DimensionStyleDef, LeaderStyleDef, ProjectSettings, TableStyleDef, TextStyleDef, WallStyleDef,
+    dimension_styles_problem, leader_styles_problem, table_style_defs_problem, text_styles_problem,
+    wall_styles_problem,
 };
 
 /// A style of one of the tables: its id.
@@ -27,7 +28,7 @@ macro_rules! styled {
     )*};
 }
 
-styled!(TextStyleDef, DimensionStyleDef, LeaderStyleDef, WallStyleDef);
+styled!(TextStyleDef, DimensionStyleDef, LeaderStyleDef, WallStyleDef, TableStyleDef);
 
 /// One style before and after the step, each with its place in the table; none: not there.
 #[derive(Clone, Debug, PartialEq)]
@@ -54,6 +55,8 @@ pub(crate) struct StyleTables {
     dimension: Vec<Change<DimensionStyleDef>>,
     leader: Vec<Change<LeaderStyleDef>>,
     wall: Vec<Change<WallStyleDef>>,
+    /// The table styles (docs/adr/1126 §2).
+    table: Vec<Change<TableStyleDef>>,
 }
 
 /// The styles that differ between two tables: the ones before in their order, then the new ones in theirs.
@@ -131,6 +134,7 @@ impl StyleTables {
             dimension: changes(&before.dimension_styles, &after.dimension_styles),
             leader: changes(&before.leader_styles, &after.leader_styles),
             wall: changes(&before.wall_styles, &after.wall_styles),
+            table: changes(&before.table_styles, &after.table_styles),
         };
         (tables != Self::default()).then_some(tables)
     }
@@ -141,6 +145,7 @@ impl StyleTables {
             dimension: self.dimension.iter().map(Change::inverse).collect(),
             leader: self.leader.iter().map(Change::inverse).collect(),
             wall: self.wall.iter().map(Change::inverse).collect(),
+            table: self.table.iter().map(Change::inverse).collect(),
         }
     }
 
@@ -192,6 +197,7 @@ impl StyleTables {
         );
         apply(&mut settings.leader_styles, &self.leader, leader_styles_problem);
         apply(&mut settings.wall_styles, &self.wall, wall_styles_problem);
+        apply(&mut settings.table_styles, &self.table, table_style_defs_problem);
     }
 }
 

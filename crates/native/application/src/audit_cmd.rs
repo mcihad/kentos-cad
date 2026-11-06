@@ -39,6 +39,7 @@ struct Found {
     /// The styles to remove, by their ids.
     text_styles: Vec<String>,
     dimension_styles: Vec<String>,
+    table_styles: Vec<String>,
     warnings: Vec<CommandWarning>,
 }
 
@@ -127,12 +128,20 @@ fn find(doc: &Document, input: &DrawingAudit) -> Found {
             purged: purge_dims,
         });
     }
+    // Table styles no table follows (docs/adr/1126 §5); one a table follows is never purged.
+    let tables = doc.unused_table_styles();
+    let purge_tables = input.purge.contains(&AuditPurge::TableStyles);
+    for id in &tables {
+        let name = settings.table_styles.iter().find(|s| &s.id == id).map(|s| s.name.clone()).unwrap_or_default();
+        unused.push(UnusedResource { kind: ResourceKind::TableStyle, id: id.clone(), name, purged: purge_tables });
+    }
     Found {
         findings,
         unused,
         repairs,
         text_styles: if purge_text { text } else { Vec::new() },
         dimension_styles: if purge_dims { dims } else { Vec::new() },
+        table_styles: if purge_tables { tables } else { Vec::new() },
         warnings,
     }
 }
@@ -150,6 +159,7 @@ fn write(cx: &mut ExecutionContext<'_>, found: Found) -> CommandResult<DrawingAu
         repairs,
         text_styles,
         dimension_styles,
+        table_styles,
         warnings,
     } = found;
     let doc = &mut *cx.doc;
@@ -165,8 +175,9 @@ fn write(cx: &mut ExecutionContext<'_>, found: Found) -> CommandResult<DrawingAu
         doc.name_step(LABEL);
         doc.update_many(repaired, LABEL);
     }
-    if !text_styles.is_empty() || !dimension_styles.is_empty() {
+    if !text_styles.is_empty() || !dimension_styles.is_empty() || !table_styles.is_empty() {
         let mut settings = doc.settings().clone();
+        settings.table_styles.retain(|s| !table_styles.contains(&s.id));
         settings
             .text_styles
             .retain(|s| !text_styles.contains(&s.id));

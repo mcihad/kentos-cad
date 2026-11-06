@@ -83,6 +83,10 @@ pub struct StandardProvenance {
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"))]
     pub tool_palettes: std::collections::BTreeMap<String, StandardOrigin>,
+    /// Table styles by name (docs/adr/1126 §6).
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"))]
+    pub table_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
 /// Inspect global rules and named definitions in ordered standard documents.
@@ -285,6 +289,10 @@ pub struct StandardResources {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ToolPalette>>"))]
     pub tool_palettes: Vec<ToolPalette>,
+    /// Named table styles (docs/adr/1126 §6): installed by name as the other styles are.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::TableStyleDef>>"))]
+    pub table_style_definitions: Vec<crate::TableStyleDef>,
 }
 
 /// An office tool palette (docs/adr/1014).
@@ -601,6 +609,9 @@ pub fn parse_standard_document(
                 if let Some(problem) = tool_palettes_problem(&resources.tool_palettes) {
                     return Err(format!("Araç paleti geçersiz: {problem}."));
                 }
+                if let Some(problem) = crate::table_style_defs_problem(&resources.table_style_definitions) {
+                    return Err(format!("Tablo stili kaynağı geçersiz: {problem}."));
+                }
             }
             _ => {}
         }
@@ -716,8 +727,38 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
             "textStyleDefinitions",
             "dimensionStyleDefinitions",
             "toolPalettes",
+            "tableStyleDefinitions",
         ],
     )?;
+    // Table styles (docs/adr/1126 §6): a style's and each cell style's fields, nothing dropped unseen.
+    if let Some(value) = object(resources, "resources")?.get("tableStyleDefinitions") {
+        let styles = value
+            .as_array()
+            .ok_or("resources.tableStyleDefinitions bir dizi olmalı.")?;
+        for (i, item) in styles.iter().enumerate() {
+            let path = format!("resources.tableStyleDefinitions[{i}]");
+            keys(item, &path, &["id", "name", "title", "header", "data"])?;
+            for cell in ["title", "header", "data"] {
+                if let Some(c) = object(item, &path)?.get(cell) {
+                    keys(
+                        c,
+                        &format!("{path}.{cell}"),
+                        &[
+                            "textStyle",
+                            "height",
+                            "align",
+                            "color",
+                            "fill",
+                            "horizontalMargin",
+                            "verticalMargin",
+                            "borderWeight",
+                            "borderColor",
+                        ],
+                    )?;
+                }
+            }
+        }
+    }
     let root = object(resources, "resources")?;
     if let Some(value) = root.get("blocks") {
         let blocks = value
@@ -1054,6 +1095,10 @@ pub enum StandardIssueKind {
     TextStyleDefinition,
     MissingDimensionStyleDefinition,
     DimensionStyleDefinition,
+    /// A table style the standard has and the drawing does not (docs/adr/1126 §6).
+    MissingTableStyleDefinition,
+    /// A table style whose cell styles differ from the standard's.
+    TableStyleDefinition,
     /// Objects with a line type of their own the standard does not have.
     ObjectLineType,
     /// Objects with a look of their own when the standard has them take their layers'.
@@ -1537,6 +1582,8 @@ pub enum StandardResourceKind {
     TextStyle,
     DimensionStyle,
     LeaderStyle,
+    /// A named table style (docs/adr/1126 §6).
+    TableStyle,
     Block,
     SheetTemplate,
 }

@@ -35,14 +35,26 @@ pub fn entity_at(entity: &Entity, scale: Option<f64>) -> Option<std::borrow::Cow
     }
 }
 
-pub fn record_at(entity: &Entity, scale: Option<f64>) -> Option<(f64, &str, bool, Shape)> {
+/// `entity` as the store records it at `scale`: a table as its table style draws it (docs/adr/1126 §3), from the
+/// project's `settings`.
+pub fn record_at<'a>(
+    entity: &'a Entity,
+    scale: Option<f64>,
+    settings: &kentos_commands::ProjectSettings,
+) -> Option<(f64, &'a str, bool, Shape)> {
     let base = entity.base();
     let represented = entity_at(entity, scale)?;
+    let shape = match represented.as_ref() {
+        Entity::Table(t) if t.table_style.is_some() => {
+            crate::geometry::core_table(&kentos_commands::styled(t, settings))
+        }
+        e => crate::geometry::shape(e),
+    };
     Some((
         f64::from(base.id),
         base.layer_id.as_str(),
         base.label.as_deref().is_some_and(|s| !s.is_empty()),
-        crate::geometry::shape(&represented),
+        shape,
     ))
 }
 

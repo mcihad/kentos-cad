@@ -105115,11 +105115,20 @@
     },
     "AuditPurge": {
       "description": "The named resources Denetle removes when nothing uses them.",
-      "enum": [
-        "textStyles",
-        "dimensionStyles"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "textStyles",
+            "dimensionStyles"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "tableStyles",
+          "description": "The table styles no table follows (docs/adr/1126 §5).",
+          "type": "string"
+        }
+      ]
     },
     "AuditedRecord": {
       "description": "A record `cad.forms.audit` lists: its persistent id and its issues.",
@@ -159911,6 +159920,13 @@
           ],
           "description": "The project's survey constants and tolerances (docs/adr/0169 §3);\nabsent: k = [`REFRACTION`] and no tolerance."
         },
+        "tableStyles": {
+          "description": "The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.",
+          "items": {
+            "$ref": "#/$defs/TableStyleDef"
+          },
+          "type": "array"
+        },
         "textStyles": {
           "description": "The project's named text styles (docs/adr/0183 §2), in the order they were made.",
           "items": {
@@ -163951,7 +163967,8 @@
         "group",
         "block",
         "textStyle",
-        "dimensionStyle"
+        "dimensionStyle",
+        "tableStyle"
       ],
       "type": "string"
     },
@@ -174017,6 +174034,16 @@
           "type": "string"
         },
         {
+          "const": "missingTableStyleDefinition",
+          "description": "A table style the standard has and the drawing does not (docs/adr/1126 §6).",
+          "type": "string"
+        },
+        {
+          "const": "tableStyleDefinition",
+          "description": "A table style whose cell styles differ from the standard's.",
+          "type": "string"
+        },
+        {
           "const": "objectLineType",
           "description": "Objects with a line type of their own the standard does not have.",
           "type": "string"
@@ -174142,6 +174169,13 @@
           },
           "type": "object"
         },
+        "tableStyleDefinitions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StandardOrigin"
+          },
+          "description": "Table styles by name (docs/adr/1126 §6).",
+          "type": "object"
+        },
         "textStyleDefinitions": {
           "additionalProperties": {
             "$ref": "#/$defs/StandardOrigin"
@@ -174179,16 +174213,25 @@
     },
     "StandardResourceKind": {
       "description": "A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's\nreference and a sheet template an approved template revision (docs/adr/1100 §2–§3).",
-      "enum": [
-        "lineType",
-        "hatchPattern",
-        "textStyle",
-        "dimensionStyle",
-        "leaderStyle",
-        "block",
-        "sheetTemplate"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "lineType",
+            "hatchPattern",
+            "textStyle",
+            "dimensionStyle",
+            "leaderStyle",
+            "block",
+            "sheetTemplate"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "tableStyle",
+          "description": "A named table style (docs/adr/1126 §6).",
+          "type": "string"
+        }
+      ]
     },
     "StandardResources": {
       "additionalProperties": false,
@@ -174227,6 +174270,13 @@
         "sheetTemplates": {
           "items": {
             "$ref": "#/$defs/StandardSheetTemplateReference"
+          },
+          "type": "array"
+        },
+        "tableStyleDefinitions": {
+          "description": "Named table styles (docs/adr/1126 §6): installed by name as the other styles are.",
+          "items": {
+            "$ref": "#/$defs/TableStyleDef"
           },
           "type": "array"
         },
@@ -176823,6 +176873,88 @@
       ],
       "type": "object"
     },
+    "TableCellStyleDef": {
+      "additionalProperties": false,
+      "description": "One of a table style's cell styles (AutoCAD's Title, Header or Data), every field optional.",
+      "properties": {
+        "align": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableAlign"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its words' horizontal alignment (group 170's left, centre or right)."
+        },
+        "borderColor": {
+          "description": "Its borders' colour, `#rrggbb` (groups 64–69).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderWeight": {
+          "description": "Its borders' weight on the paper, mm, 0 the thinnest line (groups 274–279).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "color": {
+          "description": "Its words' colour, `#rrggbb` (group 62).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fill": {
+          "description": "Its background, `#rrggbb` (groups 63 and 283).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "height": {
+          "description": "Its words' height on the paper, mm (group 140).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "horizontalMargin": {
+          "description": "The room between its words and its left and right borders, paper mm (group 40).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "textStyle": {
+          "description": "The text style its words are written in, by its name (AutoCAD's group 7).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verticalMargin": {
+          "description": "The room between its words and its top and bottom borders, paper mm (group 41).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        }
+      },
+      "type": "object"
+    },
     "TableCheck": {
       "additionalProperties": false,
       "description": "A CHECK constraint of a bound table (docs/adr/0755 §1).",
@@ -177790,6 +177922,13 @@
             "null"
           ]
         },
+        "tableStyle": {
+          "description": "The project's table style it follows, by its id (docs/adr/1126 §3, `.kcad` schema 185): what the table does\nnot set itself the style gives its drawing (`styled`); absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "textStyle": {
           "description": "The project's text style it follows, by its id; absent: Standart.",
           "type": [
@@ -178239,6 +178378,58 @@
       },
       "required": [
         "condition"
+      ],
+      "type": "object"
+    },
+    "TableStyleDef": {
+      "additionalProperties": false,
+      "description": "A named table style (docs/adr/1126 §2).",
+      "properties": {
+        "data": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableCellStyleDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Every other row's cells."
+        },
+        "header": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableCellStyleDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The heading row's cells: the first row after the title, when the table has a heading."
+        },
+        "id": {
+          "description": "One of its kind among the project's table styles.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name: trimmed, one of its kind whatever its letters' case.",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableCellStyleDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The title row's cells: the first row when it is one merged range across every column."
+        }
+      },
+      "required": [
+        "id",
+        "name"
       ],
       "type": "object"
     },

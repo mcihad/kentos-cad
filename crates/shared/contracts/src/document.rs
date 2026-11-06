@@ -472,6 +472,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ApprovedSheetTemplate>>", optional))]
     pub approved_sheet_templates: Vec<crate::ApprovedSheetTemplate>,
+    /// The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
+    pub table_styles: Vec<crate::TableStyleDef>,
     /// Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
     /// plotted or measured. Numbered; their stamps say which state of an object each was written for.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

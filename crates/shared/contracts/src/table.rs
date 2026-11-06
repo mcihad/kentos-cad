@@ -101,6 +101,11 @@ pub struct TableEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub breaks: Option<TableBreaks>,
+    /// The project's table style it follows, by its id (docs/adr/1126 §3, `.kcad` schema 185): what the table does
+    /// not set itself the style gives its drawing (`styled`); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table_style: Option<String>,
 }
 
 /// A table drawn in parts (docs/adr/1030 §7): each part at most `height` metres deep (it takes rows while they fit,

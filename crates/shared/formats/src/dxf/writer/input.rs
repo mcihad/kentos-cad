@@ -499,6 +499,7 @@ impl Fields {
                 },
                 source: self.source,
                 breaks: self.breaks,
+                table_style: None,
             }),
             other => {
                 return Err(E::unknown_variant(

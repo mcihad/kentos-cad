@@ -34,7 +34,7 @@ blocks, hatch definitions, templates, palette items or viewport overrides.
 Version 2 keeps the same `format`, `id`, `revision` and `standard` fields and
 requires a `resources` object. Its supported fields are `lineTypes`,
 `hatchPatterns`, `blocks`, `sheetTemplates`, `leaderStyles`,
-`textStyleDefinitions`, `dimensionStyleDefinitions` and `toolPalettes`. A tool palette (docs/adr/1014) is
+`textStyleDefinitions`, `dimensionStyleDefinitions`, `toolPalettes` and `tableStyleDefinitions`. A tool palette (docs/adr/1014) is
 `{id, name, description?, tools}`; each tool is `{id, title, description?, category?, command, commandVersion,
 input}`: a catalog command, its version and its whole input object (at most 64 KiB as JSON). At most 50 palettes,
 1–200 tools each; palette ids are unique without regard to case, tool ids unique in their palette; ids, names, titles
@@ -174,10 +174,19 @@ elements using that style name; multiple elements in one line type count once.
 The `objects` field contains direct entity uses only. These counts explain
 potential impact and do not authorize replacing a style or changing its users.
 
+Named table styles (docs/adr/1126) are `tableStyleDefinitions`: each `{id, name, title?, header?, data?}`, a cell
+style `{textStyle?, height?, align?, color?, fill?, horizontalMargin?, verticalMargin?, borderWeight?, borderColor?}`
+(paper millimetres; the text style by name), every field allowlisted. They resolve by name in binding order
+(`provenance.tableStyleDefinitions`), conflict as `tableStyleDefinition` by their differing cell styles, are checked as
+`missingTableStyleDefinition` and `tableStyleDefinition` (the tables that follow a differing local style counted) and
+install as `tableStyle` rows like the other styles. A table names its style by id (`tableStyle`); its drawing takes
+the style's alignment, colours and data text style where the table sets none (heights, margins and borders are kept and
+compared, not yet drawn).
+
 Version 2 currently transports and checks definitions for explicit
 mapping work. It does not apply them to the drawing. In particular, named
 patterns in layers and objects, SHX shape files referenced by a line type,
-block geometry, table style content, sheet-template
+block geometry, sheet-template
 contents, palette recipes and viewport overrides are not yet packaged or
 reconciled. An office standard
 must not be marked fully applied on the basis of these resource queries.
@@ -235,4 +244,4 @@ For the association workflow Autodesk documents both
 and [ordered precedence for conflicting standards](https://help.autodesk.com/cloudhelp/2022/ENU/AutoCAD-Architecture/files/GUID-22AC35EC-47D1-4FA4-96AF-671663396F55.htm).
 The current resolution covers the named definitions and global rules described
 above. Installation by the user's mapping is `cad.standards.install` (docs/adr/1002, 1100); automatic
-mapping, table styles and published tool palettes remain open.
+mapping and published tool palettes remain open.

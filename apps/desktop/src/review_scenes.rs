@@ -144,8 +144,33 @@ fn install_library(app: &mut App) {
     let _ = app.update(Message::StandardInstall(I::Pick(K::SheetTemplate, "sys:cad-mimari".into(), Choice(A::Replace))));
 }
 
+/// docs/adr/1126 §6: the table style cases' drawing (two office standards' table styles, a differing CETVEL that two
+/// tables follow, a same SADE, a missing BASLIK whose id the drawing has) with Standart kaynaklarını kur open, CETVEL
+/// to be replaced in place.
+fn install_tables(app: &mut App) {
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/commands/v1/cad.standards.install.tables.json"
+    ))
+    .expect("the cases");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).expect("the drawing reads");
+    let doc = Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Open));
+    use crate::standard_install::{Choice, Event as I};
+    use kentos_commands::{StandardInstallAction as A, StandardResourceKind as K};
+    let _ = app.update(Message::StandardInstall(I::Pick(K::TableStyle, "CETVEL".into(), Choice(A::Replace))));
+}
+
 pub(crate) fn install_scenes() -> Vec<Scene> {
     vec![
+        ("standart-tablo-kur", install_tables),
+        ("standart-tablo-kuruldu", |app| {
+            install_tables(app);
+            let _ = app.update(Message::StandardInstall(crate::standard_install::Event::Install));
+            let _ = app.update(Message::DialogClosed);
+        }),
         ("standart-kaynak-kur", install),
         ("standart-kaynak-kuruldu", |app| {
             install(app);

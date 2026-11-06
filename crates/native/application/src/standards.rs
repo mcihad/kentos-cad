@@ -124,6 +124,7 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
         text_style_definitions: Default::default(),
         dimension_style_definitions: Default::default(),
         tool_palettes: Default::default(),
+        table_style_definitions: Default::default(),
     };
     let mut layers: BTreeSet<_> = result
         .layers
@@ -148,6 +149,7 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
     let mut text_style_definitions = BTreeSet::new();
     let mut dimension_style_definitions = BTreeSet::new();
     let mut tool_palettes = BTreeSet::new();
+    let mut table_style_definitions = BTreeSet::new();
     for package in &packages {
         let Some(source) = &package.resources else {
             continue;
@@ -211,6 +213,15 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
             if tool_palettes.insert(item.id.to_lowercase()) {
                 provenance.tool_palettes.insert(item.id.clone(), origin(package));
                 resources.tool_palettes.push(item.clone());
+            }
+        }
+        // Table styles (docs/adr/1126 §6): a name once, case aside, the first standard's.
+        for item in &source.table_style_definitions {
+            if table_style_definitions.insert(item.name.trim().to_lowercase()) {
+                provenance
+                    .table_style_definitions
+                    .insert(item.name.clone(), origin(package));
+                resources.table_style_definitions.push(item.clone());
             }
         }
     }
@@ -354,6 +365,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
         String,
         (&String, &kentos_commands::DimensionStyleDef),
     > = BTreeMap::new();
+    let mut table_style_definitions: BTreeMap<String, (&String, &kentos_commands::TableStyleDef)> =
+        BTreeMap::new();
     let mut conflicts = Vec::new();
     for package in &packages {
         if let Some(first) = packages.first().filter(|first| first.id != package.id) {
@@ -634,6 +647,28 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                     }
                 } else {
                     dimension_style_definitions.insert(key, (&package.id, item));
+                }
+            }
+            // Table styles (docs/adr/1126 §6): every cell style compared, its id and name aside.
+            for item in &resources.table_style_definitions {
+                let key = item.name.trim().to_lowercase();
+                if let Some((first_id, first)) = table_style_definitions.get(&key) {
+                    let first_value = resource_appearance(first);
+                    let later_value = resource_appearance(item);
+                    let fields = style_differences(&first_value, &later_value);
+                    if !fields.is_empty() {
+                        conflicts.push(StandardConflict {
+                            kind: "tableStyleDefinition".into(),
+                            name: item.name.clone(),
+                            first_id: (*first_id).clone(),
+                            later_id: package.id.clone(),
+                            first_values: values(&fields, first_value),
+                            later_values: values(&fields, later_value),
+                            fields,
+                        });
+                    }
+                } else {
+                    table_style_definitions.insert(key, (&package.id, item));
                 }
             }
         }
@@ -1454,6 +1489,9 @@ fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Re
             "resources.dimensionStyleDefinitions",
         ));
     }
+    if let Some(problem) = kentos_commands::table_style_defs_problem(&resources.table_style_definitions) {
+        return Err(fail(codes::INVALID_STANDARD, problem, "resources.tableStyleDefinitions"));
+    }
     Ok(())
 }
 
@@ -1946,6 +1984,55 @@ fn resource_issues(
             fixable: false,
             message,
         });
+    }
+    // Table styles (docs/adr/1126 §6): by name, every cell style compared; the tables that follow a differing local
+    // style are its impact (direct tables in `objects`, those inside block definitions in the message).
+    if !resources.table_style_definitions.is_empty() {
+        let mut table_uses = std::collections::BTreeMap::<&str, [usize; 2]>::new();
+        let defined = doc.blocks().iter().flat_map(|b| b.entities.iter().map(|e| (e, 1)));
+        for (entity, index) in doc.entities().map(|e| (e, 0)).chain(defined) {
+            if let kentos_commands::Entity::Table(t) = entity
+                && let Some(id) = t.table_style.as_deref()
+            {
+                table_uses.entry(id).or_default()[index] += 1;
+            }
+        }
+        for expected in &resources.table_style_definitions {
+            let found = doc
+                .settings()
+                .table_styles
+                .iter()
+                .find(|item| item.name.trim().to_lowercase() == expected.name.trim().to_lowercase());
+            let expected_value = resource_appearance(expected);
+            let [direct, block_parts] =
+                found.and_then(|item| table_uses.get(item.id.as_str())).copied().unwrap_or_default();
+            let (kind, message, found_value) = match found {
+                None => (
+                    StandardIssueKind::MissingTableStyleDefinition,
+                    format!("“{}” tablo stili çizimde yok; stili açıkça kurun.", expected.name),
+                    None,
+                ),
+                Some(found) if !style_differences(&resource_appearance(found), &expected_value).is_empty() => (
+                    StandardIssueKind::TableStyleDefinition,
+                    format!(
+                        "“{}” tablo stilinin hücre stilleri ofis standardından farklı; değişimi açıkça inceleyin. Bu yerel stil {direct} doğrudan tabloda ve {block_parts} blok parçasında kullanılıyor.",
+                        expected.name
+                    ),
+                    Some(resource_appearance(found).to_string()),
+                ),
+                Some(_) => continue,
+            };
+            issues.push(StandardIssue {
+                kind,
+                subject: expected.name.clone(),
+                layer: None,
+                expected: Some(expected_value.to_string()),
+                found: found_value,
+                objects: count(direct),
+                fixable: false,
+                message,
+            });
+        }
     }
     if !resources.sheet_templates.is_empty() {
         if let Some(sheets) = doc.sheets() {

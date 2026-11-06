@@ -179,6 +179,8 @@ fn kind_words(kind: StandardIssueKind) -> &'static str {
         K::TextStyleDefinition => "Yazı stili tanımı",
         K::MissingDimensionStyleDefinition => "Eksik ölçü stili tanımı",
         K::DimensionStyleDefinition => "Ölçü stili tanımı",
+        K::MissingTableStyleDefinition => "Eksik tablo stili",
+        K::TableStyleDefinition => "Tablo stili",
         K::ObjectLineType => "Nesne çizgi tipi",
         K::OwnLook => "Nesne görünüşü",
     }
@@ -214,6 +216,9 @@ fn conflict_field(field: &str) -> &'static str {
         "fontFile" => "Yazı tipi dosyası",
         "options" => "Ölçü seçenekleri",
         "byLayer" => "Katmana göre görünüş",
+        "title" => "Başlık hücresi",
+        "header" => "Sütun başı hücresi",
+        "data" => "Veri hücresi",
         _ => "Özellik",
     }
 }
@@ -881,6 +886,8 @@ impl App {
                     | StandardIssueKind::DimensionStyleDefinition => {
                         Some(&p.dimension_style_definitions)
                     }
+                    StandardIssueKind::MissingTableStyleDefinition
+                    | StandardIssueKind::TableStyleDefinition => Some(&p.table_style_definitions),
                     _ => None,
                 });
                 let resource = matches!(
@@ -899,6 +906,8 @@ impl App {
                         | StandardIssueKind::TextStyleDefinition
                         | StandardIssueKind::MissingDimensionStyleDefinition
                         | StandardIssueKind::DimensionStyleDefinition
+                        | StandardIssueKind::MissingTableStyleDefinition
+                        | StandardIssueKind::TableStyleDefinition
                 );
                 if let Some(origin) = definitions.and_then(|entries| {
                     entries
@@ -945,6 +954,8 @@ impl App {
                         | StandardIssueKind::TextStyleDefinition
                         | StandardIssueKind::MissingDimensionStyleDefinition
                         | StandardIssueKind::DimensionStyleDefinition
+                        | StandardIssueKind::MissingTableStyleDefinition
+                        | StandardIssueKind::TableStyleDefinition
                 ) {
                     if let Some(found) = &issue.found {
                         if block {
@@ -1344,7 +1355,8 @@ fn change_words(issue: &StandardIssue) -> String {
             return "yok → standartta tanımlı".into();
         }
         StandardIssueKind::MissingTextStyleDefinition
-        | StandardIssueKind::MissingDimensionStyleDefinition => {
+        | StandardIssueKind::MissingDimensionStyleDefinition
+        | StandardIssueKind::MissingTableStyleDefinition => {
             return "yok → standartta tanımlı".into();
         }
         StandardIssueKind::LineTypeDefinition
@@ -1355,7 +1367,9 @@ fn change_words(issue: &StandardIssue) -> String {
         StandardIssueKind::LeaderStyleDefinition => {
             return "tanım farklı → standart tanımı".into();
         }
-        StandardIssueKind::TextStyleDefinition | StandardIssueKind::DimensionStyleDefinition => {
+        StandardIssueKind::TextStyleDefinition
+        | StandardIssueKind::DimensionStyleDefinition
+        | StandardIssueKind::TableStyleDefinition => {
             return "tanım farklı → standart tanımı".into();
         }
         StandardIssueKind::SheetTemplateOrigin => {

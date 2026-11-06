@@ -174,6 +174,7 @@ fn create_check(
         formulas: Vec::new(),
         fields: Vec::new(),
         breaks: None,
+        table_style: None,
     };
     Ok((warnings, doc.table_worked_out(&table)))
 }

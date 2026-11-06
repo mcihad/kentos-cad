@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `184`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-185.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `185`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-186.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -831,6 +831,13 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `unknown_field`, satır sonlu hücreyi `bad_value` ile reddeder. Örnek `table-extraction.kcad`; eski şemada
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
+
+**Şema 185** (ADR 1126 §2; CAD-ADV-12, dalda geçici numara): ayarların `tableStyles`'ı (sözleşmenin `TableStyleDef`
+listesinin JSON'u: kimlik, ad, `title`/`header`/`data` hücre stilleri; boş liste yazılmaz; ad kuralı yazı stillerininki;
+yükseklik 0'dan büyük, kenar boşluğu ve kalınlık 0–100 mm, renkler `#rrggbb`, bilinmeyen alan `unknown_field`) ve
+tablonun `tableStyle`'ı (boş olmayan metin, izlediği stilin kimliği). Yazıcı 185'i yalnız tablo stili ya da stil izleyen
+tablo varken seçer; 184 ve öncesi ikisini de `unknown_field` sayar (`broken/table-styles-in-schema-184.kcad`). Örnek
+`table-styles.json/.kcad`; bozuklar `broken/table-styles-{unknown-field,duplicate,height,colour,empty-ref}.kcad`.
 
 **Şema 184** (ADR 1120 §4; CAD-ADV-11, dalda geçici numara): yazı stilinin `bigFontFile`'ı (aşağıda) ve
 `styles.items`'ta AutoCAD-86 unifont 1.0 ya da bigfont 1.0 imzalı gömülü SHX kaynağı. Yazıcı 184'ü yalnız bunlardan

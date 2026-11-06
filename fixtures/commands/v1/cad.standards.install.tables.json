@@ -1,0 +1,2251 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.standards.install",
+ "commandVersion": 1,
+ "title": "Standart kaynaklarını kur: tablo stilleri",
+ "note": "ADR 1126 §6. Bağımsız başvuru scripts/fixtures/standards_table_styles_cases.py: kurallar ADR'den elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Tablo stilleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 100,
+   "workspace": "cad",
+   "textStyles": [
+    {
+     "id": "yazi-tablo",
+     "name": "A-TABLO",
+     "font": "arimo",
+     "height": 2.5
+    }
+   ],
+   "tableStyles": [
+    {
+     "id": "ofis-cetvel",
+     "name": "CETVEL",
+     "data": {
+      "align": "right",
+      "height": 2.0
+     }
+    },
+    {
+     "id": "yerel-sade",
+     "name": "SADE",
+     "data": {
+      "align": "left",
+      "horizontalMargin": 1.5
+     }
+    },
+    {
+     "id": "ofis-baslik",
+     "name": "YEREL",
+     "title": {
+      "fill": "#ffffff"
+     }
+    }
+   ],
+   "standardDocs": [
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-cetvel-a\", \"name\": \"CETVEL\", \"header\": {\"align\": \"center\", \"fill\": \"#dddddd\"}, \"data\": {\"align\": \"right\", \"height\": 2.5}}, {\"id\": \"ofis-baslik\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}, {\"id\": \"ofis-sade\", \"name\": \"sade\", \"data\": {\"align\": \"left\", \"horizontalMargin\": 1.5000000001}}]}}"
+    },
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-cetvel\", \"name\": \"Cetvel\", \"data\": {\"align\": \"left\"}}, {\"id\": \"b-liste\", \"name\": \"PLAN-LISTE\", \"data\": {\"verticalMargin\": 1.0, \"color\": \"#c0392b\"}}]}}"
+    }
+   ]
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "table",
+    "id": 1,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "header": true,
+    "tableStyle": "ofis-cetvel"
+   },
+   {
+    "kind": "table",
+    "id": 2,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 10.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "header": true,
+    "tableStyle": "yerel-sade"
+   },
+   {
+    "kind": "table",
+    "id": 3,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 20.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "header": true
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Seçimsiz: eksik BASLIK ve PLAN-LISTE eklenir, farklı CETVEL korunur, aynı sade dokunulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 2,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz, aynı satırları verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 2,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlk standardın CETVEL'i gelir; ikincininki satır değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 2,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sayılar 1e-9 içinde eşit: sade aynı (kimlik ve ad dışında)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 2,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde aynı kimlik var: BASLIK ofis-baslik-2 olarak eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 2,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı CETVEL yerinde değiştirilir: yerel ad ve kimlik kalır, tablolar izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "replace",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 1,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "header": {
+          "align": "center",
+          "fill": "#dddddd"
+         },
+         "data": {
+          "align": "right",
+          "height": 2.5
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı CETVEL yeni adla eklenir, çizimdeki kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "cetvel",
+        "action": "renameIncoming",
+        "newName": "CETVEL-OFIS"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "renameIncoming",
+         "newName": "CETVEL-OFIS",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 1,
+       "kept": 1,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-cetvel-a",
+         "name": "CETVEL-OFIS",
+         "header": {
+          "align": "center",
+          "fill": "#dddddd"
+         },
+         "data": {
+          "align": "right",
+          "height": 2.5
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik olan atlanabilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "BASLIK",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 1,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 3,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hepsi atlanınca yazım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "BASLIK",
+        "action": "keepLocal"
+       },
+       {
+        "kind": "tableStyle",
+        "name": "PLAN-LISTE",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 0,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 4,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik olan açıkça eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "PLAN-LISTE",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "keepLocal",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 2,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kurulumu geri al ve yinele",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "differs",
+         "action": "replace",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "same",
+         "action": "keepLocal",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 2,
+       "replaced": 1,
+       "renamed": 0,
+       "kept": 1,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "header": {
+          "align": "center",
+          "fill": "#dddddd"
+         },
+         "data": {
+          "align": "right",
+          "height": 2.5
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Standart kaynaklarını kur",
+     "expect": {
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "data": {
+          "align": "right",
+          "height": 2.0
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Standart kaynaklarını kur",
+     "expect": {
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel",
+         "name": "CETVEL",
+         "header": {
+          "align": "center",
+          "fill": "#dddddd"
+         },
+         "data": {
+          "align": "right",
+          "height": 2.5
+         }
+        },
+        {
+         "id": "yerel-sade",
+         "name": "SADE",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "YEREL",
+         "title": {
+          "fill": "#ffffff"
+         }
+        },
+        {
+         "id": "ofis-baslik-2",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde tablo stili yok: hepsi eksik, eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rows": [
+        {
+         "kind": "tableStyle",
+         "name": "CETVEL",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "BASLIK",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "sade",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-a",
+          "revision": "2026.1"
+         }
+        },
+        {
+         "kind": "tableStyle",
+         "name": "PLAN-LISTE",
+         "status": "missing",
+         "action": "add",
+         "source": {
+          "id": "ofis-b",
+          "revision": "2026.3"
+         }
+        }
+       ],
+       "added": 4,
+       "replaced": 0,
+       "renamed": 0,
+       "kept": 0,
+       "unavailable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "tableStyles": [
+        {
+         "id": "ofis-cetvel-a",
+         "name": "CETVEL",
+         "header": {
+          "align": "center",
+          "fill": "#dddddd"
+         },
+         "data": {
+          "align": "right",
+          "height": 2.5
+         }
+        },
+        {
+         "id": "ofis-baslik",
+         "name": "BASLIK",
+         "title": {
+          "textStyle": "A-TABLO",
+          "height": 3.5,
+          "align": "center",
+          "borderWeight": 0.5,
+          "borderColor": "#000000"
+         }
+        },
+        {
+         "id": "ofis-sade",
+         "name": "sade",
+         "data": {
+          "align": "left",
+          "horizontalMargin": 1.5000000001
+         }
+        },
+        {
+         "id": "b-liste",
+         "name": "PLAN-LISTE",
+         "data": {
+          "verticalMargin": 1.0,
+          "color": "#c0392b"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-cetvel-a\", \"name\": \"CETVEL\", \"header\": {\"align\": \"center\", \"fill\": \"#dddddd\"}, \"data\": {\"align\": \"right\", \"height\": 2.5}}, {\"id\": \"ofis-baslik\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}, {\"id\": \"ofis-sade\", \"name\": \"sade\", \"data\": {\"align\": \"left\", \"horizontalMargin\": 1.5000000001}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-cetvel\", \"name\": \"Cetvel\", \"data\": {\"align\": \"left\"}}, {\"id\": \"b-liste\", \"name\": \"PLAN-LISTE\", \"data\": {\"verticalMargin\": 1.0, \"color\": \"#c0392b\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Standartta olmayan ad: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "YOK",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "standard_resource_not_found",
+       "message": "Bağlı standartlarda “YOK” adlı tablo stili yok. Kaynağı standartların listesinden seçin.",
+       "path": "choices[0].name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Türü yanlış: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "textStyle",
+        "name": "CETVEL",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "standard_resource_not_found",
+       "message": "Bağlı standartlarda “CETVEL” adlı yazı stili yok. Kaynağı standartların listesinden seçin.",
+       "path": "choices[0].name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı stile iki seçim: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "replace"
+       },
+       {
+        "kind": "tableStyle",
+        "name": "cetvel",
+        "action": "keepLocal"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“cetvel” tablo stili için iki seçim verildi; her kaynağa bir seçim verin.",
+       "path": "choices[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik olanı değiştirmek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "BASLIK",
+        "action": "replace"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“BASLIK” tablo stili çizimde yok: eklenebilir ya da atlanabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksik olanı yeni adla eklemek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "BASLIK",
+        "action": "renameIncoming",
+        "newName": "B2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“BASLIK” tablo stili çizimde yok: eklenebilir ya da atlanabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı olanı eklemek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "sade",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“sade” tablo stili çizimdekiyle aynı: değişecek bir şey yok.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Farklı olanı eklemek: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "add"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "“CETVEL” tablo stili çizimdekinden farklı: değiştirilebilir, yeni adla eklenebilir ya da çizimdeki korunabilir.",
+       "path": "choices[0].action"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni adsız yeni adla ekleme: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "renameIncoming"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "Yeni adla eklemek için kenarı boşluksuz, boş olmayan bir ad verin (newName).",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenarı boşluklu yeni ad: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "renameIncoming",
+        "newName": "CETVEL2 "
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "Yeni adla eklemek için kenarı boşluksuz, boş olmayan bir ad verin (newName).",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştirmede yeni ad: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "replace",
+        "newName": "X"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_install_choice",
+       "message": "Yeni ad yalnız yeni adla eklemede (renameIncoming) verilir.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni ad çizimde var (büyük küçük harf ayırmadan): ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "renameIncoming",
+        "newName": "yerel"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_name",
+       "message": "“yerel” adlı tablo stili çizimde ya da standartta var; başka bir ad verin.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni ad standartta var: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "choices": [
+       {
+        "kind": "tableStyle",
+        "name": "CETVEL",
+        "action": "renameIncoming",
+        "newName": "PLAN-LISTE"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_name",
+       "message": "“PLAN-LISTE” adlı tablo stili çizimde ya da standartta var; başka bir ad verin.",
+       "path": "choices[0].newName"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen revizyon eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

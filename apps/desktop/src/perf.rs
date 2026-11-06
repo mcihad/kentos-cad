@@ -128,6 +128,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             profile_files: Vec::new(),
             standard_docs: Vec::new(),
             approved_sheet_templates: Vec::new(),
+            table_styles: Vec::new(),
             review_notes: Vec::new(),
             heights: None,
             coordinate_epoch: None,

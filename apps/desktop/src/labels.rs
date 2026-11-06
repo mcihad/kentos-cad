@@ -1784,6 +1784,9 @@ impl Labels<'_> {
                         },
                         Entity::Table(t),
                     ) => {
+                        // As its table style draws it where it sets nothing itself (docs/adr/1126 §3).
+                        let drawn = kentos_commands::styled(t, self.doc.settings());
+                        let t: &kentos_commands::TableEntity = &drawn;
                         let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
                             continue;
                         };
@@ -1791,7 +1794,7 @@ impl Labels<'_> {
                         let words = kentos_geometry_core::geom::table::cell_line(words, *line);
                         // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
                         if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
-                            let shape = kentos_native_application::geometry::shape(entity);
+                            let shape = kentos_native_application::geometry::core_table(t);
                             if let Some(g) = kentos_geometry_core::geom::table::table_geom(&shape) {
                                 for f in g.fills() {
                                     let q = f.corners.map(|p| self.screen(p));
@@ -2272,6 +2275,9 @@ impl Labels<'_> {
             .or_insert_with(|| {
                 let mut h = Fx::default();
                 format!("{:?}{:?}{:?}{:?}{:?}", t.face, t.base, t.styles, t.merges, t.aligns).hash(&mut h);
+                // Its table style's cells too (docs/adr/1126 §3): a changed style draws it again.
+                let style = t.table_style.as_deref().and_then(|id| self.doc.settings().table_styles.iter().find(|s| s.id == id));
+                format!("{:?}{style:?}", t.table_style).hash(&mut h);
                 (t.height.to_bits(), t.header).hash(&mut h);
                 h.finish()
             });

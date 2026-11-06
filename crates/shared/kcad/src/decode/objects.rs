@@ -278,6 +278,8 @@ pub(super) struct Features {
     pub(super) long_patterns: bool,
     /// Schema 184 (docs/adr/1120 §4): a text style's Big Font file.
     pub(super) shx_fonts: bool,
+    /// Schema 185 (docs/adr/1126 §2–§3): the project's table styles and a table's `tableStyle`.
+    pub(super) table_styles: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -578,6 +580,7 @@ impl Features {
             review_notes: schema >= crate::SCHEMA_WITH_REVIEW_NOTES,
             long_patterns: schema >= crate::SCHEMA_WITH_LONG_PATTERNS,
             shx_fonts: schema >= crate::SCHEMA_WITH_SHX_FONTS,
+            table_styles: schema >= crate::SCHEMA_WITH_TABLE_STYLES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -823,6 +826,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 ) || (has.table_cells
                     && matches!(key, "styles" | "formulas" | "fields" | "link" | "schedule"))
                     || (has.extraction && key == "breaks")
+                    || (has.table_styles && key == "tableStyle")
             }
             Kind::Image => matches!(
                 key,
@@ -1056,6 +1060,8 @@ struct Fields {
     table_fields: Vec<kentos_contracts::CellField>,
     table_link: Option<Link>,
     table_breaks: Option<kentos_contracts::TableBreaks>,
+    /// Schema 185 (docs/adr/1126 §3): the table style a table follows, by id.
+    table_style: Option<String>,
 }
 
 /// A linked file's path, digest, copy and rule, as a table's `link` holds them (schema 68, docs/adr/0327 §5).
@@ -1434,6 +1440,14 @@ pub(super) fn object(
                     ));
                 }
                 f.cells = Some(cells);
+            }
+            "tableStyle" if kind == Kind::Table && has.table_styles => {
+                let at = r.position();
+                let id = text(r)?;
+                if id.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "tablonun tablo stili kimliği boş"));
+                }
+                f.table_style = Some(id);
             }
             "breaks" if kind == Kind::Table => {
                 let (v, at): (kentos_contracts::TableBreaks, usize) = json_part(r, "tablonun parçaları")?;
@@ -2968,6 +2982,7 @@ fn build(
                 face: std::mem::take(&mut f.face),
                 source,
                 breaks: f.table_breaks.take(),
+                table_style: f.table_style.take(),
             };
             // Its rows, columns, cells and ranges hold together (docs/adr/0184 §1).
             if let Some((field, words)) = table.problem() {

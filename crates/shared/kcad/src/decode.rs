@@ -770,6 +770,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut standard_docs = Vec::new();
     let mut review_notes = Vec::new();
     let mut approved_sheet_templates = Vec::new();
+    let mut table_styles = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -1123,6 +1124,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 standard_docs = list;
+            }
+            // Schema 185 (docs/adr/1126 §2): the table styles, read whole and checked.
+            "tableStyles" if has.table_styles => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::TableStyleDef> = serde_json::from_value(value).map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                    r.fail_at(code, at, &format!("tablo stilleri okunamadı: {words}"))
+                })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş tablo stili listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::table_style_defs_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                table_styles = list;
             }
             // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, read whole and checked.
             "approvedSheetTemplates" if has.approved_sheet_templates => {
@@ -1772,6 +1790,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         profile_files,
         standard_docs,
         approved_sheet_templates,
+        table_styles,
         review_notes,
         lineage,
         map_srid,

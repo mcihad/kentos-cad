@@ -548,9 +548,12 @@ pub fn labels_in_view(
                 },
                 Entity::Table(t),
             ) => {
+                // As its table style draws it where it sets nothing itself (docs/adr/1126 §3).
+                let drawn = kentos_contracts::styled(t, doc.settings());
+                let t: &kentos_contracts::TableEntity = &drawn;
                 if filled.insert(id)
                     && let Some(g) = kentos_geometry_core::geom::table::table_geom(
-                        &kentos_native_application::geometry::shape(entity),
+                        &kentos_native_application::geometry::core_table(t),
                     )
                 {
                     for fill in g.fills() {

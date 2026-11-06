@@ -340,7 +340,7 @@ impl Spatial {
         self.tagged_spaces.clear();
         self.sync_tagged_spaces(doc);
         let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
-        self.store.put_many(doc.entities().filter_map(|e|kentos_native_application::viewport_scope::record_at(e,scale)));
+        self.store.put_many(doc.entities().filter_map(|e|kentos_native_application::viewport_scope::record_at(e,scale,doc.settings())));
         self.store
             .set_hosts(kentos_native_application::geometry_store::opening_hosts(doc, doc.entities()));
         // The masks are picked by their boundary only (docs/adr/0310 §4).
@@ -519,7 +519,7 @@ impl Spatial {
             .iter()
             .filter_map(|e| {
                 let (id, layer, label, mut shape) =
-                    kentos_native_application::viewport_scope::record_at(e, scale)?;
+                    kentos_native_application::viewport_scope::record_at(e, scale, doc.settings())?;
                 if let Shape::Stair { stair, .. } = &mut shape {
                     stair.upper = upper.contains(&e.base().id);
                 }
@@ -595,7 +595,7 @@ impl Spatial {
                 self.store.remove(&gone);
                 let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
                 for entity in &changed {
-                    match kentos_native_application::viewport_scope::record_at(entity,scale) {Some(record)=>{self.store.put_many(std::iter::once(record));},None=>self.store.remove(&[f64::from(entity.base().id)])}
+                    match kentos_native_application::viewport_scope::record_at(entity,scale,doc.settings()) {Some(record)=>{self.store.put_many(std::iter::once(record));},None=>self.store.remove(&[f64::from(entity.base().id)])}
                 }
                 // The openings put, in their walls (docs/adr/0341 §2).
                 self.store.set_hosts(kentos_native_application::geometry_store::opening_hosts(
