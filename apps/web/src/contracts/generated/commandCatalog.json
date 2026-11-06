@@ -54435,6 +54435,269 @@
       ]
     },
     {
+      "id": "cad.survey.baselines",
+      "version": 1,
+      "title": "GNSS baz ağı dengelemesi",
+      "summary": "GNSS baz vektörlerinden kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz, ADR 1380). İstasyonlar ECEF X, Y, Z'de (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale kovaryansların çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir). Bilinen istasyon fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum: minimal koordinatı olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı L·Lᵀ ayrıştırılıp üç denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95), artık sayıları ve Baarda testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir, bazın sonucu bileşenlerinin en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve standart sapmaları (m0 ile ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları (GRS80), bazların artık vektörü (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ², geçti mi, en kötü baz. Ağ metinle de verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z], B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Yoğun çözüm en çok 1500 bilinmeyen alır. Retler: invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance, datum_missing, network_too_large, network_disconnected.",
+      "aliases": [
+        "gnssag",
+        "bazdengele"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.survey.baselines` v1: the stations and baselines, or the same as `text` (lines `K;ad;X;Y;Z[;sX;sY;sZ]`\na known station, fixed without standard deviations; `N;ad[;X;Y;Z]` a new one; `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`\na baseline; `#` a remark; `;`, `,` or tabs between the values, a point before decimals); the variance factor the\ncovariances are multiplied by (default 1); the datum.\n\nRefusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station\nfixed and weighted …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive\ndefinite), `datum_missing`, `network_too_large` (more than 1500 unknowns), `network_disconnected`.",
+        "properties": {
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/BaselineVector"
+            },
+            "type": "array"
+          },
+          "datum": {
+            "$ref": "#/$defs/BaselineDatum"
+          },
+          "scale": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/BaselineStation"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "SurveyBaselines",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the\nminimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of\nfreedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged\ntest value, and the drawing's revision.",
+        "properties": {
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/BaselineResult"
+            },
+            "type": "array"
+          },
+          "chi2": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "f": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "held": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "m0": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "n": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "omega": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "passed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/AdjustedGnssStation"
+            },
+            "type": "array"
+          },
+          "u": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "worst": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          }
+        },
+        "required": [
+          "stations",
+          "baselines",
+          "n",
+          "u",
+          "f",
+          "omega",
+          "revision"
+        ],
+        "title": "SurveyBaselinesAdjusted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the\nminimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of\nfreedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged\ntest value, and the drawing's revision.",
+        "properties": {
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/BaselineResult"
+            },
+            "type": "array"
+          },
+          "chi2": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "f": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "held": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "m0": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "n": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "omega": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "passed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/AdjustedGnssStation"
+            },
+            "type": "array"
+          },
+          "u": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "worst": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          }
+        },
+        "required": [
+          "stations",
+          "baselines",
+          "n",
+          "u",
+          "f",
+          "omega",
+          "revision"
+        ],
+        "title": "SurveyBaselinesAdjusted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "no_baselines",
+          "duplicate_station",
+          "unknown_station",
+          "invalid_covariance",
+          "datum_missing",
+          "network_too_large",
+          "network_disconnected"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir sabit istasyon, iki yeni istasyon, üç baz (metinle)",
+          "input": {
+            "text": "K;A;4208000;2334000;4171000\nN;B\nN;C\nB;A;B;100.012;-50.004;20.001;1e-6;0;0;1e-6;0;1e-6\nB;B;C;-30.003;80.002;-10.000;1e-6;0;0;1e-6;0;1e-6\nB;A;C;70.006;29.999;10.004;1e-6;0;0;1e-6;0;1e-6"
+          }
+        }
+      ]
+    },
+    {
       "id": "map.features.code",
       "version": 1,
       "title": "Kodla çiz",
@@ -98074,6 +98337,48 @@
       "meaning": "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin."
     },
     {
+      "code": "no_baselines",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Baz vektörü yok; en az bir baz verin."
+    },
+    {
+      "code": "duplicate_station",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aynı adda iki istasyon verilmiş."
+    },
+    {
+      "code": "unknown_station",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bazın ucu verilen istasyonlardan biri değil."
+    },
+    {
+      "code": "invalid_covariance",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bazın kovaryans matrisi pozitif tanımlı değil."
+    },
+    {
+      "code": "datum_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağın datumu yok: bir istasyonu sabit ya da ağırlıklı verin ya da minimal datumu seçin."
+    },
+    {
+      "code": "network_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağ yoğun çözümün alabileceğinden büyük (en çok 1500 bilinmeyen)."
+    },
+    {
+      "code": "network_disconnected",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir istasyon datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı."
+    },
+    {
       "code": "not_a_point",
       "kind": "failed",
       "retryable": false,
@@ -102374,6 +102679,54 @@
           "type": "object"
         }
       ]
+    },
+    "AdjustedGnssStation": {
+      "description": "A station adjusted: X, Y, Z (m), their standard deviations and those in east, north, up (m, scaled by m0); held:\nfixed or held by the minimal constraint (its standard deviations 0).",
+      "properties": {
+        "held": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "senu": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "sxyz": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "xyz": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name",
+        "xyz",
+        "sxyz",
+        "senu"
+      ],
+      "type": "object"
     },
     "AffectReason": {
       "description": "Why a frame is affected.",
@@ -107371,6 +107724,134 @@
           "type": "string"
         }
       ]
+    },
+    "BaselineDatum": {
+      "description": "How the datum is held: `given` by the fixed and weighted stations; `minimal` holds the first station with\ncoordinates when none is fixed or weighted (a minimally constrained adjustment).",
+      "enum": [
+        "given",
+        "minimal"
+      ],
+      "type": "string"
+    },
+    "BaselineResult": {
+      "description": "A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and\nwhat it says (`ok`, `blunder`, `uncontrolled`).",
+      "properties": {
+        "flag": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "v": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "w": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "v",
+        "flag"
+      ],
+      "type": "object"
+    },
+    "BaselineStation": {
+      "additionalProperties": false,
+      "description": "A station: its name; its X, Y, Z when known (m); held fixed; or weighted by its standard deviations (m).",
+      "properties": {
+        "fixed": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "xyz": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "BaselineVector": {
+      "additionalProperties": false,
+      "description": "A baseline: its ends, ΔX, ΔY, ΔZ (m) and its covariance's upper triangle xx, xy, xz, yy, yz, zz (m²).",
+      "properties": {
+        "cov": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "x-unit": "m2"
+        },
+        "d": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "d",
+        "cov"
+      ],
+      "type": "object"
     },
     "BatchOnError": {
       "description": "What a batch does when a row stops at run time (docs/adr/0551 §1).",

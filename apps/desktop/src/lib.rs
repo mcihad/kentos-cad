@@ -64,6 +64,7 @@ mod sheet_details_window;
 mod plot_styles_window;
 mod flatten_window;
 mod features_window;
+mod baselines_window;
 mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
@@ -319,6 +320,8 @@ mod map_work_tools_tests;
 mod scale_summary_tests;
 #[cfg(test)]
 mod features_window_tests;
+#[cfg(test)]
+mod baselines_window_tests;
 mod map_survey_panel_tests;
 #[cfg(test)]
 mod route_window_tests;

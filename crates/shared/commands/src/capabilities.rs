@@ -2363,6 +2363,22 @@ const ENTRIES: &[Entry] = &[
         warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
         targets: none,
     },
+    // GNSS baz ağı dengelemesi (plan/map-cad.md MAP-05, docs/adr/1380).
+    Entry {
+        id: "cad.survey.baselines",
+        refusals: &[&[
+            "invalid_input",
+            "no_baselines",
+            "duplicate_station",
+            "unknown_station",
+            "invalid_covariance",
+            "datum_missing",
+            "network_too_large",
+            "network_disconnected",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     // Kodla çiz (plan/map-cad.md MAP-04, docs/adr/1360).
     Entry {
         id: "map.features.code",

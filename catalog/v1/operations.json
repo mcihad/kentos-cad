@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "survey.baselines": {
+      "level": "query",
+      "via": [
+        "cad.survey.baselines"
+      ],
+      "note": "Pencere dosyayı cad.survey.baselines'ın text'iyle verir; salt okunur analiz (ADR 1380)."
+    },
     "map.featuresCode": {
       "level": "semantic",
       "via": [

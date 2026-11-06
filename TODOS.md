@@ -61,6 +61,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve panelin Seçimi türet satırı.
 - MAP-02 / ADR 1231: `cad.crs.factors`'ın web işleyicisi ve durum çubuğu ölçek menüsünün Ölçeklerin özeti alt menüsü.
 - MAP-04 / ADR 1360: `map.features.code`'un web işleyicisi, Kodla çiz penceresi ve profil sınıfının `codes`'u.
+- MAP-05 / ADR 1380: `cad.survey.baselines`'ın web işleyicisi ve GNSS baz ağı penceresi.
 - MAP-03 / ADR 1340: `map.survey.query` ve `map.survey.edit`'in web işleyicisi, RINEX başlığı okuyucusunun WASM'ı,
   `io/kcad.ts` şema 194 (`mapSurvey`), GNSS arşivi paneli ve Öznitelikler › GNSS ölçümü, şerit komutları (`map.survey`,
   `map.survey.import`, `map.survey.select`) ve resimleri.

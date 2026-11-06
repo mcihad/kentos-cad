@@ -9797,6 +9797,22 @@
    "tests": 0
   },
   {
+   "id": "survey.baselines",
+   "kind": "command",
+   "title": "GNSS baz ağı…",
+   "level": "query",
+   "via": [
+    "cad.survey.baselines"
+   ],
+   "operation": null,
+   "python": "kentos.cad.survey.baselines",
+   "mcp": "cad.survey.baselines",
+   "note": "Pencere dosyayı cad.survey.baselines'ın text'iyle verir; salt okunur analiz (ADR 1380).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "swept.editor",
    "kind": "command",
    "title": "Araç izi…",

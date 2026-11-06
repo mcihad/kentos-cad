@@ -36,6 +36,8 @@
   hiç yazılmaz, `shared_boundary_locked`.
 - **Saha kodları ve Kodla çiz (6 Kasım 2026; MAP-04, [ADR 1360](../../docs/adr/1360-field-codes-and-kodla-ciz.md)).**
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
+- **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
+  `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
 - **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](../../plan/road.md), [ADR 0900](../../docs/adr/0900-road-terrain-surface.md)–[0911](../../docs/adr/0911-road-project-tree-views-and-rebuild.md)).**
   Ayrı ürün modülü (`CadWork::Road`, `Module::Road`, `kentos-yol`; dal `road-01-yuzey`'den birleşti). Hesap
   `crates/shared/road` (`kentos-road`: kısıtlı Delaunay `kentos.cdt/1`, aks ve km denklemleri, düşey kurplar, tip kesit

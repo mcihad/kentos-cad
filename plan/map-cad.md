@@ -393,6 +393,14 @@ korelasyonlu baz, eksik datum ve aykırı ölçü sınansın. Analiz kaynak veri
 değiştirmesin; kabul ve Undo bütün etkileri kapsasın. 1.500 bilinmeyeni
 aşan hedef veri için gerçek bellek/süre raporu olmadan ölçeklenebilirlik işaretlenmesin.
 
+**6 Kasım 2026 — MAP-05.1 ([ADR 1380](../docs/adr/1380-gnss-baseline-network-adjustment.md)): GNSS baz ağı dengelemesi.**
+Kapsam işareti: **Harita + CBS** (Mimari ve Yol'da yok). Araştırma: TBC'nin minimal/tam kısıtlı ağ akışı, χ² ve
+referans faktörü, vektör ağırlık ölçeği; GVX; DynAdjust. Kanıtlanan: korelasyonlu ECEF kovaryanslı baz vektörleri
+(Cholesky ile korelasyonsuz), sabit ve ağırlıklı 3B kontrol, minimal datum, m0/χ²/Baarda (kaba hata silinmez,
+işaretlenir), istasyonların doğu/kuzey/yukarı sapmaları; analiz hiçbir şey yazmaz. `cad.survey.baselines` (25 ortak
+durum, numpy/scipy/pyproj bağımsız başvurusu), GNSS baz ağı penceresi. Açık: seyrek çözüm ve büyük ağ ölçümü, robust
+kestirim, iç kısıtlı serbest ağ, GVX/SINEX, arşivden ağ kurma, kabul edilen çözümün yazılması, deformasyon.
+
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 
 **Öncelik:** P0 temel etkileşim; P1 ileri ilişkiler. **Kod:** [K16], [K06], [K43].

@@ -1969,6 +1969,20 @@ codes! {
     FIELD_BASE_MISSING = "field_base_missing", Warning, false, "Tabanın alan kaydı olmayan nesneleri iki yan değiştirdiyse bütün olarak çatışır; alanlar tek tek birleştirilemez.";
     /// A data profile KentOS has not by that name, or none given (docs/adr/0541).
     UNKNOWN_PROFILE = "unknown_profile", Failed, false, "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin.";
+    /// GNSS baz ağı (docs/adr/1380): no baseline given.
+    NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
+    /// GNSS baz ağı: a station named twice.
+    DUPLICATE_STATION = "duplicate_station", Failed, false, "Aynı adda iki istasyon verilmiş.";
+    /// GNSS baz ağı: a baseline's end is no station given.
+    UNKNOWN_STATION = "unknown_station", Failed, false, "Bazın ucu verilen istasyonlardan biri değil.";
+    /// GNSS baz ağı: a baseline's covariance is not positive definite.
+    INVALID_COVARIANCE = "invalid_covariance", Failed, false, "Bazın kovaryans matrisi pozitif tanımlı değil.";
+    /// GNSS baz ağı: nothing holds the network's datum.
+    DATUM_MISSING = "datum_missing", Failed, false, "Ağın datumu yok: bir istasyonu sabit ya da ağırlıklı verin ya da minimal datumu seçin.";
+    /// GNSS baz ağı: more unknowns than the dense solver takes.
+    NETWORK_TOO_LARGE = "network_too_large", Failed, false, "Ağ yoğun çözümün alabileceğinden büyük (en çok 1500 bilinmeyen).";
+    /// GNSS baz ağı: a station no baseline ties to the datum.
+    NETWORK_DISCONNECTED = "network_disconnected", Failed, false, "Bir istasyon datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.";
     /// Kodla çiz (docs/adr/1360): an object given is not a point.
     NOT_A_POINT = "not_a_point", Failed, false, "Verilen nesne nokta değil; Kodla çiz kodlu noktaları işler.";
     /// Kodla çiz: no point given or found holds a code.

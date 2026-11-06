@@ -9,6 +9,7 @@
 //! `scripts/fixtures/network_adjust_cases.py` (mpmath, 50 digits).
 
 pub mod chi2;
+pub mod gnss;
 pub mod horizontal;
 pub mod levelling;
 mod linalg;

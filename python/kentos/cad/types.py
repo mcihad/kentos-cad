@@ -783,6 +783,18 @@ AuthKindName = Literal["none", "query", "header", "basic", "bearer", "arcgis", "
 """The names of :class:`AuthKind`, for a plain string."""
 
 
+class BaselineDatum(_StrEnum):
+    """How the datum is held: `given` by the fixed and weighted stations; `minimal` holds the first station with
+    coordinates when none is fixed or weighted (a minimally constrained adjustment).
+    """
+    GIVEN = "given"
+    MINIMAL = "minimal"
+
+
+BaselineDatumName = Literal["given", "minimal"]
+"""The names of :class:`BaselineDatum`, for a plain string."""
+
+
 class BatchOnError(_StrEnum):
     """What a batch does when a row stops at run time (docs/adr/0551 §1).
 
@@ -12881,6 +12893,42 @@ class AdjustObservation(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AdjustedGnssStation(_Model):
+    """A station adjusted: X, Y, Z (m), their standard deviations and those in east, north, up (m, scaled by m0); held:
+    fixed or held by the minimal constraint (its standard deviations 0).
+    Attributes:
+        xyz: Unit: m.
+        sxyz: Unit: m.
+        senu: Unit: m.
+    """
+    name: str
+    xyz: list[float]
+    sxyz: list[float]
+    senu: list[float]
+    held: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["xyz"] = [float(e0) for e0 in self.xyz]
+        out["sxyz"] = [float(e0) for e0 in self.sxyz]
+        out["senu"] = [float(e0) for e0 in self.senu]
+        if self.held is not UNSET:
+            out["held"] = self.held
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdjustedGnssStation:
+        return cls(
+            name=data["name"],
+            xyz=[float(e0) for e0 in data["xyz"]],
+            sxyz=[float(e0) for e0 in data["sxyz"]],
+            senu=[float(e0) for e0 in data["senu"]],
+            held=data.get("held", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AffectedFrame(_Model):
     """A frame the objects' change affects.
     Attributes:
@@ -17198,6 +17246,104 @@ class AuditedRecord(_Model):
         return cls(
             uid=data["uid"],
             issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineResult(_Model):
+    """A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and
+    what it says (`ok`, `blunder`, `uncontrolled`).
+    Attributes:
+        v: Unit: m.
+        w: Unit: 1.
+    """
+    from_: str
+    to: str
+    v: list[float]
+    flag: str
+    w: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["v"] = [float(e0) for e0 in self.v]
+        out["flag"] = self.flag
+        if self.w is not UNSET:
+            out["w"] = None if self.w is None else float(self.w)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineResult:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            v=[float(e0) for e0 in data["v"]],
+            flag=data["flag"],
+            w=UNSET if "w" not in data else None if data["w"] is None else float(data["w"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineStation(_Model):
+    """A station: its name; its X, Y, Z when known (m); held fixed; or weighted by its standard deviations (m).
+    Attributes:
+        sigma: Unit: m.
+        xyz: Unit: m.
+    """
+    name: str
+    fixed: bool | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+    xyz: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.fixed is not UNSET:
+            out["fixed"] = self.fixed
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        if self.xyz is not UNSET:
+            out["xyz"] = None if self.xyz is None else [float(e0) for e0 in self.xyz]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineStation:
+        return cls(
+            name=data["name"],
+            fixed=data.get("fixed", UNSET),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+            xyz=UNSET if "xyz" not in data else None if data["xyz"] is None else [float(e0) for e0 in data["xyz"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineVector(_Model):
+    """A baseline: its ends, ΔX, ΔY, ΔZ (m) and its covariance's upper triangle xx, xy, xz, yy, yz, zz (m²).
+    Attributes:
+        d: Unit: m.
+        cov: Unit: m2.
+    """
+    from_: str
+    to: str
+    d: list[float]
+    cov: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["d"] = [float(e0) for e0 in self.d]
+        out["cov"] = [float(e0) for e0 in self.cov]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineVector:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            d=[float(e0) for e0 in data["d"]],
+            cov=[float(e0) for e0 in data["cov"]],
         )
 
 
@@ -87372,6 +87518,117 @@ class SurveyAntenna(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyBaselines(_Model):
+    """Input of `cad.survey.baselines` v1: the stations and baselines, or the same as `text` (lines `K;ad;X;Y;Z[;sX;sY;sZ]`
+    a known station, fixed without standard deviations; `N;ad[;X;Y;Z]` a new one; `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`
+    a baseline; `#` a remark; `;`, `,` or tabs between the values, a point before decimals); the variance factor the
+    covariances are multiplied by (default 1); the datum.
+
+    Refusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station
+    fixed and weighted …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive
+    definite), `datum_missing`, `network_too_large` (more than 1500 unknowns), `network_disconnected`.
+    Attributes:
+        scale: Unit: 1.
+    """
+    baselines: list[BaselineVector] | Unset = UNSET
+    datum: BaselineDatum | BaselineDatumName | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    stations: list[BaselineStation] | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.baselines is not UNSET:
+            out["baselines"] = [e0.to_json() for e0 in self.baselines]
+        if self.datum is not UNSET:
+            out["datum"] = _enum_out(self.datum)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.stations is not UNSET:
+            out["stations"] = [e0.to_json() for e0 in self.stations]
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyBaselines:
+        return cls(
+            baselines=[BaselineVector.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
+            datum=_enum_in(BaselineDatum, data["datum"]) if "datum" in data else UNSET,
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            stations=[BaselineStation.from_json(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+            text=data.get("text", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyBaselinesAdjusted(_Model):
+    """Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the
+    minimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of
+    freedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged
+    test value, and the drawing's revision.
+    Attributes:
+        n: Unit: count.
+        u: Unit: count.
+        f: Unit: count.
+        omega: Unit: 1.
+        chi2: Unit: 1.
+        m0: Unit: 1.
+        worst: Unit: index.
+    """
+    stations: list[AdjustedGnssStation]
+    baselines: list[BaselineResult]
+    n: int
+    u: int
+    f: int
+    omega: float
+    revision: str
+    chi2: float | None | Unset = UNSET
+    held: str | None | Unset = UNSET
+    m0: float | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+    worst: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stations"] = [e0.to_json() for e0 in self.stations]
+        out["baselines"] = [e0.to_json() for e0 in self.baselines]
+        out["n"] = self.n
+        out["u"] = self.u
+        out["f"] = self.f
+        out["omega"] = float(self.omega)
+        out["revision"] = self.revision
+        if self.chi2 is not UNSET:
+            out["chi2"] = None if self.chi2 is None else float(self.chi2)
+        if self.held is not UNSET:
+            out["held"] = self.held
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        if self.worst is not UNSET:
+            out["worst"] = self.worst
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyBaselinesAdjusted:
+        return cls(
+            stations=[AdjustedGnssStation.from_json(e0) for e0 in data["stations"]],
+            baselines=[BaselineResult.from_json(e0) for e0 in data["baselines"]],
+            n=data["n"],
+            u=data["u"],
+            f=data["f"],
+            omega=float(data["omega"]),
+            revision=data["revision"],
+            chi2=UNSET if "chi2" not in data else None if data["chi2"] is None else float(data["chi2"]),
+            held=data.get("held", UNSET),
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            passed=data.get("passed", UNSET),
+            worst=data.get("worst", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyCampaign(_Model):
     """A survey campaign.
     Attributes:
@@ -120217,6 +120474,7 @@ __all__ = [
     "AdjustMapSurveyOperation",
     "AdjustObservation",
     "AdjustWork",
+    "AdjustedGnssStation",
     "AdoptMaterialsOperation",
     "AffectReason",
     "AffectReasonName",
@@ -120450,7 +120708,12 @@ __all__ = [
     "AutoPaperLegendEntries",
     "AutoPaperScaleBarLength",
     "AzimuthDimensionMeasure",
+    "BaselineDatum",
+    "BaselineDatumName",
     "BaselineDimensionMeasure",
+    "BaselineResult",
+    "BaselineStation",
+    "BaselineVector",
     "BatchOnError",
     "BatchOnErrorName",
     "BatchRow",
@@ -123518,6 +123781,8 @@ __all__ = [
     "SurveyAdjusted",
     "SurveyAdjustedPoint",
     "SurveyAntenna",
+    "SurveyBaselines",
+    "SurveyBaselinesAdjusted",
     "SurveyCampaign",
     "SurveyCampaignRow",
     "SurveyFile",

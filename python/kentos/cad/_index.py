@@ -265,6 +265,7 @@ COMMANDS: dict[str, Any] = {
     "cad.subnetworks.find": subnetworks.find,
     "cad.subnetworks.update": subnetworks.update,
     "cad.survey.adjust": survey.adjust,
+    "cad.survey.baselines": survey.baselines,
     "cad.survey.points": survey.points,
     "cad.tables.edit": tables.edit,
     "cad.tags.check": tags.check,
