@@ -264,6 +264,7 @@ pub(super) fn frame(
                 scale_factor: 1.0,
                 settings,
                 keep_picture: true,
+                moving: false,
                 overlays: 0,
             },
         )

@@ -708,6 +708,7 @@ impl Viewport {
                 })
                 .and_then(|_| self.settling())
                 .max(self.moved_until()),
+            moving: self.moving(),
             other: self.other,
             passive: self.passive,
         })
@@ -950,6 +951,12 @@ impl Viewport {
             .try_borrow_mut()
             .map(|mut c| c.take_dropped())
             .unwrap_or_default()
+    }
+
+    /// A test's pan held on (until `false`): the view counts as moving as a pan makes it (docs/adr/1067).
+    #[cfg(test)]
+    pub(crate) fn hold_moving(&mut self, on: bool) {
+        self.moved_at = on.then(|| Instant::now() + std::time::Duration::from_secs(3600));
     }
 
     /// Whether the view is moving (a pan or the wheel within the last [`SYMBOLS_SETTLE`]): the labels keep their
@@ -1377,6 +1384,8 @@ struct Program {
     images: Option<Arc<crate::style::images::Images>>,
     /// When the wheel's zoom settles and screen-sized symbols are to be built again.
     settle_at: Option<Instant>,
+    /// The view is being panned or zoomed (docs/adr/1067): the kept picture may be moved by a pan's whole pixels.
+    moving: bool,
     /// The inactive view of a split area (docs/adr/0285 §3).
     other: Option<usize>,
     /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
@@ -1516,6 +1525,7 @@ impl shader::Program<Message> for Program {
             styled: self.styled.clone(),
             images: self.images.clone(),
             lens: false,
+            moving: self.moving,
         }
     }
 
@@ -1715,6 +1725,8 @@ pub struct Frame {
     /// `camera`. One primitive type for both, since Iced keeps a renderer
     /// per primitive type and the window draws with the area's.
     lens: bool,
+    /// The view is being panned or zoomed (`FrameInput::moving`, docs/adr/1067).
+    moving: bool,
 }
 
 impl fmt::Debug for Frame {
@@ -1777,6 +1789,7 @@ impl shader::Primitive for Frame {
                         // last part) goes over it (kentos-render-wgpu, renderer.rs).
                         keep_picture: true,
                         overlays: 1,
+                        moving: self.moving,
                     },
                 );
                 // The styled layers after the plain parts of the same frame (docs/adr/0090).
@@ -1878,6 +1891,7 @@ impl shader::Program<Message> for Lens {
             styled: StyledScene::default(),
             images: None,
             lens: true,
+            moving: false,
         }
     }
 }
