@@ -378,7 +378,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[2]"
               },
               {
@@ -393,7 +393,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[6]"
               }
             ]
@@ -670,7 +670,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -761,7 +761,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[0]"
               }
             ]
@@ -1278,7 +1278,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[1]"
               }
             ]
@@ -2374,7 +2374,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[2]"
               },
               {
@@ -2389,7 +2389,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[6]"
               }
             ]
@@ -2504,7 +2504,7 @@
             "warnings": [
               {
                 "code": "font_substituted",
-                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Barlow ile çizilir.",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
                 "path": "styles[2]"
               },
               {
@@ -2519,7 +2519,7 @@
               },
               {
                 "code": "font_substituted",
-                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz); yazıları Quicksand ile çizilir.",
+                "message": "“Çince” stili gbcbig.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Quicksand ile çizilir.",
                 "path": "styles[6]"
               }
             ]
@@ -2801,6 +2801,2308 @@
               "revision": "$current"
             },
             "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gömülü SHX unifont: stil gömülü, uyarısız",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gömülü unifont ve Big Font: ikisi de gömülü, uyarısız",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+              "name": "SHX Big",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx",
+              "bigFontFile": "kentos-big.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            },
+            {
+              "id": "shx:kentos-big.shx",
+              "kind": "asset",
+              "name": "kentos-big.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-big.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBiaWdmb250IDEuMA0KGggABgABAIEAnwAAAAAAAAAAAAAAGQBTAAAAAQAGAGwAAABAgQoAcgAAAEGBEAB8AAAAQoEFAIwAAABLZW50T1MgVGVzdCBCaWcgRm9udAAIAgAAACQCLDAAAICEiIwCCAoAAAACRAGAAgj8BAGMAggGAAAABwFwAA==",
+              "sha256": "51ac3ed0e6e37958196b62acd79ea1a7ef23c76e575413082243b54494be9df8"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+                  "name": "SHX Big",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Big Font gömülü değil: stil gömülü sayılmaz, uyarı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+              "name": "SHX Big",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx",
+              "bigFontFile": "kentos-big.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+                  "name": "SHX Big",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“SHX Big” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazı fontu gömülü değil, yalnız Big Font: uyarı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+              "name": "SHX Big",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx",
+              "bigFontFile": "kentos-big.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-big.shx",
+              "kind": "asset",
+              "name": "kentos-big.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-big.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBiaWdmb250IDEuMA0KGggABgABAIEAnwAAAAAAAAAAAAAAGQBTAAAAAQAGAGwAAABAgQoAcgAAAEGBEAB8AAAAQoEFAIwAAABLZW50T1MgVGVzdCBCaWcgRm9udAAIAgAAACQCLDAAAICEiIwCCAoAAAACRAGAAgj8BAGMAggGAAAABwFwAA==",
+              "sha256": "51ac3ed0e6e37958196b62acd79ea1a7ef23c76e575413082243b54494be9df8"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+                  "name": "SHX Big",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“SHX Big” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SHX hiç gömülü değil: eski uyarı, yeni açıklamayla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“SHX yazı” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosya adının büyük/küçük harfi önemsiz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0510",
+              "name": "Büyük",
+              "font": "barlow",
+              "fontFile": "KENTOS-UNI.SHX"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0510",
+                  "name": "Büyük",
+                  "file": "KENTOS-UNI.SHX",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynak yolu yalnız dosya adıyla eşlenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0511",
+              "name": "Yollu",
+              "font": "barlow",
+              "fontFile": "C:\\CAD\\Fonts\\kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0511",
+                  "name": "Yollu",
+                  "file": "C:\\CAD\\Fonts\\kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şekil dosyası (yazı fontu tanımı yok) yazı fontu sayılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0512",
+              "name": "Çit",
+              "font": "barlow",
+              "fontFile": "fence.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:fence.shx",
+              "kind": "asset",
+              "name": "fence.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "fence.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBzaGFwZXMgMS4wDQoaAQABAAEAAQAZAEZFTkNFAAUCCAD/AQgAAgYCCP8AAQgCAABFT0Y=",
+              "sha256": "73f48699381bde84ae815fcdaae9d21285781b4a315505fc2a559042075c7694"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0512",
+                  "name": "Çit",
+                  "file": "fence.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Çit” stili fence.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Big Font yazı fontu olarak adlandırılırsa gömülü sayılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0513",
+              "name": "Ters",
+              "font": "barlow",
+              "fontFile": "kentos-big.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-big.shx",
+              "kind": "asset",
+              "name": "kentos-big.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-big.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBiaWdmb250IDEuMA0KGggABgABAIEAnwAAAAAAAAAAAAAAGQBTAAAAAQAGAGwAAABAgQoAcgAAAEGBEAB8AAAAQoEFAIwAAABLZW50T1MgVGVzdCBCaWcgRm9udAAIAgAAACQCLDAAAICEiIwCCAoAAAACRAGAAgj8BAGMAggGAAAABwFwAA==",
+              "sha256": "51ac3ed0e6e37958196b62acd79ea1a7ef23c76e575413082243b54494be9df8"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0513",
+                  "name": "Ters",
+                  "file": "kentos-big.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Ters” stili kentos-big.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unifont Big Font olarak adlandırılırsa gömülü sayılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0514",
+              "name": "İki uni",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx",
+              "bigFontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0514",
+                  "name": "İki uni",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“İki uni” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bir stil gömülü, öbürü değil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+              "name": "Pafta",
+              "font": "barlow",
+              "fontFile": "romans.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0503",
+                  "name": "Pafta",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Pafta” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[1]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gömülü stilin yazıları sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "SU",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520"
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "US",
+            "height": 2.5,
+            "rotation": 0,
+            "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520"
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500030,
+              "y": 4400000
+            },
+            "text": "Not",
+            "height": 2.5,
+            "rotation": 0
+          }
+        ],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 2
+                }
+              ],
+              "names": [],
+              "faces": [
+                "barlow"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gömülü stilin yüzü değişmez: Quicksand",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0515",
+              "name": "Q",
+              "font": "quicksand",
+              "fontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0515",
+                  "name": "Q",
+                  "file": "kentos-uni.shx",
+                  "face": "quicksand",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TrueType stilin Big Font'u SHX değildir: gömülü sayılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0516",
+              "name": "TTF",
+              "font": "arimo",
+              "fontFile": "arial.ttf",
+              "bigFontFile": "kentos-big.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-big.shx",
+              "kind": "asset",
+              "name": "kentos-big.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-big.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBiaWdmb250IDEuMA0KGggABgABAIEAnwAAAAAAAAAAAAAAGQBTAAAAAQAGAGwAAABAgQoAcgAAAEGBEAB8AAAAQoEFAIwAAABLZW50T1MgVGVzdCBCaWcgRm9udAAIAgAAACQCLDAAAICEiIwCCAoAAAACRAGAAgj8BAGMAggGAAAABwFwAA==",
+              "sha256": "51ac3ed0e6e37958196b62acd79ea1a7ef23c76e575413082243b54494be9df8"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0516",
+                  "name": "TTF",
+                  "file": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ad sorusu gömülülüğe bakmaz: kentos-uni.shx SHX'tir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "names": [
+              "kentos-uni.shx"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [
+                {
+                  "name": "kentos-uni.shx",
+                  "how": "shx"
+                }
+              ],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan execute ile aynıdır (gömülü)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+              "name": "SHX Big",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx",
+              "bigFontFile": "kentos-big.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            },
+            {
+              "id": "shx:kentos-big.shx",
+              "kind": "asset",
+              "name": "kentos-big.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-big.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBiaWdmb250IDEuMA0KGggABgABAIEAnwAAAAAAAAAAAAAAGQBTAAAAAQAGAGwAAABAgQoAcgAAAEGBEAB8AAAAQoEFAIwAAABLZW50T1MgVGVzdCBCaWcgRm9udAAIAgAAACQCLDAAAICEiIwCCAoAAAACRAGAAgj8BAGMAggGAAAABwFwAA==",
+              "sha256": "51ac3ed0e6e37958196b62acd79ea1a7ef23c76e575413082243b54494be9df8"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0521",
+                  "name": "SHX Big",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kullanılmayan gömülü kaynak stilsiz rapora girmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+              "name": "Ada no",
+              "font": "arimo"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gömülü kaynak başka adda: stilin dosyası bulunmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0517",
+              "name": "Başka",
+              "font": "barlow",
+              "fontFile": "romans.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0517",
+                  "name": "Başka",
+                  "file": "romans.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Başka” stili romans.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki stil aynı gömülü fontu kullanır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0518",
+              "name": "İkinci",
+              "font": "overpass",
+              "fontFile": "kentos-uni.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0518",
+                  "name": "İkinci",
+                  "file": "kentos-uni.shx",
+                  "face": "overpass",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gömülü stille ana çizim: yalnız SHX stilinin uyarısı kalkar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+              "name": "Ada no",
+              "font": "arimo"
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+              "name": "Yol adı",
+              "font": "arimo",
+              "fontFile": "arial.ttf"
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+              "name": "SHX yazı",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx"
+            },
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+              "name": "Başlık",
+              "font": "overpass",
+              "fontFile": "times.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0501",
+                  "name": "Ada no",
+                  "face": "arimo",
+                  "how": "own",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0502",
+                  "name": "Yol adı",
+                  "file": "arial.ttf",
+                  "face": "arimo",
+                  "how": "equivalent",
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0520",
+                  "name": "SHX yazı",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "embedded": true,
+                  "texts": 0
+                },
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0504",
+                  "name": "Başlık",
+                  "file": "times.ttf",
+                  "face": "overpass",
+                  "how": "missing",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Başlık” stili times.ttf yazı tipini adlandırıyor (KentOS'ta yok); yazıları Overpass ile çizilir.",
+                "path": "styles[3]"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Big Font yerine şekil dosyası: gömülü sayılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Yazı tipleri",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 500,
+          "workspace": "cad",
+          "drawingFont": "barlow",
+          "textStyles": [
+            {
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0519",
+              "name": "Şekil BF",
+              "font": "barlow",
+              "fontFile": "kentos-uni.shx",
+              "bigFontFile": "fence.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:kentos-uni.shx",
+              "kind": "asset",
+              "name": "kentos-uni.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "kentos-uni.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+              "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+            },
+            {
+              "id": "shx:fence.shx",
+              "kind": "asset",
+              "name": "fence.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "fence.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBzaGFwZXMgMS4wDQoaAQABAAEAAQAZAEZFTkNFAAUCCAD/AQgAAgYCCP8AAQgCAABFT0Y=",
+              "sha256": "73f48699381bde84ae815fcdaae9d21285781b4a315505fc2a559042075c7694"
+            }
+          ],
+          "categories": []
+        },
+        "blocks": []
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "project": "barlow",
+              "styles": [
+                {
+                  "style": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0519",
+                  "name": "Şekil BF",
+                  "file": "kentos-uni.shx",
+                  "face": "barlow",
+                  "how": "shx",
+                  "texts": 0
+                }
+              ],
+              "names": [],
+              "faces": [],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "font_substituted",
+                "message": "“Şekil BF” stili kentos-uni.shx yazı tipini adlandırıyor (AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor); yazıları Barlow ile çizilir.",
+                "path": "styles[0]"
+              }
+            ]
           },
           "expect": {
             "canUndo": false,

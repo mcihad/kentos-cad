@@ -204,35 +204,66 @@ fn path(
     if fill.is_none() && line.is_none() {
         return;
     }
-    page.poly(&paper, p.closed);
-    if p.closed {
-        for hole in &p.holes {
-            let ring: Option<Vec<[f64; 2]>> = hole.iter().map(|g| frame.paper(*g)).collect();
-            if let Some(ring) = ring.filter(|r| r.len() >= 3) {
-                page.poly(&ring, true);
+    let shape = |page: &mut Page<'_>| {
+        page.poly(&paper, p.closed);
+        if p.closed {
+            for hole in &p.holes {
+                let ring: Option<Vec<[f64; 2]>> = hole.iter().map(|g| frame.paper(*g)).collect();
+                if let Some(ring) = ring.filter(|r| r.len() >= 3) {
+                    page.poly(&ring, true);
+                }
             }
         }
-    }
-    page.alpha_for(
-        fill.map_or(1.0, |(_, a)| a),
-        line.map_or(1.0, |(_, (_, a))| a),
-    );
-    if let Some((rgb, _)) = fill {
-        page.fill_rgb(rgb);
-    }
-    if let Some((s, (rgb, _))) = line {
-        page.stroke_rgb(rgb);
-        stroke_style(page, s);
-    }
-    let even_odd = !p.holes.is_empty();
-    page.note_paint(fill.is_some(), line.map(|(s, _)| mm(s.width).max(0.0)), even_odd);
-    match (fill.is_some(), line.is_some()) {
-        (true, true) if even_odd => page.c.fill_even_odd_and_stroke(),
-        (true, true) => page.c.fill_nonzero_and_stroke(),
-        (true, false) if even_odd => page.c.fill_even_odd(),
-        (true, false) => page.c.fill_nonzero(),
-        _ => page.c.stroke(),
     };
+    // A dot of a line type prints as AutoCAD plots it (ADR 1124): butt and square ends paint no zero-length dash
+    // in PDF, so the dots are a second, round-capped stroke over the same path.
+    let dots = line
+        .filter(|(s, _)| s.cap != crate::LineCap::Round)
+        .and_then(|(s, _)| {
+            let dash: Vec<f64> = s.dash.iter().map(|d| mm(*d)).collect();
+            super::dots::split(&dash, mm(s.dash_offset.unwrap_or(0.0)))
+        });
+    let dashed = match &dots {
+        Some(d) => d.dashes.as_ref().map(|(dash, phase)| (dash.as_slice(), *phase)),
+        None => line.map(|(s, _)| (&[][..], mm(s.dash_offset.unwrap_or(0.0)))),
+    };
+    let line_now = line.filter(|_| dashed.is_some());
+    let even_odd = !p.holes.is_empty();
+    if fill.is_some() || line_now.is_some() {
+        shape(page);
+        page.alpha_for(
+            fill.map_or(1.0, |(_, a)| a),
+            line_now.map_or(1.0, |(_, (_, a))| a),
+        );
+        if let Some((rgb, _)) = fill {
+            page.fill_rgb(rgb);
+        }
+        if let Some((s, (rgb, _))) = line_now {
+            page.stroke_rgb(rgb);
+            match (&dots, dashed) {
+                (Some(_), Some((dash, phase))) => {
+                    page.line_style_phase(mm(s.width), dash, phase, s.cap, s.join);
+                }
+                _ => stroke_style(page, s),
+            }
+        }
+        page.note_paint(fill.is_some(), line_now.map(|(s, _)| mm(s.width).max(0.0)), even_odd);
+        match (fill.is_some(), line_now.is_some()) {
+            (true, true) if even_odd => page.c.fill_even_odd_and_stroke(),
+            (true, true) => page.c.fill_nonzero_and_stroke(),
+            (true, false) if even_odd => page.c.fill_even_odd(),
+            (true, false) => page.c.fill_nonzero(),
+            _ => page.c.stroke(),
+        };
+    }
+    if let (Some(d), Some((s, (rgb, a)))) = (&dots, line) {
+        shape(page);
+        page.alpha_for(1.0, a);
+        page.stroke_rgb(rgb);
+        page.line_style_phase(mm(s.width), &d.dots.0, d.dots.1, crate::LineCap::Round, s.join);
+        page.note_paint(false, Some(mm(s.width).max(0.0)), false);
+        page.c.stroke();
+    }
 }
 
 /// Millimetres on the paper as points.

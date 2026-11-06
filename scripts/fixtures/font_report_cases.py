@@ -6,20 +6,32 @@ The rule is the ADR's, written here again without KentOS code: a name ending in 
 family is exactly one of KentOS's seven faces is that face; recognized style suffixes do not change the family.
 Arial, Helvetica and Liberation Sans are Arimo's
 twins, Courier Courier Prime's; any other is missing. A style naming no file is its own face. A style drawn in another
-face than the one its file names is a `font_substituted` warning. The faces are those its texts, dimensions, leaders and
-tables are drawn in (a text's or a table's own face, a dimension's look's, else the project's), in the contract's order.
+face than the one its file names is a `font_substituted` warning, unless (ADR 1125) its SHX font is embedded: the
+project's styles hold an SHX asset of the file's name (lowercase, its basename) whose bytes are a text font (a unifont,
+or a shapes file with its font descriptor, shape 0), and the Big Font it names, if any, is embedded too as a bigfont;
+such a style is `embedded` and no warning. The faces are those its texts, dimensions, leaders and tables are drawn in
+(a text's or a table's own face, a dimension's look's, else the project's), in the contract's order.
 The desktop (crates/native/application/tests/all/fixtures.rs) and Python (python/tests/test_command_cases.py) run them.
 
     python3 scripts/fixtures/font_report_cases.py           # writes the file
     python3 scripts/fixtures/font_report_cases.py --check   # compares it with the one on disk
 """
+import base64
+import hashlib
 import json
+import struct
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.fonts.report.json"
 X, Y = 500000, 4400000
+SHX = ROOT / "fixtures/shx/v1"
+SHAPES = (b"AutoCAD-86 shapes 1.0\r\n\x1a", b"AutoCAD-86 shapes 1.1\r\n\x1a")
+UNIFONT = b"AutoCAD-86 unifont 1.0\r\n\x1a"
+BIGFONT = b"AutoCAD-86 bigfont 1.0\r\n\x1a"
+# The shapes 1.0 file of one shape (FENCE, no font descriptor) the KCAD samples embed: not a text font.
+FENCE = base64.b64decode(json.loads((ROOT / "fixtures/kcad/v2/shape-resources.json").read_text("utf-8"))["styles"]["items"][0]["data"].split(",", 1)[1])
 
 FACES = ["barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono"]
 LABELS = {"barlow": "Barlow", "arimo": "Arimo", "overpass": "Overpass", "quicksand": "Quicksand",
@@ -52,10 +64,12 @@ def resolve(name):
     return None, "missing"
 
 
-def style(i, name, font, file=None):
+def style(i, name, font, file=None, big=None):
     s = {"id": f"0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d05{i:02d}", "name": name, "font": font}
     if file is not None:
         s["fontFile"] = file
+    if big is not None:
+        s["bigFontFile"] = big
     return s
 
 
@@ -82,7 +96,7 @@ def leader(i):
             "text": "Not", "height": 2.5, "rotation": 0}
 
 
-def setup(styles=(), entities=(), font="barlow"):
+def setup(styles=(), entities=(), font="barlow", shx=()):
     return {
         "format": "kentos.document",
         "version": 1,
@@ -94,9 +108,51 @@ def setup(styles=(), entities=(), font="barlow"):
                     "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}],
         "activeLayer": "yazi",
         "entities": list(entities),
-        "styles": {"items": [], "categories": []},
+        "styles": {"items": [resource(n, shx_bytes(n.lower())) for n in shx], "categories": []},
         "blocks": [],
     }
+
+
+def resource(name, data):
+    """A project's SHX asset (ADR 0930): its id the lowercase basename."""
+    return {"id": "shx:" + name.lower(), "kind": "asset", "name": name, "path": ["CAD", "SHX"], "format": "shx",
+            "file": name, "data": "data:application/x-autocad-shx;base64," + base64.b64encode(data).decode(),
+            "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def shx_bytes(name):
+    return FENCE if name == "fence.shx" else (SHX / name).read_bytes()
+
+
+def text_font(data):
+    """A unifont, or a shapes file whose shape 0 is a font descriptor (its index's first entry)."""
+    if data.startswith(UNIFONT):
+        return True
+    for head in SHAPES:
+        if data.startswith(head):
+            at = len(head)
+            _, _, count = struct.unpack_from("<HHH", data, at)
+            numbers = [struct.unpack_from("<HH", data, at + 6 + 4 * i)[0] for i in range(count)]
+            return 0 in numbers
+    return False
+
+
+def embedded(doc, s):
+    """The style's SHX font (and Big Font) embedded as their forms (ADR 1125)."""
+    items = {i["id"]: i for i in doc.get("styles", {}).get("items", []) if i.get("format") == "shx"}
+
+    def data(file):
+        leaf = file.replace("\\", "/").rsplit("/", 1)[-1]
+        item = items.get("shx:" + leaf.lower())
+        return None if item is None else base64.b64decode(item["data"].split(",", 1)[1])
+
+    font = data(s["fontFile"])
+    if font is None or not text_font(font):
+        return False
+    if "bigFontFile" in s:
+        big = data(s["bigFontFile"])
+        return big is not None and big.startswith(BIGFONT)
+    return True
 
 
 def report(doc, names=()):
@@ -121,15 +177,19 @@ def report(doc, names=()):
             named, how = resolve(s["fontFile"])
         else:
             named, how = s["font"], "own"
-        if named != s["font"]:
-            what = {"shx": "AutoCAD'in SHX çizgi yazı tipi, KentOS okumaz", "missing": "KentOS'ta yok"}.get(how, "stil başka bir yazı tipine çevrilmiş")
+        shx = how == "shx" and embedded(doc, s)
+        if named != s["font"] and not shx:
+            what = {"shx": "AutoCAD'in SHX çizgi yazı tipi; projeye eklenmemiş ya da okunamıyor", "missing": "KentOS'ta yok"}.get(how, "stil başka bir yazı tipine çevrilmiş")
             warnings.append({"code": "font_substituted",
                              "message": f"“{s['name']}” stili {s.get('fontFile', '')} yazı tipini adlandırıyor ({what}); yazıları {LABELS[s['font']]} ile çizilir.",
                              "path": f"styles[{i}]"})
         row = {"style": s["id"], "name": s["name"]}
         if "fontFile" in s:
             row["file"] = s["fontFile"]
-        row.update({"face": s["font"], "how": how, "texts": used.get(s["id"], 0)})
+        row.update({"face": s["font"], "how": how})
+        if shx:
+            row["embedded"] = True
+        row["texts"] = used.get(s["id"], 0)
         styles.append(row)
     named = []
     for n in names:
@@ -170,6 +230,8 @@ S_BARLOW = style(5, "Not", "barlow", "Barlow-Bold.ttf")
 S_TURNED = style(6, "Kot", "overpass", "arialbd.ttf")
 S_BIG = style(7, "Çince", "quicksand", "gbcbig.shx")
 S_COUR = style(8, "Liste", "courier-prime", "couri.ttf")
+U_STYLE = style(20, "SHX yazı", "barlow", "kentos-uni.shx")
+UB_STYLE = style(21, "SHX Big", "barlow", "kentos-uni.shx", "kentos-big.shx")
 BASE = setup(
     [S_OWN, S_ARIAL, S_SHX, S_TIMES, S_BARLOW, S_TURNED, S_BIG, S_COUR],
     [text(1, "101", S_OWN["id"], "arimo"), text(2, "102", S_OWN["id"], "arimo"), text(3, "Atatürk Cd.", S_ARIAL["id"], "arimo"),
@@ -217,6 +279,29 @@ CASES = [
     refused("İkinci ad boş: yeri söylenir", {"names": ["arial.ttf", ""]}, "empty_name", MESSAGE_EMPTY.format(2), "names[1]"),
     refused("80 karakterden uzun ad reddedilir", {"names": [LONG]}, "invalid_name", MESSAGE_LONG.format(1), "names[0]"),
     case("Tam 80 karakter kabul edilir", setup(), {"names": ["a" * 80]}),
+] + [
+    # ADR 1125: a style's embedded SHX font draws its texts; it is no substitute.
+    case("Gömülü SHX unifont: stil gömülü, uyarısız", setup([U_STYLE], shx=["kentos-uni.shx"])),
+    case("Gömülü unifont ve Big Font: ikisi de gömülü, uyarısız", setup([UB_STYLE], shx=["kentos-uni.shx", "kentos-big.shx"])),
+    case("Big Font gömülü değil: stil gömülü sayılmaz, uyarı", setup([UB_STYLE], shx=["kentos-uni.shx"])),
+    case("Yazı fontu gömülü değil, yalnız Big Font: uyarı", setup([UB_STYLE], shx=["kentos-big.shx"])),
+    case("SHX hiç gömülü değil: eski uyarı, yeni açıklamayla", setup([U_STYLE])),
+    case("Dosya adının büyük/küçük harfi önemsiz", setup([style(10, "Büyük", "barlow", "KENTOS-UNI.SHX")], shx=["kentos-uni.shx"])),
+    case("Kaynak yolu yalnız dosya adıyla eşlenir", setup([style(11, "Yollu", "barlow", r"C:\CAD\Fonts\kentos-uni.shx")], shx=["kentos-uni.shx"])),
+    case("Şekil dosyası (yazı fontu tanımı yok) yazı fontu sayılmaz", setup([style(12, "Çit", "barlow", "fence.shx")], shx=["fence.shx"])),
+    case("Big Font yazı fontu olarak adlandırılırsa gömülü sayılmaz", setup([style(13, "Ters", "barlow", "kentos-big.shx")], shx=["kentos-big.shx"])),
+    case("Unifont Big Font olarak adlandırılırsa gömülü sayılmaz", setup([style(14, "İki uni", "barlow", "kentos-uni.shx", "kentos-uni.shx")], shx=["kentos-uni.shx"])),
+    case("Bir stil gömülü, öbürü değil", setup([U_STYLE, S_SHX], shx=["kentos-uni.shx"])),
+    case("Gömülü stilin yazıları sayılır", setup([U_STYLE], [text(1, "SU", U_STYLE["id"]), text(2, "US", U_STYLE["id"]), text(3, "Not")], shx=["kentos-uni.shx"])),
+    case("Gömülü stilin yüzü değişmez: Quicksand", setup([style(15, "Q", "quicksand", "kentos-uni.shx")], shx=["kentos-uni.shx"])),
+    case("TrueType stilin Big Font'u SHX değildir: gömülü sayılmaz", setup([style(16, "TTF", "arimo", "arial.ttf", "kentos-big.shx")], shx=["kentos-big.shx"])),
+    case("Ad sorusu gömülülüğe bakmaz: kentos-uni.shx SHX'tir", setup([U_STYLE], shx=["kentos-uni.shx"]), {"names": ["kentos-uni.shx"]}),
+    case("Plan execute ile aynıdır (gömülü)", setup([UB_STYLE], shx=["kentos-uni.shx", "kentos-big.shx"]), op="plan"),
+    case("Kullanılmayan gömülü kaynak stilsiz rapora girmez", setup([S_OWN], shx=["kentos-uni.shx"])),
+    case("Gömülü kaynak başka adda: stilin dosyası bulunmaz", setup([style(17, "Başka", "barlow", "romans.shx")], shx=["kentos-uni.shx"])),
+    case("İki stil aynı gömülü fontu kullanır", setup([U_STYLE, style(18, "İkinci", "overpass", "kentos-uni.shx")], shx=["kentos-uni.shx"])),
+    case("Gömülü stille ana çizim: yalnız SHX stilinin uyarısı kalkar", setup([S_OWN, S_ARIAL, U_STYLE, S_TIMES], shx=["kentos-uni.shx"])),
+    case("Big Font yerine şekil dosyası: gömülü sayılmaz", setup([style(19, "Şekil BF", "barlow", "kentos-uni.shx", "fence.shx")], shx=["kentos-uni.shx", "fence.shx"])),
 ]
 
 

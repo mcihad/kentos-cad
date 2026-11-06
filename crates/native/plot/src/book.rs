@@ -538,7 +538,7 @@ pub(crate) fn prepare_captured(
                 f.code.as_str(),
                 "missing_named_view" | "bad_scale" | "bad_value" | "plot_provider_unsupported" | "linetype_unsupported"
                     | "text_field_stale" | "text_field_unverified" | "map_text_unsupported"
-                    | "text_layout_unsupported" | "table_field_stale" | "table_field_unverified"
+                    | "text_layout_unsupported" | "text_shx_unsupported" | "table_field_stale" | "table_field_unverified"
                     | "table_field_source_stale" | "table_field_source_unverified"
                     | "block_field_unverified" | "block_text_field_stale" | "block_text_field_unverified" | "block_text_layout_unsupported"
                     | "block_table_field_stale" | "block_table_field_unverified"

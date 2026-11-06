@@ -527,6 +527,8 @@ mod linetype_font_scenes;
 #[cfg(test)]
 mod curve_dash_scenes;
 #[cfg(test)]
+mod shx_text_scenes;
+#[cfg(test)]
 mod stretch_scenes;
 mod style_impact;
 #[cfg(test)]

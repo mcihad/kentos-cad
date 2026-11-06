@@ -49,7 +49,14 @@ pub fn shared_source() -> String {
 /// Native long-pattern extension, preserving the paused browser's v10 source
 /// and its bindings. Short recipes still call the original inline function.
 pub fn source() -> String {
-    let mut source = shared_source().replacen("fn dashCover(", "fn inlineDashCover(", 1);
+    let mut source = shared_source()
+        .replacen("fn dashCover(", "fn inlineDashCover(", 1)
+        // Round dots of the line's weight (ADR 1124), native only: the paused browser keeps its one-pixel dot.
+        .replacen(
+            "a *= dashCover(i.s0 + x, unitK(), st.a.y, st.a.z, st.a.w);",
+            "a = max(a * strokeDash(i.s0 + x), dotCover(i.s0 + x, x, y, i.len, (i.ends & 2u) != 0u, i.halfW));",
+            1,
+        );
     source.push_str(include_str!("dashes.wgsl"));
     // Instanced blocks (docs/adr/1063 §2), native only as the long patterns are.
     source.push_str(include_str!("instances.wgsl"));
@@ -72,5 +79,13 @@ mod tests {
             1
         );
         assert!(!shared.contains("@group(2)"));
+    }
+
+    /// ADR 1124: the native strokes take their round dots; the shared (browser) source is unchanged.
+    #[test]
+    fn native_strokes_draw_round_dots() {
+        let native = source();
+        assert_eq!(native.matches("dotCover(i.s0 + x, x, y, i.len").count(), 1);
+        assert!(!shared_source().contains("dotCover"));
     }
 }

@@ -37,3 +37,5 @@ mod source_snapshot;
 
 mod line_types;
 mod curve_dashes;
+mod dots;
+mod shx_texts;

@@ -224,31 +224,48 @@ fn draw(
             );
         }
         if let Some(s) = &p.stroke {
-            target.stroke_path(
-                &shape,
-                &super::raster::ink(&s.color),
-                &Stroke {
-                    width: if s.width == 0. {
-                        1.
-                    } else {
-                        (s.width * px_mm) as f32
-                    },
-                    line_cap: match s.cap {
-                        LineCap::Butt => tiny_skia::LineCap::Butt,
-                        LineCap::Round => tiny_skia::LineCap::Round,
-                        LineCap::Square => tiny_skia::LineCap::Square,
-                    },
-                    line_join: match s.join {
-                        LineJoin::Miter => tiny_skia::LineJoin::Miter,
-                        LineJoin::Round => tiny_skia::LineJoin::Round,
-                        LineJoin::Bevel => tiny_skia::LineJoin::Bevel,
-                    },
-                    miter_limit: 10.,
-                    dash: StrokeDash::new(s.dash.iter().map(|d| (d * px_mm) as f32).collect(), 0.),
+            let dash: Vec<f64> = s.dash.iter().map(|d| d * px_mm).collect();
+            let phase = s.dash_offset.unwrap_or(0.) * px_mm;
+            // A line type's dots print as round dots of the line's weight, whatever its ends (ADR 1124): as in PDF.
+            let dots = (s.cap != LineCap::Round)
+                .then(|| kentos_sheet::pdf::dots::split(&dash, phase))
+                .flatten();
+            let pen = |dash: Option<(&[f64], f64)>, cap: LineCap| Stroke {
+                width: if s.width == 0. {
+                    1.
+                } else {
+                    (s.width * px_mm) as f32
                 },
-                Transform::identity(),
-                None,
-            );
+                line_cap: match cap {
+                    LineCap::Butt => tiny_skia::LineCap::Butt,
+                    LineCap::Round => tiny_skia::LineCap::Round,
+                    LineCap::Square => tiny_skia::LineCap::Square,
+                },
+                line_join: match s.join {
+                    LineJoin::Miter => tiny_skia::LineJoin::Miter,
+                    LineJoin::Round => tiny_skia::LineJoin::Round,
+                    LineJoin::Bevel => tiny_skia::LineJoin::Bevel,
+                },
+                miter_limit: 10.,
+                dash: dash.filter(|(d, _)| !d.is_empty()).and_then(|(d, phase)| {
+                    // tiny-skia takes an even list: an odd one is the list twice, as PDF reads it.
+                    let mut d: Vec<f32> = d.iter().map(|v| *v as f32).collect();
+                    if d.len() % 2 == 1 {
+                        d.extend_from_within(..);
+                    }
+                    StrokeDash::new(d, phase as f32)
+                }),
+            };
+            let ink = super::raster::ink(&s.color);
+            match &dots {
+                None => target.stroke_path(&shape, &ink, &pen(Some((&dash, phase)), s.cap), Transform::identity(), None),
+                Some(d) => {
+                    if let Some((dashes, phase)) = &d.dashes {
+                        target.stroke_path(&shape, &ink, &pen(Some((dashes, *phase)), s.cap), Transform::identity(), None);
+                    }
+                    target.stroke_path(&shape, &ink, &pen(Some((&d.dots.0, d.dots.1)), LineCap::Round), Transform::identity(), None);
+                }
+            }
         }
     }
 }

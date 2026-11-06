@@ -446,3 +446,91 @@ pub(super) fn complex_linetype_timing(gpu: &mut Gpu) {
     }
     gpu.styled = None;
 }
+
+/// ADR 1124: a dot (a zero-length dash) is a disc of the line's weight on the GPU and its CPU twin, for a short
+/// recipe (the uniform's eight) and a long one (the storage page), and the dot on a corner is drawn once. Expected
+/// from the discs' own distances, not from a rendered image.
+pub(super) fn round_dots_match_the_disc(gpu: &mut Gpu) {
+    let old = gpu.styled.take();
+    let keep = gpu.keep;
+    gpu.keep = false;
+    let (w, h) = (512usize, 128usize);
+    let zoom = 100.;
+    let (width, period) = (0.2, 0.6); // 20 px across, a dot every 60 px
+    let short = vec![0., period];
+    let long: Vec<f64> = (0..10).map(|i| if i % 2 == 0 { 0. } else { period }).collect();
+    for (case, recipe) in [short, long].into_iter().enumerate() {
+        // Along y = 0 from x = −2 to 1, then up to (1, 0.6): a dot on the corner and one on the end.
+        let data = vec![-2., 0., 1., 0., 0., 1., 1., 0., 1., 0.6, 3., 2.];
+        let batch = StyledBatch {
+            range: 0..12,
+            kind: BatchKind::Stroke {
+                color: [1., 1., 1., 0.5],
+                width,
+                unit: Unit::World,
+                dash: Some(recipe.clone()),
+                dash_offset: 0.,
+                cap: Cap::Butt,
+                blur: 0.,
+            },
+            level: 0.,
+            key: 0,
+            bounds: [-2.2, -0.2, 1.2, 0.8],
+            origin: [0.; 2],
+            reach: 0.2,
+            reach_unit: Unit::World,
+            min_scale: None,
+            max_scale: None,
+            group: 0,
+            effect: None,
+            weight_cap: 0.,
+            line_type_loss: None,
+            lod: None,
+            instances: None,
+        };
+        let layer = StyledLayer { data, batches: vec![batch], ..Default::default() };
+        let view = kentos_native_style::cpu::CpuView {
+            m: [zoom, 0., 0., -zoom],
+            t: [w as f64 / 2., h as f64 / 2.],
+            px_per_m: zoom,
+            dpr: 1.,
+            scale: 100.,
+        };
+        let cpu = kentos_native_style::cpu::paint(w as u32, h as u32, &view, &[&layer], &kentos_native_style::picture::NoImages)
+            .unwrap();
+        gpu.styled = Some(StyledScene {
+            layers: vec![Arc::new(StyledLayerPart { id: 1124 + case as u64, layer })],
+            ..Default::default()
+        });
+        let camera = Camera { width: w as f64, height: h as f64, scale: zoom, ..Default::default() };
+        let image = gpu.draw(&[], &camera, &RenderSettings::new(Rgba8::rgb(0, 0, 0)), w as u32, h as u32);
+        // The dots' centres every 0.6 m along the path: five on y = 0 from x = −2, the corner, the end.
+        let centres: Vec<(f64, f64)> =
+            (0..5).map(|k| (-2. + 0.6 * f64::from(k), 0.)).chain([(1., 0.), (1., 0.6)]).collect();
+        let r = width / 2.;
+        let (mut inside, mut outside) = (0, 0);
+        for y in 0..h {
+            for x in 0..w {
+                let gx = (x as f64 + 0.5 - w as f64 / 2.) / zoom;
+                let gy = (h as f64 / 2. - y as f64 - 0.5) / zoom;
+                let d = centres.iter().map(|c| (gx - c.0).hypot(gy - c.1)).fold(f64::MAX, f64::min);
+                let p = (y * w + x) * 4;
+                // Half-transparent white over black: a dot drawn once is about 128, twice about 191.
+                let (g, c) = (image[p], cpu[p + 3]);
+                if (d - r) * zoom < -1.5 {
+                    assert!((110..=145).contains(&g), "GPU case={case} inside a dot, once, at ({x},{y}): {g}");
+                    assert!((110..=145).contains(&c), "CPU case={case} inside a dot, once, at ({x},{y}): {c}");
+                    inside += 1;
+                } else if (d - r) * zoom > 1.5 && (gy.abs() < r || (gx - 1.).abs() < r) {
+                    assert!(g < 20, "GPU case={case} off the dots at ({x},{y}): {g}");
+                    assert!(c < 20, "CPU case={case} off the dots at ({x},{y}): {c}");
+                    outside += 1;
+                }
+            }
+        }
+        // Seven discs of 10 px radius (the top one partly above the picture).
+        assert!(inside > 1200 && outside > 4000, "case={case}: {inside} inside, {outside} outside");
+    }
+    gpu.styled = old;
+    gpu.keep = keep;
+}

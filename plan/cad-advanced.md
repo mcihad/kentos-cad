@@ -1801,6 +1801,25 @@ parça düzeyinde kesin kırpma açık.
   sayfası; AutoCAD `A` hizalaması/PLINEGEN=0; 2M nokta sınırının ötesi; parça düzeyinde kesin kırpma; genel
   performans kabulü. Madde `[~]`.
 
+**Yuvarlak nokta, yazı nesnesinde SHX fontu, aktarımın yazı fontları (6 Kasım 2026, [ADR 1124](../docs/adr/1124-line-type-dots-print-round.md),
+[ADR 1125](../docs/adr/1125-shx-fonts-for-ordinary-texts.md)):**
+
+- Sıfır uzunluklu tire artık AutoCAD'in varsayılan uç biçimiyle (Autodesk: “Use object end style”, yuvarlak) basılır:
+  çapı çizgi kalınlığı olan yuvarlak nokta. PDF'de `butt`/`square` uçlu desen tireler ve `[0 a 0 b] 1 J` noktalar
+  olarak iki vuruşa bölünür (faz korunur); CPU baskı resmi aynı bölmeyi alır (fazın ve tek sayılı listenin yok sayılması
+  da düzeldi); GPU ve CPU ikizi noktayı bir piksellik çubuk yerine daire çizer, köşedeki nokta bir kez. Poppler 1200 dpi
+  ölçümü 1:1/1:20/1:100'de nokta 0,5 mm, merkezi tireden 1 mm, ±0,2 mm'de 0,3 mm kiriş; aynı test düzeltmeden önce
+  “0 nokta” ile kırmızıydı.
+- Stili gömülü `.shx` adlandıran yazı nesnesi ekranda, PDF'de ve CPU resminde fontun kendi çizgileriyle çizilir
+  (hiza, dönüş, çarpan, eğiklik, satırlar, kutuya kaydırma, Big Font `\M+`); 23 bağımsız Python yerleşim durumu 1e-9
+  içinde aynı. Çizilemeyen yazı `text_shx_unsupported` hatasıdır ve PDF'i durdurur; gömülü olmayan font eskisi gibi
+  adlandırılmış `text_font_substituted`. Unicode → Big Font çevirisi bilerek reddedildi: Big Font dosyası kod sayfası
+  taşımaz, proje `$DWGCODEPAGE` saklamaz. `cad.fonts.report` `embedded` alanı (21 yeni ortak durum), paketin font ve
+  `shapeFile` satırları; DXF/DWG aktarımı gömülü SHX yazı fontlarını ve Big Font'u çizimin yanına yazar.
+- Açık: blok yazısı, ölçü/kılavuz/tablo yazısının SHX ile çizimi; eğri boyunca SHX yazısı; harf biçimli MTEXT; seçim
+  kutusunun SHX genişliği; AutoCAD `A` hizalaması/PLINEGEN=0; 2M nokta sınırının ötesi; parça düzeyinde kesin kırpma;
+  genel performans kabulü. Madde `[~]`.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

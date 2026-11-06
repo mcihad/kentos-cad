@@ -326,6 +326,8 @@ fn map_text_coverage(doc: &Document, map: &kentos_sheet::display::MapPrim) -> Ve
     let mut missing: BTreeMap<(String, u16, bool), BTreeSet<char>> = BTreeMap::new();
     for label in crate::labels::map_labels(source, &spatial, map) {
         if !kentos_sheet::pdf::includes_text_anchor(map, [label.at.x, label.at.y]) { continue; }
+        // An SHX text's letters are its font's strokes (ADR 1125); its fonts were checked as the text was laid out.
+        if label.shx.is_some() { continue; }
         if let Some(unicode)=&label.unicode {
             if let Err(error)=&unicode.text.plan {
                 out.push(finding(&map.item,"text_layout_unsupported",error.message(&unicode.text.source),

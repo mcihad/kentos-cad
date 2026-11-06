@@ -501,6 +501,16 @@ fn long_patterns_on_a_real_gpu() {
     dashes::full_patterns_match_independent_samples(&mut Gpu::open());
 }
 
+/// ADR 1124: a line type's dots round and the line's weight across, on a real GPU and its CPU twin.
+#[test]
+fn round_dots_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; skipped is not acceptance");
+        return;
+    }
+    dashes::round_dots_match_the_disc(&mut Gpu::open());
+}
+
 #[test]
 fn remote_dash_phase_on_a_real_gpu() {
     if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {

@@ -463,7 +463,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
     // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
     let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());
     for f in &fonts.styles {
-        if matches!(f.how, FontMatch::Shx | FontMatch::Missing) {
+        if matches!(f.how, FontMatch::Shx | FontMatch::Missing) && !f.embedded {
             left.push(PackageLeft {
                 kind: PackagedKind::Font,
                 path: f.file.clone().unwrap_or_default(),
