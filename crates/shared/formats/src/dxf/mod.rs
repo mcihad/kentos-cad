@@ -32,6 +32,7 @@ mod spatial;
 pub use polyline_policy::write_checked;
 mod strings;
 mod styles;
+mod table_styles;
 mod writer;
 pub mod xdata;
 
@@ -1136,6 +1137,13 @@ fn read_once(
         .filter(|s| s.is_finite() && *s > 0.0)
         .unwrap_or(1000.0);
     let metres = |x: f64| scale.apply(x);
+    // The table styles (docs/adr/1128 §4), and the text styles their cell styles name, kept with them.
+    let tables = table_styles::read(bytes, rd.dec, &metres, plot, &mut out.report)?;
+    for key in &tables.text_styles {
+        if lib.text_records.get(key).is_some_and(|r| !styles::is_standard(&r.name)) && !text_used.contains(key) {
+            text_used.push(key.clone());
+        }
+    }
     let mut text_styles = Vec::new();
     for (i, key) in text_used.iter().enumerate() {
         let Some(r) = lib.text_records.get(key) else {
@@ -1266,6 +1274,7 @@ fn read_once(
         blocks,
         text_styles,
         dimension_styles,
+        table_styles: tables.styles,
         unit: Some(unit),
     };
     crate::import::summarise_cad(&mut result);

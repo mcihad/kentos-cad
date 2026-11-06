@@ -295,5 +295,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         // The project's styles as STYLE and DIMSTYLE records (docs/adr/0183 §7).
         text_styles: settings.text_styles.clone(),
         dimension_styles: settings.dimension_styles.clone(),
+        // The project's table styles as TABLESTYLE objects (docs/adr/1128 §3).
+        table_styles: settings.table_styles.clone(),
     }
 }

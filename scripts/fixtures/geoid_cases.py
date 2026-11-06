@@ -28,6 +28,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import crs_vertical_cases as cv  # noqa: E402
+import crs_chain_rules as chain  # noqa: E402
 from crs_vertical_cases import n, pt, step, warning, failed, case, SAME, ENGINE  # noqa: E402
 import pyproj  # noqa: E402
 from pyproj import Transformer  # noqa: E402
@@ -338,11 +339,26 @@ def transformed(points, frm=None, to=None, vel=None, op="execute", warn=(), unre
     for k, val in (("from", frm), ("to", to), ("velocity", vel)):
         if val is not None:
             inp[k] = val
-    return {"op": op, "input": inp,
-            "result": {"status": "completed",
-                       "output": {"points": out, "unreached": unreached, "operation": rec, "report": report},
-                       "warnings": warnings},
-            "expect": SAME, "within": tol}
+    c = {"op": op, "input": inp,
+         "result": {"status": "completed",
+                    "output": {"points": out, "unreached": unreached, "operation": rec, "report": report},
+                    "warnings": warnings},
+         "expect": SAME, "within": tol}
+    # The coordinate chain (docs/adr/1230): the sides from PROJ's database, the grids with the boxes their nodes cover.
+    (fe, fs), (te, ts), stated = chain.epoch_sources(se, de, "srid" not in (frm or {}), "srid" not in (to or {}))
+    return chain.add(c, chain.side(cv.entry(src), sh, fe, fs), chain.side(cv.entry(dst), dh, te, ts), stated,
+                     [chain_grid(g) for g in rec["grids"]])
+
+
+# The box each file's nodes cover (degrees): west, south, east, north.
+NODES = {"tg.gtx": TR, "tg-alan.tif": TR, "tg-nokta.tif": TR, "egm-1.gtx": GLOBAL, "hiz.tif": VEL}
+
+
+def chain_grid(g):
+    f = file_of(g)
+    west, south, d, cols, rows = NODES[f]
+    return {"kind": FILES[f][0], "name": g["name"], "sha256": g["sha256"],
+            "extent": {"west": west, "south": south, "east": west + d * (cols - 1), "north": south + d * (rows - 1)}}
 
 
 def own_move(srid, x, y, h, v):

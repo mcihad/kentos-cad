@@ -31,7 +31,8 @@ use kentos_contracts::{
     DrawingUnit, FieldChoice, FieldColumn, GeoidModel, HeightKind, HeightReference, LayerField,
     LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
     LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId,
-    ProjectSettings, ProjectStyles, SurveySettings, TopologyException, TopologyRule,
+    ProjectSettings, ProjectStyles, SurveySettings, TopologyDecision, TopologyException, TopologyProfile,
+    TopologyRule, TopologyScope,
     TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
     layer_states_problem,
 };
@@ -667,7 +668,7 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
-/// Whether road settings carry schema 188's field: an alignment PI's ove (docs/adr/0979).
+/// Whether road settings carry schema 192's field: an alignment PI's ove (docs/adr/0979).
 pub(crate) fn road_has_ove(road: &kentos_contracts::RoadSettings) -> bool {
     road.alignments.iter().any(|a| a.pis.iter().any(|p| p.ove))
 }
@@ -776,6 +777,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut review_notes = Vec::new();
     let mut approved_sheet_templates = Vec::new();
     let mut table_styles = Vec::new();
+    let mut standard_exceptions = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -792,6 +794,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         (None, None, None, None);
     let mut cad_work = None;
     let mut road = None;
+    let mut map_work = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1036,6 +1039,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             // Schema 102 (docs/adr/0622 §5): Otomatik seçim.
             "autoSelect" if has.layer_geometry => auto_select = Some(r.bool()?),
             // Schema 98 (docs/adr/0583 §3): the map's system.
+            // Schema 188 (docs/adr/1200 §2): a map project's work structure, read whole and checked.
+            "mapWork" if has.map_work => {
+                let (v, at): (kentos_contracts::MapWork, usize) = objects::json_part(r, "harita işi")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş harita işi yazılmaz"));
+                }
+                if let Some((field, words)) = v.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                map_work = Some(v);
+            }
             "mapSrid" if has.source_crs => {
                 let at = r.position();
                 let v = r.uint(u64::from(u32::MAX))?;
@@ -1148,6 +1162,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 table_styles = list;
             }
             // Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, read whole and checked.
+            // Schema 190 (docs/adr/1129): the accepted standards findings, read whole and checked.
+            "standardExceptions" if has.standard_exceptions => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::StandardException> = serde_json::from_value(value).map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                    r.fail_at(code, at, &format!("kabul edilmiş standart bulguları okunamadı: {words}"))
+                })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş kabul edilmiş bulgu listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::standard_exceptions_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                standard_exceptions = list;
+            }
             "approvedSheetTemplates" if has.approved_sheet_templates => {
                 let at = r.position();
                 let value = r.opaque()?;
@@ -1375,7 +1406,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 layer_states = layer_states_list(r, has.labels, has.frozen, has.patterns)?
             }
             "topology" if has.topology => {
-                topology = Some(topology_settings(r, has.exception_digests)?)
+                topology = Some(topology_settings(r, has.exception_digests, has.topology_reviews)?)
             }
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
@@ -1456,7 +1487,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             // Schema 159 (plan/road.md Y2.2): a road project's terrain surfaces' definitions.
             "road" if has.road_work => {
                 let (mut v, at): (kentos_contracts::RoadSettings, usize) = objects::json_part(r, "yol ayarları")?;
-                // Schema 187 (docs/adr/0977): an older file's grades were percent.
+                // Schema 191 (docs/adr/0977): an older file's grades were percent.
                 if !has.road_grades {
                     v.grades_from_percent();
                 }
@@ -1467,7 +1498,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::UnknownField, at, "tip kesitin üstyapısı ve kübajın kuralı şema 166 ister"));
                 }
                 if !has.road_ove && road_has_ove(&v) {
-                    return Err(r.fail_at(Code::UnknownField, at, "aks noktasının ovesi şema 188 ister"));
+                    return Err(r.fail_at(Code::UnknownField, at, "aks noktasının ovesi şema 192 ister"));
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 167 ister"));
@@ -1653,6 +1684,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "leaderStyles" if has.multileader => {
                 let (l, at): (Vec<kentos_contracts::LeaderStyleDef>, usize) =
                     objects::json_part(r, "kılavuz stilleri")?;
+                // Schema 187 (docs/adr/1025): a leader style's text style.
+                if !has.leader_text_styles && l.iter().any(|s| s.text_style.is_some()) {
+                    return Err(r.fail_at(Code::UnknownField, at, "kılavuz stilinin yazı stili belge şeması 187 gerektirir"));
+                }
                 if let Some((field, words)) =
                     l.iter().find_map(kentos_contracts::LeaderStyleDef::problem)
                 {
@@ -1756,8 +1791,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     if road.is_some() && cad_work != Some(CadWork::Road) {
         return Err(relation("road", "yol ayarları yalnız yol projesinin olur (cadWork road)", r));
     }
+    // A map's work structure is a map project's (docs/adr/1200 §2).
+    if map_work.is_some() && cad_work != Some(CadWork::Map) {
+        return Err(relation("mapWork", "harita işi yalnız harita projesinin olur (cadWork map)", r));
+    }
     Ok(ProjectSettings {
         road,
+        map_work,
         source_bases,
         heights,
         coordinate_epoch,
@@ -1803,6 +1843,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         standard_docs,
         approved_sheet_templates,
         table_styles,
+        standard_exceptions,
         review_notes,
         lineage,
         map_srid,
@@ -1854,9 +1895,14 @@ fn annotation_heights(r: &mut Reader<'_>) -> Result<AnnotationHeights, KcadError
 
 /// Schema 27's topology settings (docs/adr/0202 §7): the tolerance, the
 /// rules (`id`, `kind`, `layer`, `other`, `value`) and the exceptions (`at`,
-/// `rule`, `objects`; from schema 99 `digest`), checked whole as the contract checks them
-/// (`TopologySettings::problem`).
-fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettings, KcadError> {
+/// `rule`, `objects`; from schema 99 `digest`; from schema 189 `decision`, `reason`, `ruleDigest`, `scope`) and, from
+/// schema 189, the quality `profile` (`name`, `edition`, `precision`, `acceptance`, docs/adr/1260), checked whole as the
+/// contract checks them (`TopologySettings::problem`).
+fn topology_settings(
+    r: &mut Reader<'_>,
+    digests: bool,
+    reviews: bool,
+) -> Result<TopologySettings, KcadError> {
     let at = r.position();
     let mut t = TopologySettings::default();
     map(r, |r, key| {
@@ -1896,9 +1942,29 @@ fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettin
                 })?
             }
             "tolerance" => t.tolerance = Some(r.float()?),
+            "profile" if reviews => {
+                let (mut name, mut edition, mut precision, mut acceptance) = (None, None, None, None);
+                map(r, |r, key| {
+                    match key {
+                        "name" => name = Some(text(r)?),
+                        "edition" => edition = Some(text(r)?),
+                        "precision" => precision = Some(r.float()?),
+                        "acceptance" => acceptance = Some(r.float()?),
+                        _ => return Err(unknown(r)),
+                    }
+                    Ok(())
+                })?;
+                t.profile = Some(TopologyProfile {
+                    name: required(r, name, "name")?,
+                    edition,
+                    precision: required(r, precision, "precision")?,
+                    acceptance: required(r, acceptance, "acceptance")?,
+                });
+            }
             "exceptions" => {
                 t.exceptions = list(r, |r, _| {
                     let (mut at, mut rule, mut objects, mut digest) = (None, None, None, None);
+                    let (mut decision, mut reason, mut rule_digest, mut scope) = (None, None, None, None);
                     map(r, |r, key| {
                         match key {
                             "at" => at = Some(point(r)?),
@@ -1908,6 +1974,36 @@ fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettin
                                     Some(list(r, |r, _| id16(r).map(kentos_contracts::EntityId))?)
                             }
                             "digest" if digests => digest = Some(text(r)?),
+                            "decision" if reviews => {
+                                let at = r.position();
+                                decision = Some(match r.text()? {
+                                    "exception" => TopologyDecision::Exception,
+                                    "error" => TopologyDecision::Error,
+                                    k => {
+                                        return Err(r.fail_at(
+                                            Code::BadValue,
+                                            at,
+                                            &format!("“{k}” bilinen bir topoloji kararı değil"),
+                                        ));
+                                    }
+                                });
+                            }
+                            "reason" if reviews => reason = Some(text(r)?),
+                            "ruleDigest" if reviews => rule_digest = Some(text(r)?),
+                            "scope" if reviews => {
+                                let at = r.position();
+                                scope = Some(match r.text()? {
+                                    "finding" => TopologyScope::Finding,
+                                    "objects" => TopologyScope::Objects,
+                                    k => {
+                                        return Err(r.fail_at(
+                                            Code::BadValue,
+                                            at,
+                                            &format!("“{k}” bilinen bir istisna kapsamı değil"),
+                                        ));
+                                    }
+                                });
+                            }
                             _ => return Err(unknown(r)),
                         }
                         Ok(())
@@ -1917,6 +2013,10 @@ fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettin
                         objects: required(r, objects, "objects")?,
                         at: required(r, at, "at")?,
                         digest,
+                        decision,
+                        reason,
+                        rule_digest,
+                        scope,
                     })
                 })?
             }

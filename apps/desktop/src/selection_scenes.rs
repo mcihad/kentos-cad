@@ -132,8 +132,27 @@ fn filtered(app: &mut App) {
     hover(app, [26.0, 18.0]);
 }
 
+/// docs/adr/1027: 30 001 lines all selected, past both limits: the selection highlighted as the box round it and
+/// Öznitelikler giving the size and kinds only.
+fn large(app: &mut App) {
+    let mut o = Objects::new();
+    for k in 0..30_001u32 {
+        let (x, y) = (f64::from(k % 300), f64::from(k / 300));
+        o.line("cizim", [x, y], [x + 0.6, y + 0.4]);
+    }
+    open(app, o);
+    make_cad(app);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E - 10.0, min_y: N - 10.0, max_x: E + 310.0, max_y: N + 110.0 },
+        24.0,
+    );
+    let ids: Vec<kentos_domain::Slot> = (1..=30_001).map(kentos_domain::Slot).collect();
+    app.selection.set(ids);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("secim-buyuk", large),
         ("secim-cip", chip),
         ("secim-cokgen", polygon),
         ("secim-cokgen-sonuc", polygon_done),

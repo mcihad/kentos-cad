@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `188`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-189.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `192`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-193.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -832,20 +832,49 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
 
-**Şema 188** (ADR 0979; ROAD-ALIGN-15): aks noktasının `ove`'si (mantıksal; yalnız `true` yazılır): o noktanın kurbu bir
-sonraki noktanın kurbuna bir ove klotoidiyle bağlanır, A PI'lardan çözülür. Yazıcı 188'i bir aks noktası `ove` taşıyınca
-seçer; 187 ve öncesi alanı `unknown_field` sayar (`broken/road-ove-in-schema-187.kcad`). Örnek `road-ove.json/.kcad`.
+**Şema 192** (ADR 0979; ROAD-ALIGN-15): aks noktasının `ove`'si (mantıksal; yalnız `true` yazılır): o noktanın kurbu bir
+sonraki noktanın kurbuna bir ove klotoidiyle bağlanır, A PI'lardan çözülür. Yazıcı 192'yi bir aks noktası `ove` taşıyınca
+seçer; 191 ve öncesi alanı `unknown_field` sayar (`broken/road-ove-in-schema-191.kcad`). Örnek `road-ove.json/.kcad`.
 
-**Şema 187** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
+**Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,
 kurbun `rate`'i, satırın `left`/`right`'ı, menfezin `slope`'u, platformun `grade`'i, kübajın diş kazısının
-`bench.slope`'u. Alan adları değişmedi, birimleri değişti: 186 ve öncesi bunları yüzde yazmıştır ve okuyucu her birini
-100'e böler (IEEE bölmesi; eski dosya bugünkü çizim olarak okunur). Yazıcı 187'yi yol ayarlarında bu alanlardan
+`bench.slope`'u. Alan adları değişmedi, birimleri değişti: 190 ve öncesi bunları yüzde yazmıştır ve okuyucu her birini
+100'e böler (IEEE bölmesi; eski dosya bugünkü çizim olarak okunur). Yazıcı 191'i yol ayarlarında bu alanlardan
 birini taşıyan liste (tip kesit, dever, menfez, platform ya da diş kazılı kübaj) varken seçer: eski bir okuyucu oranı
 yüzde sanacağı için dosyayı “daha yeni” diye açmaz. Sınırlar oranla: enine eğim ve normal eğim en çok 1, basamak
-eğimi 0–0,5, menfez eğimi 0–1, platform eğimi en çok 1, diş kazısının eğimi (0, 10]. Örnek `road-*.kcad` (hepsi 187);
+eğimi 0–0,5, menfez eğimi 0–1, platform eğimi en çok 1, diş kazısının eğimi (0, 10]. Örnek `road-*.kcad` (hepsi 191);
 eski şemanın dosyaları `road-work-percent.kcad` (162) ve `road-volume-grid-percent.kcad` (179), içerikleri
 `road-work.json` ve `road-volume-grid.json` (`rewrite: false`).
+
+**Şema 190** (ADR 1129; CAD-ADV-12): ayarların `standardExceptions`'ı (sözleşmenin
+`StandardException` listesinin JSON'u: bulgunun türü `kind`, konusu `subject`, katmanı `layer`, standardın kaynağı
+`standard` ve `revision`'ı, kabul anındaki `expected`/`found`, gerekçe `reason` (boşluktan ibaret değil, en çok 500
+karakter), isteğe bağlı `by` ve `at`; boş liste yazılmaz, aynı tür, konu ve katman aynı standart için bir kez,
+bilinmeyen alan `unknown_field`). Yazıcı 190'ı yalnız kabul edilmiş bulgu varken seçer; 189 ve öncesi alanı
+`unknown_field` sayar (`broken/standard-exceptions-in-schema-189.kcad`). Örnek `standard-exceptions.json/.kcad`; bozuklar
+`broken/standard-exceptions-{unknown-field,reason,duplicate}.kcad`.
+
+**Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
+`decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri
+varken seçer; öncesi alanları `unknown_field` sayar (`broken/topology-reviews-in-schema-188.kcad`). Örnek
+`topology-reviews.json/.kcad`; bozuklar: hassasiyetin iki katından küçük tolerans
+(`broken/topology-profile-tolerance-below-precision.kcad`), boş gerekçe (`broken/topology-review-reason-blank.kcad`),
+bilinmeyen karar (`broken/topology-review-decision-unknown.kcad`), hepsi `bad_value`.
+**Şema 188** (ADR 1200 §2; MAP-01): ayarların `mapWork`'ü, harita projesinin iş yapısı
+(sözleşmenin `MapWork`'ünün JSON'u; 7 harfli anahtarlar arasında `mapSrid`'den sonra). `items`: kimlik `is-N` (baştaki
+sıfırsız, tek), `kind` (`campaign`, `reference`, `working`, `design`, `check`, `delivery`), 1–200 karakterlik kenarı
+boşluksuz `name`, `draft` değilse `status` (`review`, `approved`), varsa `layers` (bir katman tek öğede), varsa `file`
+(`path` boş olmayan, `revision` 64 küçük onaltılık haneli SHA-256); `derivations`: kimlik `tr-N`, dosyası olan bir
+öğe `source`, SHA-256 `revision`, 1–200 karakterlik `operation`, 1–1 000 000 küçük harfli UUID `uids` (bir nesne tek
+kayıtta). Boş yapı, `draft` durumu ve boş liste yazılmaz; yalnız `cadWork: map` projesinin olur; kurala uymayan
+`bad_value`. Yazıcı 188'i yalnız `mapWork` varken seçer; 187 ve öncesi alanı `unknown_field` sayar
+(`broken/map-work-in-schema-187.kcad`). Örnek `map-work.json/.kcad`; bozuklar
+`broken/map-work-{not-map,shared-layer,no-file-source,object-twice,draft-written}.kcad`.
+
+**Şema 187** (ADR 1025; CAD-ADV-11): kılavuz stilinin `textStyle`'ı (notun yazıldığı proje yazı stili, adıyla; ad
+kuralı şema 186'nınki). Yazıcı 187'yi yalnız bir kılavuz stili `textStyle` taşıyınca seçer; 186 ve öncesi alanı
+`unknown_field` sayar (`broken/leader-text-style-in-schema-186.kcad`). Örnek `leader-text-style.json/.kcad`.
 
 **Şema 186** (ADR 1023; CAD-ADV-11): ölçü stilinin `textStyle`'ı (değerin yazıldığı proje yazı stili, adıyla; boş
 olmayan, kenarı boşluksuz, en çok 256 bayt metin; yoksa `bad_value`). Yazıcı 186'yı yalnız bir ölçü stili `textStyle`
@@ -1113,13 +1142,23 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 
 #### 6.4.5 Topoloji kuralları
 
-Şema 27'de (ADR 0202). Harita, anahtarları kodlanmış sırasıyla `rules` < `tolerance` < `exceptions`; üçü de isteğe bağlıdır ama harita boş olamaz (`broken/topology-empty.kcad`). Bütünü denetlenir (`bad_value`).
+Şema 27'de (ADR 0202). Harita, anahtarları kodlanmış sırasıyla `rules` < `profile` < `tolerance` < `exceptions`; hepsi isteğe bağlıdır ama harita boş olamaz (`broken/topology-empty.kcad`). Bütünü denetlenir (`bad_value`).
 
 | Anahtar | Tür | Değerler |
 |---|---|---|
 | `rules` | dizi | kurallar, denetlenecekleri ve listelenecekleri sırayla; boş dizi yazılmaz |
+| `profile` | harita | şema 189'da (ADR 1260 §2): kurumun ya da işin kalite profili, aşağıda |
 | `tolerance` | float | metre, 0,000001 ile 1 arası (`broken/topology-tolerance-range.kcad`); yokluğu 0,001 |
-| `exceptions` | dizi | bilerek bırakılan bulgular; boş dizi yazılmaz |
+| `exceptions` | dizi | bilerek bırakılan ya da hata diye onaylanan bulgular; boş dizi yazılmaz |
+
+**Profil** haritadır, anahtarları `name` < `edition` < `precision` < `acceptance`:
+
+| Anahtar | Tür | Zorunlu | Değerler |
+|---|---|---|---|
+| `name` | metin | evet | boş olmayan, en çok 200 karakter |
+| `edition` | metin | | profilin sahibinin yazdığı sürüm, boş olmayan, en çok 50 karakter |
+| `precision` | float | evet | koordinatların depolama hassasiyeti, metre, 0,000000001 ile 0,5 arası; tolerans en az iki katı (`broken/topology-profile-tolerance-below-precision.kcad`) |
+| `acceptance` | float | evet | kurumun kabul eşiği, metre, sonlu ve `precision`'dan küçük değil: hiçbir onarım kaynak köşeyi bundan uzağa taşımaz |
 
 **Kural** haritadır, anahtarları `id` < `kind` < `layer` < `other` < `value`:
 
@@ -1131,7 +1170,7 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 | `other` | metin | | katmanlar arası kuralda zorunlu, başkasında yazılamaz (`broken/topology-rule-without-other.kcad`, `broken/topology-rule-other-on-one-layer.kcad`); boş ya da `layer` ile aynı olamaz (`broken/topology-rule-other-itself.kcad`) |
 | `value` | float | | yalnız değer alan türde (`mustNotHaveSlivers`, `mustNotHaveShortEdges` metre; `mustNotHaveSmallAngles` radyan, dik açıdan küçük; `broken/topology-rule-value-not-taken.kcad`, `broken/topology-rule-angle-too-large.kcad`); sıfırdan büyük; yokluğu türün varsayılanı (0,1 m, 0,05 m, 5°) |
 
-**İstisna** haritadır, anahtarları `at` < `rule` < `digest` < `objects`:
+**İstisna** haritadır, anahtarları `at` < `rule` < `scope` < `digest` < `reason` < `objects` < `decision` < `ruleDigest`:
 
 | Anahtar | Tür | Zorunlu | Değerler |
 |---|---|---|---|
@@ -1139,6 +1178,10 @@ Bilinmeyen anahtar `unknown_field`'dır (`broken/style-table-unknown-field.kcad`
 | `rule` | metin | evet | kuralın kimliği; listede olmayan kural `bad_value` (`broken/topology-exception-unknown-rule.kcad`) |
 | `digest` | metin | hayır | şema 99'da (ADR 0589 §3): istisna yapıldığında nesnelerin geometrisinin özeti, 16 küçük onaltılık rakam; başka biçim `bad_value` (`broken/topology-digest-*.kcad`). Geometri değişince istisna düşer |
 | `objects` | dizi: kimlik | evet | bulgunun nesnelerinin kalıcı kimlikleri (§6.3), bulgunun sırasıyla; boş olamaz. Çizimde olmayan nesnenin kimliği geçerlidir: istisna bir bulguya uymaz |
+| `scope` | numaralı metin | | şema 189'da: `finding` (yokluğu; yerindeki bulgu) ya da `objects` (aynı nesneler arasındaki kuralın her bulgusu) |
+| `reason` | metin | | şema 189'da: gerekçe, boş olmayan, en çok 500 karakter (`broken/topology-review-reason-blank.kcad`) |
+| `decision` | numaralı metin | | şema 189'da: `exception` (yokluğu) ya da `error` (hata diye onaylandı, düzeltilecek); başkası `bad_value` (`broken/topology-review-decision-unknown.kcad`) |
+| `ruleDigest` | metin | | şema 189'da: işaretlendiğindeki kural sürümü (ADR 1260 §3), 16 küçük onaltılık rakam. Kural değişince işaret düşer |
 
 Bilinmeyen anahtar `unknown_field`'dır.
 

@@ -150,10 +150,12 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             standard_docs: Vec::new(),
             approved_sheet_templates: Vec::new(),
             table_styles: Vec::new(),
+            standard_exceptions: Vec::new(),
             review_notes: Vec::new(),
             heights: None,
             coordinate_epoch: None,
             road: None,
+            map_work: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),
@@ -669,5 +671,48 @@ fn a_hatch_s_fill_takes_its_transparency() {
             set.contains("\"opacity\":0.6"),
             "the {kind} hatch is 60 % seen: {set}"
         );
+    }
+}
+
+/// The view zoomed far in past the construction lines' box (twenty views' width, docs/adr/1068 §5): with none in the
+/// drawing only the box follows and the scene is the one built; with one, its part is clipped again.
+#[test]
+fn a_far_zoom_builds_again_only_for_construction_lines() {
+    let library = kentos_native_style::system::library();
+    let zoomed = Bounds {
+        min_x: 488_900.0,
+        min_y: 4_420_950.0,
+        max_x: 489_100.0,
+        max_y: 4_421_050.0,
+    };
+    let scene_at = |cache: &mut StyledCache, doc: &Document, spatial: &mut Spatial, view: &Bounds| {
+        spatial.sync(&doc.model);
+        cache.scene(1, &doc.model, spatial.store(), &library, &look(doc), view, 1.0, false, 1)
+    };
+    for with_line in [false, true] {
+        let mut doc = drawing(200, None);
+        if with_line {
+            let mut base = doc.model.get(Slot(1)).expect("a parcel").base().clone();
+            base.id = 0;
+            let line = Entity::Xline(kentos_commands::ConstructionEntity {
+                base,
+                p: Vec2 { x: 489_000.0, y: 4_421_000.0 },
+                dir: Vec2 { x: 1.0, y: 0.5 },
+            });
+            assert!(doc.model.add(line).is_ok(), "the line is added");
+        }
+        let mut spatial = Spatial::of(&doc.model);
+        let mut cache = StyledCache::default();
+        let before = scene_at(&mut cache, &doc, &mut spatial, &VIEW);
+        cache.last_build = None;
+        let after = scene_at(&mut cache, &doc, &mut spatial, &zoomed);
+        assert_eq!(cache.last_build.is_some(), with_line, "built again: {with_line}");
+        if !with_line {
+            assert_eq!(after.layers.len(), before.layers.len());
+            assert!(after.layers.iter().zip(&before.layers).all(|(a, b)| Arc::ptr_eq(a, b)), "the same parts");
+            // The box followed the view: the next frame there is a comparison too.
+            scene_at(&mut cache, &doc, &mut spatial, &zoomed);
+            assert!(cache.last_build.is_none());
+        }
     }
 }

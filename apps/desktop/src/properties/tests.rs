@@ -3877,3 +3877,29 @@ fn block_parameter_physical_dimensions_stay_independent_of_instance_scale_in_all
         assert_eq!(i.parameters["Genişlik"], ParamValue::Number(1.05));
     }
 }
+
+/// docs/adr/1027: past the limit (AutoCAD's PROPOBJLIMIT) Öznitelikler shows the selection's size and kinds and one
+/// note, no values and no editors; at the limit it shows the values as before.
+#[test]
+fn a_selection_past_the_limit_shows_its_size_and_no_editors() {
+    let mut app = crate::files_testing::app_with_drawing();
+    let mut o = crate::tools_scenes::Objects::new();
+    for k in 0..(super::PROPERTIES_LIMIT as u32 + 1) {
+        let (x, y) = (f64::from(k % 300), f64::from(k / 300));
+        o.line("cizim", [x, y], [x + 0.5, y]);
+    }
+    crate::tools_scenes::open(&mut app, o);
+    let all: Vec<u32> = (1..=super::PROPERTIES_LIMIT as u32 + 1).collect();
+    select(&mut app, &all);
+    let sections = rows(&app);
+    assert_eq!(sections.len(), 1, "{:?}", sections.iter().map(|(t, _)| t).collect::<Vec<_>>());
+    assert_eq!(sections[0].0, "Büyük seçim");
+    assert!(!editable(&app), "no editors past the limit");
+    let doc = app.document.as_ref().expect("open");
+    let panel = app.properties_panel(doc);
+    assert_eq!((panel.total, panel.editable), (super::PROPERTIES_LIMIT + 1, super::PROPERTIES_LIMIT + 1), "none locked");
+    // At the limit: the values and their editors, as before.
+    select(&mut app, &all[..super::PROPERTIES_LIMIT]);
+    assert!(editable(&app), "values and editors at the limit");
+    assert!(rows(&app).iter().all(|(t, _)| t != "Büyük seçim"));
+}

@@ -238,6 +238,7 @@ fn moved(
                 blocks: Vec::new(),
                 text_styles: Vec::new(),
                 dimension_styles: Vec::new(),
+                table_styles: Vec::new(),
                 unit: None,
                 line_types: Vec::new(),
                 line_type_scale: None,

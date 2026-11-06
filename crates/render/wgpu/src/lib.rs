@@ -49,6 +49,7 @@ pub mod shader;
 pub mod stats;
 pub mod styled;
 pub mod targets;
+pub mod zoomed;
 
 pub use camera::{Camera, normal_twist};
 pub use color::{Palette, Rgba8};

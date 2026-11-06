@@ -2,7 +2,7 @@
 //! each schema the codec reads has a sample written in it that every reader opens, and each schema after the
 //! first has a sample of its newest feature in the schema before, which the readers refuse; the version past the
 //! newest is refused as `schema_version`. A schema added without both fails here; one that changes a unit instead of
-//! adding a field (187, docs/adr/0977) has its older samples read in the new unit instead.
+//! adding a field (191, docs/adr/0977) has its older samples read in the new unit instead.
 
 use std::collections::BTreeSet;
 
@@ -54,7 +54,7 @@ fn every_schema_has_a_sample_and_the_one_before_refuses_its_feature() {
             written.contains(&s),
             "schema {s} has no sample written in it"
         );
-        // Schema 187 (docs/adr/0977) adds no field: it changes the unit of fields older schemas had. Nothing of it can
+        // Schema 191 (docs/adr/0977) adds no field: it changes the unit of fields older schemas had. Nothing of it can
         // be refused in 186; instead each older road sample, as its own schema's writer wrote it in percent, reads as
         // today's drawing in grades (the `*-percent.kcad` files, read by `fixtures`).
         if s == kentos_kcad::SCHEMA_WITH_ROAD_GRADES {

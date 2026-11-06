@@ -29,6 +29,8 @@
 //! 1002 {  1000 noteturn 1040 <degrees>           1002 }   a LEADER's note's turn, exactly (its MTEXT's direction rounds it)
 //! 1002 {  1000 face     <json>                   1002 }   a TEXT's or an MTEXT's style and face as KentOS writes them (docs/adr/0183 §7)
 //! 1002 {  1000 look     <json>                   1002 }   a DIMENSION's style and look, its style's id and its value's writing
+//! 1002 {  1000 tablestyle <json>                 1002 }   a TABLESTYLE object is this project table style, exactly (docs/adr/1128 §3)
+//! 1002 {  1000 tablestyleref 1005 <handle>       1002 }   a table's INSERT follows the TABLESTYLE object with that handle (docs/adr/1128 §3)
 //! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
 //!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
 //!         [1002 { 1000 za 1040 <metres> 1002 }] [1002 { 1000 zb 1040 <metres> 1002 }]
@@ -125,6 +127,10 @@ pub struct Meta {
     /// The INSERT draws a KentOS object as a block (a dimension's or a leader's look, docs/adr/0327 §6): the object
     /// as the contract's JSON, which KentOS reads back.
     pub object: Option<String>,
+    /// A TABLESTYLE object's project table style as the contract's JSON (docs/adr/1128 §3): its groups say it in part.
+    pub table_style: Option<String>,
+    /// A table's INSERT: the handle of the TABLESTYLE object its table follows (docs/adr/1128 §3).
+    pub table_style_ref: Option<u64>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -324,6 +330,12 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if let Some(t) = &meta.table {
         item("table", &mut out, |o| string(t, o));
+    }
+    if let Some(t) = &meta.table_style {
+        item("tablestyle", &mut out, |o| string(t, o));
+    }
+    if let Some(h) = meta.table_style_ref {
+        item("tablestyleref", &mut out, |o| o.push((1005, format!("{h:X}"))));
     }
     if let Some(l) = &meta.layout {
         item("layout", &mut out, |o| string(l, o));
@@ -554,6 +566,12 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
             "face" => m.face = text(a).or(m.face),
             "look" => m.look = text(a).or(m.look),
             "table" => m.table = text(a).or(m.table),
+            "tablestyle" => m.table_style = text(a).or(m.table_style),
+            "tablestyleref" => {
+                if let Some(Value::Handle(h)) = a {
+                    m.table_style_ref = Some(*h);
+                }
+            }
             "along" => m.along = text(a).or(m.along),
             "layout" => m.layout = text(a).or(m.layout),
             "fields" => m.fields = text(a).or(m.fields),
@@ -643,6 +661,8 @@ mod tests {
             face: Some(r#"{"textStyle":"a","font":"arimo","bold":true}"#.into()),
             look: Some(r#"{"arrow":"dot","prefix":"Ø ^ \\"}"#.into()),
             table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
+            table_style: Some(r#"{"name":"Metraj ^","title":{"height":3.5}}"#.into()),
+            table_style_ref: Some(0x2A7),
             along: Some(r#"{"text":"Dere ^","height":2,"path":{"pts":[{"x":20,"y":0}],"bulges":[0.3]}}"#.into()),
             hatch: Some(r#"{"type":"pattern","angle":30,"spacing":1,"name":"ANSI31","scale":0.5,"lines":[{"angle":45,"origin":[0,0],"offset":[0,3.175]}]}"#.into()),
         };

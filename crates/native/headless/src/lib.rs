@@ -38,6 +38,7 @@ pub mod gis_export;
 pub mod package;
 pub mod publish;
 mod publish_status;
+mod publish_update;
 pub mod recover;
 mod sheet_resources;
 mod sheet_preflight;
@@ -57,7 +58,7 @@ pub use dispatch::{Op, call_envelope, commands, with_own_file};
 pub use error::HeadlessError;
 pub use query::{
     Basis, Conventions, MEASURE_MAX, Measure, MeasureItem, Measures, Method, Page, Totals, Units,
-    conventions, units,
+    conventions, measure_by, units,
 };
 pub use session::{NewDrawing, Session, new_drawing};
 pub use veil::Veil;

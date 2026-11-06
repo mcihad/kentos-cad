@@ -235,6 +235,50 @@ pub fn dimension_value(
     Some(t)
 }
 
+/// A leader's note as a text for [`place_cached`] when its leader style (`leader_style`, by id) names a text style
+/// whose font is an SHX file (docs/adr/1025): from its left baseline at `at`, turned `rotation` degrees, `height`
+/// high (ground). None for any other leader: its note is drawn in the typeface.
+pub fn leader_note(
+    settings: &ProjectSettings,
+    leader_style: Option<&str>,
+    at: kentos_commands::Vec2,
+    rotation: f64,
+    height: f64,
+    words: &str,
+) -> Option<TextEntity> {
+    let leader = settings.leader_styles.iter().find(|s| Some(s.id.as_str()) == leader_style)?;
+    let style = kentos_commands::leader_text_style(leader, &settings.text_styles).filter(|s| is_shx(s))?;
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+        {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
+         "height": height, "rotation": rotation}))
+    else {
+        return None;
+    };
+    t.face.text_style = Some(style.id.clone());
+    Some(t)
+}
+
+/// Words written in `face` from their left baseline at `at` (a table cell's line, docs/adr/1026) as a text for
+/// [`place_cached`] when the face's style is an SHX one (and the face sets no font of its own); none otherwise.
+pub fn words_in(
+    settings: &ProjectSettings,
+    face: &kentos_commands::TextFace,
+    at: kentos_commands::Vec2,
+    rotation: f64,
+    height: f64,
+    words: &str,
+) -> Option<TextEntity> {
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+        {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
+         "height": height, "rotation": rotation}))
+    else {
+        return None;
+    };
+    t.face = face.clone();
+    style_of(settings, &t)?;
+    Some(t)
+}
+
 /// The most texts [`place_cached`] keeps per thread before it starts again.
 const CACHED: usize = 4096;
 

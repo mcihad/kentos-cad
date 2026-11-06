@@ -205,13 +205,13 @@ pub struct RoadDrawingDef {
 
 impl RoadSettings {
     /// Whether a grade (rise over run) is held: a template's cross slopes, a superelevation schedule, a culvert's fall,
-    /// a pad's grade or a volume's benched ground slope (docs/adr/0977; KCAD schema 187 holds them as grades).
+    /// a pad's grade or a volume's benched ground slope (docs/adr/0977; KCAD schema 191 holds them as grades).
     pub fn has_grades(&self) -> bool {
         !(self.templates.is_empty() && self.superelevations.is_empty() && self.culverts.is_empty() && self.platforms.is_empty())
             || self.volumes.iter().any(|v| v.bench.is_some())
     }
 
-    /// A file written before schema 187 held these in percent (docs/adr/0977): each is divided by 100 as it is read,
+    /// A file written before schema 191 held these in percent (docs/adr/0977): each is divided by 100 as it is read,
     /// so −2.5 becomes −0.025. Nothing else is touched (a side slope is horizontal per vertical, a share is a share).
     pub fn grades_from_percent(&mut self) {
         let p = |v: &mut f64| *v /= 100.0;
@@ -518,7 +518,7 @@ pub struct AlignmentPi {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spiral_out: f64,
     /// The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
-    /// schema 188): both curves turn the same way, of different radii, with no clothoid on the side they share.
+    /// schema 192): both curves turn the same way, of different radii, with no clothoid on the side they share.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub ove: bool,

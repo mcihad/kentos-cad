@@ -1392,6 +1392,22 @@ impl StyledGpu {
         );
     }
 
+    /// A strip of the view's own picture (docs/adr/1067 §2): its batches as [`StyledGpu::draw`] draws them, those
+    /// that do not reach `strip` (the view's coordinates, the camera's centre from the origin) left out.
+    pub fn draw_strip(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled, samples: u32, strip: [f64; 4]) {
+        let (_, px_per_m, dpr, _, _) = view.frame_facts();
+        self.draw_through(
+            pass,
+            view,
+            samples,
+            &view.frame_bind,
+            &view.pictures,
+            view.raster_binds.as_ref(),
+            Some((strip, px_per_m, dpr)),
+            &view.seq,
+        );
+    }
+
     /// The same through the lens [`StyledGpu::prepare_lens`] set: only the
     /// batches that reach its box.
     pub fn draw_lens(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled) {
@@ -1917,6 +1933,51 @@ impl ViewStyled {
                 }
             }
         }
+    }
+
+    /// What the view shows but for the camera's place (docs/adr/1067 §2), into `hasher`: its key without the camera's
+    /// centre or which batches the view's box meets; false (nothing hashed of note) when a moved picture of it would
+    /// not be its picture at another place: a raster's or a service's tiles (they are fetched for the view), a cloud
+    /// (drawn for the camera), effect groups (composed), or a pattern or hatch laid on the screen.
+    pub(crate) fn shift_key(&self, hasher: &mut impl Hasher) -> bool {
+        self.content_key(hasher, true)
+    }
+
+    /// Whether a picture of these layers may be zoomed while the wheel turns (docs/adr/1068), and the frame's part of
+    /// its key: [`Self::shift_key`]'s refusals, without what is built again for a new scale (the scale, the layers'
+    /// builds, the labels' places); the host's drawing key says the rest.
+    pub(crate) fn zoom_key(&self, hasher: &mut impl Hasher) -> bool {
+        self.content_key(hasher, false)
+    }
+
+    fn content_key(&self, hasher: &mut impl Hasher, scale: bool) -> bool {
+        if !self.cloud_targets.is_empty() || !self.compose.is_empty() || !self.quads.data.is_empty() {
+            return false;
+        }
+        self.under.hash(hasher);
+        let u = &self.uniform;
+        if scale {
+            self.order.as_deref().hash(hasher);
+            self.pictures_rev.hash(hasher);
+            u.px_per_m.to_bits().hash(hasher);
+        }
+        (u.dpr.to_bits(), u.viewport.map(f32::to_bits), u.twist.map(f32::to_bits)).hash(hasher);
+        for layer in &self.layers {
+            if scale {
+                layer.id.hash(hasher);
+            }
+            for b in &layer.batches {
+                let on_screen = matches!(b.pipe, Pipe::Hatch | Pipe::Pattern | Pipe::Tile) && b.block.u[0] == 1;
+                if !b.vector.is_empty() || b.raster.is_some() || b.service.is_some() || b.cloud.is_some() || on_screen {
+                    return false;
+                }
+                if let Some((generation, uv)) = b.placed.filter(|_| scale) {
+                    generation.hash(hasher);
+                    uv.map(f32::to_bits).hash(hasher);
+                }
+            }
+        }
+        true
     }
 
     /// What the composer needs of a batch of the draw order (docs/adr/0226 §2): whether

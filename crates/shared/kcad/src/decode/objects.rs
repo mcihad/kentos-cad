@@ -282,6 +282,12 @@ pub(super) struct Features {
     pub(super) table_styles: bool,
     /// Schema 186 (docs/adr/1023): a dimension style's text style.
     pub(super) dimension_text_styles: bool,
+    /// Schema 187 (docs/adr/1025): a leader style's text style.
+    pub(super) leader_text_styles: bool,
+    /// Schema 188 (docs/adr/1200 §2): a map project's work structure.
+    pub(super) map_work: bool,
+    /// Schema 190 (docs/adr/1129): the accepted standards findings.
+    pub(super) standard_exceptions: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -301,6 +307,8 @@ pub(super) struct Features {
     pub(super) layer_geometry: bool,
     /// Schema 99: a topology exception's geometry digest (docs/adr/0589).
     pub(super) exception_digests: bool,
+    /// Schema 189: the topology quality profile and an exception's review fields (docs/adr/1260).
+    pub(super) topology_reviews: bool,
     /// Schema 100: a georeference record's `crs` (docs/adr/0594 §1).
     pub(super) georef_crs: bool,
     /// Schema 90: a layer time's system time attributes (docs/adr/0537).
@@ -362,9 +370,9 @@ pub(super) struct Features {
     pub(super) slope_transitions: bool,
     /// Schema 179: an earthwork volume on a grid and its cell (docs/adr/0974).
     pub(super) volume_grid: bool,
-    /// Schema 187: a road project's grades as rise over run, percent before (docs/adr/0977).
+    /// Schema 191: a road project's grades as rise over run, percent before (docs/adr/0977).
     pub(super) road_grades: bool,
-    /// Schema 188: an alignment PI's ove (docs/adr/0979).
+    /// Schema 192: an alignment PI's ove (docs/adr/0979).
     pub(super) road_ove: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
@@ -588,6 +596,9 @@ impl Features {
             shx_fonts: schema >= crate::SCHEMA_WITH_SHX_FONTS,
             table_styles: schema >= crate::SCHEMA_WITH_TABLE_STYLES,
             dimension_text_styles: schema >= crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES,
+            leader_text_styles: schema >= crate::SCHEMA_WITH_LEADER_TEXT_STYLES,
+            map_work: schema >= crate::SCHEMA_WITH_MAP_WORK,
+            standard_exceptions: schema >= crate::SCHEMA_WITH_STANDARD_EXCEPTIONS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
@@ -600,6 +611,7 @@ impl Features {
             source_crs: schema >= crate::SCHEMA_WITH_SOURCE_CRS,
             layer_geometry: schema >= crate::SCHEMA_WITH_LAYER_GEOMETRY,
             exception_digests: schema >= crate::SCHEMA_WITH_EXCEPTION_DIGESTS,
+            topology_reviews: schema >= crate::SCHEMA_WITH_TOPOLOGY_REVIEWS,
             georef_crs: schema >= crate::SCHEMA_WITH_GEOREF_CRS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,
             source_bases: schema >= crate::SCHEMA_WITH_SOURCE_BASES,

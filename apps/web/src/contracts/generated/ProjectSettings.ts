@@ -21,6 +21,7 @@ import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { LineageRecord } from "./LineageRecord";
+import type { MapWork } from "./MapWork";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
@@ -34,6 +35,7 @@ import type { RoadSettings } from "./RoadSettings";
 import type { ServiceConnection } from "./ServiceConnection";
 import type { SourceBase } from "./SourceBase";
 import type { SourceLink } from "./SourceLink";
+import type { StandardException } from "./StandardException";
 import type { SurveySettings } from "./SurveySettings";
 import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
@@ -251,6 +253,11 @@ approvedSheetTemplates?: Array<ApprovedSheetTemplate>,
  */
 tableStyles?: Array<TableStyleDef>, 
 /**
+ * The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
+ * the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
+ */
+standardExceptions?: Array<StandardException>, 
+/**
  * Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
  * plotted or measured. Numbered; their stamps say which state of an object each was written for.
  */
@@ -269,4 +276,9 @@ coordinateEpoch?: number,
  * A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
  * project drawn for a road has them (`.kcad` schema 158).
  */
-road?: RoadSettings, };
+road?: RoadSettings, 
+/**
+ * A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
+ * derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
+ */
+mapWork?: MapWork, };

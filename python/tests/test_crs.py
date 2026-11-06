@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 
 import kentos.cad as cad
@@ -36,6 +37,38 @@ class Transform(unittest.TestCase):
         self.assertAlmostEqual(point.z, 854.4819061812013, places=6)
         self.assertEqual(out.report.combined, 2.101)
         self.assertEqual(out.report.topology_tolerance, 0.001)
+
+    def test_the_chain_says_each_side_and_why_it_is_limited(self) -> None:
+        # docs/adr/1230: ED50 to TUREF is EPSG's unofficial way; the chain says it, the sides and the budget.
+        doc = cad.Document.new(srid=5254)
+        with warnings.catch_warnings(record=True) as said:
+            warnings.simplefilter("always")
+            out = cad.crs.transform(
+                doc,
+                points=[cad.CrsPoint(x=ED50.x, y=ED50.y)],
+                from_=cad.CrsSide(srid=2320),
+                to=cad.CrsSide(srid=5254),
+            )
+        chain = out.chain
+        self.assertEqual(chain.status, cad.ChainStatus.LIMITED)
+        self.assertEqual(chain.reasons, ["unofficial_operation"])
+        self.assertEqual(chain.source.family, cad.CrsFamily.TRANSVERSE_MERCATOR)
+        self.assertEqual((chain.source.srid, chain.source.datum, chain.source.unit), (2320, "ED50", "m"))
+        self.assertEqual((chain.source.axes, chain.source.epsg_axes), ("east,north", "ne"))
+        self.assertEqual(
+            chain.bases,
+            [cad.AccuracyBasis.EXACT, cad.AccuracyBasis.EPSG, cad.AccuracyBasis.EPSG, cad.AccuracyBasis.EXACT],
+        )
+        self.assertEqual((chain.budget.horizontal, chain.budget.vertical), (1e-6, 1e-6))
+        self.assertEqual([w.message.code for w in said], ["unofficial_operation", "chain_limited"])
+
+    def test_a_stored_code_the_registry_does_not_resolve_is_refused_by_name(self) -> None:
+        doc = cad.Document.new(srid=5254)
+        moved = cad.crs.transform(doc, points=[cad.CrsPoint(x=500000.0, y=4400000.0)], to=cad.CrsSide(srid=5255))
+        self.assertEqual(moved.chain.status, cad.ChainStatus.COMPLETE)
+        with self.assertRaises(cad.CommandFailed) as caught:
+            cad.crs.transform(doc, points=[ED50], to=cad.CrsSide(srid=2193))
+        self.assertEqual(caught.exception.code, "unknown_srid")
 
     def test_heights_between_ellipsoid_and_geoid_are_refused(self) -> None:
         doc = cad.Document.new(srid=5254)

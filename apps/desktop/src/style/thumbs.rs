@@ -291,6 +291,8 @@ impl shader::Primitive for Frame {
             scale_factor: f64::from(scale),
             settings: &settings,
             keep_picture: false,
+            moving: false,
+            drawing: None,
             overlays: 0,
         };
         if renderer

@@ -361,10 +361,14 @@ def settings(s):
                 "standardDocs": (opaque, False),
                 # Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, as their JSON.
                 "approvedSheetTemplates": (opaque, False),
+                # Schema 190 (docs/adr/1129): the accepted standards findings, as their JSON.
+                "standardExceptions": (opaque, False),
                 # Schema 185 (docs/adr/1126 §2): the table styles, as their JSON.
                 "tableStyles": (opaque, False),
                 # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
                 "reviewNotes": (opaque, False),
+                # Schema 188 (docs/adr/1200 §2): a map project's work structure, as its JSON.
+                "mapWork": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -511,12 +515,18 @@ def topology(t):
     exceptions = []
     for x in t.get("exceptions", []):
         assert x["rule"] in ids and x["objects"], x
-        assert set(x) <= {"at", "rule", "objects", "digest"}, x
+        assert set(x) <= {"at", "rule", "objects", "digest", "decision", "reason", "ruleDigest", "scope"}, x
         # Schema 99 (docs/adr/0589 §3): the objects' geometry when marked, 16 lowercase hexadecimal digits.
-        assert "digest" not in x or (len(x["digest"]) == 16 and all(c in "0123456789abcdef" for c in x["digest"])), x
+        hex16 = lambda d: len(d) == 16 and all(c in "0123456789abcdef" for c in d)  # noqa: E731
+        assert "digest" not in x or hex16(x["digest"]), x
+        # Schema 190 (docs/adr/1260 §1): what was decided, why, the rule's version, what it covers.
+        assert "ruleDigest" not in x or hex16(x["ruleDigest"]), x
+        assert "reason" not in x or (x["reason"].strip() and len(x["reason"]) <= 500), x
+        assert x.get("decision", "exception") in ("exception", "error") and x.get("scope", "finding") in ("finding", "objects"), x
         exc = {"at": point(x["at"]), "rule": text(x["rule"]), "objects": array([blob(uid_bytes(u)) for u in x["objects"]])}
-        if "digest" in x:
-            exc["digest"] = text(x["digest"])
+        for k in ("digest", "decision", "reason", "ruleDigest", "scope"):
+            if k in x:
+                exc[k] = text(x[k])
         exceptions.append(cmap(exc))
     out = {}
     if rules:
@@ -525,7 +535,20 @@ def topology(t):
         out["tolerance"] = finite(t["tolerance"])
     if exceptions:
         out["exceptions"] = array(exceptions)
-    assert set(t) <= {"rules", "tolerance", "exceptions"}, t
+    if "profile" in t:
+        # Schema 190 (docs/adr/1260 §2): a name, an edition, the storage precision within [1e-9, 0.5] m (the tolerance at
+        # least twice it) and an acceptance threshold not below it.
+        p = t["profile"]
+        assert set(p) <= {"name", "edition", "precision", "acceptance"}, p
+        assert p["name"].strip() and len(p["name"]) <= 200, p
+        assert "edition" not in p or (p["edition"].strip() and len(p["edition"]) <= 50), p
+        assert 1e-9 <= p["precision"] <= 0.5 and t.get("tolerance", 0.001) >= 2 * p["precision"], p
+        assert p["acceptance"] >= p["precision"], p
+        prof = {"name": text(p["name"]), "precision": finite(p["precision"]), "acceptance": finite(p["acceptance"])}
+        if "edition" in p:
+            prof["edition"] = text(p["edition"])
+        out["profile"] = cmap(prof)
+    assert set(t) <= {"rules", "tolerance", "exceptions", "profile"}, t
     return cmap(out)
 
 
@@ -2337,7 +2360,7 @@ def raw_document(d):
 
 
 def road_percent(d):
-    """A drawing whose road grades are written back in percent, as a file before schema 187 held them (docs/adr/0977):
+    """A drawing whose road grades are written back in percent, as a file before schema 191 held them (docs/adr/0977):
     each grade's shortest decimal times 100, checked to read back to the very grade when divided by 100."""
     from decimal import Decimal
     d = copy.deepcopy(d)
@@ -2465,6 +2488,19 @@ def document(d):
     if any("textStyle" in st for st in d["settings"].get("dimensionStyles", [])):
         # A dimension style that names the text style of its value (docs/adr/1023).
         schema = max(schema, 186)
+    topo = d["settings"].get("topology", {})
+    if "profile" in topo or any(k in x for x in topo.get("exceptions", []) for k in ("decision", "reason", "ruleDigest", "scope")):
+        # The topology quality profile, an exception's review fields (docs/adr/1260).
+        schema = max(schema, 189)
+    if "mapWork" in d["settings"]:
+        # A map project's work structure (docs/adr/1200 §2).
+        schema = max(schema, 188)
+    if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
+        # A leader style that names the text style of its note (docs/adr/1025).
+        schema = max(schema, 187)
+    if d["settings"].get("standardExceptions"):
+        # Standards findings the project accepts with a reason (docs/adr/1129).
+        schema = max(schema, 190)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -2538,10 +2574,10 @@ def document(d):
     if any(road.get(k) for k in ("templates", "superelevations", "culverts", "platforms")) \
             or any("bench" in v for v in road.get("volumes", [])):
         # A road project's grades as rise over run (docs/adr/0977); an older reader would take them for percent.
-        schema = max(schema, 187)
+        schema = max(schema, 191)
     if any(p.get("ove") for a in road.get("alignments", []) for p in a.get("pis", [])):
         # An alignment PI's ove (docs/adr/0979).
-        schema = max(schema, 188)
+        schema = max(schema, 192)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3417,7 +3453,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-189.kcad"] = container(root(cmap(parts), version=uint(189)))
+    files["schema-version-193.kcad"] = container(root(cmap(parts), version=uint(193)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5714,6 +5750,53 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 189 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
+    # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
+    # reason and an unknown decision are refused.
+    reviewed = load("topology-reviews.json")
+    reviewed_data = document(reviewed)
+    assert reviewed_data.count(b"\x67version\x18\xbd") == 1, "the topology reviews are schema 189"
+    out["topology-reviews.kcad"] = container(reviewed_data)
+    out["broken/topology-reviews-in-schema-188.kcad"] = container(
+        reviewed_data.replace(b"\x67version\x18\xbd", b"\x67version\x18\xbc"))
+    assert reviewed_data.count(text("precision") + finite(0.0001)) == 1
+    narrow_data = reviewed_data.replace(text("precision") + finite(0.0001), text("precision") + finite(0.002))
+    out["broken/topology-profile-tolerance-below-precision.kcad"] = container(narrow_data)
+    why = reviewed["settings"]["topology"]["exceptions"][0]["reason"]
+    assert reviewed_data.count(text(why)) == 1
+    out["broken/topology-review-reason-blank.kcad"] = container(reviewed_data.replace(text(why), text("   ")))
+    assert reviewed_data.count(text("error")) == 1
+    out["broken/topology-review-decision-unknown.kcad"] = container(reviewed_data.replace(text("error"), text("maybe")))
+    # Schema 187 (docs/adr/1025): a leader style naming its note's text style; schema 186 refuses the field, an empty
+    # name is refused.
+    led = load("leader-text-style.json")
+    led_data = document(led)
+    assert led_data.count(b"\x67version\x18\xbb") == 1, "a leader style's text style is schema 187"
+    out["leader-text-style.kcad"] = container(led_data)
+    out["broken/leader-text-style-in-schema-186.kcad"] = container(
+        led_data.replace(b"\x67version\x18\xbb", b"\x67version\x18\xba"))
+    bad_led = copy.deepcopy(led)
+    bad_led["settings"]["leaderStyles"][0]["textStyle"] = ""
+    out["broken/leader-text-style-empty.kcad"] = container(document(bad_led))
+    # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
+    # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
+    # item without a file, an object in two derivations and a draft status written are refused.
+    mapped = load("map-work.json")
+    mapped_data = document(mapped)
+    assert mapped_data.count(b"\x67version\x18\xbc") == 1, "a map's work structure is schema 188"
+    out["map-work.kcad"] = container(mapped_data)
+    out["broken/map-work-in-schema-187.kcad"] = container(
+        mapped_data.replace(b"\x67version\x18\xbc", b"\x67version\x18\xbb"))
+    for name, change in (
+            ("not-map", lambda d: d["settings"].update({"cadWork": "architecture"})),
+            ("shared-layer", lambda d: d["settings"]["mapWork"]["items"][2].update({"layers": ["gnss"]})),
+            ("no-file-source", lambda d: d["settings"]["mapWork"]["derivations"][0].update({"source": "is-3"})),
+            ("object-twice", lambda d: d["settings"]["mapWork"]["derivations"].append(
+                {**d["settings"]["mapWork"]["derivations"][0], "id": "tr-2"})),
+            ("draft-written", lambda d: d["settings"]["mapWork"]["items"][0].update({"status": "draft"}))):
+        broken_work = copy.deepcopy(mapped)
+        change(broken_work)
+        out[f"broken/map-work-{name}.kcad"] = container(document(broken_work))
     # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
     # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
     dimmed = load("dimension-text-style.json")
@@ -5744,6 +5827,23 @@ def build():
         broken_styles = copy.deepcopy(tabled)
         change(broken_styles)
         out[f"broken/table-styles-{name}.kcad"] = container(document(broken_styles))
+    # Schema 190 (docs/adr/1129): two accepted standards findings (a layer's colour against a package's revision, who and
+    # when given; a text style's height against a built-in standard); schema 189 refuses the field, an unknown field,
+    # a reason of white space and the same finding against the same standard twice are refused.
+    accepted = load("standard-exceptions.json")
+    accepted_data = document(accepted)
+    assert accepted_data.count(b"\x67version\x18\xbe") == 1, "accepted findings are schema 190"
+    out["standard-exceptions.kcad"] = container(accepted_data)
+    out["broken/standard-exceptions-in-schema-189.kcad"] = container(
+        accepted_data.replace(b"\x67version\x18\xbe", b"\x67version\x18\xbd"))
+    for name, change in (
+            ("unknown-field", lambda t: t["settings"]["standardExceptions"][0].update({"note": "?"})),
+            ("reason", lambda t: t["settings"]["standardExceptions"][1].update({"reason": "  "})),
+            ("duplicate", lambda t: t["settings"]["standardExceptions"][1].update(
+                {"kind": "layerColor", "subject": "A-DUVAR", "layer": "0", "standard": "ofis-a"}))):
+        broken_accepted = copy.deepcopy(accepted)
+        change(broken_accepted)
+        out[f"broken/standard-exceptions-{name}.kcad"] = container(document(broken_accepted))
     # Schema 183 (docs/adr/1100 §3): two approved sheet template revisions, each with the standard that approved it;
     # schema 182 refuses the field, a repeated template id (case aside) and a revision 0 are bad values.
     approved = load("approved-sheet-templates.json")
@@ -5838,7 +5938,7 @@ def build():
     out["broken/cad-work-no-type.kcad"] = container(document(untyped))
     # Schema 162 (plan/road.md Y1.1): a road project, KentOS Yol's; schema 161 refuses the work.
     rd = document(load("road-work.json"))
-    assert rd.count(b"\x67version\x18\xbb") == 1, "the road work is schema 162; the grades make it 187 (docs/adr/0977)"
+    assert rd.count(b"\x67version\x18\xbf") == 1, "the road work is schema 162; the grades make it 191 (docs/adr/0977)"
     out["road-work.kcad"] = container(rd)
     # The work alone: the surfaces would be refused first (their key sorts before `cadWork`).
     bare = load("road-work.json")
@@ -5847,21 +5947,21 @@ def build():
         document(bare).replace(b"\x67version\x18\xa2", b"\x67version\x18\xa1"))
     # Schema 166 (docs/adr/0975 §2): a template's pavement and a volume's rule; schema 165 refuses them as unknown.
     pv = document(load("road-pavement.json"))
-    assert pv.count(b"\x67version\x18\xbb") == 1, "the pavement is schema 166; the grades make it 187 (docs/adr/0977)"
+    assert pv.count(b"\x67version\x18\xbf") == 1, "the pavement is schema 166; the grades make it 191 (docs/adr/0977)"
     out["road-pavement.kcad"] = container(pv)
-    out["broken/road-pavement-in-schema-165.kcad"] = container(pv.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa5"))
+    out["broken/road-pavement-in-schema-165.kcad"] = container(pv.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa5"))
     ruled = load("road-work.json")
     ruled["settings"]["road"]["volumes"][0]["rule"] = "roadGround"
     rd2 = document(ruled)
-    assert rd2.count(b"\x67version\x18\xbb") == 1, "a volume's rule is schema 166; the grades make it 187 (docs/adr/0977)"
-    out["broken/road-volume-rule-in-schema-165.kcad"] = container(rd2.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa5"))
+    assert rd2.count(b"\x67version\x18\xbf") == 1, "a volume's rule is schema 166; the grades make it 191 (docs/adr/0977)"
+    out["broken/road-volume-rule-in-schema-165.kcad"] = container(rd2.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa5"))
     # Schema 167 (docs/adr/0931 §2): a superelevation's axis of rotation; schema 166 refuses it as unknown.
     pivoted = load("road-work.json")
     pivoted["settings"]["road"]["superelevations"][0]["pivot"] = "insideEdge"
     pd = document(pivoted)
-    assert pd.count(b"\x67version\x18\xbb") == 1, "the pivot is schema 167; the grades make it 187 (docs/adr/0977)"
+    assert pd.count(b"\x67version\x18\xbf") == 1, "the pivot is schema 167; the grades make it 191 (docs/adr/0977)"
     out["road-pivot.kcad"] = container(pd)
-    out["broken/road-pivot-in-schema-166.kcad"] = container(pd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa6"))
+    out["broken/road-pivot-in-schema-166.kcad"] = container(pd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa6"))
     # Schema 168 (docs/adr/0933 §3): a sample line set at the terrain's breaks, clipped, and a range with a curve
     # step; schema 167 refuses them as unknown.
     broke = load("road-work.json")
@@ -5870,82 +5970,82 @@ def build():
     sets[0]["clip"] = True
     sets[1]["stations"] = {"method": "range", "from": 0.0, "to": 500.0, "every": 20.0, "curve": 10.0}
     bd = document(broke)
-    assert bd.count(b"\x67version\x18\xbb") == 1, "the breaks are schema 168; the grades make it 187 (docs/adr/0977)"
+    assert bd.count(b"\x67version\x18\xbf") == 1, "the breaks are schema 168; the grades make it 191 (docs/adr/0977)"
     out["road-section-breaks.kcad"] = container(bd)
-    out["broken/road-section-breaks-in-schema-167.kcad"] = container(bd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa7"))
+    out["broken/road-section-breaks-in-schema-167.kcad"] = container(bd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa7"))
     # Schema 169 (docs/adr/0934 §2): an earthwork volume corrected on a curve; schema 168 refuses it as unknown.
     curved = load("road-volume-curve.json")
     cd = document(curved)
-    assert cd.count(b"\x67version\x18\xbb") == 1, "the curve correction is schema 169; the grades make it 187 (docs/adr/0977)"
+    assert cd.count(b"\x67version\x18\xbf") == 1, "the curve correction is schema 169; the grades make it 191 (docs/adr/0977)"
     out["road-volume-curve.kcad"] = container(cd)
-    out["broken/road-volume-curve-in-schema-168.kcad"] = container(cd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa8"))
+    out["broken/road-volume-curve-in-schema-168.kcad"] = container(cd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa8"))
     # Schema 170 (docs/adr/0939): a corridor's vertical chord height and sampling check; schema 169 refuses them.
     sampled = load("road-corridor-sampling.json")
     sd = document(sampled)
-    assert sd.count(b"\x67version\x18\xbb") == 1, "the corridor's sampling check is schema 170; the grades make it 187 (docs/adr/0977)"
+    assert sd.count(b"\x67version\x18\xbf") == 1, "the corridor's sampling check is schema 170; the grades make it 191 (docs/adr/0977)"
     out["road-corridor-sampling.kcad"] = container(sd)
-    out["broken/road-corridor-sampling-in-schema-169.kcad"] = container(sd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa9"))
+    out["broken/road-corridor-sampling-in-schema-169.kcad"] = container(sd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa9"))
     # Schema 171 (docs/adr/0944): a mass haul diagram's unsuitable cut and barriers; schema 170 refuses them.
     sorting = load("road-haul-sorting.json")
     hd = document(sorting)
-    assert hd.count(b"\x67version\x18\xbb") == 1, "the haul's unsuitable cut and barriers are schema 171; the grades make it 187 (docs/adr/0977)"
+    assert hd.count(b"\x67version\x18\xbf") == 1, "the haul's unsuitable cut and barriers are schema 171; the grades make it 191 (docs/adr/0977)"
     out["road-haul-sorting.kcad"] = container(hd)
-    out["broken/road-haul-sorting-in-schema-170.kcad"] = container(hd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xaa"))
+    out["broken/road-haul-sorting-in-schema-170.kcad"] = container(hd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xaa"))
     # Schema 172 (docs/adr/0946): a profile's crossings; schema 171 refuses them.
     crossed = load("road-profile-crossings.json")
     cd = document(crossed)
-    assert cd.count(b"\x67version\x18\xbb") == 1, "a profile's crossings are schema 172; the grades make it 187 (docs/adr/0977)"
+    assert cd.count(b"\x67version\x18\xbf") == 1, "a profile's crossings are schema 172; the grades make it 191 (docs/adr/0977)"
     out["road-profile-crossings.kcad"] = container(cd)
-    out["broken/road-profile-crossings-in-schema-171.kcad"] = container(cd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xab"))
+    out["broken/road-profile-crossings-in-schema-171.kcad"] = container(cd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xab"))
     # Schema 173 (docs/adr/0950): a volume's numbered approvals and their history; schema 172 refuses them.
     kept = load("road-volume-history.json")
     hd = document(kept)
-    assert hd.count(b"\x67version\x18\xbb") == 1, "a volume's approval history is schema 173; the grades make it 187 (docs/adr/0977)"
+    assert hd.count(b"\x67version\x18\xbf") == 1, "a volume's approval history is schema 173; the grades make it 191 (docs/adr/0977)"
     out["road-volume-history.kcad"] = container(hd)
-    out["broken/road-volume-history-in-schema-172.kcad"] = container(hd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xac"))
+    out["broken/road-volume-history-in-schema-172.kcad"] = container(hd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xac"))
     # Schema 174 (docs/adr/0954): a mass haul diagram's approved plan and its history; schema 173 refuses them.
     signed = load("road-haul-approval.json")
     sd = document(signed)
-    assert sd.count(b"\x67version\x18\xbb") == 1, "a haul plan's approval is schema 174; the grades make it 187 (docs/adr/0977)"
+    assert sd.count(b"\x67version\x18\xbf") == 1, "a haul plan's approval is schema 174; the grades make it 191 (docs/adr/0977)"
     out["road-haul-approval.kcad"] = container(sd)
-    out["broken/road-haul-approval-in-schema-173.kcad"] = container(sd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xad"))
+    out["broken/road-haul-approval-in-schema-173.kcad"] = container(sd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xad"))
     # Schema 175 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road; 174 refuses them.
     netted = load("road-haul-network.json")
     nd = document(netted)
-    assert nd.count(b"\x67version\x18\xbb") == 1, "a haul road network is schema 175; the grades make it 187 (docs/adr/0977)"
+    assert nd.count(b"\x67version\x18\xbf") == 1, "a haul road network is schema 175; the grades make it 191 (docs/adr/0977)"
     out["road-haul-network.kcad"] = container(nd)
-    out["broken/road-haul-network-in-schema-174.kcad"] = container(nd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xae"))
+    out["broken/road-haul-network-in-schema-174.kcad"] = container(nd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xae"))
     # Schema 176 (docs/adr/0957): a volume factor row's soil densities and source; schema 175 refuses them.
     dense = load("road-volume-states.json")
     dd = document(dense)
-    assert dd.count(b"\x67version\x18\xbb") == 1, "a factor row's densities are schema 176; the grades make it 187 (docs/adr/0977)"
+    assert dd.count(b"\x67version\x18\xbf") == 1, "a factor row's densities are schema 176; the grades make it 191 (docs/adr/0977)"
     out["road-volume-states.kcad"] = container(dd)
-    out["broken/road-volume-states-in-schema-175.kcad"] = container(dd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xaf"))
+    out["broken/road-volume-states-in-schema-175.kcad"] = container(dd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xaf"))
     # Schema 177 (docs/adr/0958): a template side's cut and fill slope benches; schema 176 refuses them.
     benched = load("road-cut-benches.json")
     bd = document(benched)
-    assert bd.count(b"\x67version\x18\xbb") == 1, "a template's slope benches are schema 177; the grades make it 187 (docs/adr/0977)"
+    assert bd.count(b"\x67version\x18\xbf") == 1, "a template's slope benches are schema 177; the grades make it 191 (docs/adr/0977)"
     out["road-cut-benches.kcad"] = container(bd)
-    out["broken/road-cut-benches-in-schema-176.kcad"] = container(bd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xb0"))
+    out["broken/road-cut-benches-in-schema-176.kcad"] = container(bd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xb0"))
     # Schema 178 (docs/adr/0960): a corridor region's slope transition; schema 177 refuses it.
     eased = load("road-slope-transitions.json")
     ed = document(eased)
-    assert ed.count(b"\x67version\x18\xbb") == 1, "a region's slope transition is schema 178; the grades make it 187 (docs/adr/0977)"
+    assert ed.count(b"\x67version\x18\xbf") == 1, "a region's slope transition is schema 178; the grades make it 191 (docs/adr/0977)"
     out["road-slope-transitions.kcad"] = container(ed)
-    out["broken/road-slope-transitions-in-schema-177.kcad"] = container(ed.replace(b"\x67version\x18\xbb", b"\x67version\x18\xb1"))
+    out["broken/road-slope-transitions-in-schema-177.kcad"] = container(ed.replace(b"\x67version\x18\xbf", b"\x67version\x18\xb1"))
     # Schema 179 (docs/adr/0974): an earthwork volume on a grid and its cell; schema 178 refuses it.
     gridded = load("road-volume-grid.json")
     gd = document(gridded)
-    assert gd.count(b"\x67version\x18\xbb") == 1, "a volume on a grid is schema 179; the grades make it 187 (docs/adr/0977)"
+    assert gd.count(b"\x67version\x18\xbf") == 1, "a volume on a grid is schema 179; the grades make it 191 (docs/adr/0977)"
     out["road-volume-grid.kcad"] = container(gd)
-    out["broken/road-volume-grid-in-schema-178.kcad"] = container(gd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xb2"))
-    # Schema 188 (docs/adr/0979): an alignment PI's ove; schema 187 refuses it as unknown.
+    out["broken/road-volume-grid-in-schema-178.kcad"] = container(gd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xb2"))
+    # Schema 192 (docs/adr/0979): an alignment PI's ove; schema 191 refuses it as unknown.
     oved = load("road-ove.json")
     od = document(oved)
-    assert od.count(b"\x67version\x18\xbc") == 1, "an ove is schema 188"
+    assert od.count(b"\x67version\x18\xc0") == 1, "an ove is schema 192"
     out["road-ove.kcad"] = container(od)
-    out["broken/road-ove-in-schema-187.kcad"] = container(od.replace(b"\x67version\x18\xbc", b"\x67version\x18\xbb"))
-    # Schema 187 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
+    out["broken/road-ove-in-schema-191.kcad"] = container(od.replace(b"\x67version\x18\xc0", b"\x67version\x18\xbf"))
+    # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.
     for name, version in (("road-work", b"\xa2"), ("road-pavement", b"\xa6"), ("road-pivot", b"\xa7"),
@@ -5956,8 +6056,8 @@ def build():
                           ("road-volume-states", b"\xb0"), ("road-cut-benches", b"\xb1"),
                           ("road-slope-transitions", b"\xb2"), ("road-volume-grid", b"\xb3")):
         ld = document(road_percent(load(f"{name}.json")))
-        assert ld.count(b"\x67version\x18\xbb") == 1, f"{name} in percent is written as 187 before it is aged"
-        out[f"{name}-percent.kcad"] = container(ld.replace(b"\x67version\x18\xbb", b"\x67version\x18" + version))
+        assert ld.count(b"\x67version\x18\xbf") == 1, f"{name} in percent is written as 191 before it is aged"
+        out[f"{name}-percent.kcad"] = container(ld.replace(b"\x67version\x18\xbf", b"\x67version\x18" + version))
     # Schema 182 (docs/adr/1030): a table's parts, a cell of several lines and a data extraction table; schema 181
     # refuses each of them.
     extracted = load("table-extraction.json")
@@ -5992,8 +6092,8 @@ def build():
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"
     mpd = document(mp)
-    assert mpd.count(b"\x67version\x18\xbb") == 1, "a map project with a road's settings (its grades: 187, docs/adr/0977)"
-    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\xbb", b"\x67version\x18\xa2"))
+    assert mpd.count(b"\x67version\x18\xbf") == 1, "a map project with a road's settings (its grades: 191, docs/adr/0977)"
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa2"))
     # Schema 162 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
     onp = load("road-work.json")
     onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"

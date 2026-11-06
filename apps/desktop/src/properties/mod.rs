@@ -439,6 +439,10 @@ pub(crate) struct InspectScope {
     epoch: u64,
 }
 
+/// Past this many objects of a selection Öznitelikler shows its size and kinds only (AutoCAD's PROPOBJLIMIT default,
+/// docs/adr/1027).
+pub(crate) const PROPERTIES_LIMIT: usize = 25_000;
+
 impl App {
     fn properties_key(&self, doc: &Document) -> PanelKey {
         (doc.session, doc.model.generation(), self.selection.version(), self.properties_scope.epoch)
@@ -495,6 +499,44 @@ impl App {
         for (kind, n) in counts {
             *types.entry(kind).or_default() += n;
         }
+        // Past the limit (AutoCAD's PROPOBJLIMIT, docs/adr/1027): the selection's size and kinds only, no values and no
+        // editors — working out and comparing a million objects' values took most of a select-all.
+        if selected.len() > PROPERTIES_LIMIT {
+            let total: usize = types.values().sum();
+            let kinds = types
+                .iter()
+                .map(|(k, n)| format!("{n} {}", rows::kind_lower(crate::selecting::kind_title(k))))
+                .collect::<Vec<_>>()
+                .join(", ");
+            // The objects on locked layers, each layer looked up once.
+            let layers = doc.model.layers();
+            let mut locked_layers: std::collections::HashMap<&str, bool> = std::collections::HashMap::new();
+            let locked = selected
+                .iter()
+                .filter_map(|s| doc.model.get(*s))
+                .filter(|e| {
+                    let id = e.base().layer_id.as_str();
+                    *locked_layers.entry(id).or_insert_with(|| layers.is_locked(id))
+                })
+                .count();
+            return rows::Panel {
+                summary: rows::Summary::Many { count: total, kinds },
+                meta: Some(format!("{total} nesne")),
+                sections: vec![rows::Section {
+                    id: "large-selection".into(),
+                    title: "Büyük seçim".into(),
+                    rows: vec![
+                        Row::note(&format!("{} nesne seçili.", selected.len())),
+                        Row::note(&format!("Değerler en çok {PROPERTIES_LIMIT} nesnede gösterilir.")),
+                        Row::note("Seçimi ya da tür seçimini daraltın."),
+                        Row::note("Ya da komut kullanın (Katmana taşı)."),
+                    ],
+                }],
+                types: types.into_iter().collect(),
+                total,
+                editable: total - locked,
+            };
+        }
         // The program's own rows (module_surfaces.rs).
         let shown = rows::Shown {
             crs: self.shows_property_rows(crate::module_surfaces::PropertyRows::Crs),
@@ -526,6 +568,15 @@ impl App {
                 info.push(Row::text("Görünür renk", displayed));
             }
             panel.sections.insert(0, rows::Section {id:"picked-piece".into(),title:"Seçilen blok parçası".into(),rows:info});
+        }
+        // One object of a map project's work: where it comes from (docs/adr/1200 §4); a map's programs'.
+        if let [slot] = selected.as_slice()
+            && self.shows_property_rows(crate::module_surfaces::PropertyRows::MapWork)
+            && let Some(section) = map_work_section(doc, *slot)
+        {
+            // Right under the object's own rows, where it is seen without scrolling.
+            let at = panel.sections.len().min(1);
+            panel.sections.insert(at, section);
         }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
@@ -2530,4 +2581,41 @@ impl App {
             CommandResult::Cancelled | CommandResult::Queued { .. } | CommandResult::NeedsInput { .. } => {}
         }
     }
+}
+
+/// Kaynağı (docs/adr/1200 §4): the object's role in the map's work, its item, the source it was derived from, the
+/// source's revision then (its first 12 hex digits), the operation and whether it is up to date; none outside a map
+/// project's work structure.
+fn map_work_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
+    let uid = doc.model.uid(slot)?.to_string();
+    let found = kentos_native_application::map_work::source_of(&doc.model, &uid)?;
+    let work = doc.model.map_work()?;
+    let name = |id: &Option<String>| {
+        id.as_deref().map(|i| work.item(i).map_or_else(|| i.to_owned(), |w| format!("{} ({i})", w.name)))
+    };
+    let role = match found.role {
+        kentos_commands::WorkObjectRole::Source => "Kaynak veri",
+        kentos_commands::WorkObjectRole::Derived => "Kaynaktan türetildi",
+        kentos_commands::WorkObjectRole::Free => "Bağımsız çizim",
+    };
+    let mut out = vec![rows::Row::text("Rol", role)];
+    if let Some(item) = name(&found.item) {
+        out.push(rows::Row::text("İş öğesi", item));
+    }
+    if found.role == kentos_commands::WorkObjectRole::Derived
+        && let Some(source) = name(&found.source)
+    {
+        out.push(rows::Row::text("Kaynağı", source));
+    }
+    if let Some(r) = &found.revision {
+        out.push(rows::Row::text("Kaynak revizyonu", r.chars().take(12).collect::<String>()));
+    }
+    if let Some(op) = &found.operation {
+        out.push(rows::Row::text("Üretim işlemi", op.clone()));
+    }
+    if let Some(current) = found.current {
+        out.push(rows::Row::text("Güncellik", if current { "Güncel" } else { "Güncel değil: kaynağı değişti" }));
+    }
+    out.push(rows::Row::text("Kimlik", uid));
+    Some(rows::Section { id: "mapWork".into(), title: "Kaynağı".into(), rows: out })
 }

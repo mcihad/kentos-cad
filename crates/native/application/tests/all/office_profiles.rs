@@ -1,8 +1,9 @@
 //! CAD-ADV-12's acceptance (plan/cad-advanced.md; docs/adr/1100 §7): two office profiles, each a versioned standard
-//! package with a layer, a line type, a text style, a block publication and a sheet template, taken in turn by one
+//! package with a layer, a line type, a text style, a table style (docs/adr/1126–1128), a block publication and a
+//! sheet template, taken in turn by one
 //! drawing through the commands alone (`cad.settings.set`, `cad.standards.resolve`, `.apply`, `.install`). The same
-//! named block and line type differ between the offices; the preview equals the result; an object's own colour and
-//! two viewports' different layer overrides survive the second office; undo takes the install back whole; and the
+//! named block, line type and table style differ between the offices; the preview equals the result; an object's
+//! own colour, a table's own cell style and two viewports' different layer overrides survive the second office; undo takes the install back whole; and the
 //! same recipe gives the same drawing on a new project and on a project saved and opened again.
 
 use kentos_commands::CommandResult;
@@ -26,6 +27,7 @@ fn office(
     gaz: [f64; 2],
     note: f64,
     release: u32,
+    cetvel: f64,
 ) -> String {
     json!({"format": "kentos.drawing-standard", "version": 2, "id": id, "revision": revision,
         "standard": {"name": id, "layers": [{"name": "A-DUVAR", "color": color, "lineType": "continuous",
@@ -33,17 +35,19 @@ fn office(
         "resources": {
             "lineTypes": [{"name": "GAZ", "elements": [{"length": gaz[0]}, {"length": gaz[1]}], "unit": "paper"}],
             "textStyleDefinitions": [{"id": format!("{id}-not"), "name": "A-NOT", "font": "barlow", "height": note}],
+            "tableStyleDefinitions": [{"id": format!("{id}-cetvel"), "name": "CETVEL",
+                "data": {"align": "right", "height": cetvel}}],
             "blocks": [door(release)],
             "sheetTemplates": [{"templateId": "sys:cad-mimari", "revision": 1}]}})
     .to_string()
 }
 
 fn office_a() -> String {
-    office("ofis-a", "2026.1", "#ff0000", 0.35, [2.0, -1.0], 2.5, 1)
+    office("ofis-a", "2026.1", "#ff0000", 0.35, [2.0, -1.0], 2.5, 1, 2.0)
 }
 
 fn office_b() -> String {
-    office("ofis-b", "2026.2", "#0000ff", 0.5, [9.0, -9.0], 3.5, 2)
+    office("ofis-b", "2026.2", "#0000ff", 0.5, [9.0, -9.0], 3.5, 2, 2.5)
 }
 
 fn fresh() -> Document {
@@ -103,7 +107,8 @@ fn office_b_choices() -> Value {
     json!([
         {"kind": "block", "name": "KAPI", "action": "replace"},
         {"kind": "lineType", "name": "GAZ", "action": "renameIncoming", "newName": "GAZ-B"},
-        {"kind": "textStyle", "name": "A-NOT", "action": "replace"}])
+        {"kind": "textStyle", "name": "A-NOT", "action": "replace"},
+        {"kind": "tableStyle", "name": "CETVEL", "action": "replace"}])
 }
 
 fn row<'a>(answer: &'a Value, kind: &str, name: &str) -> &'a Value {
@@ -152,6 +157,30 @@ fn place_doors(doc: &mut Document) -> kentos_commands::BlockId {
     id
 }
 
+/// A table on A-DUVAR following the drawing's CETVEL, its first data cell its own colour (a cell style of its own).
+fn place_table(doc: &mut Document) -> Slot {
+    let style = doc.settings().table_styles.iter().find(|s| s.name == "CETVEL").expect("CETVEL installed").id.clone();
+    doc.transact("Ekle", |doc| {
+        let table: kentos_commands::Entity = serde_json::from_value(json!({"kind": "table", "id": 0,
+            "layerId": DUVAR, "attrs": {}, "p": {"x": 20.0, "y": 5.0}, "rotation": 0.0, "height": 0.25,
+            "rows": [0.6, 0.5], "columns": [2.0, 2.0], "cells": [["Ada", "Alan"], ["101", "512"]], "header": true,
+            "styles": [{"row": 1, "col": 0, "rows": 1, "cols": 1, "color": "#00aa00"}], "tableStyle": style}))
+        .unwrap();
+        doc.add(table).map_err(|e| format!("{e:?}"))
+    })
+    .unwrap()
+}
+
+fn table_style_of(doc: &Document, slot: Slot) -> (Option<String>, Option<f64>) {
+    let Some(kentos_commands::Entity::Table(t)) = doc.get(slot) else { panic!("the table") };
+    let height = t
+        .table_style
+        .as_ref()
+        .and_then(|id| doc.settings().table_styles.iter().find(|s| &s.id == id))
+        .and_then(|s| s.data.as_ref()?.height);
+    (t.table_style.clone(), height)
+}
+
 fn inserts_of(doc: &Document, id: kentos_commands::BlockId) -> usize {
     doc.entities()
         .filter(|e| matches!(e, kentos_commands::Entity::Insert(i) if i.block == id))
@@ -176,7 +205,7 @@ fn produced(doc: &Document) -> Value {
         })
         .collect();
     json!({"layers": serde_json::to_value(doc.layers().nodes()).unwrap(), "lineTypes": s.line_types,
-        "textStyles": styles, "approved": s.approved_sheet_templates, "blocks": blocks})
+        "textStyles": styles, "tableStyles": s.table_styles, "approved": s.approved_sheet_templates, "blocks": blocks})
 }
 
 #[test]
@@ -191,9 +220,11 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     );
     assert_eq!(
         (a["added"].as_u64(), a["unavailable"].as_u64()),
-        (Some(4), Some(0))
+        (Some(5), Some(0))
     );
     let kapi = place_doors(&mut doc);
+    let table = place_table(&mut doc);
+    assert_eq!(table_style_of(&doc, table), (Some("ofis-a-cetvel".into()), Some(2.0)));
     two_viewports(&mut doc);
     let book = doc.sheets().cloned();
     assert_eq!(doc.layers().get(DUVAR).unwrap().style.color, "#ff0000");
@@ -206,10 +237,16 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     assert_eq!(row(&b, "lineType", "GAZ")["fields"], json!(["elements"]));
     assert_eq!(row(&b, "textStyle", "A-NOT")["fields"], json!(["height"]));
     assert_eq!(row(&b, "sheetTemplate", "sys:cad-mimari")["status"], "same");
+    let cetvel = row(&b, "tableStyle", "CETVEL");
+    assert_eq!((&cetvel["status"], &cetvel["fields"], &cetvel["uses"]), (&json!("differs"), &json!(["data"]), &json!(1)));
     assert_eq!(
         (b["replaced"].as_u64(), b["renamed"].as_u64()),
-        (Some(2), Some(1))
+        (Some(3), Some(1))
     );
+    // The table still follows the drawing's CETVEL (its id kept), now the second office's; its own cell style stays.
+    assert_eq!(table_style_of(&doc, table), (Some("ofis-a-cetvel".into()), Some(2.5)));
+    let Some(kentos_commands::Entity::Table(t)) = doc.get(table) else { panic!("the table") };
+    assert_eq!(t.styles[0].color.as_deref(), Some("#00aa00"), "the table's own cell style");
 
     // The same-named block is replaced in place: its id stays, both inserts follow it, the definition is the second
     // release. The drawing's GAZ is kept and the second office's comes in as GAZ-B.
@@ -287,6 +324,7 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     let def = doc.block_named("KAPI").unwrap();
     assert_eq!((def.id, def.entities.len()), (kapi, 4));
     assert_eq!(gaz(&doc, "GAZ-B"), None);
+    assert_eq!(table_style_of(&doc, table), (Some("ofis-a-cetvel".into()), Some(2.0)));
     assert_eq!(
         doc.settings()
             .text_styles
@@ -326,6 +364,75 @@ fn the_same_profile_recipe_gives_the_same_drawing_on_a_new_and_a_reopened_projec
         v
     };
     assert_eq!(look(&only_b), look(&live));
+}
+
+/// CAD-ADV-12: “eski projeyi açmak standardı uygulama izni sayılmasın”. A project bound to the second office but not
+/// applied, saved and opened again, keeps the first office's look; checking it says the difference and writes nothing.
+#[test]
+fn opening_a_project_bound_to_another_office_does_not_apply_it() {
+    use kentos_commands::CallOp::Execute;
+    let mut doc = fresh();
+    profile(&mut doc, &office_a(), json!([]));
+    run(&mut doc, "cad.settings.set", Execute, json!({"standardDocs": [{"text": office_b()}]}));
+    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).expect("writes");
+    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
+    let opened = reopened.to_snapshot_v2();
+    assert_eq!(opened, doc.to_snapshot_v2(), "opening changes nothing");
+    assert_eq!(reopened.layers().get(DUVAR).unwrap().style.color, "#ff0000", "still the first office's");
+    let resolved = run(&mut reopened, "cad.standards.resolve", Execute, json!({}));
+    let checked = run(&mut reopened, "cad.standards.check", Execute, json!({"standard": resolved["standard"]}));
+    let issues = checked["issues"].as_array().unwrap();
+    assert!(
+        issues.iter().any(|i| i["kind"] == "layerColor" && i["expected"] == "#0000ff" && i["found"] == "#ff0000"),
+        "{issues:?}"
+    );
+    assert_eq!(reopened.to_snapshot_v2(), opened, "checking writes nothing either");
+    assert!(!reopened.can_undo());
+}
+
+/// CAD-ADV-12: “Geçerli istisna gerekçeyle saklanabilsin” (docs/adr/1129). After the first office, A-DUVAR is given
+/// another colour by hand; the finding is accepted with its reason against the office's package; saved and opened,
+/// the check says it is accepted (listed, counted apart); the same office's next revision makes it lapse.
+#[test]
+fn an_accepted_finding_survives_a_reopen_and_lapses_on_the_next_revision() {
+    use kentos_commands::CallOp::Execute;
+    let mut doc = fresh();
+    profile(&mut doc, &office_a(), json!([]));
+    let mut snapshot = serde_json::to_value(doc.to_snapshot_v2()).unwrap();
+    for layer in snapshot["layers"].as_array_mut().unwrap() {
+        if layer["id"] == DUVAR {
+            layer["style"]["color"] = json!("#00aa00");
+        }
+    }
+    let mut doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
+    let check = |doc: &mut Document| {
+        let resolved = run(doc, "cad.standards.resolve", Execute, json!({}));
+        let input = json!({"standard": resolved["standard"], "origin": resolved["provenance"]["rules"]});
+        (run(doc, "cad.standards.check", Execute, input), resolved)
+    };
+    let (before, resolved) = check(&mut doc);
+    let finding = |report: &Value| {
+        report["issues"].as_array().unwrap().iter().find(|i| i["kind"] == "layerColor" && i["layer"] == DUVAR).cloned()
+    };
+    assert_eq!(finding(&before).unwrap()["found"], "#00aa00");
+    let accepted = run(&mut doc, "cad.standards.exceptions", Execute, json!({"operation": "accept",
+        "standard": resolved["standard"], "origin": resolved["provenance"]["rules"],
+        "findings": [{"kind": "layerColor", "subject": "A-DUVAR", "layer": DUVAR}],
+        "reason": "Bu projede duvarlar yeşil basılır.", "by": "ayse"}));
+    assert_eq!((accepted["changed"].as_u64(), accepted["exceptions"].as_u64()), (Some(1), Some(1)));
+    let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).expect("writes");
+    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
+    let (after, _) = check(&mut reopened);
+    let f = finding(&after).expect("still listed");
+    assert_eq!((f["state"].as_str(), f["reason"].as_str()), (Some("accepted"), Some("Bu projede duvarlar yeşil basılır.")));
+    assert_eq!(after["accepted"], 1);
+    assert_eq!(after["issues"].as_array().unwrap().len(), before["issues"].as_array().unwrap().len(), "not hidden");
+    // The same office's next revision: the acceptance lapses, its reason still said.
+    let next = office("ofis-a", "2026.3", "#ff0000", 0.35, [2.0, -1.0], 2.5, 1, 2.0);
+    run(&mut reopened, "cad.settings.set", Execute, json!({"standardDocs": [{"text": next}]}));
+    let (lapsed, _) = check(&mut reopened);
+    assert_eq!(finding(&lapsed).unwrap()["state"], "lapsed");
+    assert_eq!(lapsed["lapsed"], 1);
 }
 
 #[test]

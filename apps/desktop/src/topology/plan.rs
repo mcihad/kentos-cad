@@ -42,6 +42,16 @@ pub mod texts {
     pub const STOP: &str = "Durdur";
     pub const STOP_HINT: &str = "Denetimi durdurur; çizim değişmez, son denetimin bulguları kalır.";
     pub const NONE_SHOWN: &str = "Bu süzgeçte bulgu yok.";
+    pub const ERROR: &str = "Hata işaretle";
+    pub const ERROR_HINT: &str = "Seçili bulguları değerlendirilmiş, düzeltilecek hata sayar; Gerekçe'deki sözle projede saklanır. Geometri ya da kural değişince yeniden değerlendirilir.";
+    pub const REASON: &str = "Gerekçe";
+    pub const REASON_HINT: &str = "İstisna ve hata işaretinin gerekçesi; kalite profili olan projede zorunlu.";
+    pub const RECIPE: &str = "Tarifle onar";
+    pub const RECIPE_HINT: &str = "Seçili bulguları gösterildikleri sırayla, her birini ilk düzeltmesiyle onaran tarifi önce önizler: değişen nesneler, taşınan kaynak köşeler, alan farkı, önce ve sonra açık bulgular. Uygula tek geri alma adımında yazar.";
+    pub const APPLY: &str = "Uygula";
+    pub const APPLY_HINT: &str = "Önizlenen tarifi tek geri alma adımında yazar; denetim yinelenir.";
+    pub const DROP: &str = "Vazgeç";
+    pub const DROP_HINT: &str = "Tarifi bırakır; çizim değişmez.";
 }
 
 /// Before a check: how many rules a check runs.
@@ -65,7 +75,7 @@ pub fn missing_layers(n: usize) -> String {
 }
 
 /// The table's columns.
-pub const COLUMNS: [&str; 6] = ["Sıra", "Katman", "Kural", "Sorun", "Nesneler", "Ölçü"];
+pub const COLUMNS: [&str; 7] = ["Sıra", "Katman", "Kural", "Sorun", "Durum", "Nesneler", "Ölçü"];
 
 /// What the rows show: the findings left open, those marked as exceptions, or all.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

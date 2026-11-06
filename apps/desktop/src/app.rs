@@ -56,12 +56,14 @@ pub enum Panel {
     Navigator,
     /// Yol projesi: the road project's sources and drawings with their states (road_project_panel.rs, docs/adr/0911 §4).
     RoadProject,
+    /// Harita işi: a map project's items and derivations with their states (map_work_panel.rs, docs/adr/1200 §4).
+    MapWork,
     Properties,
 }
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 8] = [
+    pub(crate) const ALL: [Panel; 9] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
@@ -69,6 +71,7 @@ impl Panel {
         Panel::Sources,
         Panel::Navigator,
         Panel::RoadProject,
+        Panel::MapWork,
         Panel::Properties,
     ];
 
@@ -81,6 +84,7 @@ impl Panel {
             Panel::Sources => "Kaynaklar",
             Panel::Navigator => "Gezgin",
             Panel::RoadProject => "Yol projesi",
+            Panel::MapWork => "Harita işi",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -94,6 +98,7 @@ impl Panel {
             Panel::Sources => crate::icons::from_web(Some("dataSources")),
             Panel::Navigator => crate::icons::from_web(Some("navigator")),
             Panel::RoadProject => crate::icons::from_web(Some("corridorEditor")),
+            Panel::MapWork => crate::icons::from_web(Some("sourceLinked")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -110,6 +115,7 @@ impl Panel {
             Panel::Sources,
             Panel::Navigator,
             Panel::RoadProject,
+            Panel::MapWork,
         ] {
             if crate::module_surfaces::shows_panel_in(program, panel) {
                 docks.dock(panel, Side::Right);
@@ -638,6 +644,7 @@ pub enum Message {
     BlocksPanel(crate::blocks_panel::Event),
     Navigator(crate::navigator::Event),
     RoadProject(crate::road_project_panel::Event),
+    MapWork(crate::map_work_panel::Event),
     /// Şablonlar panel (templates_panel.rs).
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
@@ -1045,6 +1052,7 @@ pub struct App {
     pub(crate) blocks_panel: crate::blocks_panel::PanelState,
     pub(crate) navigator: crate::navigator::PanelState,
     pub(crate) road_project: crate::road_project_panel::PanelState,
+    pub(crate) map_work: crate::map_work_panel::PanelState,
     /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
@@ -1665,6 +1673,7 @@ impl App {
             blocks_panel: crate::blocks_panel::PanelState::default(),
             navigator: crate::navigator::PanelState::default(),
             road_project: crate::road_project_panel::PanelState::default(),
+            map_work: crate::map_work_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             office_palettes: Default::default(),
             sources: crate::sources::SourcesPanel::default(),
@@ -2561,6 +2570,7 @@ impl App {
             Message::BlocksPanel(event) => return self.blocks_panel_event(event),
             Message::Navigator(event) => return self.navigator_event(event),
             Message::RoadProject(e) => return self.road_project_event(e),
+            Message::MapWork(e) => return self.map_work_event(e),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::Sources(event) => return self.sources_event(event),
             Message::Db(event) => return self.db_event(event),

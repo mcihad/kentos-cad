@@ -114,8 +114,9 @@ Retler (`BadOve`):
   - "p1–p2 arasına ove sığmıyor: … ortadaki aliyman X m uzun kalıyor";
   - "birden çok ove var (A = …)";
   - "p1 noktasında ove olamaz: …".
-- **KCAD şema 188:** `ove`; 187 ve öncesi `unknown_field` der. Örnekler `road-ove.kcad` ve
-  `broken/road-ove-in-schema-187.kcad`; gelecek şema dosyası 189 oldu.
+- **KCAD şema 192:** `ove`; 191 ve öncesi `unknown_field` der. Örnekler `road-ove.kcad` ve
+  `broken/road-ove-in-schema-191.kcad`; gelecek şema dosyası 193 oldu. (Dalda 188'di; main'le birleşirken 187–190
+  başka işlere verilmişti.)
 - **Python:** `kentos.cad` yeniden üretildi.
 - **Güzergâh penceresi:**
   - PI tablosuna "Ove" sütunu geldi: başlangıçta, bitişte ve bitişten önceki PI'da "—".

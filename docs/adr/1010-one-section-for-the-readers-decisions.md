@@ -29,6 +29,8 @@ KentOS'undur.
   - **layer:** `layer_unused_left_out`, `layer_missing_created`, `layer_state_kept`;
   - **paper:** `paper_layout_invalid_size`, `paper_units_unsupported`, `paper_inches_to_mm`, `paper_default_a3`,
     `paper_viewport_frozen_layers_dropped`, `paper_empty_layout_left_out`, `paper_layouts_read`.
+  - **style** ([ADR 1128](1128-dxf-table-styles.md) §4 ekledi): `table_style_from_acad_table`, `table_style_lossy`,
+    `table_style_unused_left_out`.
 - Eskiden not olarak söylenen kararlar (birim, blok birimi/ölçeği/derinliği, eşit olmayan blokta NURBS ve genişlik,
   pafta boyutu, varsayılan A3, görünümde dondurulmuş katman) aynı sözlerle `notes`'ta da kalır: yalnız notları okuyan
   istemci bozulmaz. Yeni kararlar (değişmeyen birim, ters/eğik düzlem, nesnesiz/tabloda olmayan/durumu korunan

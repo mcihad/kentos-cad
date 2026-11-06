@@ -471,11 +471,20 @@ fn the_pipelines_and_their_vertex_layouts_agree_with_the_contract_and_the_wgsl()
     assert_eq!(layout::LINE.buffers[0].array_stride, 36);
 }
 
-/// The composition shader of a view's own targets (AA-02, `targets`) is
-/// native-only, but it too stays within core WebGPU and validates with naga.
+/// The composition shader of a view's own targets (AA-02, `targets`) and the
+/// zoomed picture's (docs/adr/1068) are native-only, but they too stay within
+/// core WebGPU and validate with naga.
 #[test]
 fn the_composition_shader_validates_within_core_webgpu() {
-    let source = kentos_render_wgpu::targets::compose_source();
+    for source in [
+        kentos_render_wgpu::targets::compose_source(),
+        kentos_render_wgpu::zoomed::zoomed_source(),
+    ] {
+        composition_shader_validates(source);
+    }
+}
+
+fn composition_shader_validates(source: &str) {
     let module = naga::front::wgsl::parse_str(source)
         .unwrap_or_else(|e| panic!("WGSL does not parse:\n{}", e.emit_to_string(source)));
     naga::valid::Validator::new(

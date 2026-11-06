@@ -300,6 +300,8 @@ pub(crate) mod road_project;
 pub mod road_project_query;
 pub mod road_project_rebuild;
 pub mod road_project_edit;
+pub mod map_work;
+pub mod map_work_edit;
 pub mod road_corridors_draw;
 pub mod road_corridors_edit;
 pub mod road_corridors_query;
@@ -449,6 +451,7 @@ mod library_symbols;
 pub mod north;
 pub mod review_notes;
 pub mod standards_install;
+pub mod standards_exceptions;
 pub mod standards_palettes;
 mod standards_install_library;
 pub mod standard_libraries;
@@ -463,6 +466,7 @@ pub mod viewmarks;
 pub mod spaces_finish;
 pub mod navigator;
 pub mod sheets_set;
+pub mod sheets_sources;
 pub mod pdf_underlay;
 pub mod xrefs;
 mod xrefs_bind;
@@ -534,6 +538,7 @@ pub mod style_tables;
 pub mod styles_edit;
 pub mod topology_check;
 pub mod topology_exceptions;
+pub mod topology_repair;
 pub mod topology_follow;
 pub mod transform;
 pub mod trim;
@@ -1403,6 +1408,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_PROJECT_QUERY, kentos_commands::ROAD_PROJECT_QUERY_VERSION),
     (kentos_commands::ROAD_PROJECT_REBUILD, kentos_commands::ROAD_PROJECT_REBUILD_VERSION),
     (kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION),
+    // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
+    (kentos_commands::MAP_WORK_QUERY, kentos_commands::MAP_WORK_QUERY_VERSION),
+    (kentos_commands::MAP_WORK_EDIT, kentos_commands::MAP_WORK_EDIT_VERSION),
     (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
     (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
     (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),
@@ -1430,6 +1438,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_TOPOLOGY_EXCEPTIONS,
         kentos_commands::CAD_TOPOLOGY_EXCEPTIONS_VERSION,
+    ),
+    // Topoloji onarım tarifi ([`topology_repair`], docs/adr/1260 §4).
+    (
+        kentos_commands::CAD_TOPOLOGY_REPAIR,
+        kentos_commands::CAD_TOPOLOGY_REPAIR_VERSION,
     ),
     // Adres verisini denetle ([`addresses_check`], docs/adr/0579).
     (
@@ -1682,6 +1695,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_STANDARDS_INSTALL,
         kentos_commands::CAD_STANDARDS_INSTALL_VERSION,
+    ),
+    // Kabul edilmiş standart bulguları ([`standards_exceptions`], docs/adr/1129).
+    (
+        kentos_commands::CAD_STANDARDS_EXCEPTIONS,
+        kentos_commands::CAD_STANDARDS_EXCEPTIONS_VERSION,
     ),
     (
         kentos_commands::CAD_STANDARDS_RESOLVE,

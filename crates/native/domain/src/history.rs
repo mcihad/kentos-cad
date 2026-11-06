@@ -282,6 +282,11 @@ pub(crate) enum Op {
         before: std::sync::Arc<Vec<kentos_contracts::ApprovedSheetTemplate>>,
         after: std::sync::Arc<Vec<kentos_contracts::ApprovedSheetTemplate>>,
     },
+    /// A map project's work structure (docs/adr/1200 §3), before and after.
+    MapWork {
+        before: std::sync::Arc<Option<kentos_contracts::MapWork>>,
+        after: std::sync::Arc<Option<kentos_contracts::MapWork>>,
+    },
     /// The review notes (docs/adr/1000 §3), before and after: a note is not an object but its change is a step.
     ReviewNotes {
         before: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
@@ -711,6 +716,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::ReviewNotes { before, after } => Op::ReviewNotes {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::MapWork { before, after } => Op::MapWork {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1466,6 +1475,7 @@ impl Document {
                 | Op::ImportMetadata { .. }
                 | Op::TemplateSettings { .. }
                 | Op::ReviewNotes { .. }
+                | Op::MapWork { .. }
                 | Op::PatternTables { .. }
                 | Op::ApprovedSheetTemplates { .. }
                 | Op::StyleTables(_)
@@ -1756,6 +1766,10 @@ impl Document {
             }
             Op::ReviewNotes { after, .. } => {
                 self.settings.review_notes = after.as_ref().clone();
+                return;
+            }
+            Op::MapWork { after, .. } => {
+                self.settings.map_work = after.as_ref().clone();
                 return;
             }
             Op::PatternTables { after, .. } => {

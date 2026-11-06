@@ -608,6 +608,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.edit"
             | "cad.entities.transform"
             | "cad.entities.set"
+            // A topology repair recipe changes and deletes the findings' objects (docs/adr/1260 §4).
+            | "cad.topology.repair"
             | "cad.blocks.define"
             | "cad.blocks.edit"
             // It moves inserts to another block and may purge the first (docs/adr/0317 §3).
@@ -758,6 +760,9 @@ fn command_tool(c: &Value) -> Value {
             | "road.pay.edit"
             | "road.junctions.edit"
             | "road.project.rebuild"
+            // Its remove takes an item of a map's work away, its forget a derivation record; its relink points rasters
+            // and images at another file (docs/adr/1200 §3).
+            | "map.work.edit"
             // It overwrites the attribute's values and takes them away from what no subnetwork reaches (docs/adr/0557 §2).
             | "cad.subnetworks.update"
             // Its remove takes address data's definition away (docs/adr/0229 §14).

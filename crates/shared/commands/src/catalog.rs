@@ -9304,6 +9304,63 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::MAP_WORK_QUERY.into(),
+            version: crate::MAP_WORK_QUERY_VERSION,
+            title: "Harita işini sorgula".into(),
+            summary: "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi, tasarım, denetim sonucu, teslim paketi) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (kampanya ya da referans katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. \
+                      Retler: not_a_map_project, invalid_uid, entity_not_found."
+                .into(),
+            aliases: vec!["haritaisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapWorkQuery>(),
+            output: schema::<crate::MapWorkTree>(),
+            plan: Some(schema::<crate::MapWorkTree>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dosyaları okuyarak, bir noktanın kaynağıyla".into(),
+                input: json!({ "deep": true, "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::MAP_WORK_EDIT.into(),
+            version: crate::MAP_WORK_EDIT_VERSION,
+            title: "Harita işini düzenle".into(),
+            summary: "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. \
+                      Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked, work_full."
+                .into(),
+            aliases: vec!["haritaisiduzenle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapWorkEdit>(),
+            output: schema::<crate::MapWorkEdited>(),
+            plan: Some(schema::<crate::MapWorkEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "GNSS kampanyası, dosyasıyla".into(),
+                    input: json!({ "operation": { "op": "add", "kind": "campaign", "name": "GNSS 2026-10", "layers": ["gnss"], "file": "/veri/kampanya.nmea" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Taşınan ortofotoyu yeniden bağla".into(),
+                    input: json!({ "operation": { "op": "relink", "item": "is-2", "file": "/arsiv/ortofoto.tif" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -9602,7 +9659,8 @@ pub fn catalog() -> CommandCatalog {
                       Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. \
                       Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. \
                       Her bulgu kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir; ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir. \
-                      Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı). \
+                      Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı); kural sürümüyle yapılmış işaret kural değişince de düşer. \
+                      Her bulgunun state'i yaşam döngüsündeki yeridir (ADR 1260): open (değerlendirilmedi), error (hata diye onaylandı, düzeltilecek), exception (bilerek bırakıldı), lapsed (işaretlendikten sonra geometrisi ya da kuralı değişti, yeniden değerlendirilmeli); reason işaretin gerekçesidir, errors onaylanmış hata sayısı. \
                       stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. \
                       preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak cad.entities.edit'in topologyFix'idir). \
                       Retler: invalid_limit, topology_rule_not_found, finding_not_found, fix_unavailable."
@@ -9642,7 +9700,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_TOPOLOGY_EXCEPTIONS.into(),
             version: crate::CAD_TOPOLOGY_EXCEPTIONS_VERSION,
             title: "Topoloji istisnaları".into(),
-            summary: "Bulguları istisna yapar (mark) ya da istisnalarını kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. \
+            summary: "Bulguları istisna yapar (mark), hata diye onaylar (error) ya da işaretlerini kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. \
+                      İşaret gerekçeyi (reason; projenin kalite profili varsa zorunlu, yoksa reason_required), kuralın sürümünü ve istisnada kapsamı (scope: finding yerindeki bulgu, objects aynı nesneler arasındaki kuralın her bulgusu) taşır; kural değişince de düşer (ADR 1260). \
                       İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. \
                       Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. \
                       İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. \
@@ -9669,6 +9728,44 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Bir bulgunun istisnasını kaldır".into(),
                     input: json!({ "operation": "unmark", "keys": ["3f9a0c12d4e5b678"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir bulguyu gerekçesiyle hata diye onayla".into(),
+                    input: json!({ "operation": "error", "keys": ["3f9a0c12d4e5b678"], "reason": "Sayısallaştırma hatası; ölçüyle düzeltilecek" }),
+                    output: None,
+                },
+            ],
+        },
+        // Topoloji onarım tarifi (docs/adr/1260 §4), held together by fixtures/commands/v1/cad.topology.repair.json.
+        CommandDescriptor {
+            id: crate::CAD_TOPOLOGY_REPAIR.into(),
+            version: crate::CAD_TOPOLOGY_REPAIR_VERSION,
+            title: "Topolojiyi onar (tarif)".into(),
+            summary: "Bir onarım tarifini uygular: adımlar (steps, 1–1000) sırayla, her biri bir bulgunun kalıcı anahtarı (key) ve uygulanacak düzeltmesi (fix: subtractFirst, removeVertex …; bulgunun sunduklarından). \
+                      Her adımdan önce kurallar önceki adımların bıraktığı çizimde yeniden çalışır (GRASS v.clean'in her araçtan önce topolojiyi kurması gibi); anahtar o çizimdeki bulgunun anahtarıdır. Kör “hepsini onar” yoktur: her adım bulgusunu anar. \
+                      Cevap uygulanan tarifi (adım başına kural, sorun, nesneler), değişen her nesneyi (alanı ya da uzunluğu önce ve sonra, silindiyse removed, kaynak köşelerinden yerinde kalan ve taşınan sayısı, en uzak ve toplam taşınma uzaklığı, onu değiştiren adımlar), bütün taşınan köşe sayısını ve uzaklıklarını (kalite profili varsa depolama hassasiyetinin altında taşınanlar belowPrecision; yine taşınmış sayılır, yuvarlanmaz), alanların toplamındaki değişimi ve önce/sonra açık bulgu sayısını verir. Plan aynı cevabı verir, yazmaz. \
+                      Hepsi ya da hiçbiri, tek geri alma adımı (Topoloji düzelt). Retler: invalid_input, invalid_revision, revision_conflict, finding_not_found (steps[i].key), repair_refused_exception (istisna olan bulgu), fix_unavailable (steps[i].fix), layer_locked (steps[i]: kilitli katmandaki nesneyi değiştiren adım), repair_beyond_acceptance (bir kaynak köşeyi kalite profilinin kabul eşiğinden uzağa taşıyan adım). İptal edilen iş hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["topolojionar".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::TopologyRepair>(),
+            output: schema::<crate::TopologyRepaired>(),
+            plan: Some(schema::<crate::TopologyRepaired>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki bulguyu sırayla onar".into(),
+                    input: json!({ "steps": [
+                        { "key": "3f9a0c12d4e5b678", "fix": "subtractFirst" },
+                        { "key": "0a1b2c3d4e5f6071", "fix": "removeVertex" }
+                    ] }),
                     output: None,
                 },
             ],
@@ -10892,6 +10989,37 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Eksikleri ekle, farklı GAZ çizgi tipini yeni adla al".into(),
                 input: json!({ "choices": [{ "kind": "lineType", "name": "GAZ", "action": "renameIncoming", "newName": "GAZ-OFIS" }] }),
+                output: None,
+            }],
+        },
+        // Standart bulgusunu gerekçeyle kabul et (docs/adr/1129), held together by
+        // fixtures/commands/v1/cad.standards.exceptions.json.
+        CommandDescriptor {
+            id: crate::CAD_STANDARDS_EXCEPTIONS.into(),
+            version: crate::CAD_STANDARDS_EXCEPTIONS_VERSION,
+            title: "Standart bulgusunu kabul et".into(),
+            summary: "cad.standards.check'in bulgularını gerekçesiyle kabul eder (operation accept) ya da kabulü geri alır (withdraw). Bulgu bugünkü denetimdeki türü, konusu ve katmanıyla anılır; standart denetimdeki gibi verilir (name ya da standard, resources) ve origin bağlı paketin kimliği ve revizyonudur (yoksa standardın adı). \
+                      Kabul standardın kaynağını, revizyonunu ve bulgunun o anki beklenen ve bulunan değerini saklar; revizyon ya da çizimdeki değer değişince denetim bulguyu lapsed (yeniden değerlendirilecek) verir, kabul edilenleri accepted olarak listede tutar ve ayrı sayar. \
+                      Gerekçe zorunludur (en çok 500 karakter); by ve at (kim, ne zaman) verilirse kaydedilir. Kabuller proje ayarıdır (standardExceptions): çizimi kirli yapar, geri alma adımı değildir. Eski projeyi açmak standardı uygulamaz. \
+                      Retler: invalid_input, reason_required, standard_not_found, no_standard, invalid_standard, invalid_revision, revision_conflict, finding_not_found."
+                .into(),
+            aliases: vec!["standartistisna".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::StandardsExceptions>(),
+            output: schema::<crate::StandardsExceptionsEdited>(),
+            plan: Some(schema::<crate::StandardsExceptionsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "A-DUVAR'ın rengini müşteri isteğiyle kabul et".into(),
+                input: json!({ "operation": "accept", "name": "mimari-ofis",
+                    "findings": [{ "kind": "layerColor", "subject": "A-DUVAR", "layer": "duvar" }],
+                    "reason": "Müşteri duvarların kırmızı basılmasını istedi" }),
                 output: None,
             }],
         },
@@ -13492,7 +13620,8 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Ortometrik kot, yanın geoit modeliyle (heights.geoid, SHA-256'sıyla; bu cihazın ızgara kitaplığında GTX ya da GeoTIFF) elipsoit yüksekliğine ve geri çevrilir (H = h − N, PROJ'un vgridshift'i gibi çift doğrusal); geoit modeli söylenmemişse geoid_required, iki düşey datumdan birinin geoidi yoksa vertical_unsupported, ızgara bu cihazda yoksa geoid_missing.  \
                       Epoklar: iki ayrı epok velocity (hız ızgarası: doğu, kuzey, yukarı mm/yıl, GeoTIFF; SHA-256'sıyla) verilince noktalar kaynağın datumunda epok farkı kadar yer merkezli koordinatlarda taşınır (PROJ'un deformation'ı gibi); verilmezse epoch_unsupported, ızgara bu cihazda yoksa velocity_missing. KentOS yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  \
                       Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  \
-                      Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir."
+                      Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları.  \
+                      Zincir (chain, ADR 1230): iki tarafın yatay sistemi (kod, aile, datum, birim, eksen sırası, datum topluluğunun doğruluğu), düşey sistemi, epoku ve epokun nereden geldiği; okunan ızgaraların türü, SHA-256'sı ve düğüm kutusu; her adımın doğruluk dayanağı; karar (complete ya da limited) ve nedenleri; motorun PROJ'a göre sayısal bütçesi. Sınırlı zincir hassas dönüşüm değildir (chain_limited). Projenin kayıtlı kodu KentOS'un çözdüğü sistemlerden değilse unsupported_srid. Çizimi değiştirmez; plan aynı cevabı verir."
                 .into(),
             aliases: vec!["koordinat-donustur".into(), "cs2cs".into()],
             effect: CommandEffect::Query,
@@ -14536,17 +14665,17 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
         CommandDescriptor {
             id:crate::FILE_PUBLISH_SHEETS.into(),version:crate::FILE_PUBLISH_SHEETS_VERSION,
             title:"Paftaları toplu yayınla".into(),
-            summary:"Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.".into(),
+            summary:"Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle taşır (docs/adr/1320 §2); çizimin geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3): sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.".into(),
             aliases:vec!["PAFTAYAYINLA".into()],effect:CommandEffect::Query,
             hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,
             input:schema::<crate::PublishSheets>(),output:schema::<crate::SheetsPublished>(),plan:Some(schema::<crate::SheetsPublished>()),capabilities:None,
-            examples:vec![CommandExample{title:"Paftaların tamamı, ayrı PDF dosyaları".into(),input:json!({"path":"/tmp/pafta-teslimi","mode":"separate","naming":"{index}-{sheet}"}),output:None}],
+            examples:vec![CommandExample{title:"Paftaların tamamı, ayrı PDF dosyaları".into(),input:json!({"path":"/tmp/pafta-teslimi","mode":"separate","naming":"{index}-{sheet}"}),output:None},CommandExample{title:"Önceki teslimin güncellemesi: yalnız değişen paftalar yeniden üretilir".into(),input:json!({"path":"/tmp/pafta-teslimi-2","mode":"separate","previous":"/tmp/pafta-teslimi"}),output:None}],
         },
         // Yayın durumu (docs/adr/1090 §6): a delivery against the drawing now, page by page.
         CommandDescriptor {
             id:crate::FILE_PUBLISH_STATUS.into(),version:crate::FILE_PUBLISH_STATUS_VERSION,
             title:"Yayın durumu".into(),
-            summary:"Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği.".into(),
+            summary:"Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği. Her sayfanın teslim tarihi (date) ve kaynaklarının teslimden beri değişimi (changes, docs/adr/1320 §2): içeriği değişen, sayfaya giren ve sayfadan çıkan nesneler kalıcı kimlikleriyle, paftanın kendi kaydının değişip değişmediği ve değişen proje parçaları (settings, layers, styles, blocks, book, resources).".into(),
             aliases:vec!["YAYINDURUMU".into()],effect:CommandEffect::Query,
             hosts:vec![CommandHost::Desktop],headless:true,requires:vec![CommandRequirement::Document],permissions:vec![],undo:CommandUndo::None,cost:CommandCost::Job,
             input:schema::<crate::PublishStatus>(),output:schema::<crate::PublishStatusReport>(),plan:Some(schema::<crate::PublishStatusReport>()),capabilities:None,
@@ -15521,6 +15650,8 @@ mod tests {
                     crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
+                    crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
+                    crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
@@ -15577,6 +15708,9 @@ mod tests {
                     crate::CAD_TOPOLOGY_EXCEPTIONS => {
                         serde_json::from_value::<crate::TopologyExceptions>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_TOPOLOGY_REPAIR => {
+                        serde_json::from_value::<crate::TopologyRepair>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_TIME => {
                         serde_json::from_value::<crate::LayersTime>(e.input.clone()).map(|_| ())
@@ -15658,6 +15792,9 @@ mod tests {
                     }
                     crate::CAD_STANDARDS_INSTALL => {
                         serde_json::from_value::<crate::StandardsInstall>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STANDARDS_EXCEPTIONS => {
+                        serde_json::from_value::<crate::StandardsExceptions>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_DRAWING_REPAIR => {
                         serde_json::from_value::<crate::DrawingRepair>(e.input.clone()).map(|_| ())
@@ -16449,6 +16586,8 @@ mod tests {
                         crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
+                        crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
+                        crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
@@ -16493,6 +16632,10 @@ mod tests {
                             crate::TopologyExceptionsEdited,
                         >(output.clone())
                         .map(|_| ()),
+                        crate::CAD_TOPOLOGY_REPAIR => {
+                            serde_json::from_value::<crate::TopologyRepaired>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::CAD_LAYERS_TIME => {
                             serde_json::from_value::<crate::LayersTimed>(output.clone()).map(|_| ())
                         }

@@ -133,16 +133,16 @@ Ret iletisi birimi söyler: "enine eğim oranla yazılır (−0,025 %−2,5'tir)
 
 Dever çizelgesinin kendisi doğrusaldır, birimden bağımsızdır; yalnız açıklamaları değişti.
 
-### Kayıt: KCAD şema 187
+### Kayıt: KCAD şema 191
 
 - **Alanlar aynı, birim değişti.** Yazıcı yol ayarlarında tip kesit, dever, menfez, platform ya da diş kazılı kübaj
-  varsa 187'yi seçer. Eski bir okuyucu oranı yüzde sanacağı için dosyayı açmaz, "daha yeni" der.
-- **Okuyucu:** 186 ve öncesinin yol ayarlarında bu alanları 100'e böler (`RoadSettings::grades_from_percent`; IEEE
+  varsa 191'i seçer. (Dalda 187 olarak yazıldı; main'le birleşirken 187–190 başka işlere verilmişti, 191 oldu.) Eski bir okuyucu oranı yüzde sanacağı için dosyayı açmaz, "daha yeni" der.
+- **Okuyucu:** 190 ve öncesinin yol ayarlarında bu alanları 100'e böler (`RoadSettings::grades_from_percent`; IEEE
   bölmesi). Eski dosya bugünkü çizim olarak açılır.
 - **Eski örnekler:** Her eski yol şemasının (162, 166–179) örneği `road-*-percent.kcad` olarak, kendi yazıcısının
   baytlarıyla durur (`rewrite: false`). Bunlar dalın önceki `road-*.kcad` dosyalarıyla bayt bayt aynıdır. İçerikleri
   `road-*.json`'dur: Rust ve Python okuyucuları onları oranla okur.
-- **Şema kuralı:** "Her şemanın özelliği bir öncekinde reddedilir" kuralı 187'de bilerek atlanır. Alan eklenmedi,
+- **Şema kuralı:** "Her şemanın özelliği bir öncekinde reddedilir" kuralı 191'de bilerek atlanır. Alan eklenmedi,
   reddedilecek bir şey yok; onun yerine eski örneklerin yeni birimle okunması sınanır
   (`crates/shared/kcad/tests/all/schemas.rs`).
 

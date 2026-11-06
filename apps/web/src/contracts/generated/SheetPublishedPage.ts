@@ -12,7 +12,12 @@ file: string,
 /**
  * The page's content digest made without the title context (user, date): equal digests draw the same page.
  */
-digest: string, strokes: number, fills: number, evenOddFills: number, hairlines: number, thinLines: number, minStrokeMm?: number, texts: number, fonts: Array<string>, clips: number, transparent: number, images: number, rasterMaps: number, placeholders: number, 
+digest: string, 
+/**
+ * The date its bytes were made with (the title context's): an update's carried page keeps its earlier one
+ * (docs/adr/1320 §3). None in publications made before.
+ */
+date?: string, strokes: number, fills: number, evenOddFills: number, hairlines: number, thinLines: number, minStrokeMm?: number, texts: number, fonts: Array<string>, clips: number, transparent: number, images: number, rasterMaps: number, placeholders: number, 
 /**
  * The page's audit findings (none an error by itself: the preflight's errors block publication).
  */

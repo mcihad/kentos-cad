@@ -18,7 +18,10 @@ use kentos_geometry_core::crs::operation::{self as op, Operation};
 use kentos_geometry_core::crs::{self as core, Unreached};
 use kentos_geometry_core::vec2::Vec2;
 
-use kentos_commands::VelocityModel;
+use kentos_commands::{
+    AccuracyBasis, ChainGrid, ChainSide, ChainStatus, ChainVertical, CrsChain, CrsFamily,
+    DegreeBox, EpochSource, GridKind, NumericBudget, VelocityModel,
+};
 use kentos_geometry_core::crs::geoid::{self, Ride, Vertical};
 
 use crate::ExecutionContext;
@@ -58,22 +61,27 @@ pub fn execute(
 struct Side {
     system: core::System,
     title: String,
+    /// The registry's code and name of the system, the order EPSG gives its axes (none for a definition).
+    srid: Option<u32>,
+    name: String,
+    epsg_axes: Option<String>,
     /// None: not said.
     heights: Option<HeightReference>,
     epoch: Option<f64>,
+    epoch_source: EpochSource,
 }
 
 fn side(settings: &ProjectSettings, given: Option<&CrsSide>, path: &str) -> Result<Side, Stop> {
     let given = given.cloned().unwrap_or_default();
-    let (system, title, own) = match given.srid {
+    let (system, title, own, srid, name, epsg_axes) = match given.srid {
         Some(srid) => {
             let found = kentos_project::crs::system(srid)
                 .filter(|s| !s.is_local())
                 .and_then(|s| {
                     s.transform_system()
-                        .map(|t| (t, kentos_project::crs::title(s)))
+                        .map(|t| (t, kentos_project::crs::title(s), s))
                 });
-            let Some((system, title)) = found else {
+            let Some((system, title, entry)) = found else {
                 return Err(fail(
                     codes::UNKNOWN_SRID,
                     format!(
@@ -82,10 +90,22 @@ fn side(settings: &ProjectSettings, given: Option<&CrsSide>, path: &str) -> Resu
                     &format!("{path}.srid"),
                 ));
             };
-            (system, title, false)
+            let axes = (!entry.axis_order.is_empty()).then(|| entry.axis_order.clone());
+            (system, title, false, Some(srid), entry.name.clone(), axes)
         }
         None => {
             let Some(named) = kentos_project::systems::own(settings) else {
+                // A stored code the registry does not resolve is not a local project (docs/adr/1230 §1).
+                if settings.srid != kentos_project::crs::LOCAL_SRID {
+                    return Err(fail(
+                        codes::UNSUPPORTED_SRID,
+                        format!(
+                            "{path}: projenin kayıtlı sistemi EPSG:{} KentOS'un çözdüğü sistemler arasında yok (TUREF, ED50 ve WGS 84'ün coğrafi, TM ve UTM sistemleri, WGS 84 / Pseudo-Mercator, projenin yerel tanımı). Koordinatlar bu kodla dönüştürülmez: projeye kayıttaki bir sistemi atayın ya da tarafın sistemini EPSG koduyla verin (srid).",
+                            settings.srid
+                        ),
+                        path,
+                    ));
+                }
                 return Err(fail(
                     codes::NO_SYSTEM,
                     format!(
@@ -104,7 +124,13 @@ fn side(settings: &ProjectSettings, given: Option<&CrsSide>, path: &str) -> Resu
                     path,
                 ));
             };
-            (system, named.title, true)
+            let entry = kentos_project::crs::system(settings.srid)
+                .filter(|_| settings.srid != kentos_project::crs::LOCAL_SRID);
+            let srid = entry.map(|e| e.srid);
+            let axes = entry
+                .filter(|e| !e.axis_order.is_empty())
+                .map(|e| e.axis_order.clone());
+            (system, named.title, true, srid, named.name, axes)
         }
     };
     let heights = match given.heights {
@@ -119,10 +145,10 @@ fn side(settings: &ProjectSettings, given: Option<&CrsSide>, path: &str) -> Resu
             &format!("{path}.heights.{at}"),
         ));
     }
-    let epoch = match given.epoch {
-        Some(e) => Some(e),
-        None if own => settings.coordinate_epoch,
-        None => None,
+    let (epoch, epoch_source) = match (given.epoch, settings.coordinate_epoch) {
+        (Some(e), _) => (Some(e), EpochSource::Given),
+        (None, Some(e)) if own => (Some(e), EpochSource::Project),
+        _ => (None, EpochSource::None),
     };
     if let Some(why) = epoch.and_then(kentos_commands::epoch_problem) {
         return Err(fail(
@@ -134,8 +160,12 @@ fn side(settings: &ProjectSettings, given: Option<&CrsSide>, path: &str) -> Resu
     Ok(Side {
         system,
         title,
+        srid,
+        name,
+        epsg_axes,
         heights: heights.filter(|h| h.kind != HeightKind::Unknown),
         epoch,
+        epoch_source,
     })
 }
 
@@ -628,6 +658,30 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             path: Some("points".into()),
         });
     }
+    let chain = chain(
+        settings,
+        &p,
+        &steps,
+        &unreached,
+        method,
+        height_accuracy,
+        input,
+    );
+    if chain.status == ChainStatus::Limited {
+        warnings.push(CommandWarning {
+            code: codes::CHAIN_LIMITED.into(),
+            message: format!(
+                "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: {}.",
+                chain
+                    .reasons
+                    .iter()
+                    .map(|r| reason_text(r))
+                    .collect::<Vec<_>>()
+                    .join("; ")
+            ),
+            path: Some("to".into()),
+        });
+    }
     let decimals = settings.length_decimals;
     let report = AccuracyReport {
         source: p.uncertainty,
@@ -670,7 +724,208 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
                 unofficial: op.unofficial,
             },
             report,
+            chain,
         },
         warnings,
+    }
+}
+
+/// The reasons a chain is limited, in their order (docs/adr/1230 §3).
+pub const REASONS: [&str; 7] = [
+    "points_outside",
+    "accuracy_unknown",
+    "height_accuracy_unknown",
+    "heights_unchanged",
+    "epoch_unknown",
+    "datum_ensemble",
+    "unofficial_operation",
+];
+
+/// A reason as a sentence says it.
+pub fn reason_text(code: &str) -> &'static str {
+    match code {
+        "points_outside" => "bazı noktalar izdüşümün ya da ızgaranın kapsamı dışında",
+        "accuracy_unknown" => "bir adımın yatay doğruluğu bilinmiyor",
+        "height_accuracy_unknown" => {
+            "kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor)"
+        }
+        "heights_unchanged" => "kotların ne olduğu söylenmedi, değişmeden kaldı",
+        "epoch_unknown" => {
+            "yalnız bir yanın epoku söylendi; öbürünün aynı epokta olduğu varsayıldı"
+        }
+        "datum_ensemble" => "WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz",
+        "unofficial_operation" => "ED50'nin EPSG işlemi resmî dönüşüm değil",
+        _ => "bilinmeyen neden",
+    }
+}
+
+fn family(s: &core::System) -> CrsFamily {
+    match s {
+        core::System::Geographic { .. } => CrsFamily::Geographic,
+        core::System::Tm { .. } => CrsFamily::TransverseMercator,
+        core::System::Mercator {} => CrsFamily::PseudoMercator,
+        core::System::Local { .. } => CrsFamily::Local,
+    }
+}
+
+fn datum_name(s: &core::System) -> String {
+    match s.datum() {
+        core::Datum::Turef => "TUREF".into(),
+        core::Datum::Ed50 => "ED50".into(),
+        core::Datum::Wgs84 => "WGS84".into(),
+        core::Datum::Custom(c) => c.name.clone(),
+    }
+}
+
+fn chain_side(s: &Side, epoch: Option<f64>, source: EpochSource) -> ChainSide {
+    let geographic = matches!(s.system, core::System::Geographic { .. });
+    let datum = datum_name(&s.system);
+    ChainSide {
+        srid: s.srid,
+        name: s.name.clone(),
+        family: family(&s.system),
+        ensemble_accuracy: kentos_commands::ensemble_accuracy(&datum),
+        datum,
+        unit: if geographic { "deg" } else { "m" }.into(),
+        axes: if geographic {
+            "longitude,latitude"
+        } else {
+            "east,north"
+        }
+        .into(),
+        epsg_axes: s.epsg_axes.clone(),
+        vertical: s.heights.as_ref().map(|h| ChainVertical {
+            kind: h.kind,
+            srid: h.vertical_srid,
+            name: match (h.kind, h.vertical()) {
+                (HeightKind::Orthometric, Some(v)) => v.name.into(),
+                _ => h.title(),
+            },
+            unit: h.vertical().map_or("m", |v| v.unit).into(),
+            geoid: h.geoid.clone(),
+        }),
+        epoch,
+        epoch_source: source,
+    }
+}
+
+fn degrees([west, south, east, north]: [f64; 4]) -> DegreeBox {
+    DegreeBox {
+        west,
+        south,
+        east,
+        north,
+    }
+}
+
+/// The coordinate chain of an answer (docs/adr/1230): the sides, what each step's accuracy rests on, the grids
+/// with their extents, the verdict and the numeric budget.
+fn chain(
+    settings: &ProjectSettings,
+    p: &Prepared,
+    steps: &[OperationStep],
+    unreached: &[UnreachedPoint],
+    method: HeightMethod,
+    height_accuracy: Option<f64>,
+    input: &CrsTransform,
+) -> CrsChain {
+    let op = &p.operation;
+    let bases = steps
+        .iter()
+        .map(|s| match (s.kind, s.accuracy) {
+            (StepKind::Conversion | StepKind::Unit, _) => AccuracyBasis::Exact,
+            (StepKind::Geoid | StepKind::Velocity, _) | (_, None) => AccuracyBasis::Unknown,
+            _ if s.name.starts_with("EPSG:") => AccuracyBasis::Epsg,
+            _ => AccuracyBasis::Project,
+        })
+        .collect();
+    let mut grids: Vec<ChainGrid> = op
+        .grids
+        .iter()
+        .filter_map(|id| {
+            let grid = kentos_geometry_core::crs::ntv2::get(id)?;
+            let stated = settings
+                .datum_transforms
+                .iter()
+                .filter_map(|t| t.grid.as_ref())
+                .find(|g| g.id == *id);
+            Some(ChainGrid {
+                kind: GridKind::Horizontal,
+                name: stated.map_or_else(|| id.clone(), |g| g.file.clone()),
+                sha256: id.clone(),
+                extent: degrees(grid.summary().1),
+                accuracy: stated.and_then(|g| g.accuracy),
+            })
+        })
+        .collect();
+    let node = |kind, name: &str, id: &str| {
+        geoid::get(id).map(|g| ChainGrid {
+            kind,
+            name: name.to_owned(),
+            sha256: id.to_owned(),
+            extent: degrees(g.extent()),
+            accuracy: None,
+        })
+    };
+    if let Heights::Geoid {
+        from: Some((n, id)),
+        ..
+    } = &p.heights
+    {
+        grids.extend(node(GridKind::Geoid, n, id));
+    }
+    if let Some((m, _)) = &p.velocity {
+        grids.extend(node(GridKind::Velocity, &m.name, &m.sha256));
+    }
+    if let Heights::Geoid {
+        to: Some((n, id)), ..
+    } = &p.heights
+    {
+        grids.extend(node(GridKind::Geoid, n, id));
+    }
+    let heights_given = input.points.iter().any(|q| q.z.is_some());
+    let datum_changes = !op.id.is_empty();
+    let ensemble = |s: &Side| kentos_commands::ensemble_accuracy(&datum_name(&s.system)).is_some();
+    let reasons: Vec<String> = REASONS
+        .iter()
+        .filter(|r| match **r {
+            "points_outside" => !unreached.is_empty(),
+            "accuracy_unknown" => op.accuracy.is_none(),
+            "height_accuracy_unknown" => {
+                heights_given
+                    && matches!(method, HeightMethod::Ellipsoidal | HeightMethod::Geoid)
+                    && height_accuracy.is_none()
+            }
+            "heights_unchanged" => method == HeightMethod::Unchanged,
+            "epoch_unknown" => p.from.epoch.is_some() != p.to.epoch.is_some(),
+            "datum_ensemble" => datum_changes && (ensemble(&p.from) || ensemble(&p.to)),
+            "unofficial_operation" => op.unofficial,
+            _ => false,
+        })
+        .map(|r| (*r).to_owned())
+        .collect();
+    let to_source = match (p.to.epoch, p.from.epoch) {
+        (None, Some(_)) => EpochSource::Carried,
+        _ => p.to.epoch_source,
+    };
+    CrsChain {
+        source: chain_side(&p.from, p.from_epoch, p.from.epoch_source),
+        target: chain_side(&p.to, p.to_epoch, to_source),
+        bases,
+        grids,
+        status: if reasons.is_empty() {
+            ChainStatus::Complete
+        } else {
+            ChainStatus::Limited
+        },
+        reasons,
+        budget: NumericBudget {
+            horizontal: if matches!(p.to.system, core::System::Geographic { .. }) {
+                kentos_commands::CRS_BUDGET_DEGREES
+            } else {
+                kentos_commands::CRS_BUDGET_METRES
+            },
+            vertical: kentos_commands::CRS_BUDGET_HEIGHT,
+        },
     }
 }

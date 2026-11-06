@@ -11,9 +11,11 @@ mod areas;
 pub mod calls;
 mod fixes;
 pub mod incremental;
+mod shift;
 mod lines;
 
 pub use fixes::{Change, fix};
+pub use shift::{Shift, shift};
 
 use crate::entity::Shape;
 use crate::geom::arrangement::{Area, edge_box, edge_len};
@@ -270,6 +272,9 @@ pub struct Exception {
     pub rule: String,
     pub objects: Vec<String>,
     pub at: Vec2,
+    /// Whether it covers every finding of the rule between the objects wherever it is (docs/adr/1260 §1), not only
+    /// the one at its place.
+    pub anywhere: bool,
 }
 
 /// The objects the check looks at: each one's shape, layer and uid.
@@ -964,7 +969,7 @@ pub fn check_watched(
                         .iter()
                         .zip(&f.objects)
                         .all(|(u, &i)| *u == objects.uids[i])
-                    && dist(x.at, f.at) <= t
+                    && (x.anywhere || dist(x.at, f.at) <= t)
             });
             out.findings.push(f);
         }

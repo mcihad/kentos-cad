@@ -529,13 +529,20 @@ SCHEMA_WITH_SHX_FONTS = 184
 # Temporary number on the CAD-ADV-12 branch.
 SCHEMA_WITH_TABLE_STYLES = 185
 SCHEMA_WITH_DIMENSION_TEXT_STYLES = 186
+SCHEMA_WITH_LEADER_TEXT_STYLES = 187
+# docs/adr/1200 §2: a map project's work structure (`settings.mapWork`).
+SCHEMA_WITH_MAP_WORK = 188
+# docs/adr/1260: the topology quality profile and an exception's decision, reason, rule version and scope.
+SCHEMA_WITH_TOPOLOGY_REVIEWS = 189
+# docs/adr/1129: the standards findings the project accepts with a reason (`settings.standardExceptions`).
+SCHEMA_WITH_STANDARD_EXCEPTIONS = 190
 # docs/adr/0977: a road project's grades (cross slopes, superelevation, a culvert's fall, a pad's grade, a benched
 # ground's slope) as rise over run; an older file's are percent and are divided by 100 as they are read.
-SCHEMA_WITH_ROAD_GRADES = 187
+SCHEMA_WITH_ROAD_GRADES = 191
 # docs/adr/0979: an alignment PI's `ove`, an ove clothoid into the next PI's curve.
-SCHEMA_WITH_ROAD_OVE = 188
+SCHEMA_WITH_ROAD_OVE = 192
 def grades_from_percent(road):
-    """A road project's settings written before schema 187 (docs/adr/0977): its grades were percent, each is divided
+    """A road project's settings written before schema 191 (docs/adr/0977): its grades were percent, each is divided
     by 100 (the same IEEE division KentOS makes). Anything not shaped as expected is left for the checks to refuse."""
     if not isinstance(road, dict):
         return road
@@ -906,7 +913,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3461,6 +3468,9 @@ class _Schema:
         self.shx_fonts = version >= SCHEMA_WITH_SHX_FONTS
         self.table_style_defs = version >= SCHEMA_WITH_TABLE_STYLES
         self.dimension_text_styles = version >= SCHEMA_WITH_DIMENSION_TEXT_STYLES
+        self.leader_text_styles = version >= SCHEMA_WITH_LEADER_TEXT_STYLES
+        self.map_work = version >= SCHEMA_WITH_MAP_WORK
+        self.standard_exceptions = version >= SCHEMA_WITH_STANDARD_EXCEPTIONS
         self.long_patterns = version >= SCHEMA_WITH_LONG_PATTERNS
         self.shape_resources = version >= SCHEMA_WITH_SHAPE_RESOURCES
         self.text_engine = version >= SCHEMA_WITH_TEXT_ENGINE
@@ -3523,6 +3533,7 @@ class _Schema:
         self.profile_files = version >= SCHEMA_WITH_PROFILE_FILES
         self.source_crs = version >= SCHEMA_WITH_SOURCE_CRS
         self.exception_digests = version >= SCHEMA_WITH_EXCEPTION_DIGESTS
+        self.topology_reviews = version >= SCHEMA_WITH_TOPOLOGY_REVIEWS
         self.georef_crs = version >= SCHEMA_WITH_GEOREF_CRS
         self.lineage = version >= SCHEMA_WITH_LINEAGE
         self.layer_geometry = version >= SCHEMA_WITH_LAYER_GEOMETRY
@@ -4432,6 +4443,7 @@ class _Schema:
                 **({"profileFiles": (self.profile_files_, False)} if self.profile_files else {}),
                 **({"standardDocs": (self.standard_docs_, False)} if self.standard_docs else {}),
                 **({"reviewNotes": (self.review_notes_, False)} if self.review_notes else {}),
+                **({"standardExceptions": (self.standard_exceptions_, False)} if self.standard_exceptions else {}),
                 **({"approvedSheetTemplates": (self.approved_sheet_templates_, False)}
                    if self.approved_sheet_templates else {}),
                 **({"tableStyles": (self.table_style_defs_, False)} if self.table_style_defs else {}),
@@ -4440,8 +4452,13 @@ class _Schema:
                 **({"autoSelect": (self.bool, False)} if self.layer_geometry else {}),
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
                 **({"road": (self.road_, False)} if self.road_work else {}),
+                **({"mapWork": (self.map_work_, False)} if self.map_work else {}),
             }
         )(v)
+        # A map's work structure is a map project's (docs/adr/1200 §2).
+        if "mapWork" in s and s.get("cadWork") != "map":
+            self.path.append("mapWork")
+            self.fail("bad_value", "harita işi yalnız harita projesinin olur (cadWork map)")
         # A road's settings are a road project's (plan/road.md Y2.2).
         if "road" in s and s.get("cadWork") != "road":
             self.path.append("road")
@@ -4565,11 +4582,33 @@ class _Schema:
                 self.fail("bad_value", "istisnanın geometri özeti 16 küçük onaltılık rakam değil")
             return d
 
+        def rule_digest(x):
+            # Schema 190 (docs/adr/1260 §3): the rule's version when marked, 16 lowercase hexadecimal digits.
+            d = self.text(x)
+            if len(d) != 16 or any(c not in "0123456789abcdef" for c in d):
+                self.fail("bad_value", "istisnanın kural sürümü 16 küçük onaltılık rakam değil")
+            return d
+
+        def reason(x):
+            r = self.text(x)
+            if not r.strip():
+                self.fail("bad_value", "istisnanın gerekçe boş")
+            if len(r) > 500:
+                self.fail("bad_value", "istisnanın gerekçe 500 karakteri aşıyor")
+            return r
+
+        reviews = {"decision": (self.enum(("exception", "error")), False), "reason": (reason, False),
+                   "ruleDigest": (rule_digest, False), "scope": (self.enum(("finding", "objects")), False)}
         exception = self.fields({"at": (self.point, True), "rule": (self.text, True), "objects": (self.array(self.id16), True),
-                                 **({"digest": (digest, False)} if self.exception_digests else {})})
-        t = self.fields({"rules": (self.array(rule), False), "tolerance": (self.float, False), "exceptions": (self.array(exception), False)})(v)
+                                 **({"digest": (digest, False)} if self.exception_digests else {}),
+                                 **(reviews if self.topology_reviews else {})})
+        # Schema 190 (docs/adr/1260 §2): the quality profile.
+        profile = self.fields({"name": (self.text, True), "edition": (self.text, False), "precision": (self.float, True),
+                               "acceptance": (self.float, True)})
+        t = self.fields({"rules": (self.array(rule), False), "tolerance": (self.float, False), "exceptions": (self.array(exception), False),
+                         **({"profile": (profile, False)} if self.topology_reviews else {})})(v)
         rules, exceptions = t.get("rules", []), t.get("exceptions", [])
-        if not rules and not exceptions and "tolerance" not in t:
+        if not rules and not exceptions and "tolerance" not in t and "profile" not in t:
             self.fail("bad_value", "topoloji ayarı boş; ayarı olmayan proje alanı yazmaz")
         if "tolerance" in t and not (1e-6 <= t["tolerance"] <= 1):
             self.fail("bad_value", f"topoloji toleransı {t['tolerance']} m; 0,000001 ile 1 arasında olmalı")
@@ -4599,6 +4638,18 @@ class _Schema:
                 self.fail("bad_value", f"istisnanın kuralı “{x['rule']}” yok")
             if not x["objects"]:
                 self.fail("bad_value", "istisnanın nesnesi yok")
+        if "profile" in t:
+            p, tol = t["profile"], t.get("tolerance", 0.001)
+            if not p["name"].strip() or len(p["name"]) > 200:
+                self.fail("bad_value", "kalite profilinin adı boş ya da 200 karakterden uzun")
+            if "edition" in p and (not p["edition"].strip() or len(p["edition"]) > 50):
+                self.fail("bad_value", "kalite profilinin sürümü boş ya da 50 karakterden uzun")
+            if not (1e-9 <= p["precision"] <= 0.5):
+                self.fail("bad_value", f"kalite profilinin depolama hassasiyeti {p['precision']} m; 0,000000001 ile 0,5 arasında olmalı")
+            if tol < 2 * p["precision"]:
+                self.fail("bad_value", "topoloji toleransı depolama hassasiyetinin iki katından küçük")
+            if not (math.isfinite(p["acceptance"]) and p["acceptance"] >= p["precision"]):
+                self.fail("bad_value", "kalite profilinin kabul eşiği depolama hassasiyetinden küçük")
         return t
 
     def layer_states_(self, v):
@@ -6241,6 +6292,80 @@ class _Schema:
                 self.fail("bad_value", "profiller ve eşlemeler adlarının sırasıyla yazılır (aynı adda önce profil)")
         return lst
 
+    def map_work_(self, v):
+        """Schema 188 (docs/adr/1200 §2): a map project's work structure, never empty: its items (at most 1000, each
+        an id is-N without leading zeros and once, a kind, a name of 1–200 characters without space at its ends, a status
+        written only when it is not draft, layers written only when there are any, a layer in one item at most, a file
+        with a path not blank and its SHA-256 revision of 64 lower-case hex digits) and its derivations (at most 10 000,
+        each an id tr-N once, a source item with a file, a revision of 64 lower-case hex digits, an operation of 1–200
+        characters, 1 to 1 000 000 objects as lower-case UUIDs, an object in one derivation at most)."""
+        def numbered(t, prefix):
+            n = t[len(prefix):] if t.startswith(prefix) else ""
+            return n != "" and n[0] != "0" and len(n) <= 9 and all(c in "0123456789" for c in n)
+
+        def named(t):
+            return 0 < len(t) <= 200 and t.strip() == t
+
+        def sha(t):
+            return re.fullmatch(r"[0-9a-f]{64}", t) is not None
+
+        def uuid_ok(t):
+            return re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", t) is not None and t != "00000000-0000-0000-0000-000000000000"
+
+        file_ = self.fields({"path": (self.text, True), "revision": (self.text, True)})
+        item = self.fields({
+            "id": (self.text, True),
+            "kind": (self.enum(("campaign", "reference", "working", "design", "check", "delivery")), True),
+            "name": (self.text, True),
+            "status": (self.enum(("draft", "review", "approved")), False),
+            "layers": (self.array(self.text), False),
+            "file": (file_, False)})
+        derivation = self.fields({
+            "id": (self.text, True), "source": (self.text, True), "revision": (self.text, True),
+            "operation": (self.text, True), "uids": (self.array(self.text), True)})
+        w = self.fields({"items": (self.array(item), False), "derivations": (self.array(derivation), False)})(v)
+        items, derivations = w.get("items", []), w.get("derivations", [])
+        if not items and not derivations:
+            self.fail("bad_value", "boş harita işi yazılmaz")
+        if ("items" in w and not items) or ("derivations" in w and not derivations):
+            self.fail("bad_value", "boş liste yazılmaz")
+        if len(items) > 1000 or len(derivations) > 10_000:
+            self.fail("bad_value", "en çok 1000 iş öğesi ve 10 000 türetme olur")
+        ids, layers = {}, set()
+        for i in items:
+            if not numbered(i["id"], "is-") or i["id"] in ids:
+                self.fail("bad_value", "öğenin kimliği geçersiz ya da yinelenmiş")
+            ids[i["id"]] = i
+            if not named(i["name"]):
+                self.fail("bad_value", "öğenin adı geçersiz")
+            if i.get("status") == "draft" or ("layers" in i and not i["layers"]):
+                self.fail("bad_value", "varsayılan değer yazılmaz")
+            if len(i.get("layers", [])) > 1000:
+                self.fail("bad_value", "bir öğede en çok 1000 katman olur")
+            for layer in i.get("layers", []):
+                if layer == "" or layer in layers:
+                    self.fail("bad_value", "katman boş ya da iki öğede")
+                layers.add(layer)
+            f = i.get("file")
+            if f is not None and (f["path"].strip() == "" or f["path"].strip() != f["path"] or not sha(f["revision"])):
+                self.fail("bad_value", "öğenin dosyası geçersiz")
+        dids, objects = set(), set()
+        for d in derivations:
+            if not numbered(d["id"], "tr-") or d["id"] in dids:
+                self.fail("bad_value", "türetmenin kimliği geçersiz ya da yinelenmiş")
+            dids.add(d["id"])
+            if d["source"] not in ids or "file" not in ids[d["source"]]:
+                self.fail("bad_value", "türetmenin kaynağı dosyası olan bir öğe olmalı")
+            if not sha(d["revision"]) or not named(d["operation"]):
+                self.fail("bad_value", "türetmenin revizyonu ya da işlemi geçersiz")
+            if not 0 < len(d["uids"]) <= 1_000_000:
+                self.fail("bad_value", "türetmede 1 ile 1 000 000 arasında nesne olur")
+            for u in d["uids"]:
+                if not uuid_ok(u) or u in objects:
+                    self.fail("bad_value", "türetmenin nesnesi geçersiz ya da iki türetmede")
+                objects.add(u)
+        return w
+
     def review_notes_(self, v):
         """Schema 180 (docs/adr/1000 §2): the review notes, each its id (lowercase UUID, unique), number (1 or more,
         unique), text (not blank, no space at its edges, no control character but a line break or a tab, at most 4000
@@ -6345,6 +6470,46 @@ class _Schema:
                 self.fail("bad_value", "tablo stilinin adı yinelenmiş ya da Standart'ın")
             ids.add(t["id"]); names.add(name.lower())
         return styles
+
+    def standard_exceptions_(self, v):
+        """Schema 190 (docs/adr/1129): the accepted standards findings, never an empty list, at most 10 000: each a
+        kind, a subject and a standard (not empty), a revision, an expected and a found value, the layer, a reason (not
+        only white space, at most 500 characters), who and when (not empty, at most 200 characters, no control
+        character); the same kind, subject and layer against the same standard once."""
+        def short(t):
+            t = self.text(t)
+            if len(t) > 200 or any(unicodedata.category(c) == "Cc" for c in t):
+                self.fail("bad_value", "kabul edilmiş bulgunun alanı geçersiz")
+            return t
+
+        def filled(t):
+            t = short(t)
+            if not t.strip():
+                self.fail("bad_value", "kabul edilmiş bulgunun alanı boş")
+            return t
+
+        def reason(t):
+            t = self.text(t)
+            if not t.strip() or len(t) > 500:
+                self.fail("bad_value", "kabul edilmiş bulgunun gerekçesi boş ya da uzun")
+            return t
+
+        one = self.fields({"kind": (filled, True), "subject": (self.text, True), "layer": (self.text, False),
+                           "standard": (filled, True), "revision": (short, False), "expected": (self.text, False),
+                           "found": (self.text, False), "reason": (reason, True), "by": (filled, False),
+                           "at": (filled, False)})
+        found = self.array(one)(v)
+        if not found or len(found) > 10000:
+            self.fail("bad_value", "kabul edilmiş bulgu listesi boş ya da çok uzun")
+        seen = set()
+        for e in found:
+            if not e["subject"]:
+                self.fail("bad_value", "kabul edilmiş bulgunun konusu boş")
+            key = (e["kind"], e["subject"], e.get("layer"), e["standard"])
+            if key in seen:
+                self.fail("bad_value", "aynı bulgu aynı standart için iki kez kabul edilmiş")
+            seen.add(key)
+        return found
 
     def approved_sheet_templates_(self, v):
         """Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, 1 to 256: each its template id
@@ -9014,8 +9179,14 @@ class _Schema:
         """The project's leader styles (docs/adr/0326 §4): the note's paper height over 0 and at most 1000 mm."""
         styles = self.array(self.fields({"id": (self.text, True), "name": (self.text, True), "height": (self.float, True),
                                          "arrow": (self.enum(LEADER_ARROWS_30), False), "arrowSize": (self.leader_arrow_size, False),
-                                         "mask": (self.true_flag, False)}))(v)
+                                         "mask": (self.true_flag, False),
+                                         # Schema 187 (docs/adr/1025): the note's text style, by name.
+                                         **({"textStyle": (self.text, False)} if self.leader_text_styles else {})}))(v)
         for st in styles:
+            t = st.get("textStyle")
+            if t is not None and (not t.strip() or t.strip() != t or len(t.encode()) > 256
+                                  or any(ord(c) < 32 or 127 <= ord(c) < 160 for c in t)):
+                self.fail("bad_value", f"“{st['name']}” kılavuz stilinin yazı stili adı “{t}” geçersiz")
             if not 0 < st["height"] <= 1000:
                 self.fail("bad_value", f"“{st['name']}” kılavuz stilinin not yüksekliği {st['height']:g} mm; sıfırdan büyük, en çok 1000 olmalı")
         return styles
@@ -9857,7 +10028,7 @@ class _Schema:
             return self.fields({"id": (word, True), "x": (finite, True), "y": (finite, True),
                                 "radius": (not_negative, False), "spiralIn": (not_negative, False),
                                 "spiralOut": (not_negative, False),
-                                # Docs/adr/0979: an ove into the next PI's curve (schema 188).
+                                # Docs/adr/0979: an ove into the next PI's curve (schema 192).
                                 **({"ove": (self.bool, False)} if self.road_ove else {})})(x)
 
         equation = self.fields({"back": (finite, True), "ahead": (finite, True), "increasing": (self.bool, False)})

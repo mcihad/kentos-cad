@@ -19,7 +19,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::geometry::{drawing_font, shape};
 
-fn corners_box(c: &[Vec2]) -> Option<[f64; 4]> {
+pub(crate) fn corners_box(c: &[Vec2]) -> Option<[f64; 4]> {
     let first = c.first()?;
     let mut b = [first.x, first.y, first.x, first.y];
     for p in c {
@@ -29,7 +29,7 @@ fn corners_box(c: &[Vec2]) -> Option<[f64; 4]> {
 }
 
 /// Two closed boxes share a point.
-fn meets(a: &Bounds, b: &[f64; 4]) -> bool {
+pub(crate) fn meets(a: &Bounds, b: &[f64; 4]) -> bool {
     a.min_x <= b[2] && b[0] <= a.max_x && a.min_y <= b[3] && b[1] <= a.max_y
 }
 
@@ -37,7 +37,7 @@ fn meets(a: &Bounds, b: &[f64; 4]) -> bool {
 /// level or on none (an opening on its wall's, a tag on its object's: Kat görünümü's rule), its category and phase not
 /// left out by its linked view's recipe; when that recipe crops (docs/adr/0781 §2), its box also meets the view's
 /// area's. The map frame's box test is the caller's.
-fn drawn_by<'a>(
+pub(crate) fn drawn_by<'a>(
     doc: &'a Document,
     sheet: &str,
     item: &str,
@@ -368,7 +368,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
 /// Which of `named` a model table's rows or fields come from (docs/adr/1090 §6), by persistent id, in their order: a
 /// coordinate, area or attribute table of it, a block schedule counting its insert (every block's without names), a
 /// schedule listing it among its rows' members, a cell field reading it.
-fn reads_of(doc: &Document, table: &Entity, named: &[(usize, Slot, &Entity, &String)]) -> Vec<String> {
+pub(crate) fn reads_of(doc: &Document, table: &Entity, named: &[(usize, Slot, &Entity, &String)]) -> Vec<String> {
     let Entity::Table(t) = table else {
         return Vec::new();
     };

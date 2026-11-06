@@ -190,6 +190,7 @@ fn edited(seed: u64, steps: usize) {
         rule: "r1".into(),
         objects: o.objects.iter().map(|&i| d.uids[i].clone()).collect(),
         at: o.at,
+        anywhere: false,
     }];
     let mut last = check(&d.objects(), &rules, T, &exceptions);
     let mut last_uids = d.uids.clone();

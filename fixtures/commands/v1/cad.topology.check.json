@@ -222,7 +222,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -243,7 +244,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -262,7 +264,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -313,7 +316,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -334,7 +338,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -353,7 +358,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -406,7 +412,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 1,
@@ -461,7 +468,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -482,7 +490,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 2,
@@ -560,7 +569,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -660,7 +670,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -681,7 +692,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -700,7 +712,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -768,7 +781,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -789,7 +803,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -808,7 +823,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -921,7 +937,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": true
+         "exception": true,
+         "state": "exception"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -942,7 +959,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -961,7 +979,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -1213,7 +1232,8 @@
           "subtractSecond"
          ],
          "exception": false,
-         "lapsed": true
+         "lapsed": true,
+         "state": "lapsed"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -1234,7 +1254,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -1253,7 +1274,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -1511,7 +1533,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -1532,7 +1555,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -1551,7 +1575,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 3,
@@ -2021,7 +2046,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "379743b5e121f212",
@@ -2040,7 +2066,8 @@
          "fixes": [
           "removeVertex"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 2,
@@ -2124,7 +2151,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         },
         {
          "key": "124d6ce65d642cf7",
@@ -2145,7 +2173,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 2,
@@ -2224,7 +2253,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 1,
@@ -2366,7 +2396,8 @@
           "subtractFirst",
           "subtractSecond"
          ],
-         "exception": false
+         "exception": false,
+         "state": "open"
         }
        ],
        "total": 1,

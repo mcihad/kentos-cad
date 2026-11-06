@@ -1856,6 +1856,18 @@ impl Labels<'_> {
                                 .as_deref()
                                 .or(self.layer_color(layer))),
                         );
+                        // In its face's SHX text style (docs/adr/1026), as a text is.
+                        if let Some(w) = kentos_native_application::shx_text::words_in(
+                            self.doc.settings(),
+                            &t.face,
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *rotation,
+                            height,
+                            words,
+                        ) && self.shx_text(frame, slot, &w, color)
+                        {
+                            continue;
+                        }
                         self.draw(
                             frame,
                             &Piece {
@@ -1892,6 +1904,21 @@ impl Labels<'_> {
                         let Some(note) = l.text.as_deref() else {
                             continue;
                         };
+                        // In its leader style's SHX text style (docs/adr/1025).
+                        if let Some(mut t) = kentos_native_application::shx_text::leader_note(
+                            self.doc.settings(),
+                            l.leader_style.as_deref(),
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *rotation,
+                            l.height,
+                            note,
+                        ) {
+                            t.mask = *mask > 0.0;
+                            let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                            if self.shx_text(frame, slot, &t, ink) {
+                                continue;
+                            }
+                        }
                         let (font, lean) = face_font(&Default::default(), self.font, true, None);
                         self.draw(
                             frame,

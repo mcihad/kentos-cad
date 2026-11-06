@@ -6,7 +6,7 @@
 //! themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=standart-bulgular,standart-uygulandi,standart-serit,standart-blok cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=standart-bulgular,standart-uygulandi,standart-serit,standart-blok,standart-istisna cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -104,6 +104,25 @@ fn findings(app: &mut App) {
     ));
 }
 
+/// docs/adr/1129: the first finding accepted with its reason (Kabul edildi in its row and its message), the second
+/// chosen with a reason typed, Gerekçeyle kabul et ready.
+fn accepted(app: &mut App) {
+    use crate::drawing_standard::Event as E;
+    drawn(app);
+    run(app, "standards.check");
+    let _ = app.update(Message::DrawingStandard(E::Pick(0)));
+    let _ = app.update(Message::DrawingStandard(E::Reason("Müşteri duvarların kırmızı basılmasını istedi.".into())));
+    let _ = app.update(Message::DrawingStandard(E::Accept));
+    let _ = app.update(Message::DrawingStandard(E::Pick(0)));
+}
+
+fn reasoning(app: &mut App) {
+    use crate::drawing_standard::Event as E;
+    accepted(app);
+    let _ = app.update(Message::DrawingStandard(E::Pick(1)));
+    let _ = app.update(Message::DrawingStandard(E::Reason("Kurumun eski paftalarıyla aynı kalsın.".into())));
+}
+
 /// After Uygula: the standard's layers in Katmanlar, what is left (the furniture's name, the dotted axis, the
 /// wall's own colour) said.
 fn applied(app: &mut App) {
@@ -173,5 +192,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("standart-uygulandi", applied),
         ("standart-serit", ribbon),
         ("standart-blok", block),
+        ("standart-istisna", accepted),
+        ("standart-istisna-gerekce", reasoning),
     ]
 }

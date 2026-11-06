@@ -8,6 +8,9 @@
 //! - **Ayrıntı geçişi:** a zoom of one part in ten million across the curves' band boundary (`lod::build_band`) and
 //!   across the styled layers' quarter-octave step (`quarter_scale`), against the same zoom inside one band: what
 //!   changes beyond the control is a jump.
+//! - **Yakınlaştırırken:** two wheel ticks while the view moves (in, out, out with a wider picture kept, and a long
+//!   zoom in then out) scale the last sharp picture (docs/adr/1068); settled, the frame must be the same pixels as the
+//!   same frames drawn whole without the scaling.
 //! - **Kenet:** endpoint and nearest snaps at points on the source geometry (a circle, an arc, a long polyline's
 //!   vertex, a line's end), with the same 10 px tolerance in each view: the hit must be the same number to the bit, and
 //!   a circle's nearest point on its true radius, not on a chord.
@@ -218,6 +221,153 @@ fn stability() {
         println!("kaydırma {row}");
         out.push(row);
     }
+    // A pan's moved picture (docs/adr/1067). Today's frame: the view panned by whole pixels without moving, drawn
+    // whole (`today`). The same pan while moving: the kept picture moved and the strips drawn (`moved`), against the
+    // same view drawn whole while moving (`whole`: the styled parts built again, so nothing is held to move); then the
+    // view settled, drawn whole again (`settled`), against today's. The same views before each (the grid's part and
+    // the labels' placing follow where the view has been).
+    for (name, c, s) in views {
+        let target = [c[0] - dx as f64 / s, c[1] + dy as f64 / s];
+        shot(&mut app, &mut h, c, s);
+        let today = shot(&mut app, &mut h, target, s);
+        shot(&mut app, &mut h, c, s);
+        app.viewport.hold_moving(true);
+        app.viewport.camera.center.x = target[0];
+        app.viewport.camera.center.y = target[1];
+        h.frame(&mut app, &[]);
+        let was_moved = app.viewport.status().stats.picture_moved;
+        let moved = shot(&mut app, &mut h, target, s);
+        app.viewport.hold_moving(false);
+        h.frame(&mut app, &[]);
+        let stats = app.viewport.status().stats;
+        let settled_whole = !stats.picture_kept && !stats.picture_moved;
+        let settled = shot(&mut app, &mut h, target, s);
+        // The moved picture against the view drawn whole while moving: the parts built again, the same view.
+        shot(&mut app, &mut h, c, s);
+        app.viewport.hold_moving(true);
+        shot(&mut app, &mut h, target, s);
+        app.styles.block_proxy = false;
+        h.frame(&mut app, &[]);
+        app.styles.block_proxy = true;
+        let whole = shot(&mut app, &mut h, target, s);
+        app.viewport.hold_moving(false);
+        shot(&mut app, &mut h, target, s);
+        keep(&format!("kaydirirken-{}", name.split(' ').next().unwrap_or(name)), &moved, &whole, 0, 0);
+        keep(&format!("durunca-{}", name.split(' ').next().unwrap_or(name)), &settled, &today, 0, 0);
+        let row = json!({
+            "view": name, "pxPerM": s, "pictureMoved": was_moved, "settledDrawnWhole": settled_whole,
+            "movedAgainstWhole": compare(&moved, &whole, r, 0, 0),
+            "settledAgainstToday": compare(&settled, &today, r, 0, 0),
+        });
+        println!("kaydırırken {row}");
+        out.push(row);
+    }
+    // A zoom's scaled picture (docs/adr/1068). Today's frame: the view zoomed tick by tick without moving, drawn whole
+    // (`today`).
+    // The same zoom while the wheel turns: the last sharp picture scaled (`zoomed`, after one tick and after two, the
+    // second from the same sharp picture), then the view settled and drawn whole again (`settled`), against today's.
+    for (name, c, s) in views {
+        // In, out, and out after a view twice as far was drawn (the wide picture fills the ring, docs/adr/1068 §2).
+        for (tick, factor, wider) in [("içeri", 1.25, None), ("dışarı", 0.8, None), ("geniş", 0.8, Some(0.5))] {
+            let first = s * factor;
+            let second = first * factor;
+            let before = |app: &mut App, h: &mut Harness| {
+                match wider {
+                    Some(w) => {
+                        shot(app, h, c, s * w);
+                    }
+                    // No wider picture kept: a frame of another drawing (the grid hidden) replaces it, and the view
+                    // drawn again at `s` is the only one.
+                    None => {
+                        app.viewport.grid_shown = false;
+                        shot(app, h, c, s);
+                        app.viewport.grid_shown = true;
+                    }
+                }
+                shot(app, h, c, s);
+            };
+            // Today's frame through the same views (the labels' placing follows where the view has been).
+            before(&mut app, &mut h);
+            shot(&mut app, &mut h, c, first);
+            let today = shot(&mut app, &mut h, c, second);
+            before(&mut app, &mut h);
+            app.viewport.hold_moving(true);
+            app.viewport.camera.scale = first;
+            h.frame(&mut app, &[]);
+            let once = app.viewport.status().stats.picture_zoomed;
+            app.viewport.camera.scale = second;
+            h.frame(&mut app, &[]);
+            let twice = app.viewport.status().stats.picture_zoomed;
+            let from_wide = app.viewport.status().stats.picture_zoomed_wide;
+            let zoomed = h.picture(&mut app);
+            app.viewport.hold_moving(false);
+            h.frame(&mut app, &[]);
+            let stats = app.viewport.status().stats;
+            let settled_whole = !stats.picture_kept && !stats.picture_moved && !stats.picture_zoomed;
+            let settled = shot(&mut app, &mut h, c, second);
+            // The control: the same frames, every zoom frame drawn whole.
+            crate::viewport::Viewport::set_zoom_scaled(false);
+            before(&mut app, &mut h);
+            app.viewport.hold_moving(true);
+            for scale in [first, second] {
+                app.viewport.camera.scale = scale;
+                h.frame(&mut app, &[]);
+            }
+            let unscaled = app.viewport.status().stats.picture_zoomed;
+            app.viewport.hold_moving(false);
+            h.frame(&mut app, &[]);
+            let control = shot(&mut app, &mut h, c, second);
+            crate::viewport::Viewport::set_zoom_scaled(true);
+            let tag = format!("yakinlastirirken-{tick}-{}", name.split(' ').next().unwrap_or(name));
+            keep(&tag, &zoomed, &today, 0, 0);
+            keep(&format!("{tag}-durunca"), &settled, &today, 0, 0);
+            let row = json!({
+                "view": name, "zoom": tick, "pxPerM": second, "zoomedOnce": once, "zoomedTwice": twice,
+                "settledDrawnWhole": settled_whole,
+                "zoomedAgainstToday": compare(&zoomed, &today, r, 0, 0),
+                "settledAgainstToday": compare(&settled, &today, r, 0, 0),
+                "controlZoomed": unscaled, "ringFromWide": from_wide,
+                "settledAgainstControl": compare(&settled, &control, r, 0, 0),
+            });
+            println!("yakınlaştırırken {row}");
+            out.push(row);
+        }
+    }
+    // A long zoom in, past four times (a whole frame on the way), settled, then a zoom out: the ring comes from the
+    // source the zoom in left behind, one step farther (docs/adr/1068 §2).
+    for (name, c, s) in views {
+        let gesture = |app: &mut App, h: &mut Harness| {
+            shot(app, h, c, s);
+            app.viewport.hold_moving(true);
+            // Past four times at 4.1 (drawn whole, the new source) and past eight at 10.5: the first picture no longer
+            // covers it, the one left behind at 4.1 does.
+            for k in [1.6, 2.56, 4.1, 6.5, 10.5] {
+                app.viewport.camera.scale = s * k;
+                h.frame(app, &[]);
+            }
+            app.viewport.hold_moving(false);
+            shot(app, h, c, s * 10.5);
+            app.viewport.hold_moving(true);
+            for k in [8.4, 6.7] {
+                app.viewport.camera.scale = s * k;
+                h.frame(app, &[]);
+            }
+            let stats = app.viewport.status().stats;
+            app.viewport.hold_moving(false);
+            h.frame(app, &[]);
+            (stats.picture_zoomed, stats.picture_zoomed_wide, shot(app, h, c, s * 6.7))
+        };
+        let (zoomed, from_wide, settled) = gesture(&mut app, &mut h);
+        crate::viewport::Viewport::set_zoom_scaled(false);
+        let (_, _, control) = gesture(&mut app, &mut h);
+        crate::viewport::Viewport::set_zoom_scaled(true);
+        let row = json!({
+            "view": name, "zoom": "uzun", "pxPerM": s * 6.7, "longZoomed": zoomed, "ringFromWide": from_wide,
+            "longSettledAgainstControl": compare(&settled, &control, r, 0, 0),
+        });
+        println!("yakınlaştırırken {row}");
+        out.push(row);
+    }
     // Detail steps: across the curves' band and the styled quarter octave near 1:200, against a step inside one.
     let tol = RenderSettings::new(kentos_render_wgpu::Rgba8([0, 0, 0, 255])).curve_tolerance_px;
     let near = 1.0 / (200.0 * 0.000_264_58);
@@ -400,6 +550,33 @@ fn stability() {
             if row["pxPerM"].as_f64().is_some_and(|s| s >= 1.0) {
                 assert_eq!(row["onAgainstOff"]["visible"], 0, "near, the blocks draw as before: {row}");
             }
+            continue;
+        }
+        // A pan's moved picture (docs/adr/1067): the frame did move the kept picture; nothing visibly apart from the
+        // view drawn whole; settled, the view is drawn whole again, pixel for pixel as drawn whole from elsewhere.
+        if row.get("movedAgainstWhole").is_some() {
+            assert_eq!(row["pictureMoved"], true, "a pan by whole pixels moves the picture: {row}");
+            assert_eq!(row["movedAgainstWhole"]["visible"], 0, "the moved picture shows the view: {row}");
+            assert_eq!(row["settledDrawnWhole"], true, "settled, the view is drawn whole: {row}");
+            assert_eq!(row["settledAgainstToday"]["different"], 0, "settled, the frame is today's: {row}");
+            continue;
+        }
+        // A zoom's scaled picture (docs/adr/1068): both ticks scaled the sharp picture; settled, the view is drawn
+        // whole again, pixel for pixel as drawn whole from elsewhere. How far the scaled picture is from the view
+        // drawn whole is reported: it is a stretched picture until the wheel stops.
+        if row.get("zoomedAgainstToday").is_some() {
+            assert_eq!(row["zoomedOnce"], true, "a wheel tick scales the picture: {row}");
+            assert_eq!(row["zoomedTwice"], true, "a second tick scales the same sharp picture: {row}");
+            assert_eq!(row["settledDrawnWhole"], true, "settled, the view is drawn whole: {row}");
+            assert_eq!(row["controlZoomed"], false, "the control draws every zoom frame whole: {row}");
+            assert_eq!(row["ringFromWide"], row["zoom"] == "geniş", "the ring from the wide picture after one: {row}");
+            assert_eq!(row["settledAgainstControl"]["different"], 0, "settled, the frame is the one drawn whole: {row}");
+            continue;
+        }
+        if row.get("longSettledAgainstControl").is_some() {
+            assert_eq!(row["longZoomed"], true, "the zoom out scales the picture: {row}");
+            assert_eq!(row["ringFromWide"], true, "its ring comes from the source left behind: {row}");
+            assert_eq!(row["longSettledAgainstControl"]["different"], 0, "settled, the frame is the one drawn whole: {row}");
             continue;
         }
         if row["shortcut"] == "çizgi düzeyleri" {

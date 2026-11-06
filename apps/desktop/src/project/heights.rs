@@ -7,7 +7,8 @@
 use iced::widget::{Column, column, container};
 use iced::{Element, Fill};
 use kentos_commands::{
-    CrsTransformed, GeoidModel, HeightKind, HeightReference, StepKind, VERTICAL_SYSTEMS,
+    ChainSide, ChainStatus, CrsChain, CrsFamily, CrsTransformed, EpochSource, GeoidModel, GridKind,
+    HeightKind, HeightReference, StepKind, VERTICAL_SYSTEMS,
 };
 use kentos_ui::theme::typography;
 use kentos_ui::widget::Banner;
@@ -210,6 +211,7 @@ fn record<'a>(answer: &CrsTransformed) -> Element<'a, Message> {
             ]
             .spacing(4),
         );
+    c = c.push(chain(&answer.chain));
     c = c.push(group(
         "Ayrı tutulan sayılar",
         Column::new()
@@ -236,6 +238,117 @@ fn record<'a>(answer: &CrsTransformed) -> Element<'a, Message> {
             )),
     ));
     c.into()
+}
+
+/// A side of the chain in one line: “TUREF / TM30 (EPSG:5254) · TM · doğu, kuzey (m) · Antalya height · epok 2005
+/// (proje)” (docs/adr/1230 §1).
+pub fn side_line(s: &ChainSide) -> String {
+    let family = match s.family {
+        CrsFamily::Geographic => "coğrafi",
+        CrsFamily::TransverseMercator => "TM",
+        CrsFamily::PseudoMercator => "Pseudo-Mercator",
+        CrsFamily::Local => "yerel düzlem",
+    };
+    let axes = if s.unit == "deg" {
+        "boylam, enlem (°)"
+    } else {
+        "doğu, kuzey (m)"
+    };
+    let mut t = match s.srid {
+        Some(code) => format!("{} (EPSG:{code})", s.name),
+        None => format!("{} (özel sistem)", s.name),
+    };
+    t.push_str(&format!(" · {family}, {} · {axes}", s.datum));
+    if let Some(a) = s.ensemble_accuracy {
+        t.push_str(&format!(" · datum topluluğu ±{a} m"));
+    }
+    t.push_str(" · ");
+    t.push_str(
+        &s.vertical
+            .as_ref()
+            .map_or_else(|| "kot söylenmemiş".to_owned(), |v| v.name.clone()),
+    );
+    match (s.epoch, s.epoch_source) {
+        (Some(e), EpochSource::Project) => t.push_str(&format!(" · epok {e} (proje)")),
+        (Some(e), EpochSource::Carried) => t.push_str(&format!(" · epok {e} (kaynaktan)")),
+        (Some(e), _) => t.push_str(&format!(" · epok {e}")),
+        (None, _) => t.push_str(" · epok söylenmemiş"),
+    }
+    t
+}
+
+/// The chain: whether it is complete and why not, the two sides, the grids and the engine's budget.
+fn chain<'a>(c: &CrsChain) -> Element<'a, Message> {
+    let verdict = match c.status {
+        ChainStatus::Complete => Banner::info(
+            "Zincir tam: her adımın doğruluğu söyleniyor, epoklar yerleşik, bütün noktalar kapsamda.",
+        ),
+        ChainStatus::Limited => Banner::warning(format!(
+            "Zincir sınırlı, hassas dönüşüm sayılmaz: {}.",
+            c.reasons
+                .iter()
+                .map(|r| kentos_native_application::crs_transform::reason_text(r))
+                .collect::<Vec<_>>()
+                .join("; ")
+        )),
+    };
+    let grids = if c.grids.is_empty() {
+        "—".to_owned()
+    } else {
+        c.grids
+            .iter()
+            .map(|g| {
+                let kind = match g.kind {
+                    GridKind::Horizontal => "datum",
+                    GridKind::Geoid => "geoit",
+                    GridKind::Velocity => "hız",
+                };
+                let e = &g.extent;
+                format!(
+                    "{} ({kind}, {}…) {}°–{}° D, {}°–{}° K",
+                    g.name,
+                    &g.sha256[..g.sha256.len().min(12)],
+                    e.west,
+                    e.east,
+                    e.south,
+                    e.north
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    group(
+        "Koordinat zinciri",
+        Column::new()
+            .spacing(6)
+            .push(verdict)
+            .push(setting(
+                "Kaynak",
+                None,
+                label::caption(side_line(&c.source)).width(Fill),
+            ))
+            .push(setting(
+                "Hedef",
+                None,
+                label::caption(side_line(&c.target)).width(Fill),
+            ))
+            .push(setting(
+                "Izgaralar",
+                Some("Adı, SHA-256'sı ve düğümlerinin kapsadığı kutu; dışındaki noktanın değeri yoktur."),
+                label::caption(grids).width(Fill),
+            ))
+            .push(setting(
+                "Sayısal bütçe",
+                Some("Motorun PROJ'a göre en büyük farkı; doğruluk değil."),
+                label::body(format!(
+                    "{:e} {} yatay, {:e} m kot",
+                    c.budget.horizontal,
+                    if c.target.unit == "deg" { "°" } else { "m" },
+                    c.budget.vertical
+                )),
+            )),
+    )
+    .into()
 }
 
 /// The section; `second`: the answer of the way to the second system, none without one.
@@ -554,6 +667,14 @@ mod tests {
                     Edit::Vertical(Some(5775)),
                 ],
             ),
+            // The record scrolled to its end: the coordinate chain (docs/adr/1230 §6).
+            (
+                "zincir",
+                vec![
+                    Edit::Kind(Some(HeightKind::Orthometric)),
+                    Edit::Vertical(Some(5775)),
+                ],
+            ),
         ];
         for (theme, w, h) in [
             ("light", 1440.0, 900.0),
@@ -583,6 +704,17 @@ mod tests {
                     let _ = app.update(message);
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
+                if *name == "zincir" {
+                    let at = iced::Point::new(w * 0.55, h * 0.6);
+                    let events = [
+                        iced::Event::Mouse(iced::mouse::Event::CursorMoved { position: at }),
+                        iced::Event::Mouse(iced::mouse::Event::WheelScrolled {
+                            delta: iced::mouse::ScrollDelta::Lines { x: 0.0, y: -200.0 },
+                        }),
+                    ];
+                    snapshot.step(&mut app, App::view, &mut update, &events);
+                    snapshot.settle(&mut app, App::view, &mut update);
+                }
                 let file = out.join(format!("kotlar-epok-{name}-{w}x{h}-{theme}.png"));
                 snapshot
                     .render(app.view(), &app.theme())

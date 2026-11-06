@@ -127,6 +127,20 @@ AccessSourceName = Literal["owner", "grant", "policy"]
 """The names of :class:`AccessSource`, for a plain string."""
 
 
+class AccuracyBasis(_StrEnum):
+    """What a step's accuracy rests on (docs/adr/1230 §2): exact (a conversion, a unit change), EPSG's registry, the
+    project's own statement (its Helmert or grid), or nothing (a geoid model, a velocity grid).
+    """
+    EXACT = "exact"
+    EPSG = "epsg"
+    PROJECT = "project"
+    UNKNOWN = "unknown"
+
+
+AccuracyBasisName = Literal["exact", "epsg", "project", "unknown"]
+"""The names of :class:`AccuracyBasis`, for a plain string."""
+
+
 class ActionKind(_StrEnum):
     """What a form action does (docs/adr/0442 §5).
 
@@ -1060,6 +1074,18 @@ CaseworkSideName = Literal["left", "right"]
 """The names of :class:`CaseworkSide`, for a plain string."""
 
 
+class ChainStatus(_StrEnum):
+    """Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights
+    carried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.
+    """
+    COMPLETE = "complete"
+    LIMITED = "limited"
+
+
+ChainStatusName = Literal["complete", "limited"]
+"""The names of :class:`ChainStatus`, for a plain string."""
+
+
 class CheckMoment(_StrEnum):
     """When a check is asked (docs/adr/0438 §2).
 
@@ -1431,6 +1457,25 @@ class CrossingSide(_StrEnum):
 
 CrossingSideName = Literal["above", "below"]
 """The names of :class:`CrossingSide`, for a plain string."""
+
+
+class CrsFamily(_StrEnum):
+    """The families of horizontal systems KentOS's engine resolves (docs/adr/1230 §1). A system outside them, or an EPSG
+    code the registry does not hold, is refused by name: a stored code is not assumed resolvable.
+
+    - ``geographic``: Latitude and longitude on a datum's ellipsoid.
+    - ``transverseMercator``: A transverse Mercator grid: the TM3 zones, UTM, or the project's own.
+    - ``pseudoMercator``: WGS 84 / Pseudo-Mercator (EPSG:3857).
+    - ``local``: A local system bound to a base system by a plane transform (the project's definition).
+    """
+    GEOGRAPHIC = "geographic"
+    TRANSVERSE_MERCATOR = "transverseMercator"
+    PSEUDO_MERCATOR = "pseudoMercator"
+    LOCAL = "local"
+
+
+CrsFamilyName = Literal["geographic", "transverseMercator", "pseudoMercator", "local"]
+"""The names of :class:`CrsFamily`, for a plain string."""
 
 
 class CrsSource(_StrEnum):
@@ -2138,6 +2183,20 @@ EmptyResultName = Literal["keep", "clear"]
 """The names of :class:`EmptyResult`, for a plain string."""
 
 
+class EpochSource(_StrEnum):
+    """Where a side's coordinate epoch came from: the call, the project's settings, the other side (the target takes
+    the source's when it states none), or nowhere.
+    """
+    GIVEN = "given"
+    PROJECT = "project"
+    CARRIED = "carried"
+    NONE = "none"
+
+
+EpochSourceName = Literal["given", "project", "carried", "none"]
+"""The names of :class:`EpochSource`, for a plain string."""
+
+
 class EventLinkKind(_StrEnum):
     """What an event object is: a point at a measure, or a line between two.
 
@@ -2583,6 +2642,17 @@ class GridBubbles(_StrEnum):
 
 GridBubblesName = Literal["both", "start", "end", "none"]
 """The names of :class:`GridBubbles`, for a plain string."""
+
+
+class GridKind(_StrEnum):
+    """What a grid of the chain does: an NTv2 datum shift, a geoid model, a velocity grid."""
+    HORIZONTAL = "horizontal"
+    GEOID = "geoid"
+    VELOCITY = "velocity"
+
+
+GridKindName = Literal["horizontal", "geoid", "velocity"]
+"""The names of :class:`GridKind`, for a plain string."""
 
 
 class GridOrigin(_StrEnum):
@@ -6810,6 +6880,20 @@ StakeoutSendFormatName = Literal["landxml", "gsi16", "gsi8", "gts7", "jobxml", "
 """The names of :class:`StakeoutSendFormat`, for a plain string."""
 
 
+class StandardExceptionOperation(_StrEnum):
+    """What `cad.standards.exceptions` does.
+
+    - ``accept``: The findings are kept on purpose, with `reason`.
+    - ``withdraw``: Their acceptance is taken away: they are open again.
+    """
+    ACCEPT = "accept"
+    WITHDRAW = "withdraw"
+
+
+StandardExceptionOperationName = Literal["accept", "withdraw"]
+"""The names of :class:`StandardExceptionOperation`, for a plain string."""
+
+
 class StandardInstallAction(_StrEnum):
     """What happens to one resource: added when the drawing lacks it, the drawing's replaced in place (its name and
     local id kept, so what names it follows), the drawing's kept, or the standard's added under another name.
@@ -6896,6 +6980,22 @@ class StandardIssueKind(_StrEnum):
 
 StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "missingTableStyleDefinition", "tableStyleDefinition", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
+
+
+class StandardIssueState(_StrEnum):
+    """Whether a finding is the project's to look at (docs/adr/1129 §2).
+
+    - ``open``: Not accepted (the field is then absent).
+    - ``accepted``: Accepted with a reason, against this standard's revision and with what the drawing has now.
+    - ``lapsed``: Accepted once, but the standard's revision or what the drawing has changed since: to be looked at again.
+    """
+    OPEN = "open"
+    ACCEPTED = "accepted"
+    LAPSED = "lapsed"
+
+
+StandardIssueStateName = Literal["open", "accepted", "lapsed"]
+"""The names of :class:`StandardIssueState`, for a plain string."""
 
 
 class StandardResourceKind(_StrEnum):
@@ -7367,18 +7467,52 @@ ToleranceKindName = Literal["symmetric", "deviation", "limits"]
 """The names of :class:`ToleranceKind`, for a plain string."""
 
 
+class TopologyDecision(_StrEnum):
+    """A review's decision on a finding (docs/adr/1260 §1).
+
+    - ``exception``: İstisna: left on purpose.
+    - ``error``: Hata: confirmed, to be put right.
+    """
+    EXCEPTION = "exception"
+    ERROR = "error"
+
+
+TopologyDecisionName = Literal["exception", "error"]
+"""The names of :class:`TopologyDecision`, for a plain string."""
+
+
 class TopologyExceptionOperation(_StrEnum):
     """What `cad.topology.exceptions` does to the findings it names.
 
     - ``mark``: İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is
-    - ``unmark``: İstisnayı kaldır.
+    - ``unmark``: İstisnayı ya da hata işaretini kaldır: the finding is not reviewed again.
+    - ``error``: Hata olarak işaretle (docs/adr/1260 §1): reviewed and confirmed, to be put right; bound like an exception.
     """
     MARK = "mark"
     UNMARK = "unmark"
+    ERROR = "error"
 
 
-TopologyExceptionOperationName = Literal["mark", "unmark"]
+TopologyExceptionOperationName = Literal["mark", "unmark", "error"]
 """The names of :class:`TopologyExceptionOperation`, for a plain string."""
+
+
+class TopologyFindingState(_StrEnum):
+    """A finding's place in its life cycle (docs/adr/1260 §1).
+
+    - ``open``: Değerlendirilmedi: no review names it.
+    - ``error``: Hata: reviewed and confirmed, to be put right.
+    - ``exception``: İstisna: reviewed and left on purpose.
+    - ``lapsed``: Yeniden değerlendir: a review named it, but its objects' geometry or its rule changed since.
+    """
+    OPEN = "open"
+    ERROR = "error"
+    EXCEPTION = "exception"
+    LAPSED = "lapsed"
+
+
+TopologyFindingStateName = Literal["open", "error", "exception", "lapsed"]
+"""The names of :class:`TopologyFindingState`, for a plain string."""
 
 
 class TopologyRuleKind(_StrEnum):
@@ -7415,6 +7549,20 @@ class TopologyRuleKind(_StrEnum):
 
 TopologyRuleKindName = Literal["mustNotOverlap", "mustNotHaveGaps", "mustNotHaveSlivers", "mustNotHaveDuplicates", "mustNotHaveDangles", "mustNotHaveShortEdges", "mustNotHaveSmallAngles", "mustBeValid", "mustNotHaveMissingVertices", "mustNotOverlapWith", "mustBeCoveredBy", "boundaryMustBeCoveredBy", "mustBeOnEndOf"]
 """The names of :class:`TopologyRuleKind`, for a plain string."""
+
+
+class TopologyScope(_StrEnum):
+    """What an exception covers (docs/adr/1260 §1).
+
+    - ``finding``: The finding at its place (within the tolerance).
+    - ``objects``: Every finding of the rule between the same objects in the same order.
+    """
+    FINDING = "finding"
+    OBJECTS = "objects"
+
+
+TopologyScopeName = Literal["finding", "objects"]
+"""The names of :class:`TopologyScope`, for a plain string."""
 
 
 class TraverseShape(_StrEnum):
@@ -7825,6 +7973,88 @@ class WideningMethod(_StrEnum):
 
 WideningMethodName = Literal["standard", "simple"]
 """The names of :class:`WideningMethod`, for a plain string."""
+
+
+class WorkFileState(_StrEnum):
+    """How an item's file stands: there (looked for only), the same content as its revision, other content, not there."""
+    FOUND = "found"
+    CURRENT = "current"
+    CHANGED = "changed"
+    MISSING = "missing"
+
+
+WorkFileStateName = Literal["found", "current", "changed", "missing"]
+"""The names of :class:`WorkFileState`, for a plain string."""
+
+
+class WorkKind(_StrEnum):
+    """What an item is in the map's work.
+
+    - ``campaign``: A survey campaign: GNSS, total station or scan data gathered in the field.
+    - ``reference``: A reference source taken as it is: an orthophoto, a CAD reference, a base map.
+    - ``working``: The working data drawn and edited in the project.
+    - ``design``: A design: a surface, a plan, an infrastructure layout.
+    - ``check``: The results of a check (topology, quality, preflight).
+    - ``delivery``: A delivery package.
+    """
+    CAMPAIGN = "campaign"
+    REFERENCE = "reference"
+    WORKING = "working"
+    DESIGN = "design"
+    CHECK = "check"
+    DELIVERY = "delivery"
+
+
+WorkKindName = Literal["campaign", "reference", "working", "design", "check", "delivery"]
+"""The names of :class:`WorkKind`, for a plain string."""
+
+
+class WorkObjectRole(_StrEnum):
+    """What an object is in the map's work.
+
+    - ``source``: Source data: on a campaign's or a reference's layer, not derived.
+    - ``derived``: Made from a source item: a derivation names it.
+    - ``free``: The user's own drawing.
+    """
+    SOURCE = "source"
+    DERIVED = "derived"
+    FREE = "free"
+
+
+WorkObjectRoleName = Literal["source", "derived", "free"]
+"""The names of :class:`WorkObjectRole`, for a plain string."""
+
+
+class WorkState(_StrEnum):
+    """How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it
+    (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A
+    derivation: up to date, out of date (its source moved on), some of its objects gone.
+    """
+    CURRENT = "current"
+    MISSING = "missing"
+    CHANGED = "changed"
+    INCOMPLETE = "incomplete"
+    STALE = "stale"
+
+
+WorkStateName = Literal["current", "missing", "changed", "incomplete", "stale"]
+"""The names of :class:`WorkState`, for a plain string."""
+
+
+class WorkStatus(_StrEnum):
+    """Where an item's work stands, as the office records it.
+
+    - ``draft``: Taslak.
+    - ``review``: Denetlenecek: handed over to be checked.
+    - ``approved``: Onaylı teslim revizyonu: the office approved it for delivery; not an institution's approval.
+    """
+    DRAFT = "draft"
+    REVIEW = "review"
+    APPROVED = "approved"
+
+
+WorkStatusName = Literal["draft", "review", "approved"]
+"""The names of :class:`WorkStatus`, for a plain string."""
 
 
 class Workspace(_StrEnum):
@@ -9521,6 +9751,32 @@ class LengthenChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> LengthenChange:
         return _variant(_LENGTHEN_CHANGE, "LengthenChange", "kind", data).from_json(data)
+
+
+class MapWorkOperation(_Union):
+    """What `map.work.edit` does.
+
+    One of:
+
+    - :class:`AddMapWorkOperation` (``op: add``)
+    - :class:`SetMapWorkOperation` (``op: set``)
+    - :class:`RemoveMapWorkOperation` (``op: remove``)
+    - :class:`RelinkMapWorkOperation` (``op: relink``)
+    - :class:`RefreshMapWorkOperation` (``op: refresh``)
+    - :class:`DeriveMapWorkOperation` (``op: derive``)
+    - :class:`ForgetMapWorkOperation` (``op: forget``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "op"
+
+    @property
+    def op(self) -> str:
+        """The name of the variant (``op`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkOperation:
+        return _variant(_MAP_WORK_OPERATION, "MapWorkOperation", "op", data).from_json(data)
 
 
 class MaterialTarget(_Union):
@@ -13060,7 +13316,7 @@ class AlignmentPi(_Model):
         x: Unit: m.
         y: Unit: m.
         ove: The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
-            schema 188): both curves turn the same way, of different radii, with no clothoid on the side they share.
+            schema 192): both curves turn the same way, of different radii, with no clothoid on the side they share.
         radius: The curve's radius; absent or 0: no curve (a kink). Unit: m.
         spiral_in: The entry clothoid's length; absent or 0: none. Unit: m.
         spiral_out: The exit clothoid's length; absent or 0: none. Unit: m.
@@ -19361,6 +19617,140 @@ class CellStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ChainGrid(_Model):
+    """A grid the chain read (docs/adr/1230 §2): what it does, its name, its file's SHA-256 (its version: another file
+    is another grid), the box its nodes cover (degrees; a point beyond has no value) and the accuracy the project
+    states for it (none: not stated; a geoid's and a velocity grid's are not known here).
+    Attributes:
+        accuracy: Unit: m.
+    """
+    kind: GridKind | GridKindName
+    name: str
+    sha256: str
+    extent: DegreeBox
+    accuracy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["sha256"] = self.sha256
+        out["extent"] = self.extent.to_json()
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChainGrid:
+        return cls(
+            kind=_enum_in(GridKind, data["kind"]),
+            name=data["name"],
+            sha256=data["sha256"],
+            extent=DegreeBox.from_json(data["extent"]),
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChainSide(_Model):
+    """One side of the chain (docs/adr/1230 §1): its horizontal system (EPSG code when the registry's, name, family,
+    datum, unit, the order KentOS reads x and y in and the order EPSG gives the axes), the datum ensemble's accuracy
+    when the datum is one (WGS 84: EPSG says 2 m), what its heights rest on, and its epoch with where it came from.
+    Attributes:
+        datum: `TUREF`, `ED50`, `WGS84`, or the project's datum's name.
+        unit: “m” on a grid, “deg” on a geographic system.
+        axes: The order x and y are: “east,north” or “longitude,latitude” (CLAUDE.md §5; whatever EPSG's order).
+        ensemble_accuracy: Unit: m.
+        epoch: Unit: year.
+        epsg_axes: The order EPSG gives the axes: “ne”, “en” or “latlon”; none for the project's definition.
+        srid: Unit: epsg.
+    """
+    name: str
+    family: CrsFamily | CrsFamilyName
+    datum: str
+    unit: str
+    axes: str
+    epoch_source: EpochSource | EpochSourceName
+    ensemble_accuracy: float | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    epsg_axes: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    vertical: ChainVertical | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["family"] = _enum_out(self.family)
+        out["datum"] = self.datum
+        out["unit"] = self.unit
+        out["axes"] = self.axes
+        out["epochSource"] = _enum_out(self.epoch_source)
+        if self.ensemble_accuracy is not UNSET:
+            out["ensembleAccuracy"] = None if self.ensemble_accuracy is None else float(self.ensemble_accuracy)
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epsg_axes is not UNSET:
+            out["epsgAxes"] = self.epsg_axes
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else self.vertical.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChainSide:
+        return cls(
+            name=data["name"],
+            family=_enum_in(CrsFamily, data["family"]),
+            datum=data["datum"],
+            unit=data["unit"],
+            axes=data["axes"],
+            epoch_source=_enum_in(EpochSource, data["epochSource"]),
+            ensemble_accuracy=UNSET if "ensembleAccuracy" not in data else None if data["ensembleAccuracy"] is None else float(data["ensembleAccuracy"]),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epsg_axes=data.get("epsgAxes", UNSET),
+            srid=data.get("srid", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else ChainVertical.from_json(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChainVertical(_Model):
+    """What a side's heights rest on, as the chain records it: their kind, the vertical system (EPSG code, name and
+    unit; an ellipsoidal height's is the horizontal datum's ellipsoid, in metres) and the geoid model.
+    Attributes:
+        unit: “m”, “ft”.
+        srid: Unit: epsg.
+    """
+    kind: HeightKind | HeightKindName
+    name: str
+    unit: str
+    geoid: GeoidModel | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["unit"] = self.unit
+        if self.geoid is not UNSET:
+            out["geoid"] = None if self.geoid is None else self.geoid.to_json()
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChainVertical:
+        return cls(
+            kind=_enum_in(HeightKind, data["kind"]),
+            name=data["name"],
+            unit=data["unit"],
+            geoid=UNSET if "geoid" not in data else None if data["geoid"] is None else GeoidModel.from_json(data["geoid"]),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ChangedObject(_Model):
     """An object that is in both and differs.
     Attributes:
@@ -23295,6 +23685,45 @@ class CrsBase(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CrsChain(_Model):
+    """The coordinate chain of a call (docs/adr/1230): the two sides, the basis of each step's accuracy (in the
+    operation's steps' order), the grids read, the verdict and its reasons (in a fixed order: `points_outside`,
+    `accuracy_unknown`, `height_accuracy_unknown`, `heights_unchanged`, `epoch_unknown`, `datum_ensemble`,
+    `unofficial_operation`) and the numeric budget.
+    """
+    source: ChainSide
+    target: ChainSide
+    bases: list[AccuracyBasis | AccuracyBasisName]
+    grids: list[ChainGrid]
+    status: ChainStatus | ChainStatusName
+    reasons: list[str]
+    budget: NumericBudget
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["target"] = self.target.to_json()
+        out["bases"] = [_enum_out(e0) for e0 in self.bases]
+        out["grids"] = [e0.to_json() for e0 in self.grids]
+        out["status"] = _enum_out(self.status)
+        out["reasons"] = list(self.reasons)
+        out["budget"] = self.budget.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsChain:
+        return cls(
+            source=ChainSide.from_json(data["source"]),
+            target=ChainSide.from_json(data["target"]),
+            bases=[_enum_in(AccuracyBasis, e0) for e0 in data["bases"]],
+            grids=[ChainGrid.from_json(e0) for e0 in data["grids"]],
+            status=_enum_in(ChainStatus, data["status"]),
+            reasons=list(data["reasons"]),
+            budget=NumericBudget.from_json(data["budget"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrsDefinition(_Model):
     """A coordinate system the project defines (docs/adr/0168 §1): its name
     and what it is.
@@ -23509,7 +23938,8 @@ class CrsTransform(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`
     (a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side
-    is the project's and the project has none), `invalid_heights` (a side's heights against their rules),
+    is the project's and the project has none), `unsupported_srid` (a side is the project's and its stored EPSG code
+    is not one the registry resolves, docs/adr/1230 §1), `invalid_heights` (a side's heights against their rules),
     `invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:
     `no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is
     a grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other
@@ -23557,12 +23987,13 @@ class CrsTransform(_Model):
 @dataclass(kw_only=True, slots=True)
 class CrsTransformed(_Model):
     """Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
-    the operation's record and the report.
+    the operation's record, the report and the coordinate chain (docs/adr/1230).
     """
     points: list[CrsPoint | None]
     unreached: list[UnreachedPoint]
     operation: CrsOperation
     report: AccuracyReport
+    chain: CrsChain
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23570,6 +24001,7 @@ class CrsTransformed(_Model):
         out["unreached"] = [e0.to_json() for e0 in self.unreached]
         out["operation"] = self.operation.to_json()
         out["report"] = self.report.to_json()
+        out["chain"] = self.chain.to_json()
         return out
 
     @classmethod
@@ -23579,6 +24011,7 @@ class CrsTransformed(_Model):
             unreached=[UnreachedPoint.from_json(e0) for e0 in data["unreached"]],
             operation=CrsOperation.from_json(data["operation"]),
             report=AccuracyReport.from_json(data["report"]),
+            chain=CrsChain.from_json(data["chain"]),
         )
 
 
@@ -25378,6 +25811,38 @@ class DeclaredVertical(_Model):
         return cls(
             name=data["name"],
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DegreeBox(_Model):
+    """A box in degrees: west, south, east, north.
+    Attributes:
+        west: Unit: deg.
+        south: Unit: deg.
+        east: Unit: deg.
+        north: Unit: deg.
+    """
+    west: float
+    south: float
+    east: float
+    north: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["west"] = float(self.west)
+        out["south"] = float(self.south)
+        out["east"] = float(self.east)
+        out["north"] = float(self.north)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DegreeBox:
+        return cls(
+            west=float(data["west"]),
+            south=float(data["south"]),
+            east=float(data["east"]),
+            north=float(data["north"]),
         )
 
 
@@ -48791,6 +49256,8 @@ class LeaderStyleDef(_Model):
         height: The note's height on paper, mm. Unit: paper-mm.
         arrow: Absent: a filled arrow.
         arrow_size: Times the note's height; absent: 1. Unit: 1.
+        text_style: The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an
+            embedded SHX file, the font draws the note. Schema 187.
     """
     id: str
     name: str
@@ -48798,6 +49265,7 @@ class LeaderStyleDef(_Model):
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    text_style: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -48810,6 +49278,8 @@ class LeaderStyleDef(_Model):
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
         return out
 
     @classmethod
@@ -48821,6 +49291,7 @@ class LeaderStyleDef(_Model):
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             mask=data.get("mask", UNSET),
+            text_style=data.get("textStyle", UNSET),
         )
 
 
@@ -50225,6 +50696,175 @@ class LostPin(_Model):
         return cls(
             uid=data["uid"],
             reason=_enum_in(PinLoss, data["reason"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWork(_Model):
+    """A map project's work structure."""
+    derivations: list[WorkDerivation] | Unset = UNSET
+    items: list[WorkItem] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.derivations is not UNSET:
+            out["derivations"] = [e0.to_json() for e0 in self.derivations]
+        if self.items is not UNSET:
+            out["items"] = [e0.to_json() for e0 in self.items]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWork:
+        return cls(
+            derivations=[WorkDerivation.from_json(e0) for e0 in data["derivations"]] if "derivations" in data else UNSET,
+            items=[WorkItem.from_json(e0) for e0 in data["items"]] if "items" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkEdit(_Model):
+    """Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,
+    “Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”).
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
+    `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
+    space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
+    `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
+    or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
+    object another derivation names), `approval_stale`, `layer_locked` (a raster or an image to relink on a locked
+    layer), `work_full`.
+    """
+    operation: MapWorkOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkEdit:
+        return cls(
+            operation=MapWorkOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkEdited(_Model):
+    """Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
+    (its file's SHA-256), how many rasters and images a relink pointed at the new file, how many derivations were taken
+    away with an item, how many derivations are out of date after, and the drawing's revision.
+    Attributes:
+        stale: Unit: count.
+        released: Unit: count.
+        relinked: Unit: count.
+    """
+    stale: int
+    revision: str
+    derivation: str | None | Unset = UNSET
+    file_revision: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+    released: int | Unset = UNSET
+    relinked: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["stale"] = self.stale
+        out["revision"] = self.revision
+        if self.derivation is not UNSET:
+            out["derivation"] = self.derivation
+        if self.file_revision is not UNSET:
+            out["fileRevision"] = self.file_revision
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.released is not UNSET:
+            out["released"] = self.released
+        if self.relinked is not UNSET:
+            out["relinked"] = self.relinked
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkEdited:
+        return cls(
+            stale=data["stale"],
+            revision=data["revision"],
+            derivation=data.get("derivation", UNSET),
+            file_revision=data.get("fileRevision", UNSET),
+            item=data.get("item", UNSET),
+            released=data.get("released", UNSET),
+            relinked=data.get("relinked", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkQuery(_Model):
+    """Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
+    and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
+    `uid` also says where that object comes from.
+
+    Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+    """
+    deep: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.deep is not UNSET:
+            out["deep"] = self.deep
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkQuery:
+        return cls(
+            deep=data.get("deep", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkTree(_Model):
+    """Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,
+    how many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing
+    objects), whether it was deep, and the revision read.
+    Attributes:
+        stale: Unit: count.
+        problems: Unit: count.
+    """
+    items: list[WorkRow]
+    derivations: list[WorkDerivationRow]
+    stale: int
+    problems: int
+    deep: bool
+    revision: str
+    object: WorkObjectSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["items"] = [e0.to_json() for e0 in self.items]
+        out["derivations"] = [e0.to_json() for e0 in self.derivations]
+        out["stale"] = self.stale
+        out["problems"] = self.problems
+        out["deep"] = self.deep
+        out["revision"] = self.revision
+        if self.object is not UNSET:
+            out["object"] = None if self.object is None else self.object.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkTree:
+        return cls(
+            items=[WorkRow.from_json(e0) for e0 in data["items"]],
+            derivations=[WorkDerivationRow.from_json(e0) for e0 in data["derivations"]],
+            stale=data["stale"],
+            problems=data["problems"],
+            deep=data["deep"],
+            revision=data["revision"],
+            object=UNSET if "object" not in data else None if data["object"] is None else WorkObjectSource.from_json(data["object"]),
         )
 
 
@@ -54463,6 +55103,32 @@ class NumberRule(_Model):
             max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
             min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NumericBudget(_Model):
+    """The engine's numeric budget for the call (docs/adr/1230 §4): how far its numbers may lie from an independent
+    engine's (PROJ) for the same operation — the target's horizontal units (metres on a grid, degrees on a geographic
+    system) and metres of height. Not an accuracy: the transformation's is the report's.
+    Attributes:
+        horizontal: Unit: system.
+        vertical: Unit: m.
+    """
+    horizontal: float
+    vertical: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["horizontal"] = float(self.horizontal)
+        out["vertical"] = float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NumericBudget:
+        return cls(
+            horizontal=float(data["horizontal"]),
+            vertical=float(data["vertical"]),
         )
 
 
@@ -63042,6 +63708,37 @@ class PreflightSheets(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PreviousPublication(_Model):
+    """The earlier delivery a publication updates (docs/adr/1320 §3).
+    Attributes:
+        sha256: Its `yayin.json`'s SHA-256 when it was read.
+        date: Its publication date.
+        source: Its source.
+    """
+    path: str
+    sha256: str
+    date: str
+    source: SheetPublishPin
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["sha256"] = self.sha256
+        out["date"] = self.date
+        out["source"] = self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PreviousPublication:
+        return cls(
+            path=data["path"],
+            sha256=data["sha256"],
+            date=data["date"],
+            source=SheetPublishPin.from_json(data["source"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProcessingBatch(_Model):
     """Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,
     through the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`
@@ -67450,6 +68147,8 @@ class ProjectSettings(_Model):
         linear_events: The project's links of event layers to their routes (docs/adr/0569), in the list's order.
         map_srid: The map's system (docs/adr/0583 §3): the view drawn in it, the objects staying in the project's; absent:
             the project's own. Changing it changes no coordinate. Unit: epsg.
+        map_work: A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
+            derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
@@ -67471,6 +68170,8 @@ class ProjectSettings(_Model):
         sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
         standard_docs: Ordered portable drawing standards retained with the project. Earlier
             entries take precedence; choosing a standard does not apply it.
+        standard_exceptions: The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
+            the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
@@ -67519,6 +68220,7 @@ class ProjectSettings(_Model):
     lineage: list[LineageRecord] | Unset = UNSET
     linear_events: list[EventLink] | Unset = UNSET
     map_srid: int | None | Unset = UNSET
+    map_work: MapWork | None | Unset = UNSET
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
@@ -67531,6 +68233,7 @@ class ProjectSettings(_Model):
     source_bases: list[SourceBase] | Unset = UNSET
     sources: list[SourceLink] | Unset = UNSET
     standard_docs: list[ProjectStandardDocument] | Unset = UNSET
+    standard_exceptions: list[StandardException] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     table_styles: list[TableStyleDef] | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
@@ -67602,6 +68305,8 @@ class ProjectSettings(_Model):
             out["linearEvents"] = [e0.to_json() for e0 in self.linear_events]
         if self.map_srid is not UNSET:
             out["mapSrid"] = self.map_srid
+        if self.map_work is not UNSET:
+            out["mapWork"] = None if self.map_work is None else self.map_work.to_json()
         if self.named_ucs is not UNSET:
             out["namedUcs"] = [e0.to_json() for e0 in self.named_ucs]
         if self.named_views is not UNSET:
@@ -67626,6 +68331,8 @@ class ProjectSettings(_Model):
             out["sources"] = [e0.to_json() for e0 in self.sources]
         if self.standard_docs is not UNSET:
             out["standardDocs"] = [e0.to_json() for e0 in self.standard_docs]
+        if self.standard_exceptions is not UNSET:
+            out["standardExceptions"] = [e0.to_json() for e0 in self.standard_exceptions]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.table_styles is not UNSET:
@@ -67683,6 +68390,7 @@ class ProjectSettings(_Model):
             lineage=[LineageRecord.from_json(e0) for e0 in data["lineage"]] if "lineage" in data else UNSET,
             linear_events=[EventLink.from_json(e0) for e0 in data["linearEvents"]] if "linearEvents" in data else UNSET,
             map_srid=data.get("mapSrid", UNSET),
+            map_work=UNSET if "mapWork" not in data else None if data["mapWork"] is None else MapWork.from_json(data["mapWork"]),
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
@@ -67695,6 +68403,7 @@ class ProjectSettings(_Model):
             source_bases=[SourceBase.from_json(e0) for e0 in data["sourceBases"]] if "sourceBases" in data else UNSET,
             sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
             standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
+            standard_exceptions=[StandardException.from_json(e0) for e0 in data["standardExceptions"]] if "standardExceptions" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             table_styles=[TableStyleDef.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
@@ -68095,6 +68804,10 @@ class PublishSheets(_Model):
         name: One PDF's leaf name; .pdf is appended when missing.
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
+        previous: An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
+            whose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has
+            its bytes is copied byte for byte with its own publication date; the rest are made again with today's. The
+            earlier folder is left as it is. Separate PDFs only; not with `resume`.
         resources: Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
         resumable: Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a
             journal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.
@@ -68112,6 +68825,7 @@ class PublishSheets(_Model):
     name: str | None | Unset = UNSET
     naming: str = "{index}-{sheet}"
     pin: SheetPublishPin | None | Unset = UNSET
+    previous: str | None | Unset = UNSET
     resources: bool = False
     resumable: bool | Unset = UNSET
     resume: bool | Unset = UNSET
@@ -68132,6 +68846,8 @@ class PublishSheets(_Model):
         out["naming"] = self.naming
         if self.pin is not UNSET:
             out["pin"] = None if self.pin is None else self.pin.to_json()
+        if self.previous is not UNSET:
+            out["previous"] = self.previous
         out["resources"] = self.resources
         if self.resumable is not UNSET:
             out["resumable"] = self.resumable
@@ -68153,6 +68869,7 @@ class PublishSheets(_Model):
             name=data.get("name", UNSET),
             naming=data["naming"] if "naming" in data else "{index}-{sheet}",
             pin=UNSET if "pin" not in data else None if data["pin"] is None else SheetPublishPin.from_json(data["pin"]),
+            previous=data.get("previous", UNSET),
             resources=data["resources"] if "resources" in data else False,
             resumable=data.get("resumable", UNSET),
             resume=data.get("resume", UNSET),
@@ -77120,12 +77837,17 @@ class SheetPublishScope(_Model):
 class SheetPublishStatus(_Model):
     """
     Attributes:
+        changes: What changed in its sources since the delivery (docs/adr/1320 §2); none when the delivery did not list them
+            (made before, or a page with an atlas or unplaced viewport) or the sheet is gone.
+        date: The date its delivered page was made with.
         digest: The digest now.
         published: The digest published.
     """
     sheet: str
     name: str
     state: SheetPublishState | SheetPublishStateName
+    changes: SheetSourceChanges | None | Unset = UNSET
+    date: str | None | Unset = UNSET
     digest: str | None | Unset = UNSET
     file: str | None | Unset = UNSET
     issue: SheetPublishIssue | None | Unset = UNSET
@@ -77136,6 +77858,10 @@ class SheetPublishStatus(_Model):
         out["sheet"] = self.sheet
         out["name"] = self.name
         out["state"] = _enum_out(self.state)
+        if self.changes is not UNSET:
+            out["changes"] = None if self.changes is None else self.changes.to_json()
+        if self.date is not UNSET:
+            out["date"] = self.date
         if self.digest is not UNSET:
             out["digest"] = self.digest
         if self.file is not UNSET:
@@ -77152,6 +77878,8 @@ class SheetPublishStatus(_Model):
             sheet=data["sheet"],
             name=data["name"],
             state=_enum_in(SheetPublishState, data["state"]),
+            changes=UNSET if "changes" not in data else None if data["changes"] is None else SheetSourceChanges.from_json(data["changes"]),
+            date=data.get("date", UNSET),
             digest=data.get("digest", UNSET),
             file=data.get("file", UNSET),
             issue=UNSET if "issue" not in data else None if data["issue"] is None else SheetPublishIssue.from_json(data["issue"]),
@@ -77206,6 +77934,8 @@ class SheetPublishedPage(_Model):
         raster_maps: Unit: count.
         placeholders: Unit: count.
         findings: The page's audit findings (none an error by itself: the preflight's errors block publication).
+        date: The date its bytes were made with (the title context's): an update's carried page keeps its earlier one
+            (docs/adr/1320 §3). None in publications made before.
         min_stroke_mm: Unit: paper-mm.
     """
     sheet: str
@@ -77224,6 +77954,7 @@ class SheetPublishedPage(_Model):
     raster_maps: int
     placeholders: int
     findings: list[SheetPublishIssue]
+    date: str | None | Unset = UNSET
     min_stroke_mm: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -77244,6 +77975,8 @@ class SheetPublishedPage(_Model):
         out["rasterMaps"] = self.raster_maps
         out["placeholders"] = self.placeholders
         out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.date is not UNSET:
+            out["date"] = self.date
         if self.min_stroke_mm is not UNSET:
             out["minStrokeMm"] = None if self.min_stroke_mm is None else float(self.min_stroke_mm)
         return out
@@ -77267,6 +78000,7 @@ class SheetPublishedPage(_Model):
             raster_maps=data["rasterMaps"],
             placeholders=data["placeholders"],
             findings=[SheetPublishIssue.from_json(e0) for e0 in data["findings"]],
+            date=data.get("date", UNSET),
             min_stroke_mm=UNSET if "minStrokeMm" not in data else None if data["minStrokeMm"] is None else float(data["minStrokeMm"]),
         )
 
@@ -77297,6 +78031,43 @@ class SheetSeries(_Model):
             series=data["series"],
             sheets=list(data["sheets"]),
             title=data.get("title", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetSourceChanges(_Model):
+    """A published page's sources against the drawing now (docs/adr/1320 §2), by persistent id in drawing order: the
+    objects it drew whose content changed, the ones it draws now and did not, the ones it drew and does not now
+    (deleted, moved out, hidden), whether the sheet's own record changed, and which project parts every page draws
+    with changed. All empty when nothing it reads changed.
+    Attributes:
+        sheet: The sheet's own items, page or drawing information.
+        parts: Of `blocks`, `book` (masters, templates, profiles), `layers`, `resources` (linked pictures), `settings`,
+            `styles`, in this order.
+    """
+    changed: list[str]
+    added: list[str]
+    removed: list[str]
+    sheet: bool
+    parts: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["added"] = list(self.added)
+        out["removed"] = list(self.removed)
+        out["sheet"] = self.sheet
+        out["parts"] = list(self.parts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetSourceChanges:
+        return cls(
+            changed=list(data["changed"]),
+            added=list(data["added"]),
+            removed=list(data["removed"]),
+            sheet=data["sheet"],
+            parts=list(data["parts"]),
         )
 
 
@@ -77651,6 +78422,8 @@ class SheetsPublished(_Model):
     Attributes:
         ready: True after full output/source checks; validate-only deliberately leaves this false.
         pages: Each written page's audit and content digest (docs/adr/1090 §4), in the published order.
+        previous: With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the
+            published order (the others were made again).
         resumed: With `resume`: the sheets whose finished pages were kept from the stopped publication.
         scope: What is published, sheet by sheet (docs/adr/1090 §7): paper, viewports with their scales, locks and layer
             states, the plot profile.
@@ -77663,7 +78436,9 @@ class SheetsPublished(_Model):
     ready: bool
     manifest: str
     sha256: str
+    carried: list[str] | Unset = UNSET
     pages: list[SheetPublishedPage] | Unset = UNSET
+    previous: PreviousPublication | None | Unset = UNSET
     resources: SheetDeliveryResources | None | Unset = UNSET
     resumed: list[str] | Unset = UNSET
     scope: list[SheetPublishScope] | Unset = UNSET
@@ -77678,8 +78453,12 @@ class SheetsPublished(_Model):
         out["ready"] = self.ready
         out["manifest"] = self.manifest
         out["sha256"] = self.sha256
+        if self.carried is not UNSET:
+            out["carried"] = list(self.carried)
         if self.pages is not UNSET:
             out["pages"] = [e0.to_json() for e0 in self.pages]
+        if self.previous is not UNSET:
+            out["previous"] = None if self.previous is None else self.previous.to_json()
         if self.resources is not UNSET:
             out["resources"] = None if self.resources is None else self.resources.to_json()
         if self.resumed is not UNSET:
@@ -77699,7 +78478,9 @@ class SheetsPublished(_Model):
             ready=data["ready"],
             manifest=data["manifest"],
             sha256=data["sha256"],
+            carried=list(data["carried"]) if "carried" in data else UNSET,
             pages=[SheetPublishedPage.from_json(e0) for e0 in data["pages"]] if "pages" in data else UNSET,
+            previous=UNSET if "previous" not in data else None if data["previous"] is None else PreviousPublication.from_json(data["previous"]),
             resources=UNSET if "resources" not in data else None if data["resources"] is None else SheetDeliveryResources.from_json(data["resources"]),
             resumed=list(data["resumed"]) if "resumed" in data else UNSET,
             scope=[SheetPublishScope.from_json(e0) for e0 in data["scope"]] if "scope" in data else UNSET,
@@ -82723,6 +83504,91 @@ class StandardDimensionStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class StandardException(_Model):
+    """An accepted standards finding.
+    Attributes:
+        kind: The finding's kind, as `cad.standards.check` names it (`layerColor`, `tableStyleDefinition` …).
+        subject: What it is about: a layer's, a style's, a line type's or a block's name.
+        standard: The standard it was found against: the source's id (a package's `id`, else the standard's name) …
+        reason: Why it is kept (not empty, at most `MAX_STANDARD_EXCEPTION_REASON` characters).
+        at: When, as the caller wrote it (ISO 8601).
+        by: Who accepted it, when the caller says.
+        expected: What the standard asked for and what the drawing had when it was accepted.
+        layer: The drawing's layer it is about, by id, when it is one.
+        revision: … and its revision (empty for a standard without one).
+    """
+    kind: str
+    subject: str
+    standard: str
+    reason: str
+    at: str | None | Unset = UNSET
+    by: str | None | Unset = UNSET
+    expected: str | None | Unset = UNSET
+    found: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    revision: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["subject"] = self.subject
+        out["standard"] = self.standard
+        out["reason"] = self.reason
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.expected is not UNSET:
+            out["expected"] = self.expected
+        if self.found is not UNSET:
+            out["found"] = self.found
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardException:
+        return cls(
+            kind=data["kind"],
+            subject=data["subject"],
+            standard=data["standard"],
+            reason=data["reason"],
+            at=data.get("at", UNSET),
+            by=data.get("by", UNSET),
+            expected=data.get("expected", UNSET),
+            found=data.get("found", UNSET),
+            layer=data.get("layer", UNSET),
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardFindingKey(_Model):
+    """A finding as `cad.standards.check` names it."""
+    kind: StandardIssueKind | StandardIssueKindName
+    subject: str
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["subject"] = self.subject
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardFindingKey:
+        return cls(
+            kind=_enum_in(StandardIssueKind, data["kind"]),
+            subject=data["subject"],
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class StandardInstallChoice(_Model):
     """The user's choice for one resource; a resource without one takes its default (add a missing one, keep a
     differing or equal one).
@@ -82824,6 +83690,8 @@ class StandardIssue(_Model):
             line type or hatch definition), or direct placements of a mismatched
             published block (BlockPublication or BlockUnit). Layer and nested-block
             uses are described separately in the finding's message. Unit: count.
+        reason: The accepted finding's reason, when it is accepted or lapsed.
+        state: Accepted or lapsed (docs/adr/1129 §2); absent: open.
     """
     kind: StandardIssueKind | StandardIssueKindName
     subject: str
@@ -82833,6 +83701,8 @@ class StandardIssue(_Model):
     found: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     objects: int | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    state: StandardIssueState | StandardIssueStateName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82848,6 +83718,10 @@ class StandardIssue(_Model):
             out["layer"] = self.layer
         if self.objects is not UNSET:
             out["objects"] = self.objects
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.state is not UNSET:
+            out["state"] = _enum_out(self.state)
         return out
 
     @classmethod
@@ -82861,6 +83735,8 @@ class StandardIssue(_Model):
             found=data.get("found", UNSET),
             layer=data.get("layer", UNSET),
             objects=data.get("objects", UNSET),
+            reason=data.get("reason", UNSET),
+            state=_enum_in(StandardIssueState, data["state"]) if "state" in data else UNSET,
         )
 
 
@@ -83209,11 +84085,14 @@ class StandardsCheck(_Model):
     """`cad.standards.check` v1: what the drawing breaks of a standard. It writes nothing.
     Attributes:
         name: A built-in standard by its id (`mimari-ofis`); or
+        origin: The standard's source, which accepted findings are bound to (docs/adr/1129): a bound package's id and revision,
+            or `cad.standards.resolve`'s `provenance.rules`. Absent: the standard's name, no revision.
         resources: Optional named definitions from a version 2 standard package. Checking
             them never imports or replaces a drawing resource.
         standard: the standard itself.
     """
     name: str | None | Unset = UNSET
+    origin: StandardOrigin | None | Unset = UNSET
     resources: StandardResources | None | Unset = UNSET
     standard: DrawingStandard | None | Unset = UNSET
 
@@ -83221,6 +84100,8 @@ class StandardsCheck(_Model):
         out: dict[str, Any] = {}
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else self.origin.to_json()
         if self.resources is not UNSET:
             out["resources"] = None if self.resources is None else self.resources.to_json()
         if self.standard is not UNSET:
@@ -83231,6 +84112,7 @@ class StandardsCheck(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsCheck:
         return cls(
             name=data.get("name", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else StandardOrigin.from_json(data["origin"]),
             resources=UNSET if "resources" not in data else None if data["resources"] is None else StandardResources.from_json(data["resources"]),
             standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
         )
@@ -83267,6 +84149,105 @@ class StandardsConflictsReport(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> StandardsConflictsReport:
         return cls(
             conflicts=[StandardConflict.from_json(e0) for e0 in data["conflicts"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsExceptions(_Model):
+    """Input of `cad.standards.exceptions` v1.
+
+    - `accept`: each finding, as today's check against the standard gives it, is accepted with `reason` (and `by` and
+      `at` when given); a lapsed one is accepted again, on the standard's revision and the drawing as they are now; one
+      accepted with the same reason, by and at is left;
+    - `withdraw`: each finding's acceptance against the standard's source is taken away (the finding itself may be gone).
+
+    Refusals (`CommandError.code`), in this order: `invalid_input` (no finding, one twice, `reason`, `by` or `at`
+    with `withdraw`, a reason over 500 characters, an empty `by` or `at`); `reason_required` (`accept` without a reason
+    or with one only of white space); the standard's (`standard_not_found`, `invalid_standard`, as the check's);
+    `invalid_revision`, `revision_conflict` (status `conflict`); `finding_not_found` (`findings[i]`: today's check has no
+    such finding, or `withdraw`: none such is accepted against the source).
+    Attributes:
+        findings: The findings, at least one.
+        by: `accept`: who accepts them and when (ISO 8601), recorded as given.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        name: The standard, as `cad.standards.check` takes it: a built-in one by its id, or the standard itself.
+        origin: The standard's source (a bound package's id and revision); absent: the standard's name, no revision.
+        reason: `accept`: why the findings are kept (not empty, at most 500 characters).
+    """
+    operation: StandardExceptionOperation | StandardExceptionOperationName
+    findings: list[StandardFindingKey]
+    at: str | None | Unset = UNSET
+    by: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    origin: StandardOrigin | None | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    resources: StandardResources | None | Unset = UNSET
+    standard: DrawingStandard | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.origin is not UNSET:
+            out["origin"] = None if self.origin is None else self.origin.to_json()
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.resources is not UNSET:
+            out["resources"] = None if self.resources is None else self.resources.to_json()
+        if self.standard is not UNSET:
+            out["standard"] = None if self.standard is None else self.standard.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsExceptions:
+        return cls(
+            operation=_enum_in(StandardExceptionOperation, data["operation"]),
+            findings=[StandardFindingKey.from_json(e0) for e0 in data["findings"]],
+            at=data.get("at", UNSET),
+            by=data.get("by", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            origin=UNSET if "origin" not in data else None if data["origin"] is None else StandardOrigin.from_json(data["origin"]),
+            reason=data.get("reason", UNSET),
+            resources=UNSET if "resources" not in data else None if data["resources"] is None else StandardResources.from_json(data["resources"]),
+            standard=UNSET if "standard" not in data else None if data["standard"] is None else DrawingStandard.from_json(data["standard"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StandardsExceptionsEdited(_Model):
+    """Output of `cad.standards.exceptions` v1, and what plan says it would do.
+    Attributes:
+        changed: The findings whose acceptance changed. Unit: count.
+        exceptions: The project's accepted findings afterwards, against every source. Unit: count.
+        revision: The document's revision afterwards (plan: the one it was made against), as decimal text.
+    """
+    changed: int
+    exceptions: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["exceptions"] = self.exceptions
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StandardsExceptionsEdited:
+        return cls(
+            changed=data["changed"],
+            exceptions=data["exceptions"],
             revision=data["revision"],
         )
 
@@ -83393,11 +84374,15 @@ class StandardsReport(_Model):
         issues: In the order: the standard's layers, the drawing's other layers, the
             fonts and styles, the objects.
         fixable: How many of them `cad.standards.apply` fixes. Unit: count.
+        accepted: How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart. Unit: count.
+        lapsed: Unit: count.
     """
     standard: str
     issues: list[StandardIssue]
     fixable: int
     revision: str
+    accepted: int | Unset = UNSET
+    lapsed: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83405,6 +84390,10 @@ class StandardsReport(_Model):
         out["issues"] = [e0.to_json() for e0 in self.issues]
         out["fixable"] = self.fixable
         out["revision"] = self.revision
+        if self.accepted is not UNSET:
+            out["accepted"] = self.accepted
+        if self.lapsed is not UNSET:
+            out["lapsed"] = self.lapsed
         return out
 
     @classmethod
@@ -83414,6 +84403,8 @@ class StandardsReport(_Model):
             issues=[StandardIssue.from_json(e0) for e0 in data["issues"]],
             fixable=data["fixable"],
             revision=data["revision"],
+            accepted=data.get("accepted", UNSET),
+            lapsed=data.get("lapsed", UNSET),
         )
 
 
@@ -91152,6 +92143,7 @@ class TopologyChecked(_Model):
         rules: The rules checked, and those whose layer (or other layer) the project does not have. Unit: count.
         objects: The drawing's objects the rules looked at, and the rows read round bound parts. Unit: count.
         complete: Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.
+        errors: The findings confirmed as errors (docs/adr/1260 §1): of the open ones. Unit: count.
         lapsed: Unit: count.
         missing: Unit: count.
         neighbours: Unit: count.
@@ -91164,6 +92156,7 @@ class TopologyChecked(_Model):
     objects: int
     complete: bool
     stamp: TopologyStamp
+    errors: int | Unset = UNSET
     incomplete: list[TopologyGap] | Unset = UNSET
     lapsed: int | Unset = UNSET
     missing: int | Unset = UNSET
@@ -91180,6 +92173,8 @@ class TopologyChecked(_Model):
         out["objects"] = self.objects
         out["complete"] = self.complete
         out["stamp"] = self.stamp.to_json()
+        if self.errors is not UNSET:
+            out["errors"] = self.errors
         if self.incomplete is not UNSET:
             out["incomplete"] = [e0.to_json() for e0 in self.incomplete]
         if self.lapsed is not UNSET:
@@ -91203,6 +92198,7 @@ class TopologyChecked(_Model):
             objects=data["objects"],
             complete=data["complete"],
             stamp=TopologyStamp.from_json(data["stamp"]),
+            errors=data.get("errors", UNSET),
             incomplete=[TopologyGap.from_json(e0) for e0 in data["incomplete"]] if "incomplete" in data else UNSET,
             lapsed=data.get("lapsed", UNSET),
             missing=data.get("missing", UNSET),
@@ -91219,22 +92215,41 @@ class TopologyException(_Model):
         rule: The rule's id.
         objects: At least one.
         at: Unit: length.
+        decision: What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed
+            error to be put right. Schema 189.
         digest: The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry
             changed since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while
             the rule, the objects and the place are the same.
+        reason: Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 189.
+        rule_digest: The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked
+            before schema 189): kept whatever the rule. Schema 189.
+        scope: What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects
+            in this order wherever it is. Schema 189.
     """
     rule: str
     objects: list[str]
     at: Vec2
+    decision: TopologyDecision | TopologyDecisionName | None | Unset = UNSET
     digest: str | None | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    rule_digest: str | None | Unset = UNSET
+    scope: TopologyScope | TopologyScopeName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["rule"] = self.rule
         out["objects"] = list(self.objects)
         out["at"] = _vec2_out(self.at)
+        if self.decision is not UNSET:
+            out["decision"] = None if self.decision is None else _enum_out(self.decision)
         if self.digest is not UNSET:
             out["digest"] = self.digest
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.rule_digest is not UNSET:
+            out["ruleDigest"] = self.rule_digest
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         return out
 
     @classmethod
@@ -91243,7 +92258,11 @@ class TopologyException(_Model):
             rule=data["rule"],
             objects=list(data["objects"]),
             at=Vec2.from_json(data["at"]),
+            decision=UNSET if "decision" not in data else None if data["decision"] is None else _enum_in(TopologyDecision, data["decision"]),
             digest=data.get("digest", UNSET),
+            reason=data.get("reason", UNSET),
+            rule_digest=data.get("ruleDigest", UNSET),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(TopologyScope, data["scope"]),
         )
 
 
@@ -91254,10 +92273,17 @@ class TopologyExceptions(_Model):
 
     Refusals, in this order: `invalid_input` (no key, or one twice), `finding_not_found` (`keys[i]`: no finding of the
     drawing as it is now has it). `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
+    Attributes:
+        reason: Why (docs/adr/1260 §1), for `mark` and `error`: kept on each mark; required when the project has a quality
+            profile. Not blank, at most 500 characters.
+        scope: What an exception covers (`mark` only): absent or `finding`, the finding at its place; `objects`, every finding of
+            its rule between the same objects.
     """
     operation: TopologyExceptionOperation | TopologyExceptionOperationName
     keys: list[str]
     expected_revision: str | None | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    scope: TopologyScope | TopologyScopeName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -91265,6 +92291,10 @@ class TopologyExceptions(_Model):
         out["keys"] = list(self.keys)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.scope is not UNSET:
+            out["scope"] = None if self.scope is None else _enum_out(self.scope)
         return out
 
     @classmethod
@@ -91273,6 +92303,8 @@ class TopologyExceptions(_Model):
             operation=_enum_in(TopologyExceptionOperation, data["operation"]),
             keys=list(data["keys"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            reason=data.get("reason", UNSET),
+            scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(TopologyScope, data["scope"]),
         )
 
 
@@ -91315,10 +92347,12 @@ class TopologyFinding(_Model):
         at: Unit: length.
         fixes: The fixes it offers, by key.
         exception: Marked as left on purpose.
+        state: Where it is in its life cycle (docs/adr/1260 §1).
         lapsed: An exception was marked on it, but its objects' geometry changed since: open again (docs/adr/0589 §3).
         measure: Its measure (an area, a length, a distance, an angle; `measureKind` says which), in metres, square metres or
             radians. Unit: value.
         outside: Of those, the rows outside a bound layer's part (read from its source, not in the drawing).
+        reason: The reason its review gave (an exception's, an error mark's, a lapsed one's).
     """
     key: str
     rule: str
@@ -91328,10 +92362,12 @@ class TopologyFinding(_Model):
     at: Vec2
     fixes: list[str]
     exception: bool
+    state: TopologyFindingState | TopologyFindingStateName
     lapsed: bool | Unset = UNSET
     measure: float | None | Unset = UNSET
     measure_kind: str | None | Unset = UNSET
     outside: list[str] | Unset = UNSET
+    reason: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -91343,6 +92379,7 @@ class TopologyFinding(_Model):
         out["at"] = _vec2_out(self.at)
         out["fixes"] = list(self.fixes)
         out["exception"] = self.exception
+        out["state"] = _enum_out(self.state)
         if self.lapsed is not UNSET:
             out["lapsed"] = self.lapsed
         if self.measure is not UNSET:
@@ -91351,6 +92388,8 @@ class TopologyFinding(_Model):
             out["measureKind"] = self.measure_kind
         if self.outside is not UNSET:
             out["outside"] = list(self.outside)
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
         return out
 
     @classmethod
@@ -91364,10 +92403,12 @@ class TopologyFinding(_Model):
             at=Vec2.from_json(data["at"]),
             fixes=list(data["fixes"]),
             exception=data["exception"],
+            state=_enum_in(TopologyFindingState, data["state"]),
             lapsed=data.get("lapsed", UNSET),
             measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
             measure_kind=data.get("measureKind", UNSET),
             outside=list(data["outside"]) if "outside" in data else UNSET,
+            reason=data.get("reason", UNSET),
         )
 
 
@@ -91513,6 +92554,250 @@ class TopologyGap(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TopologyProfile(_Model):
+    """A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)
+    is the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (ArcGIS's
+    XY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a
+    vertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.
+    Attributes:
+        name: The profile's name: the institution's or the job's (“Kadastro güncelleme”), 1–200 characters.
+        precision: Metres, within [`TOPOLOGY_PRECISIONS`]; the tolerance is at least twice it. Unit: length.
+        acceptance: Metres, finite, at least the precision. Unit: length.
+        edition: The profile's own edition as its owner writes it (“2026/1”), at most 50 characters.
+    """
+    name: str
+    precision: float
+    acceptance: float
+    edition: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["precision"] = float(self.precision)
+        out["acceptance"] = float(self.acceptance)
+        if self.edition is not UNSET:
+            out["edition"] = self.edition
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyProfile:
+        return cls(
+            name=data["name"],
+            precision=float(data["precision"]),
+            acceptance=float(data["acceptance"]),
+            edition=data.get("edition", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepair(_Model):
+    """Input of `cad.topology.repair` v1: the recipe's steps, 1–1000, in the order they are applied; all or nothing, one
+    undo step “Topoloji düzelt”.
+
+    Refusals, in this order: `invalid_input` (no step, more than 1000), the revision (`invalid_revision`,
+    `revision_conflict`), then step by step: `finding_not_found` (`steps[i].key`: the drawing as the steps before left
+    it has no finding of that key), `repair_refused_exception` (`steps[i].key`: the finding is an exception, left on
+    purpose), `fix_unavailable` (`steps[i].fix`: the finding does not offer the fix, the fix has no answer, or it would
+    change a row outside a bound part), `layer_locked` (`steps[i]`: an object it changes is on a locked layer); last
+    `repair_beyond_acceptance` (`steps[i]`, the step that moved a source vertex farthest past the quality profile's
+    acceptance threshold). A job asked to stop answers `cancelled` and writes nothing.
+    """
+    steps: list[TopologyRepairStep]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepair:
+        return cls(
+            steps=[TopologyRepairStep.from_json(e0) for e0 in data["steps"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepairApplied(_Model):
+    """A step as applied: the finding it put right, its rule, its problem and its objects' persistent ids."""
+    key: str
+    fix: str
+    rule: str
+    problem: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["fix"] = self.fix
+        out["rule"] = self.rule
+        out["problem"] = self.problem
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepairApplied:
+        return cls(
+            key=data["key"],
+            fix=data["fix"],
+            rule=data["rule"],
+            problem=data["problem"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepairChange(_Model):
+    """An object the recipe changes: its measures before and after (an area's area, a line's length), `removed` when it
+    is deleted, how many of its source vertices stayed bit for bit and how many moved, the farthest and the total
+    distance they moved to the new geometry (metres), and the steps that changed it (0-based).
+    Attributes:
+        kept: Unit: count.
+        moved: Unit: count.
+        max_moved: Unit: length.
+        total_moved: Unit: length.
+        steps: Unit: index.
+        area_after: Unit: area.
+        area_before: Unit: area.
+        length_after: Unit: length.
+        length_before: Unit: length.
+    """
+    uid: str
+    layer: str
+    kept: int
+    moved: int
+    max_moved: float
+    total_moved: float
+    steps: list[int]
+    area_after: float | None | Unset = UNSET
+    area_before: float | None | Unset = UNSET
+    length_after: float | None | Unset = UNSET
+    length_before: float | None | Unset = UNSET
+    removed: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["kept"] = self.kept
+        out["moved"] = self.moved
+        out["maxMoved"] = float(self.max_moved)
+        out["totalMoved"] = float(self.total_moved)
+        out["steps"] = list(self.steps)
+        if self.area_after is not UNSET:
+            out["areaAfter"] = None if self.area_after is None else float(self.area_after)
+        if self.area_before is not UNSET:
+            out["areaBefore"] = None if self.area_before is None else float(self.area_before)
+        if self.length_after is not UNSET:
+            out["lengthAfter"] = None if self.length_after is None else float(self.length_after)
+        if self.length_before is not UNSET:
+            out["lengthBefore"] = None if self.length_before is None else float(self.length_before)
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepairChange:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            kept=data["kept"],
+            moved=data["moved"],
+            max_moved=float(data["maxMoved"]),
+            total_moved=float(data["totalMoved"]),
+            steps=list(data["steps"]),
+            area_after=UNSET if "areaAfter" not in data else None if data["areaAfter"] is None else float(data["areaAfter"]),
+            area_before=UNSET if "areaBefore" not in data else None if data["areaBefore"] is None else float(data["areaBefore"]),
+            length_after=UNSET if "lengthAfter" not in data else None if data["lengthAfter"] is None else float(data["lengthAfter"]),
+            length_before=UNSET if "lengthBefore" not in data else None if data["lengthBefore"] is None else float(data["lengthBefore"]),
+            removed=data.get("removed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepairStep(_Model):
+    """A step: the finding (its lasting key in the drawing as the steps before left it) and the fix (`subtractFirst`,
+    `removeVertex` …; one the finding offers).
+    """
+    key: str
+    fix: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["fix"] = self.fix
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepairStep:
+        return cls(
+            key=data["key"],
+            fix=data["fix"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyRepaired(_Model):
+    """Output of `cad.topology.repair` v1, and its plan: the recipe as applied, the objects it changes in the drawing's
+    order, the source vertices moved over them all (`moved`, `maxMoved`, `totalMoved`; `belowPrecision` of them by less
+    than the profile's storage precision, still moved and written as computed), the change of the areas' sum (square
+    metres; a deleted area's whole area), the open findings before and after (of every rule), and the revision after
+    (a plan: before).
+    Attributes:
+        moved: Unit: count.
+        max_moved: Unit: length.
+        total_moved: Unit: length.
+        area_change: Unit: area.
+        open_before: Unit: count.
+        open_after: Unit: count.
+        below_precision: Unit: count.
+    """
+    recipe: list[TopologyRepairApplied]
+    changes: list[TopologyRepairChange]
+    moved: int
+    max_moved: float
+    total_moved: float
+    area_change: float
+    open_before: int
+    open_after: int
+    revision: str
+    below_precision: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["recipe"] = [e0.to_json() for e0 in self.recipe]
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        out["moved"] = self.moved
+        out["maxMoved"] = float(self.max_moved)
+        out["totalMoved"] = float(self.total_moved)
+        out["areaChange"] = float(self.area_change)
+        out["openBefore"] = self.open_before
+        out["openAfter"] = self.open_after
+        out["revision"] = self.revision
+        if self.below_precision is not UNSET:
+            out["belowPrecision"] = self.below_precision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyRepaired:
+        return cls(
+            recipe=[TopologyRepairApplied.from_json(e0) for e0 in data["recipe"]],
+            changes=[TopologyRepairChange.from_json(e0) for e0 in data["changes"]],
+            moved=data["moved"],
+            max_moved=float(data["maxMoved"]),
+            total_moved=float(data["totalMoved"]),
+            area_change=float(data["areaChange"]),
+            open_before=data["openBefore"],
+            open_after=data["openAfter"],
+            revision=data["revision"],
+            below_precision=data.get("belowPrecision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TopologyRule(_Model):
     """A rule: its kind on a layer and, between layers, another layer.
     Attributes:
@@ -91556,10 +92841,13 @@ class TopologySettings(_Model):
     """The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
     Attributes:
         exceptions: Findings marked as left on purpose (docs/adr/0202 §3).
+        profile: The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 189): its name, the storage
+            precision of the coordinates and the acceptance threshold, apart from the check's tolerance above.
         rules: The rules, in the order they are checked and listed.
         tolerance: Metres, within [`TOPOLOGY_TOLERANCES`]; absent: [`TOPOLOGY_TOLERANCE`]. Unit: length.
     """
     exceptions: list[TopologyException] | Unset = UNSET
+    profile: TopologyProfile | None | Unset = UNSET
     rules: list[TopologyRule] | Unset = UNSET
     tolerance: float | None | Unset = UNSET
 
@@ -91567,6 +92855,8 @@ class TopologySettings(_Model):
         out: dict[str, Any] = {}
         if self.exceptions is not UNSET:
             out["exceptions"] = [e0.to_json() for e0 in self.exceptions]
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
         if self.rules is not UNSET:
             out["rules"] = [e0.to_json() for e0 in self.rules]
         if self.tolerance is not UNSET:
@@ -91577,6 +92867,7 @@ class TopologySettings(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> TopologySettings:
         return cls(
             exceptions=[TopologyException.from_json(e0) for e0 in data["exceptions"]] if "exceptions" in data else UNSET,
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else TopologyProfile.from_json(data["profile"]),
             rules=[TopologyRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
         )
@@ -96118,6 +97409,268 @@ class Wipeout(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> Wipeout:
         return cls(
             frame=data["frame"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkDerivation(_Model):
+    """Objects made from an item: the item, its revision then, the operation that made them and the objects.
+    Attributes:
+        id: `tr-N`.
+        source: The item they came from: one with a file.
+        revision: The item's revision when they were made (64 lower-case hex digits).
+        operation: What made them: a command's id or a step's name, 1–200 characters.
+        uids: The objects, each in one derivation at most.
+    """
+    id: str
+    source: str
+    revision: str
+    operation: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["source"] = self.source
+        out["revision"] = self.revision
+        out["operation"] = self.operation
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkDerivation:
+        return cls(
+            id=data["id"],
+            source=data["source"],
+            revision=data["revision"],
+            operation=data["operation"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkDerivationRow(_Model):
+    """A derivation as it stands: its id, source item, operation, the source's revision it was made from, how many of its
+    objects the drawing holds of how many, its state and why.
+    Attributes:
+        objects: Unit: count.
+        recorded: Unit: count.
+    """
+    id: str
+    source: str
+    operation: str
+    revision: str
+    objects: int
+    recorded: int
+    state: WorkState | WorkStateName
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["source"] = self.source
+        out["operation"] = self.operation
+        out["revision"] = self.revision
+        out["objects"] = self.objects
+        out["recorded"] = self.recorded
+        out["state"] = _enum_out(self.state)
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkDerivationRow:
+        return cls(
+            id=data["id"],
+            source=data["source"],
+            operation=data["operation"],
+            revision=data["revision"],
+            objects=data["objects"],
+            recorded=data["recorded"],
+            state=_enum_in(WorkState, data["state"]),
+            why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkFile(_Model):
+    """The file an item is: where it is and the content the project last accepted.
+    Attributes:
+        path: An absolute path.
+        revision: The SHA-256 of its content when the project last accepted it, 64 lower-case hex digits: the item's revision.
+    """
+    path: str
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkFile:
+        return cls(
+            path=data["path"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkFileRow(_Model):
+    """An item's file: where, the revision the project accepted, how it stands."""
+    path: str
+    revision: str
+    state: WorkFileState | WorkFileStateName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["revision"] = self.revision
+        out["state"] = _enum_out(self.state)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkFileRow:
+        return cls(
+            path=data["path"],
+            revision=data["revision"],
+            state=_enum_in(WorkFileState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkItem(_Model):
+    """An item of the map's work.
+    Attributes:
+        id: `is-N`.
+        name: 1–200 characters, no space at either end.
+        layers: Layer or group ids; a layer is in one item at most.
+    """
+    id: str
+    kind: WorkKind | WorkKindName
+    name: str
+    file: WorkFile | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    status: WorkStatus | WorkStatusName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.status is not UNSET:
+            out["status"] = _enum_out(self.status)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkItem:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(WorkKind, data["kind"]),
+            name=data["name"],
+            file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkObjectSource(_Model):
+    """Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the
+    item it came from, the revision it was made from, the operation and whether it is up to date; a source object's
+    source is its own item and its revision that item's.
+    """
+    uid: str
+    role: WorkObjectRole | WorkObjectRoleName
+    current: bool | None | Unset = UNSET
+    derivation: str | None | Unset = UNSET
+    item: str | None | Unset = UNSET
+    operation: str | None | Unset = UNSET
+    revision: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["role"] = _enum_out(self.role)
+        if self.current is not UNSET:
+            out["current"] = self.current
+        if self.derivation is not UNSET:
+            out["derivation"] = self.derivation
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.operation is not UNSET:
+            out["operation"] = self.operation
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkObjectSource:
+        return cls(
+            uid=data["uid"],
+            role=_enum_in(WorkObjectRole, data["role"]),
+            current=data.get("current", UNSET),
+            derivation=data.get("derivation", UNSET),
+            item=data.get("item", UNSET),
+            operation=data.get("operation", UNSET),
+            revision=data.get("revision", UNSET),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkRow(_Model):
+    """An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state
+    and why in sentences.
+    Attributes:
+        objects: Unit: count.
+    """
+    id: str
+    kind: WorkKind | WorkKindName
+    name: str
+    status: WorkStatus | WorkStatusName
+    objects: int
+    state: WorkState | WorkStateName
+    file: WorkFileRow | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["status"] = _enum_out(self.status)
+        out["objects"] = self.objects
+        out["state"] = _enum_out(self.state)
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkRow:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(WorkKind, data["kind"]),
+            name=data["name"],
+            status=_enum_in(WorkStatus, data["status"]),
+            objects=data["objects"],
+            state=_enum_in(WorkState, data["state"]),
+            file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            why=list(data["why"]) if "why" in data else UNSET,
         )
 
 
@@ -105351,6 +106904,171 @@ class DynamicLengthenChange(LengthenChange):
     def from_json(cls, data: Mapping[str, Any]) -> DynamicLengthenChange:
         return cls(
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddMapWorkOperation(MapWorkOperation):
+    """A new item `is-N`: its kind, name, layers (each in no other item) and, for a file the project rests on, the
+    file (an absolute path; its SHA-256 is its revision).
+    """
+    TAG_VALUE: ClassVar[str] = "add"
+    kind: WorkKind | WorkKindName
+    name: str
+    file: str | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "add"}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddMapWorkOperation:
+        return cls(
+            kind=_enum_in(WorkKind, data["kind"]),
+            name=data["name"],
+            file=data.get("file", UNSET),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetMapWorkOperation(MapWorkOperation):
+    """An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the
+    status is the office's record, never an institution's approval.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    item: str
+    layers: list[str] | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    status: WorkStatus | WorkStatusName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "set"}
+        out["item"] = self.item
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetMapWorkOperation:
+        return cls(
+            item=data["item"],
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            name=data.get("name", UNSET),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(WorkStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveMapWorkOperation(MapWorkOperation):
+    """An item taken out, with the derivations made from it (their objects stay, the user's own drawing)."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    item: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "remove"}
+        out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveMapWorkOperation:
+        return cls(
+            item=data["item"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelinkMapWorkOperation(MapWorkOperation):
+    """An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that
+    showed the old file, in one step; the new file's content is the item's revision (other content than before:
+    warning `source_content_changed`, its derivations out of date).
+    """
+    TAG_VALUE: ClassVar[str] = "relink"
+    item: str
+    file: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "relink"}
+        out["item"] = self.item
+        out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelinkMapWorkOperation:
+        return cls(
+            item=data["item"],
+            file=data["file"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshMapWorkOperation(MapWorkOperation):
+    """The item's file as it is now accepted as its revision; its derivations made from before are out of date."""
+    TAG_VALUE: ClassVar[str] = "refresh"
+    item: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "refresh"}
+        out["item"] = self.item
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshMapWorkOperation:
+        return cls(
+            item=data["item"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeriveMapWorkOperation(MapWorkOperation):
+    """Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now."""
+    TAG_VALUE: ClassVar[str] = "derive"
+    source: str
+    uids: list[str]
+    operation: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "derive"}
+        out["source"] = self.source
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeriveMapWorkOperation:
+        return cls(
+            source=data["source"],
+            uids=list(data["uids"]),
+            operation=data["operation"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ForgetMapWorkOperation(MapWorkOperation):
+    """A derivation's record taken away; its objects stay, the user's own drawing."""
+    TAG_VALUE: ClassVar[str] = "forget"
+    derivation: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "forget"}
+        out["derivation"] = self.derivation
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ForgetMapWorkOperation:
+        return cls(
+            derivation=data["derivation"],
         )
 
 
@@ -116000,6 +117718,9 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
+_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation}
+
+
 _MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
 
 
@@ -116241,6 +117962,8 @@ __all__ = [
     "AcceptOptionsOperation",
     "AccessSource",
     "AccessSourceName",
+    "AccuracyBasis",
+    "AccuracyBasisName",
     "AccuracyReport",
     "AciPaperPlotStyleKey",
     "ActionFormItem",
@@ -116256,6 +117979,7 @@ __all__ = [
     "AddGuidePaperOp",
     "AddIslandsHatchEdit",
     "AddItemsPaperOp",
+    "AddMapWorkOperation",
     "AddMasterPaperOp",
     "AddMembersModulesOperation",
     "AddMembersOptionsOperation",
@@ -116664,6 +118388,11 @@ __all__ = [
     "CenterMarkDimensionMeasure",
     "CenterSubPlace",
     "CenterlineDeriveWork",
+    "ChainGrid",
+    "ChainSide",
+    "ChainStatus",
+    "ChainStatusName",
+    "ChainVertical",
     "ChamferRectangleCorners",
     "ChangeFieldTypeMigrationStep",
     "ChangedObject",
@@ -116852,7 +118581,10 @@ __all__ = [
     "CrossingSide",
     "CrossingSideName",
     "CrsBase",
+    "CrsChain",
     "CrsDefinition",
+    "CrsFamily",
+    "CrsFamilyName",
     "CrsMove",
     "CrsOperation",
     "CrsPlane",
@@ -116927,6 +118659,7 @@ __all__ = [
     "DefineModulesOperation",
     "DefineOpeningTypesOperation",
     "DefineOptionsOperation",
+    "DegreeBox",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
     "DeleteComboOptionsOperation",
@@ -116946,6 +118679,7 @@ __all__ = [
     "DerivationStatusName",
     "DerivationTable",
     "DeriveElevationsOperation",
+    "DeriveMapWorkOperation",
     "DeriveWork",
     "DerivedEntitiesPlan",
     "DesignFinding",
@@ -117216,6 +118950,8 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "EpochSource",
+    "EpochSourceName",
     "EqualConstraintRule",
     "EventLink",
     "EventLinkKind",
@@ -117342,6 +119078,7 @@ __all__ = [
     "FontMatchName",
     "FontsReport",
     "FontsReported",
+    "ForgetMapWorkOperation",
     "FormBody",
     "FormBreaking",
     "FormChange",
@@ -117464,6 +119201,8 @@ __all__ = [
     "GridChoice",
     "GridEntity",
     "GridGap",
+    "GridKind",
+    "GridKindName",
     "GridOpeningReference",
     "GridOrigin",
     "GridOriginName",
@@ -117953,6 +119692,12 @@ __all__ = [
     "LostPin",
     "MapPaperItemKind",
     "MapValuesMigrationStep",
+    "MapWork",
+    "MapWorkEdit",
+    "MapWorkEdited",
+    "MapWorkOperation",
+    "MapWorkQuery",
+    "MapWorkTree",
     "MaplibreData",
     "MaplibreExported",
     "MaplibreImported",
@@ -118136,6 +119881,7 @@ __all__ = [
     "NumberPlaceName",
     "NumberRule",
     "NumberTextEdit",
+    "NumericBudget",
     "NurbsBy",
     "NurbsCreate",
     "NurbsCreated",
@@ -118623,6 +120369,7 @@ __all__ = [
     "PolylinePlan",
     "PredefinedPaperAtlasScale",
     "PreflightSheets",
+    "PreviousPublication",
     "PrimaryOptionsOperation",
     "ProcessingBatch",
     "ProcessingBatched",
@@ -118876,6 +120623,7 @@ __all__ = [
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
     "RefreshElevationsOperation",
+    "RefreshMapWorkOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
     "RegionsLedgerBy",
@@ -118910,6 +120658,7 @@ __all__ = [
     "ReleaseCaseworkChange",
     "ReleaseElevationsOperation",
     "RelinkImagesOperation",
+    "RelinkMapWorkOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
@@ -118928,6 +120677,7 @@ __all__ = [
     "RemoveIslandsHatchEdit",
     "RemoveItemsPaperOp",
     "RemoveJoinsOp",
+    "RemoveMapWorkOperation",
     "RemoveMasterPaperOp",
     "RemoveMaterialsOperation",
     "RemoveMembersModulesOperation",
@@ -119174,6 +120924,7 @@ __all__ = [
     "SetInsertsClipOperation",
     "SetItemPropsPaperOp",
     "SetItemsPaperOp",
+    "SetMapWorkOperation",
     "SetOpeningsOperation",
     "SetOrderPaperOp",
     "SetPagePaperOp",
@@ -119221,6 +120972,7 @@ __all__ = [
     "SheetResourceKind",
     "SheetResourceKindName",
     "SheetSeries",
+    "SheetSourceChanges",
     "SheetTemplateSource",
     "SheetsCreate",
     "SheetsDetailed",
@@ -119426,6 +121178,10 @@ __all__ = [
     "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",
+    "StandardException",
+    "StandardExceptionOperation",
+    "StandardExceptionOperationName",
+    "StandardFindingKey",
     "StandardInstallAction",
     "StandardInstallActionName",
     "StandardInstallChoice",
@@ -119433,6 +121189,8 @@ __all__ = [
     "StandardIssue",
     "StandardIssueKind",
     "StandardIssueKindName",
+    "StandardIssueState",
+    "StandardIssueStateName",
     "StandardLayer",
     "StandardOrigin",
     "StandardProvenance",
@@ -119446,6 +121204,8 @@ __all__ = [
     "StandardsCheck",
     "StandardsConflicts",
     "StandardsConflictsReport",
+    "StandardsExceptions",
+    "StandardsExceptionsEdited",
     "StandardsInstall",
     "StandardsInstalled",
     "StandardsPalettes",
@@ -119732,20 +121492,32 @@ __all__ = [
     "ToolParameter",
     "TopologyCheck",
     "TopologyChecked",
+    "TopologyDecision",
+    "TopologyDecisionName",
     "TopologyException",
     "TopologyExceptionOperation",
     "TopologyExceptionOperationName",
     "TopologyExceptions",
     "TopologyExceptionsEdited",
     "TopologyFinding",
+    "TopologyFindingState",
+    "TopologyFindingStateName",
     "TopologyFixAsk",
     "TopologyFixChange",
     "TopologyFixPreview",
     "TopologyFixSource",
     "TopologyGap",
+    "TopologyProfile",
+    "TopologyRepair",
+    "TopologyRepairApplied",
+    "TopologyRepairChange",
+    "TopologyRepairStep",
+    "TopologyRepaired",
     "TopologyRule",
     "TopologyRuleKind",
     "TopologyRuleKindName",
+    "TopologyScope",
+    "TopologyScopeName",
     "TopologySettings",
     "TopologySourceStamp",
     "TopologyStamp",
@@ -119967,6 +121739,23 @@ __all__ = [
     "Wipeout",
     "WithdrawFormsOp",
     "WktCsvGeometryIn",
+    "WorkDerivation",
+    "WorkDerivationRow",
+    "WorkFile",
+    "WorkFileRow",
+    "WorkFileState",
+    "WorkFileStateName",
+    "WorkItem",
+    "WorkKind",
+    "WorkKindName",
+    "WorkObjectRole",
+    "WorkObjectRoleName",
+    "WorkObjectSource",
+    "WorkRow",
+    "WorkState",
+    "WorkStateName",
+    "WorkStatus",
+    "WorkStatusName",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",

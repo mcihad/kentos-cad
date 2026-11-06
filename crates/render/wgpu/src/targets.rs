@@ -12,7 +12,10 @@
 //! - **A kept picture:** a view that keeps its picture between frames (the
 //!   desktop's drawing area) draws the scene again only when what it shows
 //!   changed; otherwise the resolved texture it holds is composed as it is
-//!   (renderer.rs).
+//!   (renderer.rs). While the view is panned, the kept picture moved by the
+//!   pan's whole device pixels is the new one but for the strips the pan
+//!   uncovered, drawn alone (docs/adr/1067): `scratch` holds the moved part
+//!   meanwhile, and `held` says what and where the picture shows.
 //!
 //! The textures are made for a size and a sample count and made again when
 //! either changes. A replaced texture is dropped: wgpu keeps it alive until
@@ -133,6 +136,8 @@ fn texture_descriptor(
 pub struct Compose {
     pipeline: wgpu::RenderPipeline,
     layout: wgpu::BindGroupLayout,
+    /// The zoomed frames' layout (docs/adr/1068): the source picture, a linear sampler, the sampling.
+    pub(crate) zoom_layout: wgpu::BindGroupLayout,
     /// Pixel for pixel (the picture is the area's size).
     exact: wgpu::Sampler,
     /// Scaled up (one pixel per logical pixel on a denser screen).
@@ -208,6 +213,7 @@ impl Compose {
         Self {
             pipeline,
             layout,
+            zoom_layout: crate::zoomed::layout(device),
             exact: sampler("kentos.cad2d.compose.exact", wgpu::FilterMode::Nearest),
             smooth: sampler("kentos.cad2d.compose.smooth", wgpu::FilterMode::Linear),
         }
@@ -233,12 +239,73 @@ pub struct Targets {
     /// (docs/adr/0226 §4, copied from).
     pub(crate) resolve_texture: wgpu::Texture,
     pub(crate) resolve: wgpu::TextureView,
+    /// The moved part of the kept picture while the strips a pan uncovered are drawn (docs/adr/1067 §2); while the
+    /// wheel zooms, the last sharp picture the zoomed frames sample (docs/adr/1068).
+    pub(crate) scratch: wgpu::Texture,
     bind_group: wgpu::BindGroup,
+    /// The zoomed frames' sampling of `scratch` (docs/adr/1068): its uniform and bind group.
+    pub(crate) zoom_uniform: wgpu::Buffer,
+    pub(crate) zoom_bind: wgpu::BindGroup,
+    /// A wider sharp picture kept beside the source, for the ring a zoom out uncovers, and its sampling
+    /// (docs/adr/1068 §2).
+    pub(crate) wide: wgpu::Texture,
+    pub(crate) wide_uniform: wgpu::Buffer,
+    pub(crate) wide_bind: wgpu::BindGroup,
     /// Bytes of the textures, for the frame's statistics and the settings window.
     pub bytes: u64,
     /// The key of the picture the resolved texture holds, once drawn
     /// (renderer.rs, a kept picture); new targets hold none.
     kept: Mutex<Option<u64>>,
+    /// What the kept picture shows but for the camera's place (a key of its content) and where it was drawn; none
+    /// for a picture a pan may not move (docs/adr/1067 §2).
+    held: Mutex<Option<(u64, Place)>>,
+    /// What the kept picture shows but for the camera (the host's key) and where, when it is sharp (drawn whole or
+    /// moved by whole pixels) and may be scaled while the wheel zooms; and the same of the sharp picture `scratch`
+    /// holds (docs/adr/1068).
+    sharp: Mutex<Option<(u64, Place)>>,
+    source: Mutex<Option<(u64, Place)>>,
+    wide_at: Mutex<Option<(u64, Place)>>,
+}
+
+/// Where a picture was drawn (docs/adr/1067 §2): the camera's centre from the origin, the origin, the picture pixels a
+/// world unit, the picture's size and its turn.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Place {
+    pub center: [f64; 2],
+    pub origin: [f64; 2],
+    pub px_per_unit: f64,
+    pub size: [u32; 2],
+    pub twist: f64,
+    /// Device pixels a logical pixel: a zoom changes `px_per_unit`, a screen of another density this (docs/adr/1068).
+    pub dpr: f64,
+}
+
+impl Place {
+    /// The same frame but for the camera's centre and scale (docs/adr/1068): origin, size and device pixel ratio
+    /// to the bit, neither turned.
+    pub fn same_frame(&self, now: &Place) -> bool {
+        self.origin.map(f64::to_bits) == now.origin.map(f64::to_bits)
+            && self.size == now.size
+            && self.dpr.to_bits() == now.dpr.to_bits()
+            && self.twist == 0.0
+            && now.twist == 0.0
+    }
+
+    /// The whole picture pixels a picture drawn at `self` moves by to be the picture at `now` (x right, y down); none
+    /// when anything but the centre differs, the view is turned, or the move is not whole pixels (to a thousandth),
+    /// is nothing, or uncovers the whole picture.
+    pub fn shift_to(&self, now: &Place) -> Option<[i32; 2]> {
+        let same = self.same_frame(now) && self.px_per_unit.to_bits() == now.px_per_unit.to_bits();
+        if !same || !(self.px_per_unit > 0.0) {
+            return None;
+        }
+        let dx = (self.center[0] - now.center[0]) * self.px_per_unit;
+        let dy = (now.center[1] - self.center[1]) * self.px_per_unit;
+        let (rx, ry) = (dx.round(), dy.round());
+        let whole = (dx - rx).abs() < 1e-3 && (dy - ry).abs() < 1e-3;
+        let inside = rx.abs() < f64::from(self.size[0]) && ry.abs() < f64::from(self.size[1]);
+        (whole && inside && (rx != 0.0 || ry != 0.0)).then_some([rx as i32, ry as i32])
+    }
 }
 
 impl Targets {
@@ -270,9 +337,45 @@ impl Targets {
             format,
             wgpu::TextureUsages::RENDER_ATTACHMENT
                 | wgpu::TextureUsages::TEXTURE_BINDING
-                | wgpu::TextureUsages::COPY_SRC,
+                | wgpu::TextureUsages::COPY_SRC
+                | wgpu::TextureUsages::COPY_DST,
         ));
         let resolve = resolve_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let scratch = device.create_texture(&texture_descriptor(
+            "kentos.cad2d.picture.moved",
+            size,
+            1,
+            format,
+            wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
+        ));
+        let wide = device.create_texture(&texture_descriptor(
+            "kentos.cad2d.picture.wide",
+            size,
+            1,
+            format,
+            wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
+        ));
+        let sampled = |texture: &wgpu::Texture| {
+            let uniform = device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("kentos.cad2d.picture.zoomed"),
+                size: std::mem::size_of::<crate::zoomed::ZoomUniform>() as u64,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+            let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("kentos.cad2d.picture.zoomed"),
+                layout: &compose.zoom_layout,
+                entries: &[
+                    wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
+                    wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&compose.smooth) },
+                    wgpu::BindGroupEntry { binding: 2, resource: uniform.as_entire_binding() },
+                ],
+            });
+            (uniform, bind)
+        };
+        let (zoom_uniform, zoom_bind) = sampled(&scratch);
+        let (wide_uniform, wide_bind) = sampled(&wide);
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("kentos.cad2d.compose"),
             layout: &compose.layout,
@@ -300,10 +403,58 @@ impl Targets {
             msaa,
             resolve_texture,
             resolve,
+            scratch,
             bind_group,
-            bytes: pixels * texel * (u64::from(samples.max(1)) + u64::from(samples > 1)),
+            zoom_uniform,
+            zoom_bind,
+            wide,
+            wide_uniform,
+            wide_bind,
+            // The multisampled samples, the picture, the moved part and the wide picture.
+            bytes: pixels * texel * (u64::from(samples.max(1)) + u64::from(samples > 1) + 2),
             kept: Mutex::new(None),
+            held: Mutex::new(None),
+            sharp: Mutex::new(None),
+            source: Mutex::new(None),
+            wide_at: Mutex::new(None),
         }
+    }
+
+    /// The wide picture's host key and place (docs/adr/1068 §2).
+    pub fn wide_at(&self) -> Option<(u64, Place)> {
+        *self.wide_at.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    pub fn set_wide_at(&self, wide: Option<(u64, Place)>) {
+        *self.wide_at.lock().unwrap_or_else(PoisonError::into_inner) = wide;
+    }
+
+    /// The kept picture's host key and place while it is sharp (docs/adr/1068).
+    pub fn sharp(&self) -> Option<(u64, Place)> {
+        *self.sharp.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    pub fn set_sharp(&self, sharp: Option<(u64, Place)>) {
+        *self.sharp.lock().unwrap_or_else(PoisonError::into_inner) = sharp;
+    }
+
+    /// The sharp picture `scratch` holds for zoomed frames, and where (docs/adr/1068).
+    pub fn source(&self) -> Option<(u64, Place)> {
+        *self.source.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    pub fn set_source(&self, source: Option<(u64, Place)>) {
+        *self.source.lock().unwrap_or_else(PoisonError::into_inner) = source;
+    }
+
+    /// What the kept picture shows but for the camera's place, and where (docs/adr/1067 §2).
+    pub fn held(&self) -> Option<(u64, Place)> {
+        *self.held.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// The kept picture shows `content` drawn at `place`; none: a pan may not move it.
+    pub fn hold(&self, held: Option<(u64, Place)>) {
+        *self.held.lock().unwrap_or_else(PoisonError::into_inner) = held;
     }
 
     /// Whether the resolved texture holds the picture of `key`.
@@ -372,5 +523,29 @@ impl Targets {
                 },
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod place_tests {
+    use super::Place;
+
+    fn at(x: f64, y: f64) -> Place {
+        Place { center: [x, y], origin: [486_000.0, 4_420_000.0], px_per_unit: 2.0, size: [100, 80], twist: 0.0, dpr: 2.0 }
+    }
+
+    /// A pan by whole pixels moves the picture (x right, y down); a fraction, a turn, another scale or a move past
+    /// the picture does not (docs/adr/1067 §1).
+    #[test]
+    fn only_a_pan_by_whole_pixels_moves_the_picture() {
+        // The camera 4.5 m west and 2 m north: the picture moves 9 px right and 4 px down.
+        assert_eq!(at(10.0, 5.0).shift_to(&at(5.5, 7.0)), Some([9, 4]));
+        assert_eq!(at(10.0, 5.0).shift_to(&at(10.25, 5.0)), None, "half a pixel");
+        assert_eq!(at(10.0, 5.0).shift_to(&at(10.0, 5.0)), None, "nothing to move");
+        assert_eq!(at(10.0, 5.0).shift_to(&at(10.0 - 60.0, 5.0)), None, "past the picture");
+        let turned = Place { twist: 0.1, ..at(5.5, 7.0) };
+        assert_eq!(at(10.0, 5.0).shift_to(&turned), None);
+        let scaled = Place { px_per_unit: 2.5, ..at(5.5, 7.0) };
+        assert_eq!(at(10.0, 5.0).shift_to(&scaled), None);
     }
 }

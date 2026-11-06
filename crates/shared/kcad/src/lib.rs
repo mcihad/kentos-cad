@@ -808,16 +808,26 @@ pub const SCHEMA_WITH_SHX_FONTS: u32 = 184;
 pub const SCHEMA_WITH_TABLE_STYLES: u32 = 185;
 /// Schema 186 (docs/adr/1023): the text style a dimension style writes its value in (`textStyle`, by name).
 pub const SCHEMA_WITH_DIMENSION_TEXT_STYLES: u32 = 186;
-/// Schema 187 (docs/adr/0977): a road project's grades (cross slopes, superelevation, a culvert's fall, a pad's grade, a
+/// Schema 187 (docs/adr/1025): the text style a leader style writes its note in (`textStyle`, by name).
+pub const SCHEMA_WITH_LEADER_TEXT_STYLES: u32 = 187;
+/// Schema 188 (docs/adr/1200 §2): a map project's work structure (`settings.mapWork`).
+pub const SCHEMA_WITH_MAP_WORK: u32 = 188;
+/// Schema 189 (docs/adr/1260): the topology settings' quality `profile` and an exception's `decision`, `reason`,
+/// `ruleDigest` and `scope`.
+pub const SCHEMA_WITH_TOPOLOGY_REVIEWS: u32 = 189;
+/// Schema 190 (docs/adr/1129): the standards findings the project accepts with a reason
+/// (`settings.standardExceptions`).
+pub const SCHEMA_WITH_STANDARD_EXCEPTIONS: u32 = 190;
+/// Schema 191 (docs/adr/0977): a road project's grades (cross slopes, superelevation, a culvert's fall, a pad's grade, a
 /// benched ground's slope) as rise over run; before it they were percent and are divided by 100 as they are read.
-pub const SCHEMA_WITH_ROAD_GRADES: u32 = 187;
-/// Schema 188 (docs/adr/0979): an alignment PI's `ove`, an ove clothoid into the next PI's curve, its A solved.
-pub const SCHEMA_WITH_ROAD_OVE: u32 = 188;
+pub const SCHEMA_WITH_ROAD_GRADES: u32 = 191;
+/// Schema 192 (docs/adr/0979): an alignment PI's `ove`, an ove clothoid into the next PI's curve, its A solved.
+pub const SCHEMA_WITH_ROAD_OVE: u32 = 192;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 186] = [
+pub const SCHEMAS: [u32; 190] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1002,6 +1012,10 @@ pub const SCHEMAS: [u32; 186] = [
     SCHEMA_WITH_SHX_FONTS,
     SCHEMA_WITH_TABLE_STYLES,
     SCHEMA_WITH_DIMENSION_TEXT_STYLES,
+    SCHEMA_WITH_LEADER_TEXT_STYLES,
+    SCHEMA_WITH_MAP_WORK,
+    SCHEMA_WITH_TOPOLOGY_REVIEWS,
+    SCHEMA_WITH_STANDARD_EXCEPTIONS,
     SCHEMA_WITH_ROAD_GRADES,
     SCHEMA_WITH_ROAD_OVE,
 ];

@@ -1,0 +1,53 @@
+{
+ "scale": 100.0,
+ "tableStyles": [
+  {
+   "name": "CETVEL",
+   "data": {
+    "textStyle": "A-TABLO",
+    "height": 2.5,
+    "align": "right",
+    "color": "#ff0000",
+    "horizontalMargin": 1.5,
+    "verticalMargin": 1.0,
+    "borderWeight": 0.25,
+    "borderColor": "#0000ff"
+   },
+   "title": {
+    "height": 3.5,
+    "align": "center",
+    "fill": "#00ffff",
+    "horizontalMargin": 1.5,
+    "verticalMargin": 1.0,
+    "borderWeight": 0.5
+   },
+   "header": {
+    "height": 2.5,
+    "align": "center",
+    "color": "#00ff00",
+    "horizontalMargin": 1.5,
+    "verticalMargin": 1.0
+   }
+  }
+ ],
+ "textStyles": [
+  {
+   "name": "A-TABLO",
+   "fontFile": "romans.shx"
+  }
+ ],
+ "decisions": [
+  "table_style_from_acad_table",
+  "table_style_lossy",
+  "table_style_unused_left_out"
+ ],
+ "lost": [
+  "başlık hücresinin üst ya da alt hizası",
+  "başlık hücresinin kenarlarının farklı",
+  "sütun başı hücresinin gizli kenarları",
+  "sütun başının gizlenmesi"
+ ],
+ "unused": [
+  "BOS"
+ ]
+}

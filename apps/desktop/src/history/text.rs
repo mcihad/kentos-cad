@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 418] = [
+pub(crate) const TITLES: [(&str, &str); 422] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -266,6 +266,8 @@ pub(crate) const TITLES: [(&str, &str); 418] = [
     ("road.project.query", "Yol projesini sorgula"),
     ("road.project.rebuild", "Yol çizimlerini yeniden üret"),
     ("road.project.edit", "Kendiliğinden yeniden üret"),
+    ("map.work.query", "Harita işini sorgula"),
+    ("map.work.edit", "Harita işini düzenle"),
     ("file.export.landxml", "LandXML dışa aktar"),
     ("file.export.gltf", "glTF dışa aktar"),
     ("file.export.ifc", "IFC dışa aktar"),
@@ -279,6 +281,7 @@ pub(crate) const TITLES: [(&str, &str); 418] = [
     ("road.alignments.query", "Aksı sorgula"),
     ("cad.topology.check", "Topolojiyi denetle"),
     ("cad.topology.exceptions", "Topoloji istisnaları"),
+    ("cad.topology.repair", "Topolojiyi onar (tarif)"),
     ("cad.addresses.check", "Adres verisini denetle"),
     ("cad.addresses.compare", "Adres kaydıyla karşılaştır"),
     ("cad.addresses.normalize", "Adres yazılışlarını düzelt"),
@@ -312,6 +315,7 @@ pub(crate) const TITLES: [(&str, &str); 418] = [
     ("cad.standards.resolve", "Proje standartlarını birleştir"),
     ("cad.standards.palettes", "Ofis araç paletleri"),
     ("cad.standards.install", "Standart kaynaklarını kur"),
+    ("cad.standards.exceptions", "Standart bulgusunu kabul et"),
     ("cad.standards.conflicts", "Bağlı standartlardaki farklı tanımları göster"),
     ("cad.standards.check", "Standardı denetle"),
     ("cad.standards.apply", "Standardı uygula"),

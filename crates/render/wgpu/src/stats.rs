@@ -28,4 +28,12 @@ pub struct FrameStats {
     /// shows changed, so the scene was not drawn again, only the overlays
     /// over it (`FrameInput::keep_picture`). The counts above are the picture's.
     pub picture_kept: bool,
+    /// The frame moved the kept picture by the pan's whole pixels and drew only the strips it uncovered
+    /// (`FrameInput::moving`, docs/adr/1067).
+    pub picture_moved: bool,
+    /// The frame showed the last sharp picture scaled while the wheel zoomed and drew only the ring it did not cover
+    /// (docs/adr/1068).
+    pub picture_zoomed: bool,
+    /// With `picture_zoomed`: the ring a zoom out uncovered came from the wide picture, not drawn (docs/adr/1068 §2).
+    pub picture_zoomed_wide: bool,
 }

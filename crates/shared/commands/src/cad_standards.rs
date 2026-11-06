@@ -796,7 +796,8 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
             keys(
                 item,
                 &format!("resources.leaderStyles[{i}]"),
-                &["id", "name", "height", "arrow", "arrowSize", "mask"],
+                // docs/adr/1025: the note's text style, by name.
+                &["id", "name", "height", "arrow", "arrowSize", "mask", "textStyle"],
             )?;
         }
     }
@@ -1055,6 +1056,33 @@ pub struct StandardsCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub resources: Option<StandardResources>,
+    /// The standard's source, which accepted findings are bound to (docs/adr/1129): a bound package's id and revision,
+    /// or `cad.standards.resolve`'s `provenance.rules`. Absent: the standard's name, no revision.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub origin: Option<StandardOrigin>,
+}
+
+/// Whether a finding is the project's to look at (docs/adr/1129 §2).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum StandardIssueState {
+    /// Not accepted (the field is then absent).
+    #[default]
+    Open,
+    /// Accepted with a reason, against this standard's revision and with what the drawing has now.
+    Accepted,
+    /// Accepted once, but the standard's revision or what the drawing has changed since: to be looked at again.
+    Lapsed,
+}
+
+impl StandardIssueState {
+    pub fn is_open(&self) -> bool {
+        *self == StandardIssueState::Open
+    }
 }
 
 /// What a finding is about.
@@ -1143,6 +1171,14 @@ pub struct StandardIssue {
     pub fixable: bool,
     /// For people: what is wrong and what fixes it.
     pub message: String,
+    /// Accepted or lapsed (docs/adr/1129 §2); absent: open.
+    #[serde(default, skip_serializing_if = "StandardIssueState::is_open")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<StandardIssueState>"))]
+    pub state: StandardIssueState,
+    /// The accepted finding's reason, when it is accepted or lapsed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reason: Option<String>,
 }
 
 /// `cad.standards.check`'s answer.
@@ -1160,6 +1196,15 @@ pub struct StandardsReport {
     /// How many of them `cad.standards.apply` fixes.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub fixable: u32,
+    /// How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub accepted: u32,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub lapsed: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

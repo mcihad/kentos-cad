@@ -32,8 +32,15 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
     yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu
     verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi
     teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı
-    özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını
-    kaldırmaz.
+    özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle
+    taşır (docs/adr/1320 §2); çizimin geri alması teslim dosyalarını kaldırmaz. previous
+    ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3):
+    sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve
+    kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir;
+    önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya
+    revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın
+    olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir
+    sayfa kopyalanmaz.
     """
     __slots__ = ()
     id = "file.publish.sheets"
@@ -58,6 +65,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         resources: bool = False,
         resumable: bool | Unset = UNSET,
         resume: bool | Unset = UNSET,
@@ -71,8 +79,15 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini
         ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün
         klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi
-        sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü
-        taşır; çizimin geri alması teslim dosyalarını kaldırmaz.
+        sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her
+        sayfanın kaynak nesnelerini içerik özetleriyle taşır (docs/adr/1320 §2); çizimin
+        geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin
+        güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3): sayfası aynı çizen ve PDF'i
+        teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır
+        (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi
+        kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız
+        ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı
+        resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.
 
         Args:
             doc: The drawing it works on.
@@ -85,6 +100,10 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name: One PDF's leaf name; .pdf is appended when missing.
             naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
             pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
+            previous: An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
+                whose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has
+                its bytes is copied byte for byte with its own publication date; the rest are made again with today's. The
+                earlier folder is left as it is. Separate PDFs only; not with `resume`.
             resources: Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.
             resumable: Separate PDFs only (docs/adr/1090 §7): a publication that is stopped or fails keeps its finished pages and a
                 journal in a hidden sibling folder (`.<folder>.kentos-devam`), never in the delivery folder, so `resume` can go on.
@@ -114,6 +133,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            previous=previous,
             resources=resources,
             resumable=resumable,
             resume=resume,
@@ -134,6 +154,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         resources: bool = False,
         resumable: bool | Unset = UNSET,
         resume: bool | Unset = UNSET,
@@ -152,6 +173,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            previous=previous,
             resources=resources,
             resumable=resumable,
             resume=resume,
@@ -172,6 +194,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         resources: bool = False,
         resumable: bool | Unset = UNSET,
         resume: bool | Unset = UNSET,
@@ -190,6 +213,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            previous=previous,
             resources=resources,
             resumable=resumable,
             resume=resume,
@@ -210,6 +234,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
         name: str | None | Unset = UNSET,
         naming: str = "{index}-{sheet}",
         pin: SheetPublishPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         resources: bool = False,
         resumable: bool | Unset = UNSET,
         resume: bool | Unset = UNSET,
@@ -233,6 +258,7 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             name=name,
             naming=naming,
             pin=pin,
+            previous=previous,
             resources=resources,
             resumable=resumable,
             resume=resume,
@@ -255,7 +281,11 @@ class _FilePublishStatus(LocalCommand[PublishStatus, PublishStatusReport, Publis
     verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve
     file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da
     başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve
-    kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği.
+    kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği. Her sayfanın
+    teslim tarihi (date) ve kaynaklarının teslimden beri değişimi (changes,
+    docs/adr/1320 §2): içeriği değişen, sayfaya giren ve sayfadan çıkan nesneler kalıcı
+    kimlikleriyle, paftanın kendi kaydının değişip değişmediği ve değişen proje
+    parçaları (settings, layers, styles, blocks, book, resources).
     """
     __slots__ = ()
     id = "file.publish.status"
@@ -286,7 +316,11 @@ class _FilePublishStatus(LocalCommand[PublishStatus, PublishStatusReport, Publis
         yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in
         sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir
         bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve
-        resume ile devam edilip edilemeyeceği.
+        resume ile devam edilip edilemeyeceği. Her sayfanın teslim tarihi (date) ve
+        kaynaklarının teslimden beri değişimi (changes, docs/adr/1320 §2): içeriği değişen,
+        sayfaya giren ve sayfadan çıkan nesneler kalıcı kimlikleriyle, paftanın kendi
+        kaydının değişip değişmediği ve değişen proje parçaları (settings, layers, styles,
+        blocks, book, resources).
 
         Args:
             doc: The drawing it works on.

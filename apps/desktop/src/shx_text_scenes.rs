@@ -5,7 +5,7 @@
 //! `tools_screens` takes them:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=shx-metin-cizim,shx-metin-yakin,shx-blok-metin,shx-olcu-cizim,shx-olcu-penceresi,nokta-yuvarlak cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=shx-metin-cizim,shx-metin-yakin,shx-blok-metin,shx-olcu-cizim,shx-olcu-penceresi,shx-kilavuz-penceresi,nokta-yuvarlak cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -28,6 +28,7 @@ fn resources() -> serde_json::Value {
 const SHX: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1125";
 const SHX_BLOCK: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1020";
 const SHX_DIM: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1023";
+const SHX_LEADER: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1025";
 
 fn drawing(app: &mut App) {
     let mut o = Objects::new();
@@ -61,7 +62,16 @@ fn drawing(app: &mut App) {
     // words are its letters), one turned.
     o.dimension("shx", None, [[0.0, -60.0], [20.0, -60.0]], None, -4.0, json!({"dimStyle": SHX_DIM, "text": "SUS-U"}));
     o.dimension("shx", None, [[30.0, -60.0], [44.0, -52.0]], None, -3.0, json!({"dimStyle": SHX_DIM, "text": "Ş\\M+18140U"}));
+    // docs/adr/1026: a table in the SHX face.
+    o.push("shx", json!({"kind": "table", "p": crate::tools_scenes::xy([60.0, -40.0]), "rotation": 0.0, "height": 1.5,
+        "rows": [2.5, 2.5], "columns": [6.0, 6.0], "cells": [["SU", "US"], ["S-U", "SUS"]], "textStyle": SHX}));
+    // docs/adr/1025: a leader whose style writes its note in the SHX style.
+    o.push("shx", json!({"kind": "leader", "pts": [crate::tools_scenes::xy([52.0, -62.0]), crate::tools_scenes::xy([56.0, -56.0])],
+        "text": "SUS-U", "height": 2.5, "rotation": 0.0, "leaderStyle": SHX_LEADER}));
     open_edited(app, o, |d| {
+        d["settings"]["leaderStyles"] = json!([
+            {"id": SHX_LEADER, "name": "Ofis not", "height": 2.5, "textStyle": "Uni"}
+        ]);
         d["settings"]["dimensionStyles"] = json!([
             {"id": SHX_DIM, "name": "Ofis ölçü", "height": 2.5, "arrow": "closed", "textStyle": "Uni"}
         ]);
@@ -116,7 +126,13 @@ pub(crate) fn scenes() -> Vec<Scene> {
         }),
         ("shx-olcu-cizim", |app| {
             drawing(app);
-            fit(app, [-3.0, -68.0, 50.0, -48.0]);
+            fit(app, [-3.0, -68.0, 76.0, -36.0]);
+        }),
+        ("shx-kilavuz-penceresi", |app| {
+            drawing(app);
+            fit(app, [-3.0, -68.0, 72.0, -48.0]);
+            crate::tools_scenes::run(app, "leader.styles");
+            let _ = app.update(crate::app::Message::LeaderTools(crate::leader_tools::Event::Choose(0)));
         }),
         ("shx-olcu-penceresi", |app| {
             drawing(app);

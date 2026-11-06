@@ -505,6 +505,7 @@ fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf, format: CadFormat
         dimension: result.dimension_styles,
         line_types: result.line_types,
         line_type_scale: result.line_type_scale,
+        table: result.table_styles,
     };
     match import_apply::apply_styled_import(doc, result.entities, result.blocks, styles, &plan) {
         Err(message) => CommandResult::Failed {

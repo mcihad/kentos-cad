@@ -1556,7 +1556,7 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   Bütün okuyucularda karışık paragraf kopya sırası, PDF/UA/A ve ertelenmiş
   web kabulü iddia edilmez. **CAD-ADV-10 bu açık yerel destek sözleşmesiyle tamamlandı.**
 
-### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [~]
+### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [x]
 
 **Öncelik:** P1; yanlış teslimi önleyen uyarılar P0. **Kod:** [C19], [C31].
 **Dayanak:** AutoCAD özel çizgi tiplerinde font, metin yönü, ölçek ve
@@ -1833,6 +1833,13 @@ ekranda, PDF'de ve CPU baskısında fontun çizgileridir, çizilemeyen değer ha
 DIMTXSTY'nin stilini korur (ezdxf başvurusu). Standart paketi `textStyle`'ı ve Big Font'u kabul eder; masaüstü
 penceresinde Yazı stili seçimi. DXF dışa aktarma DIMTXSTY'yi yazar. Kılavuz ve tablo yazısı açık.
 
+**Kılavuz notu SHX ile (6 Kasım 2026, [ADR 1025](../docs/adr/1025-leader-styles-write-their-note-in-a-text-style.md)):**
+Kılavuz stili notunu bir yazı stiliyle yazar (`textStyle`, `.kcad` şema 187); SHX yazı stilinde not ekranda, PDF'de
+ve CPU baskısında fontun çizgileridir, çizilemeyen not hatadır, pafta ön denetimi kılavuzları da sorar. Bağımsız
+başvuru durumuyla test edildi; pencere resmi bakıldı. Ek ([ADR 1026](../docs/adr/1026-table-cells-in-their-shx-face.md)):
+yüzü SHX yazı stili olan tablonun hücreleri de fontun çizgileriyle yazılır; çizilemeyen hücre adıyla hatadır. Böylece
+yazı, blok yazısı, ölçü, kılavuz ve tablo SHX ile çizilir. DXF MLEADERSTYLE yazı stili ve seçim kutusu genişliği açık.
+
 **Kâğıt çizgisinin noktası (6 Kasım 2026, ADR 1124 ek):** Pafta çizgisi, şekil ve dikdörtgenin kendi tire
 listesindeki sıfır boylu tire PDF'de ve SVG'de yuvarlak, çizgi kalınlığında nokta basılır (yol iki kez: tireler, sonra
 noktalar). PDF akışı ve SVG testleriyle; ifraz altın PDF'i değişmedi; 600 dpi resme bakıldı.
@@ -1842,7 +1849,33 @@ Aynı çizim 1:50 ve 1:20 görünüm pencerelerinde vektör PDF'te çizim sıras
 kalınlıklı saç telini, yarı saydam mürekkebi ve aynı kâğıt tiresini korur; CPU baskı resmi maskeyi aynı sırayla
 uygular. Dört ekran temasında pafta takımının PDF'i bayt bayt aynı, çizim değişmez. Üç test ve PDF resmi.
 
-### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
+**Kapanış (6 Kasım 2026):** maddenin her satırı kanıtına bağlandı.
+
+- *`dashes_of`'un iki sınırı; desteklenmeyen görünüş UI'da ve çıktı raporunda kaybolmasın:* yazı/şekil öğeleri çizilir,
+  desen 256 öğeye çıktı (ADR 0930, 1001); `line_types::named_pattern_loss_follows_actual_visibility_and_overrides`,
+  `complex_marks_without_any_gap_still_refuse_preview_vector_and_direct_cpu_output`, görünüm penceresi kırpmasında kayıp
+  (ADR 1007, altı geometrik durum).
+- *GPU/CPU/PDF ortak tarif, uzun desen ölçülmüş tamponla:* depo sayfası (ADR 0930), `line_types::long_custom_stroke_phase_
+  reaches_the_actual_pdf_content_stream`, gerçek GPU `round_dots_on_a_real_gpu` uzun tarifle (ADR 1124).
+- *Yazı/şekil deseninde font, glyph, açı, upright/teğet/mutlak yön, faz, tekrar; eksik font boşluk değil:* ADR 0930,
+  1120; `line_types::attached_shapes_print_from_embedded_bytes_and_missing_glyphs_block_the_complete_output`.
+- *Düz/yaylı/kapalı yolda faz, kısa parça, köşe, yön, değişken genişlik, aynalı/nonuniform blok; model boyu, kâğıt
+  kalınlığı ve görünüm deseni ayrı:* `curve_dashes::curve_dashes_are_cut_at_true_arc_distances_at_three_scales`,
+  `ellipse_and_nurbs_dashes_follow_their_arc_length`, `a_dotted_wide_polyline_prints_its_cross_sections` (ADR 1121,
+  1122), `wide_block_paths::complex_patterns_follow_placed_geometry_in_mirrored_affine_nested_blocks`, ADR 0930 §22
+  (432 kök/blok karşılaştırması), `line_types::named_patterns_keep_either_paper_size_or_drawing_length_across_viewports`.
+- *Çizim sırası, maske, saydamlık, saç teli; tema rengi değiştirmesin:* ADR 1021'in üç testi.
+- **Kabul** — *on ikiden fazla öğe, yazı ve şekil desenleri doğru/yay/yol/blokta:* ADR 1001 (16 öğe, açılan çizimin
+  ekranından piksel ölçümü), ADR 0930 §22; *1:1/1:20/1:100 faz, sembol yönü, kâğıt boyu:* ADR 1122 (1e-6 mm), ADR 1124
+  `dots::a_dot_prints_round_and_as_wide_as_the_line_in_the_pdf_and_the_cpu_preview`; *kaynak tanım round-trip:* `lin`
+  testleri (`lin_files_read_as_the_cases_say`, `the_types_are_written_back_as_the_cases_say`), `.kcad` şema 181;
+  *desteklenmeyen kaynak açık bulgu:* `linetype_unsupported`, `text_shx_unsupported`, ADR 1007.
+
+Bu madde dışında kalan ve TODOS.md'ye ayrı iş olarak taşınanlar: PLINEGEN=0 (her köşede yeniden başlayan desen;
+AutoCAD'in `A` hizalama algoritması belgelenmemiş), seçim kutusunun SHX genişliği, 2 milyon nokta bütçesinin ötesi,
+parça düzeyinde kesin kırpma, DXF MLEADERSTYLE yazı stili.
+
+### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [x]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
 **Dayanak:** AutoCAD adlandırılmış kaynak denetimi ve proje araç
@@ -2205,6 +2238,73 @@ türünü aldı (37 ortak vaka), tablonun stili `cad.entities.edit`'in `tableSty
 `edit_geometry` gidiş-dönüşü stili artık düşürmez. Masaüstünde Tablo stilleri penceresi (§7.19 iskeleti) ve
 özelliklerde Tablo stili satırı; kurulum penceresinin Kullanım sütunu “N tablo” der. Açık: DXF TABLESTYLE, dikey hizalama
 ve satırın yazıya göre büyümesi, kenar başına ayrı bakış.
+
+**DXF tablo stili (6 Kasım 2026, [ADR 1128](../docs/adr/1128-dxf-table-styles.md)):** Projenin tablo stilleri DXF'e
+ACAD_TABLESTYLE sözlüğünde TABLESTYLE nesneleri olarak yazılır (Autodesk DXF başvurusunun grupları; hücre stillerinin
+sırası veri, başlık, sütun başı, LibreDWG `dwg2.spec`'e göre); KENTOS verisi stili tam taşır, tablonun INSERT'i
+nesnenin tutamacını anar. Okurken KentOS'un stilleri birebir gelir; başka programın stili bir ACAD_TABLE'ın 342'si
+onu anıyorsa alınır, taşınamayanlar (yukarı akış, gizli başlık/sütun başı, üst/alt hiza, farklı ya da gizli
+kenarlar) içe aktarma raporunun yeni `style` konusundadır; izlenmeyen stil alınmaz ve söylenir. Bağımsız taraf ezdxf
+(içe aktarma örneği ve dışa aktarmanın etiket etiket okunması): `table_style_dxf` sınamaları (biçim 2, uygulama 3) ve
+`scripts/fixtures/table_style_dxf.py --check` geçer. Yazarın JSON girdisi tablonun `tableStyle`'ını ve `breaks`'ini
+artık düşürmez.
+
+**Kabulün kanıtı (6 Kasım 2026).** Kabul satırları ve kanıtları; kabul sınaması
+`crates/native/application/tests/all/office_profiles.rs`:
+
+- *“iki ofis profili arasında katman/stil eşle”*: `two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides`
+  — iki sürümlü paket sırayla bağlanır, çözülür, uygulanır, kurulur; A-DUVAR'ın görünüşü ikinci ofisin olur, A-NOT
+  yazı stili ve CETVEL tablo stili yerinde değiştirilir (kimlikleri kalır, tablo yeni stilini çizer). ADR 1002, 1100,
+  1126.
+- *“aynı adlı farklı blok ve çizgi tipini dene”*: aynı sınama — KAPI `differs` (`entities`, `publication`), iki
+  yerleştirmeyle yerinde değiştirilir, kimliği kalır; GAZ `differs` (`elements`), ikinci ofisinki GAZ-B olarak gelir,
+  çizimdeki kalır. ADR 1100, 1002, 1019.
+- *“Önizleme ile sonuç aynı olsun”*: her kurulumda `plan` ile `execute`'un satırları ve sayıları eşit (`profile`).
+  ADR 1002.
+- *“nesne override'ı … korunabilsin”*: çizginin kendi rengi (#00ff00) ve tablonun kendi hücre stili ikinci ofisten
+  sonra kalır; “Bu değer nereden geliyor?” kökeni “Nesne”, sıfırlama ikinci ofisin rengini gösterir. ADR 1100, 1015,
+  1018 (`the_value_origin_of_an_insert_counts_where_the_blocks_parts_take_their_look`,
+  `the_value_origin_says_what_the_sheets_plot_profile_prints`).
+- *“iki viewportun farklı stilleri korunabilsin”*: A-101'in macenta ve A-102'nin 0,7 mm geçersiz kılması değişmez
+  (pafta kitabı aynı), köken iki pencereyi ayrı söyler. ADR 1100.
+- *“Yeni/yeniden açılmış projelerde aynı profil tarifi aynı üretim davranışını versin”*:
+  `the_same_profile_recipe_gives_the_same_drawing_on_a_new_and_a_reopened_project` — canlı, kaydedilip açılmış ve
+  yalnız ikinci ofisi alan projeler katmanlarda, çizgi tiplerinde, yazı ve tablo stillerinde, onaylı şablonlarda ve
+  bloklarda aynı sonuca varır.
+
+Maddeler:
+
+- Mevcut araçlar ve sürümlü paket: `cad.standards.check/apply/resolve/conflicts/install/palettes` ve
+  `docs/specs/drawing-standard-package.md` sürüm 2 (ortak vakalar `fixtures/commands/v1/cad.standards.*.json`).
+- Paketin kaynakları: katman, yazı/ölçü/kılavuz/tablo stili, çizgi tipi, tarama, blok ve pafta şablonu (ADR 1002,
+  1100, 1126); köken ve sürüm `resolve`'da; kişisel palet ve favoriler ayar klasöründe, çizime karışmaz (ADR 1016).
+  Bulut kitaplığından doğrudan okuma bu maddenin metninde yok (“blok ve pafta şablonu referanslarını taşısın”);
+  `.kblok` kitaplıkları pencereden ve Python/MCP'den verilir (ADR 1017, 1019).
+- Değerin kökeni ve sıfırlama önizlemesi: ADR 1100, 1015, 1018 sınamaları (yukarıda).
+- Standart denetimi içerik kurallarını tarar (stil yükseklikleri, çizgi tipi/tarama/blok/tablo stili tanımları);
+  *eski projeyi açmak uygulama sayılmaz*: `opening_a_project_bound_to_another_office_does_not_apply_it` (başka ofise
+  bağlı, uygulanmamış proje kaydedilip açılınca değişmez, denetim farkı söyler ve yazmaz). **Kanıtı yok:** *“Geçerli
+  istisna gerekçeyle saklanabilsin”* — KentOS'ta bir bulguyu gerekçesiyle kabul edip projede saklayan bir yapı yok
+  (sözleşme, `.kcad` alanı, denetimin onu süzmesi ve pencere gerekir).
+- Araç paleti: ADR 1014 (`palettes_need_a_readable_bound_standard`, masaüstü
+  `a_ready_tool_runs_its_command_and_a_dimmed_one_cannot_be_pressed`), ADR 1016
+  (`a_favourite_keeps_its_recipe_and_an_own_tool_is_the_journals_last_call`).
+- Paket güncellemesinin etkisi ve kullanıcı eşlemesi: kurulum satırları eksik/aynı/farklı, alanları ve kullanımıyla;
+  Değiştir yerel ad ve kimliği korur, Yeni adla yeni ad ister; kullanılan tanım temizlenmez (ADR 1002, 1100, 1126 §5).
+
+Gerekçeli istisna dışında bütün satırlar kanıtlı; o satır açık olduğu için madde `[~]` kalır.
+
+**Gerekçeli istisna (6 Kasım 2026, [ADR 1129](../docs/adr/1129-accepted-standards-findings.md)):** *“Geçerli istisna
+gerekçeyle saklanabilsin”* artık kanıtlı. `cad.standards.exceptions` bir denetim bulgusunu (tür, konu, katman)
+standardın kaynağına ve revizyonuna bağlı, kabul anındaki değerleriyle, zorunlu gerekçe ve isteğe bağlı kim/ne
+zamanla kabul eder ya da kabulü geri alır; kabuller projededir (`.kcad` şema 190). `cad.standards.check`
+kabul edilen bulguyu gizlemez: `accepted` olarak listeler ve ayrı sayar; paketin revizyonu ya da çizimdeki değer
+değişince `lapsed` der. Çizim standardı penceresinde Gerekçe, Gerekçeyle kabul et ve Kabulü geri al. Kanıt:
+`office_profiles.rs` `an_accepted_finding_survives_a_reopen_and_lapses_on_the_next_revision` (kabul, kaydedip açınca
+kalır, sonraki revizyonda düşer) ve `opening_a_project_bound_to_another_office_does_not_apply_it` (açılış
+uygulamaz); bağımsız başvurudan 53 ortak vaka (`cad.standards.exceptions` 32, `cad.standards.check.exceptions` 21);
+şema 190 örnekleri bağımsız okuyucuyla. Bu ve yukarıdaki satırlarla maddenin bütün kabul satırları ve maddeleri
+kanıtlıdır; madde `[x]`. Sınır: Uygula kabul edilmiş bulguyu ayırt etmez (ADR 1129 §7).
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
@@ -2784,7 +2884,7 @@ iptal: masaüstü kaydının her aşamada durdurulması önceki dosyayı ve kayd
 tekrar kullanılan salt okunur denetim: ADR 1009. Ayrı kurtarma kopyası ve katı okuyucudan ayrı kısmi okuma: ADR 1013.
 Açık kalan (maddeyi kapatmayı engellemez): çoklu çizgi kenarının açı onarımı, bir blok tanımının içini bölen kurtarma.
 
-### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [~]
+### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [x]
 
 **Öncelik:** P0; diğer maddeler boyunca uygulanır. **Kod:** [C05], [C13], [C31].
 **Dayanak:** QCAD kaynak kodundaki blok başına uzamsal dizin ve işlem
@@ -2867,6 +2967,58 @@ farklı olanlar için yazılır, UID yalnız dosya bağlayan nesnede. Önce → 
 Hepsini seç 2 156 → 1 152 ms, uzak kaydırma GPU 118 → 108 ms; 10⁵: Hepsini seç 172 → 109, ilk kare 238 → 174 ms.
 İki ikilinin resimleri çizim alanında piksel piksel aynı, `perf::stability` sayı sayı aynı. **Tutmayan:** 10⁶'da uzak
 görünüm (108 ms), Hepsini seç (1,15 s), ilk kare (1,5 s) 60 Hz'de değil. Madde `[~]`.
+
+**Kaydırırken tutulan resmin taşınması (6 Kasım 2026, [ADR 1067](../docs/adr/1067-moved-picture-while-panning.md)):**
+Görünüm kaydırılırken kamera yalnız tam cihaz pikseli kadar yer değiştirdiyse ve resmin gösterdiği başka hiçbir şey
+değişmediyse, kare tutulan resmi o kadar taşır ve yalnız açılan şeritleri çizer (her şeritte yalnız ona erişen
+batch'ler); kesirli kayma, ölçek değişimi, döndürülmüş görünüm, raster/servis karosu, nokta bulutu, efekt grubu ve
+ekrana bağlı desende eskisi gibi bütün çizilir, resim hiç yeniden örneklenmez. Görünüm durunca kare bütün çizilir ve
+bugünkü kareyle piksel piksel aynıdır (`perf::stability` doğrular); kaydırırken taşınan bölüm bütün çizimden en çok
+2/255 ayrılır, görünür fark yok. Aynı izle, önce → sonra: uzak kaydırma GPU p50 10⁶'da 110,7 → 8,9 ms, 10⁵'te
+10,8 → 2,8 ms; bellek görünüm başına bir resim (~3 MB). **Tutmayan:** 10⁶'da uzak tekerlek (65 ms), Hepsini seç ve
+açılışın ilk karesi 60 Hz'de değil. Madde `[~]`.
+
+**Büyük seçim sınırı (6 Kasım 2026, [ADR 1027](../docs/adr/1027-large-selection-limits.md); sahibin kararı):**
+25 000 nesneyi aşan seçimde Öznitelikler yalnız sayıyı ve türleri, 20 000'i aşan seçimde vurgu seçimin kutusunu
+gösterir (AutoCAD PROPOBJLIMIT/SELECTIONPREVIEWLIMIT varsayılanları); tutamaç sınırı zaten 150. İki test ve resim.
+10⁶ Tümünü seç ölçümü yakınlaştırmada resim yeniden kullanma işiyle birlikte alınacak (sahip “Evet, büyüt” dedi).
+
+**Tekerlek dönerken ölçeklenen resim ve maddenin kapanışı (6 Kasım 2026, [ADR 1068](../docs/adr/1068-zoomed-picture-while-the-wheel-turns.md); sahibin kararı “Evet, büyüt”):**
+Görünüm hareket ederken bir zoom karesi resmi bütün çizmez, son keskin resmi ölçekler (en çok dört kat). Uzaklaşırken
+açılan halka, daha önce daha uzaktan çizilmiş geniş resimden gelir, yoksa şeritlerle çizilir. Resmin aynı çizimi
+gösterdiğini ev sahibinin anahtarı söyler (belge nesli, seçim, görünüş). Görünüm durunca kare bütün çizilir ve ölçekleme
+kapalıyken çizilecek kareyle piksel piksel aynıdır (`perf::stability`, 12 satır). Ölçüm sırasında bulunan bir şey de
+düzeltildi: yapı çizgisi olmayan bir çizimde stilli sahnenin uzak yakınlaşmada boşuna yeniden kurulması (10⁶'da 20 ms'lik
+arayüz karesi). Aynı izle, ADR 1067 → bu dal: 10⁶ uzak tekerlek GPU p50 65,0 → 7,0 ms, MİB p99 22,9 → 1,8 ms, bütçeyi
+aşan arayüz karesi 2 → 0; 10⁵ 15,3 → 2,8 ms. Hepsini seç 10⁶'da 1 131 → 271 ms (ADR 1027'nin sınırları).
+
+Kabul satırlarının kanıtı:
+
+- **Tek küçük düzenleme:** 10⁶'da bir düzenleme 1 470 parçadan birini yeniden kurar; MİB ~21 ms (ADR 1062, 1066 komut
+  tablosu).
+- **Pan/zoom ve LOD kararlılığı:** kaydırma, ayrıntı geçişi ve kısayol satırları ile kenetler sayı sayı aynı (ADR
+  1062–1068, `perf::stability`); kenet ve seçim kaynak geometridir.
+- **Yoğun blok, linetype ve tarama:** örnekleme, eğri ve çizgi düzeyleri, blok vekili, art arda taramalar (ADR
+  1063–1066).
+- **Ekran, kaynak ve PDF ayrı:** düzeyler ve vekil yalnız çizim alanında; kâğıt, kenet ve seçim kaynakta (ADR 1063–1065).
+- **Sabit veri setleri ve rapor:** 10⁴/10⁵/10⁶ (`perf::mixed`); açılış, ilk etkileşim, p95/p99, yazı girişi, komut,
+  RAM/VRAM ve iptal ayrı raporlanır (`perf::large`).
+- **Hedefler (Apple M5, 1440×900):**
+  - Hafif etkileşim (imleç, tekerlek, kaydırma): üç koşuda 10⁴–10⁶ GPU p50 ≤ 13,7 ms, bütçeyi aşan arayüz karesi 0.
+  - Tuş yankısı: 10⁶'da en kötüsü 16,8 ms (≤ 50).
+  - İptal: Esc'nin karesi 7 ms, pencere o karede kapanır (≤ 100).
+- **Kabul:** önce/sonra aynı izle, özellik açık/kapalı karşılaştırması, gerçek GPU'da yakın/uzak resimler, MİB ve GPU
+  ayrı.
+
+**Açık kalan ve ölçülen sınırlar:**
+
+- 10⁶ yakın kaydırmanın p95'i 15–17 ms, bütçenin sınırında.
+- Uzaklaşırken halkayı kaplayan geniş resim yoksa 10⁶'nın yoğun bölgesinde zoom karesi 40–95 ms tutar.
+- 10⁶'da açılışın ilk karesi ~1,4 s, Hepsini seç ~0,27 s (kare bütçesi hedefi değil, ayrıca raporlanır).
+- Uzakta küçük dairelerin ve uzun çizgilerin mürekkep yoğunluğu değişti (sahibin kararı).
+- Tekerlek dönerken resim ölçeklenmiş ve bulanıktır, durunca keskindir.
+
+Madde `[x]`.
 
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 

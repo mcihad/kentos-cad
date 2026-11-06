@@ -95,6 +95,11 @@ pub struct SampleFailure {
     pub error: String,
 }
 
+/// Picture pixels round a strip of a panned picture within which a batch is drawn for it (docs/adr/1067 §2): a batch's
+/// box is its geometry's; its widths, halos and marks reach out as far as their own reach says, this covers the
+/// anti-aliasing ramp the reach leaves out.
+const MOVED_STRIP_MARGIN_PX: f64 = 4.0;
+
 /// What a frame of a view needs besides its scene parts.
 #[derive(Clone, Copy, Debug)]
 pub struct FrameInput<'a> {
@@ -118,6 +123,15 @@ pub struct FrameInput<'a> {
     /// hovered object). They are left out of the kept picture and drawn over
     /// it in every frame, straight into the host's frame at its resolution.
     pub overlays: usize,
+    /// With `keep_picture`: the view is being panned (docs/adr/1067). A frame whose camera only moved by whole device
+    /// pixels then moves the kept picture and draws the strips the move uncovered; the view, once it settles (this
+    /// false), is drawn whole again.
+    pub moving: bool,
+    /// With `moving`: what the picture shows apart from the camera, as the host knows it (docs/adr/1068): the
+    /// drawing's generation, the selection, the look. A frame zoomed while moving scales the last sharp picture of the
+    /// same value; none, a zoom is drawn whole. The parts and styled layers themselves cannot say it: they are built
+    /// again for a new scale.
+    pub drawing: Option<u64>,
 }
 
 /// Büyüteç (docs/adr/0181 §5): a view's scene seen through a second camera,
@@ -141,6 +155,8 @@ struct Pipelines {
     fill: wgpu::RenderPipeline,
     line: wgpu::RenderPipeline,
     marker: wgpu::RenderPipeline,
+    /// The kept picture scaled while the wheel zooms (docs/adr/1068).
+    zoomed: wgpu::RenderPipeline,
 }
 
 pub struct Renderer {
@@ -201,8 +217,8 @@ impl Renderer {
             bind_group_layouts: &[&frame_layout],
             push_constant_ranges: &[],
         });
-        let host = build_pipelines(device, &module, &pipeline_layout, format, 1);
         let compose = Compose::new(device, format);
+        let host = build_pipelines(device, &module, &pipeline_layout, format, 1, &compose.zoom_layout);
         if let Some(error) = pop_error_now(device) {
             return Err(RenderError(error.to_string()));
         }
@@ -431,9 +447,42 @@ impl Renderer {
         for part in &state.parts[..state.parts.len() - state.overlays] {
             part.id.hash(&mut key);
         }
-        bytemuck::bytes_of(&uniform).hash(&mut key);
         settings.highlight_width.to_bits().hash(&mut key);
         state.clear.map(f32::to_bits).hash(&mut key);
+        // What the picture shows but for the camera's place (docs/adr/1067 §2): the frame without its centre.
+        let mut plain = key.clone();
+        let u = &uniform;
+        // What a picture zoomed while the wheel turns shows (docs/adr/1068): the host's drawing and the frame.
+        let mut zoomless = DefaultHasher::new();
+        frame.drawing.hash(&mut zoomless);
+        (
+            u.viewport.map(f32::to_bits),
+            u.dpi.to_bits(),
+            u.background.map(f32::to_bits),
+            u.line_width.to_bits(),
+            u.twist_c.to_bits(),
+            u.twist_s.to_bits(),
+        )
+            .hash(&mut zoomless);
+        u.srgb_target.hash(&mut zoomless);
+        state.plain_zoom = frame.drawing.map(|_| zoomless.finish());
+        (
+            u.viewport.map(f32::to_bits),
+            u.px_per_unit.to_bits(),
+            u.dpi.to_bits(),
+            u.background.map(f32::to_bits),
+            u.line_width.to_bits(),
+            u.twist_c.to_bits(),
+            u.twist_s.to_bits(),
+        )
+            .hash(&mut plain);
+        u.srgb_target.hash(&mut plain);
+        state.plain_content = plain.finish();
+        state.moving = frame.moving;
+        state.content = None;
+        bytemuck::bytes_of(&uniform).hash(&mut key);
+        // A picture moved while panning is drawn whole again once the view settles.
+        frame.moving.hash(&mut key);
         state.want = key.finish();
         state.want_styled = None;
         if state.overlays > 0 {
@@ -514,6 +563,15 @@ impl Renderer {
         let mut key = DefaultHasher::new();
         styled.key(&mut key);
         state.want_styled = Some(key.finish());
+        // What it shows but for the camera's place, when a moved picture would be its picture (docs/adr/1067 §2).
+        let mut content = DefaultHasher::new();
+        state.plain_content.hash(&mut content);
+        state.content = (styled.shift_key(&mut content) && !needs_compose(styled)).then(|| content.finish());
+        state.zoom_content = state.plain_zoom.and_then(|plain| {
+            let mut zoomed = DefaultHasher::new();
+            plain.hash(&mut zoomed);
+            (styled.zoom_key(&mut zoomed) && !needs_compose(styled)).then(|| zoomed.finish())
+        });
         state.stats.draw_calls += drawn;
         state.stats.resident_bytes += bytes;
         // Composed layers and effect groups (docs/adr/0226): planned now, recorded in render.
@@ -542,6 +600,20 @@ impl Renderer {
             }
         }
         state.stats.picture_kept = state.picture_kept();
+        state.stats.picture_moved = !state.stats.picture_kept && state.shift().is_some();
+        // Zoomed by the wheel (docs/adr/1068): the sharp picture now kept, else the source set aside before.
+        state.zoom = None;
+        if !state.stats.picture_kept && !state.stats.picture_moved {
+            state.zoom = state.zoom_plan();
+            if let (Some((plan, _)), Some(t)) = (&state.zoom, &state.targets) {
+                queue.write_buffer(&t.zoom_uniform, 0, bytemuck::bytes_of(&plan.uniform));
+                if let Some(wide) = &plan.wide {
+                    queue.write_buffer(&t.wide_uniform, 0, bytemuck::bytes_of(wide));
+                }
+            }
+        }
+        state.stats.picture_zoomed = state.zoom.is_some();
+        state.stats.picture_zoomed_wide = state.zoom.as_ref().is_some_and(|(p, _)| p.wide.is_some());
         pending
     }
 
@@ -564,6 +636,117 @@ impl Renderer {
             self.styled.as_ref().map(|g| (g, 1)),
             state.parts.len(),
         );
+    }
+
+    /// A panned view's picture (docs/adr/1067 §2): the kept one moved by `shift` whole picture pixels (x right, y
+    /// down), then the strips the move uncovered drawn as the whole picture would draw them there. The moved part is
+    /// set aside (`Targets::scratch`) while the pass draws the strips into the picture, its samples resolved over the
+    /// whole picture as always, and is laid back over all but the strips. Each strip draws only the batches that reach
+    /// it (a few pixels round it, for their widths).
+    fn render_moved(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        state: &View,
+        targets: &Targets,
+        pipes: &Pipelines,
+        [dx, dy]: [i32; 2],
+        clear: wgpu::Color,
+    ) {
+        let [w, h] = targets.size;
+        let (ax, ay) = (dx.unsigned_abs(), dy.unsigned_abs());
+        // The part of the old picture still in view: from (sx, sy) to (tx, ty), cw × ch.
+        let (sx, tx) = if dx >= 0 { (0, ax) } else { (ax, 0) };
+        let (sy, ty) = if dy >= 0 { (0, ay) } else { (ay, 0) };
+        let (cw, ch) = (w - ax, h - ay);
+        let copy = |enc: &mut wgpu::CommandEncoder, from: &wgpu::Texture, at: [u32; 2], to: &wgpu::Texture, into: [u32; 2]| {
+            enc.copy_texture_to_texture(
+                wgpu::TexelCopyTextureInfo {
+                    texture: from,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d { x: at[0], y: at[1], z: 0 },
+                    aspect: wgpu::TextureAspect::All,
+                },
+                wgpu::TexelCopyTextureInfo {
+                    texture: to,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d { x: into[0], y: into[1], z: 0 },
+                    aspect: wgpu::TextureAspect::All,
+                },
+                wgpu::Extent3d { width: cw, height: ch, depth_or_array_layers: 1 },
+            );
+        };
+        copy(encoder, &targets.resolve_texture, [sx, sy], &targets.scratch, [tx, ty]);
+        // The strips: the columns uncovered at the left or right edge, the rows at the top or bottom between them.
+        let mut strips: Vec<[u32; 4]> = Vec::with_capacity(2);
+        if ax > 0 {
+            strips.push(if dx > 0 { [0, 0, ax, h] } else { [w - ax, 0, w, h] });
+        }
+        if ay > 0 {
+            strips.push(if dy > 0 { [tx, 0, tx + cw, ay] } else { [tx, h - ay, tx + cw, h] });
+        }
+        {
+            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("kentos.cad2d.picture.strips"),
+                color_attachments: &[Some(targets.attachment(clear))],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            for strip in &strips {
+                let [x0, y0, x1, y1] = *strip;
+                pass.set_scissor_rect(x0, y0, (x1 - x0).max(1), (y1 - y0).max(1));
+                state.draw_strip(
+                    &mut pass,
+                    pipes,
+                    self.styled.as_ref().map(|g| (g, targets.samples)),
+                    state.parts.len() - state.overlays,
+                    state.box_of(*strip, MOVED_STRIP_MARGIN_PX),
+                );
+            }
+        }
+        copy(encoder, &targets.scratch, [tx, ty], &targets.resolve_texture, [tx, ty]);
+    }
+
+    /// A zoomed view's picture (docs/adr/1068): the source scaled into the pixels it covers, sampled once with a
+    /// linear filter, then the ring a zoom out uncovered drawn as the whole picture would draw it there.
+    fn render_zoomed(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        state: &View,
+        targets: &Targets,
+        pipes: &Pipelines,
+        plan: &crate::zoomed::Plan,
+        clear: wgpu::Color,
+    ) {
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("kentos.cad2d.picture.zoomed"),
+            color_attachments: &[Some(targets.attachment(clear))],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        // The ring from the wide picture, under the source; else drawn.
+        if plan.wide.is_some() {
+            pass.set_pipeline(&pipes.zoomed);
+            pass.set_bind_group(0, &targets.wide_bind, &[]);
+            pass.draw(0..3, 0..1);
+        }
+        for strip in &plan.strips {
+            let [x0, y0, x1, y1] = *strip;
+            pass.set_scissor_rect(x0, y0, (x1 - x0).max(1), (y1 - y0).max(1));
+            state.draw_strip(
+                &mut pass,
+                pipes,
+                self.styled.as_ref().map(|g| (g, targets.samples)),
+                state.parts.len() - state.overlays,
+                state.box_of(*strip, MOVED_STRIP_MARGIN_PX),
+            );
+        }
+        let [x0, y0, x1, y1] = plan.inner;
+        pass.set_scissor_rect(x0, y0, (x1 - x0).max(1), (y1 - y0).max(1));
+        pass.set_pipeline(&pipes.zoomed);
+        pass.set_bind_group(0, &targets.zoom_bind, &[]);
+        pass.draw(0..3, 0..1);
     }
 
     /// Draws `view` into its own targets and composes the picture into
@@ -658,6 +841,33 @@ impl Renderer {
             if state.keep {
                 targets.keep(key);
             }
+            targets.hold(None);
+            targets.set_sharp(None);
+            targets.set_source(None);
+            targets.set_wide_at(None);
+        } else if let Some(shift) = state.shift().filter(|_| !(state.keep && targets.holds(key))) {
+            // Panned by whole pixels (docs/adr/1067 §2): the kept picture moved, the strips it uncovered drawn. The
+            // move uses the spare texture: a zoom's source there is gone.
+            self.render_moved(encoder, state, targets, pipes, shift, wgpu::Color { r, g, b, a });
+            targets.keep(key);
+            targets.hold(state.held_now());
+            targets.set_sharp(state.sharp_now());
+            targets.set_source(None);
+        } else if let Some((plan, refresh)) = state.zoom.as_ref().filter(|_| !(state.keep && targets.holds(key))) {
+            // Zoomed by the wheel (docs/adr/1068): the sharp picture scaled, the ring it does not cover drawn.
+            if *refresh {
+                encoder.copy_texture_to_texture(
+                    targets.resolve_texture.as_image_copy(),
+                    targets.scratch.as_image_copy(),
+                    wgpu::Extent3d { width: targets.size[0], height: targets.size[1], depth_or_array_layers: 1 },
+                );
+                targets.set_source(targets.sharp());
+            }
+            self.render_zoomed(encoder, state, targets, pipes, plan, wgpu::Color { r, g, b, a });
+            targets.keep(key);
+            // A scaled picture is neither moved by a pan nor scaled again.
+            targets.hold(None);
+            targets.set_sharp(None);
         } else if !(state.keep && targets.holds(key)) {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("kentos.cad2d.picture"),
@@ -672,8 +882,21 @@ impl Renderer {
                 self.styled.as_ref().map(|g| (g, targets.samples)),
                 state.parts.len() - state.overlays,
             );
+            drop(pass);
             if state.keep {
                 targets.keep(key);
+            }
+            targets.hold(state.held_now());
+            targets.set_sharp(state.sharp_now());
+            // The wide picture beside the source, for a zoom out's ring (docs/adr/1068 §2).
+            if let Some((wide, from_source)) = state.new_wide() {
+                let from = if from_source { &targets.scratch } else { &targets.resolve_texture };
+                encoder.copy_texture_to_texture(
+                    from.as_image_copy(),
+                    targets.wide.as_image_copy(),
+                    wgpu::Extent3d { width: targets.size[0], height: targets.size[1], depth_or_array_layers: 1 },
+                );
+                targets.set_wide_at(Some(wide));
             }
         }
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -932,6 +1155,7 @@ fn build_pipelines(
     layout: &wgpu::PipelineLayout,
     format: wgpu::TextureFormat,
     samples: u32,
+    zoom_layout: &wgpu::BindGroupLayout,
 ) -> Pipelines {
     let make = |spec: &PipelineSpec| {
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -972,6 +1196,7 @@ fn build_pipelines(
         fill: make(&layout::FILL),
         line: make(&layout::LINE),
         marker: make(&layout::MARKER),
+        zoomed: crate::zoomed::pipeline(device, zoom_layout, format, samples),
     }
 }
 
@@ -994,7 +1219,7 @@ fn make_targets(
     device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
     device.push_error_scope(wgpu::ErrorFilter::Validation);
     let new_pipelines = (!pipelines.contains_key(&samples))
-        .then(|| build_pipelines(device, module, layout, format, samples));
+        .then(|| build_pipelines(device, module, layout, format, samples, &compose.zoom_layout));
     let targets = Targets::new(device, compose, format, size, samples, scaled);
     let validation = pop_error_now(device);
     let memory = pop_error_now(device);
@@ -1050,6 +1275,18 @@ struct View {
     /// The composing pictures and this frame's composed passes (docs/adr/0226).
     compose_targets: Option<ComposeTargets>,
     compose: Option<ComposeFrame>,
+    /// The view is being panned (`FrameInput::moving`), and what its picture shows but for the camera's place: the
+    /// plain parts' (`prepare`), then with the styled layers' (`prepare_styled`); none when a moved picture would not
+    /// be its picture at another place (docs/adr/1067 §2).
+    moving: bool,
+    plain_content: u64,
+    content: Option<u64>,
+    /// [`Self::content`] without the scale (docs/adr/1068).
+    plain_zoom: Option<u64>,
+    zoom_content: Option<u64>,
+    /// This frame's zoomed picture (docs/adr/1068): its plan, and whether the sharp picture is set aside as the source
+    /// first.
+    zoom: Option<(crate::zoomed::Plan, bool)>,
 }
 
 /// The target and camera a frame is drawn at.
@@ -1155,7 +1392,102 @@ impl View {
             lens: None,
             compose_targets: None,
             compose: None,
+            moving: false,
+            plain_content: 0,
+            content: None,
+            plain_zoom: None,
+            zoom_content: None,
+            zoom: None,
         }
+    }
+
+    /// Where this frame's picture is drawn (docs/adr/1067 §2).
+    fn place(&self) -> Option<crate::targets::Place> {
+        let t = self.targets.as_ref()?;
+        let d = &self.drawn;
+        (d.map.is_none()).then_some(crate::targets::Place {
+            center: d.center,
+            origin: d.origin,
+            px_per_unit: d.scale * d.scale_factor,
+            size: t.size,
+            twist: d.twist,
+            dpr: d.scale_factor,
+        })
+    }
+
+    /// The whole picture pixels this frame moves the kept picture by, while the view is panned: none when it draws
+    /// the picture whole (docs/adr/1067 §2).
+    fn shift(&self) -> Option<[i32; 2]> {
+        if !(self.keep && self.moving) || self.compose.is_some() {
+            return None;
+        }
+        let content = self.content?;
+        let (held, place) = self.targets.as_ref()?.held()?;
+        (held == content).then(|| place.shift_to(&self.place()?)).flatten()
+    }
+
+    /// The zoomed picture this frame shows while the wheel zooms (docs/adr/1068): from the source set aside (false), or
+    /// from the sharp picture kept, set aside first (true); none when the frame is drawn whole.
+    fn zoom_plan(&self) -> Option<(crate::zoomed::Plan, bool)> {
+        if !(self.keep && self.moving) || self.compose.is_some() {
+            return None;
+        }
+        let content = self.zoom_content?;
+        let now = self.place()?;
+        let t = self.targets.as_ref()?;
+        let wide = |plan: crate::zoomed::Plan| match t.wide_at() {
+            Some((held, at)) if held == content => plan.with_wide(&at, &now),
+            _ => plan,
+        };
+        // The newest sharp picture first (set aside by this frame's copy); else the source a zoom set aside.
+        if let Some((held, at)) = t.sharp()
+            && held == content
+            && let Some(plan) = crate::zoomed::plan(&at, &now)
+        {
+            return Some((wide(plan), true));
+        }
+        let (held, at) = t.source()?;
+        (held == content).then(|| crate::zoomed::plan(&at, &now).map(|p| (wide(p), false))).flatten()
+    }
+
+    /// What becomes the wide picture as a sharp picture is drawn whole this frame (docs/adr/1068 §2), when the one
+    /// kept shows another drawing or does not cover it: the zoom's source set aside (`true`, the picture one step
+    /// farther) when it covers this one, else this picture.
+    fn new_wide(&self) -> Option<((u64, crate::targets::Place), bool)> {
+        let now = self.sharp_now()?;
+        let t = self.targets.as_ref()?;
+        let covers = |held: Option<(u64, crate::targets::Place)>| {
+            held.filter(|(key, at)| *key == now.0 && crate::zoomed::keeps_wide(at, &now.1))
+        };
+        if covers(t.wide_at()).is_some() {
+            return None;
+        }
+        Some(covers(t.source()).map_or((now, false), |source| (source, true)))
+    }
+
+    /// What a sharp picture drawn this frame holds for a zoom (docs/adr/1068).
+    fn sharp_now(&self) -> Option<(u64, crate::targets::Place)> {
+        Some((self.zoom_content?, self.place()?))
+    }
+
+    /// What a picture drawn whole this frame holds for a pan (docs/adr/1067 §2).
+    fn held_now(&self) -> Option<(u64, crate::targets::Place)> {
+        Some((self.content?, self.place()?))
+    }
+
+    /// The view's box in its own coordinates (the camera's centre from the origin) of picture pixels `x0..x1`,
+    /// `y0..y1` (y down), `margin` picture pixels more round it.
+    fn box_of(&self, [x0, y0, x1, y1]: [u32; 4], margin: f64) -> [f64; 4] {
+        let d = &self.drawn;
+        let s = (d.scale * d.scale_factor).max(1e-12);
+        let [w, h] = self.targets.as_ref().map_or([1, 1], |t| t.size);
+        let (cx, cy) = (f64::from(w) / 2.0, f64::from(h) / 2.0);
+        [
+            d.center[0] + (f64::from(x0) - margin - cx) / s,
+            d.center[1] + (cy - f64::from(y1) - margin) / s,
+            d.center[0] + (f64::from(x1) + margin - cx) / s,
+            d.center[1] + (cy - f64::from(y0) + margin) / s,
+        ]
     }
 
     /// The key of the picture this frame shows.
@@ -1196,6 +1528,32 @@ impl View {
                 self.draw_parts(pass, pipes, 0..under);
                 gpu.draw(pass, view, samples);
                 // The highlights, at their width.
+                pass.set_bind_group(0, &self.highlight.1, &[]);
+                self.draw_parts(pass, pipes, under..all.end);
+            }
+            _ => self.draw_parts(pass, pipes, all),
+        }
+    }
+
+    /// [`View::draw`] for a strip of a panned picture (docs/adr/1067 §2): the styled layers' batches that reach `strip`
+    /// (the view's coordinates) only; the plain parts whole (the pass's scissor keeps them to the strip).
+    fn draw_strip(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        pipes: &Pipelines,
+        styled: Option<(&StyledGpu, u32)>,
+        end: usize,
+        strip: [f64; 4],
+    ) {
+        pass.set_bind_group(0, &self.bind_group, &[]);
+        pass.set_pipeline(&pipes.background);
+        pass.draw(0..layout::BACKGROUND.vertex_count.unwrap_or(3), 0..1);
+        let all = 0..end.min(self.parts.len());
+        match (styled, &self.styled) {
+            (Some((gpu, samples)), Some(view)) if !view.layers.is_empty() => {
+                let under = view.under.min(self.parts.len());
+                self.draw_parts(pass, pipes, 0..under);
+                gpu.draw_strip(pass, view, samples, strip);
                 pass.set_bind_group(0, &self.highlight.1, &[]);
                 self.draw_parts(pass, pipes, under..all.end);
             }
