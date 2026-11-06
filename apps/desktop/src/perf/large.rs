@@ -200,9 +200,25 @@ fn adapter() -> Value {
 fn trace(app: &mut App, h: &mut Harness, hover: usize) -> Vec<(&'static str, Vec<Parts>)> {
     let area = app.viewport.bounds;
     let center = area.center();
+    // `KENTOS_PERF_TRACE_VIEW` (a diagnosis, docs/adr/1064 §5): what the view did for each pointer frame.
+    let tell = std::env::var("KENTOS_PERF_TRACE_VIEW").is_ok();
     let hovering = path(area, hover)
         .into_iter()
-        .map(|p| h.frame(app, &[moved(p)]))
+        .map(|p| {
+            let f = h.frame(app, &[moved(p)]);
+            if tell {
+                let s = app.viewport.status().stats;
+                println!(
+                    "imleç: GPU {:.2} ms, resim tutuldu {}, yüklenen {} B, parça {}, çizim çağrısı {}",
+                    f.gpu_ms(),
+                    s.picture_kept,
+                    s.uploaded_bytes,
+                    s.segments,
+                    s.draw_calls
+                );
+            }
+            f
+        })
         .collect();
     h.frame(app, &[moved(center)]);
     let mut wheels = Vec::new();
@@ -633,7 +649,7 @@ fn large() {
 
 /// `KENTOS_PERF_SETTINGS` (`graphics.msaa=1;graphics.hiDpi=false`): typed settings chosen before a diagnosis runs,
 /// as the settings window would; never set for a measured report.
-fn settings_from_env(app: &mut App) {
+pub(super) fn settings_from_env(app: &mut App) {
     let Ok(list) = std::env::var("KENTOS_PERF_SETTINGS") else {
         return;
     };
@@ -646,18 +662,25 @@ fn settings_from_env(app: &mut App) {
     app.apply_settings();
 }
 
-/// `KENTOS_PERF_SHORTCUTS` (docs/adr/1063): the drawing area's shortcuts a run measures, `off` (the plain build, the
-/// "önce" of a comparison), `instancing` or `lod` (one of them); unset, both (the app's own).
+/// `KENTOS_PERF_SHORTCUTS` (docs/adr/1063, 1064): the drawing area's shortcuts a run measures, `off` (the plain build,
+/// the "önce" of a comparison), `instancing`, `lod` or `line` (one of them), `adr1063` (the first two, without the
+/// long strokes' levels: the "önce" of ADR 1064); unset, all three (the app's own).
 pub(super) fn shortcuts_from_env(app: &mut App) {
     let asked = std::env::var("KENTOS_PERF_SHORTCUTS").unwrap_or_default();
-    let (instancing, lod) = match asked.as_str() {
-        "off" => (false, false),
-        "instancing" => (true, false),
-        "lod" => (false, true),
-        _ => (true, true),
+    let (instancing, lod, line) = match asked.as_str() {
+        "off" => (false, false, false),
+        "instancing" => (true, false, false),
+        "lod" => (false, true, false),
+        "line" => (false, false, true),
+        "adr1063" => (true, true, false),
+        _ => (true, true, true),
     };
     app.styles.instancing = instancing;
     app.styles.curve_lod = lod;
+    app.styles.line_lod = line;
+    // A moving view's turned texts from their pictures kept for another quarter pixel (docs/adr/1064 §6): with the
+    // long strokes' levels, off in the "önce" of ADR 1064.
+    crate::label_picture::set_nearest_while_moving(!matches!(asked.as_str(), "off" | "adr1063"));
 }
 
 /// Which kind of object the far view's GPU time goes to (docs/adr/1062 §3): the mixed drawing of

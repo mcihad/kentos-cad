@@ -135,6 +135,7 @@ impl Instancer {
             .or_insert_with(|| {
                 *made += 1;
                 let mut rec = BatchSink::recorder();
+                rec.set_line_lod(view.line_lod && !view.plot_precision);
                 for (k, piece) in flat.pieces.iter().enumerate() {
                     let shape = &piece.shape;
                     // A construction line is clipped to the view's box, which a definition's base knows nothing of.

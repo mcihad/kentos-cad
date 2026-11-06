@@ -2797,6 +2797,17 @@ fark 0); daire, yay ve elips uzak görünüm için 0,25 px toleranslı seyrek ki
 küçük dairelerin mürekkep yoğunluğu değişti (eski 72 kiriş onları koyulaştırıyordu; sahibinin kararı), 10⁴'te imleç
 karesinin GPU'su 2,5 → 4–7 ms (açıklanamadı). Madde `[~]`.
 
+**Uzun çizgilerin uzak düzeyleri ve tekerlekte tutulan yazı (6 Kasım 2026, [ADR 1064](../docs/adr/1064-far-view-line-levels-and-held-text.md)):**
+En az 8 köşeli çizgi, çizim alanında eğrilerin tavanlarında 0,25 px toleranslı Douglas–Peucker düzeyleri taşır (düzey 0
+eskisiyle sayı sayı aynı; desen her korunan köşede kaynaktaki uzunluktan başlar; CAD çizgi tipi önceden kaynak eğride
+kesildiği için tire uçları değişmez; kâğıt, kenet, seçim kaynak geometride). Tekerlek dönerken büyütülmüş yazı
+yerleştiği boyda çizilir; resmi yeniden yapılmaz. Aynı izle, önce → sonra: 10⁵ uzak kaydırma GPU p50 45,3 → 25,5 ms
+(çizgi katmanı 23,4 → 7,2), 10⁶ 406 → 282 ms; uzak tekerlek MİB p95 10⁵'te 25,7 → 1,4 ms (bütçeyi aşan 6 → 0), 10⁶'da
+53,7 → 29,3; yakın görünüm aynı (açık/kapalı fark 0, `perf::stability`). 10⁴ imleç karesinin GPU artışı iş değil, GPU'nun
+başarım durumudur (resim tutuluyor, stilli geçiş 0; ağır yükten sonra 2,1 ms, boşta 3,4–7,6 ms). **Tutmayan:** 10⁵'te
+16,7 ms (kalan pay bloklar, 17 ms: ~1 px'lik yerleşimin ayrı parçaları), uzakta uzun çizgilerin mürekkep yoğunluğu
+değişti (sahibinin kararı), görünümün tamponları 10⁶'da 709 → 959 MB, duruştaki yeniden yerleşim ~50 ms. Madde `[~]`.
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].

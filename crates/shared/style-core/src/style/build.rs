@@ -472,6 +472,8 @@ pub struct View {
     pub instancing: bool,
     /// The drawing area's own (docs/adr/1063 §3): curves' strokes with coarser detail levels for far views.
     pub curve_lod: bool,
+    /// The drawing area's own (docs/adr/1064 §2): a long stroke's far levels, simplified within the curves' tolerance.
+    pub line_lod: bool,
     /// The drawing's own looks (`MODE_SET`) dash a CAD line type along the source
     /// curve itself (docs/adr/1122); off, the renderer measures the drawn chords
     /// (the web's build and the frozen answers until it opts in).
@@ -486,6 +488,7 @@ impl PartialEq for View {
             && self.walls == o.walls
             && self.instancing == o.instancing
             && self.curve_lod == o.curve_lod
+            && self.line_lod == o.line_lod
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -507,6 +510,7 @@ impl Default for View {
             walls: None,
             instancing: false,
             curve_lod: false,
+            line_lod: false,
             cad_phase: false,
         }
     }
@@ -679,6 +683,7 @@ pub fn build_layer_in(
     };
     let mut sink = BatchSink::new(origin);
     sink.set_position_low(view.position_low);
+    sink.set_line_lod(view.line_lod && view.map.is_none() && !view.plot_precision);
     sink.set_map(view.map);
     let mut buf = Vec::new();
     let mut piece_at = 0usize;

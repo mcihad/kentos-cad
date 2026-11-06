@@ -57,8 +57,9 @@ mod parts_tests;
 #[derive(Default)]
 pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>);
 
-/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only).
-type Kept = (u64, u64, Shown, Option<Bounds>);
+/// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), and the
+/// view's scale they were placed at.
+type Kept = (u64, u64, Shown, Option<Bounds>, f64);
 
 /// A view's box in the world.
 type Bounds = kentos_geometry_core::geometry::Bounds;
@@ -70,7 +71,7 @@ impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
-        self.0.borrow().as_ref().map(|(_, _, spots, _)| spots.clone())
+        self.0.borrow().as_ref().map(|(_, _, spots, _, _)| spots.clone())
     }
 
     /// The bands its labels' parts were painted as (docs/adr/0786 §3).
@@ -81,21 +82,21 @@ impl Spots {
     /// The key the kept labels were asked for (a test's).
     #[cfg(test)]
     pub(crate) fn key(&self) -> Option<u64> {
-        self.0.borrow().as_ref().map(|(key, _, _, _)| *key)
+        self.0.borrow().as_ref().map(|(key, _, _, _, _)| *key)
     }
 
     /// The labels for `key` (the drawing and the view), asked when not known; while `moving`, the last ones asked for
     /// the same drawing (`content`, the key without the view). Asked for `wide`, a box round the view (true sizes,
     /// docs/adr/0626 §7), the last ones serve while the view moves inside it and are asked again, moving or not,
-    /// once it leaves it: a text coming into view is never missing.
+    /// once it leaves it: a text coming into view is never missing. With them, the view's scale they were placed at.
     fn get(
         &self,
         key: u64,
         content: u64,
         moving: bool,
-        (view, wide): (Bounds, Option<Bounds>),
+        (view, wide, scale): (Bounds, Option<Bounds>, f64),
         ask: impl FnOnce(Bounds) -> LabelParts,
-    ) -> Shown {
+    ) -> (Shown, f64) {
         let mut kept = self.0.borrow_mut();
         let inside = |asked: &Option<Bounds>| {
             asked.is_none_or(|b| {
@@ -106,14 +107,14 @@ impl Spots {
             })
         };
         match kept.as_ref() {
-            Some((known, _, spots, _)) if *known == key => spots.clone(),
-            Some((_, same, spots, asked)) if moving && *same == content && inside(asked) => {
-                spots.clone()
+            Some((known, _, spots, _, at)) if *known == key => (spots.clone(), *at),
+            Some((_, same, spots, asked, at)) if moving && *same == content && inside(asked) => {
+                (spots.clone(), *at)
             }
             _ => {
                 let spots = Rc::new(ask(wide.unwrap_or(view)));
-                *kept = Some((key, content, spots.clone(), wide));
-                spots
+                *kept = Some((key, content, spots.clone(), wide, scale));
+                (spots, scale)
             }
         }
     }
@@ -315,7 +316,8 @@ fn build<'a>(
             max_y: view.max_y + h,
         }
     });
-    let spots = kept.get(key.finish(), content, engine.moving, (view, wide), |view| {
+    let placed_scale = camera.scale;
+    let (spots, placed_at) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
         let mut spots = spatial.label_parts(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
@@ -402,6 +404,14 @@ fn build<'a>(
         band_memo: layered.then(|| kept.bands()),
         band_key: band_key.finish(),
         bands_out: layered.then_some(()),
+        moving: engine.moving,
+        // A moving view keeps a grown text as high on the screen as its placing had it (docs/adr/1064 §6).
+        held: match size {
+            _ if !engine.moving || placed_at <= 0.0 => None,
+            LabelSize::Legible => Some((placed_at, true)),
+            LabelSize::Screen { .. } => Some((placed_at, false)),
+            _ => None,
+        },
     };
     // True sizes keep their picture while the view moves (docs/adr/0626 §7); a twisted view's turns as a picture.
     if true_size && labels.turned.is_none() {
@@ -607,6 +617,13 @@ struct Labels<'a> {
     band_key: u64,
     /// The bands are drawn by the layer as one mesh (labels/layer.rs), not stroked here.
     bands_out: Option<()>,
+    /// The view is moving (docs/adr/0597): a turned text may take its picture kept for another quarter pixel
+    /// (label_picture.rs, docs/adr/1064 §6).
+    moving: bool,
+    /// While the view moves, the scale the labels were placed at and whether a grown text never shrinks below its
+    /// true size (Kaybolmasın; Ekranda sabit does not clamp): a grown text drawn as high on the screen as there
+    /// (docs/adr/1064 §6). None: drawn by its placing's growth as it is.
+    held: Option<(f64, bool)>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -683,6 +700,8 @@ pub fn paint_in_map(
         band_memo: None,
         band_key: 0,
         bands_out: None,
+        moving: false,
+        held: None,
     }
     .paint(frame);
 }
@@ -732,6 +751,8 @@ pub fn texts_in_map(
         band_memo: None,
         band_key: 0,
         bands_out: None,
+        moving: false,
+        held: None,
     }
     .paint(&mut list);
     list.labels
@@ -852,6 +873,31 @@ fn grown(view: Camera, g: Grow) -> Camera {
             g.anchor.y - (g.anchor.y - view.center.y) / g.k,
         ),
         scale: view.scale * g.k,
+        ..view
+    }
+}
+
+/// A grown label while the view moves (docs/adr/1064 §6): drawn at the scale its placing at `placed` drew it (the
+/// growth makes a grown text's screen height the scale's own, so a fresh placing would give the same), the same
+/// number each frame, so its picture is found again; never below the view's scale when `clamp` (Kaybolmasın grows a
+/// text, never shrinks it). A text its placing drew at its true size stays as the view has it.
+fn held_grown(view: Camera, g: Grow, (placed, clamp): (f64, bool)) -> Camera {
+    if g.k == 1.0 || !g.k.is_finite() || g.k <= 0.0 || !(view.scale > 0.0) {
+        return view;
+    }
+    // A pan: the scale is the placing's, the growth as it was, to the bit.
+    if placed == view.scale {
+        return grown(view, g);
+    }
+    let target = placed * g.k;
+    let target = if clamp && target < view.scale { view.scale } else { target };
+    let k = view.scale / target;
+    Camera {
+        center: kentos_render_wgpu::Vec2::new(
+            g.anchor.x - (g.anchor.x - view.center.x) * k,
+            g.anchor.y - (g.anchor.y - view.center.y) * k,
+        ),
+        scale: target,
         ..view
     }
 }
@@ -1100,6 +1146,7 @@ impl canvas::Program<Message> for Labels<'_> {
         }
         vec![state.cache.draw(renderer, bounds.size(), |frame| {
             crate::label_picture::set_twisted(self.turned.is_some());
+            crate::label_picture::set_moving(self.moving);
             let Some(area) = self.turned else {
                 self.paint(frame);
                 return;
@@ -1616,7 +1663,10 @@ impl Labels<'_> {
                     continue;
                 }
                 // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
-                self.camera.set(grown(self.view, *grow));
+                self.camera.set(match self.held {
+                    Some(held) => held_grown(self.view, *grow, held),
+                    None => grown(self.view, *grow),
+                });
                 let slot = match spot {
                     LabelSpot::Dimension { slot, .. }
                     | LabelSpot::Text { slot, .. }
@@ -3911,6 +3961,8 @@ fn perf() {
         band_memo: None,
         band_key: 0,
         bands_out: None,
+        moving: false,
+        held: None,
     };
     let started = Instant::now();
     for _ in 0..frames {
@@ -4005,6 +4057,8 @@ fn file_paint() {
         band_memo: None,
         band_key: 0,
         bands_out: None,
+        moving: false,
+        held: None,
     };
     let started = Instant::now();
     for _ in 0..frames {
