@@ -125,6 +125,20 @@ AccessSourceName = Literal["owner", "grant", "policy"]
 """The names of :class:`AccessSource`, for a plain string."""
 
 
+class AccuracyBasis(_StrEnum):
+    """What a step's accuracy rests on (docs/adr/1230 §2): exact (a conversion, a unit change), EPSG's registry, the
+    project's own statement (its Helmert or grid), or nothing (a geoid model, a velocity grid).
+    """
+    EXACT = "exact"
+    EPSG = "epsg"
+    PROJECT = "project"
+    UNKNOWN = "unknown"
+
+
+AccuracyBasisName = Literal["exact", "epsg", "project", "unknown"]
+"""The names of :class:`AccuracyBasis`, for a plain string."""
+
+
 class ActionKind(_StrEnum):
     """What a form action does (docs/adr/0442 §5).
 
@@ -1056,6 +1070,18 @@ CaseworkSideName = Literal["left", "right"]
 """The names of :class:`CaseworkSide`, for a plain string."""
 
 
+class ChainStatus(_StrEnum):
+    """Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights
+    carried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.
+    """
+    COMPLETE = "complete"
+    LIMITED = "limited"
+
+
+ChainStatusName = Literal["complete", "limited"]
+"""The names of :class:`ChainStatus`, for a plain string."""
+
+
 class CheckMoment(_StrEnum):
     """When a check is asked (docs/adr/0438 §2).
 
@@ -1427,6 +1453,25 @@ class CrossingSide(_StrEnum):
 
 CrossingSideName = Literal["above", "below"]
 """The names of :class:`CrossingSide`, for a plain string."""
+
+
+class CrsFamily(_StrEnum):
+    """The families of horizontal systems KentOS's engine resolves (docs/adr/1230 §1). A system outside them, or an EPSG
+    code the registry does not hold, is refused by name: a stored code is not assumed resolvable.
+
+    - ``geographic``: Latitude and longitude on a datum's ellipsoid.
+    - ``transverseMercator``: A transverse Mercator grid: the TM3 zones, UTM, or the project's own.
+    - ``pseudoMercator``: WGS 84 / Pseudo-Mercator (EPSG:3857).
+    - ``local``: A local system bound to a base system by a plane transform (the project's definition).
+    """
+    GEOGRAPHIC = "geographic"
+    TRANSVERSE_MERCATOR = "transverseMercator"
+    PSEUDO_MERCATOR = "pseudoMercator"
+    LOCAL = "local"
+
+
+CrsFamilyName = Literal["geographic", "transverseMercator", "pseudoMercator", "local"]
+"""The names of :class:`CrsFamily`, for a plain string."""
 
 
 class CrsSource(_StrEnum):
@@ -2134,6 +2179,20 @@ EmptyResultName = Literal["keep", "clear"]
 """The names of :class:`EmptyResult`, for a plain string."""
 
 
+class EpochSource(_StrEnum):
+    """Where a side's coordinate epoch came from: the call, the project's settings, the other side (the target takes
+    the source's when it states none), or nowhere.
+    """
+    GIVEN = "given"
+    PROJECT = "project"
+    CARRIED = "carried"
+    NONE = "none"
+
+
+EpochSourceName = Literal["given", "project", "carried", "none"]
+"""The names of :class:`EpochSource`, for a plain string."""
+
+
 class EventLinkKind(_StrEnum):
     """What an event object is: a point at a measure, or a line between two.
 
@@ -2579,6 +2638,17 @@ class GridBubbles(_StrEnum):
 
 GridBubblesName = Literal["both", "start", "end", "none"]
 """The names of :class:`GridBubbles`, for a plain string."""
+
+
+class GridKind(_StrEnum):
+    """What a grid of the chain does: an NTv2 datum shift, a geoid model, a velocity grid."""
+    HORIZONTAL = "horizontal"
+    GEOID = "geoid"
+    VELOCITY = "velocity"
+
+
+GridKindName = Literal["horizontal", "geoid", "velocity"]
+"""The names of :class:`GridKind`, for a plain string."""
 
 
 class GridOrigin(_StrEnum):
@@ -19299,6 +19369,140 @@ class CellStyle(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ChainGrid(_Model):
+    """A grid the chain read (docs/adr/1230 §2): what it does, its name, its file's SHA-256 (its version: another file
+    is another grid), the box its nodes cover (degrees; a point beyond has no value) and the accuracy the project
+    states for it (none: not stated; a geoid's and a velocity grid's are not known here).
+    Attributes:
+        accuracy: Unit: m.
+    """
+    kind: GridKind | GridKindName
+    name: str
+    sha256: str
+    extent: DegreeBox
+    accuracy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["sha256"] = self.sha256
+        out["extent"] = self.extent.to_json()
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChainGrid:
+        return cls(
+            kind=_enum_in(GridKind, data["kind"]),
+            name=data["name"],
+            sha256=data["sha256"],
+            extent=DegreeBox.from_json(data["extent"]),
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChainSide(_Model):
+    """One side of the chain (docs/adr/1230 §1): its horizontal system (EPSG code when the registry's, name, family,
+    datum, unit, the order KentOS reads x and y in and the order EPSG gives the axes), the datum ensemble's accuracy
+    when the datum is one (WGS 84: EPSG says 2 m), what its heights rest on, and its epoch with where it came from.
+    Attributes:
+        datum: `TUREF`, `ED50`, `WGS84`, or the project's datum's name.
+        unit: “m” on a grid, “deg” on a geographic system.
+        axes: The order x and y are: “east,north” or “longitude,latitude” (CLAUDE.md §5; whatever EPSG's order).
+        ensemble_accuracy: Unit: m.
+        epoch: Unit: year.
+        epsg_axes: The order EPSG gives the axes: “ne”, “en” or “latlon”; none for the project's definition.
+        srid: Unit: epsg.
+    """
+    name: str
+    family: CrsFamily | CrsFamilyName
+    datum: str
+    unit: str
+    axes: str
+    epoch_source: EpochSource | EpochSourceName
+    ensemble_accuracy: float | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    epsg_axes: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    vertical: ChainVertical | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["family"] = _enum_out(self.family)
+        out["datum"] = self.datum
+        out["unit"] = self.unit
+        out["axes"] = self.axes
+        out["epochSource"] = _enum_out(self.epoch_source)
+        if self.ensemble_accuracy is not UNSET:
+            out["ensembleAccuracy"] = None if self.ensemble_accuracy is None else float(self.ensemble_accuracy)
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epsg_axes is not UNSET:
+            out["epsgAxes"] = self.epsg_axes
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else self.vertical.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChainSide:
+        return cls(
+            name=data["name"],
+            family=_enum_in(CrsFamily, data["family"]),
+            datum=data["datum"],
+            unit=data["unit"],
+            axes=data["axes"],
+            epoch_source=_enum_in(EpochSource, data["epochSource"]),
+            ensemble_accuracy=UNSET if "ensembleAccuracy" not in data else None if data["ensembleAccuracy"] is None else float(data["ensembleAccuracy"]),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epsg_axes=data.get("epsgAxes", UNSET),
+            srid=data.get("srid", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else ChainVertical.from_json(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ChainVertical(_Model):
+    """What a side's heights rest on, as the chain records it: their kind, the vertical system (EPSG code, name and
+    unit; an ellipsoidal height's is the horizontal datum's ellipsoid, in metres) and the geoid model.
+    Attributes:
+        unit: “m”, “ft”.
+        srid: Unit: epsg.
+    """
+    kind: HeightKind | HeightKindName
+    name: str
+    unit: str
+    geoid: GeoidModel | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["unit"] = self.unit
+        if self.geoid is not UNSET:
+            out["geoid"] = None if self.geoid is None else self.geoid.to_json()
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ChainVertical:
+        return cls(
+            kind=_enum_in(HeightKind, data["kind"]),
+            name=data["name"],
+            unit=data["unit"],
+            geoid=UNSET if "geoid" not in data else None if data["geoid"] is None else GeoidModel.from_json(data["geoid"]),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ChangedObject(_Model):
     """An object that is in both and differs.
     Attributes:
@@ -23233,6 +23437,45 @@ class CrsBase(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CrsChain(_Model):
+    """The coordinate chain of a call (docs/adr/1230): the two sides, the basis of each step's accuracy (in the
+    operation's steps' order), the grids read, the verdict and its reasons (in a fixed order: `points_outside`,
+    `accuracy_unknown`, `height_accuracy_unknown`, `heights_unchanged`, `epoch_unknown`, `datum_ensemble`,
+    `unofficial_operation`) and the numeric budget.
+    """
+    source: ChainSide
+    target: ChainSide
+    bases: list[AccuracyBasis | AccuracyBasisName]
+    grids: list[ChainGrid]
+    status: ChainStatus | ChainStatusName
+    reasons: list[str]
+    budget: NumericBudget
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["target"] = self.target.to_json()
+        out["bases"] = [_enum_out(e0) for e0 in self.bases]
+        out["grids"] = [e0.to_json() for e0 in self.grids]
+        out["status"] = _enum_out(self.status)
+        out["reasons"] = list(self.reasons)
+        out["budget"] = self.budget.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsChain:
+        return cls(
+            source=ChainSide.from_json(data["source"]),
+            target=ChainSide.from_json(data["target"]),
+            bases=[_enum_in(AccuracyBasis, e0) for e0 in data["bases"]],
+            grids=[ChainGrid.from_json(e0) for e0 in data["grids"]],
+            status=_enum_in(ChainStatus, data["status"]),
+            reasons=list(data["reasons"]),
+            budget=NumericBudget.from_json(data["budget"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrsDefinition(_Model):
     """A coordinate system the project defines (docs/adr/0168 §1): its name
     and what it is.
@@ -23447,7 +23690,8 @@ class CrsTransform(_Model):
 
     Refusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`
     (a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side
-    is the project's and the project has none), `invalid_heights` (a side's heights against their rules),
+    is the project's and the project has none), `unsupported_srid` (a side is the project's and its stored EPSG code
+    is not one the registry resolves, docs/adr/1230 §1), `invalid_heights` (a side's heights against their rules),
     `invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:
     `no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is
     a grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other
@@ -23495,12 +23739,13 @@ class CrsTransform(_Model):
 @dataclass(kw_only=True, slots=True)
 class CrsTransformed(_Model):
     """Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
-    the operation's record and the report.
+    the operation's record, the report and the coordinate chain (docs/adr/1230).
     """
     points: list[CrsPoint | None]
     unreached: list[UnreachedPoint]
     operation: CrsOperation
     report: AccuracyReport
+    chain: CrsChain
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23508,6 +23753,7 @@ class CrsTransformed(_Model):
         out["unreached"] = [e0.to_json() for e0 in self.unreached]
         out["operation"] = self.operation.to_json()
         out["report"] = self.report.to_json()
+        out["chain"] = self.chain.to_json()
         return out
 
     @classmethod
@@ -23517,6 +23763,7 @@ class CrsTransformed(_Model):
             unreached=[UnreachedPoint.from_json(e0) for e0 in data["unreached"]],
             operation=CrsOperation.from_json(data["operation"]),
             report=AccuracyReport.from_json(data["report"]),
+            chain=CrsChain.from_json(data["chain"]),
         )
 
 
@@ -25316,6 +25563,38 @@ class DeclaredVertical(_Model):
         return cls(
             name=data["name"],
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DegreeBox(_Model):
+    """A box in degrees: west, south, east, north.
+    Attributes:
+        west: Unit: deg.
+        south: Unit: deg.
+        east: Unit: deg.
+        north: Unit: deg.
+    """
+    west: float
+    south: float
+    east: float
+    north: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["west"] = float(self.west)
+        out["south"] = float(self.south)
+        out["east"] = float(self.east)
+        out["north"] = float(self.north)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DegreeBox:
+        return cls(
+            west=float(data["west"]),
+            south=float(data["south"]),
+            east=float(data["east"]),
+            north=float(data["north"]),
         )
 
 
@@ -54401,6 +54680,32 @@ class NumberRule(_Model):
             max=UNSET if "max" not in data else None if data["max"] is None else float(data["max"]),
             min=UNSET if "min" not in data else None if data["min"] is None else float(data["min"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NumericBudget(_Model):
+    """The engine's numeric budget for the call (docs/adr/1230 §4): how far its numbers may lie from an independent
+    engine's (PROJ) for the same operation — the target's horizontal units (metres on a grid, degrees on a geographic
+    system) and metres of height. Not an accuracy: the transformation's is the report's.
+    Attributes:
+        horizontal: Unit: system.
+        vertical: Unit: m.
+    """
+    horizontal: float
+    vertical: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["horizontal"] = float(self.horizontal)
+        out["vertical"] = float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NumericBudget:
+        return cls(
+            horizontal=float(data["horizontal"]),
+            vertical=float(data["vertical"]),
         )
 
 
@@ -116139,6 +116444,8 @@ __all__ = [
     "AcceptOptionsOperation",
     "AccessSource",
     "AccessSourceName",
+    "AccuracyBasis",
+    "AccuracyBasisName",
     "AccuracyReport",
     "AciPaperPlotStyleKey",
     "ActionFormItem",
@@ -116561,6 +116868,11 @@ __all__ = [
     "CenterMarkDimensionMeasure",
     "CenterSubPlace",
     "CenterlineDeriveWork",
+    "ChainGrid",
+    "ChainSide",
+    "ChainStatus",
+    "ChainStatusName",
+    "ChainVertical",
     "ChamferRectangleCorners",
     "ChangeFieldTypeMigrationStep",
     "ChangedObject",
@@ -116749,7 +117061,10 @@ __all__ = [
     "CrossingSide",
     "CrossingSideName",
     "CrsBase",
+    "CrsChain",
     "CrsDefinition",
+    "CrsFamily",
+    "CrsFamilyName",
     "CrsMove",
     "CrsOperation",
     "CrsPlane",
@@ -116824,6 +117139,7 @@ __all__ = [
     "DefineModulesOperation",
     "DefineOpeningTypesOperation",
     "DefineOptionsOperation",
+    "DegreeBox",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
     "DeleteComboOptionsOperation",
@@ -117113,6 +117429,8 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "EpochSource",
+    "EpochSourceName",
     "EqualConstraintRule",
     "EventLink",
     "EventLinkKind",
@@ -117361,6 +117679,8 @@ __all__ = [
     "GridChoice",
     "GridEntity",
     "GridGap",
+    "GridKind",
+    "GridKindName",
     "GridOpeningReference",
     "GridOrigin",
     "GridOriginName",
@@ -118033,6 +118353,7 @@ __all__ = [
     "NumberPlaceName",
     "NumberRule",
     "NumberTextEdit",
+    "NumericBudget",
     "NurbsBy",
     "NurbsCreate",
     "NurbsCreated",
