@@ -1778,6 +1778,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
             source,
             breaks: None,
+            table_style: None,
         }),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
         EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),

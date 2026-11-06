@@ -1138,6 +1138,13 @@ impl<'d> Encoder<'d> {
                 if let Some(b) = &e.breaks {
                     f.push(("breaks", Val::Json(serde_json::to_value(b).unwrap_or_default())));
                 }
+                // Schema 185 (docs/adr/1126 §3): the table style it follows, by id.
+                if let Some(id) = &e.table_style {
+                    if id.is_empty() {
+                        return refuse(self, "tableStyle", "tablonun tablo stili kimliği boş");
+                    }
+                    f.push(("tableStyle", Val::Text(id)));
+                }
             }
             Entity::Image(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {

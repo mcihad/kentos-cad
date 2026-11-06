@@ -51,8 +51,19 @@ fn kind_words(k: Kind) -> &'static str {
         Kind::TextStyle => "Yazı stili",
         Kind::DimensionStyle => "Ölçü stili",
         Kind::LeaderStyle => "Kılavuz stili",
+        Kind::TableStyle => "Tablo stili",
         Kind::Block => "Blok",
         Kind::SheetTemplate => "Pafta şablonu",
+    }
+}
+
+/// A differing field as the row says it: a table style's cell styles in words (docs/adr/1126 §6), others by name.
+fn field_words(f: &str) -> &str {
+    match f {
+        "title" => "başlık hücresi",
+        "header" => "sütun başı",
+        "data" => "veri hücresi",
+        other => other,
     }
 }
 
@@ -276,7 +287,7 @@ impl App {
                                 .into()
                         };
                         let status = if matches!(r.status.as_str(), "differs" | "unavailable") && !r.fields.is_empty() {
-                            format!("{} ({})", status_words(&r.status), r.fields.join(", "))
+                            format!("{} ({})", status_words(&r.status), r.fields.iter().map(|f| field_words(f)).collect::<Vec<_>>().join(", "))
                         } else {
                             status_words(&r.status).to_owned()
                         };

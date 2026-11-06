@@ -1699,6 +1699,7 @@ impl Packer {
                 face,
                 source,
                 breaks,
+                table_style,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*rotation, *height]);
@@ -1794,7 +1795,7 @@ impl Packer {
                     }
                 }
                 // Schema 68's styles, formulas, fields, linked file and block schedule (docs/adr/0327): one JSON object.
-                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref(), breaks.as_ref()) {
+                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref(), breaks.as_ref(), table_style.as_deref()) {
                     flags |= OPT[11];
                     self.text(&j);
                 }
@@ -3136,6 +3137,7 @@ fn geometry(
             }
             Entity::Table(TableEntity {
                 breaks: more.breaks,
+                table_style: more.table_style,
                 styles: more.styles,
                 formulas: more.formulas,
                 fields: more.fields,
@@ -3785,6 +3787,9 @@ struct TableCells {
     /// Its parts (docs/adr/1030 §7).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     breaks: Option<kentos_contracts::TableBreaks>,
+    /// Its table style, by id (docs/adr/1126 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    table_style: Option<String>,
 }
 
 #[derive(Default, serde::Serialize, serde::Deserialize)]
@@ -3808,6 +3813,7 @@ fn table_cells_json(
     fields: &[kentos_contracts::CellField],
     source: Option<&TableSource>,
     breaks: Option<&kentos_contracts::TableBreaks>,
+    table_style: Option<&str>,
 ) -> Option<String> {
     let link = match source {
         Some(TableSource::File {
@@ -3837,6 +3843,7 @@ fn table_cells_json(
         && link.is_none()
         && schedule.is_none()
         && breaks.is_none()
+        && table_style.is_none()
     {
         return None;
     }
@@ -3847,6 +3854,7 @@ fn table_cells_json(
         link,
         schedule,
         breaks: breaks.copied(),
+        table_style: table_style.map(str::to_owned),
     })
     .ok()
 }

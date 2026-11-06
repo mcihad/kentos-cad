@@ -517,6 +517,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.review_notes.is_empty())
             + usize::from(!s.approved_sheet_templates.is_empty())
+            + usize::from(!s.table_styles.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -815,6 +816,18 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.source_bases)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 185 (docs/adr/1126 §2): the table styles, as their JSON (after sourceBases: the keys' canonical order).
+        if !s.table_styles.is_empty() {
+            self.key("tableStyles");
+            self.at(Seg::Name("tableStyles"), |e| {
+                if let Some(problem) = kentos_contracts::table_style_defs_problem(&s.table_styles) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.table_styles)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -2148,6 +2161,12 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 185 (docs/adr/1126 §2–§3): the project's table styles, a table that follows one.
+    if !doc.settings.table_styles.is_empty()
+        || objs.iter().any(|e| matches!(e, Entity::Table(t) if t.table_style.is_some()))
+    {
+        return crate::SCHEMA_WITH_TABLE_STYLES;
+    }
     // Schema 184 (docs/adr/1120 §4): a Big Font beside a text style's font, an SHX unifont or Big Font resource.
     if doc.settings.text_styles.iter().any(|s| s.big_font_file.is_some())
         || doc.styles.items.iter().any(kentos_contracts::shape_resource::is_font_form)

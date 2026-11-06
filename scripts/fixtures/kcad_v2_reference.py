@@ -361,6 +361,8 @@ def settings(s):
                 "standardDocs": (opaque, False),
                 # Schema 183 (docs/adr/1100 §3): the approved sheet template revisions, as their JSON.
                 "approvedSheetTemplates": (opaque, False),
+                # Schema 185 (docs/adr/1126 §2): the table styles, as their JSON.
+                "tableStyles": (opaque, False),
                 # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
                 "reviewNotes": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
@@ -1877,6 +1879,8 @@ KINDS = {
         "schedule": (opaque, False),
         # Schema 182 (docs/adr/1030 §7): its parts, as their JSON.
         "breaks": (opaque, False),
+        # Schema 185 (docs/adr/1126 §3): the table style it follows, by id.
+        "tableStyle": (text, False),
     },
     # Schema 24 (docs/adr/0192): a picture's frame, one source, its clip in its own fractions, its opacity; `mirror`
     # only when true; only in the drawing.
@@ -2415,6 +2419,10 @@ def document(d):
             for i in d.get("styles", {}).get("items", [])):
         # A Big Font beside a text style's font, an SHX unifont or Big Font resource (docs/adr/1120 §4).
         schema = max(schema, 184)
+    if d["settings"].get("tableStyles") or any(
+            e.get("kind") == "table" and "tableStyle" in e for e in d.get("entities", [])):
+        # The project's table styles, a table that follows one (docs/adr/1126 §2–§3).
+        schema = max(schema, 185)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3360,7 +3368,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-185.kcad"] = container(root(cmap(parts), version=uint(185)))
+    files["schema-version-186.kcad"] = container(root(cmap(parts), version=uint(186)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5657,6 +5665,24 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 185 (docs/adr/1126 §2–§3): two table styles (one with every cell field, one with a data cell only) and a
+    # table that follows the first; schema 184 refuses the settings' field, an unknown cell field, a repeated name
+    # (case aside), a zero text height and a bad colour are refused, as is an empty tableStyle.
+    tabled = load("table-styles.json")
+    tabled_data = document(tabled)
+    assert tabled_data.count(b"\x67version\x18\xb9") == 1, "table styles are schema 185"
+    out["table-styles.kcad"] = container(tabled_data)
+    out["broken/table-styles-in-schema-184.kcad"] = container(
+        tabled_data.replace(b"\x67version\x18\xb9", b"\x67version\x18\xb8"))
+    for name, change in (
+            ("unknown-field", lambda t: t["settings"]["tableStyles"][0]["data"].update({"flow": "up"})),
+            ("duplicate", lambda t: t["settings"]["tableStyles"][1].update({"name": "a-tablo"})),
+            ("height", lambda t: t["settings"]["tableStyles"][0]["title"].update({"height": 0.0})),
+            ("colour", lambda t: t["settings"]["tableStyles"][0]["header"].update({"fill": "#eee"})),
+            ("empty-ref", lambda t: t["entities"][0].update({"tableStyle": ""}))):
+        broken_styles = copy.deepcopy(tabled)
+        change(broken_styles)
+        out[f"broken/table-styles-{name}.kcad"] = container(document(broken_styles))
     # Schema 183 (docs/adr/1100 §3): two approved sheet template revisions, each with the standard that approved it;
     # schema 182 refuses the field, a repeated template id (case aside) and a revision 0 are bad values.
     approved = load("approved-sheet-templates.json")

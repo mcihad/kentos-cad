@@ -33,12 +33,13 @@ pub const ID: &str = "audit";
 pub const LABEL: &str = "Denetle";
 
 /// The kinds' names in the counts, in the report's order.
-const KINDS: [(ResourceKind, &str); 5] = [
+const KINDS: [(ResourceKind, &str); 6] = [
     (ResourceKind::Layer, "katman"),
     (ResourceKind::Group, "grup"),
     (ResourceKind::Block, "blok"),
     (ResourceKind::TextStyle, "yazı stili"),
     (ResourceKind::DimensionStyle, "ölçü stili"),
+    (ResourceKind::TableStyle, "tablo stili"),
 ];
 
 /// What the audit found: `3 bozuk nesne (1 kilitli katmanda)`; none: empty.

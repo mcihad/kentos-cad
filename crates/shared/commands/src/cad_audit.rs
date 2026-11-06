@@ -45,6 +45,8 @@ pub enum AuditCode {
 pub enum AuditPurge {
     TextStyles,
     DimensionStyles,
+    /// The table styles no table follows (docs/adr/1126 §5).
+    TableStyles,
 }
 
 /// A named resource's kind.
@@ -59,6 +61,7 @@ pub enum ResourceKind {
     Block,
     TextStyle,
     DimensionStyle,
+    TableStyle,
 }
 
 /// Input of `cad.drawing.audit` v1. Finds what the drawing carries broken (`AuditCode`) and the named resources

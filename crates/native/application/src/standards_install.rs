@@ -1,5 +1,5 @@
 //! `cad.standards.install` v1 (Standart kaynaklarını kur, docs/adr/1002): the bound office standards' named
-//! resources (line types, hatch patterns, text, dimension and leader styles; `cad.standards.resolve`'s first-source
+//! resources (line types, hatch patterns, text, dimension, leader and table styles; `cad.standards.resolve`'s first-source
 //! answer) installed into the drawing by the user's choices. Each resource is `missing`, `same` or `differs` against
 //! the drawing's of that name (case aside, appearance compared as `cad.standards.check` does: names, ids,
 //! descriptions and sources aside, numbers within 1e-9). A missing one is added by default; a differing one is kept by
@@ -43,6 +43,7 @@ fn kind_words(k: Kind) -> &'static str {
         Kind::TextStyle => "yazı stili",
         Kind::DimensionStyle => "ölçü stili",
         Kind::LeaderStyle => "kılavuz stili",
+        Kind::TableStyle => "tablo stili",
         Kind::Block => "blok",
         Kind::SheetTemplate => "pafta şablonu",
     }
@@ -120,6 +121,16 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             source: origin(&p.leader_styles, &t.name),
         });
     }
+    // Table styles (docs/adr/1126 §6): by name, every cell style compared.
+    for t in &r.resources.table_style_definitions {
+        out.push(Incoming {
+            kind: Kind::TableStyle,
+            name: t.name.clone(),
+            look: appearance(t),
+            local: s.table_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            source: origin(&p.table_style_definitions, &t.name),
+        });
+    }
     out.sort_by_key(|i| i.kind);
     out
 }
@@ -133,6 +144,7 @@ fn local_names(doc: &Document, kind: Kind) -> BTreeSet<String> {
         Kind::TextStyle => s.text_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::DimensionStyle => s.dimension_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::LeaderStyle => s.leader_styles.iter().map(|t| key(&t.name)).collect(),
+        Kind::TableStyle => s.table_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::Block => doc.blocks().iter().map(|b| key(&b.name)).collect(),
         Kind::SheetTemplate => s.approved_sheet_templates.iter().map(|t| key(&t.template_id)).collect(),
     }
@@ -450,6 +462,20 @@ fn write_rows(
             ..t.clone()
         },
     );
+    // Table styles (docs/adr/1126 §6): replaced in place keep the drawing's name and id, so its tables follow.
+    let table = styles(
+        &s.table_styles,
+        &r.table_style_definitions,
+        rows,
+        Kind::TableStyle,
+        |t| t.name.as_str(),
+        |t| t.id.as_str(),
+        |t, name, id| kentos_commands::TableStyleDef {
+            name: name.unwrap_or_else(|| t.name.clone()),
+            id: id.unwrap_or_else(|| t.id.clone()),
+            ..t.clone()
+        },
+    );
     let approved = library::approved_after(doc, all);
     doc.name_step(STANDARDS_INSTALL_STEP);
     doc.transact(STANDARDS_INSTALL_STEP, |doc| {
@@ -458,6 +484,7 @@ fn write_rows(
             next.text_styles = text;
             next.dimension_styles = dimension;
             next.leader_styles = leader;
+            next.table_styles = table;
             doc.set_settings(next);
         });
         doc.set_pattern_tables(line_types, hatch_patterns, STANDARDS_INSTALL_STEP);

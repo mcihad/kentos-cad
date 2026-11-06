@@ -97,7 +97,7 @@ pub fn store_for_viewport(
     );
     store
         .put_many(doc.entities().filter_map(|e| {
-            crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale))
+            crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale), doc.settings())
         }));
     store.set_hosts(opening_hosts(doc, doc.entities()));
     // The masks are picked by their boundary only (docs/adr/0310 §4).

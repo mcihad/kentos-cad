@@ -603,6 +603,7 @@ fn table_of(
         formulas: Vec::new(),
         fields: Vec::new(),
         breaks: input.breaks,
+        table_style: None,
     };
     doc.take_rows(&mut t, cells);
     t.aligns = Some(aligns);

@@ -73,9 +73,11 @@ fn alike_but_placed(a: &TableEntity, b: &TableEntity) -> bool {
         formulas,
         fields,
         breaks,
+        table_style,
     } = a;
     *height == b.height
         && *breaks == b.breaks
+        && *table_style == b.table_style
         && *header == b.header
         && *frame == b.frame
         && *grid == b.grid

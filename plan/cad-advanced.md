@@ -2143,6 +2143,18 @@ ofisin `.kblok` dosyalarını verilen sırayla KentOS'unkilerden önce okur; pen
 çağrı kitaplığıyla yinelenir. Bağımsız başvurudan on yeni ortak vaka (34) ve masaüstü testi geçti. CAD-ADV-12'de açık
 kalan: tablo stili kaynağı ve bulut kitaplığının doğrudan okunması.
 
+**Tablo stili kaynağı (6 Kasım 2026, [ADR 1126](../docs/adr/1126-table-styles-and-the-office-standard.md)):**
+Projeye adlandırılmış tablo stili (`TableStyleDef`: AutoCAD'in başlık/sütun başı/veri hücre stilleri; yazı stili adı,
+yükseklik, hizalama, yazı ve dolgu rengi, kenar boşlukları, kenar çizgisi kalınlığı ve rengi) ve tablonun `tableStyle`'ı
+eklendi (`.kcad` şema 185, geçici numara; bağımsız okuyucu ve başvuru aynı kuralla, 7 yeni örnek). Tablo, kendi
+belirlemediği hizalama, renk, dolgu ve yazı stilini stilinden alır (ekran, PDF, seçim deposu aynı `styled`); yükseklik,
+kenar boşluğu ve kenar çizgileri saklanır ve karşılaştırılır, henüz çizilmez. Ofis paketi `tableStyleDefinitions`'ı
+taşır: resolve kökeni, conflicts `tableStyleDefinition`, check eksik/farklı bulgusu (izleyen tablolar sayılır), install
+`tableStyle` satırları (ekle/değiştir/koru/yeni adla). Denetle'nin temizliği kullanılmayan tablo stilini siler, bir
+tablonun izlediğini hiç; tablo stilinin adlandırdığı yazı stili kullanılıyor sayılır. Bağımsız başvurudan 40 ortak vaka
+(kurulum 26, denetim 10, fark 4). Açık: tablo stili penceresi ve düzenleme komutu, DXF TABLESTYLE, hücre türüne göre
+yükseklik/kenar boşluğu/kenar çizgisi çizimi, tablo yönü.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

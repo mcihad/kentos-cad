@@ -693,12 +693,18 @@ AuditCodeName = Literal["brokenLink", "brokenHatch", "missingCutout", "hatchText
 
 
 class AuditPurge(_StrEnum):
-    """The named resources Denetle removes when nothing uses them."""
+    """The named resources Denetle removes when nothing uses them.
+
+    - ``textStyles``
+    - ``dimensionStyles``
+    - ``tableStyles``: The table styles no table follows (docs/adr/1126 §5).
+    """
     TEXT_STYLES = "textStyles"
     DIMENSION_STYLES = "dimensionStyles"
+    TABLE_STYLES = "tableStyles"
 
 
-AuditPurgeName = Literal["textStyles", "dimensionStyles"]
+AuditPurgeName = Literal["textStyles", "dimensionStyles", "tableStyles"]
 """The names of :class:`AuditPurge`, for a plain string."""
 
 
@@ -5846,9 +5852,10 @@ class ResourceKind(_StrEnum):
     BLOCK = "block"
     TEXT_STYLE = "textStyle"
     DIMENSION_STYLE = "dimensionStyle"
+    TABLE_STYLE = "tableStyle"
 
 
-ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionStyle"]
+ResourceKindName = Literal["layer", "group", "block", "textStyle", "dimensionStyle", "tableStyle"]
 """The names of :class:`ResourceKind`, for a plain string."""
 
 
@@ -6830,6 +6837,8 @@ class StandardIssueKind(_StrEnum):
     - ``textStyleName``: A text style the standard does not have.
     - ``textStyleHeight``: A text style's paper height differs from the standard.
     - ``dimensionStyleHeight``: A dimension style's paper text height differs from the standard.
+    - ``missingTableStyleDefinition``: A table style the standard has and the drawing does not (docs/adr/1126 §6).
+    - ``tableStyleDefinition``: A table style whose cell styles differ from the standard's.
     - ``objectLineType``: Objects with a line type of their own the standard does not have.
     - ``ownLook``: Objects with a look of their own when the standard has them take their layers'.
     """
@@ -6861,17 +6870,28 @@ class StandardIssueKind(_StrEnum):
     TEXT_STYLE_NAME = "textStyleName"
     TEXT_STYLE_HEIGHT = "textStyleHeight"
     DIMENSION_STYLE_HEIGHT = "dimensionStyleHeight"
+    MISSING_TABLE_STYLE_DEFINITION = "missingTableStyleDefinition"
+    TABLE_STYLE_DEFINITION = "tableStyleDefinition"
     OBJECT_LINE_TYPE = "objectLineType"
     OWN_LOOK = "ownLook"
 
 
-StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "objectLineType", "ownLook"]
+StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLineTypeDefinition", "lineTypeDefinition", "missingHatchPatternDefinition", "hatchPatternDefinition", "missingBlockReference", "blockPublication", "blockUnit", "sheetTemplateOrigin", "missingLeaderStyleDefinition", "leaderStyleDefinition", "missingTextStyleDefinition", "textStyleDefinition", "missingDimensionStyleDefinition", "dimensionStyleDefinition", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "textStyleHeight", "dimensionStyleHeight", "missingTableStyleDefinition", "tableStyleDefinition", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
 
 
 class StandardResourceKind(_StrEnum):
     """A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's
     reference and a sheet template an approved template revision (docs/adr/1100 §2–§3).
+
+    - ``lineType``
+    - ``hatchPattern``
+    - ``textStyle``
+    - ``dimensionStyle``
+    - ``leaderStyle``
+    - ``block``
+    - ``sheetTemplate``
+    - ``tableStyle``: A named table style (docs/adr/1126 §6).
     """
     LINE_TYPE = "lineType"
     HATCH_PATTERN = "hatchPattern"
@@ -6880,9 +6900,10 @@ class StandardResourceKind(_StrEnum):
     LEADER_STYLE = "leaderStyle"
     BLOCK = "block"
     SHEET_TEMPLATE = "sheetTemplate"
+    TABLE_STYLE = "tableStyle"
 
 
-StandardResourceKindName = Literal["lineType", "hatchPattern", "textStyle", "dimensionStyle", "leaderStyle", "block", "sheetTemplate"]
+StandardResourceKindName = Literal["lineType", "hatchPattern", "textStyle", "dimensionStyle", "leaderStyle", "block", "sheetTemplate", "tableStyle"]
 """The names of :class:`StandardResourceKind`, for a plain string."""
 
 
@@ -67370,6 +67391,7 @@ class ProjectSettings(_Model):
             entries take precedence; choosing a standard does not apply it.
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
+        table_styles: The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
         topology: The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
         ucs: The drawing's user coordinate system (docs/adr/0261 §1); none: the
@@ -67428,6 +67450,7 @@ class ProjectSettings(_Model):
     sources: list[SourceLink] | Unset = UNSET
     standard_docs: list[ProjectStandardDocument] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
+    table_styles: list[TableStyleDef] | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
     ucs: Ucs | None | Unset = UNSET
@@ -67523,6 +67546,8 @@ class ProjectSettings(_Model):
             out["standardDocs"] = [e0.to_json() for e0 in self.standard_docs]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
+        if self.table_styles is not UNSET:
+            out["tableStyles"] = [e0.to_json() for e0 in self.table_styles]
         if self.text_styles is not UNSET:
             out["textStyles"] = [e0.to_json() for e0 in self.text_styles]
         if self.topology is not UNSET:
@@ -67589,6 +67614,7 @@ class ProjectSettings(_Model):
             sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
             standard_docs=[ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]] if "standardDocs" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
+            table_styles=[TableStyleDef.from_json(e0) for e0 in data["tableStyles"]] if "tableStyles" in data else UNSET,
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
             ucs=UNSET if "ucs" not in data else None if data["ucs"] is None else Ucs.from_json(data["ucs"]),
@@ -82817,6 +82843,7 @@ class StandardOrigin(_Model):
 class StandardProvenance(_Model):
     """Provenance of the global rules and each effective named definition.
     Attributes:
+        table_style_definitions: Table styles by name (docs/adr/1126 §6).
         tool_palettes: Office tool palettes by id (docs/adr/1014).
     """
     rules: StandardOrigin
@@ -82830,6 +82857,7 @@ class StandardProvenance(_Model):
     leader_styles: dict[str, StandardOrigin]
     text_style_definitions: dict[str, StandardOrigin]
     dimension_style_definitions: dict[str, StandardOrigin]
+    table_style_definitions: dict[str, StandardOrigin] | Unset = UNSET
     tool_palettes: dict[str, StandardOrigin] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -82845,6 +82873,8 @@ class StandardProvenance(_Model):
         out["leaderStyles"] = {k0: e0.to_json() for k0, e0 in self.leader_styles.items()}
         out["textStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.text_style_definitions.items()}
         out["dimensionStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.dimension_style_definitions.items()}
+        if self.table_style_definitions is not UNSET:
+            out["tableStyleDefinitions"] = {k0: e0.to_json() for k0, e0 in self.table_style_definitions.items()}
         if self.tool_palettes is not UNSET:
             out["toolPalettes"] = {k0: e0.to_json() for k0, e0 in self.tool_palettes.items()}
         return out
@@ -82863,6 +82893,7 @@ class StandardProvenance(_Model):
             leader_styles={k0: StandardOrigin.from_json(e0) for k0, e0 in data["leaderStyles"].items()},
             text_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["textStyleDefinitions"].items()},
             dimension_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["dimensionStyleDefinitions"].items()},
+            table_style_definitions={k0: StandardOrigin.from_json(e0) for k0, e0 in data["tableStyleDefinitions"].items()} if "tableStyleDefinitions" in data else UNSET,
             tool_palettes={k0: StandardOrigin.from_json(e0) for k0, e0 in data["toolPalettes"].items()} if "toolPalettes" in data else UNSET,
         )
 
@@ -82872,6 +82903,7 @@ class StandardResources(_Model):
     """Portable resource definitions carried by a version 2 office standard.
     Association alone never overwrites the project's definitions.
     Attributes:
+        table_style_definitions: Named table styles (docs/adr/1126 §6): installed by name as the other styles are.
         tool_palettes: Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the
             package where it is bound; never installed in the drawing.
     """
@@ -82881,6 +82913,7 @@ class StandardResources(_Model):
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     line_types: list[LineTypeDef] | Unset = UNSET
     sheet_templates: list[StandardSheetTemplateReference] | Unset = UNSET
+    table_style_definitions: list[TableStyleDef] | Unset = UNSET
     text_style_definitions: list[TextStyleDef] | Unset = UNSET
     tool_palettes: list[ToolPalette] | Unset = UNSET
 
@@ -82898,6 +82931,8 @@ class StandardResources(_Model):
             out["lineTypes"] = [e0.to_json() for e0 in self.line_types]
         if self.sheet_templates is not UNSET:
             out["sheetTemplates"] = [e0.to_json() for e0 in self.sheet_templates]
+        if self.table_style_definitions is not UNSET:
+            out["tableStyleDefinitions"] = [e0.to_json() for e0 in self.table_style_definitions]
         if self.text_style_definitions is not UNSET:
             out["textStyleDefinitions"] = [e0.to_json() for e0 in self.text_style_definitions]
         if self.tool_palettes is not UNSET:
@@ -82913,6 +82948,7 @@ class StandardResources(_Model):
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             line_types=[LineTypeDef.from_json(e0) for e0 in data["lineTypes"]] if "lineTypes" in data else UNSET,
             sheet_templates=[StandardSheetTemplateReference.from_json(e0) for e0 in data["sheetTemplates"]] if "sheetTemplates" in data else UNSET,
+            table_style_definitions=[TableStyleDef.from_json(e0) for e0 in data["tableStyleDefinitions"]] if "tableStyleDefinitions" in data else UNSET,
             text_style_definitions=[TextStyleDef.from_json(e0) for e0 in data["textStyleDefinitions"]] if "textStyleDefinitions" in data else UNSET,
             tool_palettes=[ToolPalette.from_json(e0) for e0 in data["toolPalettes"]] if "toolPalettes" in data else UNSET,
         )
@@ -86148,6 +86184,67 @@ class TableBreaks(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TableCellStyleDef(_Model):
+    """One of a table style's cell styles (AutoCAD's Title, Header or Data), every field optional.
+    Attributes:
+        align: Its words' horizontal alignment (group 170's left, centre or right).
+        border_color: Its borders' colour, `#rrggbb` (groups 64–69).
+        border_weight: Its borders' weight on the paper, mm, 0 the thinnest line (groups 274–279). Unit: paper-mm.
+        color: Its words' colour, `#rrggbb` (group 62).
+        fill: Its background, `#rrggbb` (groups 63 and 283).
+        height: Its words' height on the paper, mm (group 140). Unit: paper-mm.
+        horizontal_margin: The room between its words and its left and right borders, paper mm (group 40). Unit: paper-mm.
+        text_style: The text style its words are written in, by its name (AutoCAD's group 7).
+        vertical_margin: The room between its words and its top and bottom borders, paper mm (group 41). Unit: paper-mm.
+    """
+    align: TableAlign | TableAlignName | None | Unset = UNSET
+    border_color: str | None | Unset = UNSET
+    border_weight: float | None | Unset = UNSET
+    color: str | None | Unset = UNSET
+    fill: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    horizontal_margin: float | None | Unset = UNSET
+    text_style: str | None | Unset = UNSET
+    vertical_margin: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.align is not UNSET:
+            out["align"] = None if self.align is None else _enum_out(self.align)
+        if self.border_color is not UNSET:
+            out["borderColor"] = self.border_color
+        if self.border_weight is not UNSET:
+            out["borderWeight"] = None if self.border_weight is None else float(self.border_weight)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.horizontal_margin is not UNSET:
+            out["horizontalMargin"] = None if self.horizontal_margin is None else float(self.horizontal_margin)
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
+        if self.vertical_margin is not UNSET:
+            out["verticalMargin"] = None if self.vertical_margin is None else float(self.vertical_margin)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableCellStyleDef:
+        return cls(
+            align=UNSET if "align" not in data else None if data["align"] is None else _enum_in(TableAlign, data["align"]),
+            border_color=data.get("borderColor", UNSET),
+            border_weight=UNSET if "borderWeight" not in data else None if data["borderWeight"] is None else float(data["borderWeight"]),
+            color=data.get("color", UNSET),
+            fill=data.get("fill", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            horizontal_margin=UNSET if "horizontalMargin" not in data else None if data["horizontalMargin"] is None else float(data["horizontalMargin"]),
+            text_style=data.get("textStyle", UNSET),
+            vertical_margin=UNSET if "verticalMargin" not in data else None if data["verticalMargin"] is None else float(data["verticalMargin"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TableCheck(_Model):
     """A CHECK constraint of a bound table (docs/adr/0755 §1).
     Attributes:
@@ -86231,6 +86328,8 @@ class TableEntity(Entity):
         source: Where its rows came from (Tabloyu güncelle); absent: written by hand.
         styles: Its cells' styles, a later over an earlier (docs/adr/0327 §1).
         symbol: Library symbol overriding the layer's style.
+        table_style: The project's table style it follows, by its id (docs/adr/1126 §3, `.kcad` schema 185): what the table does
+            not set itself the style gives its drawing (`styled`); absent: none.
         text_style: The project's text style it follows, by its id; absent: Standart.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
@@ -86272,6 +86371,7 @@ class TableEntity(Entity):
     source: TableSource | None | Unset = UNSET
     styles: list[CellStyle] | Unset = UNSET
     symbol: str | None | Unset = UNSET
+    table_style: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
@@ -86339,6 +86439,8 @@ class TableEntity(Entity):
             out["styles"] = [e0.to_json() for e0 in self.styles]
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
+        if self.table_style is not UNSET:
+            out["tableStyle"] = self.table_style
         if self.text_style is not UNSET:
             out["textStyle"] = self.text_style
         if self.transparency is not UNSET:
@@ -86385,6 +86487,7 @@ class TableEntity(Entity):
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
             styles=[CellStyle.from_json(e0) for e0 in data["styles"]] if "styles" in data else UNSET,
             symbol=data.get("symbol", UNSET),
+            table_style=data.get("tableStyle", UNSET),
             text_style=data.get("textStyle", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
@@ -86496,6 +86599,45 @@ class TableStyle(_Model):
             bold=data.get("bold", UNSET),
             color=data.get("color", UNSET),
             field=data.get("field", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TableStyleDef(_Model):
+    """A named table style (docs/adr/1126 §2).
+    Attributes:
+        id: One of its kind among the project's table styles.
+        name: Its name: trimmed, one of its kind whatever its letters' case.
+        data: Every other row's cells.
+        header: The heading row's cells: the first row after the title, when the table has a heading.
+        title: The title row's cells: the first row when it is one merged range across every column.
+    """
+    id: str
+    name: str
+    data: TableCellStyleDef | None | Unset = UNSET
+    header: TableCellStyleDef | None | Unset = UNSET
+    title: TableCellStyleDef | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.data is not UNSET:
+            out["data"] = None if self.data is None else self.data.to_json()
+        if self.header is not UNSET:
+            out["header"] = None if self.header is None else self.header.to_json()
+        if self.title is not UNSET:
+            out["title"] = None if self.title is None else self.title.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TableStyleDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            data=UNSET if "data" not in data else None if data["data"] is None else TableCellStyleDef.from_json(data["data"]),
+            header=UNSET if "header" not in data else None if data["header"] is None else TableCellStyleDef.from_json(data["header"]),
+            title=UNSET if "title" not in data else None if data["title"] is None else TableCellStyleDef.from_json(data["title"]),
         )
 
 
@@ -119298,6 +119440,7 @@ __all__ = [
     "TableAlign",
     "TableAlignName",
     "TableBreaks",
+    "TableCellStyleDef",
     "TableCheck",
     "TableEdit",
     "TableEntity",
@@ -119313,6 +119456,7 @@ __all__ = [
     "TableReport",
     "TableSource",
     "TableStyle",
+    "TableStyleDef",
     "TableUnique",
     "TablesEdit",
     "TablesEdited",

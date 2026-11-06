@@ -1,0 +1,4159 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.standards.conflicts",
+ "commandVersion": 1,
+ "title": "Standart farkları: tablo stilleri",
+ "note": "ADR 1126 §6. Bağımsız başvuru scripts/fixtures/standards_table_styles_cases.py: kurallar ADR'den elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Tablo stilleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 100,
+   "workspace": "cad",
+   "textStyles": [
+    {
+     "id": "yazi-tablo",
+     "name": "A-TABLO",
+     "font": "arimo",
+     "height": 2.5
+    }
+   ],
+   "tableStyles": [
+    {
+     "id": "ofis-cetvel",
+     "name": "CETVEL",
+     "data": {
+      "align": "right",
+      "height": 2.0
+     }
+    },
+    {
+     "id": "yerel-sade",
+     "name": "SADE",
+     "data": {
+      "align": "left",
+      "horizontalMargin": 1.5
+     }
+    },
+    {
+     "id": "ofis-baslik",
+     "name": "YEREL",
+     "title": {
+      "fill": "#ffffff"
+     }
+    }
+   ],
+   "standardDocs": [
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-cetvel-a\", \"name\": \"CETVEL\", \"header\": {\"align\": \"center\", \"fill\": \"#dddddd\"}, \"data\": {\"align\": \"right\", \"height\": 2.5}}, {\"id\": \"ofis-baslik\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}, {\"id\": \"ofis-sade\", \"name\": \"sade\", \"data\": {\"align\": \"left\", \"horizontalMargin\": 1.5000000001}}]}}"
+    },
+    {
+     "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-cetvel\", \"name\": \"Cetvel\", \"data\": {\"align\": \"left\"}}, {\"id\": \"b-liste\", \"name\": \"PLAN-LISTE\", \"data\": {\"verticalMargin\": 1.0, \"color\": \"#c0392b\"}}]}}"
+    }
+   ]
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "table",
+    "id": 1,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "header": true,
+    "tableStyle": "ofis-cetvel"
+   },
+   {
+    "kind": "table",
+    "id": 2,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 10.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "header": true,
+    "tableStyle": "yerel-sade"
+   },
+   {
+    "kind": "table",
+    "id": 3,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 20.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "header": true
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Aynı adlı farklı tablo stili: farklı hücre stilleri ve iki değer",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-cetvel-a\", \"name\": \"CETVEL\", \"header\": {\"align\": \"center\", \"fill\": \"#dddddd\"}, \"data\": {\"align\": \"right\", \"height\": 2.5}}, {\"id\": \"ofis-baslik\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}, {\"id\": \"ofis-sade\", \"name\": \"sade\", \"data\": {\"align\": \"left\", \"horizontalMargin\": 1.5000000001}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-cetvel\", \"name\": \"Cetvel\", \"data\": {\"align\": \"left\"}}, {\"id\": \"b-liste\", \"name\": \"PLAN-LISTE\", \"data\": {\"verticalMargin\": 1.0, \"color\": \"#c0392b\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "Cetvel",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data",
+          "header"
+         ],
+         "firstValues": {
+          "data": {
+           "align": "right",
+           "height": 2.5
+          },
+          "header": {
+           "align": "center",
+           "fill": "#dddddd"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "align": "left"
+          },
+          "header": null
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı içerik, farklı kimlik ve ad harfi: fark değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-baslik\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b\", \"name\": \"baslik\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sayılar 1e-9 içinde eşit: fark değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-sade\", \"name\": \"sade\", \"data\": {\"align\": \"left\", \"horizontalMargin\": 1.5000000001}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-sade\", \"name\": \"sade\", \"data\": {\"align\": \"left\", \"horizontalMargin\": 1.5000000001}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkincide olmayan hücre stili null'dır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"ofis-cetvel-a\", \"name\": \"CETVEL\", \"header\": {\"align\": \"center\", \"fill\": \"#dddddd\"}, \"data\": {\"align\": \"right\", \"height\": 2.5}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b\", \"name\": \"CETVEL\", \"data\": {\"align\": \"right\", \"height\": 2.5}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "CETVEL",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "header"
+         ],
+         "firstValues": {
+          "header": {
+           "align": "center",
+           "fill": "#dddddd"
+          }
+         },
+         "laterValues": {
+          "header": null
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin textStyle alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"B-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "B-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin height alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.5, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.5,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin align alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"left\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "left",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin color alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#222222\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#222222",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin fill alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#eeeeee\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#eeeeee",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin horizontalMargin alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 2.0, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 2.0,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin verticalMargin alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 0.5, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 0.5,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin borderWeight alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.35, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.35,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Veri hücresinin borderColor alanı farkı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#333333\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#333333"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız ikincide olan ad fark değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"BASKA\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ad harf büyüklüğüyle farklı, içerik farklı: ikincinin adıyla",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b\", \"name\": \"t\", \"title\": {\"align\": \"left\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "t",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "title"
+         ],
+         "firstValues": {
+          "title": {
+           "align": "center"
+          }
+         },
+         "laterValues": {
+          "title": {
+           "align": "left"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkisi aynı, kimlikleri farklı: fark yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir standartta hücre stili yok, öbüründe var",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a\", \"name\": \"U\"}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b\", \"name\": \"U\", \"header\": {\"align\": \"center\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "U",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "header"
+         ],
+         "firstValues": {
+          "header": null
+         },
+         "laterValues": {
+          "header": {
+           "align": "center"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Renk yazısının harf büyüklüğü farktır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#DDDDDD\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "header"
+         ],
+         "firstValues": {
+          "header": {
+           "fill": "#dddddd"
+          }
+         },
+         "laterValues": {
+          "header": {
+           "fill": "#DDDDDD"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Üç hücre stili de farklı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-t\", \"name\": \"T\", \"title\": {}, \"header\": {}, \"data\": {}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "T",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "data",
+          "header",
+          "title"
+         ],
+         "firstValues": {
+          "data": {
+           "textStyle": "A-TABLO",
+           "height": 2.0,
+           "align": "right",
+           "color": "#111111",
+           "fill": "#ffffff",
+           "horizontalMargin": 1.5,
+           "verticalMargin": 1.0,
+           "borderWeight": 0.25,
+           "borderColor": "#000000"
+          },
+          "header": {
+           "fill": "#dddddd"
+          },
+          "title": {
+           "align": "center"
+          }
+         },
+         "laterValues": {
+          "data": {},
+          "header": {},
+          "title": {}
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Birinci standartta iki stil, ikincide biri farklı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Tablo stilleri",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 100,
+     "workspace": "cad",
+     "textStyles": [
+      {
+       "id": "yazi-tablo",
+       "name": "A-TABLO",
+       "font": "arimo",
+       "height": 2.5
+      }
+     ],
+     "tableStyles": [],
+     "standardDocs": [
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-a\", \"revision\": \"2026.1\", \"standard\": {\"name\": \"ofis-a\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"a-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}, {\"id\": \"ofis-baslik\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 3.5, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}]}}"
+      },
+      {
+       "text": "{\"format\": \"kentos.drawing-standard\", \"version\": 2, \"id\": \"ofis-b\", \"revision\": \"2026.3\", \"standard\": {\"name\": \"ofis-b\", \"layers\": []}, \"resources\": {\"tableStyleDefinitions\": [{\"id\": \"b-b\", \"name\": \"BASLIK\", \"title\": {\"textStyle\": \"A-TABLO\", \"height\": 4.0, \"align\": \"center\", \"borderWeight\": 0.5, \"borderColor\": \"#000000\"}}, {\"id\": \"b-t\", \"name\": \"T\", \"title\": {\"align\": \"center\"}, \"header\": {\"fill\": \"#dddddd\"}, \"data\": {\"textStyle\": \"A-TABLO\", \"height\": 2.0, \"align\": \"right\", \"color\": \"#111111\", \"fill\": \"#ffffff\", \"horizontalMargin\": 1.5, \"verticalMargin\": 1.0, \"borderWeight\": 0.25, \"borderColor\": \"#000000\"}}]}}"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "table",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 0.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "ofis-cetvel"
+     },
+     {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 10.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true,
+      "tableStyle": "yerel-sade"
+     },
+     {
+      "kind": "table",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+       "x": 20.0,
+       "y": 10.0
+      },
+      "rotation": 0.0,
+      "height": 0.25,
+      "rows": [
+       0.5,
+       0.5
+      ],
+      "columns": [
+       2.0,
+       2.0
+      ],
+      "cells": [
+       [
+        "Ada",
+        "Alan"
+       ],
+       [
+        "101",
+        "512"
+       ]
+      ],
+      "header": true
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "conflicts": [
+        {
+         "kind": "tableStyleDefinition",
+         "name": "BASLIK",
+         "firstId": "ofis-a",
+         "laterId": "ofis-b",
+         "fields": [
+          "title"
+         ],
+         "firstValues": {
+          "title": {
+           "textStyle": "A-TABLO",
+           "height": 3.5,
+           "align": "center",
+           "borderWeight": 0.5,
+           "borderColor": "#000000"
+          }
+         },
+         "laterValues": {
+          "title": {
+           "textStyle": "A-TABLO",
+           "height": 4.0,
+           "align": "center",
+           "borderWeight": 0.5,
+           "borderColor": "#000000"
+          }
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

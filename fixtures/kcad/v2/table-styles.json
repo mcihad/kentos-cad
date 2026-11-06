@@ -1,0 +1,42 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tablo stilleri",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0,
+    "textStyles": [
+      {"id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1126", "name": "A-TABLO", "font": "arimo", "height": 2.5}
+    ],
+    "tableStyles": [
+      {
+        "id": "ofis-tablo",
+        "name": "A-Tablo",
+        "title": {"textStyle": "A-TABLO", "height": 3.5, "align": "center", "fill": "#eeeeee", "verticalMargin": 1.5},
+        "header": {"height": 2.5, "align": "center", "color": "#c0392b", "fill": "#dddddd", "borderWeight": 0.5,
+                   "borderColor": "#000000"},
+        "data": {"textStyle": "A-TABLO", "height": 2.0, "align": "right", "horizontalMargin": 1.5,
+                 "verticalMargin": 1.0, "borderWeight": 0.18, "borderColor": "#333333"}
+      },
+      {"id": "sade", "name": "Sade", "data": {"align": "left"}}
+    ]
+  },
+  "origin": {"x": 500000.0, "y": 4400000.0},
+  "layers": [
+    {"id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true,
+     "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {"kind": "table", "id": 1, "layerId": "0", "attrs": {}, "p": {"x": 500001.0, "y": 4400020.0}, "rotation": 0.0,
+     "height": 0.25, "rows": [0.6, 0.5, 0.5], "columns": [2.0, 2.5],
+     "cells": [["Yapı listesi", ""], ["Ada", "Alan"], ["101", "512,25"]],
+     "merges": [{"row": 0, "col": 0, "rows": 1, "cols": 2}], "header": true, "tableStyle": "ofis-tablo"}
+  ],
+  "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e26"],
+  "styles": {"items": [], "categories": []}
+}

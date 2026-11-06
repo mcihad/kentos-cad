@@ -247,6 +247,25 @@ impl Document {
             .collect()
     }
 
+    /// The table styles no table of the drawing or of a block definition follows (docs/adr/1126 §5), by id, in the
+    /// table's order: what a purge may remove; one in use never is.
+    pub fn unused_table_styles(&self) -> Vec<String> {
+        let used: HashSet<&str> = self
+            .entities()
+            .chain(self.blocks().iter().flat_map(|b| b.entities.iter()))
+            .filter_map(|e| match e {
+                Entity::Table(t) => t.table_style.as_deref(),
+                _ => None,
+            })
+            .collect();
+        self.settings()
+            .table_styles
+            .iter()
+            .filter(|t| !used.contains(t.id.as_str()))
+            .map(|t| t.id.clone())
+            .collect()
+    }
+
     pub fn unused_styles(&self) -> (Vec<String>, Vec<String>) {
         let mut text: HashSet<&str> = HashSet::new();
         let mut dims: HashSet<&str> = HashSet::new();
@@ -261,10 +280,22 @@ impl Document {
         }
         let s = self.settings();
         let line_types = self.line_type_text_style_usage();
+        // A text style a table style's cell names (docs/adr/1126 §5) is in use like one a line type writes with.
+        let by_table_style = |t: &kentos_contracts::TextStyleDef| {
+            s.table_styles.iter().any(|ts| {
+                [&ts.title, &ts.header, &ts.data]
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|c| c.text_style.as_deref())
+                    .any(|n| n.eq_ignore_ascii_case(&t.name))
+            })
+        };
         (
             s.text_styles
                 .iter()
-                .filter(|t| !text.contains(t.id.as_str()) && !line_types.contains_key(&t.id))
+                .filter(|t| {
+                    !text.contains(t.id.as_str()) && !line_types.contains_key(&t.id) && !by_table_style(t)
+                })
                 .map(|t| t.id.clone())
                 .collect(),
             s.dimension_styles
@@ -273,5 +304,33 @@ impl Document {
                 .map(|d| d.id.clone())
                 .collect(),
         )
+    }
+}
+
+#[cfg(test)]
+mod table_style_tests {
+    use super::*;
+
+    /// docs/adr/1126 §5: a table style a table follows is never unused, one no table follows is; a text style only a
+    /// table style's cell names stays used.
+    #[test]
+    fn a_used_table_style_and_its_text_style_are_not_purgeable() {
+        let snap: kentos_contracts::DocumentSnapshotV1 = serde_json::from_value(serde_json::json!({
+            "format": "kentos.document", "version": 1, "name": "t",
+            "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                "plotScale": 100.0, "textStyles": [{"id": "ts", "name": "A-TABLO", "font": "arimo"}, {"id": "bos", "name": "BOS", "font": "arimo"}],
+                "tableStyles": [{"id": "kullanilan", "name": "K", "data": {"textStyle": "a-tablo"}}, {"id": "bos", "name": "B"}]},
+            "origin": {"x": 0, "y": 0},
+            "layers": [{"id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true,
+                "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}],
+            "activeLayer": "0",
+            "entities": [{"kind": "table", "id": 1, "layerId": "0", "attrs": {}, "p": {"x": 0, "y": 0}, "rotation": 0,
+                "height": 1, "rows": [1], "columns": [1], "cells": [["a"]], "tableStyle": "kullanilan"}],
+            "styles": {"items": [], "categories": []}
+        }))
+        .unwrap();
+        let doc = Document::from_snapshot(snap).unwrap();
+        assert_eq!(doc.unused_table_styles(), vec!["bos".to_owned()]);
+        assert_eq!(doc.unused_styles().0, vec!["bos".to_owned()], "A-TABLO stays: a table style's cell names it");
     }
 }
