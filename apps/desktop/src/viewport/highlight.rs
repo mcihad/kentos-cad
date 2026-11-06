@@ -129,18 +129,19 @@ impl Viewport {
                 // A large selection (select all, a window over a map) is built on
                 // the machine's cores; the part is the one built in turn.
                 let part = if selection.len() >= PARALLEL_FROM {
-                    let mut pieces = Vec::new();
-                    let objects = objects_of(
+                    let threads = std::thread::available_parallelism()
+                        .map_or(1, |n| n.get())
+                        .clamp(1, 8);
+                    let mut pieces: Vec<Vec<Entity>> = Vec::new();
+                    let objects = objects_of_parallel(
                         doc,
                         spatial,
                         &mut selection.ids().iter().copied().filter(|s| shown(s)),
                         &mut pieces,
+                        threads,
                     );
                     let moved = on_map(&objects, self.camera.map);
                     let objects = moved.as_ref().map_or(objects, |m| m.iter().collect());
-                    let threads = std::thread::available_parallelism()
-                        .map_or(1, |n| n.get())
-                        .clamp(1, 8);
                     Arc::new(scene::build_highlight_parallel(
                         &objects,
                         &style,
@@ -229,6 +230,56 @@ pub(crate) fn objects_of<'a>(
     }
     let pieces: &'a Vec<Entity> = pieces;
     objects.extend(pieces.iter());
+    objects
+}
+
+/// [`objects_of`] for a large selection (docs/adr/1066 §3): the inserts' pieces made into objects on `threads` cores,
+/// the store read on this thread; the same objects in the same order (each core's kept where it made them).
+pub(crate) fn objects_of_parallel<'a>(
+    doc: &'a Document,
+    spatial: Option<&Spatial>,
+    ids: &mut dyn Iterator<Item = Slot>,
+    pieces: &'a mut Vec<Vec<Entity>>,
+    threads: usize,
+) -> Vec<&'a Entity> {
+    // A sheet's view represents the objects otherwise: as one by one.
+    let Some(sp) = spatial.filter(|s| !s.has_sheet_view()) else {
+        pieces.push(Vec::new());
+        let [own] = pieces.as_mut_slice() else {
+            unreachable!("one list was pushed");
+        };
+        return objects_of(doc, spatial, ids, own);
+    };
+    let mut objects = Vec::new();
+    let mut sources = Vec::new();
+    for slot in ids {
+        let Some(e) = doc.model.get(slot) else {
+            continue;
+        };
+        match sp.pieces_source(e) {
+            Some((x, shown)) => sources.push((e, x, shown)),
+            None => objects.push(e),
+        }
+    }
+    let chunk = sources.len().div_ceil(threads.max(1)).max(1);
+    let made: Vec<Vec<Entity>> = std::thread::scope(|scope| {
+        let handles: Vec<_> = sources
+            .chunks(chunk)
+            .map(|part| {
+                scope.spawn(move || {
+                    let mut out = Vec::new();
+                    for (e, x, shown) in part {
+                        out.extend(kentos_native_application::blocks::piece_entities_shown(e, x, |i| shown[i]));
+                    }
+                    out
+                })
+            })
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap_or_default()).collect()
+    });
+    *pieces = made;
+    let pieces: &'a Vec<Vec<Entity>> = pieces;
+    objects.extend(pieces.iter().flatten());
     objects
 }
 
@@ -494,5 +545,23 @@ mod tests {
                 canvas_frame.as_secs_f64() * 1e3,
             );
         }
+    }
+
+    /// A large selection's inserts made into objects on several cores are the objects one core makes, in the same
+    /// order (docs/adr/1066 §3).
+    #[test]
+    fn a_large_selection_is_made_into_the_same_objects_on_several_cores() {
+        let (snapshot, _) = crate::perf::mixed::drawing(4_000, crate::perf::mixed::SEED);
+        let doc = Document::from_v2(snapshot, None).expect("the drawing opens");
+        let mut spatial = Spatial::new();
+        spatial.reload(&doc.model);
+        let ids: Vec<Slot> = doc.model.entities().map(|e| Slot(e.base().id)).collect();
+        let mut one = Vec::new();
+        let a = objects_of(&doc, Some(&spatial), &mut ids.iter().copied(), &mut one);
+        let mut many = Vec::new();
+        let b = objects_of_parallel(&doc, Some(&spatial), &mut ids.iter().copied(), &mut many, 8);
+        assert!(a.len() > ids.len(), "the inserts' pieces: {} objects", a.len());
+        assert_eq!(a.len(), b.len());
+        assert!(a.iter().zip(&b).all(|(x, y)| x == y), "the same objects in the same order");
     }
 }

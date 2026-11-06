@@ -472,12 +472,27 @@ impl App {
     }
 
     fn work_out_panel(&self, doc: &Document) -> Panel {
-        let mut types = BTreeMap::<&'static str, usize>::new();
+        // The kinds counted with the last one met at hand (docs/adr/1066 §3): a large selection's objects come in runs
+        // of a kind, and a name compared for each of a million objects was a tenth of the panel.
+        let mut counts: Vec<(&'static str, usize)> = Vec::new();
+        let mut last = 0usize;
+        let only = self.properties_kind(doc);
         let selected: Vec<Slot> = self.selection.ids().iter().copied().filter(|slot| {
             let Some(e) = doc.model.get(*slot) else { return false; };
-            *types.entry(e.kind()).or_default() += 1;
-            self.properties_kind(doc).is_none_or(|kind| e.kind() == kind)
+            let kind = e.kind();
+            if !counts.get(last).is_some_and(|(k, _)| std::ptr::eq(*k, kind) || *k == kind) {
+                last = counts.iter().position(|(k, _)| *k == kind).unwrap_or_else(|| {
+                    counts.push((kind, 0));
+                    counts.len() - 1
+                });
+            }
+            counts[last].1 += 1;
+            only.is_none_or(|k| std::ptr::eq(k, kind) || kind == k)
         }).collect();
+        let mut types = BTreeMap::<&'static str, usize>::new();
+        for (kind, n) in counts {
+            *types.entry(kind).or_default() += n;
+        }
         // The program's own rows (module_surfaces.rs).
         let shown = rows::Shown {
             crs: self.shows_property_rows(crate::module_surfaces::PropertyRows::Crs),

@@ -279,7 +279,7 @@ fn run(app: &mut App, input: Value) {
 }
 
 /// Opens `file` through the app's open, frames drawn meanwhile as the window would: its parts.
-fn open(app: &mut App, h: &mut Harness, file: &Path) -> Value {
+pub(super) fn open(app: &mut App, h: &mut Harness, file: &Path) -> Value {
     let t0 = Instant::now();
     let rx = drive(app.start_opening(file.to_owned(), crate::opening::Purpose::File));
     let mut during = Vec::new();
@@ -529,7 +529,7 @@ fn root() -> PathBuf {
 }
 
 /// The drawing's file: made by this code from the seed, kept in `.run/perf/` between runs.
-fn file_of(n: usize) -> PathBuf {
+pub(super) fn file_of(n: usize) -> PathBuf {
     root().join(format!(".run/perf/karma-{n}-s{}.kcad", mixed::SEED))
 }
 

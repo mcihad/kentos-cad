@@ -46,6 +46,8 @@ mod file;
 mod frame;
 // A large mixed 2D drawing: open, frames, keys, commands, cancel, memory (docs/adr/1062).
 mod large;
+// Where the 10⁶ mixed drawing's slow frames go, for a sampling profiler (docs/adr/1066 §1).
+mod million;
 pub(crate) mod mixed;
 mod stability;
 // The 2+1 apartment of the acceptance flow, 1, 20 and 100 copies (docs/adr/0776 §4).
