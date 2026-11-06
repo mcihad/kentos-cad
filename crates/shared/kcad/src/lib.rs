@@ -806,11 +806,13 @@ pub const SCHEMA_WITH_SHX_FONTS: u32 = 184;
 /// Schema 185 (docs/adr/1126 §2–§3): the project's named table styles (`settings.tableStyles`) and the style a table
 /// follows (`tableStyle`). Temporary number on the CAD-ADV-12 branch: renumbered on merge.
 pub const SCHEMA_WITH_TABLE_STYLES: u32 = 185;
+/// Schema 186 (docs/adr/1023): the text style a dimension style writes its value in (`textStyle`, by name).
+pub const SCHEMA_WITH_DIMENSION_TEXT_STYLES: u32 = 186;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 183] = [
+pub const SCHEMAS: [u32; 184] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -994,6 +996,7 @@ pub const SCHEMAS: [u32; 183] = [
     SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
     SCHEMA_WITH_SHX_FONTS,
     SCHEMA_WITH_TABLE_STYLES,
+    SCHEMA_WITH_DIMENSION_TEXT_STYLES,
 ];
 
 /// The file a drawing is saved as.

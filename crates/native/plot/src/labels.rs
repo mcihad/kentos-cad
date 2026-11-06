@@ -334,6 +334,19 @@ pub fn labels_in_view(
                 if *masked {
                     ground_mask = -1.;
                 }
+                // In its style's SHX text style (docs/adr/1023): the font's strokes, the value's own box its mask.
+                if let Some(t) = kentos_native_application::shx_text::dimension_value(
+                    doc.settings(),
+                    d.look.dim_style.as_deref(),
+                    kentos_contracts::Vec2 { x: at.x, y: at.y },
+                    *angle,
+                    d.height,
+                    &l.text,
+                ) && let Some(Ok(p)) = shx_of(&t).as_deref()
+                {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *masked);
+                    ground_mask = 0.;
+                }
             }
             (
                 LabelSpot::Text {
@@ -451,6 +464,18 @@ pub fn labels_in_view(
                 );
                 if *masked {
                     ground_mask = -1.;
+                }
+                if let Some(t) = kentos_native_application::shx_text::dimension_value(
+                    doc.settings(),
+                    look.dim_style.as_deref(),
+                    kentos_contracts::Vec2 { x: at.x, y: at.y },
+                    *angle,
+                    *height,
+                    &l.text,
+                ) && let Some(Ok(p)) = shx_of(&t).as_deref()
+                {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *masked);
+                    ground_mask = 0.;
                 }
             }
             (LabelSpot::Line {unicode:Some(text),at,height,..},_)=> {

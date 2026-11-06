@@ -550,6 +550,8 @@ pub fn dimension_style(
         prefix: affix(prefix),
         suffix: affix(suffix),
         font,
+        // Its text style (DIMTXSTY) by name, set by the reader that keeps that style (docs/adr/1023).
+        text_style: None,
         // Its lines (docs/adr/0205 §6): one type for both extension lines, the first's.
         dim_line_color: line_colour(v.dimclrd),
         dim_line_weight: line_weight_mm(v.dimlwd),

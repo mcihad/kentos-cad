@@ -27,6 +27,12 @@ height: number, arrow?: DimensionArrow,
  */
 arrowSize?: number, extOffset?: number, extBeyond?: number, textGap?: number, textPlace?: DimensionTextPlace, decimals?: number, unit?: DrawingUnit, prefix?: string, suffix?: string, font?: DrawingFont, 
 /**
+ * The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that
+ * style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
+ * (a DXF's reader sets both). Schema 186.
+ */
+textStyle?: string, 
+/**
  * The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
  */
 dimLineColor?: string, dimLineWeight?: number, dimLineType?: LineType, extColor?: string, extWeight?: number, extLineType?: LineType, textColor?: string, 

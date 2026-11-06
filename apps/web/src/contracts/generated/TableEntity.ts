@@ -84,7 +84,12 @@ fields?: Array<CellField>,
 /**
  * Its parts (Tabloyu böl, docs/adr/1030 §7, `.kcad` schema 182); absent: one part.
  */
-breaks?: TableBreaks, id: number, layerId: string, 
+breaks?: TableBreaks, 
+/**
+ * The project's table style it follows, by its id (docs/adr/1126 §3, `.kcad` schema 185): what the table does
+ * not set itself the style gives its drawing (`styled`); absent: none.
+ */
+tableStyle?: string, id: number, layerId: string, 
 /**
  * Colour override; absent = the layer's colour ("katmana göre").
  */

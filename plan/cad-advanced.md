@@ -1827,6 +1827,12 @@ yerleştirmede aynı çıktığı test edildi; `shx-blok-metin` resmi bakıldı.
 çok satırlı ve kutuya kaydırılan blok yazısı da SHX ile, iki başvuru durumu daha. Boyut, kılavuz ve tablo yazısı açık
 (ölçü stili yazı stiline bağlanmıyor; model kararı gerekir).
 
+**Ölçü değeri SHX ile (6 Kasım 2026, [ADR 1023](../docs/adr/1023-dimension-styles-write-their-value-in-a-text-style.md)):**
+Ölçü stili değerini bir yazı stiliyle yazar (`textStyle`, DXF DIMTXSTY; `.kcad` şema 186); SHX yazı stilinde değer
+ekranda, PDF'de ve CPU baskısında fontun çizgileridir, çizilemeyen değer hatadır ve PDF'i durdurur. DXF içe alma
+DIMTXSTY'nin stilini korur (ezdxf başvurusu). Standart paketi `textStyle`'ı ve Big Font'u kabul eder; masaüstü
+penceresinde Yazı stili seçimi. Kılavuz ve tablo yazısı, DXF'e DIMTXSTY yazımı açık.
+
 **Kâğıt çizgisinin noktası (6 Kasım 2026, ADR 1124 ek):** Pafta çizgisi, şekil ve dikdörtgenin kendi tire
 listesindeki sıfır boylu tire PDF'de ve SVG'de yuvarlak, çizgi kalınlığında nokta basılır (yol iki kez: tireler, sonra
 noktalar). PDF akışı ve SVG testleriyle; ifraz altın PDF'i değişmedi; 600 dpi resme bakıldı.

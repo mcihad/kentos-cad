@@ -5,7 +5,7 @@
 //! `tools_screens` takes them:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=shx-metin-cizim,shx-metin-yakin,shx-blok-metin,nokta-yuvarlak cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=shx-metin-cizim,shx-metin-yakin,shx-blok-metin,shx-olcu-cizim,shx-olcu-penceresi,nokta-yuvarlak cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -27,6 +27,7 @@ fn resources() -> serde_json::Value {
 
 const SHX: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1125";
 const SHX_BLOCK: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1020";
+const SHX_DIM: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1023";
 
 fn drawing(app: &mut App) {
     let mut o = Objects::new();
@@ -56,7 +57,14 @@ fn drawing(app: &mut App) {
     // (an insert turns in radians); its two-line text too (docs/adr/1022).
     o.insert("shx", SHX_BLOCK, [0.0, -40.0], 1.0, 0.0, false);
     o.insert("shx", SHX_BLOCK, [30.0, -44.0], 1.5, 30f64.to_radians(), false);
+    // docs/adr/1023: dimensions whose style writes its value in the SHX style (the test font has no digits: their
+    // words are its letters), one turned.
+    o.dimension("shx", None, [[0.0, -60.0], [20.0, -60.0]], None, -4.0, json!({"dimStyle": SHX_DIM, "text": "SUS-U"}));
+    o.dimension("shx", None, [[30.0, -60.0], [44.0, -52.0]], None, -3.0, json!({"dimStyle": SHX_DIM, "text": "Ş\\M+18140U"}));
     open_edited(app, o, |d| {
+        d["settings"]["dimensionStyles"] = json!([
+            {"id": SHX_DIM, "name": "Ofis ölçü", "height": 2.5, "arrow": "closed", "textStyle": "Uni"}
+        ]);
         d["blocks"] = json!([{"id": SHX_BLOCK, "name": "SHX-ETIKET", "base": {"x": 0.0, "y": 0.0}, "entities": [
             {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": -1.0, "y": -1.0}, "b": {"x": 14.0, "y": -1.0}},
             {"kind": "text", "id": 2, "layerId": "", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "text": "SUS-U",
@@ -105,6 +113,18 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("shx-blok-metin", |app| {
             drawing(app);
             fit(app, [-3.0, -50.0, 64.0, -20.0]);
+        }),
+        ("shx-olcu-cizim", |app| {
+            drawing(app);
+            fit(app, [-3.0, -68.0, 50.0, -48.0]);
+        }),
+        ("shx-olcu-penceresi", |app| {
+            drawing(app);
+            fit(app, [-3.0, -68.0, 50.0, -48.0]);
+            crate::tools_scenes::run(app, "style.dimensionStyles");
+            let _ = app.update(crate::app::Message::AnnotationStyles(crate::annotation_styles::Event::Choose(Some(
+                SHX_DIM.into(),
+            ))));
         }),
         ("nokta-yuvarlak", |app| {
             drawing(app);

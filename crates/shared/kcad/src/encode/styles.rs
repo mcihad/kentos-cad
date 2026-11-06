@@ -109,6 +109,9 @@ impl<'d> Encoder<'d> {
             if let Some(font) = s.font {
                 f.push(("font", Val::Name(font.id())));
             }
+            if let Some(t) = &s.text_style {
+                f.push(("textStyle", Val::Text(t)));
+            }
             // Its lines (docs/adr/0205 §6).
             for (key, c) in [
                 ("dimLineColor", &s.dim_line_color),

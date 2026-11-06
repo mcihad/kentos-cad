@@ -1716,6 +1716,20 @@ impl Labels<'_> {
                                 .or(base.color.as_deref())
                                 .or(self.layer_color(layer)),
                         );
+                        // In its style's SHX text style (docs/adr/1023): the font's strokes, its own box the mask.
+                        if let Some(mut t) = kentos_native_application::shx_text::dimension_value(
+                            self.doc.settings(),
+                            d.look.dim_style.as_deref(),
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *angle,
+                            d.height,
+                            &text,
+                        ) {
+                            t.mask = *mask;
+                            if self.shx_text(frame, slot, &t, color) {
+                                continue;
+                            }
+                        }
                         let size = (d.height * self.camera.get().scale) as f32;
                         let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
                         self.draw(
@@ -1967,6 +1981,19 @@ impl Labels<'_> {
                                 .or(base.color.as_deref())
                                 .or(self.layer_color(layer)),
                         );
+                        if let Some(mut t) = kentos_native_application::shx_text::dimension_value(
+                            self.doc.settings(),
+                            look.dim_style.as_deref(),
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *angle,
+                            *height,
+                            &text,
+                        ) {
+                            t.mask = *mask;
+                            if self.shx_text(frame, slot, &t, color) {
+                                continue;
+                            }
+                        }
                         let size = (height * self.camera.get().scale) as f32;
                         let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
                         self.draw(

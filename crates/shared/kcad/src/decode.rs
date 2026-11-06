@@ -1650,7 +1650,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "dimensionStyles" if has.styles => {
                 dimension_styles =
-                    styles::dimension_styles(r, has.annotation, has.dimension_options)?
+                    styles::dimension_styles(r, has.annotation, has.dimension_options, has.dimension_text_styles)?
             }
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {

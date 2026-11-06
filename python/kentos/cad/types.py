@@ -27000,6 +27000,9 @@ class DimensionStyleDef(_Model):
         ext_weight: Unit: paper-mm.
         options: The value's fit and writing (docs/adr/0321 §1, §2).
         text_gap: Unit: paper-mm.
+        text_style: The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that
+            style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
+            (a DXF's reader sets both). Schema 186.
     """
     id: str
     name: str
@@ -27022,6 +27025,7 @@ class DimensionStyleDef(_Model):
     text_color: str | None | Unset = UNSET
     text_gap: float | None | Unset = UNSET
     text_place: DimensionTextPlace | DimensionTextPlaceName | None | Unset = UNSET
+    text_style: str | None | Unset = UNSET
     unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -27065,6 +27069,8 @@ class DimensionStyleDef(_Model):
             out["textGap"] = None if self.text_gap is None else float(self.text_gap)
         if self.text_place is not UNSET:
             out["textPlace"] = None if self.text_place is None else _enum_out(self.text_place)
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
         if self.unit is not UNSET:
             out["unit"] = None if self.unit is None else _enum_out(self.unit)
         return out
@@ -27093,6 +27099,7 @@ class DimensionStyleDef(_Model):
             text_color=data.get("textColor", UNSET),
             text_gap=UNSET if "textGap" not in data else None if data["textGap"] is None else float(data["textGap"]),
             text_place=UNSET if "textPlace" not in data else None if data["textPlace"] is None else _enum_in(DimensionTextPlace, data["textPlace"]),
+            text_style=data.get("textStyle", UNSET),
             unit=UNSET if "unit" not in data else None if data["unit"] is None else _enum_in(DrawingUnit, data["unit"]),
         )
 

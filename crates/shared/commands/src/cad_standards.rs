@@ -818,6 +818,8 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
                     "height",
                     "widthFactor",
                     "fontFile",
+                    // ADR 1120 §4: the Big Font beside an SHX font.
+                    "bigFontFile",
                 ],
             )?;
         }
@@ -845,6 +847,8 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
                     "prefix",
                     "suffix",
                     "font",
+                    // docs/adr/1023: the text style its value is written in, by name.
+                    "textStyle",
                     "dimLineColor",
                     "dimLineWeight",
                     "dimLineType",

@@ -35,6 +35,7 @@ import type { ServiceConnection } from "./ServiceConnection";
 import type { SourceBase } from "./SourceBase";
 import type { SourceLink } from "./SourceLink";
 import type { SurveySettings } from "./SurveySettings";
+import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { TopologySettings } from "./TopologySettings";
 import type { Ucs } from "./Ucs";
@@ -245,6 +246,10 @@ standardDocs?: Array<ProjectStandardDocument>,
  * (docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.
  */
 approvedSheetTemplates?: Array<ApprovedSheetTemplate>, 
+/**
+ * The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
+ */
+tableStyles?: Array<TableStyleDef>, 
 /**
  * Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
  * plotted or measured. Numbered; their stamps say which state of an object each was written for.

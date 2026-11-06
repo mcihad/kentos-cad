@@ -118202,6 +118202,13 @@
             }
           ]
         },
+        "textStyle": {
+          "description": "The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that\nstyle's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface\n(a DXF's reader sets both). Schema 186.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "unit": {
           "anyOf": [
             {

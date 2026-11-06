@@ -1,0 +1,18 @@
+{
+ "textStyles": [
+  {
+   "name": "A-OLCU",
+   "fontFile": "romans.shx"
+  }
+ ],
+ "dimensionStyles": [
+  {
+   "name": "OFIS",
+   "textStyle": "A-OLCU"
+  },
+  {
+   "name": "DUZ",
+   "textStyle": null
+  }
+ ]
+}
