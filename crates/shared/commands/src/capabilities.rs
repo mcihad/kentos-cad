@@ -7113,6 +7113,7 @@ const ENTRIES: &[Entry] = &[
             "integrity_failed",
             "no_resume",
             "resume_stale",
+            "no_previous",
         ]],
         warnings: &[],
         targets: none,

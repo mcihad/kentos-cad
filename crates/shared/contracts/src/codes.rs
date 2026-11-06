@@ -1725,6 +1725,8 @@ codes! {
     NO_RESUME = "no_resume", Failed, false, "Bu teslim klasörünün durdurulmuş bir yayını yok; yayını baştan başlatın.";
     /// Sheet publication: the drawing, its resources or the options changed since the stopped publication (docs/adr/1090 §7).
     RESUME_STALE = "resume_stale", Failed, false, "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın.";
+    /// Update publication: `previous` names a folder without a readable publication (docs/adr/1320 §3).
+    NO_PREVIOUS = "no_previous", Failed, false, "Önceki teslim klasöründe okunabilir bir yayın (yayin.json) yok; güncellenecek teslimin klasörünü verin.";
 
     // ── The change set (docs/adr/0253 §8) ───────────────────────────────
     /// No step given.

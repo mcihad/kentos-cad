@@ -75,6 +75,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yayın penceresinde kapsam ve sayfa denetimi satırları, Durum ve Devam et, `file.publish.status` istemcisi;
   `SetFrame.detail`/`locked` ve `AffectReason::table` sözleri; pafta tasarımcısında detay başlığının `@olcek` okuması.
   TS türleri üretildi; WASM bağlayıcısı yok.
+- MAP-18 / ADR 1320: yayın penceresinde Durum satırlarının tarih ve kaynak değişimi (`changes`), Güncelle
+  (`previous`) ve kopyalanan/yeniden üretilen paftaların raporu; `file.publish.sheets.update.json` ortak durumlarının
+  web koşucusu. TS türleri üretildi (`PreviousPublication`, `SheetSourceChanges`, yeni alanlar).
 - CAD-ADV-18 / ADR 1009: açılışta sağlık denetimi yalnız masaüstü ayarıdır (`appearance.openHealthCheck`); web'de
   aynı denetim Worker'da, süre bütçesiyle eklenecekse ayarın konağına web yazılır.
 - CAD-ADV-12 / ADR 1014: Şablonlar panelinde Ofis paletleri bölümü `cad.standards.palettes`'e bağlanmalı; TS türleri üretildi.

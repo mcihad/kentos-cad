@@ -88,6 +88,29 @@ pub struct PublishSheets {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub resume: bool,
+    /// An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
+    /// whose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has
+    /// its bytes is copied byte for byte with its own publication date; the rest are made again with today's. The
+    /// earlier folder is left as it is. Separate PDFs only; not with `resume`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous: Option<String>,
+}
+
+/// The earlier delivery a publication updates (docs/adr/1320 §3).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct PreviousPublication {
+    pub path: String,
+    /// Its `yayin.json`'s SHA-256 when it was read.
+    pub sha256: String,
+    /// Its publication date.
+    pub date: String,
+    /// Its source.
+    pub source: SheetPublishPin,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -144,6 +167,14 @@ pub struct SheetsPublished {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub resumed: Vec<String>,
+    /// With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the
+    /// published order (the others were made again).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous: Option<PreviousPublication>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub carried: Vec<String>,
 }
 
 /// One viewport of a published sheet.
@@ -207,6 +238,11 @@ pub struct SheetPublishedPage {
     pub file: String,
     /// The page's content digest made without the title context (user, date): equal digests draw the same page.
     pub digest: String,
+    /// The date its bytes were made with (the title context's): an update's carried page keeps its earlier one
+    /// (docs/adr/1320 §3). None in publications made before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub date: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub strokes: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
@@ -302,6 +338,35 @@ pub struct SheetPublishStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub issue: Option<SheetPublishIssue>,
+    /// The date its delivered page was made with.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub date: Option<String>,
+    /// What changed in its sources since the delivery (docs/adr/1320 §2); none when the delivery did not list them
+    /// (made before, or a page with an atlas or unplaced viewport) or the sheet is gone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub changes: Option<SheetSourceChanges>,
+}
+
+/// A published page's sources against the drawing now (docs/adr/1320 §2), by persistent id in drawing order: the
+/// objects it drew whose content changed, the ones it draws now and did not, the ones it drew and does not now
+/// (deleted, moved out, hidden), whether the sheet's own record changed, and which project parts every page draws
+/// with changed. All empty when nothing it reads changed.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[serde(rename_all = "camelCase")]
+pub struct SheetSourceChanges {
+    pub changed: Vec<String>,
+    pub added: Vec<String>,
+    pub removed: Vec<String>,
+    /// The sheet's own items, page or drawing information.
+    pub sheet: bool,
+    /// Of `blocks`, `book` (masters, templates, profiles), `layers`, `resources` (linked pictures), `settings`,
+    /// `styles`, in this order.
+    pub parts: Vec<String>,
 }
 
 /// Why a publication stopped.

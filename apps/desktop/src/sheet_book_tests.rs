@@ -2818,3 +2818,6 @@ fn adv16_detail_set_screens() {
         snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-resumed-{theme}-{text}.png"))).unwrap();
     }
 }
+
+#[path = "sheet_update_tests.rs"]
+mod update;

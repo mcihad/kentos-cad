@@ -90746,7 +90746,7 @@
       "id": "file.publish.sheets",
       "version": 1,
       "title": "Paftaları toplu yayınla",
-      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.",
+      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle taşır (docs/adr/1320 §2); çizimin geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3): sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.",
       "aliases": [
         "PAFTAYAYINLA"
       ],
@@ -90821,6 +90821,13 @@
             ],
             "description": "A plan's immutable document pin; changed source refuses publication before any file is exposed."
           },
+          "previous": {
+            "description": "An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet\nwhose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has\nits bytes is copied byte for byte with its own publication date; the rest are made again with today's. The\nearlier folder is left as it is. Separate PDFs only; not with `resume`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "resources": {
             "default": false,
             "description": "Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.",
@@ -90854,6 +90861,12 @@
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {
+          "carried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "files": {
             "items": {
               "$ref": "#/$defs/SheetPublishedFile"
@@ -90878,6 +90891,17 @@
           },
           "path": {
             "type": "string"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PreviousPublication"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the\npublished order (the others were made again)."
           },
           "ready": {
             "description": "True after full output/source checks; validate-only deliberately leaves this false.",
@@ -90936,6 +90960,12 @@
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {
+          "carried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "files": {
             "items": {
               "$ref": "#/$defs/SheetPublishedFile"
@@ -90960,6 +90990,17 @@
           },
           "path": {
             "type": "string"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PreviousPublication"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the\npublished order (the others were made again)."
           },
           "ready": {
             "description": "True after full output/source checks; validate-only deliberately leaves this false.",
@@ -91028,7 +91069,8 @@
           "package_incomplete",
           "integrity_failed",
           "no_resume",
-          "resume_stale"
+          "resume_stale",
+          "no_previous"
         ]
       },
       "examples": [
@@ -91039,6 +91081,14 @@
             "naming": "{index}-{sheet}",
             "path": "/tmp/pafta-teslimi"
           }
+        },
+        {
+          "title": "Önceki teslimin güncellemesi: yalnız değişen paftalar yeniden üretilir",
+          "input": {
+            "mode": "separate",
+            "path": "/tmp/pafta-teslimi-2",
+            "previous": "/tmp/pafta-teslimi"
+          }
         }
       ]
     },
@@ -91046,7 +91096,7 @@
       "id": "file.publish.status",
       "version": 1,
       "title": "Yayın durumu",
-      "summary": "Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği.",
+      "summary": "Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği. Her sayfanın teslim tarihi (date) ve kaynaklarının teslimden beri değişimi (changes, docs/adr/1320 §2): içeriği değişen, sayfaya giren ve sayfadan çıkan nesneler kalıcı kimlikleriyle, paftanın kendi kaydının değişip değişmediği ve değişen proje parçaları (settings, layers, styles, blocks, book, resources).",
       "aliases": [
         "YAYINDURUMU"
       ],
@@ -95992,6 +96042,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın."
+    },
+    {
+      "code": "no_previous",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Önceki teslim klasöründe okunabilir bir yayın (yayin.json) yok; güncellenecek teslimin klasörünü verin."
     },
     {
       "code": "no_steps",
@@ -157916,6 +157972,33 @@
         }
       ]
     },
+    "PreviousPublication": {
+      "description": "The earlier delivery a publication updates (docs/adr/1320 §3).",
+      "properties": {
+        "date": {
+          "description": "Its publication date.",
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "description": "Its `yayin.json`'s SHA-256 when it was read.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SheetPublishPin",
+          "description": "Its source."
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "date",
+        "source"
+      ],
+      "type": "object"
+    },
     "ProcessingRan": {
       "description": "What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).",
       "properties": {
@@ -169717,6 +169800,24 @@
     },
     "SheetPublishStatus": {
       "properties": {
+        "changes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SheetSourceChanges"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What changed in its sources since the delivery (docs/adr/1320 §2); none when the delivery did not list them\n(made before, or a page with an atlas or unplaced viewport) or the sheet is gone."
+        },
+        "date": {
+          "description": "The date its delivered page was made with.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "digest": {
           "description": "The digest now.",
           "type": [
@@ -169801,6 +169902,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "date": {
+          "description": "The date its bytes were made with (the title context's): an update's carried page keeps its earlier one\n(docs/adr/1320 §3). None in publications made before.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "digest": {
           "description": "The page's content digest made without the title context (user, date): equal digests draw the same page.",
@@ -169949,6 +170057,48 @@
       "required": [
         "series",
         "sheets"
+      ],
+      "type": "object"
+    },
+    "SheetSourceChanges": {
+      "description": "A published page's sources against the drawing now (docs/adr/1320 §2), by persistent id in drawing order: the\nobjects it drew whose content changed, the ones it draws now and did not, the ones it drew and does not now\n(deleted, moved out, hidden), whether the sheet's own record changed, and which project parts every page draws\nwith changed. All empty when nothing it reads changed.",
+      "properties": {
+        "added": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "changed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parts": {
+          "description": "Of `blocks`, `book` (masters, templates, profiles), `layers`, `resources` (linked pictures), `settings`,\n`styles`, in this order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "removed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sheet": {
+          "description": "The sheet's own items, page or drawing information.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "changed",
+        "added",
+        "removed",
+        "sheet",
+        "parts"
       ],
       "type": "object"
     },

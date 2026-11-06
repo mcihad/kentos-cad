@@ -1,0 +1,4352 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.publish.sheets",
+ "commandVersion": 1,
+ "host": "headless-file",
+ "runner": "publish-update",
+ "title": "Update publication from an earlier delivery",
+ "note": "docs/adr/1320. Each case publishes the book into $first, applies its edits, asks file.publish.status of $first and publishes an update with previous=$first into $second. Stale sheets, page sources, object digests and carried sheets are computed here from boxes and JSON, never read from KentOS. $uidOf:N is slot N's persistent id; $new an object the case creates.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Parseller",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 2,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000,
+   "workspace": "cad",
+   "drawingFont": "barlow",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4540000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parseller",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#1A1A1A",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "1"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "2"
+    },
+    "pts": [
+     {
+      "x": 500020.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "3"
+    },
+    "pts": [
+     {
+      "x": 500040.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "4"
+    },
+    "pts": [
+     {
+      "x": 500060.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "5"
+    },
+    "pts": [
+     {
+      "x": 500080.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "6"
+    },
+    "pts": [
+     {
+      "x": 500100.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "7"
+    },
+    "pts": [
+     {
+      "x": 500120.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "8"
+    },
+    "pts": [
+     {
+      "x": 500140.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 9,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "9"
+    },
+    "pts": [
+     {
+      "x": 500160.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 10,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "10"
+    },
+    "pts": [
+     {
+      "x": 500180.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 11,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "11"
+    },
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 12,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "12"
+    },
+    "pts": [
+     {
+      "x": 500220.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 13,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "13"
+    },
+    "pts": [
+     {
+      "x": 500240.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 14,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "14"
+    },
+    "pts": [
+     {
+      "x": 500260.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 15,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "15"
+    },
+    "pts": [
+     {
+      "x": 500280.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 16,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "16"
+    },
+    "pts": [
+     {
+      "x": 500300.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 17,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "17"
+    },
+    "pts": [
+     {
+      "x": 500320.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 18,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "18"
+    },
+    "pts": [
+     {
+      "x": 500340.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 19,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "19"
+    },
+    "pts": [
+     {
+      "x": 500360.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 20,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "20"
+    },
+    "pts": [
+     {
+      "x": 500380.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500400.0,
+      "y": 4540000.0
+     },
+     {
+      "x": 500400.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 21,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "21"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 22,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "22"
+    },
+    "pts": [
+     {
+      "x": 500020.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 23,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "23"
+    },
+    "pts": [
+     {
+      "x": 500040.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 24,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "24"
+    },
+    "pts": [
+     {
+      "x": 500060.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 25,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "25"
+    },
+    "pts": [
+     {
+      "x": 500080.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 26,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "26"
+    },
+    "pts": [
+     {
+      "x": 500100.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 27,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "27"
+    },
+    "pts": [
+     {
+      "x": 500120.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 28,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "28"
+    },
+    "pts": [
+     {
+      "x": 500140.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 29,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "29"
+    },
+    "pts": [
+     {
+      "x": 500160.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 30,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "30"
+    },
+    "pts": [
+     {
+      "x": 500180.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 31,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "31"
+    },
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 32,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "32"
+    },
+    "pts": [
+     {
+      "x": 500220.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 33,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "33"
+    },
+    "pts": [
+     {
+      "x": 500240.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 34,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "34"
+    },
+    "pts": [
+     {
+      "x": 500260.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 35,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "35"
+    },
+    "pts": [
+     {
+      "x": 500280.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 36,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "36"
+    },
+    "pts": [
+     {
+      "x": 500300.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 37,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "37"
+    },
+    "pts": [
+     {
+      "x": 500320.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 38,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "38"
+    },
+    "pts": [
+     {
+      "x": 500340.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 39,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "39"
+    },
+    "pts": [
+     {
+      "x": 500360.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 40,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "40"
+    },
+    "pts": [
+     {
+      "x": 500380.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500400.0,
+      "y": 4540020.0
+     },
+     {
+      "x": 500400.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 41,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "41"
+    },
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 42,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "42"
+    },
+    "pts": [
+     {
+      "x": 500020.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 43,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "43"
+    },
+    "pts": [
+     {
+      "x": 500040.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 44,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "44"
+    },
+    "pts": [
+     {
+      "x": 500060.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 45,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "45"
+    },
+    "pts": [
+     {
+      "x": 500080.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 46,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "46"
+    },
+    "pts": [
+     {
+      "x": 500100.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 47,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "47"
+    },
+    "pts": [
+     {
+      "x": 500120.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500120.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 48,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "48"
+    },
+    "pts": [
+     {
+      "x": 500140.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500140.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 49,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "49"
+    },
+    "pts": [
+     {
+      "x": 500160.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500160.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 50,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "50"
+    },
+    "pts": [
+     {
+      "x": 500180.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500180.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 51,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "51"
+    },
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 52,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "52"
+    },
+    "pts": [
+     {
+      "x": 500220.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500220.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 53,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "53"
+    },
+    "pts": [
+     {
+      "x": 500240.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 54,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "54"
+    },
+    "pts": [
+     {
+      "x": 500260.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500260.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 55,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "55"
+    },
+    "pts": [
+     {
+      "x": 500280.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500280.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 56,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "56"
+    },
+    "pts": [
+     {
+      "x": 500300.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 57,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "57"
+    },
+    "pts": [
+     {
+      "x": 500320.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500320.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 58,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "58"
+    },
+    "pts": [
+     {
+      "x": 500340.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 59,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "59"
+    },
+    "pts": [
+     {
+      "x": 500360.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500360.0,
+      "y": 4540060.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 60,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "60"
+    },
+    "pts": [
+     {
+      "x": 500380.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500400.0,
+      "y": 4540040.0
+     },
+     {
+      "x": 500400.0,
+      "y": 4540060.0
+     },
+     {
+      "x": 500380.0,
+      "y": 4540060.0
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "book": {
+  "schema": "kentos.sheet/1",
+  "sheets": [
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "bati-500",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "bati-500-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 500090.0,
+         "y": 4540030.0
+        },
+        "rotation": 0,
+        "scale": 500,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "bati-500-baslik",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 250000,
+       "width": 360000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_no %] [% @pafta_adi %] Rev. [% @revizyon %] [% @tarih %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     }
+    ],
+    "name": "Batı 1:500",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": [],
+    "drawingInfo": {
+     "number": "P-1",
+     "title": "Batı 1:500",
+     "revision": "A",
+     "status": "",
+     "subset": []
+    }
+   },
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "dogu-500",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "dogu-500-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 500310.0,
+         "y": 4540030.0
+        },
+        "rotation": 0,
+        "scale": 500,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "dogu-500-baslik",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 250000,
+       "width": 360000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_no %] [% @pafta_adi %] Rev. [% @revizyon %] [% @tarih %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     }
+    ],
+    "name": "Doğu 1:500",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": [],
+    "drawingInfo": {
+     "number": "P-2",
+     "title": "Doğu 1:500",
+     "revision": "A",
+     "status": "",
+     "subset": []
+    }
+   },
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "genel-1000",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "genel-1000-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 500100.0,
+         "y": 4540030.0
+        },
+        "rotation": 0,
+        "scale": 1000,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "genel-1000-baslik",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 250000,
+       "width": 360000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_no %] [% @pafta_adi %] Rev. [% @revizyon %] [% @tarih %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     }
+    ],
+    "name": "Genel 1:1000",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": [],
+    "drawingInfo": {
+     "number": "P-3",
+     "title": "Genel 1:1000",
+     "revision": "A",
+     "status": "",
+     "subset": []
+    }
+   },
+   {
+    "export": {
+     "dpi": 300,
+     "fileName": "[% @pafta_adi %]",
+     "format": "svg"
+    },
+    "guides": [],
+    "id": "butun-5000",
+    "items": [
+     {
+      "bindings": [],
+      "constraints": {
+       "h": "left",
+       "relativeTo": "margins",
+       "v": "top"
+      },
+      "frame": {
+       "height": 230000,
+       "left": 20000,
+       "top": 10000,
+       "width": 390000
+      },
+      "hidden": false,
+      "id": "butun-5000-harita",
+      "kind": {
+       "clipToAtlasFeature": false,
+       "grids": [],
+       "labelBand": 0,
+       "layers": {
+        "type": "all"
+       },
+       "overviewFrame": {
+        "cap": "butt",
+        "color": "#d0021b",
+        "dash": [],
+        "join": "miter",
+        "width": 500
+       },
+       "type": "map",
+       "view": {
+        "center": {
+         "x": 500200.0,
+         "y": 4540030.0
+        },
+        "rotation": 0,
+        "scale": 5000,
+        "type": "fixed"
+       }
+      },
+      "locked": false,
+      "name": "Harita",
+      "opacity": 100,
+      "padding": 0,
+      "printable": true,
+      "rotation": 0
+     },
+     {
+      "id": "butun-5000-baslik",
+      "name": "Başlık",
+      "frame": {
+       "left": 30000,
+       "top": 250000,
+       "width": 360000,
+       "height": 10000
+      },
+      "kind": {
+       "type": "text",
+       "content": "[% @pafta_no %] [% @pafta_adi %] Rev. [% @revizyon %] [% @tarih %]",
+       "style": {
+        "size": 3500
+       }
+      }
+     }
+    ],
+    "name": "Bütün 1:5000",
+    "page": {
+     "margins": {
+      "bottom": 10000,
+      "left": 20000,
+      "right": 10000,
+      "top": 10000
+     },
+     "orientation": "landscape",
+     "paper": "a3",
+     "size": {
+      "height": 297000,
+      "width": 420000
+     }
+    },
+    "snapGrid": {
+     "enabled": false,
+     "spacing": 5000,
+     "visible": false
+    },
+    "variables": [],
+    "variants": [],
+    "drawingInfo": {
+     "number": "P-4",
+     "title": "Bütün 1:5000",
+     "revision": "A",
+     "status": "",
+     "subset": []
+    }
+   }
+  ],
+  "masters": [],
+  "assets": [],
+  "variables": []
+ },
+ "digests": {
+  "1": "56276ae4b10cc52617f8b8ea6a4e15439a8589937b222cbf263f908dc57b1e1f",
+  "2": "ad34daf7bfd5fb17e95dea38f5ee27d5dd173826b269a1f69ff393d72005d8fd",
+  "3": "f2b085c80988ea0936a2c5a8e751b96aa98e86e6919469ba0af4af584f123e43",
+  "4": "cf613477520e96ced23e54974af58eca67c6cef3373192d9247d839254f89487",
+  "5": "b8208f9982742fc4daa25b5355a5bbf1a7e2db72ab141ea6cae248dcf09f85b3",
+  "6": "07a66f785da72d9496e1608613c8c54c95fd060871f33553506088f3780ef182",
+  "7": "fd86c37af98a17c34bb9ac6dda7b5e97ffe6bc1a8eb1ad135e0771b2a2902fd1",
+  "8": "f126126e934530992051827620f83b9dbb8b8f98a5a8dc51c8cf2b71629574fd",
+  "9": "c3db5a6dd0243684fb1f2302f694dc8f1ff73d1c17766fcf1f63397dbf4297f6",
+  "10": "e5fb70b827c1f548fc312b70dd9f69224af60722ef8bb1fe9bcf4f1a4a1c555a",
+  "11": "98afb3d0c320b0d4b565efb469e8b25f5b4586940cbbb62716ff0f2bd96f68e4",
+  "12": "e1520b7f6d3c6720b82df10134d9be0fcec54c246e35239f4b64c49d69cd63f6",
+  "13": "31bcaa33a4b43e56563fabccb1311c4383b3a0cb04bc8b27e9980610d21d8bd5",
+  "14": "d571d44bafeab776ae5f7888fd3fd3cb2ed0d94071e38e4d86188482447eaf25",
+  "15": "a5a712dbfdab3120e46d2e633d58847cc06974bc3a24743911e8215209a434f8",
+  "16": "0c9b8d14ab668d6f7bd0c533eedd65a912805d9108314de8013794c9c36c21ad",
+  "17": "1e3a2e688c48433e4bb97ac938cac64d088c74099d06bc04f24b6d23df833942",
+  "18": "b83029b17d388f28a52cfaedb208f6a9b5b09af2c9ff4f4146f185708e21225f",
+  "19": "d6a2766866219ddf48795090f05490313d49f2535221b83b94058ece8f3638c7",
+  "20": "f8295a71fa1173fa4abf82fdea43c6d7a7bdd97d15752f079a6e4b1b688b1989",
+  "21": "b7562143216cd645a8da92bcd0775913616f2599ab20c60bf83cb15e19f57839",
+  "22": "d3a535aca172262c4b3722e1567c7a4b7d37a6e3f3c865625f1a99958964449f",
+  "23": "e326d8392939270204b0f6da778d7f10f48badabc5ce03bfa265ac410f15ef82",
+  "24": "89d49cb3b7650b26c2ef9c5d47b6ebaf84e4e3f6a194683a94ed619a866a4e2c",
+  "25": "076d63757e0da7c042dde4938e2edf25aff7753f1de34321aab8cef5694fb4e7",
+  "26": "9047155aef8dacc88ad553947b5420caa1cf0af067ecc04a06f939d11b09ea09",
+  "27": "7d94d1ff3ce628e8f10a724f3dc10960d9a6371a8d78aed1918706853566fcfb",
+  "28": "22e2ef876276714936fcd82134d84c636e7c5eba0f50beec7b3e5b577b039864",
+  "29": "b14c8935e1a8e68512faeda14a6db8bf3b6705cdcaa5428bcb6f44c71a124bc1",
+  "30": "d5191ec4551d917cb56b29e672cb3260155a7c9f0a8490260769eda9f9d12fb3",
+  "31": "38860735d009bebd20ae5370537c76837ee1cba66507220aa06a4ce0cde56830",
+  "32": "3afa4c385dc786377c6487a796b2b2bd0642006b9d8db6ada1ac986b56066bfb",
+  "33": "3875882735f29aa7504bce967102a11cc915c251dcfe3a0c89e397bbb5d32613",
+  "34": "baba14f05dac563dc3c7dab8245b04a71f9abfeeaefd515db7f9d5792ce17333",
+  "35": "7e3c8a5d3dd1474a3c2e4709e0689851cda0f5087516be43f8c6091db9762670",
+  "36": "62ef8424c430912beddcc8c5c5638a11926df067432a3b4adb0d5c7b58f70c96",
+  "37": "fb6e0287cd619ae9ec83b2c4ff3915526c85848d2f9bacd3322aca8c5a7284df",
+  "38": "28e1775af9231c426e85e84c3ad2db9b477ea692d044418098cee6b5106fc9e3",
+  "39": "10725cb41600f26894be5ed8045df5d2003d84e914eea9a3a6e1f4e40d72f436",
+  "40": "3523056937367c3697b226d601f654136666ca8dceabc9c793c403aea9634827",
+  "41": "1f33d074bc433691b9c07f00c287422660ba826a7e768c377f26b06d2389696b",
+  "42": "0e66cd2b80ca6dc9f18fc26f033d5b8c1c0159eeafe6319eabcfc4c68514ec4f",
+  "43": "e20924a2c1136b877a03c394d745818fc261fe363746daca8a38a42e63ceb0d4",
+  "44": "e6462bca35ef96e6280f9d2cc621f54ed457a36dd3d5cb1fd2498beb57a998e4",
+  "45": "dbf18c14dbe16001506185ce623c7bb28cfbd2f6466e2db5bfa09a1825c98102",
+  "46": "07193333f720fbee4f13b033cc33bb1e81f54d53c2f8ae0ecfff23a1f48110c7",
+  "47": "da30aefedf610a5632afc6dbfb8bd4c8158508815c10e4cd1ba287bbdefae6d1",
+  "48": "bfd8267ba52b0e66485255a86cf3c3ff49d3f17a3c002dcc2e643d376136b0f7",
+  "49": "9e8a0f0642841e81eeb05ac06f80309edf7caaef02d1cdc31916212bb750af45",
+  "50": "c6e493f8be38ddb64f318a6cbce104d56ee689cf94dd98da9c3e2754b293630d",
+  "51": "3d919f0c138b0d3621c8f8bf87a9931fa8c8dc0c619d7dde22f6d32f162f5396",
+  "52": "3d353d3e0e44ade70e0e7b7f6e00686a769ea54dd43aae87ef812aff2eeae9b8",
+  "53": "c476b967d49008121ef2ad13f1a375a29db80a0a46dad9128b5f0d9c9a163c71",
+  "54": "c013d75d8d14135b01e398c049c8dcbf1ee9a7c53953164a7e80abdb2df326f2",
+  "55": "918e3d97cd9800f31466b0d40318268eceead18e4df2d6080418cddf498a26da",
+  "56": "14a21928ea893521ce09f296d0126624b2c56c8222154b4f4d53bdf577f4cb9b",
+  "57": "89f7f2990cce4486bdaed616b64d57a4e68c5cadabafa94b0887060cb183d3b3",
+  "58": "3184eb3650144c5f08d43c8b3b924068a6412c06f640d57c21ef3924a2a3753b",
+  "59": "37bd640e136be0f4297dc48c65c8da2b552c41bcf5f7561c2015ac6d1a9c2bf8",
+  "60": "9c2bab788bd02650db576873b6e73adfa91c0155bdc9215eb14e549242cb471d"
+ },
+ "sources": {
+  "bati-500": [
+   "$uidOf:1",
+   "$uidOf:2",
+   "$uidOf:3",
+   "$uidOf:4",
+   "$uidOf:5",
+   "$uidOf:6",
+   "$uidOf:7",
+   "$uidOf:8",
+   "$uidOf:9",
+   "$uidOf:10",
+   "$uidOf:21",
+   "$uidOf:22",
+   "$uidOf:23",
+   "$uidOf:24",
+   "$uidOf:25",
+   "$uidOf:26",
+   "$uidOf:27",
+   "$uidOf:28",
+   "$uidOf:29",
+   "$uidOf:30",
+   "$uidOf:41",
+   "$uidOf:42",
+   "$uidOf:43",
+   "$uidOf:44",
+   "$uidOf:45",
+   "$uidOf:46",
+   "$uidOf:47",
+   "$uidOf:48",
+   "$uidOf:49",
+   "$uidOf:50"
+  ],
+  "dogu-500": [
+   "$uidOf:11",
+   "$uidOf:12",
+   "$uidOf:13",
+   "$uidOf:14",
+   "$uidOf:15",
+   "$uidOf:16",
+   "$uidOf:17",
+   "$uidOf:18",
+   "$uidOf:19",
+   "$uidOf:20",
+   "$uidOf:31",
+   "$uidOf:32",
+   "$uidOf:33",
+   "$uidOf:34",
+   "$uidOf:35",
+   "$uidOf:36",
+   "$uidOf:37",
+   "$uidOf:38",
+   "$uidOf:39",
+   "$uidOf:40",
+   "$uidOf:51",
+   "$uidOf:52",
+   "$uidOf:53",
+   "$uidOf:54",
+   "$uidOf:55",
+   "$uidOf:56",
+   "$uidOf:57",
+   "$uidOf:58",
+   "$uidOf:59",
+   "$uidOf:60"
+  ],
+  "genel-1000": [
+   "$uidOf:1",
+   "$uidOf:2",
+   "$uidOf:3",
+   "$uidOf:4",
+   "$uidOf:5",
+   "$uidOf:6",
+   "$uidOf:7",
+   "$uidOf:8",
+   "$uidOf:9",
+   "$uidOf:10",
+   "$uidOf:11",
+   "$uidOf:12",
+   "$uidOf:13",
+   "$uidOf:14",
+   "$uidOf:15",
+   "$uidOf:21",
+   "$uidOf:22",
+   "$uidOf:23",
+   "$uidOf:24",
+   "$uidOf:25",
+   "$uidOf:26",
+   "$uidOf:27",
+   "$uidOf:28",
+   "$uidOf:29",
+   "$uidOf:30",
+   "$uidOf:31",
+   "$uidOf:32",
+   "$uidOf:33",
+   "$uidOf:34",
+   "$uidOf:35",
+   "$uidOf:41",
+   "$uidOf:42",
+   "$uidOf:43",
+   "$uidOf:44",
+   "$uidOf:45",
+   "$uidOf:46",
+   "$uidOf:47",
+   "$uidOf:48",
+   "$uidOf:49",
+   "$uidOf:50",
+   "$uidOf:51",
+   "$uidOf:52",
+   "$uidOf:53",
+   "$uidOf:54",
+   "$uidOf:55"
+  ],
+  "butun-5000": [
+   "$uidOf:1",
+   "$uidOf:2",
+   "$uidOf:3",
+   "$uidOf:4",
+   "$uidOf:5",
+   "$uidOf:6",
+   "$uidOf:7",
+   "$uidOf:8",
+   "$uidOf:9",
+   "$uidOf:10",
+   "$uidOf:11",
+   "$uidOf:12",
+   "$uidOf:13",
+   "$uidOf:14",
+   "$uidOf:15",
+   "$uidOf:16",
+   "$uidOf:17",
+   "$uidOf:18",
+   "$uidOf:19",
+   "$uidOf:20",
+   "$uidOf:21",
+   "$uidOf:22",
+   "$uidOf:23",
+   "$uidOf:24",
+   "$uidOf:25",
+   "$uidOf:26",
+   "$uidOf:27",
+   "$uidOf:28",
+   "$uidOf:29",
+   "$uidOf:30",
+   "$uidOf:31",
+   "$uidOf:32",
+   "$uidOf:33",
+   "$uidOf:34",
+   "$uidOf:35",
+   "$uidOf:36",
+   "$uidOf:37",
+   "$uidOf:38",
+   "$uidOf:39",
+   "$uidOf:40",
+   "$uidOf:41",
+   "$uidOf:42",
+   "$uidOf:43",
+   "$uidOf:44",
+   "$uidOf:45",
+   "$uidOf:46",
+   "$uidOf:47",
+   "$uidOf:48",
+   "$uidOf:49",
+   "$uidOf:50",
+   "$uidOf:51",
+   "$uidOf:52",
+   "$uidOf:53",
+   "$uidOf:54",
+   "$uidOf:55",
+   "$uidOf:56",
+   "$uidOf:57",
+   "$uidOf:58",
+   "$uidOf:59",
+   "$uidOf:60"
+  ]
+ },
+ "acceptance": {
+  "frame": {
+   "left": 20.0,
+   "top": 10.0,
+   "width": 390.0,
+   "height": 230.0
+  },
+  "sheets": [
+   {
+    "sheet": "bati-500",
+    "scale": 500,
+    "ground": [
+     499992.5,
+     4539972.5,
+     500187.5,
+     4540087.5
+    ],
+    "edge": 40.0
+   },
+   {
+    "sheet": "dogu-500",
+    "scale": 500,
+    "ground": [
+     500212.5,
+     4539972.5,
+     500407.5,
+     4540087.5
+    ],
+    "edge": 40.0
+   },
+   {
+    "sheet": "genel-1000",
+    "scale": 1000,
+    "ground": [
+     499905.0,
+     4539915.0,
+     500295.0,
+     4540145.0
+    ],
+    "edge": 20.0
+   },
+   {
+    "sheet": "butun-5000",
+    "scale": 5000,
+    "ground": [
+     499225.0,
+     4539455.0,
+     501175.0,
+     4540605.0
+    ],
+    "edge": 4.0
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "nothing changed: every page carried",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "status": {
+    "stale": [],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "regenerated": [],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "an east parcel moved: only the pages showing it are made again",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:38"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1.0,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a west parcel moved: its three pages made again under an unchanged revision",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": 1.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "dogu-500"
+    ],
+    "regenerated": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a middle parcel seen at 1:500 east, 1:1000 and 1:5000",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:53"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": -0.5,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:53"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:53"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:53"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a parcel half in the west frame",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.25,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:10"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "dogu-500"
+    ],
+    "regenerated": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a parcel moved out of every frame is removed from its pages",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:18"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": 1000.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [
+        "$uidOf:18"
+       ],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [
+        "$uidOf:18"
+       ],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a parcel moved from west to east is removed there and added here",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:23"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 300.0,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [
+        "$uidOf:23"
+       ],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [
+        "$uidOf:23"
+       ],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [
+        "$uidOf:23"
+       ],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:23"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [],
+    "regenerated": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "an attribute alone changes no page: its object is listed, the pages carried",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "attrs": {
+       "Malik": "Hazine"
+      },
+      "operation": "attributes"
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "regenerated": [],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a deleted east parcel is removed from its pages",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:19"
+      ]
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [
+        "$uidOf:19"
+       ],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [
+        "$uidOf:19"
+       ],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a new east parcel is added to its pages",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "parsel",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 500300.0,
+           "y": 4540070.0
+          },
+          {
+           "x": 500310.0,
+           "y": 4540070.0
+          },
+          {
+           "x": 500310.0,
+           "y": 4540080.0
+          },
+          {
+           "x": 500300.0,
+           "y": 4540080.0
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [
+        "$new"
+       ],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [
+        "$new"
+       ],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a layer colour changes every page and names the layers",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.layers.edit",
+     "input": {
+      "operation": "style",
+      "layer": "parsel",
+      "color": "#0055AA"
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": [
+        "layers"
+       ]
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": [
+        "layers"
+       ]
+      }
+     },
+     "genel-1000": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": [
+        "layers"
+       ]
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": [
+        "layers"
+       ]
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [],
+    "regenerated": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "an advanced revision makes its sheet again with no note",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.sheets.edit",
+     "input": {
+      "ops": [
+       {
+        "op": "setDrawingInfo",
+        "id": "bati-500",
+        "info": {
+         "number": "P-1",
+         "title": "Batı 1:500",
+         "revision": "B",
+         "status": "",
+         "subset": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "bati-500"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": true,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "regenerated": [
+     "bati-500"
+    ],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a moved parcel with one revision advanced",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": 1.0
+      }
+     }
+    },
+    {
+     "op": "edit",
+     "command": "cad.sheets.edit",
+     "input": {
+      "ops": [
+       {
+        "op": "setDrawingInfo",
+        "id": "bati-500",
+        "info": {
+         "number": "P-1",
+         "title": "Batı 1:500",
+         "revision": "B",
+         "status": "",
+         "subset": []
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": true,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "dogu-500"
+    ],
+    "regenerated": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [
+     "genel-1000",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a delivered file altered on disk is made again, the rest carried",
+   "first": {},
+   "edits": [],
+   "tamper": {
+    "files": {
+     "bati-500": "alter"
+    }
+   },
+   "status": {
+    "stale": [
+     "bati-500"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "fileChanged",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "regenerated": [
+     "bati-500"
+    ],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a delivered file removed is made again",
+   "first": {},
+   "edits": [],
+   "tamper": {
+    "files": {
+     "dogu-500": "remove"
+    }
+   },
+   "status": {
+    "stale": [
+     "dogu-500"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "fileChanged",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "regenerated": [
+     "dogu-500"
+    ],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a renamed pattern carries the same bytes under new names",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:38"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1.0,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {
+     "naming": "{id}"
+    },
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "an update of two sheets in a chosen order",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:38"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1.0,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {
+     "sheets": [
+      "dogu-500",
+      "bati-500"
+     ]
+    },
+    "sheets": [
+     "dogu-500",
+     "bati-500"
+    ],
+    "carried": [
+     "bati-500"
+    ],
+    "regenerated": [
+     "dogu-500"
+    ],
+    "notes": [
+     "dogu-500"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "another resolution carries nothing",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "status": {
+    "stale": [],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {
+     "dpi": 150
+    },
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [],
+    "regenerated": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "a delivery without geo-reference carries nothing into a geo-referenced one",
+   "first": {
+    "geo": false
+   },
+   "edits": [],
+   "tamper": {},
+   "status": {
+    "stale": [],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [],
+    "regenerated": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "notes": [],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "the plan of an update says what it carries and writes nothing",
+   "first": {},
+   "edits": [
+    {
+     "op": "edit",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:38"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 1.0,
+       "dy": 0.0
+      }
+     }
+    }
+   ],
+   "tamper": {},
+   "status": {
+    "stale": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "sheets": {
+     "bati-500": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "dogu-500": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "genel-1000": {
+      "state": "current",
+      "changes": {
+       "changed": [],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     },
+     "butun-5000": {
+      "state": "stale",
+      "changes": {
+       "changed": [
+        "$uidOf:38"
+       ],
+       "added": [],
+       "removed": [],
+       "sheet": false,
+       "parts": []
+      }
+     }
+    }
+   },
+   "update": {
+    "input": {},
+    "sheets": [
+     "bati-500",
+     "dogu-500",
+     "genel-1000",
+     "butun-5000"
+    ],
+    "carried": [
+     "bati-500",
+     "genel-1000"
+    ],
+    "regenerated": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "notes": [
+     "dogu-500",
+     "butun-5000"
+    ],
+    "result": {
+     "status": "completed"
+    }
+   }
+  },
+  {
+   "name": "an update is not a single PDF",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "update": {
+    "input": {
+     "mode": "single"
+    },
+    "result": {
+     "status": "failed",
+     "error": {
+      "code": "invalid_input"
+     }
+    }
+   }
+  },
+  {
+   "name": "an update is not resumable",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "update": {
+    "input": {
+     "resumable": true
+    },
+    "result": {
+     "status": "failed",
+     "error": {
+      "code": "invalid_input"
+     }
+    }
+   }
+  },
+  {
+   "name": "the earlier delivery is an absolute folder",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "update": {
+    "input": {
+     "previous": "teslim"
+    },
+    "result": {
+     "status": "failed",
+     "error": {
+      "code": "invalid_file_path"
+     }
+    }
+   }
+  },
+  {
+   "name": "a folder without a publication is not an earlier delivery",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "update": {
+    "input": {
+     "previous": "$empty"
+    },
+    "result": {
+     "status": "failed",
+     "error": {
+      "code": "no_previous"
+     }
+    }
+   }
+  },
+  {
+   "name": "an update never overwrites the earlier delivery",
+   "first": {},
+   "edits": [],
+   "tamper": {},
+   "update": {
+    "input": {
+     "path": "$first"
+    },
+    "result": {
+     "status": "failed",
+     "error": {
+      "code": "invalid_input"
+     }
+    }
+   }
+  }
+ ]
+}
