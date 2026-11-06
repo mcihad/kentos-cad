@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_alignment_cases as aref  # noqa: E402
 import road_alignment_command_cases as acmd  # noqa: E402
 import road_profile_cases as pref  # noqa: E402
+import road_grades  # noqa: E402  (docs/adr/0977: grades written as KentOS holds them)
 import road_surface_cases as tri  # noqa: E402
 import road_vertical_cases as vref  # noqa: E402
 
@@ -94,23 +95,35 @@ PART = {"id": "b-3", "name": "Kısmi kot", "alignment": "g-1", "alignmentRevisio
         "pvis": [pv("a", 100, 104), pv("b", 400, 110)]}
 
 
-def setup(profiles=(), work="road", surfaces=SURFACES, layers=None):
+def setup(profiles=(), work="road", surfaces=SURFACES, layers=None, supers=None):
     settings = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": work, "drawingFont": "barlow"}
     if work == "road":
-        settings["road"] = road_of(list(profiles), surfaces)
+        settings["road"] = road_of(list(profiles), surfaces, supers)
     return {"format": "kentos.document", "version": 2, "name": "Yol boykesitleri", "settings": settings,
             "origin": {"x": 0.0, "y": 0.0}, "layers": copy.deepcopy(layers or LAYERS), "activeLayer": "0",
             "entities": copy.deepcopy(ENTITIES), "uids": list(UIDS), "styles": {"items": [], "categories": []}}
 
 
-def road_of(profiles, surfaces=SURFACES):
+def road_of(profiles, surfaces=SURFACES, supers=None):
     if profiles is None:
         return None
     out = {"surfaces": copy.deepcopy(surfaces), "alignments": copy.deepcopy(ALIGNMENTS)}
     if profiles:
         out["profiles"] = copy.deepcopy(profiles)
+    if supers:
+        out["superelevations"] = copy.deepcopy(supers)
     return out
+
+
+# Docs/adr/0980: a superelevation schedule by rows on the main alignment, for KGM's Dever band (percent, as this
+# reference writes slopes; the fixture's writer turns them into grades).
+DEVER = {"id": "d-1", "name": "Ana dever", "alignment": "g-1", "alignmentRevision": 1, "revision": 1,
+         "normalLeft": -2.5, "normalRight": -2.5,
+         "method": {"method": "stations", "rows": [{"station": 150.0, "left": -2.5, "right": -2.5},
+                                                   {"station": 200.0, "left": -6.0, "right": 6.0},
+                                                   {"station": 300.0, "left": -6.0, "right": 6.0},
+                                                   {"station": 350.0, "left": -2.5, "right": -2.5}]}}
 
 
 # ── The geometry, by the references ───────────────────────────────────────────────────────────────────────────────
@@ -676,7 +689,7 @@ DRAW_LAYERS = LAYERS + [{**node("kilitli", "Kilitli"), "locked": True}, {**node(
                         {**node("grup", "Yol"), "type": "group", "children": [node("yol-boykesit", "Yol boykesit")]}]
 
 
-def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, to=None):
+def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, to=None, bands=None, dever=None):
     """What the drawing says (frame, datum, top, grid, columns) and how many objects it writes; `frm` and `to` a view of
     the stations between them only (docs/adr/0908 §10)."""
     b = ALIGNED[d["alignment"]]
@@ -733,8 +746,25 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, 
             drawn = False
     shown_curves = [r for r in rows if r["start"][0] < s1 - 1e-9 and r["end"][0] > s0 + 1e-9]
     grades = [1 for p, q in zip(pvis, pvis[1:]) if q["station"] > s0 + 1e-9 and p["station"] < s1 - 1e-9]
-    n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(shown_curves) + 10
-         + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(grades))
+    if bands == "kgm":
+        # Docs/adr/0980, KGM's bands: their lines and names and the names' edge; each column's line, km, red and black;
+        # each element in the range its tick and words, and the band's line; the vertical band's line, each curve's
+        # words, the grades, each PVI's tick and words; the Dever band's axis, two sides and caption with each break
+        # point's tick and words, or one sentence without a schedule.
+        els = [e for e in b.els if e.station < s1 - 1e-9 and e.station + e.length > s0 + 1e-9]
+        pvi_in = [p for p in pvis if s0 - 1e-9 <= p["station"] <= s1 + 1e-9]
+        if dever is None:
+            dev = 1
+        else:
+            rows_ = dever["method"]["rows"]
+            breaks = sorted({r["station"] for r in rows_ if s0 <= r["station"] <= s1})
+            dev = 4 + 2 * len(breaks)
+        n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(shown_curves) + 13
+             + sum(3 + ("black" in c) for c in cols) + 2 * len(els) + (1 if els else 0)
+             + 1 + len(shown_curves) + len(grades) + 2 * len(pvi_in) + dev)
+    else:
+        n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(shown_curves) + 10
+             + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(grades))
     out = {"profile": d["id"], "frame": [list(at_), [at_[0] + (s1 - s0), at_[1] + (top - base) * ex]],
            "datum": base, "top": top, "exaggeration": ex, "grid": float(grid), "columns": cols}
     return out, n, lo
@@ -746,23 +776,24 @@ def draw_cases():
     cases = []
     first = len(ENTITIES) + 1
 
-    def ok(name, input_, d, op="execute", warns=(), undo=False, setup_=None, before=start, **kw):
-        out, n, _ = drawing(d, input_["at"], **kw)
+    def ok(name, input_, d, op="execute", warns=(), undo=False, setup_=None, before=start, supers=None, **kw):
+        out, n, _ = drawing(d, input_["at"], bands=input_.get("bands"), **kw)
         out = {**out, "uids": "$any" if op == "execute" else [], "revision": "$current"}
         if op == "validate":
-            result, expect = completed(None, warns), {**UNCHANGED, "road": road_of(before)}
+            result, expect = completed(None, warns), {**UNCHANGED, "road": road_of(before, supers=supers)}
         elif op == "plan":
-            result, expect = completed(out, warns), {**UNCHANGED, "road": road_of(before)}
+            result, expect = completed(out, warns), {**UNCHANGED, "road": road_of(before, supers=supers)}
         else:
             result = completed(out, warns)
-            expect = {**STEPPED, "road": road_of(before), "ids": list(range(1, first + n))}
+            expect = {**STEPPED, "road": road_of(before, supers=supers), "ids": list(range(1, first + n))}
         steps = [step(op, input_, result, expect)]
         if undo:
             steps.append({"op": "undo", "returns": "Boykesit çiz", "expect": {"ids": list(range(1, first)), "canRedo": True}})
         cases.append(case(name, steps, setup_))
 
-    def no(name, input_, result, setup_=None, before=start):
-        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road_of(before)})], setup_))
+    def no(name, input_, result, setup_=None, before=start, supers=None):
+        cases.append(case(name, [step("execute", input_, result, {**UNCHANGED, "road": road_of(before, supers=supers)})],
+                          setup_))
 
     hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
     ok("Proje kotu: her 50 m'de bant, 10 kat abartma", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0]}, MAIN)
@@ -798,6 +829,16 @@ def draw_cases():
     ok("Kurbun ortasından: tepe noktası aralıkta", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0],
                                                   "from": 320.0, "to": 380.0, "exaggeration": 5.0},
        MAIN, frm=320.0, to=380.0, ex=5.0)
+    # Docs/adr/0980: KGM's bands (KGM 2019 technical specification): without a schedule, with one, on part of it.
+    ok("KGM bantları, dever çizelgesiz", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "bands": "kgm"}, MAIN)
+    with_dever = setup(start, layers=DRAW_LAYERS, supers=[DEVER])
+    ok("KGM bantları, dever çizelgesiyle", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "bands": "kgm",
+                                           "superelevation": "Ana dever"}, MAIN, setup_=with_dever, supers=[DEVER],
+       dever=DEVER)
+    ok("KGM bantları, km 100–300", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0], "bands": "kgm",
+                                   "superelevation": "d-1", "from": 100.0, "to": 300.0}, MAIN, setup_=with_dever,
+       supers=[DEVER], dever=DEVER, frm=100.0, to=300.0)
+    ok("KentOS bantları açıkça", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "bands": "kentos"}, MAIN)
 
     _, _, lowest = drawing(MAIN, [0.0, 0.0])
     no("Yol projesi değil", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0]}, NOT_ROAD,
@@ -828,6 +869,21 @@ def draw_cases():
        failed("invalid_label", "Aralığın sonu başından sonra olmalı.", "to"))
     no("Aralık boş", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "from": 300.0, "to": 300.0},
        failed("invalid_label", "Aralığın sonu başından sonra olmalı.", "to"))
+    # Docs/adr/0980: the Dever band's schedule.
+    side_dever = {**DEVER, "id": "d-2", "name": "Yan dever", "alignment": "g-2", "alignmentRevision": 2}
+    two = setup(start, layers=DRAW_LAYERS, supers=[DEVER, side_dever])
+    no("Dever çizelgesi KentOS bantlarında çizilmez", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0],
+                                                       "superelevation": "d-1"},
+       failed("invalid_label", "Dever çizelgesi yalnız KGM bantlarında (bands: kgm) Dever bandına çizilir.",
+              "superelevation"), setup_=two, supers=[DEVER, side_dever])
+    no("Olmayan dever çizelgesi", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "bands": "kgm",
+                                   "superelevation": "yok"},
+       failed("unknown_superelevation", "“yok” kimlikli ya da adlı dever çizelgesi projede yok.", "superelevation"),
+       setup_=two, supers=[DEVER, side_dever])
+    no("Başka aksın dever çizelgesi", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "bands": "kgm",
+                                       "superelevation": "Yan dever"},
+       failed("invalid_label", "“Yan dever” dever çizelgesi boykesitin aksında değil.", "superelevation"),
+       setup_=two, supers=[DEVER, side_dever])
     no("Geçersiz beklenen sürüm", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "41"}, CONFLICT)
     return file("road.profiles.draw", "Boykesit çiz", base_setup, cases)
@@ -839,6 +895,7 @@ def main():
     check = "--check" in sys.argv[1:]
     bad = False
     for name, data in files.items():
+        data = road_grades.fixture(data)
         text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
         path = OUT / name
         if check:

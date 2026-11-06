@@ -9,8 +9,8 @@
 //! `fixtures/commands/v1/road.profiles.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, ProfileAt, ProfilesDraw,
-    ProfilesDrawn, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, ProfileAt, ProfileBands,
+    ProfilesDraw, ProfilesDrawn, TextAlign, TextFace, Vec2,
 };
 use kentos_road::alignment::km_text;
 use kentos_road::profile::{Piece, VCurve};
@@ -27,6 +27,11 @@ use crate::road_terrains::fail;
 const MOST: usize = 100_000;
 /// The bands under the frame, top down.
 pub const BANDS: [&str; 5] = ["Km", "Siyah kot", "Kırmızı kot", "Fark", "Eğim"];
+/// KGM's bands (docs/adr/0980; KGM 2019 technical specification: "Profiller alt kısımda sırası ile Kırmızı Kot, Siyah
+/// Kot, Kilometre, Yatay Geometri, Düşey Geometri ve Dever Bandı"), top down, and each one's depth in text heights:
+/// the values of the first three are written up the band, as on KGM's and the schools' sheets.
+pub const KGM_BANDS: [(&str, f64); 6] =
+    [("Kırmızı Kot", 7.0), ("Siyah Kot", 7.0), ("Kilometre", 9.0), ("Yatay Geometri", 6.0), ("Düşey Geometri", 7.0), ("Dever", 7.0)];
 const RED: &str = "#d62828";
 
 /// A number as Rust writes an f64.
@@ -49,6 +54,9 @@ struct Checked {
     s0: f64,
     s1: f64,
     warnings: Vec<CommandWarning>,
+    bands: ProfileBands,
+    /// The Dever band's schedule (docs/adr/0980): its name, break points and normal slopes.
+    dever: Option<(String, kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
 }
 
 /// The profile's range, its first and last PVI's stations.
@@ -177,6 +185,31 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         );
     }
     layer_warnings.extend(warnings);
+    let bands = input.bands.unwrap_or(ProfileBands::Kentos);
+    let dever = match (&input.superelevation, bands) {
+        (None, _) => None,
+        (Some(_), ProfileBands::Kentos) => {
+            return Err(fail(
+                codes::INVALID_LABEL,
+                "Dever çizelgesi yalnız KGM bantlarında (bands: kgm) Dever bandına çizilir.".into(),
+                "superelevation",
+            ));
+        }
+        (Some(name), ProfileBands::Kgm) => {
+            let (_, sdef) = crate::road_superelevations::find(doc.road_superelevations(), name, "superelevation")?;
+            if sdef.alignment != def.alignment {
+                return Err(fail(
+                    codes::INVALID_LABEL,
+                    format!("“{}” dever çizelgesi boykesitin aksında değil.", sdef.name),
+                    "superelevation",
+                ));
+            }
+            let on = crate::road_superelevations::alignment_of(doc, sdef)?;
+            let (schedule, _) = crate::road_superelevations::schedule(sdef, &on)?;
+            layer_warnings.extend(crate::road_superelevations::stale_warning(doc, sdef));
+            Some((sdef.name.clone(), schedule, crate::road_superelevations::normal(sdef)))
+        }
+    };
     Ok(Checked {
         id: def.id.clone(),
         built,
@@ -190,6 +223,8 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         s0,
         s1,
         warnings: layer_warnings,
+        bands,
+        dever,
     })
 }
 
@@ -264,6 +299,11 @@ fn path(pts: &[[f64; 2]], closed: bool, color: Option<&str>, weight: Option<f64>
 }
 
 fn text(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>) -> NewObject {
+    turned(at, words, height, align, color, 0.0)
+}
+
+/// A text turned `rotation` degrees counterclockwise (up the band: 90; the contract's unit).
+fn turned(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>, rotation: f64) -> NewObject {
     object(
         EntityGeometry::Text {
             layout: None,
@@ -271,7 +311,7 @@ fn text(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Optio
             p: Vec2 { x: at[0], y: at[1] },
             text: words,
             height,
-            rotation: 0.0,
+            rotation,
             align: Some(align),
             width_factor: None,
             mask: false,
@@ -372,6 +412,10 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             TextAlign::BottomCenter,
             Some(RED),
         ));
+    }
+    if c.bands == ProfileBands::Kgm {
+        kgm_bands(&mut out, c, columns, at, h, names);
+        return out;
     }
     // The bands: their lines and names, then a column at every round km and at the ends, then the grades.
     for (i, name) in BANDS.iter().enumerate() {
@@ -477,6 +521,192 @@ pub(crate) fn view(
 /// How deep the bands under a view are, in drawing units, with texts `height` paper millimetres high.
 pub(crate) fn bands_depth(doc: &kentos_domain::Document, height: f64) -> f64 {
     BANDS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
+}
+
+/// The bands KGM's 2019 technical specification asks for (docs/adr/0980), under the frame whose lower left is `at`:
+/// Kırmızı Kot, Siyah Kot, Kilometre (each column's value written up the band), Yatay Geometri (a tangent on the
+/// band's axis, a curve a step up for a right turn and down for a left one, a clothoid the slope between; R, Δ in
+/// grad, L, a clothoid's A), Düşey Geometri (the grades as KGM writes them, a crest a step up and a sag down with its
+/// length and K, each PVI's km and elevation) and Dever (the left side's slope solid, the right's dashed, about the
+/// band's axis, each break point's two slopes).
+fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [f64; 2], h: f64, names: f64) {
+    use kentos_road::alignment::Kind;
+    use kentos_road::profile::grade_text;
+    let (s0, s1) = (c.s0, c.s1);
+    let x = |s: f64| at[0] + (s - s0);
+    let (x0, x1, y0) = (x(s0), x(s1), at[1]);
+    // Each band's top and bottom.
+    let mut rows = Vec::new();
+    let mut top = y0;
+    for (name, depth) in KGM_BANDS {
+        let bottom = top - depth * h;
+        out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
+        out.push(text([x0 - names + 0.5 * h, 0.5 * (top + bottom)], name.to_owned(), h, TextAlign::MiddleLeft, None));
+        rows.push((top, bottom));
+        top = bottom;
+    }
+    out.push(line([x0 - names, y0], [x0 - names, top], None, Some(0.13)));
+    let mid = |i: usize| 0.5 * (rows[i].0 + rows[i].1);
+    let up = 90.0;
+    // Kırmızı Kot, Siyah Kot, Kilometre: a column at every round km and at the ends.
+    for col in columns {
+        let cx = x(col.station);
+        out.push(line([cx, y0], [cx, rows[2].1], None, Some(0.13)));
+        let round = (col.km / c.every - (col.km / c.every).round()).abs() <= 1e-9;
+        let km = if round { km_text(col.km, 0) } else { km_text(col.km, 2) };
+        if let Some(r) = col.red {
+            out.push(turned([cx - 0.2 * h, mid(0)], format!("{r:.2}"), h, TextAlign::BottomCenter, Some(RED), up));
+        }
+        if let Some(b) = col.black {
+            out.push(turned([cx - 0.2 * h, mid(1)], format!("{b:.2}"), h, TextAlign::BottomCenter, None, up));
+        }
+        out.push(turned([cx - 0.2 * h, mid(2)], km, h, TextAlign::BottomCenter, None, up));
+    }
+    // Yatay Geometri: the elements in the range, each at its step.
+    let core = &c.built.alignment.core;
+    let step = 1.5 * h;
+    let off = |k: f64| if k > 1e-12 { -step } else if k < -1e-12 { step } else { 0.0 };
+    let ym = mid(3);
+    let mut pts: Vec<[f64; 2]> = Vec::new();
+    for e in core.elements.iter().filter(|e| e.station < s1 - 1e-9 && e.station + e.length > s0 + 1e-9) {
+        let (a, b) = (e.station.max(s0), (e.station + e.length).min(s1));
+        let (oa, ob) = (off(e.curvature(a - e.station)), off(e.curvature(b - e.station)));
+        // A clothoid from or to a tangent slopes between the two steps; one between two curves stays at theirs.
+        let (oa, ob) = match e.kind {
+            Kind::Spiral if e.k0 == 0.0 || e.k1 == 0.0 => (off(e.k0) * (1.0 - (a - e.station) / e.length) + off(e.k1) * ((a - e.station) / e.length),
+                                                              off(e.k0) * (1.0 - (b - e.station) / e.length) + off(e.k1) * ((b - e.station) / e.length)),
+            _ => (oa, ob),
+        };
+        pts.push([x(a), ym + oa]);
+        pts.push([x(b), ym + ob]);
+        out.push(line([x(a), rows[3].0], [x(a), rows[3].1], None, Some(0.13)));
+        let cx = x(0.5 * (a + b));
+        let words = match e.kind {
+            Kind::Tangent => format!("L={:.2}", e.length),
+            Kind::Arc => {
+                let delta = core.curves.iter().find(|cu| e.id.starts_with(&format!("{}/", cu.pi))).map(|cu| cu.delta.abs());
+                match delta {
+                    Some(d) => format!("R={:.2} Δ={:.4}g L={:.2}", 1.0 / e.k0.abs(), d * 200.0 / std::f64::consts::PI, e.length),
+                    None => format!("R={:.2} L={:.2}", 1.0 / e.k0.abs(), e.length),
+                }
+            }
+            Kind::Spiral => format!("Kl. A={:.2} L={:.2}", e.a().unwrap_or(0.0), e.length),
+        };
+        // The words on the step's far side from the axis, a tangent's over it.
+        let side = 0.5 * (oa + ob);
+        let (wy, align) = if side < 0.0 { (ym + side - 0.3 * h, TextAlign::TopCenter) } else { (ym + side + 0.3 * h, TextAlign::BottomCenter) };
+        out.push(text([cx, wy], words, 0.8 * h, align, None));
+    }
+    pts.dedup_by(|a, b| (a[0] - b[0]).abs() < 1e-9 && (a[1] - b[1]).abs() < 1e-9);
+    if pts.len() >= 2 {
+        out.push(path(&pts, false, None, Some(0.35)));
+    }
+    // Düşey Geometri: the grades between the PVIs, a crest a step up and a sag down, each PVI's km and elevation. Three
+    // lines of words that do not meet: the curves' along the top, the grades over the axis, the PVIs' along the bottom.
+    let ym = rows[4].0 - 3.2 * h;
+    let step = h;
+    let km_of = |s: f64| kentos_road::alignment::Stationing::km(&c.built.alignment.regions, s);
+    let mut vpts: Vec<[f64; 2]> = vec![[x0, ym]];
+    for cu in c.built.vertical.curves.iter().filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9) {
+        let (a, b) = (cu.start[0].max(s0), cu.end[0].min(s1));
+        let o = if cu.crest { step } else { -step };
+        vpts.extend([[x(a), ym], [x(a), ym + o], [x(b), ym + o], [x(b), ym]]);
+        let length = cu.end[0] - cu.start[0];
+        out.push(text(
+            [x(0.5 * (a + b)), rows[4].0 - 0.3 * h],
+            format!("{} ŞK={length:.2} K={:.1}", cu.pvi, cu.k.unwrap_or(0.0)),
+            0.8 * h,
+            TextAlign::TopCenter,
+            None,
+        ));
+    }
+    vpts.push([x1, ym]);
+    out.push(path(&vpts, false, None, Some(0.35)));
+    for w in c.pvis.windows(2) {
+        let ((sa, za), (sb, zb)) = (w[0], w[1]);
+        if sb <= s0 + 1e-9 || sa >= s1 - 1e-9 {
+            continue;
+        }
+        let g = (zb - za) / (sb - sa);
+        out.push(text(
+            [x(0.5 * (sa.max(s0) + sb.min(s1))), ym + step + 0.3 * h],
+            format!("{} L={:.2}", grade_text(g), sb - sa),
+            0.8 * h,
+            TextAlign::BottomCenter,
+            None,
+        ));
+    }
+    for &(sp, zp) in c.pvis.iter().filter(|(sp, _)| *sp >= s0 - 1e-9 && *sp <= s1 + 1e-9) {
+        out.push(line([x(sp), rows[4].1], [x(sp), rows[4].1 + 0.8 * h], None, Some(0.13)));
+        out.push(text([x(sp), rows[4].1 + 0.15 * h], format!("{} {zp:.2}", km_text(km_of(sp), 3)), 0.7 * h, TextAlign::BottomCenter, None));
+    }
+    // Dever: about the band's axis, the left solid and the right dashed, each break point's slopes.
+    let (top5, bottom5) = rows[5];
+    let ym = mid(5);
+    match &c.dever {
+        None => out.push(text([0.5 * (x0 + x1), ym], "Dever çizelgesi verilmedi".into(), 0.8 * h, TextAlign::MiddleCenter, None)),
+        Some((name, schedule, normal)) => {
+            out.push(line([x0, ym], [x1, ym], None, Some(0.13)));
+            let side = |points: &[[f64; 2]], n: f64| -> Vec<[f64; 2]> {
+                let mut v: Vec<[f64; 2]> = vec![[s0, points.first().map_or(n, |p| p[1])]];
+                v.extend(points.iter().copied().filter(|p| p[0] > s0 && p[0] < s1));
+                v.push([s1, points.last().map_or(n, |p| p[1])]);
+                // The ends' slopes as the schedule has them there.
+                v[0][1] = value_at(points, s0, n);
+                let last = v.len() - 1;
+                v[last][1] = value_at(points, s1, n);
+                v
+            };
+            let (l, r) = (side(&schedule.left, normal.left), side(&schedule.right, normal.right));
+            let most = l.iter().chain(&r).map(|p| p[1].abs()).fold(0.0_f64, f64::max).max(1e-9);
+            let scale = (0.5 * (top5 - bottom5) - 1.2 * h) / most;
+            let yv = |e: f64| ym + e * scale;
+            let left: Vec<[f64; 2]> = l.iter().map(|p| [x(p[0]), yv(p[1])]).collect();
+            out.push(path(&left, false, None, Some(0.35)));
+            // The right side dashed, as on KGM's sample sheets.
+            let right: Vec<[f64; 2]> = r.iter().map(|p| [x(p[0]), yv(p[1])]).collect();
+            let mut dashed = path(&right, false, None, Some(0.35));
+            dashed.line_type = Some(kentos_commands::layer::LineType::Dashed);
+            out.push(dashed);
+            let mut breaks: Vec<f64> = schedule.left.iter().chain(&schedule.right).map(|p| p[0]).filter(|s| *s >= s0 && *s <= s1).collect();
+            breaks.sort_by(f64::total_cmp);
+            breaks.dedup_by(|a, b| (*a - *b).abs() < 1e-6);
+            for s in breaks {
+                let (el, er) = (value_at(&schedule.left, s, normal.left), value_at(&schedule.right, s, normal.right));
+                out.push(line([x(s), bottom5], [x(s), bottom5 + 0.6 * h], None, Some(0.13)));
+                out.push(turned(
+                    [x(s) - 0.2 * h, bottom5 + 0.7 * h],
+                    format!("{} {}", grade_text(el), grade_text(er)),
+                    0.6 * h,
+                    TextAlign::MiddleLeft,
+                    None,
+                    up,
+                ));
+            }
+            out.push(text([x0 + 0.5 * h, top5 - 0.3 * h], format!("{name}: sol düz, sağ kesikli"), 0.7 * h, TextAlign::TopLeft, None));
+        }
+    }
+}
+
+/// A schedule side's slope at `s`: linear between its break points, its first before them and its last after; the
+/// normal slope when it has none.
+fn value_at(points: &[[f64; 2]], s: f64, normal: f64) -> f64 {
+    match points {
+        [] => normal,
+        [only] => only[1],
+        _ if s <= points[0][0] => points[0][1],
+        _ if s >= points[points.len() - 1][0] => points[points.len() - 1][1],
+        _ => {
+            let i = points.windows(2).position(|w| s >= w[0][0] && s <= w[1][0]).unwrap_or(0);
+            let (a, b) = (points[i], points[i + 1]);
+            if b[0] > a[0] { a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0]) } else { b[1] }
+        }
+    }
+}
+
+/// How deep KGM's bands are, in drawing units, with texts `height` paper millimetres high (docs/adr/0980).
+pub(crate) fn kgm_depth(doc: &kentos_domain::Document, height: f64) -> f64 {
+    KGM_BANDS.iter().map(|(_, d)| d).sum::<f64>() * height * doc.settings().plot_scale / 1000.0
 }
 
 /// Checks `input` against the document, writing nothing.

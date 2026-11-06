@@ -236,7 +236,17 @@ pub(crate) fn keep<I: Serialize>(
         id: id.clone(),
         command: command.to_owned(),
         input: kept_input(input, field, &main),
-        sources: sources(doc, kind, &main),
+        sources: {
+            let mut all = sources(doc, kind, &main);
+            // Docs/adr/0980: a profile drawn with KGM's Dever band follows its superelevation schedule too.
+            let dever = serde_json::to_value(input).ok().and_then(|v| v.get("superelevation").and_then(Value::as_str).map(str::to_owned));
+            if command == "road.profiles.draw"
+                && let Some(id) = dever.and_then(|t| resolve(doc, RoadSourceKind::Superelevation, &t))
+            {
+                add(doc, RoadSourceKind::Superelevation, &id, &mut all);
+            }
+            all
+        },
         uids: uids.to_vec(),
         digest: objects_stamp(doc, uids).0,
     };

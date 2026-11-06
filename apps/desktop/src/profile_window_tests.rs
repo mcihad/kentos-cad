@@ -281,3 +281,100 @@ fn the_status_says_the_length_in_space_apart_from_the_km_s() {
     assert!(said.contains(&want), "{said} / {want}");
     assert!(asked > 669.0, "the red line in space is longer than its horizontal run");
 }
+
+/// `road.profiles.draw`'s KGM case drawing (docs/adr/0980): the main profile and a superelevation schedule by rows on
+/// its alignment.
+fn kgm_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.profiles.draw.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "KGM bantları, dever çizelgesiyle").expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// Çizime yaz with KGM's bands (docs/adr/0980): the six bands' names in KGM's order, the right side's slope dashed, the
+/// kept drawing following the schedule too; one undo step.
+#[test]
+fn the_profile_is_drawn_with_kgm_s_bands() {
+    let mut app = kgm_app();
+    let _ = app.update(Message::Run("profile.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::DrawLayer("0".into()));
+    send(&mut app, W::Place("0; -200".into()));
+    send(&mut app, W::Kgm(true));
+    send(&mut app, W::Dever(Some("d-1".into())));
+    send(&mut app, W::Draw);
+    let doc = &app.document.as_ref().expect("doc").model;
+    let texts: Vec<(String, f64)> = doc
+        .entities()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some((t.text.clone(), t.p.y)),
+            _ => None,
+        })
+        .collect();
+    let y = |name: &str| texts.iter().find(|(t, _)| t == name).map(|(_, y)| *y).unwrap_or_else(|| panic!("{name} is written"));
+    let order = ["Kırmızı Kot", "Siyah Kot", "Kilometre", "Yatay Geometri", "Düşey Geometri", "Dever"];
+    assert!(order.windows(2).all(|w| y(w[0]) > y(w[1])), "KGM's order, top down");
+    assert!(
+        doc.entities().any(|e| e.base().look.line_type == Some(kentos_commands::layer::LineType::Dashed)),
+        "the right side's slope dashed"
+    );
+    let kept = doc.road_drawings().last().expect("kept");
+    assert!(kept.sources.iter().any(|s| s.kind == kentos_commands::RoadSourceKind::Superelevation && s.id == "d-1"));
+    let doc = &mut app.document.as_mut().expect("doc").model;
+    assert_eq!(doc.undo().as_deref(), Some("Boykesit çiz"));
+}
+
+/// KGM's bands under the profile, in the window and drawn, light and dark; `.run/gui-evidence/yol-y73/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib profile_window_tests::screens_kgm -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_kgm() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y73");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = kgm_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("profile.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::DrawLayer("0".into()));
+        send(&mut app, W::Place("0; -200".into()));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Dever(Some("d-1".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y73-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Draw);
+        let _ = app.update(Message::Profiles(W::Cancel));
+        // The bands under the frame: the frame's lower left is (0, −200); the bands go about 43 text heights down.
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -45.0, min_y: -320.0, max_x: 420.0, max_y: -150.0 }, 12.0);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y73-bantlar-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: 100.0, min_y: -320.0, max_x: 420.0, max_y: -220.0 }, 12.0);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y73-bantlar-yakin-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

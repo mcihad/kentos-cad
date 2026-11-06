@@ -5231,6 +5231,20 @@ PolygonSelectModeName = Literal["inside", "crossing", "outside"]
 """The names of :class:`PolygonSelectMode`, for a plain string."""
 
 
+class ProfileBands(_StrEnum):
+    """Which bands a profile drawing has under its frame (docs/adr/0980).
+
+    - ``kentos``: Km, Siyah kot, Kırmızı kot, Fark, Eğim.
+    - ``kgm``: KGM 2019: Kırmızı Kot, Siyah Kot, Kilometre, Yatay Geometri, Düşey Geometri, Dever.
+    """
+    KENTOS = "kentos"
+    KGM = "kgm"
+
+
+ProfileBandsName = Literal["kentos", "kgm"]
+"""The names of :class:`ProfileBands`, for a plain string."""
+
+
 class ProfileChangeKind(_StrEnum):
     """How a stretch of the grade line differs.
 
@@ -64869,22 +64883,29 @@ class ProfilesDraw(_Model):
     the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
     Attributes:
         at: Unit: length.
+        bands: The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
+            Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
+            Geometri, Düşey Geometri and Dever.
         datum: Unit: elevation.
         every: Unit: m.
         exaggeration: Unit: 1.
         from_: Unit: m.
         height: Unit: paper-mm.
+        superelevation: The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
+            absent: the band says none was given.
         to: Unit: m.
     """
     profile: str
     layer_id: str
     at: list[float]
+    bands: ProfileBands | ProfileBandsName | None | Unset = UNSET
     datum: float | None | Unset = UNSET
     every: float | None | Unset = UNSET
     exaggeration: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     from_: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    superelevation: str | None | Unset = UNSET
     to: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -64892,6 +64913,8 @@ class ProfilesDraw(_Model):
         out["profile"] = self.profile
         out["layerId"] = self.layer_id
         out["at"] = [float(e0) for e0 in self.at]
+        if self.bands is not UNSET:
+            out["bands"] = None if self.bands is None else _enum_out(self.bands)
         if self.datum is not UNSET:
             out["datum"] = None if self.datum is None else float(self.datum)
         if self.every is not UNSET:
@@ -64904,6 +64927,8 @@ class ProfilesDraw(_Model):
             out["from"] = None if self.from_ is None else float(self.from_)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.superelevation is not UNSET:
+            out["superelevation"] = self.superelevation
         if self.to is not UNSET:
             out["to"] = None if self.to is None else float(self.to)
         return out
@@ -64914,12 +64939,14 @@ class ProfilesDraw(_Model):
             profile=data["profile"],
             layer_id=data["layerId"],
             at=[float(e0) for e0 in data["at"]],
+            bands=UNSET if "bands" not in data else None if data["bands"] is None else _enum_in(ProfileBands, data["bands"]),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
             expected_revision=data.get("expectedRevision", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            superelevation=data.get("superelevation", UNSET),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
         )
 
@@ -118597,6 +118624,8 @@ __all__ = [
     "ProcessingToolsListed",
     "ProfileAddress",
     "ProfileAt",
+    "ProfileBands",
+    "ProfileBandsName",
     "ProfileBin",
     "ProfileChange",
     "ProfileChangeKind",

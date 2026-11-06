@@ -220,6 +220,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                     height: None,
                     from: Some(va),
                     to: Some(vb),
+                    bands: None,
+                    superelevation: None,
                     expected_revision: None,
                 };
                 let (_, sized, _) = road_profiles_draw::view(doc, &asked)?;

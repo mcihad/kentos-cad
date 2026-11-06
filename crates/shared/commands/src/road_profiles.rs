@@ -405,10 +405,34 @@ pub struct ProfilesDraw {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub to: Option<f64>,
+    /// The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
+    /// Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
+    /// Geometri, Düşey Geometri and Dever.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub bands: Option<ProfileBands>,
+    /// The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
+    /// absent: the band says none was given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// Which bands a profile drawing has under its frame (docs/adr/0980).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ProfileBands {
+    /// Km, Siyah kot, Kırmızı kot, Fark, Eğim.
+    Kentos,
+    /// KGM 2019: Kırmızı Kot, Siyah Kot, Kilometre, Yatay Geometri, Düşey Geometri, Dever.
+    Kgm,
 }
 
 /// Output of `road.profiles.draw` v1, and its plan: the frame's lower left and upper right, the datum and top

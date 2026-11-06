@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    ProfileBands,
+    ProfileBandsName,
     ProfileCrossingDef,
     ProfileFitted,
     ProfileImpact,
@@ -406,14 +408,20 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
     yoksa 10), kot ızgarası ve kotları, arazi (siyah; yüzeyin dışı çizilmez), proje
     çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında
     bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik
-    yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. Yazılar height mm
-    (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en alçak
-    kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü. Cevap
-    çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların sütunlarıdır.
-    Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project,
-    unknown_road_profile, invalid_label, layer_not_found, not_a_layer, service_layer,
-    layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden,
-    profile_stale, profile_surface_gone.
+    yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. bands: kgm KGM'nin 2019
+    teknik şartnamesinin sırasını çizer (ADR 0980): Kırmızı Kot, Siyah Kot, Kilometre
+    (değerler bant boyunca dik), Yatay Geometri (aliyman eksende, kurp sağa dönüşte
+    yukarı sola dönüşte aşağı basamak, klotoid aradaki eğik çizgi; R, grad cinsinden Δ,
+    L, klotoidin A'sı), Düşey Geometri (eğimler +%5.241 biçiminde, tepe kurbu yukarı
+    çukur aşağı basamak, ŞK ve K; PVI'lerin km ve kotu) ve Dever (sol yan düz, sağ yan
+    kesikli; superelevation: boykesitin aksındaki dever çizelgesi, yoksa bant çizelge
+    verilmedi der). Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum
+    verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en
+    yükseğin bir metre üstü. Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara
+    aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler:
+    not_a_road_project, unknown_road_profile, invalid_label, unknown_superelevation,
+    layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision,
+    revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone.
     """
     __slots__ = ()
     id = "road.profiles.draw"
@@ -432,12 +440,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         profile: str,
         layer_id: str,
         at: Sequence[float],
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -449,25 +459,37 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         kotları, arazi (siyah; yüzeyin dışı çizilmez), proje çizgisi (kırmızı; kurp 16
         parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında bantlar: Km, Siyah kot,
         Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve
-        uçlarda, Eğim PVI'ler arasında. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim
-        ölçeğiyle. datum verilmezse gösterilen en alçak kotun bir metre altı (aşağı
-        yuvarlanmış), tepe en yükseğin bir metre üstü. Cevap çerçevenin köşeleri, datum,
-        tepe, abartma, ızgara aralığı ve bantların sütunlarıdır. Tek geri alma adımı
-        “Boykesit çiz”. Retler: not_a_road_project, unknown_road_profile, invalid_label,
-        layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision,
-        revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone.
+        uçlarda, Eğim PVI'ler arasında. bands: kgm KGM'nin 2019 teknik şartnamesinin
+        sırasını çizer (ADR 0980): Kırmızı Kot, Siyah Kot, Kilometre (değerler bant boyunca
+        dik), Yatay Geometri (aliyman eksende, kurp sağa dönüşte yukarı sola dönüşte aşağı
+        basamak, klotoid aradaki eğik çizgi; R, grad cinsinden Δ, L, klotoidin A'sı), Düşey
+        Geometri (eğimler +%5.241 biçiminde, tepe kurbu yukarı çukur aşağı basamak, ŞK ve K;
+        PVI'lerin km ve kotu) ve Dever (sol yan düz, sağ yan kesikli; superelevation:
+        boykesitin aksındaki dever çizelgesi, yoksa bant çizelge verilmedi der). Yazılar
+        height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en
+        alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü.
+        Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların
+        sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project,
+        unknown_road_profile, invalid_label, unknown_superelevation, layer_not_found,
+        not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict;
+        uyarılar layer_hidden, profile_stale, profile_surface_gone.
 
         Args:
             doc: The drawing it works on.
             profile:
             layer_id:
             at: Unit: length.
+            bands: The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
+                Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
+                Geometri, Düşey Geometri and Dever.
             datum: Unit: elevation.
             every: Unit: m.
             exaggeration: Unit: 1.
             expected_revision:
             from_: Unit: m.
             height: Unit: paper-mm.
+            superelevation: The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
+                absent: the band says none was given.
             to: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -485,12 +507,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             profile=profile,
             layer_id=layer_id,
             at=list(at),
+            bands=bands,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            superelevation=superelevation,
             to=to,
         ), request_id=request_id, expected=expected)
 
@@ -502,12 +526,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         profile: str,
         layer_id: str,
         at: Sequence[float],
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> ProfilesDrawn:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -517,12 +543,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             profile=profile,
             layer_id=layer_id,
             at=list(at),
+            bands=bands,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            superelevation=superelevation,
             to=to,
         ))
 
@@ -534,12 +562,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         profile: str,
         layer_id: str,
         at: Sequence[float],
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -549,12 +579,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             profile=profile,
             layer_id=layer_id,
             at=list(at),
+            bands=bands,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            superelevation=superelevation,
             to=to,
         ))
 
@@ -566,12 +598,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         profile: str,
         layer_id: str,
         at: Sequence[float],
+        bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -586,12 +620,14 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             profile=profile,
             layer_id=layer_id,
             at=list(at),
+            bands=bands,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            superelevation=superelevation,
             to=to,
         ), op=op, request_id=request_id, expected=expected)
 

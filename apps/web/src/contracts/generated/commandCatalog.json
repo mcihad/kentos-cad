@@ -39767,7 +39767,7 @@
       "id": "road.profiles.draw",
       "version": 1,
       "title": "Boykesit çiz",
-      "summary": "Yol projesinin bir boykesitini (profile: kimliği ya da adı) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: ilk PVI'den son PVI'ye çerçeve (sol altı at: ilk PVI'nin km'si ve datum kotu; km'nin bir metresi bir çizim birimi, kotun bir metresi exaggeration birim, yoksa 10), kot ızgarası ve kotları, arazi (siyah; yüzeyin dışı çizilmez), proje çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü. Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project, unknown_road_profile, invalid_label, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone.",
+      "summary": "Yol projesinin bir boykesitini (profile: kimliği ya da adı) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: ilk PVI'den son PVI'ye çerçeve (sol altı at: ilk PVI'nin km'si ve datum kotu; km'nin bir metresi bir çizim birimi, kotun bir metresi exaggeration birim, yoksa 10), kot ızgarası ve kotları, arazi (siyah; yüzeyin dışı çizilmez), proje çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. bands: kgm KGM'nin 2019 teknik şartnamesinin sırasını çizer (ADR 0980): Kırmızı Kot, Siyah Kot, Kilometre (değerler bant boyunca dik), Yatay Geometri (aliyman eksende, kurp sağa dönüşte yukarı sola dönüşte aşağı basamak, klotoid aradaki eğik çizgi; R, grad cinsinden Δ, L, klotoidin A'sı), Düşey Geometri (eğimler +%5.241 biçiminde, tepe kurbu yukarı çukur aşağı basamak, ŞK ve K; PVI'lerin km ve kotu) ve Dever (sol yan düz, sağ yan kesikli; superelevation: boykesitin aksındaki dever çizelgesi, yoksa bant çizelge verilmedi der). Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir metre üstü. Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler: not_a_road_project, unknown_road_profile, invalid_label, unknown_superelevation, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone.",
       "aliases": [
         "boykesitciz"
       ],
@@ -39795,6 +39795,17 @@
             "minItems": 2,
             "type": "array",
             "x-unit": "length"
+          },
+          "bands": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileBands"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,\nEğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay\nGeometri, Düşey Geometri and Dever."
           },
           "datum": {
             "format": "double",
@@ -39848,6 +39859,13 @@
           },
           "profile": {
             "type": "string"
+          },
+          "superelevation": {
+            "description": "The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);\nabsent: the band says none was given.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "to": {
             "format": "double",
@@ -157452,6 +157470,21 @@
         "kmText"
       ],
       "type": "object"
+    },
+    "ProfileBands": {
+      "description": "Which bands a profile drawing has under its frame (docs/adr/0980).",
+      "oneOf": [
+        {
+          "const": "kentos",
+          "description": "Km, Siyah kot, Kırmızı kot, Fark, Eğim.",
+          "type": "string"
+        },
+        {
+          "const": "kgm",
+          "description": "KGM 2019: Kırmızı Kot, Siyah Kot, Kilometre, Yatay Geometri, Düşey Geometri, Dever.",
+          "type": "string"
+        }
+      ]
     },
     "ProfileBin": {
       "description": "One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).",

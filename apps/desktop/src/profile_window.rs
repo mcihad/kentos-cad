@@ -348,6 +348,9 @@ pub struct Window {
     /// Çizime yaz: the layer, and the frame's lower left as typed (“Y; X”).
     layer: Option<String>,
     place: String,
+    /// Çizime yaz's bands: KGM's 2019 order when set (docs/adr/0980), and the schedule its Dever band draws.
+    pub(crate) kgm: bool,
+    pub(crate) dever: Option<String>,
     /// Düşey kurp boyu over the window (profile_lengths_window.rs, docs/adr/0935 §3).
     pub(crate) lengths: Option<Box<crate::profile_lengths_window::Lengths>>,
     /// The values typed there, kept while the program runs when it is closed.
@@ -469,6 +472,10 @@ pub enum Event {
     FromGround,
     DrawLayer(String),
     Place(String),
+    /// KentOS's bands (false) or KGM's (true), docs/adr/0980.
+    Kgm(bool),
+    /// The superelevation schedule KGM's Dever band draws (its id); none: no schedule.
+    Dever(Option<String>),
     Draw,
     Save,
     Cancel,
@@ -827,6 +834,8 @@ impl App {
             }
             Event::DrawLayer(id) => w.layer = Some(id),
             Event::Place(t) => w.place = t,
+            Event::Kgm(on) => w.kgm = on,
+            Event::Dever(id) => w.dever = id,
             Event::Draw => return self.draw_profile(),
             Event::Cancel => {
                 self.profile_window = None;
@@ -924,6 +933,8 @@ impl App {
             height: None,
             from: None,
             to: None,
+            bands: w.kgm.then_some(kentos_commands::ProfileBands::Kgm),
+            superelevation: if w.kgm { w.dever.clone() } else { None },
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {
@@ -1096,15 +1107,44 @@ impl App {
             move |i| msg(Event::DrawLayer(ids[i].clone())),
         )
         .placeholder("Katman");
-        row![
+        // Docs/adr/0980: KentOS's bands or KGM's 2019 order; KGM's Dever band draws a schedule of the profile's alignment.
+        let bands = Select::new(
+            ["KentOS", "KGM 2019"].into_iter().map(Choice::new),
+            Some(usize::from(w.kgm)),
+            |i| msg(Event::Kgm(i == 1)),
+        );
+        let alignment = w.chosen.and_then(|i| w.rows.get(i)).map(|r| r.alignment.clone()).unwrap_or_default();
+        let schedules: Vec<(String, String)> = self
+            .document
+            .as_ref()
+            .map(|d| {
+                d.model
+                    .road_superelevations()
+                    .iter()
+                    .filter(|s| s.alignment == alignment)
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let chosen = w.dever.as_ref().and_then(|id| schedules.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+        let ids: Vec<Option<String>> = std::iter::once(None).chain(schedules.iter().map(|(i, _)| Some(i.clone()))).collect();
+        let dever = Select::new(
+            std::iter::once("Çizelge yok".to_owned()).chain(schedules.iter().map(|(_, n)| n.clone())).map(Choice::new),
+            Some(chosen),
+            move |i| msg(Event::Dever(ids[i].clone())),
+        );
+        let mut line = row![
             label::strong("Çizime"),
             words::field("Katman", layer, None),
-            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(220), None),
-            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
+            words::field("Bantlar", container(bands).width(130), None),
         ]
         .spacing(10)
-        .align_y(iced::alignment::Vertical::Bottom)
-        .into()
+        .align_y(iced::alignment::Vertical::Bottom);
+        if w.kgm {
+            line = line.push(words::field("Dever bandı", container(dever).width(170), None));
+        }
+        line.push(words::secondary(DRAW, saved.then(|| msg(Event::Draw)))).into()
     }
 
     fn road_profile_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message> {

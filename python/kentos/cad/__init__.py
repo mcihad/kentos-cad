@@ -2470,6 +2470,8 @@ __all__ = [
     "ProcessingToolsListed",
     "ProfileAddress",
     "ProfileAt",
+    "ProfileBands",
+    "ProfileBandsName",
     "ProfileBin",
     "ProfileChange",
     "ProfileChangeKind",
