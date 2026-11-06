@@ -10,10 +10,11 @@ use iced::{Center, Element, Task};
 use kentos_commands::{BaselineDatum, CommandResult, SurveyBaselines, SurveyBaselinesAdjusted};
 use kentos_native_application::{ExecutionContext, survey_baselines};
 use kentos_ui::label;
-use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Switch};
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented, Switch};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
+use crate::road_dialog::{col, num, sheet};
 use crate::traces::Control;
 
 pub const TITLE: &str = "GNSS baz ağı";
@@ -22,6 +23,7 @@ const OPEN: &str = "Dosya seç…";
 
 #[derive(Clone, Debug, Default)]
 pub struct State {
+    pub view: View,
     pub file: Option<PathBuf>,
     pub text: Option<String>,
     pub minimal: bool,
@@ -29,8 +31,26 @@ pub struct State {
     pub answer: Option<Result<SurveyBaselinesAdjusted, String>>,
 }
 
+/// What the table shows.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum View {
+    #[default]
+    Baselines,
+    Stations,
+}
+
+impl std::fmt::Display for View {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            View::Baselines => "Bazlar",
+            View::Stations => "İstasyonlar",
+        })
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Event {
+    View(View),
     Pick,
     Picked(Option<PathBuf>),
     Minimal(bool),
@@ -90,6 +110,7 @@ impl App {
 
     pub(crate) fn baselines_event(&mut self, event: Event) -> Task<Message> {
         match event {
+            Event::View(v) => self.baselines.view = v,
             Event::Pick => {
                 return Task::perform(
                     async {
@@ -137,6 +158,7 @@ impl App {
             Kind::Info,
             "Satırlar: K;ad;X;Y;Z[;sX;sY;sZ] bilinen, N;ad yeni istasyon, B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz baz (ECEF, m, m²). Hiçbir şey yazılmaz.",
         )];
+        let mut table: Option<Element<'_, Message>> = None;
         match &s.answer {
             Some(Ok(a)) => {
                 let test = match (a.m0, a.passed) {
@@ -148,24 +170,54 @@ impl App {
                 if let Some(h) = &a.held {
                     lines.push(words::text_line(Kind::Info, format!("Minimal datum: “{h}” tutuldu.")));
                 }
-                for st in a.stations.iter().filter(|st| !st.held) {
-                    lines.push(words::text_line(
-                        Kind::Ok,
-                        format!("{}: σ doğu {} mm, kuzey {} mm, yukarı {} mm", st.name, mm(st.senu[0]), mm(st.senu[1]), mm(st.senu[2])),
-                    ));
+                if let Some(i) = a.worst {
+                    if let Some(b) = a.baselines.get(i as usize) {
+                        let kind = if b.flag == "blunder" { Kind::Error } else { Kind::Info };
+                        lines.push(words::text_line(kind, format!("En kötü baz: {} → {} (w {}).", b.from, b.to, b.w.map_or("—".to_owned(), |w| format!("{w:.2}")))));
+                    }
                 }
-                for (i, b) in a.baselines.iter().enumerate() {
-                    let len = (b.v[0] * b.v[0] + b.v[1] * b.v[1] + b.v[2] * b.v[2]).sqrt();
-                    let w = b.w.map_or("denetlenemez".to_owned(), |w| format!("w {w:.2}"));
-                    let kind = if b.flag == "blunder" { Kind::Error } else { Kind::Ok };
-                    let worst = if a.worst == Some(i as u32) { " — en kötü baz" } else { "" };
-                    lines.push(words::text_line(kind, format!("{} → {}: artık {} mm, {w}{worst}", b.from, b.to, mm(len))));
-                }
+                // The results in the kit's data table: its rows scroll inside it (the owner: data tables scroll).
+                table = Some(match s.view {
+                    View::Stations => sheet(
+                        vec![col("İstasyon", 140.0), num("σ doğu (mm)", 110.0), num("σ kuzey (mm)", 110.0), num("σ yukarı (mm)", 110.0)],
+                        a.stations
+                            .iter()
+                            .filter(|st| !st.held)
+                            .map(|st| vec![st.name.clone(), mm(st.senu[0]), mm(st.senu[1]), mm(st.senu[2])])
+                            .collect(),
+                        "Yeni istasyon yok.",
+                        240.0,
+                    ),
+                    View::Baselines => sheet(
+                        vec![col("Başlangıç", 110.0), col("Bitiş", 110.0), num("Artık (mm)", 100.0), num("w", 80.0), col("Durum", 120.0)],
+                        a.baselines
+                            .iter()
+                            .enumerate()
+                            .map(|(i, b)| {
+                                let len = (b.v[0] * b.v[0] + b.v[1] * b.v[1] + b.v[2] * b.v[2]).sqrt();
+                                let state = match (b.flag.as_str(), a.worst == Some(i as u32)) {
+                                    ("blunder", _) => "Kaba hata",
+                                    (_, true) => "En kötü",
+                                    _ if b.w.is_none() => "Denetlenemez",
+                                    _ => "Geçti",
+                                };
+                                vec![b.from.clone(), b.to.clone(), mm(len), b.w.map_or("—".to_owned(), |w| format!("{w:.2}")), state.to_owned()]
+                            })
+                            .collect(),
+                        "Baz yok.",
+                        240.0,
+                    ),
+                });
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
         }
         body = body.push(words::summary(lines));
+        if let Some(table) = table {
+            body = body
+                .push(Segmented::new([View::Baselines, View::Stations], s.view, |v| msg(Event::View(v))))
+                .push(table);
+        }
         Frame::new(TITLE).push(body).action(words::primary(CLOSE, Some(msg(Event::Close)))).width(680.0).modal(msg(Event::Close))
     }
 

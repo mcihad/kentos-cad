@@ -25,9 +25,11 @@ use iced::{
 use crate::theme::Tokens;
 
 /// Kaydırma çubuğunun genişliği (üzerine gelince kalınlaşır) ve en kısa
-/// tutamağı.
-const BAR: f32 = 4.0;
-const BAR_HOT: f32 = 7.0;
+/// tutamağı. Kitin öbür ince çubukları gibi 6 piksel ve rayı görünür: bir
+/// veri tablosunun dikey kaydığı ilk bakışta anlaşılır (sahibin 6 Kasım
+/// isteği: “veri tablolarında dikey scroll olmalıdır”).
+const BAR: f32 = 6.0;
+const BAR_HOT: f32 = 8.0;
 const MIN_THUMB: f32 = 24.0;
 /// Tekerleğin bir satırı kaç satır kaydırır.
 const WHEEL_ROWS: f32 = 3.0;
@@ -411,9 +413,21 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
 
             let hot = state.bar_hovered || state.dragging.is_some();
 
-            if let Some((_, thumb)) = self.bar(bounds, viewport, state.offset, hot) {
+            if let Some((rail, thumb)) = self.bar(bounds, viewport, state.offset, hot) {
                 let t = Tokens::of(theme);
 
+                // The rail, faint, so a list that scrolls is seen to scroll before it is touched.
+                renderer.fill_quad(
+                    Quad {
+                        bounds: rail,
+                        border: Border {
+                            radius: (rail.width / 2.0).into(),
+                            ..Border::default()
+                        },
+                        ..Quad::default()
+                    },
+                    Background::Color(t.muted.scale_alpha(0.14)),
+                );
                 renderer.fill_quad(
                     Quad {
                         bounds: thumb,
@@ -423,7 +437,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
                         },
                         ..Quad::default()
                     },
-                    Background::Color(t.muted.scale_alpha(if hot { 0.7 } else { 0.45 })),
+                    Background::Color(t.muted.scale_alpha(if hot { 0.75 } else { 0.55 })),
                 );
             }
         });

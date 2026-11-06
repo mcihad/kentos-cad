@@ -340,6 +340,8 @@ mod zoning_window_tests;
 mod impact_window_tests;
 #[cfg(test)]
 mod readjustment_window_tests;
+#[cfg(test)]
+mod map_menus_tests;
 mod map_survey_panel_tests;
 #[cfg(test)]
 mod route_window_tests;
