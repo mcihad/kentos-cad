@@ -31,3 +31,12 @@ Kayıt kuralı değişmedi: geçici dosyaya yaz, diske indir (`sync_all`), geri 
 Gerçek disk dolması (ENOSPC) bu makinede güvenle üretilemediği için klasörün yazmayı reddetmesiyle sınandı; masaüstünün
 kendi kayıt yolu ayrı uygulamadır ve kendi hata enjeksiyonu testleriyle kapsanır. Onarılmış sonucun ayrı kurtarma
 kopyası, kısmi okunabilen dosyadan veri çıkarma ve açılışta bütçeli sağlık denetimi açıktır.
+
+## Ek (6 Kasım 2026): gerçek dolu disk
+
+`save_crash::a_save_onto_a_full_disk_keeps_the_previous_file_and_the_drawing` (macOS) `hdiutil` ile ayrıcalıksız 1 MB'lık
+bir disk görüntüsü bağlar, çizimi oraya koyar ve alana sığmayacak bir sürümü kaydetmeye çalışır: kayıt diskin kendi
+ENOSPC'siyle `file_unwritable` döner, önceki dosya bayt bayt aynıdır, birimde geçici dosya kalmaz, çizim kaydedilmemiş
+ve aynı revizyonda kalır, geri alma zinciri sağlamdır. Linux/Windows'ta aynı test yok (orada küçük bir dosya sistemi
+bağlamak ayrıcalık ister).
+

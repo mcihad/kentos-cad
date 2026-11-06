@@ -147,3 +147,60 @@ fn a_save_the_disk_refuses_keeps_the_drawing_unsaved_and_its_undo() {
     assert!(s.undo().is_some(), "the undo chain is whole");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A real full disk (docs/adr/1006 ek): a 1 MB volume mounted from a disk image (macOS `hdiutil`, no privileges)
+/// holds the drawing; a save of a version too large for the space left fails with the disk's own ENOSPC, the previous
+/// file is byte for byte as it was, no temporary file is left on the volume, the drawing stays unsaved and its undo
+/// chain whole.
+#[cfg(target_os = "macos")]
+#[test]
+fn a_save_onto_a_full_disk_keeps_the_previous_file_and_the_drawing() {
+    struct Mounted(PathBuf);
+    impl Drop for Mounted {
+        fn drop(&mut self) {
+            let _ = std::process::Command::new("hdiutil").args(["detach", "-force"]).arg(&self.0).output();
+        }
+    }
+    let dir = std::env::temp_dir().join(format!("kentos-save-full-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let image = dir.join("dolu.dmg");
+    let made = std::process::Command::new("hdiutil")
+        .args(["create", "-size", "1m", "-fs", "HFS+", "-volname", "KDOLU", "-type", "UDIF"])
+        .arg(&image)
+        .output()
+        .expect("hdiutil runs");
+    assert!(made.status.success(), "{}", String::from_utf8_lossy(&made.stderr));
+    let mount = dir.join("mnt");
+    let attached = std::process::Command::new("hdiutil")
+        .args(["attach", "-nobrowse", "-mountpoint"])
+        .arg(&mount)
+        .arg(&image)
+        .output()
+        .expect("hdiutil runs");
+    assert!(attached.status.success(), "{}", String::from_utf8_lossy(&attached.stderr));
+    let _mounted = Mounted(mount.clone());
+    let target = mount.join("pafta.kcad");
+    let original = std::fs::read(sheets_fixture()).expect("the fixture");
+    std::fs::write(&target, &original).expect("the original fits");
+    let mut s = Session::open(&target).expect("opens");
+    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    // Far more than the volume's space left: 30 000 points with their attributes.
+    let objects: Vec<_> = (0..POINTS)
+        .map(|i| json!({"geometry": {"kind": "point", "p": {"x": 500000.0 + f64::from(i % 300), "y": 4400000.0 + f64::from(i / 300)}},
+            "attrs": {"V": "dolu"}}))
+        .collect();
+    let answer = s
+        .run("cad.entities.create", None, Op::Execute, json!({"layerId": layer, "objects": objects}))
+        .expect("runs");
+    assert_eq!(answer["status"], "completed");
+    let before = s.summary();
+    let error = s.save(None).expect_err("the disk is full");
+    assert_eq!(error.code, "file_unwritable", "{}", error.message);
+    assert_eq!(std::fs::read(&target).expect("the file"), original, "the previous file is untouched");
+    assert!(leftovers(&mount).is_empty(), "no temporary file is left: {:?}", leftovers(&mount));
+    assert_eq!(s.summary(), before, "the drawing is as it was: unsaved, the same revision");
+    assert!(s.undo().is_some(), "the undo chain is whole");
+    drop(_mounted);
+    let _ = std::fs::remove_dir_all(&dir);
+}
