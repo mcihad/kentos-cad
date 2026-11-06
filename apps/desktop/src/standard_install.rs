@@ -345,14 +345,31 @@ impl App {
     }
 }
 
+/// The picture of docs/adr/1017: Ofis P's block, not in KentOS's libraries, found in the project's library added with
+/// Kitaplık ekle…. `KENTOS_SHOTS_ONLY=standart-proje-kitaplik cargo test -p kentos-desktop --lib tools_screens::screens
+/// -- --ignored --nocapture`.
 #[cfg(test)]
-mod tests {
+pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
+    vec![("standart-proje-kitaplik", |app| {
+        crate::files_testing::make_cad(app);
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.standard_docs = vec![kentos_commands::ProjectStandardDocument { text: tests::package() }];
+        doc.model.set_settings(settings);
+        let _ = app.standard_install_event(Event::Open);
+        let dir = crate::files_testing::scratch("proje-kitaplik-resim");
+        let _ = app.standard_install_event(Event::LibraryPicked(Some(tests::library(&dir))));
+    })]
+}
+
+#[cfg(test)]
+pub(crate) mod tests {
     use super::*;
     use serde_json::json;
 
     const PUBLICATION: &str = "0192f5a0-0000-7000-8000-0000000fa001";
 
-    fn package() -> String {
+    pub(crate) fn package() -> String {
         json!({"format": "kentos.drawing-standard", "version": 2, "id": "ofis-p", "revision": "1",
             "standard": {"name": "Ofis P", "layers": []},
             "resources": {"blocks": [{"name": "PROJE-KAPI", "publication": {"familyId": PUBLICATION,
@@ -360,7 +377,7 @@ mod tests {
         .to_string()
     }
 
-    fn library(dir: &std::path::Path) -> std::path::PathBuf {
+    pub(crate) fn library(dir: &std::path::Path) -> std::path::PathBuf {
         let path = dir.join("proje.kblok");
         let file = json!({"format": "kentos.blocks", "version": 4, "blocks": [{
             "id": "0192f5a0-0000-7000-8000-0000000fa0b1", "name": "PROJE-KAPI", "base": {"x": 0.0, "y": 0.0},

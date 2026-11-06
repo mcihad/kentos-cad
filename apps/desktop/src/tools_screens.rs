@@ -551,6 +551,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::import_decision_scenes::scenes());
     all.extend(crate::recover_file::scenes());
     all.extend(crate::office_palettes::scenes());
+    all.extend(crate::standard_install::scenes());
     all.extend(crate::clipboard_scenes::scenes());
     all.extend(crate::wipeout_scenes::scenes());
     all.extend(crate::wall_scenes::scenes());
