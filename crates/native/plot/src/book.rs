@@ -139,6 +139,8 @@ type ScaledKey = (
     Option<(String, bool)>,
     Option<kentos_commands::WallDetail>,
     Vec<kentos_commands::OptionChoice>,
+    // The map's content turn (docs/adr/0982: a road's texts read left to right on it).
+    kentos_sheet::units::Mdeg,
 );
 
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
@@ -153,6 +155,8 @@ pub(crate) struct MapDrawer<'a> {
     /// object draws otherwise there; per scale and level where the level's plan shows the stairs under it from above
     /// (docs/adr/0724 §4).
     annotative: bool,
+    /// A road project with alignments (docs/adr/0982): every map draws a copy with them.
+    axes: bool,
     scaled: std::collections::HashMap<ScaledKey, Option<(Document, Spatial)>>,
     pub(crate) notes: Vec<String>,
     errors: Vec<String>,
@@ -199,6 +203,7 @@ impl<'a> MapDrawer<'a> {
             library,
             window,
             annotative: doc.has_annotative(),
+            axes: kentos_native_application::road_plan_axes::has_axes(doc),
             scaled: std::collections::HashMap::new(),
             notes: Vec::new(),
             errors: Vec::new(),
@@ -244,16 +249,28 @@ impl<'a> MapDrawer<'a> {
             m.wall_detail,
             // A linked view's design options (docs/adr/0788 §3): their walls join, the primaries' do not.
             m.options.to_vec(),
+            // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
+            m.view.rotation,
         );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_with(doc, at, m.wall_detail);
         let options = !m.options.is_empty();
-        if (self.annotative || walls || upper.is_some() || options) && !self.scaled.contains_key(&key) {
+        let axes = self.axes;
+        if (self.annotative || walls || axes || upper.is_some() || options) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
                 .then(|| doc.at_scale(annotation))
                 .flatten()
-                .or_else(|| (walls || upper.is_some() || options).then(|| doc.reading_copy()));
+                .or_else(|| (walls || axes || upper.is_some() || options).then(|| doc.reading_copy()))
+                // A road project's alignments on a layer of their own (docs/adr/0982): the model has no object for them.
+                .map(|copy| {
+                    if !axes {
+                        return copy;
+                    }
+                    let kept = copy.reading_copy();
+                    let turn = f64::from(m.view.rotation) / 1000.0;
+                    kentos_native_application::road_plan_axes::with_axes_on(copy, annotation, turn).unwrap_or(kept)
+                });
             let window = self.window;
             let main = self.spatial;
             let copy = copy.map(|copy| {

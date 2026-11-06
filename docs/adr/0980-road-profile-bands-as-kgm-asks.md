@@ -63,7 +63,8 @@ istediği yatay geometri ve dever bantları yoktu, sıra da KGM'ninkinden farkl�
     - Aksın elemanları bandın ekseninde; aliyman eksende durur.
     - Kurp, sağa dönüşte yukarı, sola dönüşte aşağı bir basamaktır. Klotoid düz ile kurp arasında eğik, iki kurp
       arasında (ove) basamakta kalır.
-    - Yazılar: aliyman `L=`, kurp `R= Δ=…g L=`, klotoid `Kl. A= L=`.
+    - Yazılar: aliyman `L=`, kurp `R= A=…g L=`, klotoid `Kl. A= L=`. (Y73'te `Δ=` yazılmıştı; çizim yazı tipinde Δ
+      olmadığı için pafta PDF'e yazılamıyordu, Y76'da KGM'nin yazdığı `A=` oldu, ADR 0982.)
     - "Kl." bilerek eklendi: Türk paftasında "A=" sapma açısı demektir, karışmasın.
   - **Düşey Geometri:** Üç satır yazı vardır ve birbirine binmez:
     - üstte kurpların `PVI ŞK= K=` yazısı;

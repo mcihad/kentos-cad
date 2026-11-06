@@ -279,6 +279,7 @@ pub mod road_alignments_create;
 pub mod road_alignments_edit;
 pub mod road_alignments_label;
 pub mod road_alignments_query;
+pub mod road_plan_axes;
 pub mod road_profiles;
 pub mod road_profiles_create;
 pub mod road_profiles_draw;

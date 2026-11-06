@@ -94,6 +94,8 @@ type ScaledKey = (
     Option<(String, bool)>,
     Option<kentos_commands::WallDetail>,
     Vec<kentos_commands::OptionChoice>,
+    // The map's content turn (docs/adr/0982: a road's texts read left to right on it).
+    kentos_sheet::units::Mdeg,
 );
 
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
@@ -187,6 +189,8 @@ impl SheetMaps {
             detail,
             // A linked view's design options (docs/adr/0788 §3): their walls join, the primaries' do not.
             options.to_vec(),
+            // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
+            view.rotation,
         );
         let upper = key.6.is_some().then_some(level).flatten();
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
@@ -194,14 +198,24 @@ impl SheetMaps {
             let at = scale.max(1e-6);
             // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
             let walls = Spatial::walls_differ_with(&drawing.model, at, detail);
+            let axes = kentos_native_application::road_plan_axes::has_axes(&drawing.model);
             let view = drawing
                 .model
                 .has_annotative()
                 .then(|| drawing.model.at_scale(annotation))
                 .flatten()
                 .or_else(|| {
-                    (walls || unscoped || upper.is_some() || !options.is_empty())
+                    (walls || unscoped || axes || upper.is_some() || !options.is_empty())
                         .then(|| drawing.model.reading_copy())
+                })
+                // A road project's alignments on a layer of their own (docs/adr/0982): the model has no object for them.
+                .map(|model| {
+                    if !axes {
+                        return model;
+                    }
+                    let turn = f64::from(view.rotation) / 1000.0;
+                    let kept = model.reading_copy();
+                    kentos_native_application::road_plan_axes::with_axes_on(model, annotation, turn).unwrap_or(kept)
                 })
                 .map(|model| {
                     let mut spatial = Spatial::new();

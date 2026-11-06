@@ -140,6 +140,10 @@ fn the_sheets_take_kgm_s_bands() {
     send(&mut app, W::Make);
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert!(doc.entities().any(|e| matches!(e, kentos_commands::Entity::Text(t) if t.text == "Yatay Geometri")));
+    // The sheet goes to PDF: every text of the bands and of the plan map's axis is in the drawing font (docs/adr/0982:
+    // the bands' Δ was not, and the book refused).
+    let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06");
+    assert!(pdf.is_ok(), "{:?}", pdf.err());
     let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Model));
     let _ = app.update(Message::Run("edit.undo"));
     assert!(app.document.as_ref().expect("a drawing").model.road_sheet_sets().is_empty());
@@ -186,5 +190,60 @@ fn screens_kgm() {
         shot(&mut app, "pafta-ilk");
         let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
         shot(&mut app, "pafta-ondenetim");
+        if theme == "light" {
+            // The sheet as its PDF writes it (docs/adr/0982: the plan map's axis on paper).
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
+            let file = out.join("y75-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// The plan map's axis (docs/adr/0982) on KGM's A1 sheet at 1:2000, where the whole sample alignment fits the map: the
+/// red axis, the hectometres, the curve's main points and its data at the PI. Light and dark, and the sheet's PDF
+/// (rendered with `pdftoppm -r 150`); `.run/gui-evidence/yol-y76/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_axes -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_axes() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y76");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = kgm_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Field(1, "2000".into()));
+        send(&mut app, W::Profile(Some("b-1".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Dever(Some("d-1".into())));
+        send(&mut app, W::Make);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y76-pafta-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        if theme == "light" {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
+            let file = out.join("y76-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
     }
 }

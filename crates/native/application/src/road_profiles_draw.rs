@@ -525,7 +525,7 @@ pub(crate) fn bands_depth(doc: &kentos_domain::Document, height: f64) -> f64 {
 
 /// The bands KGM's 2019 technical specification asks for (docs/adr/0980), under the frame whose lower left is `at`:
 /// Kırmızı Kot, Siyah Kot, Kilometre (each column's value written up the band), Yatay Geometri (a tangent on the
-/// band's axis, a curve a step up for a right turn and down for a left one, a clothoid the slope between; R, Δ in
+/// band's axis, a curve a step up for a right turn and down for a left one, a clothoid the slope between; R, the deflection A (KGM: Δ is not in the drawing font, docs/adr/0982) in
 /// grad, L, a clothoid's A), Düşey Geometri (the grades as KGM writes them, a crest a step up and a sag down with its
 /// length and K, each PVI's km and elevation) and Dever (the left side's slope solid, the right's dashed, about the
 /// band's axis, each break point's two slopes).
@@ -586,7 +586,7 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
             Kind::Arc => {
                 let delta = core.curves.iter().find(|cu| e.id.starts_with(&format!("{}/", cu.pi))).map(|cu| cu.delta.abs());
                 match delta {
-                    Some(d) => format!("R={:.2} Δ={:.4}g L={:.2}", 1.0 / e.k0.abs(), d * 200.0 / std::f64::consts::PI, e.length),
+                    Some(d) => format!("R={:.2} A={:.4}g L={:.2}", 1.0 / e.k0.abs(), d * 200.0 / std::f64::consts::PI, e.length),
                     None => format!("R={:.2} L={:.2}", 1.0 / e.k0.abs(), e.length),
                 }
             }
