@@ -9620,6 +9620,22 @@
    "tests": 2
   },
   {
+   "id": "style.tableStyles",
+   "kind": "command",
+   "title": "Tablo stilleri",
+   "level": "semantic",
+   "via": [
+    "cad.styles.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.styles.edit",
+   "mcp": "cad.styles.edit",
+   "note": "Tablo stili türü (table); silinen stilin tabloları tek adımda bağını yitirir (ADR 1127 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "style.textStyles",
    "kind": "command",
    "title": "Yazı stilleri…",

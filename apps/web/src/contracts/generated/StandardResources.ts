@@ -5,6 +5,7 @@ import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { StandardBlockReference } from "./StandardBlockReference";
 import type { StandardSheetTemplateReference } from "./StandardSheetTemplateReference";
+import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { ToolPalette } from "./ToolPalette";
 
@@ -17,4 +18,8 @@ export type StandardResources = { lineTypes?: Array<LineTypeDef>, hatchPatterns?
  * Published office tool palettes (docs/adr/1014): each tool a catalog command with its input. Read from the
  * package where it is bound; never installed in the drawing.
  */
-toolPalettes?: Array<ToolPalette>, };
+toolPalettes?: Array<ToolPalette>, 
+/**
+ * Named table styles (docs/adr/1126 §6): installed by name as the other styles are.
+ */
+tableStyleDefinitions?: Array<TableStyleDef>, };

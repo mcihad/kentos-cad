@@ -1674,7 +1674,8 @@ pub struct StandardInstallRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub library: Option<String>,
     /// Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
-    /// templates: the sheets made from that template, which are never changed.
+    /// templates: the sheets made from that template, which are never changed; table styles: the tables of the drawing
+    /// and of its block definitions that follow the drawing's style of that name (docs/adr/1127 §1).
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<u32>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

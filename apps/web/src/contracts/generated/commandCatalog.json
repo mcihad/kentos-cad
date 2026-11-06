@@ -3866,7 +3866,7 @@
       "id": "cad.entities.edit",
       "version": 1,
       "title": "Nesneleri düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Tam elipste ellipseAxis değişikliği uid, index (0:+major, 1:+minor, 2:-major, 3:-minor) ve dünya metre at hedefini alır; yalnız operation=grip. Çekirdek geometriyi üretir, geçici hedef yalnız sürüklenen ekseni tutar; diğer yarıçap mevcut ölçüyü sağlayabilir. İndeks kaynak elipsindir; eksen sırası değişimi komut içinde eşlenir. Bu kalıcı eksen bağı değildir. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. Tam elipste ellipseAxis değişikliği uid, index (0:+major, 1:+minor, 2:-major, 3:-minor) ve dünya metre at hedefini alır; yalnız operation=grip. Çekirdek geometriyi üretir, geçici hedef yalnız sürüklenen ekseni tutar; diğer yarıçap mevcut ölçüyü sağlayabilir. İndeks kaynak elipsindir; eksen sırası değişimi komut içinde eşlenir. Bu kalıcı eksen bağı değildir. Parçala, Yönü çevir, Sadeleştir ve Çizimi temizle split, reverse, simplify ve cleanup işlemleriyle, Tüm köşeleri yuvarla ve Tüm köşelere pah fillet ve chamfer işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. Tablonun geometrisindeki tableStyle izlediği tablo stilinin kimliğidir (docs/adr/1127 §3): verilmezse tablonunki kalır, null stili kaldırır, projede olmayan kimlik unknown_style ile reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -64503,7 +64503,7 @@
       "id": "cad.styles.edit",
       "version": 1,
       "title": "Yazı ve ölçü stilleri",
-      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791).",
+      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791). Tablo stili (kind table, docs/adr/1127 §2) başlık, sütun başı ve veri hücre stilleriyle tablosunu kendi değeri olmayan yerde çizdirir: update ve rename tablo yazmaz; remove stilin tablolarının bağını tek adımda (“Tablo stili”) kaldırır. Yazı stili yeniden adlandırılınca tablo stillerinin hücre stilleri onu yeni adıyla anar.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -64518,7 +64518,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step;\n- `export`: `styles` (absent: every style of the kind), in the table's\n  order, as a `kentos.annotation-styles` file's text in `library`;\n  nothing is written;\n- `import`: `library`, a `kentos.annotation-styles` file's text of the\n  same kind; each of its styles by name (Turkish case folded, trimmed):\n  a new name is added (its id kept when the table has none such, else a\n  new one), a name the table has is kept as it is (`skipped`), or with\n  `replace` updated in its place (its id and name kept, its objects following as\n  `update` makes them).\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space), `no_library` (import without `library`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`style_not_found` (update's id, rename's and remove's `style`, each of\nexport's `styles`), `duplicate_style` (create's given id the table has),\n`invalid_library` (import's text not such a file, or of the other kind);\n`invalid_style` (the table it would leave, by `text_styles_problem` or\n`dimension_styles_problem`: the names, then each style's values).",
+        "description": "Input of `cad.styles.edit` v1.\n\n- `create`: the kind's definition (`text` or `dimension`); an empty id\n  gives it a new one (a UUIDv7), a given id must be new. It goes last in\n  the table; nothing follows it yet;\n- `update`: the kind's definition, whose id names the style it replaces\n  (its place kept). The texts (or dimensions) of the style take its new\n  values where they still held the old ones (`follow_text_style`,\n  `follow_dimension_style`), in one undo step;\n- `rename`: `style`, `name`; the objects name the style by its id and\n  do not change;\n- `remove`: `style`; its objects keep their look and lose the link, in\n  one undo step;\n- `export`: `styles` (absent: every style of the kind), in the table's\n  order, as a `kentos.annotation-styles` file's text in `library`;\n  nothing is written;\n- `import`: `library`, a `kentos.annotation-styles` file's text of the\n  same kind; each of its styles by name (Turkish case folded, trimmed):\n  a new name is added (its id kept when the table has none such, else a\n  new one), a name the table has is kept as it is (`skipped`), or with\n  `replace` updated in its place (its id and name kept, its objects following as\n  `update` makes them).\n\nThe table is the project's setting: changing it makes the drawing dirty\nand is no undo step (docs/adr/0183 §5, kept by docs/adr/0248 §4). Objects\non locked layers are left as they are and counted in `locked`.\n\nRefusals (`CommandError.code`), checked in this order: `no_definition`\n(create, update without the kind's definition), `no_style` (rename,\nremove without `style`), `empty_name` (rename with a name empty or only\nwhite space), `no_library` (import without `library`); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`style_not_found` (update's id, rename's and remove's `style`, each of\nexport's `styles`), `duplicate_style` (create's given id the table has),\n`invalid_library` (import's text not such a file, or of the other kind);\n`invalid_style` (the table it would leave, by `text_styles_problem`,\n`dimension_styles_problem` or for table styles `table_style_defs_problem`:\nthe names, then each style's values).\n\nA text style renamed renames it in the table styles' cell styles that name it (its letters' case aside, as\nline types' texts follow it), so a table style keeps its text style (docs/adr/1127 §2).",
         "properties": {
           "dimension": {
             "anyOf": [
@@ -64593,6 +64593,17 @@
               "array",
               "null"
             ]
+          },
+          "table": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TableStyleDef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw\nit as they are, none is written."
           },
           "text": {
             "anyOf": [
@@ -64793,6 +64804,26 @@
               "height": 3.5,
               "id": "",
               "name": "Ada no"
+            }
+          }
+        },
+        {
+          "title": "CETVEL tablo stili: veri hücreleri sağa, 2,5 mm, sütun başı 0,5 mm kenarla",
+          "input": {
+            "kind": "table",
+            "operation": "create",
+            "table": {
+              "data": {
+                "align": "right",
+                "height": 2.5,
+                "horizontalMargin": 1.5
+              },
+              "header": {
+                "align": "center",
+                "borderWeight": 0.5
+              },
+              "id": "",
+              "name": "CETVEL"
             }
           }
         },
@@ -101456,6 +101487,11 @@
           "const": "wall",
           "description": "A wall style (docs/adr/0339 §2): its walls take its components, ends and fill.",
           "type": "string"
+        },
+        {
+          "const": "table",
+          "description": "A table style (docs/adr/1126, 1127 §2): its tables draw it where they set nothing themselves, so an update\nwrites no table; a removed one's tables lose the link in one undo step, “Tablo stili”.",
+          "type": "string"
         }
       ]
     },
@@ -122302,6 +122338,13 @@
               },
               "type": [
                 "array",
+                "null"
+              ]
+            },
+            "tableStyle": {
+              "description": "The table style it follows, by its id among the project's (`ProjectSettings.table_styles`, docs/adr/1127\n§3); null: none. Absent in an edit: the table's kept.",
+              "type": [
+                "string",
                 "null"
               ]
             },
@@ -173898,7 +173941,7 @@
           "type": "string"
         },
         "uses": {
-          "description": "Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet\ntemplates: the sheets made from that template, which are never changed.",
+          "description": "Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet\ntemplates: the sheets made from that template, which are never changed; table styles: the tables of the drawing\nand of its block definitions that follow the drawing's style of that name (docs/adr/1127 §1).",
           "format": "uint32",
           "minimum": 0,
           "type": "integer",

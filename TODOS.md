@@ -103,6 +103,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   aktarımında (`apps/web/src/io/columns.ts`'in tablo JSON yan kanalı) yok; web tablo çizimi `styled`'ı almaz (WASM
   yeniden derlemesi), standart penceresi `tableStyle` satırlarını ve `tableStyleDefinition` bulgularını göstermez. TS türleri
   (`TableStyleDef`, `TableCellStyleDef`) üretildi, web kodu onları kullanmıyor.
+- CAD-ADV-12 / ADR 1127: çekirdeğin `CellLook` alanları (`height`, `margin`, `vmargin`, `borderWeight`,
+  `borderColor`) ve `plain_lines`/`borders` WASM'a açılmadı; web tablo çizimi `styled_table`'ı, stil derlemesinin
+  `table_borders`'ı almaz. `cad.styles.edit`'in `table` türü, `cad.entities.edit`'in `tableStyle`'ı, Tablo stilleri
+  penceresi ve özelliklerin Tablo stili satırı web'de yok.
 - CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
   `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
   stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya

@@ -1110,6 +1110,7 @@ pub fn catalog() -> CommandCatalog {
                       update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; \
                       add bir nesneden yeni nesne yapar, katmanını, rengini ve kalınlığını alır; add'e verilen katman, renk, kalınlık, öznitelik ve etiket yeni nesnenin kendisinindir (Patlat bir bloğun nesnelerini kendi katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. \
                       Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. \
+                      Tablonun geometrisindeki tableStyle izlediği tablo stilinin kimliğidir (docs/adr/1127 §3): verilmezse tablonunki kalır, null stili kaldırır, projede olmayan kimlik unknown_style ile reddedilir. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
                 .into(),
@@ -10980,7 +10981,9 @@ pub fn catalog() -> CommandCatalog {
                       import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
                       Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
-                      Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791)."
+                      Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791). \
+                      Tablo stili (kind table, docs/adr/1127 §2) başlık, sütun başı ve veri hücre stilleriyle tablosunu kendi değeri olmayan yerde çizdirir: update ve rename tablo yazmaz; remove stilin tablolarının bağını tek adımda (“Tablo stili”) kaldırır. \
+                      Yazı stili yeniden adlandırılınca tablo stillerinin hücre stilleri onu yeni adıyla anar."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -11001,6 +11004,16 @@ pub fn catalog() -> CommandCatalog {
                         "kind": "text",
                         "operation": "create",
                         "text": { "id": "", "name": "Ada no", "font": "arimo", "bold": true, "height": 3.5 }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "CETVEL tablo stili: veri hücreleri sağa, 2,5 mm, sütun başı 0,5 mm kenarla".into(),
+                    input: json!({
+                        "kind": "table",
+                        "operation": "create",
+                        "table": { "id": "", "name": "CETVEL", "header": { "align": "center", "borderWeight": 0.5 },
+                                   "data": { "align": "right", "height": 2.5, "horizontalMargin": 1.5 } }
                     }),
                     output: None,
                 },

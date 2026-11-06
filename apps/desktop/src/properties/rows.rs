@@ -2383,6 +2383,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 &ids,
                 locked,
             ));
+            geo.extend(table_style_row(doc.model.settings(), t, &ids, locked));
             geo.extend([
                 Row::figure("Satır sayısı", t.rows.len().to_string()),
                 Row::figure("Sütun sayısı", t.columns.len().to_string()),
@@ -3065,6 +3066,47 @@ fn override_rows(lists: &[&[String]], slots: &[Slot], locked: bool) -> Vec<Row> 
         }],
     };
     vec![Row::text("Stilden ayrılan", text).editor((!locked).then_some(editor))]
+}
+
+/// Tablo stili ▾ (docs/adr/1127 §3): the table style the table follows (Yok: none, its own look), chosen among the
+/// project's; Tablo stilleri… opens their window. None in a project without table styles whose table follows none.
+fn table_style_row(
+    settings: &kentos_commands::ProjectSettings,
+    t: &kentos_commands::TableEntity,
+    slots: &[Slot],
+    locked: bool,
+) -> Vec<Row> {
+    if settings.table_styles.is_empty() && t.table_style.is_none() {
+        return Vec::new();
+    }
+    let none = "Yok";
+    let value = match t.table_style.as_deref() {
+        None => none.to_owned(),
+        Some(id) => settings
+            .table_styles
+            .iter()
+            .find(|s| s.id == id)
+            .map_or_else(|| format!("{id} (projede yok)"), |s| s.name.clone()),
+    };
+    let pick = |label: String, id: Option<String>| Choice::Pick {
+        chosen: value == label,
+        label,
+        swatch: None,
+        icon: None,
+        wide: false,
+        enabled: true,
+        message: Message::Properties(Event::TableStyle(slots.to_vec(), id)),
+    };
+    let items = std::iter::once(pick(none.to_owned(), None))
+        .chain(settings.table_styles.iter().map(|s| pick(s.name.clone(), Some(s.id.clone()))))
+        .chain(std::iter::once(Choice::Action {
+            label: "Tablo stilleri…",
+            icon: "settings",
+            message: Some(Message::TableStyleDefs(crate::table_style_window::Event::Open)),
+        }))
+        .collect();
+    let editor = Editor::Select { text: value.clone(), swatch: None, icon: None, items };
+    vec![Row::text("Tablo stili", value).editor((!locked).then_some(editor))]
 }
 
 fn style_rows(

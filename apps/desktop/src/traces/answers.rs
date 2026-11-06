@@ -131,6 +131,7 @@ impl App {
             Dialog::FormAudit => crate::forms::audit::TITLE.to_owned(),
             Dialog::AnnotationStyles => self.annotation_styles_title().to_owned(),
             Dialog::WallStyles => crate::wall_styles::TITLE.to_owned(),
+            Dialog::TableStyleDefs => crate::table_style_window::TITLE.to_owned(),
             Dialog::WallJoins => crate::wall_joins::TITLE.to_owned(),
             Dialog::OpeningTypes => crate::opening_types_window::TITLE.to_owned(),
             Dialog::Materials => crate::materials_window::TITLE.to_owned(),

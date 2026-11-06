@@ -959,6 +959,10 @@ fn draw_object(
             }
         }
     }
+    // A table's borders in their cell style's weight and colour (docs/adr/1127 §1).
+    if matches!(shape, Shape::Table { .. }) {
+        table_borders(shape, [mode, a, simple], program, values, env, sink);
+    }
     // Nokta yoğunluğu's dots and Grafik's chart over what the object draws (docs/adr/0213 §2.4, §2.5).
     if mode == MODE_RENDERER {
         match program.renderer.as_ref() {
@@ -997,6 +1001,58 @@ fn draw_object(
             }
             _ => {}
         }
+    }
+}
+
+/// A table's borders (docs/adr/1127 §1): the lines its cell styles give a border look, through the line symbol its
+/// other lines take, in the border's colour and at its weight on the paper (mm; under `hairlines` the symbol's own),
+/// each look's lines one stroke run. The table's record holds its other lines only (`plain_lines_of`).
+fn table_borders(
+    shape: &Shape,
+    [mode, a, simple]: [i32; 3],
+    program: &Program,
+    values: &RowValues<'_, '_>,
+    env: &Env<'_>,
+    sink: &mut BatchSink,
+) {
+    let borders = kentos_geometry_core::geom::table::borders_of(shape);
+    if borders.is_empty() {
+        return;
+    }
+    let set_line = |k: i32| {
+        usize::try_from(k)
+            .ok()
+            .and_then(|k| program.sets.get(k))
+            .and_then(|s| program.symbol(s.line.as_ref()))
+    };
+    let symbol = match mode {
+        MODE_SET => set_line(a),
+        MODE_OWN => usize::try_from(a)
+            .ok()
+            .and_then(|k| program.refs.get(k))
+            .and_then(|r| program.symbol(Some(r))),
+        _ => None,
+    }
+    .or_else(|| set_line(simple));
+    let Some(symbol) = symbol else { return };
+    let mut looks: Vec<((Option<u64>, Option<String>), Vec<(Vec<Vec2>, bool)>)> = Vec::new();
+    for b in borders {
+        let look = (b.weight.map(f64::to_bits), b.color);
+        let path = (b.line.to_vec(), false);
+        match looks.iter_mut().find(|(l, _)| *l == look) {
+            Some((_, paths)) => paths.push(path),
+            None => looks.push((look, vec![path])),
+        }
+    }
+    for ((weight, color), paths) in looks {
+        let mut drawn = symbol.clone();
+        if let Some(c) = &color {
+            drawn = thematic::with_color(&drawn, c);
+        }
+        if let Some(w) = weight.map(f64::from_bits).filter(|_| !program.hairlines) {
+            drawn = thematic::with_size(&drawn, w, Unit::Mm);
+        }
+        compile_symbol(&drawn, &Geom::Line(paths), values, env, sink, LEVEL_LINE);
     }
 }
 

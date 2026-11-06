@@ -423,6 +423,7 @@ impl App {
             name: None,
             text: None,
             dimension: None,
+            table: None,
             styles: None,
             library: None,
             replace: None,

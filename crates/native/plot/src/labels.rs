@@ -244,6 +244,8 @@ pub fn labels_in_view(
     let mut out = Vec::new();
     let mut placed: Option<(Slot, kentos_contracts::LabelStyle)> = None;
     let mut filled = std::collections::HashSet::new();
+    // The last table's shape as its table style draws it (docs/adr/1127 §1): its cells come one after another.
+    let mut drawn_table: Option<(Slot, kentos_geometry_core::entity::Shape)> = None;
     // Where the words of an object drawn faint start: made faint when the next object's begin, and at the end.
     let mut faint_from: Option<usize> = None;
     let fade = |out: &mut [MapLabel]| {
@@ -548,14 +550,19 @@ pub fn labels_in_view(
                 },
                 Entity::Table(t),
             ) => {
-                // As its table style draws it where it sets nothing itself (docs/adr/1126 §3).
+                // As its table style draws it where it sets nothing itself (docs/adr/1126 §3, 1127 §1).
+                if drawn_table.as_ref().is_none_or(|(of, _)| *of != id) {
+                    drawn_table = Some((id, kentos_native_application::geometry::styled_table(t, doc.settings())));
+                }
                 let drawn = kentos_contracts::styled(t, doc.settings());
                 let t: &kentos_contracts::TableEntity = &drawn;
-                if filled.insert(id)
-                    && let Some(g) = kentos_geometry_core::geom::table::table_geom(
-                        &kentos_native_application::geometry::core_table(t),
-                    )
-                {
+                let Some(g) = drawn_table
+                    .as_ref()
+                    .and_then(|(_, shape)| kentos_geometry_core::geom::table::table_geom(shape))
+                else {
+                    continue;
+                };
+                if filled.insert(id) {
                     for fill in g.fills() {
                         let mut p = l.clone();
                         p.fill = Some(fill.corners.map(|p| [p.x, p.y]).to_vec());
@@ -570,7 +577,8 @@ pub fn labels_in_view(
                 l.text = kentos_geometry_core::geom::table::cell_line(text, *line).to_owned();
                 l.at = *at;
                 l.rotation = *rotation;
-                ground_height = t.height;
+                // Its cell style's height, else the table's (docs/adr/1127 §1).
+                ground_height = g.style_at(*row, *col).height.unwrap_or(t.height);
                 face(&mut l, &t.face, false);
                 if *bold {
                     l.weight = 600;

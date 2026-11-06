@@ -1,0 +1,4093 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.edit",
+ "commandVersion": 1,
+ "title": "Nesneleri düzenle: tablonun stili",
+ "note": "ADR 1127 §2–§3. Bağımsız başvuru scripts/fixtures/table_style_edit_cases.py: kurallar ADR'den ve sözleşmeden elle yazılır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Tablo stilleri",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 100,
+   "workspace": "cad",
+   "textStyles": [
+    {
+     "id": "yazi-tablo",
+     "name": "A-TABLO",
+     "font": "arimo"
+    }
+   ],
+   "tableStyles": [
+    {
+     "id": "ofis-cetvel",
+     "name": "CETVEL",
+     "title": {
+      "align": "center",
+      "height": 3.5
+     },
+     "header": {
+      "fill": "#dddddd",
+      "borderWeight": 0.5
+     },
+     "data": {
+      "textStyle": "A-TABLO",
+      "align": "right",
+      "height": 2.5,
+      "horizontalMargin": 1.5
+     }
+    },
+    {
+     "id": "yerel-sade",
+     "name": "SADE",
+     "data": {
+      "align": "left"
+     }
+    }
+   ]
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [
+   {
+    "kind": "table",
+    "id": 1,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 0.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.6,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Liste",
+      ""
+     ],
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "merges": [
+     {
+      "row": 0,
+      "col": 0,
+      "rows": 1,
+      "cols": 2
+     }
+    ],
+    "header": true,
+    "tableStyle": "ofis-cetvel"
+   },
+   {
+    "kind": "table",
+    "id": 2,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 10.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.6,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Liste",
+      ""
+     ],
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "merges": [
+     {
+      "row": 0,
+      "col": 0,
+      "rows": 1,
+      "cols": 2
+     }
+    ],
+    "header": true,
+    "tableStyle": "yerel-sade"
+   },
+   {
+    "kind": "table",
+    "id": 3,
+    "layerId": "kilitli",
+    "attrs": {},
+    "p": {
+     "x": 20.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.6,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Liste",
+      ""
+     ],
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "merges": [
+     {
+      "row": 0,
+      "col": 0,
+      "rows": 1,
+      "cols": 2
+     }
+    ],
+    "header": true,
+    "tableStyle": "ofis-cetvel"
+   },
+   {
+    "kind": "table",
+    "id": 4,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 30.0,
+     "y": 10.0
+    },
+    "rotation": 0.0,
+    "height": 0.25,
+    "rows": [
+     0.6,
+     0.5,
+     0.5
+    ],
+    "columns": [
+     2.0,
+     2.0
+    ],
+    "cells": [
+     [
+      "Liste",
+      ""
+     ],
+     [
+      "Ada",
+      "Alan"
+     ],
+     [
+      "101",
+      "512"
+     ]
+    ],
+    "merges": [
+     {
+      "row": 0,
+      "col": 0,
+      "rows": 1,
+      "cols": 2
+     }
+    ],
+    "header": true
+   },
+   {
+    "kind": "text",
+    "id": 5,
+    "layerId": "0",
+    "attrs": {},
+    "p": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "text": "Not",
+    "height": 0.25,
+    "rotation": 0.0
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Stil ver: stilsiz tabloya CETVEL; tek adım “Değiştir”, geri al stili kaldırır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değiştir",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Stili değiştir: CETVEL'den SADE'ye",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:1",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 0.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yerel-sade"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değiştir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Stili kaldır: null bağı kaldırır, tablonun kendi değerleri kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:1",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 0.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": null
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değiştir",
+     "expect": {
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Stilsiz geometri: tablonun stili kalır (ADR 1127 §3)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:1",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 0.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taşınan tablo stilini korur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:1",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 5.0,
+          "y": 12.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 5.0,
+         "y": 12.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tabloyu düzenle: sütunlar değişir, stil kalır; adım “Tablo”",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "table",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:2",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 10.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          3.0,
+          2.5
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         3.0,
+         2.5
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Tablo",
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tabloyu düzenle: stil ve hücreler birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "table",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:2",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 10.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          3.0,
+          2.5
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "102",
+           "640"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         3.0,
+         2.5
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "102",
+          "640"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki tabloya bir adımda: biri verilir, biri kaldırılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:2",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 10.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       },
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yerel-sade"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:2",
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değiştir",
+     "expect": {
+      "entities": {
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı stili yeniden vermek tabloyu değiştirmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:1",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 0.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Stilsiz tabloya null: değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": null
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geri al ve yinele",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yerel-sade"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Değiştir",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       }
+      },
+      "canUndo": false
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Değiştir",
+     "expect": {
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Projede olmayan stil: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yok"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_style",
+       "message": "“yok” kimlikli tablo stili projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir tablo stilinin kimliğini verin ya da null ile stili kaldırın (Standart).",
+       "path": "changes[0].geometry.tableStyle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "3": {
+        "kind": "table",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 20.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       },
+       "5": {
+        "kind": "text",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkinci değişikliğin stili yok: hiçbiri yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:2",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 10.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       },
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yok"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_style",
+       "message": "“yok” kimlikli tablo stili projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir tablo stilinin kimliğini verin ya da null ile stili kaldırın (Standart).",
+       "path": "changes[1].geometry.tableStyle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "3": {
+        "kind": "table",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 20.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       },
+       "5": {
+        "kind": "text",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimliğin harf büyüklüğü farkı: ret (kimlik tam eşleşir)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "OFIS-CETVEL"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_style",
+       "message": "“OFIS-CETVEL” kimlikli tablo stili projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir tablo stilinin kimliğini verin ya da null ile stili kaldırın (Standart).",
+       "path": "changes[0].geometry.tableStyle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "3": {
+        "kind": "table",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 20.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       },
+       "5": {
+        "kind": "text",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki tablo: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:3",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 20.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": null
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+       "path": "changes[0].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "3": {
+        "kind": "table",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 20.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       },
+       "5": {
+        "kind": "text",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki tablo başka bir değişiklikle: hiçbiri yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       },
+       {
+        "kind": "update",
+        "uid": "$uidOf:3",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 20.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yerel-sade"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+       "path": "changes[1].uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "3": {
+        "kind": "table",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 20.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       },
+       "5": {
+        "kind": "text",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tabloyu düzenle yalnız tabloları değiştirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": "table",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:5",
+        "geometry": {
+         "kind": "text",
+         "p": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "text": "Not",
+         "height": 0.25,
+         "rotation": 0.0
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_table",
+       "message": "Tablonun düzenlemesi yalnız tabloları değiştirir: her değişiklik bir tablonun yeni hâli olmalı (update, tablo geometrisi).",
+       "path": "changes[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "1": {
+        "kind": "table",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "2": {
+        "kind": "table",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 10.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "yerel-sade"
+       },
+       "3": {
+        "kind": "table",
+        "id": 3,
+        "layerId": "kilitli",
+        "attrs": {},
+        "p": {
+         "x": 20.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true,
+        "tableStyle": "ofis-cetvel"
+       },
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       },
+       "5": {
+        "kind": "text",
+        "id": 5,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Planla: stil verilir gibi söyler, yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        {
+         "kind": "table",
+         "id": 4,
+         "layerId": "0",
+         "attrs": {},
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       ],
+       "created": [],
+       "removed": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false,
+      "entities": {
+       "4": {
+        "kind": "table",
+        "id": 4,
+        "layerId": "0",
+        "attrs": {},
+        "p": {
+         "x": 30.0,
+         "y": 10.0
+        },
+        "rotation": 0.0,
+        "height": 0.25,
+        "rows": [
+         0.6,
+         0.5,
+         0.5
+        ],
+        "columns": [
+         2.0,
+         2.0
+        ],
+        "cells": [
+         [
+          "Liste",
+          ""
+         ],
+         [
+          "Ada",
+          "Alan"
+         ],
+         [
+          "101",
+          "512"
+         ]
+        ],
+        "merges": [
+         {
+          "row": 0,
+          "col": 0,
+          "rows": 1,
+          "cols": 2
+         }
+        ],
+        "header": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrula: yazmaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "ofis-cetvel"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrula: projede olmayan stil ret",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "table",
+         "p": {
+          "x": 30.0,
+          "y": 10.0
+         },
+         "rotation": 0.0,
+         "height": 0.25,
+         "rows": [
+          0.6,
+          0.5,
+          0.5
+         ],
+         "columns": [
+          2.0,
+          2.0
+         ],
+         "cells": [
+          [
+           "Liste",
+           ""
+          ],
+          [
+           "Ada",
+           "Alan"
+          ],
+          [
+           "101",
+           "512"
+          ]
+         ],
+         "merges": [
+          {
+           "row": 0,
+           "col": 0,
+           "rows": 1,
+           "cols": 2
+          }
+         ],
+         "header": true,
+         "tableStyle": "yok"
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_style",
+       "message": "“yok” kimlikli tablo stili projede yok: silinmiş ya da başka bir projenin olabilir. Projenin bir tablo stilinin kimliğini verin ya da null ile stili kaldırın (Standart).",
+       "path": "changes[0].geometry.tableStyle"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}
