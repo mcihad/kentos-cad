@@ -87,6 +87,18 @@ fn uses_words(kind: Kind, uses: u32) -> String {
 #[derive(Debug, Default)]
 pub(crate) struct Window {
     pub choices: BTreeMap<(Kind, String), (Action, String)>,
+    /// Block libraries the user added (a project's or an office's `.kblok`, docs/adr/1017), searched before KentOS's own.
+    pub libraries: Vec<kentos_native_application::standard_libraries::BlockLibrary>,
+}
+
+impl Window {
+    fn libraries(&self) -> kentos_native_application::standard_libraries::Libraries {
+        // The last added is searched first.
+        self.libraries
+            .iter()
+            .cloned()
+            .fold(kentos_native_application::standard_libraries::Libraries::builtin(), |l, b| l.with_blocks(b))
+    }
 }
 
 impl Window {
@@ -113,6 +125,9 @@ pub enum Event {
     Pick(Kind, String, Choice),
     Name(Kind, String, String),
     Install,
+    /// Kitaplık ekle…: a `.kblok` file to search for the blocks (docs/adr/1017).
+    AddLibrary,
+    LibraryPicked(Option<std::path::PathBuf>),
 }
 
 fn msg(event: Event) -> Message {
@@ -125,7 +140,7 @@ impl App {
             return Err(String::new());
         };
         let mut copy = doc.model.reading_copy();
-        match standards_install::plan(&ExecutionContext::new(&mut copy), &w.input()) {
+        match standards_install::plan_with(&ExecutionContext::new(&mut copy), &w.input(), &w.libraries()) {
             CommandResult::Completed { output, .. } => Ok(output),
             CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
             _ => Err("Önizleme hazırlanamadı.".into()),
@@ -157,13 +172,13 @@ impl App {
                     self.warn(locked);
                     return Task::none();
                 }
-                let Some(input) = self.standard_install.as_ref().map(Window::input) else {
+                let Some((input, libraries)) = self.standard_install.as_ref().map(|w| (w.input(), w.libraries())) else {
                     return Task::none();
                 };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                let result = standards_install::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                let result = standards_install::execute_with(&mut ExecutionContext::new(&mut doc.model), input, &libraries);
                 if let Some(done) = self.answered(result) {
                     self.say(
                         Level::Success,
@@ -180,7 +195,41 @@ impl App {
                             }
                         ),
                     );
-                    self.standard_install = Some(Window::default());
+                    let kept = self.standard_install.take().map(|w| w.libraries).unwrap_or_default();
+                    self.standard_install = Some(Window { libraries: kept, ..Window::default() });
+                }
+            }
+            Event::AddLibrary => {
+                if let crate::app::Picker::File(path) = &self.picker {
+                    let path = path.clone();
+                    return self.standard_install_event(Event::LibraryPicked(Some(path)));
+                }
+                return Task::perform(
+                    async {
+                        let file = rfd::AsyncFileDialog::new()
+                            .set_title("Blok kitaplığı ekle")
+                            .add_filter("KentOS blok kitaplığı (.kblok)", &["kblok", "json"])
+                            .pick_file()
+                            .await?;
+                        Some(file.path().to_path_buf())
+                    },
+                    |path| msg(Event::LibraryPicked(path)),
+                );
+            }
+            Event::LibraryPicked(None) => {}
+            Event::LibraryPicked(Some(path)) => {
+                let name = path.file_stem().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+                let read = std::fs::read_to_string(&path)
+                    .map_err(|e| e.to_string())
+                    .and_then(|text| kentos_native_application::standard_libraries::read_block_library(&name, &text));
+                match (read, self.standard_install.as_mut()) {
+                    (Ok(library), Some(w)) => {
+                        let n = library.blocks.len();
+                        w.libraries.push(library);
+                        self.say(Level::Success, format!("“{name}” kitaplığı eklendi ({n} blok); KentOS kitaplıklarından önce aranır."));
+                    }
+                    (Err(e), _) => self.warn(format!("“{}” blok kitaplığı olarak okunamadı: {e}", path.display())),
+                    _ => {}
                 }
             }
         }
@@ -277,11 +326,70 @@ impl App {
                 }
             }
         }
+        let libraries = if w.libraries.is_empty() {
+            "Bloklar KentOS kitaplıklarında aranır.".to_owned()
+        } else {
+            format!(
+                "Bloklar önce {} kitaplığında, sonra KentOS kitaplıklarında aranır.",
+                w.libraries.iter().rev().map(|l| format!("“{}”", l.name)).collect::<Vec<_>>().join(", ")
+            )
+        };
+        let body = body.push(label::muted(libraries));
         Frame::new("Standart kaynaklarını kur")
             .scroll(body)
+            .action(words::secondary("Kitaplık ekle…", Some(msg(Event::AddLibrary))))
             .action(words::secondary("Kapat", Some(Message::DialogClosed)))
             .action(words::primary("Kur", (plan.is_ok() && changes > 0).then(|| msg(Event::Install))))
             .width(920.0)
             .modal(Message::DialogClosed)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    const PUBLICATION: &str = "0192f5a0-0000-7000-8000-0000000fa001";
+
+    fn package() -> String {
+        json!({"format": "kentos.drawing-standard", "version": 2, "id": "ofis-p", "revision": "1",
+            "standard": {"name": "Ofis P", "layers": []},
+            "resources": {"blocks": [{"name": "PROJE-KAPI", "publication": {"familyId": PUBLICATION,
+                "typeId": "0192f5a0-0000-7000-8000-0000000fa002", "typeName": "Proje kapısı", "release": 1}}]}})
+        .to_string()
+    }
+
+    fn library(dir: &std::path::Path) -> std::path::PathBuf {
+        let path = dir.join("proje.kblok");
+        let file = json!({"format": "kentos.blocks", "version": 4, "blocks": [{
+            "id": "0192f5a0-0000-7000-8000-0000000fa0b1", "name": "PROJE-KAPI", "base": {"x": 0.0, "y": 0.0},
+            "entities": [{"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 0.9, "y": 0.0}}],
+            "card": {"publication": {"familyId": PUBLICATION, "typeId": "0192f5a0-0000-7000-8000-0000000fa002",
+                "typeName": "Proje kapısı", "release": 1}, "version": 1}}]});
+        std::fs::write(&path, file.to_string()).expect("the library");
+        path
+    }
+
+    #[test]
+    fn a_project_library_added_in_the_window_is_searched_for_the_blocks() {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        let doc = app.document.as_mut().expect("a drawing");
+        let mut settings = doc.settings().clone();
+        settings.standard_docs = vec![kentos_commands::ProjectStandardDocument { text: package() }];
+        doc.model.set_settings(settings);
+        let _ = app.standard_install_event(Event::Open);
+        let plan = app.install_plan().expect("a plan");
+        let row = plan.rows.iter().find(|r| r.name == "PROJE-KAPI").expect("the block's row");
+        assert_eq!(row.status, "unavailable", "KentOS's libraries do not hold it");
+        let dir = crate::files_testing::scratch("proje-kitaplik");
+        let _ = app.standard_install_event(Event::LibraryPicked(Some(library(&dir))));
+        let plan = app.install_plan().expect("a plan");
+        let row = plan.rows.iter().find(|r| r.name == "PROJE-KAPI").expect("the block's row");
+        assert_eq!(row.status, "missing", "found in the added library: {row:?}");
+        assert_eq!(row.library.as_deref(), Some("proje"));
+        let _ = app.standard_install_event(Event::Install);
+        assert!(app.document.as_ref().unwrap().model.block_named("PROJE-KAPI").is_some(), "installed from it");
     }
 }

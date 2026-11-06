@@ -2129,7 +2129,8 @@ basılan değeri **Baskıda** satırıyla söyler (PDF'in kuralıyla); model de�
 Ofis araçları ☆ ile anahtar ve tarif özetiyle favori olur; yeni revizyonda değişen favori çalışmaz ve söyler, yeniden
 seçilince yeni tarifi tutar. “Son komutu araç yap” günlüğün son komutunu kendi araç yapar; arama hepsini süzer.
 Kişisel palet ayar klasöründedir, çizime karışmaz. Açık: tablo stili kaynağı (KentOS tablosunun stil modeli yok), blok
-içi tek parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi.
+içi tek parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi. Ek (ADR 1017): kurulum penceresi **Kitaplık
+ekle…** ile proje `.kblok`'unu KentOS kitaplıklarından önce arar; bulut kitaplığı ve Python/MCP'den kitaplık seçimi açık.
 
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
