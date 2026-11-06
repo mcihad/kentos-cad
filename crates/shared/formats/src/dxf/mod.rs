@@ -972,6 +972,20 @@ fn read_once(
             text_used.push(key);
         }
     }
+    // A dimension style's text style (DIMTXSTY, docs/adr/1023) is kept with it, Standard aside: the value is written
+    // in that style (an SHX style's embedded font draws it).
+    for key in &dim_used {
+        if let Some(key) = lib
+            .dim_records
+            .get(key)
+            .and_then(|(_, v)| v.dimtxsty)
+            .and_then(|h| lib.style_handles.get(&h))
+            .filter(|k| lib.text_records.get(*k).is_some_and(|r| !styles::is_standard(&r.name)))
+            && !text_used.contains(key)
+        {
+            text_used.push(key.clone());
+        }
+    }
     let mut out = em.out;
     // Layers the objects landed on: the table's (in its order), then any it lacked.
     let mut layers: Vec<ImportLayer> = Vec::new();
@@ -1151,11 +1165,13 @@ fn read_once(
         let Some((name, vars)) = lib.dim_records.get(key) else {
             continue;
         };
-        let font = vars
+        let record = vars
             .dimtxsty
             .and_then(|h| lib.style_handles.get(&h))
             .and_then(|n| lib.text_records.get(n))
-            .filter(|r| !styles::is_standard(&r.name))
+            .filter(|r| !styles::is_standard(&r.name));
+        let text_style = record.map(|r| r.name.clone());
+        let font = record
             .and_then(|r| {
                 r.kentos.as_ref().map(|k| k.font).or_else(|| {
                     styles::family_of(r.family.as_deref().unwrap_or(&r.file))
@@ -1172,6 +1188,7 @@ fn read_once(
             &metres,
             plot,
         );
+        let style = kentos_contracts::DimensionStyleDef { text_style, ..style };
         if let Some(block) = said.arrow {
             out.report.note(
                 "Ölçü stili (DIMSTYLE)",

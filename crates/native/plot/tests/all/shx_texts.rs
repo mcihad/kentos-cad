@@ -212,7 +212,7 @@ fn shx_text_pictures() {
     std::fs::write(dir.join("adr1125-shx-metin-1-250-cpu.png"), &image.png).unwrap();
 }
 
-/// docs/adr/1020: a block's one-line text in an embedded SHX style prints the same strokes as the text object would
+/// docs/adr/1020, 1022: a block's text (one line or several) in an embedded SHX style prints the same strokes as the text object would
 /// where the insert puts it (an insert turns in radians, a text in degrees). The reference case's text is put in a block so that the insert (moved, and turned a
 /// quarter) places it at the case's own point and turn: the strokes are the reference's, at the insert's weight;
 /// no substitute face is written and nothing is said substituted.
@@ -220,7 +220,10 @@ fn shx_text_pictures() {
 fn a_blocks_text_prints_in_its_embedded_shx_font_where_the_insert_puts_it() {
     let expected = expected();
     let cases = expected["texts"].as_array().unwrap();
-    for name in ["Sol taban", "Çarpan, eğiklik ve dönüş birlikte", "Big Font karakteri"] {
+    // One line, and (docs/adr/1022) several lines and a wrapped box, drawn whole at their first line.
+    for name in ["Sol taban", "Çarpan, eğiklik ve dönüş birlikte", "Big Font karakteri", "Üç satır, aralık 1,5, üst sağ",
+        "Kutuya kaydırma, ortalı"]
+    {
         let case = cases.iter().find(|c| c["name"] == name).unwrap();
         for (turn, at) in [(0.0f64, [3.0, -2.0]), (90.0, [4.0, 1.0])] {
             let (mut doc, b) = drawn(case, 100, &["kentos-uni.shx", "kentos-big.shx"], None);
@@ -258,5 +261,70 @@ fn a_blocks_text_prints_in_its_embedded_shx_font_where_the_insert_puts_it() {
             assert!(findings(&doc, &b, "text_font_substituted").is_empty(), "{name}: drawn in its font, not substituted");
             assert!(findings(&doc, &b, "text_shx_unsupported").is_empty());
         }
+    }
+}
+
+/// docs/adr/1023: a dimension whose style names an SHX text style (DIMTXSTY) writes its value in that font. The
+/// dimension shows the words “SU” (its text over the value) 2.5 high, horizontal: its strokes are the reference case
+/// “Taban ortası” (the same words, height and baseline-centre alignment) moved to where the dimension puts its value;
+/// a dimension whose style names no text style is written in its typeface, as before.
+#[test]
+fn a_dimension_writes_its_value_in_its_styles_shx_font() {
+    let expected = expected();
+    let case = expected["texts"].as_array().unwrap().iter().find(|c| c["name"] == "Taban ortası").unwrap().clone();
+    for named in [true, false] {
+        let (doc, b) = drawn(&case, 100, &["kentos-uni.shx", "kentos-big.shx"], None);
+        let mut raw = serde_json::to_value(doc.to_snapshot()).unwrap();
+        let layer = raw["entities"][0]["layerId"].clone();
+        let mut style = json!({"id": "olcu", "name": "Ölçü", "height": 2.5});
+        if named {
+            style["textStyle"] = json!("shx");
+        }
+        raw["settings"]["dimensionStyles"] = json!([style]);
+        raw["entities"] = json!([{"kind": "dimension", "id": 1, "layerId": layer, "attrs": {},
+            "a": {"x": 6.0, "y": 18.0}, "b": {"x": 16.0, "y": 18.0}, "offset": 2.0, "height": 2.5,
+            "dimStyle": "olcu", "text": "SU", "lineWeight": 0.35}]);
+        let sheets = doc.sheets().cloned();
+        let mut doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+        doc.set_sheets(sheets).unwrap();
+        let mut spatial = Spatial::new();
+        spatial.reload(&doc);
+        let render = book::base_inputs(&doc, "Test", "2026-11-06");
+        let list = display::display_list(&b, "ground", &render).unwrap();
+        let map = list.prims.iter().find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None }).unwrap();
+        let labels = kentos_plot::labels::map_labels(&doc, &spatial, map);
+        let value = labels.iter().find(|l| l.text == "SU").expect("the value's label");
+        if !named {
+            assert!(value.shx.is_none(), "no text style: the typeface, as before");
+            continue;
+        }
+        let (paths, weight) = value.shx.as_ref().expect("drawn in the SHX font");
+        assert!((weight - 0.35).abs() < 1e-12, "the dimension's weight");
+        let (dx, dy) = (value.at.x - 10.0, value.at.y - 20.0);
+        let want = case["paths"].as_array().unwrap();
+        assert_eq!(paths.len(), want.len());
+        for (got, want) in paths.iter().zip(want) {
+            let want = want.as_array().unwrap();
+            assert_eq!(got.len(), want.len());
+            for (g, w) in got.iter().zip(want) {
+                assert!((g[0] - (w[0].as_f64().unwrap() + dx)).abs() < 1e-9 && (g[1] - (w[1].as_f64().unwrap() + dy)).abs() < 1e-9,
+                    "{g:?} {w} + ({dx}, {dy})");
+            }
+        }
+        let (vector, texts) = vectors(&doc, &b, 100.);
+        assert_eq!(texts, 0, "no substitute face written for the value");
+        assert!(vector.iter().any(|p| p.stroke.as_ref().is_some_and(|s| s.cap == kentos_sheet::LineCap::Round)));
+        assert!(findings(&doc, &b, "text_shx_unsupported").is_empty() && findings(&doc, &b, "text_font_substituted").is_empty());
+        // Its measured value (the test font has no digits): an error naming the character, the PDF refused.
+        let mut raw = serde_json::to_value(doc.to_snapshot()).unwrap();
+        raw["entities"][0].as_object_mut().unwrap().remove("text");
+        let sheets = doc.sheets().cloned();
+        let mut measured = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+        measured.set_sheets(sheets).unwrap();
+        let errors = findings(&measured, &b, "text_shx_unsupported");
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert!(errors[0].message.contains("Ölçü değeri") && errors[0].message.contains("U+0031"), "{}", errors[0].message);
+        let refused = book::book_pdf(&measured, &[], "Test", "2026-11-06");
+        assert_eq!(refused.err().map(|e| e.code).as_deref(), Some("text_shx_unsupported"));
     }
 }

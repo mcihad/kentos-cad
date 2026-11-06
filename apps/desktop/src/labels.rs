@@ -1718,6 +1718,20 @@ impl Labels<'_> {
                                 .or(base.color.as_deref())
                                 .or(self.layer_color(layer)),
                         );
+                        // In its style's SHX text style (docs/adr/1023): the font's strokes, its own box the mask.
+                        if let Some(mut t) = kentos_native_application::shx_text::dimension_value(
+                            self.doc.settings(),
+                            d.look.dim_style.as_deref(),
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *angle,
+                            d.height,
+                            &text,
+                        ) {
+                            t.mask = *mask;
+                            if self.shx_text(frame, slot, &t, color) {
+                                continue;
+                            }
+                        }
                         let size = (d.height * self.camera.get().scale) as f32;
                         let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
                         self.draw(
@@ -1980,6 +1994,19 @@ impl Labels<'_> {
                                 .or(base.color.as_deref())
                                 .or(self.layer_color(layer)),
                         );
+                        if let Some(mut t) = kentos_native_application::shx_text::dimension_value(
+                            self.doc.settings(),
+                            look.dim_style.as_deref(),
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *angle,
+                            *height,
+                            &text,
+                        ) {
+                            t.mask = *mask;
+                            if self.shx_text(frame, slot, &t, color) {
+                                continue;
+                            }
+                        }
                         let size = (height * self.camera.get().scale) as f32;
                         let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
                         self.draw(
@@ -2009,15 +2036,19 @@ impl Labels<'_> {
                             width,
                             height,
                             lean,
+                            placed,
                             ..
                         },
                         entity,
                     ) => {
-                        // An SHX text's mask is its own box, drawn with its strokes (ADR 1125).
-                        if let Entity::Text(t) = entity
-                            && kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
+                        // An SHX text's mask is its own box, drawn with its strokes (ADR 1125); a block's piece's
+                        // too (docs/adr/1022).
+                        let shx_ok = |t: &kentos_commands::TextEntity| {
+                            kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
                                 .is_some_and(|p| p.is_ok())
-                        {
+                        };
+                        let piece = placed.as_deref().and_then(kentos_native_application::shx_text::placed_piece);
+                        if matches!(entity, Entity::Text(t) if shx_ok(t)) || piece.as_ref().is_some_and(shx_ok) {
                             continue;
                         }
                         let r = rotation.to_radians();
@@ -2053,10 +2084,26 @@ impl Labels<'_> {
                             end,
                             piece,
                             face,
+                            placed,
                             ..
                         },
                         entity,
                     ) => {
+                        // A block's multi-line text in its SHX font, whole at its first line (docs/adr/1022).
+                        if let Some(t) = placed
+                            .as_deref()
+                            .and_then(kentos_native_application::shx_text::placed_piece)
+                            .filter(|t| {
+                                kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
+                                    .is_some_and(|p| p.is_ok())
+                            })
+                        {
+                            if *start == 0 {
+                                let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                                self.shx_text(frame, slot, &t, ink);
+                            }
+                            continue;
+                        }
                         let own;
                         let (text, runs, face): (&str, &[Run], kentos_commands::TextFace) =
                             match (piece, entity) {

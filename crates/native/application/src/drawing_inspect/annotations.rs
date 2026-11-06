@@ -219,6 +219,32 @@ fn own_findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding>
             if !code.is_empty() {
                 out.push(finding(uid, &sources, code, severity, point.clone(), words.into(), "Kaynağa git ile referansları inceleyin; Yeniden bağla ile ölçünün uçlarını doğru nesneye kenetleyin."));
             }
+            // Its value in its style's SHX text style (docs/adr/1023), as a text is (ADR 1125): what the font
+            // cannot draw is an error, a font the project does not embed a named substitute.
+            if let Some(t) = crate::shx_text::dimension_value(
+                doc.settings(),
+                d.look.dim_style.as_deref(),
+                d.a,
+                0.0,
+                d.height,
+                &read.shown,
+            ) && let Some(style) = crate::shx_text::style_of(doc.settings(), &t)
+            {
+                match crate::shx_text::Fonts::of(style, doc.styles()) {
+                    Ok(fonts) => {
+                        if let Err(why) = crate::shx_text::lay_out(&fonts, &t) {
+                            out.push(finding(uid, &sources, "text_shx_unsupported", InspectionSeverity::Error, point.clone(),
+                                format!("Ölçü değeri “{}” yazı stilinin gömülü SHX fontuyla çizilemiyor: {why} Ekranda yerine {} ile çizilir; çıktı teslim edilmez.",
+                                    style.name, style.font.label()),
+                                "Ölçü stilinin yazı stilini, eksik karakteri içeren bir SHX fontuna bağlayın ya da yazı stilini değiştirin; değer sessizce başka fonta çevrilmez."));
+                        }
+                    }
+                    Err(why) => out.push(finding(uid, &sources, "text_font_substituted", InspectionSeverity::Warning, point.clone(),
+                        format!("Özgün font: {} · Çizilen font: {}. Ölçü değerinin SHX fontu çizilemiyor: {why}",
+                            style.font_file.as_deref().unwrap_or_default(), style.font.label()),
+                        "SHX kaynağını Çizgi tipleri › SHX ekle… ya da cad.library.edit ile projeye ekleyin; ölçü değeri o zaman özgün fontla çizilir.")),
+                }
+            }
             if !read.measured.is_finite() {
                 out.push(finding(
                     uid,

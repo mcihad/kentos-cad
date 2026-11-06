@@ -587,6 +587,8 @@ def dimension_styles(styles):
         "prefix": (text, False),
         "suffix": (text, False),
         "font": (enum(DRAWING_FONTS), False),
+        # Schema 186 (docs/adr/1023): the text style its value is written in, by name.
+        "textStyle": (text, False),
         **LINE_FIELDS,
         # Schema 61 (docs/adr/0321): its options, as their JSON.
         "options": (opaque, False),
@@ -2423,6 +2425,9 @@ def document(d):
             e.get("kind") == "table" and "tableStyle" in e for e in d.get("entities", [])):
         # The project's table styles, a table that follows one (docs/adr/1126 §2–§3).
         schema = max(schema, 185)
+    if any("textStyle" in st for st in d["settings"].get("dimensionStyles", [])):
+        # A dimension style that names the text style of its value (docs/adr/1023).
+        schema = max(schema, 186)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3368,7 +3373,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-186.kcad"] = container(root(cmap(parts), version=uint(186)))
+    files["schema-version-187.kcad"] = container(root(cmap(parts), version=uint(187)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5665,6 +5670,18 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
+    # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
+    dimmed = load("dimension-text-style.json")
+    dimmed_data = document(dimmed)
+    assert dimmed_data.count(b"\x67version\x18\xba") == 1, "a dimension style's text style is schema 186"
+    out["dimension-text-style.kcad"] = container(dimmed_data)
+    out["broken/dimension-text-style-in-schema-185.kcad"] = container(
+        dimmed_data.replace(b"\x67version\x18\xba", b"\x67version\x18\xb9"))
+    for name, value in (("empty", ""), ("spaces", " A-OLCU")):
+        bad = copy.deepcopy(dimmed)
+        bad["settings"]["dimensionStyles"][0]["textStyle"] = value
+        out[f"broken/dimension-text-style-{name}.kcad"] = container(document(bad))
     # Schema 185 (docs/adr/1126 §2–§3): two table styles (one with every cell field, one with a data cell only) and a
     # table that follows the first; schema 184 refuses the settings' field, an unknown cell field, a repeated name
     # (case aside), a zero text height and a bad colour are refused, as is an empty tableStyle.

@@ -85,6 +85,7 @@ pub(super) fn dimension_styles(
     r: &mut Reader<'_>,
     lines: bool,
     options: bool,
+    text_styles: bool,
 ) -> Result<Vec<DimensionStyleDef>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
@@ -105,6 +106,7 @@ pub(super) fn dimension_styles(
             prefix: None,
             suffix: None,
             font: None,
+            text_style: None,
             dim_line_color: None,
             dim_line_weight: None,
             dim_line_type: None,
@@ -144,6 +146,8 @@ pub(super) fn dimension_styles(
                 "prefix" => style.prefix = Some(text(r)?),
                 "suffix" => style.suffix = Some(text(r)?),
                 "font" => style.font = Some(font(r)?),
+                // Schema 186 (docs/adr/1023).
+                "textStyle" if text_styles => style.text_style = Some(text(r)?),
                 "dimLineColor" if lines => style.dim_line_color = Some(text(r)?),
                 "extColor" if lines => style.ext_color = Some(text(r)?),
                 "textColor" if lines => style.text_color = Some(text(r)?),

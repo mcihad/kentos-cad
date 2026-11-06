@@ -36,6 +36,7 @@ const SAVE: &str = "Kaydet";
 const CANCEL: &str = "Vazgeç";
 const NAME: &str = "Ad";
 const FONT: &str = "Yazı tipi";
+const TEXT_STYLE: &str = "Yazı stili";
 const BOLD: &str = "Kalın";
 const ITALIC: &str = "İtalik";
 const ARROWS: &str = "Uçlar";
@@ -123,6 +124,8 @@ pub enum Event {
     Unit(Option<DrawingUnit>),
     Prefix(String),
     Suffix(String),
+    /// The text style a dimension style writes its value in, by name (DIMTXSTY, docs/adr/1023); none: its typeface.
+    TextStyle(Option<String>),
     /// A line's colour (`#RRGGBB`; none: the object's), weight on paper (mm;
     /// none: a hairline) and type (none: continuous), docs/adr/0205 §6.
     LineColor(Part, Option<String>),
@@ -717,6 +720,11 @@ impl App {
                     s.unit = u;
                 }
             }
+            Event::TextStyle(name) => {
+                if let Some(s) = w.dimension_style() {
+                    s.text_style = name;
+                }
+            }
             Event::Prefix(t) => {
                 if let Some(s) = w.dimension_style() {
                     s.prefix = (!t.is_empty()).then_some(t);
@@ -1067,6 +1075,24 @@ impl App {
             },
         )
         .searchable(false);
+        // Its value's text style (DIMTXSTY, docs/adr/1023): the drawing's text styles by name; an SHX one's embedded
+        // font draws the value.
+        let names: Vec<String> = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().text_styles.iter().map(|t| t.name.clone()).collect())
+            .unwrap_or_default();
+        let chosen = s
+            .text_style
+            .as_deref()
+            .map(|n| names.iter().position(|x| x.eq_ignore_ascii_case(n)).map_or(0, |i| i + 1))
+            .unwrap_or(0);
+        let picked = names.clone();
+        let text_styles = Select::new(
+            std::iter::once(Choice::new("Yok (yazı tipi)")).chain(names.iter().map(|n| Choice::new(n.clone()))),
+            Some(chosen),
+            move |i| msg(Event::TextStyle(i.checked_sub(1).and_then(|i| picked.get(i).cloned()))),
+        );
         let affix = |label: &'static str, value: &'a Option<String>, on: fn(String) -> Event| {
             let input = kentos_ui::widget::text_field("", value.as_deref().unwrap_or_default())
                 .on_input(move |t| msg(on(t)));
@@ -1101,6 +1127,12 @@ impl App {
                     affix(PREFIX, &s.prefix, Event::Prefix),
                     affix(SUFFIX, &s.suffix, Event::Suffix),
                     container(words::field(FONT, fonts, None)).width(Fill),
+                    container(words::field(
+                        TEXT_STYLE,
+                        text_styles,
+                        Some("SHX yazı stili değeri kendi fontuyla çizer".to_owned())
+                    ))
+                    .width(Fill),
                 ]
                 .spacing(12)
                 .align_y(iced::Top),
@@ -1207,6 +1239,9 @@ impl App {
                 }
                 _ => return Err(format!("“{FONT}” listesinde “{item}” yok")),
             },
+            Control::Pick(TEXT_STYLE, item) => Some(msg(Event::TextStyle(
+                (!item.starts_with("Yok")).then(|| item.to_owned()),
+            ))),
             Control::Pick(ARROWS, item) => match ARROW_CHOICES.iter().find(|(_, l)| *l == item) {
                 Some((a, _)) => Some(msg(Event::Arrow(*a))),
                 None => return Err(format!("“{ARROWS}” listesinde “{item}” yok")),

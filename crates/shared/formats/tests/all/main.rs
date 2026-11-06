@@ -4,6 +4,7 @@
 
 mod coords;
 mod compress;
+mod dimension_text_style;
 mod dxf;
 mod cad_io;
 mod chunked;

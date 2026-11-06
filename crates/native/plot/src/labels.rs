@@ -336,6 +336,19 @@ pub fn labels_in_view(
                 if *masked {
                     ground_mask = -1.;
                 }
+                // In its style's SHX text style (docs/adr/1023): the font's strokes, the value's own box its mask.
+                if let Some(t) = kentos_native_application::shx_text::dimension_value(
+                    doc.settings(),
+                    d.look.dim_style.as_deref(),
+                    kentos_contracts::Vec2 { x: at.x, y: at.y },
+                    *angle,
+                    d.height,
+                    &l.text,
+                ) && let Some(Ok(p)) = shx_of(&t).as_deref()
+                {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *masked);
+                    ground_mask = 0.;
+                }
             }
             (
                 LabelSpot::Text {
@@ -454,6 +467,18 @@ pub fn labels_in_view(
                 if *masked {
                     ground_mask = -1.;
                 }
+                if let Some(t) = kentos_native_application::shx_text::dimension_value(
+                    doc.settings(),
+                    look.dim_style.as_deref(),
+                    kentos_contracts::Vec2 { x: at.x, y: at.y },
+                    *angle,
+                    *height,
+                    &l.text,
+                ) && let Some(Ok(p)) = shx_of(&t).as_deref()
+                {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *masked);
+                    ground_mask = 0.;
+                }
             }
             (LabelSpot::Line {unicode:Some(text),at,height,..},_)=> {
                 l.at = *at;
@@ -475,10 +500,27 @@ pub fn labels_in_view(
                     end,
                     piece,
                     face: f,
+                    placed,
                     ..
                 },
                 _,
             ) => {
+                // A block's multi-line text in its SHX font, whole at its first line's place (docs/adr/1022).
+                if let Some(t) = placed
+                    .as_deref()
+                    .and_then(kentos_native_application::shx_text::placed_piece)
+                    .filter(|t| shx_of(t).is_some_and(|p| p.is_ok()))
+                {
+                    if *start == 0
+                        && let Some(Ok(p)) = shx_of(&t).as_deref()
+                    {
+                        l.text = t.text.clone();
+                        l.size = kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(*height);
+                        shx(&mut l, p, weight_of(entity, layer.style.line_weight), false);
+                        out.push(l);
+                    }
+                    continue;
+                }
                 let (text, runs, f) = match (piece, entity) {
                     (Some(p), _) => (
                         p.0.clone(),
@@ -521,14 +563,18 @@ pub fn labels_in_view(
                     width,
                     height,
                     lean,
+                    placed,
                     ..
                 },
                 _,
             ) => {
-                // An SHX text's mask is its own box (ADR 1125).
+                // An SHX text's mask is its own box (ADR 1125), a block's piece's too (docs/adr/1022).
                 let own = match entity {
                     Entity::Text(t) => shx_of(t),
-                    _ => None,
+                    _ => placed
+                        .as_deref()
+                        .and_then(kentos_native_application::shx_text::placed_piece)
+                        .and_then(|t| shx_of(&t)),
                 };
                 l.fill = Some(match own.as_deref() {
                     Some(Ok(p)) => p.outline.iter().map(|q| [q.x, q.y]).collect(),

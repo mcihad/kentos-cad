@@ -2161,6 +2161,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 186 (docs/adr/1023): a dimension style that names the text style of its value.
+    if doc.settings.dimension_styles.iter().any(|s| s.text_style.is_some()) {
+        return crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES;
+    }
     // Schema 185 (docs/adr/1126 §2–§3): the project's table styles, a table that follows one.
     if !doc.settings.table_styles.is_empty()
         || objs.iter().any(|e| matches!(e, Entity::Table(t) if t.table_style.is_some()))

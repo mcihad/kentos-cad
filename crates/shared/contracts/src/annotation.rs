@@ -841,6 +841,12 @@ pub struct DimensionStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub font: Option<DrawingFont>,
+    /// The project text style its value is written in, by its name (AutoCAD's DIMTXSTY, docs/adr/1023): when that
+    /// style's font is an embedded SHX file, the font draws the value; otherwise `font` stays the value's typeface
+    /// (a DXF's reader sets both). Schema 186.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_style: Option<String>,
     /// The line fields as a dimension's (docs/adr/0205 §6); weights in paper mm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -993,6 +999,13 @@ impl DimensionStyleDef {
     /// What is wrong with its values (its name aside); none when they hold.
     pub fn problem(&self) -> Option<String> {
         let name = &self.name;
+        if let Some(t) = &self.text_style
+            && (t.trim().is_empty() || t.trim() != t || t.len() > 256 || t.chars().any(char::is_control))
+        {
+            return Some(format!(
+                "“{name}” ölçü stilinin yazı stili adı “{t}” geçersiz: boş olmayan, kenarı boşluksuz, en çok 256 bayt olmalı"
+            ));
+        }
         if let Some(words) = self
             .options
             .as_deref()
@@ -1164,6 +1177,16 @@ pub fn dimension_styles_problem(styles: &[DimensionStyleDef]) -> Option<String> 
         styles.iter().map(|s| (s.id.as_str(), s.name.as_str())),
     )
     .or_else(|| styles.iter().find_map(DimensionStyleDef::problem))
+}
+
+/// The project text style a dimension style writes its value in (docs/adr/1023): its `textStyle` by name, case
+/// aside, as a table style's cell finds its own; none when it names none or a style the project lacks.
+pub fn dimension_text_style<'a>(
+    dimension: &DimensionStyleDef,
+    texts: &'a [TextStyleDef],
+) -> Option<&'a TextStyleDef> {
+    let name = dimension.text_style.as_deref()?;
+    texts.iter().find(|s| s.name.eq_ignore_ascii_case(name))
 }
 
 /// The text styles as a project keeps them: of those breaking the name rule

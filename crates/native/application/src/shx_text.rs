@@ -204,6 +204,37 @@ pub fn piece_text(shape: &kentos_geometry_core::entity::Shape, shown: &str) -> O
     Some(t)
 }
 
+/// [`piece_text`] showing the piece's own words (a multi-line piece: its whole paragraph, docs/adr/1022).
+pub fn placed_piece(shape: &kentos_geometry_core::entity::Shape) -> Option<TextEntity> {
+    let kentos_geometry_core::entity::Shape::Text { text, .. } = shape else {
+        return None;
+    };
+    piece_text(shape, text)
+}
+
+/// A dimension's value as a text for [`place_cached`] when its dimension style (`dim_style`, by id; absent: none)
+/// names a text style whose font is an SHX file (docs/adr/1023): centred on its baseline at `at`, turned `rotation`
+/// degrees, `height` high (ground), the value's words. None for any other dimension: it is drawn in its typeface.
+pub fn dimension_value(
+    settings: &ProjectSettings,
+    dim_style: Option<&str>,
+    at: kentos_commands::Vec2,
+    rotation: f64,
+    height: f64,
+    words: &str,
+) -> Option<TextEntity> {
+    let dim = settings.dimension_styles.iter().find(|s| Some(s.id.as_str()) == dim_style)?;
+    let style = kentos_commands::dimension_text_style(dim, &settings.text_styles).filter(|s| is_shx(s))?;
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+        {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
+         "height": height, "rotation": rotation, "align": "baselineCenter"}))
+    else {
+        return None;
+    };
+    t.face.text_style = Some(style.id.clone());
+    Some(t)
+}
+
 /// The most texts [`place_cached`] keeps per thread before it starts again.
 const CACHED: usize = 4096;
 

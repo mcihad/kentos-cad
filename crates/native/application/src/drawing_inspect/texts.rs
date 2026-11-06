@@ -36,18 +36,8 @@ fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) ->
     // A style's embedded SHX font draws its texts (ADR 1125): no substitute; one it cannot draw is an error.
     let shx = crate::shx_text::style_of(doc.settings(), text)
         .map(|s| (s, crate::shx_text::Fonts::of(s, doc.styles())));
-    // A block's one-line text is drawn in its SHX font as a text object is (docs/adr/1020); one the view draws line
-    // by line (several lines, or along a curve) is still drawn in its style's face: said, never silently.
-    let by_lines = || {
-        let shape = crate::geometry::shape(&Entity::Text(text.clone()));
-        kentos_geometry_core::entity::TextPlace::of(&shape).is_some_and(|t| t.by_records())
-    };
-    if !owns_uid && let Some((style, _)) = &shx && by_lines() {
-        out.push(emit("text_font_substituted", InspectionSeverity::Warning,
-            format!("Özgün font: {} · Çizilen font: {}. Blok içindeki çok satırlı ya da eğri boyunca yazı SHX fontuyla çizilmiyor.",
-                style.font_file.as_deref().unwrap_or_default(), style.font.label()),
-            "Yazıyı bloktan çıkarın, tek satıra indirin ya da yazı stilini değiştirin; çok satırlı blok yazısının SHX ile çizimi ayrı iştir (docs/adr/1020)."));
-    } else if let Some((style, Ok(fonts))) = &shx
+    // A block's text is drawn in its SHX font as a text object is (docs/adr/1020, 1022), one line or several.
+    if let Some((style, Ok(fonts))) = &shx
         && let Err(why) = crate::shx_text::lay_out(fonts, text)
     {
         out.push(emit("text_shx_unsupported", InspectionSeverity::Error,
