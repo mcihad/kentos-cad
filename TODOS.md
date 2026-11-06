@@ -2300,6 +2300,11 @@ Desktop: Rust + saf wgpu çizim pipeline'ı. Web: mevcut TypeScript WebGPU ve We
 - [ ] `REN-15` Render-on-demand ve kontrollü animasyon döngüsü kur; boşta GPU/CPU tüketimi, foreground/background FPS ve güç profili settings üzerinden yönetilsin. — **25 Eylül, kısmen:** masaüstünde çizim yalnız bir şey değişince yapılır; ayarı yok.
 - [ ] `REN-16` Stilli çizimde en derin yakınlıkta milimetre altı: karoya göre tek float32 konum, karo merkezinden 27 km'de 1 mm, 46 km'de 2 mm şaşar (5000 px/m'de 5–10 px). Düz yolun (`REN-07`) güvencesi için konumlar da kaba ve ince iki parça (konum belleği ~1,5–2 kat) ya da daha küçük karolar (çok topluluk) gerekir; ölçüp seçin. Kaynak: [ADR 0157](docs/adr/0157-styled-far-tiles.md) §1, `crates/render/wgpu/tests/styled_precision.rs`.
 - [ ] `REN-17` Harita servislerinin bütçeyi aşan üç süresi ([ADR 0208](docs/adr/0208-map-services-and-basemaps.md) §16, Doğrulama): kaydırmada etiketler her karede yeniden yerleşir ve masaüstünde önbellekteki çizim silinir (iki altlıklı kaydırmada CPU p50 2,25 ms, bütçe 2 ms; yerleşimi kenar payıyla kaydırma boyunca tutup ötelemek); çeyrek katta vektör karonun stili baştan kurulur (4,6 ms, bütçe 3 ms; üçgenlemeyi ve taşınmış noktaları katlar arasında saklamak); cihazın önbelleğinden iki altlıklı tam görünüm 125 ms (bütçe 100 ms). Ölçüm `perf::services`.
+- [ ] `REN-18` CAD-ADV-11'in kapanışından ayrılan çizgi tipi işleri (plan/cad-advanced.md, 6 Kasım 2026): PLINEGEN=0
+  (çoklu çizginin deseni her köşede yeniden başlar; AutoCAD'in `A` hizalamasının uç tireleri nasıl uzattığı belgelenmemiş,
+  önce bağımsız ölçüm gerekir), SHX yazının seçim/kutu genişliği (depo bugün TrueType ölçüsüyle seçer; `TextPlace::outline`
+  yedi yerde), 2 milyon nokta bütçesinin ötesi, desen kaybında parça düzeyinde kesin kırpma (ADR 1007 kutu sınaması
+  tutucudur), DXF MLEADERSTYLE yazı stili (grup 342; ADR 1025 §4).
 
 ### 8.2 Antialias ve kalite seçenekleri
 

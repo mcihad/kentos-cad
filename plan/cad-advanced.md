@@ -1556,7 +1556,7 @@ silinmesi ön denetimde görülsün; eski dosyanın metni habersiz değişmesin.
   Bütün okuyucularda karışık paragraf kopya sırası, PDF/UA/A ve ertelenmiş
   web kabulü iddia edilmez. **CAD-ADV-10 bu açık yerel destek sözleşmesiyle tamamlandı.**
 
-### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [~]
+### CAD-ADV-11 — Karmaşık çizgi tiplerini ve çizgi görünüşünü eksiksiz çiz [x]
 
 **Öncelik:** P1; yanlış teslimi önleyen uyarılar P0. **Kod:** [C19], [C31].
 **Dayanak:** AutoCAD özel çizgi tiplerinde font, metin yönü, ölçek ve
@@ -1848,6 +1848,32 @@ noktalar). PDF akışı ve SVG testleriyle; ifraz altın PDF'i değişmedi; 600 
 Aynı çizim 1:50 ve 1:20 görünüm pencerelerinde vektör PDF'te çizim sırasını, kenarsız maskenin kâğıt beyazını, 0
 kalınlıklı saç telini, yarı saydam mürekkebi ve aynı kâğıt tiresini korur; CPU baskı resmi maskeyi aynı sırayla
 uygular. Dört ekran temasında pafta takımının PDF'i bayt bayt aynı, çizim değişmez. Üç test ve PDF resmi.
+
+**Kapanış (6 Kasım 2026):** maddenin her satırı kanıtına bağlandı.
+
+- *`dashes_of`'un iki sınırı; desteklenmeyen görünüş UI'da ve çıktı raporunda kaybolmasın:* yazı/şekil öğeleri çizilir,
+  desen 256 öğeye çıktı (ADR 0930, 1001); `line_types::named_pattern_loss_follows_actual_visibility_and_overrides`,
+  `complex_marks_without_any_gap_still_refuse_preview_vector_and_direct_cpu_output`, görünüm penceresi kırpmasında kayıp
+  (ADR 1007, altı geometrik durum).
+- *GPU/CPU/PDF ortak tarif, uzun desen ölçülmüş tamponla:* depo sayfası (ADR 0930), `line_types::long_custom_stroke_phase_
+  reaches_the_actual_pdf_content_stream`, gerçek GPU `round_dots_on_a_real_gpu` uzun tarifle (ADR 1124).
+- *Yazı/şekil deseninde font, glyph, açı, upright/teğet/mutlak yön, faz, tekrar; eksik font boşluk değil:* ADR 0930,
+  1120; `line_types::attached_shapes_print_from_embedded_bytes_and_missing_glyphs_block_the_complete_output`.
+- *Düz/yaylı/kapalı yolda faz, kısa parça, köşe, yön, değişken genişlik, aynalı/nonuniform blok; model boyu, kâğıt
+  kalınlığı ve görünüm deseni ayrı:* `curve_dashes::curve_dashes_are_cut_at_true_arc_distances_at_three_scales`,
+  `ellipse_and_nurbs_dashes_follow_their_arc_length`, `a_dotted_wide_polyline_prints_its_cross_sections` (ADR 1121,
+  1122), `wide_block_paths::complex_patterns_follow_placed_geometry_in_mirrored_affine_nested_blocks`, ADR 0930 §22
+  (432 kök/blok karşılaştırması), `line_types::named_patterns_keep_either_paper_size_or_drawing_length_across_viewports`.
+- *Çizim sırası, maske, saydamlık, saç teli; tema rengi değiştirmesin:* ADR 1021'in üç testi.
+- **Kabul** — *on ikiden fazla öğe, yazı ve şekil desenleri doğru/yay/yol/blokta:* ADR 1001 (16 öğe, açılan çizimin
+  ekranından piksel ölçümü), ADR 0930 §22; *1:1/1:20/1:100 faz, sembol yönü, kâğıt boyu:* ADR 1122 (1e-6 mm), ADR 1124
+  `dots::a_dot_prints_round_and_as_wide_as_the_line_in_the_pdf_and_the_cpu_preview`; *kaynak tanım round-trip:* `lin`
+  testleri (`lin_files_read_as_the_cases_say`, `the_types_are_written_back_as_the_cases_say`), `.kcad` şema 181;
+  *desteklenmeyen kaynak açık bulgu:* `linetype_unsupported`, `text_shx_unsupported`, ADR 1007.
+
+Bu madde dışında kalan ve TODOS.md'ye ayrı iş olarak taşınanlar: PLINEGEN=0 (her köşede yeniden başlayan desen;
+AutoCAD'in `A` hizalama algoritması belgelenmemiş), seçim kutusunun SHX genişliği, 2 milyon nokta bütçesinin ötesi,
+parça düzeyinde kesin kırpma, DXF MLEADERSTYLE yazı stili.
 
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
