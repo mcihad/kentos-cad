@@ -1,0 +1,1032 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.grade",
+ "commandVersion": 1,
+ "title": "Eğimle kot ver",
+ "note": "ADR 1290. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay boyu ve kotlar elle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Eğimle kot",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tasarim",
+    "name": "Tasarım",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "tasarim",
+  "entities": [
+   {
+    "kind": "polyline",
+    "id": 1,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4400040.0
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.0,
+     0.5,
+     0.0,
+     0.0
+    ],
+    "zs": [
+     850.0,
+     null,
+     null,
+     851.25,
+     null
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "tasarim",
+    "attrs": {},
+    "a": {
+     "x": 500000.0,
+     "y": 4400100.0
+    },
+    "b": {
+     "x": 500060.0,
+     "y": 4400180.0
+    },
+    "za": 900.0
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4400030.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 4,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400300.0
+     },
+     {
+      "x": 500010.0,
+      "y": 4400300.0
+     }
+    ],
+    "zs": [
+     10.0,
+     null
+    ]
+   },
+   {
+    "kind": "text",
+    "id": 5,
+    "layerId": "tasarim",
+    "attrs": {},
+    "text": "Kot",
+    "p": {
+     "x": 500000.0,
+     "y": 4400400.0
+    },
+    "height": 2.0,
+    "rotation": 0.0
+   }
+  ],
+  "uids": [
+   "0192f5c0-1290-7000-8000-000000000001",
+   "0192f5c0-1290-7000-8000-000000000002",
+   "0192f5c0-1290-7000-8000-000000000003",
+   "0192f5c0-1290-7000-8000-000000000004",
+   "0192f5c0-1290-7000-8000-000000000005"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Eğimle: kendi kotundan %2, düz ve yaylı kenar boyunca; geri alma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 4,
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 147.95595112510077,
+       "start": 850.0,
+       "end": 852.959119022502,
+       "grade": 0.02,
+       "zs": [
+        850.0,
+        850.6,
+        851.4,
+        852.559119022502,
+        852.959119022502
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         850.6,
+         851.4,
+         852.559119022502,
+         852.959119022502
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bitiş kotuyla: eğim ondan çıkar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "end": 852.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 127.95595112510077,
+       "start": 850.0,
+       "end": 852.0,
+       "grade": 0.01563037891097873,
+       "zs": [
+        850.0,
+        850.4689113673294,
+        851.0941265237685,
+        852.0
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         850.4689113673294,
+         851.0941265237685,
+         852.0,
+         null
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ara köşeden başlar; aralık dışı köşeler kotlarını korur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 1,
+      "to": 3,
+      "start": 849.5,
+      "grade": -0.015
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 97.95595112510077,
+       "start": 849.5,
+       "end": 848.0306607331235,
+       "grade": -0.015,
+       "zs": [
+        849.5,
+        848.9,
+        848.0306607331235
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         849.5,
+         848.9,
+         848.0306607331235,
+         null
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı kenarın boyu yayı boyuncadır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 2,
+      "to": 3,
+      "start": 100.0,
+      "end": 101.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 57.95595112510077,
+       "start": 100.0,
+       "end": 101.0,
+       "grade": 0.01725448345833288,
+       "zs": [
+        100.0,
+        101.0
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         100.0,
+         101.0,
+         null
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksi eğim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 2,
+      "grade": -0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 70.0,
+       "start": 850.0,
+       "end": 846.5,
+       "grade": -0.05,
+       "zs": [
+        850.0,
+        848.5,
+        846.5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         848.5,
+         846.5,
+         851.25,
+         null
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizginin iki ucu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000002",
+      "from": 0,
+      "to": 1,
+      "grade": 0.03
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 100.0,
+       "start": 900.0,
+       "end": 903.0,
+       "grade": 0.03,
+       "zs": [
+        900.0,
+        903.0
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "za": 900.0,
+        "zb": 903.0
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "2": {
+        "za": 900.0,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi: bitiş kotuyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000002",
+      "from": 0,
+      "to": 1,
+      "end": 905.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 100.0,
+       "start": 900.0,
+       "end": 905.5,
+       "grade": 0.055,
+       "zs": [
+        900.0,
+        905.5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "za": 900.0,
+        "zb": 905.5
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "2": {
+        "za": 900.0,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alanın dış halkası (kotsuz): başlangıç verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000003",
+      "from": 0,
+      "to": 3,
+      "start": 120.0,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 110.0,
+       "start": 120.0,
+       "end": 121.1,
+       "grade": 0.01,
+       "zs": [
+        120.0,
+        120.4,
+        120.7,
+        121.1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "3": {
+        "zs": [
+         120.0,
+         120.4,
+         120.7,
+         121.1
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "3": {
+        "zs": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 4,
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 147.95595112510077,
+       "start": 850.0,
+       "end": 852.959119022502,
+       "grade": 0.02,
+       "zs": [
+        850.0,
+        850.6,
+        851.4,
+        852.559119022502,
+        852.959119022502
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 4,
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Kotsuz köşeden başlangıç verilmeden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000003",
+      "from": 0,
+      "to": 2,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "elevation_missing",
+       "message": "0. köşenin kotu yok; başlangıç kotunu (start) verin.",
+       "path": "start"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hem bitiş hem eğim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 2,
+      "end": 851.0,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bitiş kotunu (end) ya da eğimi (grade) verin, ikisini birden değil.",
+       "path": "end"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ne bitiş ne eğim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bitiş kotunu (end) ya da eğimi (grade) verin, ikisini birden değil.",
+       "path": "end"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ters aralık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 3,
+      "to": 1,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Köşe aralığı 3–1 olamaz: nesnenin 5 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Köşe sayısının dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 5,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Köşe aralığı 0–5 olamaz: nesnenin 5 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı bir yol değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000005",
+      "from": 0,
+      "to": 1,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_path",
+       "message": "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000004",
+      "from": 0,
+      "to": 1,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli: nesnenin kotları değişemez. Kilidi açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000063",
+      "from": 0,
+      "to": 1,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-1290-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "x",
+      "from": 0,
+      "to": 1,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürüm yazısı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 1,
+      "grade": 0.01,
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 1,
+      "grade": 0.01,
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

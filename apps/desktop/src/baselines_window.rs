@@ -10,7 +10,7 @@ use iced::{Center, Element, Task};
 use kentos_commands::{BaselineDatum, CommandResult, SurveyBaselines, SurveyBaselinesAdjusted};
 use kentos_native_application::{ExecutionContext, survey_baselines};
 use kentos_ui::label;
-use kentos_ui::widget::{Dialog as Frame, NumberInput, Switch};
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Switch};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -126,15 +126,12 @@ impl App {
     pub(crate) fn baselines_view(&self) -> Element<'_, Message> {
         let s = &self.baselines;
         let file = s.file.as_ref().and_then(|p| p.file_name()).map_or("Dosya seçilmedi".to_owned(), |n| n.to_string_lossy().into_owned());
-        let head = row![
-            words::ghost(OPEN, Some(msg(Event::Pick))),
-            label::caption(file),
-            Switch::new(s.minimal, |on| msg(Event::Minimal(on))).label("Minimal datum"),
-            label::body("Varyans çarpanı"),
-            NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(90),
-        ]
-        .spacing(12)
-        .align_y(Center);
+        // One label column, the boxes the same width (the owner: a form's fields line up).
+        let head = Form::new()
+            .label_width(130.0)
+            .field("Baz dosyası", row![words::secondary(OPEN, Some(msg(Event::Pick))), label::caption(file)].spacing(10).align_y(Center))
+            .field("Varyans çarpanı", NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(140))
+            .row(Switch::new(s.minimal, |on| msg(Event::Minimal(on))).label("Minimal datum (sabit yokken ilk bilinen istasyonu tut)"));
         let mut body = Column::new().spacing(10).push(head);
         let mut lines = vec![words::text_line(
             Kind::Info,

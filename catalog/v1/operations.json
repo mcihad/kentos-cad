@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "tool.grade": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.grade"
+      ],
+      "note": "Pencere komutun planını önizler; Uygula cad.entities.grade ile tek adım yazar (ADR 1290)."
+    },
     "survey.baselines": {
       "level": "query",
       "via": [

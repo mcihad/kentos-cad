@@ -2363,6 +2363,24 @@ const ENTRIES: &[Entry] = &[
         warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
         targets: none,
     },
+    // Eğimle kot ver (plan/map-cad.md MAP-06, docs/adr/1290).
+    Entry {
+        id: "cad.entities.grade",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_path",
+                "wrong_place",
+                "invalid_input",
+                "elevation_missing",
+                "layer_locked",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // GNSS baz ağı dengelemesi (plan/map-cad.md MAP-05, docs/adr/1380).
     Entry {
         id: "cad.survey.baselines",

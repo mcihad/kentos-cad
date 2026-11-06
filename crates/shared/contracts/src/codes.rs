@@ -1969,6 +1969,8 @@ codes! {
     FIELD_BASE_MISSING = "field_base_missing", Warning, false, "Tabanın alan kaydı olmayan nesneleri iki yan değiştirdiyse bütün olarak çatışır; alanlar tek tek birleştirilemez.";
     /// A data profile KentOS has not by that name, or none given (docs/adr/0541).
     UNKNOWN_PROFILE = "unknown_profile", Failed, false, "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin.";
+    /// Eğimle kot ver (docs/adr/1290): no start elevation given and the start vertex has none.
+    ELEVATION_MISSING = "elevation_missing", Failed, false, "Başlangıç köşesinin kotu yok; başlangıç kotunu verin.";
     /// GNSS baz ağı (docs/adr/1380): no baseline given.
     NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
     /// GNSS baz ağı: a station named twice.

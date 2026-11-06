@@ -440,6 +440,13 @@ dönmez, hedef alan yaylı durumda ikiye bölmeyle bulunur, düz durum aynen kal
 12 yeni durum bağımsız mpmath başvurusuyla (50 basamak) sınandı; etkileşim izi ve resim bakıldı. Kalıcı ilişki, ortak
 sınır, kot/eğim hedefi ve çok parçalı nesne açık; madde `[ ]` kalır.
 
+**6 Kasım 2026 — Eğimle kot ver ([ADR 1290](../docs/adr/1290-grade-between-vertices.md)).** Kapsam işareti: **CAD (Harita
++ Yol)**. Araştırma: Civil 3D özellik çizgisinin Set Grade/Slope Between Points'i; parselin güzergâhı kendiliğinden
+izlemediği (kalıcı ilişki ayrı karardır, ADR 0334 kısıtları). Kanıtlanan: hedef kot/eğim alt maddesi — `cad.entities.grade`
+iki köşe arasına bitiş kotu ya da eğimle, yaylı kenarda yay boyunca kot verir (21 ortak durum), pencere Çizgi/Alan
+sekmesinde. Formlar sahibin isteğiyle tek etiket sütunlu düzene geçti. Açık: köşeleri sahneden seçmek, kalıcı ilişkiyi
+kurmak, ortak sınır, çok parçalı nesne.
+
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 
 **Öncelik:** P0. **Kod dayanağı:** [K17], [K18], [K19].

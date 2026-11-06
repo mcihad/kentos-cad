@@ -11846,6 +11846,22 @@
    "tests": 1
   },
   {
+   "id": "tool.grade",
+   "kind": "command",
+   "title": "Eğimle kot ver…",
+   "level": "semantic",
+   "via": [
+    "cad.entities.grade"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.grade",
+   "mcp": "cad.entities.grade",
+   "note": "Pencere komutun planını önizler; Uygula cad.entities.grade ile tek adım yazar (ADR 1290).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.grid",
    "kind": "command",
    "title": "Aks",

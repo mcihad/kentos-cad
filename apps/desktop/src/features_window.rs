@@ -4,13 +4,13 @@
 //! Profili uygula (`cad.profiles.apply`); Uygula writes one undo step “Kodla çiz”. The selected points, in their order,
 //! when some are selected; else every coded point on a shown, unlocked layer.
 
-use iced::widget::{Column, row};
-use iced::{Center, Element, Task};
+use iced::widget::Column;
+use iced::{Element, Task};
 use kentos_commands::{CommandResult, FeaturesCode, FeaturesCoded, ProfilesApply, ProfilesList};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_features, profile_files, profiles};
 use kentos_ui::label;
-use kentos_ui::widget::Dialog as Frame;
+use kentos_ui::widget::{Dialog as Frame, Form};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -186,14 +186,11 @@ impl App {
         let choices: Vec<(String, String)> = s.profiles.clone();
         let pick = crate::style::fields::select_owned(choices, &s.profile, |n| msg(Event::Profile(n)));
         let field = crate::style::fields::input(None, "Kod", &s.field, false, false).on_input(|f| msg(Event::Field(f)));
-        let head = row![
-            label::body("Profil"),
-            iced::widget::container(pick).width(260),
-            label::body("Kod alanı"),
-            iced::widget::container(field).width(110),
-        ]
-        .spacing(10)
-        .align_y(Center);
+        // One label column, the boxes the same width (the owner: a form's fields line up).
+        let head = Form::new()
+            .label_width(110.0)
+            .field("Profil", iced::widget::container(pick).width(300))
+            .field("Kod alanı", iced::widget::container(field).width(300));
         let scope = match &s.uids {
             Some(u) => format!("Seçili {} nokta, seçim sırasıyla.", u.len()),
             None => "Görünen ve kilitsiz katmanlardaki bütün kodlu noktalar, çizimin sırasıyla.".to_owned(),

@@ -2094,6 +2094,7 @@ impl App {
             Asking::Flatten => self.flatten_view(),
             Asking::FeaturesCode => self.features_code_view(),
             Asking::Baselines => self.baselines_view(),
+            Asking::Grade => self.grade_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),
             Asking::LayerPurge => self.layer_purge_view(),

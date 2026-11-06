@@ -54435,6 +54435,206 @@
       ]
     },
     {
+      "id": "cad.entities.grade",
+      "version": 1,
+      "title": "Eğimle kot ver",
+      "summary": "Bir çizginin, çoklu çizginin ya da alanın dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set Grade/Slope Between Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim ve köşelerin yeni kotları. Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing, layer_locked.",
+      "aliases": [
+        "egimlekot",
+        "setgrade"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's\nouter ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),\n`invalid_input` (both or neither of `end` and `grade`, a number not finite, a range of no length),\n`elevation_missing` (no start given and the vertex has none), `layer_locked`.",
+        "properties": {
+          "end": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "grade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "start": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "to": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "from",
+          "to"
+        ],
+        "title": "EntitiesGrade",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,\nthe grade (rise over run), each vertex's new elevation from `from` to `to`, and the drawing's revision.",
+        "properties": {
+          "end": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "grade": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "grade"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "start": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "zs": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "elevation"
+          }
+        },
+        "required": [
+          "length",
+          "start",
+          "end",
+          "grade",
+          "zs",
+          "revision"
+        ],
+        "title": "EntitiesGraded",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,\nthe grade (rise over run), each vertex's new elevation from `from` to `to`, and the drawing's revision.",
+        "properties": {
+          "end": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "grade": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "grade"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "start": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "zs": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": "array",
+            "x-unit": "elevation"
+          }
+        },
+        "required": [
+          "length",
+          "start",
+          "end",
+          "grade",
+          "zs",
+          "revision"
+        ],
+        "title": "EntitiesGraded",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_path",
+          "wrong_place",
+          "invalid_input",
+          "elevation_missing",
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İlk köşeden dördüncüye %2 eğimle",
+          "input": {
+            "from": 0,
+            "grade": 0.02,
+            "start": 850.0,
+            "to": 3,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.survey.baselines",
       "version": 1,
       "title": "GNSS baz ağı dengelemesi",
@@ -98335,6 +98535,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin."
+    },
+    {
+      "code": "elevation_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Başlangıç köşesinin kotu yok; başlangıç kotunu verin."
     },
     {
       "code": "no_baselines",

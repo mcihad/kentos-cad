@@ -3,6 +3,17 @@
   "version": 1,
   "commands": [
     {
+      "id": "tool.grade",
+      "title": "Eğimle kot ver…",
+      "short": "Eğimle kot",
+      "icon": "gradeBetween",
+      "description": "Seçili çizginin, çoklu çizginin ya da alanın iki köşesi arasına sabit eğimle kot verir (cad.entities.grade; Civil 3D'nin Set Grade/Slope Between Points'i gibi): başlangıç kotu, sonra bitiş kotu ya da eğim (%); aradaki köşeler yol boyunca yatay uzaklıklarına göre kot alır. Pencere önizlemedir; tek geri alma adımı. Harita ve Yol'da.",
+      "aliases": ["EGIMLEKOT", "SETGRADE"],
+      "shortcuts": [],
+      "category": "Değiştir",
+      "status": "implemented"
+    },
+    {
       "id": "survey.baselines",
       "title": "GNSS baz ağı…",
       "short": "GNSS ağı",
@@ -4575,6 +4586,7 @@
     {"id": "map.survey.select", "title": "Kabul edilen noktalar", "short": "Kabul edilenler", "icon": "gnssSelect", "description": "Projenin GNSS arşivinde kabul edilen noktaların nesnelerini seçer ve gösterir; Öznitelikler'in GNSS ölçümü bölümü her birinin yöntemini, çözümlerini, σ'sını, epoğunu, koordinat zincirini ve güncelliğini salt okunur verir. HDOP ve fix doğruluk değildir. map.survey.query ile. KentOS Harita ve GIS.", "aliases": ["KABULEDILEN", "KABULEDİLEN"], "shortcuts": [], "category": "Ölçme", "status": "implemented"}
   ],
   "icons": {
+    "gradeBetween": "<path d=\"M2.5 15.5L17.5 6.5\" stroke-width=\"1.4\"/><circle cx=\"2.5\" cy=\"15.5\" r=\"1.2\" stroke-width=\"1.1\"/><circle cx=\"17.5\" cy=\"6.5\" r=\"1.2\" stroke-width=\"1.1\"/><path d=\"M10 11v6.5M10 17.5h7.5\" stroke-width=\"0.9\" stroke-dasharray=\"1.2 1\"/><path d=\"M12.5 4.5l3-3\" stroke-width=\"0.9\"/><circle cx=\"12.6\" cy=\"1.8\" r=\"0.7\" stroke-width=\"0.8\"/><circle cx=\"15.4\" cy=\"4.2\" r=\"0.7\" stroke-width=\"0.8\"/>",
     "gnssBaselines": "<circle cx=\"4\" cy=\"15\" r=\"1.6\" stroke-width=\"1.2\"/><circle cx=\"16\" cy=\"14\" r=\"1.6\" stroke-width=\"1.2\"/><circle cx=\"10\" cy=\"5\" r=\"1.6\" stroke-width=\"1.2\"/><path d=\"M5.4 14.9l9-0.8M4.9 13.6l4.3-7.2M11 6.3l4.2 6.4\" stroke-width=\"1.2\"/><ellipse cx=\"16\" cy=\"14\" rx=\"3.2\" ry=\"2\" stroke-width=\"0.9\" stroke-dasharray=\"1 1\"/>",
     "featuresCode": "<circle cx=\"3.5\" cy=\"15.5\" r=\"1.3\" stroke-width=\"1.2\"/><circle cx=\"9\" cy=\"11\" r=\"1.3\" stroke-width=\"1.2\"/><circle cx=\"15.5\" cy=\"12.5\" r=\"1.3\" stroke-width=\"1.2\"/><path d=\"M4.6 14.6l3.4-2.8M10.3 11.3l3.9 0.9\" stroke-width=\"1.3\"/><path d=\"M2.5 2.5h7v4h-7z\" stroke-width=\"1.1\"/><path d=\"M4 4.5h4\" stroke-width=\"1\"/>",
     "topologyStopLocked": "<path d=\"M2.5 16.5l5-11 6 3\" stroke-width=\"1.3\"/><circle cx=\"7.5\" cy=\"5.5\" r=\"1.4\" stroke-width=\"1.2\"/><rect x=\"12\" y=\"12\" width=\"6\" height=\"5\" rx=\"0.8\" stroke-width=\"1.2\"/><path d=\"M13.3 12v-1.4a1.7 1.7 0 0 1 3.4 0V12\" stroke-width=\"1.2\"/>",

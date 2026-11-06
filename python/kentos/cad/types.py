@@ -31777,6 +31777,98 @@ class EntitiesFlattened(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesGrade(_Model):
+    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
+    outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
+    (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
+    `invalid_input` (both or neither of `end` and `grade`, a number not finite, a range of no length),
+    `elevation_missing` (no start given and the vertex has none), `layer_locked`.
+    Attributes:
+        from_: Unit: index.
+        to: Unit: index.
+        end: Unit: elevation.
+        grade: Unit: grade.
+        start: Unit: elevation.
+    """
+    uid: str
+    from_: int
+    to: int
+    end: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    grade: float | None | Unset = UNSET
+    start: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["from"] = self.from_
+        out["to"] = self.to
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else float(self.end)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.grade is not UNSET:
+            out["grade"] = None if self.grade is None else float(self.grade)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else float(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesGrade:
+        return cls(
+            uid=data["uid"],
+            from_=data["from"],
+            to=data["to"],
+            end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesGraded(_Model):
+    """Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,
+    the grade (rise over run), each vertex's new elevation from `from` to `to`, and the drawing's revision.
+    Attributes:
+        length: Unit: length.
+        start: Unit: elevation.
+        end: Unit: elevation.
+        grade: Unit: grade.
+        zs: Unit: elevation.
+    """
+    length: float
+    start: float
+    end: float
+    grade: float
+    zs: list[float]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["start"] = float(self.start)
+        out["end"] = float(self.end)
+        out["grade"] = float(self.grade)
+        out["zs"] = [float(e0) for e0 in self.zs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesGraded:
+        return cls(
+            length=float(data["length"]),
+            start=float(data["start"]),
+            end=float(data["end"]),
+            grade=float(data["grade"]),
+            zs=[float(e0) for e0 in data["zs"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesHatch(_Model):
     """Input of `cad.entities.hatch` v1: the regions of `region` hatched with
     `pattern` on `layerId`, one hatch each, as one undo step “Tarama”,
@@ -121375,6 +121467,8 @@ __all__ = [
     "EntitiesFillet",
     "EntitiesFlatten",
     "EntitiesFlattened",
+    "EntitiesGrade",
+    "EntitiesGraded",
     "EntitiesHatch",
     "EntitiesIsolate",
     "EntitiesIsolated",

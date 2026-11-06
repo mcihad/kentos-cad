@@ -55,6 +55,7 @@ use crate::addresses_check;
 use crate::crs_factors;
 use crate::map_features;
 use crate::survey_baselines;
+use crate::entities_grade;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -520,6 +521,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_SURVEY_BASELINES => {
                 $then!(survey_baselines, kentos_commands::SurveyBaselines)
+            }
+            kentos_commands::CAD_ENTITIES_GRADE => {
+                $then!(entities_grade, kentos_commands::EntitiesGrade)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)

@@ -1019,6 +1019,8 @@ __all__ = [
     "EntitiesFillet",
     "EntitiesFlatten",
     "EntitiesFlattened",
+    "EntitiesGrade",
+    "EntitiesGraded",
     "EntitiesHatch",
     "EntitiesIsolate",
     "EntitiesIsolated",

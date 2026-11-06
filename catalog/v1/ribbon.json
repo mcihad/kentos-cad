@@ -4676,6 +4676,17 @@
       {
        "command": "tool.setElevation",
        "size": "small"
+      },
+      {
+       "command": "tool.grade",
+       "size": "small",
+       "works": [
+        "map",
+        "road"
+       ],
+       "modes": [
+        "cad"
+       ]
       }
      ]
     },
@@ -4905,6 +4916,17 @@
       {
        "command": "tool.setElevation",
        "size": "small"
+      },
+      {
+       "command": "tool.grade",
+       "size": "small",
+       "works": [
+        "map",
+        "road"
+       ],
+       "modes": [
+        "cad"
+       ]
       }
      ]
     },
