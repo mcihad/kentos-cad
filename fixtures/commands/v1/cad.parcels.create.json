@@ -2039,6 +2039,350 @@
       ]
     },
     {
+      "name": "Başka adadaki aynı numara uyarısız verilir (ADR 1400)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "7",
+            "attrs": {
+              "Ada": "102"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "7",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "102",
+                  "Parsel": "7",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "7"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı adadaki numara uyarıyla verilir (ADR 1400)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "number": "7",
+            "attrs": {
+              "Ada": "101"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "7",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "parcel_number_taken",
+                "message": "“7” numaralı başka bir parsel var; numara yine verildi. Parsel numarasını Öznitelikler'den düzeltebilirsiniz.",
+                "path": "number"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "101",
+                  "Parsel": "7",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "7"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıradaki numara adanın içinde: yeni adada 1 (ADR 1400)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "pts": [
+              {
+                "x": 487060,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420020
+              },
+              {
+                "x": 487070,
+                "y": 4420030
+              },
+              {
+                "x": 487060,
+                "y": 4420030
+              }
+            ],
+            "attrs": {
+              "Ada": "102"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 8,
+              "number": "1",
+              "opened": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "shapes": {
+              "8": {
+                "corners": [
+                  [
+                    487060,
+                    4420020
+                  ],
+                  [
+                    487060,
+                    4420030
+                  ],
+                  [
+                    487070,
+                    4420020
+                  ],
+                  [
+                    487070,
+                    4420030
+                  ]
+                ],
+                "area": 100,
+                "parts": 1,
+                "holes": 0
+              }
+            },
+            "fields": {
+              "8": {
+                "layerId": "parsel",
+                "attrs": {
+                  "Ada": "102",
+                  "Parsel": "1",
+                  "Mahalle": "",
+                  "Nitelik": "Arsa",
+                  "Tapu alanı (m²)": "",
+                  "Pafta": ""
+                },
+                "label": "1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
       "name": "Plan: yazılmaz, numarası söylenir",
       "steps": [
         {

@@ -847,6 +847,10 @@
         "size": "small"
        },
        {
+        "command": "parcels.check",
+        "size": "small"
+       },
+       {
         "command": "tool.topology",
         "size": "small"
        },
@@ -3529,6 +3533,10 @@
        },
        {
         "command": "data.chart",
+        "size": "small"
+       },
+       {
+        "command": "parcels.check",
         "size": "small"
        }
       ],

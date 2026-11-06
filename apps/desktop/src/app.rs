@@ -412,6 +412,8 @@ pub enum Dialog {
     Grade,
     /// Taşınma raporu (clean_report_window.rs, docs/adr/1262); its state is `App::clean_report`.
     CleanReport,
+    /// Parsel alan denetimi (parcels_check_window.rs, docs/adr/1400); its state is `App::parcels_check`.
+    ParcelsCheck,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
@@ -828,6 +830,7 @@ pub enum Message {
     Baselines(crate::baselines_window::Event),
     Grade(crate::grade_window::Event),
     CleanReport(crate::clean_report_window::Event),
+    ParcelsCheck(crate::parcels_check_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
@@ -1484,6 +1487,7 @@ pub struct App {
     pub(crate) baselines: crate::baselines_window::State,
     pub(crate) grade: crate::grade_window::State,
     pub(crate) clean_report: crate::clean_report_window::State,
+    pub(crate) parcels_check: crate::parcels_check_window::State,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
     pub(crate) xref_watch: crate::xrefs_watch::Watch,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
@@ -1931,6 +1935,7 @@ impl App {
             baselines: Default::default(),
             grade: Default::default(),
             clean_report: Default::default(),
+            parcels_check: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
             reconcile: None,
@@ -2703,6 +2708,7 @@ impl App {
             Message::Baselines(event) => return self.baselines_event(event),
             Message::Grade(event) => return self.grade_event(event),
             Message::CleanReport(event) => return self.clean_report_event(event),
+            Message::ParcelsCheck(event) => return self.parcels_check_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
@@ -3555,6 +3561,7 @@ impl App {
             "survey.baselines" => return self.open_baselines(),
             "tool.grade" => return self.open_grade(),
             "topology.cleanReport" => return self.open_clean_report(),
+            "parcels.check" => return self.open_parcels_check(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
             "map.workSource" => {
                 self.map_work_show_source();

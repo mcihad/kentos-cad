@@ -64,6 +64,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-05 / ADR 1380: `cad.survey.baselines`'ın web işleyicisi ve GNSS baz ağı penceresi.
 - MAP-06 / ADR 1290: `cad.entities.grade`'in web işleyicisi ve Eğimle kot ver penceresi.
 - MAP-07 / ADR 1262: `cad.topology.clean`'in web işleyicisi ve Taşınma raporu penceresi.
+- MAP-08 / ADR 1400: `cad.parcels.check`'in web işleyicisi, Parsel alan denetimi penceresi; web'in `cad.parcels.create`'i numarayı adada arasın (üç yeni ortak durum).
 - MAP-03 / ADR 1340: `map.survey.query` ve `map.survey.edit`'in web işleyicisi, RINEX başlığı okuyucusunun WASM'ı,
   `io/kcad.ts` şema 194 (`mapSurvey`), GNSS arşivi paneli ve Öznitelikler › GNSS ölçümü, şerit komutları (`map.survey`,
   `map.survey.import`, `map.survey.select`) ve resimleri.

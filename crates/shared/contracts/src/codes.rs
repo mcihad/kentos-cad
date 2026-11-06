@@ -1973,6 +1973,8 @@ codes! {
     ELEVATION_MISSING = "elevation_missing", Failed, false, "Başlangıç köşesinin kotu yok; başlangıç kotunu verin.";
     /// A topological clean-up that would move a vertex past the quality profile's acceptance threshold (docs/adr/1262).
     CLEAN_BEYOND_ACCEPTANCE = "clean_beyond_acceptance", Failed, false, "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı.";
+    /// Parsel alan denetimi (docs/adr/1400): an object given that is not an area.
+    NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
     /// GNSS baz ağı (docs/adr/1380): no baseline given.
     NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
     /// GNSS baz ağı: a station named twice.

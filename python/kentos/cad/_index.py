@@ -181,6 +181,7 @@ COMMANDS: dict[str, Any] = {
     "cad.options.edit": options.edit,
     "cad.options.query": options.query,
     "cad.parameters.edit": parameters.edit,
+    "cad.parcels.check": parcels.check,
     "cad.parcels.create": parcels.create,
     "cad.plotstyles.import": plotstyles.import_,
     "cad.point.create": point.create,

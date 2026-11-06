@@ -57,6 +57,7 @@ use crate::map_features;
 use crate::survey_baselines;
 use crate::entities_grade;
 use crate::topology_clean;
+use crate::parcels_check;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -528,6 +529,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_TOPOLOGY_CLEAN => {
                 $then!(topology_clean, kentos_commands::TopologyClean)
+            }
+            kentos_commands::CAD_PARCELS_CHECK => {
+                $then!(parcels_check, kentos_commands::ParcelsCheck)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)

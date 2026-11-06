@@ -61256,6 +61256,76 @@ class ParametersEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelAreaCheck(_Model):
+    """A parcel as checked: its identity's parts as written (empty when missing), its geometric area (square metres),
+    its recorded area's text as written and its value when it reads, the difference (geometric − recorded), the
+    tolerance from the geometric area, and the status: `within`, `outside`, `noRecord` or `invalidRecord`;
+    `duplicate` when another parcel has the same identity, `noIdentity` when Ada or Parsel is missing.
+    Attributes:
+        area: Unit: area.
+        tolerance: Unit: area.
+        difference: Unit: area.
+        recorded: Unit: area.
+    """
+    uid: str
+    il: str
+    ilce: str
+    mahalle: str
+    ada: str
+    parsel: str
+    area: float
+    tolerance: float
+    status: str
+    difference: float | None | Unset = UNSET
+    duplicate: bool | Unset = UNSET
+    no_identity: bool | Unset = UNSET
+    recorded: float | None | Unset = UNSET
+    recorded_text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["il"] = self.il
+        out["ilce"] = self.ilce
+        out["mahalle"] = self.mahalle
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["area"] = float(self.area)
+        out["tolerance"] = float(self.tolerance)
+        out["status"] = self.status
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.duplicate is not UNSET:
+            out["duplicate"] = self.duplicate
+        if self.no_identity is not UNSET:
+            out["noIdentity"] = self.no_identity
+        if self.recorded is not UNSET:
+            out["recorded"] = None if self.recorded is None else float(self.recorded)
+        if self.recorded_text is not UNSET:
+            out["recordedText"] = self.recorded_text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelAreaCheck:
+        return cls(
+            uid=data["uid"],
+            il=data["il"],
+            ilce=data["ilce"],
+            mahalle=data["mahalle"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            area=float(data["area"]),
+            tolerance=float(data["tolerance"]),
+            status=data["status"],
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            duplicate=data.get("duplicate", UNSET),
+            no_identity=data.get("noIdentity", UNSET),
+            recorded=UNSET if "recorded" not in data else None if data["recorded"] is None else float(data["recorded"]),
+            recorded_text=data.get("recordedText", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelCreated(_Model):
     """`cad.parcels.create`'s output: the parcel written, its number and whether the parcel layer was opened for it.
     Attributes:
@@ -61312,6 +61382,82 @@ class ParcelPlan(_Model):
             number=data["number"],
             opened=data["opened"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsCheck(_Model):
+    """Input of `cad.parcels.check` v1: the parcels (none: every area on the parcel layer `parsel`) and the attribute
+    that holds the recorded area (none: `Tapu alanı (m²)`).
+
+    Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area).
+    """
+    field: str | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsCheck:
+        return cls(
+            field=data.get("field", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsChecked(_Model):
+    """Output of `cad.parcels.check` v1: the rule, the recorded area's attribute, every parcel in the drawing's order,
+    the counts by status, the identities held by more than one parcel (`İl/İlçe/Mahalle/Ada/Parsel`), and the parcels
+    without Ada or Parsel.
+    Attributes:
+        within: Unit: count.
+        outside: Unit: count.
+        no_record: Unit: count.
+        invalid_record: Unit: count.
+        no_identity: Unit: count.
+    """
+    rule: str
+    field: str
+    parcels: list[ParcelAreaCheck]
+    within: int
+    outside: int
+    no_record: int
+    invalid_record: int
+    duplicates: list[str]
+    no_identity: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["field"] = self.field
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        out["within"] = self.within
+        out["outside"] = self.outside
+        out["noRecord"] = self.no_record
+        out["invalidRecord"] = self.invalid_record
+        out["duplicates"] = list(self.duplicates)
+        out["noIdentity"] = self.no_identity
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsChecked:
+        return cls(
+            rule=data["rule"],
+            field=data["field"],
+            parcels=[ParcelAreaCheck.from_json(e0) for e0 in data["parcels"]],
+            within=data["within"],
+            outside=data["outside"],
+            no_record=data["noRecord"],
+            invalid_record=data["invalidRecord"],
+            duplicates=list(data["duplicates"]),
+            no_identity=data["noIdentity"],
         )
 
 
@@ -123025,8 +123171,11 @@ __all__ = [
     "ParametersEdited",
     "ParametersOperation",
     "ParametersOperationName",
+    "ParcelAreaCheck",
     "ParcelCreated",
     "ParcelPlan",
+    "ParcelsCheck",
+    "ParcelsChecked",
     "ParcelsCreate",
     "ParkedInfo",
     "ParkedPin",

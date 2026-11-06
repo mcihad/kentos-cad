@@ -1,0 +1,1850 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.parcels.check",
+ "commandVersion": 1,
+ "title": "Parsel alan denetimi",
+ "note": "ADR 1400. Bağımsız başvuru scripts/fixtures/parcels_check_cases.py: alan rasyonel shoelace ve yay parçası, yanılma sınırı 2022 Yönetmeliği Madde 8(2) tablosundan elle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Parsel alan denetimi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "parsel",
+    "name": "Parsel sınırı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "1",
+     "Tapu alanı (m²)": "301,2"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420015.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "2",
+     "Tapu alanı (m²)": "590"
+    },
+    "pts": [
+     {
+      "x": 487030.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487030.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "3"
+    },
+    "pts": [
+     {
+      "x": 487100.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487100.0,
+      "y": 4420020.0
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.0,
+     0.25,
+     0.0
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "102",
+     "Parsel": "1",
+     "Tapu alanı (m²)": "tapuda yok"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "2",
+     "Tapu alanı (m²)": " 10.4 "
+    },
+    "pts": [
+     {
+      "x": 487070.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487078.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487078.0,
+      "y": 4420001.25
+     },
+     {
+      "x": 487070.0,
+      "y": 4420001.25
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Parsel": "9",
+     "Tapu alanı (m²)": "1495,75"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420050.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420050.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420090.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420090.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420070.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420070.0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "103",
+     "Parsel": "1",
+     "Tapu alanı (m²)": "30.010"
+    },
+    "pts": [
+     {
+      "x": 487200.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487300.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487300.0,
+      "y": 4420300.0
+     },
+     {
+      "x": 487200.0,
+      "y": 4420300.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "parsel",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4419995.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4419995.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 9,
+    "layerId": "parsel",
+    "attrs": {},
+    "text": "Ada 101",
+    "p": {
+     "x": 487000.0,
+     "y": 4419990.0
+    },
+    "height": 2.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "polygon",
+    "id": 10,
+    "layerId": "parsel",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "101",
+     "Parsel": "4",
+     "Tapu alanı (m²)": "1.250,50"
+    },
+    "pts": [
+     {
+      "x": 487130.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4420010.03
+     },
+     {
+      "x": 487130.0,
+      "y": 4420010.03
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "201",
+     "Parsel": "1",
+     "Tapu alanı (m²)": "5003"
+    },
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487500.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487500.0,
+      "y": 4420050.0
+     },
+     {
+      "x": 487400.0,
+      "y": 4420050.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "201",
+     "Parsel": "2",
+     "Tapu alanı (m²)": "24900"
+    },
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4420100.0
+     },
+     {
+      "x": 487500.0,
+      "y": 4420100.0
+     },
+     {
+      "x": 487500.0,
+      "y": 4420350.0
+     },
+     {
+      "x": 487400.0,
+      "y": 4420350.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "201",
+     "Parsel": "3",
+     "Tapu alanı (m²)": "98,44"
+    },
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4420400.0
+     },
+     {
+      "x": 487410.0,
+      "y": 4420400.0
+     },
+     {
+      "x": 487410.0,
+      "y": 4420410.075
+     },
+     {
+      "x": 487400.0,
+      "y": 4420410.075
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "201",
+     "Parsel": "4",
+     "Tapu alanı (m²)": "10,6"
+    },
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4420500.0
+     },
+     {
+      "x": 487402.0,
+      "y": 4420500.0
+     },
+     {
+      "x": 487402.0,
+      "y": 4420505.0
+     },
+     {
+      "x": 487400.0,
+      "y": 4420505.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 15,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "201",
+     "Parsel": "5",
+     "Tapu alanı (m²)": "90000"
+    },
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4420600.0
+     },
+     {
+      "x": 487700.0,
+      "y": 4420600.0
+     },
+     {
+      "x": 487700.0,
+      "y": 4420900.0
+     },
+     {
+      "x": 487400.0,
+      "y": 4420900.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 16,
+    "layerId": "cizim",
+    "attrs": {
+     "İl": "Ankara",
+     "İlçe": "Çankaya",
+     "Mahalle": "Merkez",
+     "Ada": "201",
+     "Parsel": "6",
+     "Tapu alanı (m²)": "10.0"
+    },
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4421000.0
+     },
+     {
+      "x": 487410.0,
+      "y": 4421000.0
+     },
+     {
+      "x": 487410.0,
+      "y": 4421001.05
+     },
+     {
+      "x": 487400.0,
+      "y": 4421001.05
+     }
+    ]
+   }
+  ],
+  "uids": [
+   "0192f5c0-1400-7000-8000-000000000001",
+   "0192f5c0-1400-7000-8000-000000000002",
+   "0192f5c0-1400-7000-8000-000000000003",
+   "0192f5c0-1400-7000-8000-000000000004",
+   "0192f5c0-1400-7000-8000-000000000005",
+   "0192f5c0-1400-7000-8000-000000000006",
+   "0192f5c0-1400-7000-8000-000000000007",
+   "0192f5c0-1400-7000-8000-000000000008",
+   "0192f5c0-1400-7000-8000-000000000009",
+   "0192f5c0-1400-7000-8000-00000000000a",
+   "0192f5c0-1400-7000-8000-00000000000b",
+   "0192f5c0-1400-7000-8000-00000000000c",
+   "0192f5c0-1400-7000-8000-00000000000d",
+   "0192f5c0-1400-7000-8000-00000000000e",
+   "0192f5c0-1400-7000-8000-00000000000f",
+   "0192f5c0-1400-7000-8000-000000000010"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "plan: parsel katmanının bütün alanları; içinde, dışında, kaydı yok, okunamayan; yinelenen kimlik",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 600.0,
+         "recordedText": "590",
+         "recorded": 590.0,
+         "difference": 10.0,
+         "tolerance": 6.8,
+         "status": "outside",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "area": 433.7463551364492,
+         "tolerance": 5.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "102",
+         "parsel": "1",
+         "area": 100.0,
+         "recordedText": "tapuda yok",
+         "tolerance": 2.3,
+         "status": "invalidRecord"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000005",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 10.0,
+         "recordedText": "10.4",
+         "recorded": 10.4,
+         "difference": -0.40000000000000036,
+         "tolerance": 0.5,
+         "status": "within",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000006",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "",
+         "parsel": "9",
+         "area": 1500.0,
+         "recordedText": "1495,75",
+         "recorded": 1495.75,
+         "difference": 4.25,
+         "tolerance": 10.8,
+         "status": "within",
+         "noIdentity": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000a",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "4",
+         "area": 100.3000000026077,
+         "recordedText": "1.250,50",
+         "tolerance": 2.306000000052154,
+         "status": "invalidRecord"
+        }
+       ],
+       "within": 3,
+       "outside": 1,
+       "noRecord": 1,
+       "invalidRecord": 2,
+       "duplicates": [
+        "Ankara/Çankaya/Merkez/101/2"
+       ],
+       "noIdentity": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "uygula: salt okunur, çizim değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 600.0,
+         "recordedText": "590",
+         "recorded": 590.0,
+         "difference": 10.0,
+         "tolerance": 6.8,
+         "status": "outside",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "area": 433.7463551364492,
+         "tolerance": 5.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "102",
+         "parsel": "1",
+         "area": 100.0,
+         "recordedText": "tapuda yok",
+         "tolerance": 2.3,
+         "status": "invalidRecord"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000005",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 10.0,
+         "recordedText": "10.4",
+         "recorded": 10.4,
+         "difference": -0.40000000000000036,
+         "tolerance": 0.5,
+         "status": "within",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000006",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "",
+         "parsel": "9",
+         "area": 1500.0,
+         "recordedText": "1495,75",
+         "recorded": 1495.75,
+         "difference": 4.25,
+         "tolerance": 10.8,
+         "status": "within",
+         "noIdentity": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000a",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "4",
+         "area": 100.3000000026077,
+         "recordedText": "1.250,50",
+         "tolerance": 2.306000000052154,
+         "status": "invalidRecord"
+        }
+       ],
+       "within": 3,
+       "outside": 1,
+       "noRecord": 1,
+       "invalidRecord": 2,
+       "duplicates": [
+        "Ankara/Çankaya/Merkez/101/2"
+       ],
+       "noIdentity": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "verilen parseller, başka katmandaki alan da",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000007",
+       "0192f5c0-1400-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000007",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "103",
+         "parsel": "1",
+         "area": 30000.0,
+         "recordedText": "30.010",
+         "recorded": 30.01,
+         "difference": 29969.99,
+         "tolerance": 92.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        }
+       ],
+       "within": 1,
+       "outside": 1,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "aynı numara başka adada yinelenmiş sayılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000001",
+       "0192f5c0-1400-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "102",
+         "parsel": "1",
+         "area": 100.0,
+         "recordedText": "tapuda yok",
+         "tolerance": 2.3,
+         "status": "invalidRecord"
+        }
+       ],
+       "within": 1,
+       "outside": 0,
+       "noRecord": 0,
+       "invalidRecord": 1,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yaylı kenarlı parsel: alan yay parçasıyla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "area": 433.7463551364492,
+         "tolerance": 5.637463551364492,
+         "status": "noRecord"
+        }
+       ],
+       "within": 0,
+       "outside": 0,
+       "noRecord": 1,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "delikli parsel: delik alanı düşülür; adasız parsel kimliksiz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000006"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000006",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "",
+         "parsel": "9",
+         "area": 1500.0,
+         "recordedText": "1495,75",
+         "recorded": 1495.75,
+         "difference": 4.25,
+         "tolerance": 10.8,
+         "status": "within",
+         "noIdentity": true
+        }
+       ],
+       "within": 1,
+       "outside": 0,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başka öznitelikten kayıtlı alan",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "field": "Ada"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Ada",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "area": 300.0,
+         "recordedText": "101",
+         "recorded": 101.0,
+         "difference": 199.0,
+         "tolerance": 4.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 600.0,
+         "recordedText": "101",
+         "recorded": 101.0,
+         "difference": 499.0,
+         "tolerance": 6.8,
+         "status": "outside",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "area": 433.7463551364492,
+         "recordedText": "101",
+         "recorded": 101.0,
+         "difference": 332.7463551364492,
+         "tolerance": 5.637463551364492,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "102",
+         "parsel": "1",
+         "area": 100.0,
+         "recordedText": "102",
+         "recorded": 102.0,
+         "difference": -2.0,
+         "tolerance": 2.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000005",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 10.0,
+         "recordedText": "101",
+         "recorded": 101.0,
+         "difference": -91.0,
+         "tolerance": 0.5,
+         "status": "outside",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000006",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "",
+         "parsel": "9",
+         "area": 1500.0,
+         "tolerance": 10.8,
+         "status": "noRecord",
+         "noIdentity": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000a",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "4",
+         "area": 100.3000000026077,
+         "recordedText": "101",
+         "recorded": 101.0,
+         "difference": -0.6999999973922968,
+         "tolerance": 2.306000000052154,
+         "status": "within"
+        }
+       ],
+       "within": 2,
+       "outside": 4,
+       "noRecord": 1,
+       "invalidRecord": 0,
+       "duplicates": [
+        "Ankara/Çankaya/Merkez/101/2"
+       ],
+       "noIdentity": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "boş öznitelik adı: Tapu alanı (m²)",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "field": "   "
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000001",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "1",
+         "area": 300.0,
+         "recordedText": "301,2",
+         "recorded": 301.2,
+         "difference": -1.1999999999999886,
+         "tolerance": 4.3,
+         "status": "within"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 600.0,
+         "recordedText": "590",
+         "recorded": 590.0,
+         "difference": 10.0,
+         "tolerance": 6.8,
+         "status": "outside",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000003",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "3",
+         "area": 433.7463551364492,
+         "tolerance": 5.637463551364492,
+         "status": "noRecord"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000004",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "102",
+         "parsel": "1",
+         "area": 100.0,
+         "recordedText": "tapuda yok",
+         "tolerance": 2.3,
+         "status": "invalidRecord"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000005",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 10.0,
+         "recordedText": "10.4",
+         "recorded": 10.4,
+         "difference": -0.40000000000000036,
+         "tolerance": 0.5,
+         "status": "within",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000006",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "",
+         "parsel": "9",
+         "area": 1500.0,
+         "recordedText": "1495,75",
+         "recorded": 1495.75,
+         "difference": 4.25,
+         "tolerance": 10.8,
+         "status": "within",
+         "noIdentity": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000a",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "4",
+         "area": 100.3000000026077,
+         "recordedText": "1.250,50",
+         "tolerance": 2.306000000052154,
+         "status": "invalidRecord"
+        }
+       ],
+       "within": 3,
+       "outside": 1,
+       "noRecord": 1,
+       "invalidRecord": 2,
+       "duplicates": [
+        "Ankara/Çankaya/Merkez/101/2"
+       ],
+       "noIdentity": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "5000 m²: dilim sınırı ±24,8",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-00000000000b"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000b",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "201",
+         "parsel": "1",
+         "area": 5000.0,
+         "recordedText": "5003",
+         "recorded": 5003.0,
+         "difference": -3.0,
+         "tolerance": 24.8,
+         "status": "within"
+        }
+       ],
+       "within": 1,
+       "outside": 0,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "25000 m²: ±84,8, 100 m² fark dışında",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-00000000000c"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000c",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "201",
+         "parsel": "2",
+         "area": 25000.0,
+         "recordedText": "24900",
+         "recorded": 24900.0,
+         "difference": 100.0,
+         "tolerance": 84.8,
+         "status": "outside"
+        }
+       ],
+       "within": 0,
+       "outside": 1,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "100,75 m²: küsurat alt dilimden (11–100) ±2,315; 2,31 fark içinde",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-00000000000d"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000d",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "201",
+         "parsel": "3",
+         "area": 100.75000000186265,
+         "recordedText": "98,44",
+         "recorded": 98.44,
+         "difference": 2.3100000018626474,
+         "tolerance": 2.3150000000372533,
+         "status": "within"
+        }
+       ],
+       "within": 1,
+       "outside": 0,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "10 m²: ±0,5, 0,6 fark dışında",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-00000000000e"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000e",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "201",
+         "parsel": "4",
+         "area": 10.0,
+         "recordedText": "10,6",
+         "recorded": 10.6,
+         "difference": -0.5999999999999996,
+         "tolerance": 0.5,
+         "status": "outside"
+        }
+       ],
+       "within": 0,
+       "outside": 1,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "90000 m²: son dilim ±182,3",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-00000000000f"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000f",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "201",
+         "parsel": "5",
+         "area": 90000.0,
+         "recordedText": "90000",
+         "recorded": 90000.0,
+         "difference": 0.0,
+         "tolerance": 182.3,
+         "status": "within"
+        }
+       ],
+       "within": 1,
+       "outside": 0,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "10,5 m²: küsurat ilk dilimden ±0,525",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000010"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000010",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "201",
+         "parsel": "6",
+         "area": 10.499999998137355,
+         "recordedText": "10.0",
+         "recorded": 10.0,
+         "difference": 0.49999999813735485,
+         "tolerance": 0.5249999999068677,
+         "status": "within"
+        }
+       ],
+       "within": 1,
+       "outside": 0,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kayıt yazısı ondalık noktalı; binlik ayırıcı okunmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000007",
+       "0192f5c0-1400-7000-8000-00000000000a"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000007",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "103",
+         "parsel": "1",
+         "area": 30000.0,
+         "recordedText": "30.010",
+         "recorded": 30.01,
+         "difference": 29969.99,
+         "tolerance": 92.3,
+         "status": "outside"
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-00000000000a",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "4",
+         "area": 100.3000000026077,
+         "recordedText": "1.250,50",
+         "tolerance": 2.306000000052154,
+         "status": "invalidRecord"
+        }
+       ],
+       "within": 0,
+       "outside": 1,
+       "noRecord": 0,
+       "invalidRecord": 1,
+       "duplicates": [],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yinelenen kimlik: aynı ada, aynı parsel",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000002",
+       "0192f5c0-1400-7000-8000-000000000005"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rule": "tkgm-2022-m8-arsiv",
+       "field": "Tapu alanı (m²)",
+       "parcels": [
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000002",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 600.0,
+         "recordedText": "590",
+         "recorded": 590.0,
+         "difference": 10.0,
+         "tolerance": 6.8,
+         "status": "outside",
+         "duplicate": true
+        },
+        {
+         "uid": "0192f5c0-1400-7000-8000-000000000005",
+         "il": "Ankara",
+         "ilce": "Çankaya",
+         "mahalle": "Merkez",
+         "ada": "101",
+         "parsel": "2",
+         "area": 10.0,
+         "recordedText": "10.4",
+         "recorded": 10.4,
+         "difference": -0.40000000000000036,
+         "tolerance": 0.5,
+         "status": "within",
+         "duplicate": true
+        }
+       ],
+       "within": 1,
+       "outside": 1,
+       "noRecord": 0,
+       "invalidRecord": 0,
+       "duplicates": [
+        "Ankara/Çankaya/Merkez/101/2"
+       ],
+       "noIdentity": 0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "doğrulama: verilen parseller",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000001",
+       "0192f5c0-1400-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çizgi bir parsel değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000001",
+       "0192f5c0-1400-7000-8000-000000000008"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_parcel",
+       "message": "“0192f5c0-1400-7000-8000-000000000008” bir alan değil; parsel alan denetimi yalnız alanları denetler.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "x"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1400-7000-8000-000000000063"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-1400-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

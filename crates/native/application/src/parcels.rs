@@ -38,9 +38,22 @@ fn parse_int(text: &str) -> Option<u64> {
     Some(digits.parse().unwrap_or(u64::MAX))
 }
 
-/// One above the greatest whole number the parcels' Parsel values start with.
-pub fn next_number(doc: &Document) -> String {
+/// A parcel's place: İl, İlçe, Mahalle and Ada, trimmed (docs/adr/1400: the parcel number is unique only within its
+/// place; Parsel 5 of Ada 101 and of Ada 102 are two parcels).
+pub fn place_of<'a>(attr: impl Fn(&str) -> Option<&'a String>) -> [String; 4] {
+    ["İl", "İlçe", "Mahalle", "Ada"].map(|k| attr(k).map(|v| v.trim().to_owned()).unwrap_or_default())
+}
+
+/// Whether a parcel at `other` is in the `given` place: every part given is the same; a part not given (empty)
+/// takes any, so a parcel drawn without its Ada is compared with every parcel as before.
+pub fn in_place(given: &[String; 4], other: &[String; 4]) -> bool {
+    given.iter().zip(other).all(|(g, o)| g.is_empty() || g == o)
+}
+
+/// One above the greatest whole number the Parsel values of the parcels in `place` start with.
+pub fn next_number(doc: &Document, place: &[String; 4]) -> String {
     doc.by_layer(PARCEL_LAYER)
+        .filter(|e| in_place(place, &place_of(|k| e.base().attrs.get(k))))
         .filter_map(|e| e.base().attrs.get("Parsel"))
         .map(|text| parse_int(text).unwrap_or(0))
         .max()
@@ -51,8 +64,10 @@ pub fn next_number(doc: &Document) -> String {
 
 /// The number: the given one trimmed, or the next; a given one another parcel has is warned of.
 fn number_of(doc: &Document, input: &ParcelsCreate) -> Result<(String, Vec<CommandWarning>), Stop> {
+    let given_attrs = input.attrs.clone().unwrap_or_default();
+    let place = place_of(|k| given_attrs.get(k));
     let Some(given) = &input.number else {
-        return Ok((next_number(doc), Vec::new()));
+        return Ok((next_number(doc, &place), Vec::new()));
     };
     let number = given.trim();
     if number.is_empty() {
@@ -63,10 +78,11 @@ fn number_of(doc: &Document, input: &ParcelsCreate) -> Result<(String, Vec<Comma
         )));
     }
     let taken = doc.by_layer(PARCEL_LAYER).any(|e| {
-        e.base()
-            .attrs
-            .get("Parsel")
-            .is_some_and(|v| v.trim() == number)
+        in_place(&place, &place_of(|k| e.base().attrs.get(k)))
+            && e.base()
+                .attrs
+                .get("Parsel")
+                .is_some_and(|v| v.trim() == number)
     });
     let warnings = if taken {
         vec![CommandWarning {

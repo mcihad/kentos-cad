@@ -54635,6 +54635,199 @@
       ]
     },
     {
+      "id": "cad.parcels.check",
+      "version": 1,
+      "title": "Parsel alan denetimi",
+      "summary": "Her parselin koordinatlardan hesaplanan alanını (yay ve delikler dahil) kayıtlı alanıyla (Tapu alanı (m²), yazıldığı gibi; düz ondalık okunur, öbür yazı invalidRecord) karşılaştırır: fark (hesap − kayıt) ve yanılma sınırı, Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik (RG 27.09.2022/31966) Madde 8(2)'nin arşiv onaylı geometri tablosundan (artan oranlı dilimler; küsurat alt dilimden). Durum: within, outside, noRecord, invalidRecord. Kimlik İl/İlçe/Mahalle/Ada/Parsel birlikte: yalnız parsel numarası değil; iki parselin aynı kimliği duplicates, Ada ya da Parsel'i olmayan noIdentity. uids yoksa parsel katmanının (parsel) bütün alanları. Salt okunur: hesap alanı kayıtlı alanın üstüne yazılmaz; sonuç resmî uygunluk iddiası değildir. Retler: invalid_uid, entity_not_found, not_a_parcel (uids[i]).",
+      "aliases": [
+        "parselalan",
+        "yanilmasiniri",
+        "tecviz"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.check` v1: the parcels (none: every area on the parcel layer `parsel`) and the attribute\nthat holds the recorded area (none: `Tapu alanı (m²)`).\n\nRefusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area).",
+        "properties": {
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ParcelsCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.check` v1: the rule, the recorded area's attribute, every parcel in the drawing's order,\nthe counts by status, the identities held by more than one parcel (`İl/İlçe/Mahalle/Ada/Parsel`), and the parcels\nwithout Ada or Parsel.",
+        "properties": {
+          "duplicates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "field": {
+            "type": "string"
+          },
+          "invalidRecord": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "noIdentity": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "noRecord": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "outside": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ParcelAreaCheck"
+            },
+            "type": "array"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "within": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "rule",
+          "field",
+          "parcels",
+          "within",
+          "outside",
+          "noRecord",
+          "invalidRecord",
+          "duplicates",
+          "noIdentity"
+        ],
+        "title": "ParcelsChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.check` v1: the rule, the recorded area's attribute, every parcel in the drawing's order,\nthe counts by status, the identities held by more than one parcel (`İl/İlçe/Mahalle/Ada/Parsel`), and the parcels\nwithout Ada or Parsel.",
+        "properties": {
+          "duplicates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "field": {
+            "type": "string"
+          },
+          "invalidRecord": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "noIdentity": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "noRecord": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "outside": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ParcelAreaCheck"
+            },
+            "type": "array"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "within": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "rule",
+          "field",
+          "parcels",
+          "within",
+          "outside",
+          "noRecord",
+          "invalidRecord",
+          "duplicates",
+          "noIdentity"
+        ],
+        "title": "ParcelsChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_parcel"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının bütün parselleri",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.topology.clean",
       "version": 1,
       "title": "Topolojik temizlik (taşınma raporu)",
@@ -98831,6 +99024,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "not_a_parcel",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne bir alan değil; parsel alan denetimi alanları denetler."
     },
     {
       "code": "no_baselines",
@@ -158760,6 +158959,82 @@
           "type": "string"
         }
       ]
+    },
+    "ParcelAreaCheck": {
+      "description": "A parcel as checked: its identity's parts as written (empty when missing), its geometric area (square metres),\nits recorded area's text as written and its value when it reads, the difference (geometric − recorded), the\ntolerance from the geometric area, and the status: `within`, `outside`, `noRecord` or `invalidRecord`;\n`duplicate` when another parcel has the same identity, `noIdentity` when Ada or Parsel is missing.",
+      "properties": {
+        "ada": {
+          "type": "string"
+        },
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "difference": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "duplicate": {
+          "type": "boolean"
+        },
+        "il": {
+          "type": "string"
+        },
+        "ilce": {
+          "type": "string"
+        },
+        "mahalle": {
+          "type": "string"
+        },
+        "noIdentity": {
+          "type": "boolean"
+        },
+        "parsel": {
+          "type": "string"
+        },
+        "recorded": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "recordedText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "il",
+        "ilce",
+        "mahalle",
+        "ada",
+        "parsel",
+        "area",
+        "tolerance",
+        "status"
+      ],
+      "type": "object"
     },
     "ParkedInfo": {
       "description": "Pins parked for one object: its lasting id, the key's value, how many pins.",

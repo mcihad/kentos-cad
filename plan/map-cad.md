@@ -541,6 +541,15 @@ sınır güncellendiğinde komşuluk ve geometrik alan değişsin, kaynak belge
 değeri değişmesin. Yetkisiz kullanıcı malik/pay verisini sorgu, dışa aktarım
 ve MCP ile alamamalı. Kabul resmî tescil uygunluğu iddiası içermez.
 
+**6 Kasım 2026 — Parsel alan denetimi ([ADR 1400](../docs/adr/1400-parcel-area-check-and-identity.md)).** Kapsam işareti:
+**Harita + CBS**. Araştırma: Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik (RG 27.09.2022/31966)
+Madde 4, 7, 8; Madde 8(2) tablosu üç ikincil kaynaktan (resmî metinle karşılaştırma bekliyor); Netcad'in tapu alanını baz
+alan özeti. Kanıtlanan: geometrik ve kayıtlı alan ayrı — `cad.parcels.check` hesap alanını tapu alanıyla (yazıldığı gibi)
+karşılaştırır, fark ve yanılma sınırı, dört durum; kimlik İl/İlçe/Mahalle/Ada/Parsel birlikte, yinelenen ve kimliksiz
+parsel (21 ortak durum). K19 düzeltildi: `cad.parcels.create` yinelenen numarayı ve sıradaki numarayı adanın içinde arar.
+Açık: kalıcı parsel kaydı (belge, geçerlilik, tarihçe), mantıksal ortak sınır, erişim denetimli hak/pay, geçici
+koordinatlı yöntem.
+
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K20], [K19], [K33].

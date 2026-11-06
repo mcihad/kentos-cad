@@ -9328,6 +9328,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Parsel alan denetimi (plan/map-cad.md MAP-08, docs/adr/1400).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_CHECK.into(),
+            version: crate::CAD_PARCELS_CHECK_VERSION,
+            title: "Parsel alan denetimi".into(),
+            summary: "Her parselin koordinatlardan hesaplanan alanını (yay ve delikler dahil) kayıtlı alanıyla (Tapu alanı (m²), yazıldığı gibi; düz ondalık okunur, öbür yazı invalidRecord) karşılaştırır: fark (hesap − kayıt) ve yanılma sınırı, Tapu Planlarında Yanılma Sınırının Belirlenmesi Hakkında Yönetmelik (RG 27.09.2022/31966) Madde 8(2)'nin arşiv onaylı geometri tablosundan (artan oranlı dilimler; küsurat alt dilimden). Durum: within, outside, noRecord, invalidRecord. \
+                      Kimlik İl/İlçe/Mahalle/Ada/Parsel birlikte: yalnız parsel numarası değil; iki parselin aynı kimliği duplicates, Ada ya da Parsel'i olmayan noIdentity. uids yoksa parsel katmanının (parsel) bütün alanları. Salt okunur: hesap alanı kayıtlı alanın üstüne yazılmaz; sonuç resmî uygunluk iddiası değildir. \
+                      Retler: invalid_uid, entity_not_found, not_a_parcel (uids[i])."
+                .into(),
+            aliases: vec!["parselalan".into(), "yanilmasiniri".into(), "tecviz".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsCheck>(),
+            output: schema::<crate::ParcelsChecked>(),
+            plan: Some(schema::<crate::ParcelsChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel katmanının bütün parselleri".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
         // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CLEAN.into(),
@@ -15847,6 +15874,7 @@ mod tests {
                     crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselines>(e.input.clone()).map(|_| ()),
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16790,6 +16818,7 @@ mod tests {
                         crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone()).map(|_| ()),
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
+                        crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),

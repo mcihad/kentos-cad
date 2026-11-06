@@ -560,9 +560,18 @@ def js_parse_int(text):
     return int(digits) if digits else None
 
 
-def next_number(setup):
+PLACE = ("İl", "İlçe", "Mahalle", "Ada")
+
+
+def in_place(given, attrs):
+    """ADR 1400: a parcel number is unique within its place; a part of the place not given takes any."""
+    return all(not (given or {}).get(k, "").strip() or (given or {}).get(k, "").strip() == attrs.get(k, "").strip()
+               for k in PLACE)
+
+
+def next_number(setup, given=None):
     nums = [js_parse_int(e["attrs"].get("Parsel", "")) or 0 for e in setup["entities"]
-            if e["layerId"] == "parsel" and "Parsel" in e["attrs"]]
+            if e["layerId"] == "parsel" and "Parsel" in e["attrs"] and in_place(given, e["attrs"])]
     return str(max(nums, default=0) + 1)
 
 
@@ -580,7 +589,7 @@ def parcel_written(name, ring, number=None, attrs=None, avoid=(), topology=False
     setup = setup or parcel_setup()
     ids = [e["id"] for e in setup["entities"]]
     nid = max(ids) + 1
-    num = number if number is not None else next_number(setup)
+    num = number if number is not None else next_number(setup, attrs)
     inp = {"pts": [W(p) for p in ring]}
     if number is not None:
         inp["number"] = number
@@ -635,6 +644,14 @@ def parcel_cases():
                        setup=SETUP_PARCEL),
         parcel_written("Numaranın başı ve sonundaki boşluk kırpılır", sq, number="15", setup=SETUP_PARCEL,
                        extra={"number": "  15 "}),
+        # ADR 1400: the number is unique within its place (İl, İlçe, Mahalle, Ada), not across the drawing.
+        parcel_written("Başka adadaki aynı numara uyarısız verilir (ADR 1400)", sq, number="7", attrs={"Ada": "102"},
+                       setup=SETUP_PARCEL),
+        parcel_written("Aynı adadaki numara uyarıyla verilir (ADR 1400)", sq, number="7", attrs={"Ada": "101"},
+                       setup=SETUP_PARCEL,
+                       warnings=[{"code": "parcel_number_taken", "message": TAKEN.format(n="7"), "path": "number"}]),
+        parcel_written("Sıradaki numara adanın içinde: yeni adada 1 (ADR 1400)", sq, attrs={"Ada": "102"},
+                       setup=SETUP_PARCEL),
     ]
     # The neighbours' new corners in the topology cases.
     r = ruled(rect(20, 2, 30, 8), (), True)

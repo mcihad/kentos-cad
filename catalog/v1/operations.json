@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "parcels.check": {
+      "level": "query",
+      "via": [
+        "cad.parcels.check"
+      ],
+      "note": "Pencere cad.parcels.check'in cevabını gösterir (salt okunur): hesap alanı, tapu alanı, fark, 2022 Yönetmeliği Madde 8(2) yanılma sınırı, kimlik; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1400)."
+    },
     "topology.cleanReport": {
       "level": "semantic",
       "via": [

@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Parsel alan denetimi (6 Kasım 2026; MAP-08, [ADR 1400](../../docs/adr/1400-parcel-area-check-and-identity.md)).**
+  `cad.parcels.check` (Harita + CBS, salt okunur): hesap alanı ↔ tapu alanı, 2022 Yönetmeliği Madde 8(2) yanılma
+  sınırı; parsel kimliği il/ilçe/mahalle/ada/parsel birlikte (`cad.parcels.create` de numarayı adada arar).
 - **Taşınma raporu (6 Kasım 2026; MAP-07, [ADR 1262](../../docs/adr/1262-topology-clean-move-report.md)).**
   `cad.topology.clean` (Harita + CBS): Topolojik temizlik komut olarak, her taşınma ve kabul eşiğiyle; araç nesnelerini
   `topology_clean.rs`'ten alır. Formlar her zaman alt alta değil: kısa ve birbirine ait denetimler bir satırda.

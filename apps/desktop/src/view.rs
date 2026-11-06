@@ -2096,6 +2096,7 @@ impl App {
             Asking::Baselines => self.baselines_view(),
             Asking::Grade => self.grade_view(),
             Asking::CleanReport => self.clean_report_view(),
+            Asking::ParcelsCheck => self.parcels_check_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),
             Asking::LayerPurge => self.layer_purge_view(),

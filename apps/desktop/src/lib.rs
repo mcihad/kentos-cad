@@ -67,6 +67,7 @@ mod features_window;
 mod baselines_window;
 mod grade_window;
 mod clean_report_window;
+mod parcels_check_window;
 mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
@@ -328,6 +329,8 @@ mod baselines_window_tests;
 mod grade_window_tests;
 #[cfg(test)]
 mod clean_report_window_tests;
+#[cfg(test)]
+mod parcels_check_window_tests;
 mod map_survey_panel_tests;
 #[cfg(test)]
 mod route_window_tests;
