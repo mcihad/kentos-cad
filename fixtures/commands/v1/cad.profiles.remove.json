@@ -182,6 +182,15 @@
                   "migrations": 0
                 },
                 {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
                   "kind": "mapping",
                   "source": "drawing",
                   "name": "sivas-bel",
@@ -311,7 +320,7 @@
             "status": "failed",
             "error": {
               "code": "unknown_profile",
-              "message": "“peyzaj” adlı veri profili yok; KentOS'un profili: tucbs-temel.",
+              "message": "“peyzaj” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.",
               "path": "name"
             }
           },
@@ -1129,6 +1138,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -2449,6 +2467,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {

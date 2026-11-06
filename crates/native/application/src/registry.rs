@@ -53,6 +53,7 @@ use crate::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 use crate::entities_select::isolation as entities_isolation;
 use crate::addresses_check;
 use crate::crs_factors;
+use crate::map_features;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -512,6 +513,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_CRS_FACTORS => {
                 $then!(crs_factors, kentos_commands::CrsFactors)
+            }
+            kentos_commands::MAP_FEATURES_CODE => {
+                $then!(map_features, kentos_commands::FeaturesCode)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)

@@ -104,6 +104,15 @@
                   "release": 1,
                   "classes": 7,
                   "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
                 }
               ]
             },
@@ -174,6 +183,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 }
               ],
@@ -257,6 +275,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "park-bahce",
                   "title": "Park ve bahçeler profili",
@@ -301,6 +328,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -409,6 +445,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -526,6 +571,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -628,6 +682,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "a-r2",
                   "release": 0,
@@ -725,6 +788,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "bozuk",
                   "release": 0,
@@ -808,6 +880,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -899,6 +980,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "x",
                   "release": 0,
@@ -986,6 +1076,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "x",
                   "release": 0,
@@ -1069,6 +1168,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -1160,6 +1268,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "sinifsiz",
                   "release": 0,
@@ -1243,6 +1360,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -1333,6 +1459,15 @@
                   "migrations": 0
                 },
                 {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
                   "kind": "mapping",
                   "source": "project",
                   "name": "x",
@@ -1417,6 +1552,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -1508,6 +1652,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "baska",
                   "release": 0,
@@ -1591,6 +1744,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -1682,6 +1844,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "x",
                   "release": 0,
@@ -1765,6 +1936,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -1852,6 +2032,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -1945,6 +2134,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -2047,6 +2245,15 @@
                   "migrations": 0
                 },
                 {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
                   "kind": "mapping",
                   "source": "project",
                   "name": "hayalet-esleme",
@@ -2137,6 +2344,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -2249,6 +2465,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "project",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -2328,6 +2553,15 @@
                   "release": 1,
                   "classes": 7,
                   "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
                 }
               ]
             },
@@ -2350,6 +2584,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 }
               ]
@@ -2486,6 +2729,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -2525,6 +2777,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -2633,6 +2894,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -2752,6 +3022,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "peyzaj",
                   "title": "Peyzaj profili",
@@ -2849,6 +3128,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "bozuk",
                   "release": 0,
@@ -2931,6 +3219,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -3021,6 +3318,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "sivas-bel",
                   "release": 0,
@@ -3103,6 +3409,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -3193,6 +3508,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "peyzaj",
                   "release": 0,
@@ -3275,6 +3599,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -3369,6 +3702,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {
@@ -3479,6 +3821,15 @@
                 },
                 {
                   "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
                   "source": "drawing",
                   "name": "park-bahce",
                   "title": "Park ve bahçeler profili",
@@ -3574,6 +3925,15 @@
                   "title": "TUCBS temel belediye profili",
                   "release": 1,
                   "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "harita-varliklari",
+                  "title": "Harita varlıkları (saha kodlu)",
+                  "release": 1,
+                  "classes": 11,
                   "migrations": 0
                 },
                 {

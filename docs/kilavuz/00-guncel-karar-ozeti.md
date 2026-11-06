@@ -34,6 +34,8 @@
 - **Topolojik düzenlemede kilitli komşuda durdur (6 Kasım 2026; MAP-07, [ADR 1261](../../docs/adr/1261-topological-editing-stops-at-a-locked-neighbour.md)).**
   `drafting.topologyStopOnLocked` (ilk değer kapalı: ADR 0160'taki ayırma); açıkken kilitli komşuyla paylaşılan sınır
   hiç yazılmaz, `shared_boundary_locked`.
+- **Saha kodları ve Kodla çiz (6 Kasım 2026; MAP-04, [ADR 1360](../../docs/adr/1360-field-codes-and-kodla-ciz.md)).**
+  Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](../../plan/road.md), [ADR 0900](../../docs/adr/0900-road-terrain-surface.md)–[0911](../../docs/adr/0911-road-project-tree-views-and-rebuild.md)).**
   Ayrı ürün modülü (`CadWork::Road`, `Module::Road`, `kentos-yol`; dal `road-01-yuzey`'den birleşti). Hesap
   `crates/shared/road` (`kentos-road`: kısıtlı Delaunay `kentos.cdt/1`, aks ve km denklemleri, düşey kurplar, tip kesit

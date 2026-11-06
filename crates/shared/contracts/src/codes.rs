@@ -1969,6 +1969,20 @@ codes! {
     FIELD_BASE_MISSING = "field_base_missing", Warning, false, "Tabanın alan kaydı olmayan nesneleri iki yan değiştirdiyse bütün olarak çatışır; alanlar tek tek birleştirilemez.";
     /// A data profile KentOS has not by that name, or none given (docs/adr/0541).
     UNKNOWN_PROFILE = "unknown_profile", Failed, false, "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin.";
+    /// Kodla çiz (docs/adr/1360): an object given is not a point.
+    NOT_A_POINT = "not_a_point", Failed, false, "Verilen nesne nokta değil; Kodla çiz kodlu noktaları işler.";
+    /// Kodla çiz: no point given or found holds a code.
+    NO_CODED_POINTS = "no_coded_points", Failed, false, "Kodu olan nokta yok; noktaların kod alanını (Kod) doldurun ya da alanın adını verin.";
+    /// Kodla çiz: a class a code names has no layer in the drawing.
+    CLASS_LAYER_MISSING = "class_layer_missing", Failed, false, "Kodun sınıfının katmanı çizimde yok; önce profili uygulayın (Veri profili › Uygula).";
+    /// Kodla çiz: a code no class of the profile has; its points are left as they are.
+    UNKNOWN_CODE = "unknown_code", Warning, false, "Profilin hiçbir sınıfında olmayan saha kodu; noktaları olduğu gibi bırakıldı.";
+    /// Kodla çiz: a line string of one point, an area string of fewer than three: nothing made of it.
+    STRING_TOO_SHORT = "string_too_short", Warning, false, "Dizi çizgi için en az 2, alan için en az 3 nokta ister; bu dizi çizilmedi.";
+    /// Kodla çiz: an area class's string not closed with K: nothing made of it.
+    AREA_NOT_CLOSED = "area_not_closed", Warning, false, "Alan sınıfının dizisi K ile kapatılmadı; alan çizilmedi.";
+    /// Kodla çiz: a word after a code that is not a control (B, K, S): passed over.
+    CONTROL_UNKNOWN = "control_unknown", Warning, false, "Kodun ardındaki sözcük bir denetim kodu değil (B başla, K kapat, S son); yok sayıldı.";
     /// A data profile whose shape does not hold (docs/adr/0541).
     INVALID_PROFILE = "invalid_profile", Failed, false, "Veri profili geçersiz; iletisi neyin tutmadığını söyler.";
     /// A field the layer has with another kind than the profile's; the layer's was kept (docs/adr/0541).

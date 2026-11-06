@@ -349,6 +349,16 @@ adaylarını uzlaştır; yinelenen varlığı önle, eksik zorunlu alanı bul,
 yanlış sınıfı düzelt. Model/katalog değiştiğinde kabul edilmiş insan
 düzeltmeleri korunabilsin; işlemin tamamı bir kez geri alınabilsin.
 
+**6 Kasım 2026 — MAP-04.1 ([ADR 1360](../docs/adr/1360-field-codes-and-kodla-ciz.md)): saha kodları ve Kodla çiz.**
+Kapsam işareti: **Harita + CBS** (Mimari ve Yol'da yok). Araştırma: TBC'nin özellik kodu kütüphanesi (FXL, denetim
+kodları), Civil 3D'nin açıklama anahtarları, OpenCities Map'in şemalı özellikleri; Netcad'in kod tablosu ve BÖHHBÜY obje
+kataloğunun metni bulunamadı. Yeni katalog kurulmadı: veri profilinin sınıflarına saha kodları (`codes`) eklendi, yerleşik
+**Harita varlıkları** profili (kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi, yeşil
+alan) geldi; `map.features.code` kodlu noktaları sınıfın katmanına koyar, BRD1/BRD2 gibi dizileri çoklu çizgi, K ile
+kapanan alan dizilerini alan yapar (B/K/S denetim kodları). 26 ortak durum (bağımsız `map_features_cases.py`), masaüstü
+penceresi ve Profili uygula. Açık: sembol/blok, eğri denetim kodları, iki kaynaktan aday eşleme ve inceleme, AI çıkarım,
+katalog değişikliğinin geçiş raporu.
+
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K13]–[K15], [K04]–[K06].

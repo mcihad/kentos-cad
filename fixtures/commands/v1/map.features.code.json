@@ -1,0 +1,9635 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "map.features.code",
+ "commandVersion": 1,
+ "title": "Kodla çiz",
+ "note": "ADR 1360. Bağımsız başvuru scripts/fixtures/map_features_cases.py: kodun okunuşu, dizilerin birleştirilmesi ve iletiler ADR'den elle; profil catalog/v1/profiles/harita-varliklari.json; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kodla çiz",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "hv",
+    "name": "Harita varlıkları",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "hv-kn",
+      "name": "Kontrol noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-rog",
+      "name": "Rögarlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-agc",
+      "name": "Ağaçlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-brd",
+      "name": "Bordürler",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-bna",
+      "name": "Bina izleri",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-ysl",
+      "name": "Yeşil alanlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "olcum",
+    "name": "Ölçüm",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "olcum",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P1",
+     "Kod": "KN"
+    },
+    "p": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "z": 850.1
+   },
+   {
+    "kind": "point",
+    "id": 2,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P2",
+     "Kod": "ROG"
+    },
+    "p": {
+     "x": 500010.0,
+     "y": 4400000.0
+    },
+    "z": 850.2
+   },
+   {
+    "kind": "point",
+    "id": 3,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P3",
+     "Kod": "BRD1"
+    },
+    "p": {
+     "x": 500000.0,
+     "y": 4400010.0
+    },
+    "z": 850.3
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P4",
+     "Kod": "BRD1"
+    },
+    "p": {
+     "x": 500010.0,
+     "y": 4400010.0
+    },
+    "z": 850.4
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P5",
+     "Kod": "BRD2"
+    },
+    "p": {
+     "x": 500000.0,
+     "y": 4400020.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P6",
+     "Kod": "BRD1"
+    },
+    "p": {
+     "x": 500020.0,
+     "y": 4400012.0
+    },
+    "z": 850.5
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P7",
+     "Kod": "BRD2"
+    },
+    "p": {
+     "x": 500010.0,
+     "y": 4400022.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P8",
+     "Kod": "BNA"
+    },
+    "p": {
+     "x": 500030.0,
+     "y": 4400000.0
+    },
+    "z": 851.0
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P9",
+     "Kod": "bna"
+    },
+    "p": {
+     "x": 500040.0,
+     "y": 4400000.0
+    },
+    "z": 851.0
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P10",
+     "Kod": "BNA"
+    },
+    "p": {
+     "x": 500040.0,
+     "y": 4400010.0
+    },
+    "z": 851.0
+   },
+   {
+    "kind": "point",
+    "id": 11,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P11",
+     "Kod": "BNA K"
+    },
+    "p": {
+     "x": 500030.0,
+     "y": 4400010.0
+    },
+    "z": 851.0
+   },
+   {
+    "kind": "point",
+    "id": 12,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P12",
+     "Kod": "AGC"
+    },
+    "p": {
+     "x": 500050.0,
+     "y": 4400050.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P13",
+     "Kod": "XYZ"
+    },
+    "p": {
+     "x": 500060.0,
+     "y": 4400060.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 14,
+    "layerId": "hv-agc",
+    "attrs": {
+     "Ad": "P14",
+     "Kod": "AGC"
+    },
+    "p": {
+     "x": 500055.0,
+     "y": 4400050.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 15,
+    "layerId": "olcum",
+    "attrs": {
+     "Ad": "P15"
+    },
+    "p": {
+     "x": 500070.0,
+     "y": 4400070.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 16,
+    "layerId": "gizli",
+    "attrs": {
+     "Ad": "P16",
+     "Kod": "ROG"
+    },
+    "p": {
+     "x": 500080.0,
+     "y": 4400000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "kilitli",
+    "attrs": {
+     "Ad": "P17",
+     "Kod": "ROG"
+    },
+    "p": {
+     "x": 500090.0,
+     "y": 4400000.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5c0-1360-7000-8000-000000000001",
+   "0192f5c0-1360-7000-8000-000000000002",
+   "0192f5c0-1360-7000-8000-000000000003",
+   "0192f5c0-1360-7000-8000-000000000004",
+   "0192f5c0-1360-7000-8000-000000000005",
+   "0192f5c0-1360-7000-8000-000000000006",
+   "0192f5c0-1360-7000-8000-000000000007",
+   "0192f5c0-1360-7000-8000-000000000008",
+   "0192f5c0-1360-7000-8000-000000000009",
+   "0192f5c0-1360-7000-8000-00000000000a",
+   "0192f5c0-1360-7000-8000-00000000000b",
+   "0192f5c0-1360-7000-8000-00000000000c",
+   "0192f5c0-1360-7000-8000-00000000000d",
+   "0192f5c0-1360-7000-8000-00000000000e",
+   "0192f5c0-1360-7000-8000-00000000000f",
+   "0192f5c0-1360-7000-8000-000000000010",
+   "0192f5c0-1360-7000-8000-000000000011"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Bütün kodlu noktalar: kontrol noktası, rögar ve ağaç katmanlarına; iki bordür dizisi, kapalı bina izi; bilinmeyen kod uyarıyla kalır; gizli ve kilitli katmandakiler alınmaz; tek adım",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "kontrol-noktasi",
+         "title": "Kontrol noktası",
+         "layer": "hv-kn",
+         "points": 1,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "rogar",
+         "title": "Rögar",
+         "layer": "hv-rog",
+         "points": 1,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "agac",
+         "title": "Ağaç",
+         "layer": "hv-agc",
+         "points": 2,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 5,
+         "moved": 0,
+         "lines": 2,
+         "areas": 0
+        },
+        {
+         "class": "bina-izi",
+         "title": "Bina izi",
+         "layer": "hv-bna",
+         "points": 4,
+         "moved": 0,
+         "lines": 0,
+         "areas": 1
+        }
+       ],
+       "revision": "$current",
+       "unknown": [
+        {
+         "code": "XYZ",
+         "points": 1
+        }
+       ],
+       "created": "$any"
+      },
+      "warnings": [
+       {
+        "code": "unknown_code",
+        "message": "“XYZ” kodu “harita-varliklari” profilinin hiçbir sınıfında yok; 1 nokta olduğu gibi bırakıldı."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20
+      ],
+      "fields": {
+       "1": {
+        "layerId": "hv-kn"
+       },
+       "2": {
+        "layerId": "hv-rog"
+       },
+       "12": {
+        "layerId": "hv-agc"
+       },
+       "18": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         851.0,
+         851.0,
+         851.0,
+         851.0
+        ],
+        "layerId": "hv-bna",
+        "attrs": {
+         "Kod": "BNA"
+        }
+       },
+       "19": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400012.0
+         }
+        ],
+        "zs": [
+         850.3,
+         850.4,
+         850.5
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD1"
+        }
+       },
+       "20": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400022.0
+         }
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD2"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kodla çiz",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17
+      ],
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan aynı sınıfları söyler, yazmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "kontrol-noktasi",
+         "title": "Kontrol noktası",
+         "layer": "hv-kn",
+         "points": 1,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "rogar",
+         "title": "Rögar",
+         "layer": "hv-rog",
+         "points": 1,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "agac",
+         "title": "Ağaç",
+         "layer": "hv-agc",
+         "points": 2,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        },
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 5,
+         "moved": 0,
+         "lines": 2,
+         "areas": 0
+        },
+        {
+         "class": "bina-izi",
+         "title": "Bina izi",
+         "layer": "hv-bna",
+         "points": 4,
+         "moved": 0,
+         "lines": 0,
+         "areas": 1
+        }
+       ],
+       "revision": "$current",
+       "unknown": [
+        {
+         "code": "XYZ",
+         "points": 1
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "unknown_code",
+        "message": "“XYZ” kodu “harita-varliklari” profilinin hiçbir sınıfında yok; 1 nokta olduğu gibi bırakıldı."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama yazmaz, uyarıları söyler",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": [
+       {
+        "code": "unknown_code",
+        "message": "“XYZ” kodu “harita-varliklari” profilinin hiçbir sınıfında yok; 1 nokta olduğu gibi bırakıldı."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Verilen noktalar verilen sırayla: bordür dizisi ters sırada",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "uids": [
+       "0192f5c0-1360-7000-8000-000000000006",
+       "0192f5c0-1360-7000-8000-000000000004",
+       "0192f5c0-1360-7000-8000-000000000003"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 3,
+         "moved": 0,
+         "lines": 1,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "created": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18
+      ],
+      "fields": {
+       "18": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400012.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500000.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         850.5,
+         850.4,
+         850.3
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD1"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "B yeni dizi başlatır: iki bordür",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD B"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 4,
+         "moved": 0,
+         "lines": 2,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "created": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "5": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400000.0
+         }
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD"
+        }
+       },
+       "6": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         }
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "S diziyi bitirir; sonraki nokta yeni dizi açar ve tek noktası kısa kalır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD S"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 3,
+         "moved": 0,
+         "lines": 1,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "created": "$any"
+      },
+      "warnings": [
+       {
+        "code": "string_too_short",
+        "message": "1 dizi çizilmedi: çizgi için en az 2, kapalı çizgi ve alan için en az 3 nokta gerekir."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "4": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400000.0
+         }
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi sınıfında K kapalı çoklu çizgi",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 1.0
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 2.0
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD K"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 3.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 3,
+         "moved": 0,
+         "lines": 1,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "created": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "4": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400010.0
+         }
+        ],
+        "closed": true,
+        "zs": [
+         1.0,
+         2.0,
+         3.0
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan K ile kapatılmazsa çizilmez",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bina-izi",
+         "title": "Bina izi",
+         "layer": "hv-bna",
+         "points": 3,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "area_not_closed",
+        "message": "1 alan dizisi K ile kapatılmadığı için alan çizilmedi."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki noktalık alan dizisi kısa",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "YSL"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "YSL K"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "yesil-alan",
+         "title": "Yeşil alan",
+         "layer": "hv-ysl",
+         "points": 2,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "string_too_short",
+        "message": "1 dizi çizilmedi: çizgi için en az 2, kapalı çizgi ve alan için en az 3 nokta gerekir."
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir noktası kotsuz dizinin köşeleri kotsuz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 1.0
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 2,
+         "moved": 0,
+         "lines": 1,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "created": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "3": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400000.0
+         }
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinmeyen denetim kodu bir kez söylenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD X"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD X"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD Y"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "bordur",
+         "title": "Bordür",
+         "layer": "hv-brd",
+         "points": 3,
+         "moved": 0,
+         "lines": 1,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "created": "$any"
+      },
+      "warnings": [
+       {
+        "code": "control_unknown",
+        "message": "“X”, “Y” denetim kodu değil (B başla, K kapat, S son); yok sayıldı."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "4": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500010.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500020.0,
+          "y": 4400000.0
+         }
+        ],
+        "layerId": "hv-brd",
+        "attrs": {
+         "Kod": "BRD"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Rakamla başlayan kod sınıfsızdır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "1BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500005.0,
+       "y": 4400005.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "kontrol-noktasi",
+         "title": "Kontrol noktası",
+         "layer": "hv-kn",
+         "points": 1,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        }
+       ],
+       "revision": "$current",
+       "unknown": [
+        {
+         "code": "1BRD",
+         "points": 1
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "unknown_code",
+        "message": "“1BRD” kodu “harita-varliklari” profilinin hiçbir sınıfında yok; 1 nokta olduğu gibi bırakıldı."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "hv-kn"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zaten sınıfının katmanındaki nokta taşınmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "agac",
+         "title": "Ağaç",
+         "layer": "hv-agc",
+         "points": 1,
+         "moved": 0,
+         "lines": 0,
+         "areas": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kod başka alanda: field",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "SahaKodu": "ROG",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "field": "SahaKodu"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "classes": [
+        {
+         "class": "rogar",
+         "title": "Rögar",
+         "layer": "hv-rog",
+         "points": 1,
+         "moved": 1,
+         "lines": 0,
+         "areas": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "fields": {
+       "1": {
+        "layerId": "hv-rog"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kodlu nokta yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_coded_points",
+       "message": "“Kod” alanında profilin bir sınıfının kodunu taşıyan nokta yok; noktaların kodunu yazın ya da alanın adını verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız bilinmeyen kod: kodlu nokta yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_coded_points",
+       "message": "“Kod” alanında profilin bir sınıfının kodunu taşıyan nokta yok; noktaların kodunu yazın ya da alanın adını verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sınıfın katmanı çizimde yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500001.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "class_layer_missing",
+       "message": "“Bordür” sınıfının katmanı (Harita varlıkları › Bordürler) çizimde yok; önce “harita-varliklari” profilini uygulayın.",
+       "path": "name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sınıfın katmanı kilitli",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "BRD"
+      },
+      "p": {
+       "x": 500001.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Harita varlıkları / Bordürler” katmanı kilitli: Kodla çiz oraya çizemez. Kilidi açın.",
+       "path": "name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki verilen nokta taşınamaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "uids": [
+       "0192f5c0-1360-7000-8000-000000000011"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli: üstündeki kodlu nokta sınıfının katmanına taşınamaz. Kilidi açın.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan profil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_profile",
+       "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.",
+       "path": "name"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş alan adı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "field": " "
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kod alanının adı boş olamaz.",
+       "path": "field"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta olmayan nesne",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "b": {
+       "x": 500001.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "uids": [
+       "0192f5c0-1360-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_point",
+       "message": "“0192f5c0-1360-7000-8000-000000000002” bir nokta değil; Kodla çiz kodlu noktaları işler.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "uids": [
+       "0192f5c0-1360-7000-8000-0000000003e7"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-1360-7000-8000-0000000003e7” kimlikli nesne çizimde yok.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "uids": [
+       "P1"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“P1” geçerli bir nesne kimliği değil.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürüm yazısı geçersiz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm eski: çatışma, hiçbir şey yazılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kodla çiz",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-kn",
+        "name": "Kontrol noktaları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "olcum",
+      "name": "Ölçüm",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "olcum",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P1",
+       "Kod": "KN"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 850.1
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P2",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400000.0
+      },
+      "z": 850.2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P3",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400010.0
+      },
+      "z": 850.3
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P4",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400010.0
+      },
+      "z": 850.4
+     },
+     {
+      "kind": "point",
+      "id": 5,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P5",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400020.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 6,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P6",
+       "Kod": "BRD1"
+      },
+      "p": {
+       "x": 500020.0,
+       "y": 4400012.0
+      },
+      "z": 850.5
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P7",
+       "Kod": "BRD2"
+      },
+      "p": {
+       "x": 500010.0,
+       "y": 4400022.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P8",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P9",
+       "Kod": "bna"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400000.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P10",
+       "Kod": "BNA"
+      },
+      "p": {
+       "x": 500040.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 11,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P11",
+       "Kod": "BNA K"
+      },
+      "p": {
+       "x": 500030.0,
+       "y": 4400010.0
+      },
+      "z": 851.0
+     },
+     {
+      "kind": "point",
+      "id": 12,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P12",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P13",
+       "Kod": "XYZ"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400060.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 14,
+      "layerId": "hv-agc",
+      "attrs": {
+       "Ad": "P14",
+       "Kod": "AGC"
+      },
+      "p": {
+       "x": 500055.0,
+       "y": 4400050.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 15,
+      "layerId": "olcum",
+      "attrs": {
+       "Ad": "P15"
+      },
+      "p": {
+       "x": 500070.0,
+       "y": 4400070.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 16,
+      "layerId": "gizli",
+      "attrs": {
+       "Ad": "P16",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500080.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "P17",
+       "Kod": "ROG"
+      },
+      "p": {
+       "x": 500090.0,
+       "y": 4400000.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1360-7000-8000-000000000001",
+     "0192f5c0-1360-7000-8000-000000000002",
+     "0192f5c0-1360-7000-8000-000000000003",
+     "0192f5c0-1360-7000-8000-000000000004",
+     "0192f5c0-1360-7000-8000-000000000005",
+     "0192f5c0-1360-7000-8000-000000000006",
+     "0192f5c0-1360-7000-8000-000000000007",
+     "0192f5c0-1360-7000-8000-000000000008",
+     "0192f5c0-1360-7000-8000-000000000009",
+     "0192f5c0-1360-7000-8000-00000000000a",
+     "0192f5c0-1360-7000-8000-00000000000b",
+     "0192f5c0-1360-7000-8000-00000000000c",
+     "0192f5c0-1360-7000-8000-00000000000d",
+     "0192f5c0-1360-7000-8000-00000000000e",
+     "0192f5c0-1360-7000-8000-00000000000f",
+     "0192f5c0-1360-7000-8000-000000000010",
+     "0192f5c0-1360-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

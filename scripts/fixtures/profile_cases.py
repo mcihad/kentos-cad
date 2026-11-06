@@ -860,7 +860,7 @@ INVALID = [
      "“Bağ” ilişkisinin alanı “KayitliAlan”, “Yeşil alan” sınıfının metin alanı olmalı."),
 ]
 
-UNKNOWN = "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel."
+UNKNOWN = "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari."
 NONE_GIVEN = "Profili adıyla (name: tucbs-temel) ya da kendisini (profile) verin."
 
 
@@ -906,6 +906,19 @@ def apply_cases():
             f.clear()
             f.update({"name": "KatSayisi", "alias": "Kat sayısı", "kind": "text", "length": 10})
     cases.append(apply_case("Türü farklı alan korunur: profile_field_differs", reference(layers=lay), NAME, LINKS)[0])
+    # docs/adr/1360: the project has the class layers but no value lists; a field bound to a list is added to a layer
+    # it already has (the lists go in first; this was refused).
+    lay = reference_layers()
+
+    def unbind(nodes):
+        for n in nodes:
+            n["fields"] = [f for f in n.get("fields", []) if "domain" not in f] if "fields" in n else n.get("fields")
+            if n.get("fields") is None:
+                n.pop("fields", None)
+            unbind(n.get("children", []))
+    unbind(lay)
+    cases.append(apply_case("Katmanları olan, değer listesi olmayan proje: listeler önce eklenir, listeye bağlı alanlar var "
+                            "olan katmanlara eklenir", reference(layers=lay, domains=None), NAME, LINKS)[0])
     # A locked layer gets no fields.
     lay = reference_layers()
     get(lay, "bina")["locked"] = True
@@ -1123,7 +1136,7 @@ def no_mapping_in_folder(name="yok"):
 
 
 def no_profile_in_folder(name="yok"):
-    return f"“{name}” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin “profiller” klasöründe de “{name}.profil.json” yok."
+    return f"“{name}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin “profiller” klasöründe de “{name}.profil.json” yok."
 
 
 def bad_mapping(**change):

@@ -107,6 +107,19 @@ pub struct ProfileClass {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub registered_area: Option<RegisteredArea>,
+    /// The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+    /// description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
+    /// point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub codes: Vec<String>,
+}
+
+/// Whether `code` can be a class's field code: a capital ASCII letter, then capital ASCII letters, 1–12 in all (the
+/// digits after it are the string's number, docs/adr/1360 §2).
+pub fn field_code_holds(code: &str) -> bool {
+    let n = code.len();
+    (1..=12).contains(&n) && code.bytes().all(|b| b.is_ascii_uppercase())
 }
 
 /// A relation between two classes: the child class's field holds a parent object's persistent id.
@@ -194,10 +207,11 @@ pub struct DataProfile {
 }
 
 /// KentOS's profiles, by name.
-pub const BUILTIN_PROFILES: &[(&str, &str)] = &[(
-    "tucbs-temel",
-    include_str!("../../../../catalog/v1/profiles/tucbs-temel.json"),
-)];
+pub const BUILTIN_PROFILES: &[(&str, &str)] = &[
+    ("tucbs-temel", include_str!("../../../../catalog/v1/profiles/tucbs-temel.json")),
+    // Harita's field-coded assets (docs/adr/1360 §3).
+    ("harita-varliklari", include_str!("../../../../catalog/v1/profiles/harita-varliklari.json")),
+];
 
 /// A built-in profile by its name (case aside); none for a name KentOS has not.
 pub fn builtin_profile(name: &str) -> Option<DataProfile> {
@@ -259,6 +273,23 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
         }
         if let Some(why) = crate::fields_problem(&c.fields) {
             return Some(format!("“{}” sınıfının alanları: {why}", c.title));
+        }
+        for code in &c.codes {
+            if !field_code_holds(code) {
+                return Some(format!(
+                    "“{}” sınıfının saha kodu “{code}” olamaz: 1–12 büyük harf (A–Z), rakamsız.",
+                    c.title
+                ));
+            }
+            if c.geometry == ProfileGeometry::Record {
+                return Some(format!("“{}” geometrisiz kayıt sınıfı; saha kodu olmaz.", c.title));
+            }
+            if let Some(other) = p.classes.iter().find(|o| o.id != c.id && o.codes.contains(code)) {
+                return Some(format!("“{code}” saha kodu iki sınıfta: “{}” ve “{}”.", c.title, other.title));
+            }
+            if c.codes.iter().filter(|x| *x == code).count() > 1 {
+                return Some(format!("“{}” sınıfında “{code}” saha kodu iki kez yazılmış.", c.title));
+            }
         }
         let field = |name: &str| c.fields.iter().find(|f| f.name == name);
         if let Some(k) = &c.key

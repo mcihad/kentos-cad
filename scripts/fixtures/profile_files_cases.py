@@ -228,6 +228,15 @@ def builtin_item():
             "classes": len(PC.PROFILE["classes"]), "migrations": 0}
 
 
+# KentOS's second profile (docs/adr/1360 §3): Harita's field-coded assets; listed after tucbs-temel.
+HARITA = json.loads((ROOT / "catalog/v1/profiles/harita-varliklari.json").read_text("utf-8"))
+
+
+def builtin_items():
+    return [builtin_item(), {"kind": "profile", "source": "builtin", "name": HARITA["name"], "title": HARITA["title"],
+                             "release": 1, "classes": len(HARITA["classes"]), "migrations": 0}]
+
+
 def list_item(f, name, kind, content, others):
     """What `cad.profiles.list` says of one file of the folder: `others` finds the profiles by name (the folder's and the built-in)."""
     suffix = ".profil.json" if kind == "profile" else ".eslem.json"
@@ -277,7 +286,7 @@ def listing(f, files, carried=(), drawing=True):
             return None
         got, value = parse_content(content)
         return value if got == "profile" and value["name"] == name else None
-    items = [builtin_item()]
+    items = builtin_items()
     for kind, name, content in sorted(carried, key=lambda t: (t[1], t[0] == "mapping")):
         items.append(drawing_item(kind, name, content, find_profile))
     if not drawing:
@@ -378,7 +387,7 @@ def list_case(name, files, drawing=True, plan=False):
     out = listing(f, contents)
     inp = {"drawing": tmp(f)} if drawing else {}
     if not drawing:
-        out = {"items": [builtin_item()]}
+        out = {"items": builtin_items()}
     if plan:
         steps.append(step("plan", inp, completed(out), {"revision": "same"}))
     steps.append(step("execute", inp, completed(out), {"revision": "same"}))
@@ -391,7 +400,7 @@ def list_cases():
     # The folder that is not there.
     f = folder()
     cases.append({"name": "Klasör yoksa yalnız yerleşik profil gelir; klasör yolu söylenir", "setup": PC.empty_doc(), "steps": [
-        step("execute", {"drawing": tmp(f)}, completed({"items": [builtin_item()], "folder": f"$tmp:{f}/profiller"}))]})
+        step("execute", {"drawing": tmp(f)}, completed({"items": builtin_items(), "folder": f"$tmp:{f}/profiller"}))]})
     cases.append(list_case("Projenin profili ve eşlemesi: önce profil, sonra eşleme; sürüm, sınıf ve göç sayıları",
                            {"park-bahce.profil.json": "park-bahce.profil.json", "park-bahce-kurum.eslem.json": "park-bahce-kurum.eslem.json"},
                            plan=True))
@@ -428,8 +437,8 @@ def list_cases():
                             "peyzaj.profil.json": "peyzaj.profil.json"}))
     # A relative drawing path has no folder; so does an empty one.
     cases.append({"name": "Göreli ya da boş çizim yolunun klasörü yok: yalnız yerleşik profil", "setup": PC.empty_doc(), "steps": [
-        step("execute", {"drawing": "cizim.kcad"}, completed({"items": [builtin_item()]})),
-        step("execute", {"drawing": "  "}, completed({"items": [builtin_item()]}))]})
+        step("execute", {"drawing": "cizim.kcad"}, completed({"items": builtin_items()})),
+        step("execute", {"drawing": "  "}, completed({"items": builtin_items()}))]})
     cases.append({"name": "Doğrulama", "setup": PC.empty_doc(), "steps": [step("validate", {}, VALID)]})
     return cases + carried_list_cases()
 
@@ -1603,14 +1612,14 @@ def migrate_cases():
     cases.append(c)
     # Refusals.
     cases.append(migrate_refusal("bilinmeyen profil", doc, {"name": "yok", "from": 1}, "unknown_profile",
-                                 "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel.", "name"))
+                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.", "name"))
     cases.append(migrate_refusal("bilinmeyen profil: çizimin taşıdıkları da söylenir", carry(doc, ("profile", "park-bahce", KURUM)),
                                  {"name": "yok", "from": 1}, "unknown_profile",
-                                 "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin içindeki profiller: park-bahce.", "name"))
+                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin içindeki profiller: park-bahce.", "name"))
     f = folder()
     cases.append(migrate_refusal("bilinmeyen profil: çizimdekiler ve klasör", carry(doc, ("profile", "park-bahce", KURUM)),
                                  {"name": "yok", "from": 1, "drawing": tmp(f)}, "unknown_profile",
-                                 "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin içindeki profiller: park-bahce; "
+                                 "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin içindeki profiller: park-bahce; "
                                  "çizimin “profiller” klasöründe de “yok.profil.json” yok.", "name", before=[place_drawing(f)]))
     f = folder()
     cases.append(migrate_refusal("projenin klasöründe de yok", doc, {"name": "yok", "from": 1, "drawing": tmp(f)}, "unknown_profile",
@@ -1702,7 +1711,7 @@ def remove_cases():
     cases.append(remove_case("Son kopya çıkınca alan hiç kalmaz; adıyla artık bulunmaz", [p], {"kind": "profile", "name": "peyzaj"},
                              removed("profile", "peyzaj", small), [],
                              after=[step("execute", {"name": "peyzaj"},
-                                         failed("unknown_profile", "“peyzaj” adlı veri profili yok; KentOS'un profili: tucbs-temel.", "name"),
+                                         failed("unknown_profile", "“peyzaj” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.", "name"),
                                          command=PC.CHECK)]))
     cases.append(remove_case("Eşleme çıkarılır, aynı adlı profil kalır", [p, ("mapping", "peyzaj", own_map)],
                              {"kind": "mapping", "name": "peyzaj"}, removed("mapping", "peyzaj", own_map), [("profile", "peyzaj")]))

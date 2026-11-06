@@ -404,6 +404,8 @@ pub enum Dialog {
     Xrefs,
     /// 2B düzleme indir (flatten_window.rs, docs/adr/1061 §4); its state is `App::flatten`.
     Flatten,
+    /// Kodla çiz (features_window.rs, docs/adr/1360); its state is `App::features_code`.
+    FeaturesCode,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
@@ -816,6 +818,7 @@ pub enum Message {
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
     Flatten(crate::flatten_window::Event),
+    FeaturesCode(crate::features_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
@@ -1468,6 +1471,7 @@ pub struct App {
     /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
     pub(crate) xrefs: crate::xrefs_window::State,
     pub(crate) flatten: crate::flatten_window::State,
+    pub(crate) features_code: crate::features_window::State,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
     pub(crate) xref_watch: crate::xrefs_watch::Watch,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
@@ -1911,6 +1915,7 @@ impl App {
             sheet_set: None,
             xrefs: Default::default(),
             flatten: Default::default(),
+            features_code: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
             reconcile: None,
@@ -2679,6 +2684,7 @@ impl App {
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),
             Message::Flatten(event) => return self.flatten_event(event),
+            Message::FeaturesCode(event) => return self.features_code_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
@@ -3527,6 +3533,7 @@ impl App {
             "arch.audit" => return self.open_arch_audit(),
             "cad.inspect" => return self.open_cad_inspection(),
             "cad.flatten" => return self.open_flatten(),
+            "map.featuresCode" => return self.open_features_code(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
             "map.workSource" => {
                 self.map_work_show_source();

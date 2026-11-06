@@ -26,4 +26,10 @@ color: string, geometry: ProfileGeometry,
 /**
  * The identifier field: unique among the class's objects.
  */
-key?: string, fields: Array<LayerField>, registeredArea?: RegisteredArea, };
+key?: string, fields: Array<LayerField>, registeredArea?: RegisteredArea, 
+/**
+ * The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+ * description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
+ * point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
+ */
+codes?: Array<string>, };

@@ -54435,6 +54435,165 @@
       ]
     },
     {
+      "id": "map.features.code",
+      "version": 1,
+      "title": "Kodla çiz",
+      "summary": "Sahada kodla alınmış noktaları veri profilinin sınıflarına göre işler (TBC'nin özellik kodları, Civil 3D'nin açıklama anahtarları gibi; ADR 1360). Noktanın kodu field alanındadır (yoksa Kod): ilk sözcük büyük harfli kod ve ardından dizinin numarası (BRD1), sonraki sözcükler denetim kodu: B yeni dizi başlatır, K diziyi kapatır, S bitirir. Kod profilin bir sınıfının codes'unda aranır. Nokta sınıfının noktaları sınıfın katmanına taşınır; çizgi sınıfının dizileri çoklu çizgi (K ile kapalı), alan sınıfının K ile kapatılmış dizileri alan olarak sınıfın katmanına çizilir, noktalar yerinde kalır; bütün noktaların kotu varsa köşeler kotlu. uids verilirse o noktalar o sırayla, verilmezse görünen ve kilitsiz katmanlardaki kodlu noktalar çizimin sırasıyla. name KentOS'un profili (tucbs-temel, harita-varliklari) ya da drawing'in yanındaki profil. Tek geri alma adımı “Kodla çiz”. Uyarılar: unknown_code (profilde olmayan kod, noktaları kalır), control_unknown, string_too_short, area_not_closed. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, invalid_uid, entity_not_found, not_a_point, no_coded_points, class_layer_missing (önce profili uygulayın), layer_locked.",
+      "aliases": [
+        "kodlaciz",
+        "fieldtofinish"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.features.code` v1: the profile (`name`: KentOS's, or one beside the project's file `drawing`), the\nfield the codes are in, and the points (their lasting ids, in the order they were measured); none: every point with\na code on a shown, unlocked layer, in the drawing's order.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (an empty field name), `invalid_uid`, `entity_not_found`, `not_a_point`, `no_coded_points`,\n`class_layer_missing` (a class a code names has no layer in the drawing: apply the profile first), `layer_locked`\n(a point to move or a class's layer locked).",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "FeaturesCode",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.features.code` v1 (and its plan): each class a code named, in the profile's order; the objects made,\nby their lasting ids (the plan's are empty); the codes no class has; and the drawing's revision.",
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/$defs/CodedClass"
+            },
+            "type": "array"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "unknown": {
+            "items": {
+              "$ref": "#/$defs/UnknownCode"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "classes",
+          "revision"
+        ],
+        "title": "FeaturesCoded",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.features.code` v1 (and its plan): each class a code named, in the profile's order; the objects made,\nby their lasting ids (the plan's are empty); the codes no class has; and the drawing's revision.",
+        "properties": {
+          "classes": {
+            "items": {
+              "$ref": "#/$defs/CodedClass"
+            },
+            "type": "array"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "unknown": {
+            "items": {
+              "$ref": "#/$defs/UnknownCode"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "classes",
+          "revision"
+        ],
+        "title": "FeaturesCoded",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_profile",
+          "invalid_profile",
+          "invalid_input",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_point",
+          "no_coded_points",
+          "class_layer_missing",
+          "layer_locked"
+        ],
+        "warnings": [
+          "unknown_code",
+          "control_unknown",
+          "string_too_short",
+          "area_not_closed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Harita varlıkları profiliyle bütün kodlu noktalar",
+          "input": {
+            "name": "harita-varliklari"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.crs.factors",
       "version": 1,
       "title": "Ölçek çarpanları",
@@ -97915,6 +98074,48 @@
       "meaning": "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin."
     },
     {
+      "code": "not_a_point",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Verilen nesne nokta değil; Kodla çiz kodlu noktaları işler."
+    },
+    {
+      "code": "no_coded_points",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kodu olan nokta yok; noktaların kod alanını (Kod) doldurun ya da alanın adını verin."
+    },
+    {
+      "code": "class_layer_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kodun sınıfının katmanı çizimde yok; önce profili uygulayın (Veri profili › Uygula)."
+    },
+    {
+      "code": "unknown_code",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Profilin hiçbir sınıfında olmayan saha kodu; noktaları olduğu gibi bırakıldı."
+    },
+    {
+      "code": "string_too_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dizi çizgi için en az 2, alan için en az 3 nokta ister; bu dizi çizilmedi."
+    },
+    {
+      "code": "area_not_closed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alan sınıfının dizisi K ile kapatılmadı; alan çizilmedi."
+    },
+    {
+      "code": "control_unknown",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kodun ardındaki sözcük bir denetim kodu değil (B başla, K kapat, S son); yok sayıldı."
+    },
+    {
       "code": "invalid_profile",
       "kind": "failed",
       "retryable": false,
@@ -111215,6 +111416,55 @@
         "readable",
         "count",
         "bounds"
+      ],
+      "type": "object"
+    },
+    "CodedClass": {
+      "description": "What one class got: its points put on its layer, its lines and areas made.",
+      "properties": {
+        "areas": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "class": {
+          "type": "string"
+        },
+        "layer": {
+          "description": "The class's layer, by id.",
+          "type": "string"
+        },
+        "lines": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "moved": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "points": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "class",
+        "title",
+        "layer",
+        "points",
+        "moved",
+        "lines",
+        "areas"
       ],
       "type": "object"
     },
@@ -160878,6 +161128,13 @@
       "additionalProperties": false,
       "description": "A class of the profile: a layer by its path, its objects' geometry, its fields.",
       "properties": {
+        "codes": {
+          "description": "The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's\ndescription keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a\npoint class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "color": {
           "description": "The layer's colour when the profile adds it (a palette name or `#RRGGBB`).",
           "type": "string"
@@ -188514,6 +188771,25 @@
           "type": "string"
         }
       ]
+    },
+    "UnknownCode": {
+      "description": "A code no class of the profile has, and how many points wrote it.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "points": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "code",
+        "points"
+      ],
+      "type": "object"
     },
     "UnreachedPoint": {
       "description": "A point the target has no value for: its index and why (`outside`: a projection does not take it; `outsideGrid`:\nthe grid does not reach it).",

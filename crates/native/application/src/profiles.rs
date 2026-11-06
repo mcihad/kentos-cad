@@ -51,12 +51,12 @@ pub(crate) fn profile_only(
                         codes::UNKNOWN_PROFILE,
                         match crate::profile_files::folder_of(shelf.drawing) {
                             Some(_) => format!(
-                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel{carried}; çizimin “{}” klasöründe de “{n}{}” yok.",
+                                "“{n}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari{carried}; çizimin “{}” klasöründe de “{n}{}” yok.",
                                 kentos_commands::PROFILE_FOLDER,
                                 kentos_commands::PROFILE_SUFFIX
                             ),
                             None => format!(
-                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel{carried}."
+                                "“{n}” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari{carried}."
                             ),
                         },
                         "name",
@@ -275,6 +275,15 @@ fn write(
             }
         }
     }
+    // The value lists go in first: a layer the drawing already has takes the profile's fields bound to them, and the
+    // document checks a field's list against the project's (docs/adr/1360: a profile applied over its own layers was
+    // refused). A refusal below puts the project's own back.
+    let before = doc.settings().clone();
+    if !out.domains.is_empty() {
+        let mut with = before.clone();
+        with.domains = domains.clone();
+        doc.set_settings(with);
+    }
     // 1. The layers and their fields: one undo step.
     let group = doc.begin_group(STEP);
     let mut layer_of: HashMap<&str, String> = HashMap::new();
@@ -286,6 +295,7 @@ fn write(
             Ok(None) => {}
             Err(stop) => {
                 doc.cancel_group(group);
+                doc.set_settings(before);
                 return Err(stop);
             }
         }

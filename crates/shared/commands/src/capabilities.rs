@@ -2363,6 +2363,26 @@ const ENTRIES: &[Entry] = &[
         warnings: &["drawings_rebuilt", "drawing_edited", "drawing_not_rebuilt"],
         targets: none,
     },
+    // Kodla çiz (plan/map-cad.md MAP-04, docs/adr/1360).
+    Entry {
+        id: "map.features.code",
+        refusals: &[
+            REVISION,
+            &[
+                "unknown_profile",
+                "invalid_profile",
+                "invalid_input",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_point",
+                "no_coded_points",
+                "class_layer_missing",
+                "layer_locked",
+            ],
+        ],
+        warnings: &["unknown_code", "control_unknown", "string_too_short", "area_not_closed"],
+        targets: none,
+    },
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
     Entry {
         id: "cad.crs.factors",

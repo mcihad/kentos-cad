@@ -21269,6 +21269,48 @@ class CloudSummary(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CodedClass(_Model):
+    """What one class got: its points put on its layer, its lines and areas made.
+    Attributes:
+        layer: The class's layer, by id.
+        points: Unit: count.
+        moved: Unit: count.
+        lines: Unit: count.
+        areas: Unit: count.
+    """
+    class_: str
+    title: str
+    layer: str
+    points: int
+    moved: int
+    lines: int
+    areas: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["title"] = self.title
+        out["layer"] = self.layer
+        out["points"] = self.points
+        out["moved"] = self.moved
+        out["lines"] = self.lines
+        out["areas"] = self.areas
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CodedClass:
+        return cls(
+            class_=data["class"],
+            title=data["title"],
+            layer=data["layer"],
+            points=data["points"],
+            moved=data["moved"],
+            lines=data["lines"],
+            areas=data["areas"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ColumnCrossings(_Model):
     """Columns at every crossing of the grids given, pair by pair in their order, within both grids.
     Attributes:
@@ -34898,6 +34940,77 @@ class FeatureRecord(_Model):
             id=data["id"],
             version=data["version"],
             entity=Entity.from_json(data["entity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FeaturesCode(_Model):
+    """Input of `map.features.code` v1: the profile (`name`: KentOS's, or one beside the project's file `drawing`), the
+    field the codes are in, and the points (their lasting ids, in the order they were measured); none: every point with
+    a code on a shown, unlocked layer, in the drawing's order.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
+    `invalid_input` (an empty field name), `invalid_uid`, `entity_not_found`, `not_a_point`, `no_coded_points`,
+    `class_layer_missing` (a class a code names has no layer in the drawing: apply the profile first), `layer_locked`
+    (a point to move or a class's layer locked).
+    """
+    name: str
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FeaturesCode:
+        return cls(
+            name=data["name"],
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            field=data.get("field", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FeaturesCoded(_Model):
+    """Output of `map.features.code` v1 (and its plan): each class a code named, in the profile's order; the objects made,
+    by their lasting ids (the plan's are empty); the codes no class has; and the drawing's revision.
+    """
+    classes: list[CodedClass]
+    revision: str
+    created: list[str] | Unset = UNSET
+    unknown: list[UnknownCode] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["revision"] = self.revision
+        if self.created is not UNSET:
+            out["created"] = list(self.created)
+        if self.unknown is not UNSET:
+            out["unknown"] = [e0.to_json() for e0 in self.unknown]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FeaturesCoded:
+        return cls(
+            classes=[CodedClass.from_json(e0) for e0 in data["classes"]],
+            revision=data["revision"],
+            created=list(data["created"]) if "created" in data else UNSET,
+            unknown=[UnknownCode.from_json(e0) for e0 in data["unknown"]] if "unknown" in data else UNSET,
         )
 
 
@@ -64985,6 +65098,9 @@ class ProfileClass(_Model):
         theme: The theme it belongs to, as the profile names it (“Kadastro”).
         layer: The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).
         color: The layer's colour when the profile adds it (a palette name or `#RRGGBB`).
+        codes: The field codes a surveyor writes for the class's objects (docs/adr/1360 §1; TBC's feature codes, Civil 3D's
+            description keys): a capital letter, then capital letters and digits, 1–12; unique in the profile. A point of a
+            point class goes on its layer; a line or area class's points are joined into its objects (`map.features.code`).
         key: The identifier field: unique among the class's objects.
     """
     id: str
@@ -64994,6 +65110,7 @@ class ProfileClass(_Model):
     color: str
     geometry: ProfileGeometry | ProfileGeometryName
     fields: list[LayerField]
+    codes: list[str] | Unset = UNSET
     key: str | None | Unset = UNSET
     registered_area: RegisteredArea | None | Unset = UNSET
 
@@ -65006,6 +65123,8 @@ class ProfileClass(_Model):
         out["color"] = self.color
         out["geometry"] = _enum_out(self.geometry)
         out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.codes is not UNSET:
+            out["codes"] = list(self.codes)
         if self.key is not UNSET:
             out["key"] = self.key
         if self.registered_area is not UNSET:
@@ -65022,6 +65141,7 @@ class ProfileClass(_Model):
             color=data["color"],
             geometry=_enum_in(ProfileGeometry, data["geometry"]),
             fields=[LayerField.from_json(e0) for e0 in data["fields"]],
+            codes=list(data["codes"]) if "codes" in data else UNSET,
             key=data.get("key", UNSET),
             registered_area=UNSET if "registeredArea" not in data else None if data["registeredArea"] is None else RegisteredArea.from_json(data["registeredArea"]),
         )
@@ -95039,6 +95159,29 @@ class UnitsChanged(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnknownCode(_Model):
+    """A code no class of the profile has, and how many points wrote it.
+    Attributes:
+        points: Unit: count.
+    """
+    code: str
+    points: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["points"] = self.points
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnknownCode:
+        return cls(
+            code=data["code"],
+            points=data["points"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnreachedPoint(_Model):
     """A point the target has no value for: its index and why (`outside`: a projection does not take it; `outsideGrid`:
     the grid does not reach it).
@@ -120517,6 +120660,7 @@ __all__ = [
     "CloudStats",
     "CloudSummary",
     "CodeCell",
+    "CodedClass",
     "CoincidentConstraintRule",
     "CollectLeaderEdit",
     "CollinearConstraintRule",
@@ -121069,6 +121213,8 @@ __all__ = [
     "FeatureChange",
     "FeatureFeed",
     "FeatureRecord",
+    "FeaturesCode",
+    "FeaturesCoded",
     "FeedKind",
     "FeedKindName",
     "FenceSelectRegion",
@@ -123671,6 +123817,7 @@ __all__ = [
     "UnitSourceName",
     "UnitsChange",
     "UnitsChanged",
+    "UnknownCode",
     "UnlinkSourcesEditOp",
     "UnlinkTableEdit",
     "UnlinkTablesOperation",

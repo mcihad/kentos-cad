@@ -302,6 +302,7 @@ pub mod road_project_rebuild;
 pub mod road_project_edit;
 pub mod map_work;
 pub mod crs_factors;
+pub mod map_features;
 pub mod map_work_edit;
 pub mod map_survey;
 pub mod map_survey_edit;
@@ -1416,6 +1417,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::MAP_WORK_EDIT, kentos_commands::MAP_WORK_EDIT_VERSION),
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
     (kentos_commands::CAD_CRS_FACTORS, kentos_commands::CAD_CRS_FACTORS_VERSION),
+    // Kodla çiz (plan/map-cad.md MAP-04, docs/adr/1360).
+    (kentos_commands::MAP_FEATURES_CODE, kentos_commands::MAP_FEATURES_CODE_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (kentos_commands::MAP_SURVEY_QUERY, kentos_commands::MAP_SURVEY_QUERY_VERSION),
     (kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION),

@@ -5076,6 +5076,22 @@
    "tests": 2
   },
   {
+   "id": "map.featuresCode",
+   "kind": "command",
+   "title": "Kodla çiz…",
+   "level": "semantic",
+   "via": [
+    "map.features.code"
+   ],
+   "operation": null,
+   "python": "Connection: map.features.code",
+   "mcp": "map.features.code",
+   "note": "Pencere komutun planını önizler; Uygula map.features.code ile tek adım yazar, Profili uygula cad.profiles.apply ile (ADR 1360).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.parcelReport",
    "kind": "command",
    "title": "Parsel alan çizelgesi",

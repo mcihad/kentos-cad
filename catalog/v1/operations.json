@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "map.featuresCode": {
+      "level": "semantic",
+      "via": [
+        "map.features.code"
+      ],
+      "note": "Pencere komutun planını önizler; Uygula map.features.code ile tek adım yazar, Profili uygula cad.profiles.apply ile (ADR 1360)."
+    },
     "map.workSource": {
       "level": "query",
       "via": [

@@ -87,6 +87,7 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("map.features.code", "invalid_profile", "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır."),
     ("cad.standards.install", "no_standard", "Bağlı standart olmayan çizim review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
     ("cad.standards.install", "invalid_standard", "Okunamayan bağlı standart review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
     ("cad.standards.palettes", "invalid_standard", "cad.settings.set okunmayan paketi bağlamaz; dosyada kalmış okunmayan paketin reddi review_take::palettes_need_a_readable_bound_standard testinde sınanır."),

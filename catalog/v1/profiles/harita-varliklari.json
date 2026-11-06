@@ -1,0 +1,381 @@
+{
+  "format": "kentos.data-profile",
+  "version": 1,
+  "name": "harita-varliklari",
+  "title": "Harita varlıkları (saha kodlu)",
+  "description": "Belediyenin büyük ölçekli haritasında sahada kodla alınan varlıklar: kontrol noktası, rögar, vana, direk, ağaç, kapı, bordür, yol kenarı, duvar, bina izi ve yeşil alan; her sınıfın saha kodu, katmanı, geometrisi ve alanları. Kodla çiz noktaları bu kodlarla sınıflarına koyar, çizgi ve alanları birleştirir.",
+  "basis": "KentOS çalışma profili, sürüm 1: saha kodları Trimble Business Center'ın özellik kodu kütüphanesi ve Civil 3D'nin açıklama anahtarları gibi kurumun değiştireceği örneklerdir. BÖHHBÜY'nün obje kataloğu ve kodları değildir; kurumun kendi kod listesiyle eşlenip kabul edilmeden mevzuata uygunluk iddia edilmez.",
+  "domains": [
+    {
+      "id": "kontrol-tur",
+      "name": "Kontrol noktasının türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "gnss",
+          "label": "GNSS noktası"
+        },
+        {
+          "code": "poligon",
+          "label": "Poligon noktası"
+        },
+        {
+          "code": "nirengi",
+          "label": "Nirengi noktası"
+        },
+        {
+          "code": "rs",
+          "label": "Röper / sabit nokta"
+        }
+      ]
+    },
+    {
+      "id": "sebeke",
+      "name": "Şebeke",
+      "kind": "text",
+      "values": [
+        {
+          "code": "kanalizasyon",
+          "label": "Kanalizasyon"
+        },
+        {
+          "code": "yagmursuyu",
+          "label": "Yağmur suyu"
+        },
+        {
+          "code": "icmesuyu",
+          "label": "İçme suyu"
+        },
+        {
+          "code": "dogalgaz",
+          "label": "Doğal gaz"
+        },
+        {
+          "code": "elektrik",
+          "label": "Elektrik"
+        },
+        {
+          "code": "telekom",
+          "label": "Haberleşme"
+        }
+      ]
+    },
+    {
+      "id": "direk-tur",
+      "name": "Direğin türü",
+      "kind": "text",
+      "values": [
+        {
+          "code": "elektrik",
+          "label": "Elektrik"
+        },
+        {
+          "code": "aydinlatma",
+          "label": "Aydınlatma"
+        },
+        {
+          "code": "telekom",
+          "label": "Haberleşme"
+        },
+        {
+          "code": "trafik",
+          "label": "Trafik levhası"
+        }
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "kontrol-noktasi",
+      "title": "Kontrol noktası",
+      "theme": "Ölçme",
+      "layer": [
+        "Harita varlıkları",
+        "Kontrol noktaları"
+      ],
+      "color": "#E5484D",
+      "geometry": "point",
+      "key": "Ad",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50,
+          "required": true
+        },
+        {
+          "name": "Tur",
+          "kind": "text",
+          "alias": "Tür",
+          "domain": "kontrol-tur"
+        }
+      ],
+      "codes": [
+        "KN",
+        "PN"
+      ]
+    },
+    {
+      "id": "rogar",
+      "title": "Rögar",
+      "theme": "Altyapı",
+      "layer": [
+        "Harita varlıkları",
+        "Rögarlar"
+      ],
+      "color": "#3E63DD",
+      "geometry": "point",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        },
+        {
+          "name": "Sebeke",
+          "kind": "text",
+          "alias": "Şebeke",
+          "domain": "sebeke"
+        },
+        {
+          "name": "KapakKotu",
+          "kind": "decimal",
+          "alias": "Kapak kotu (m)",
+          "scale": 3
+        },
+        {
+          "name": "Derinlik",
+          "kind": "decimal",
+          "alias": "Derinlik (m)",
+          "scale": 2,
+          "min": "0"
+        }
+      ],
+      "codes": [
+        "ROG"
+      ]
+    },
+    {
+      "id": "vana",
+      "title": "Vana",
+      "theme": "Altyapı",
+      "layer": [
+        "Harita varlıkları",
+        "Vanalar"
+      ],
+      "color": "#0090FF",
+      "geometry": "point",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        },
+        {
+          "name": "Sebeke",
+          "kind": "text",
+          "alias": "Şebeke",
+          "domain": "sebeke"
+        }
+      ],
+      "codes": [
+        "VAN"
+      ]
+    },
+    {
+      "id": "direk",
+      "title": "Direk",
+      "theme": "Altyapı",
+      "layer": [
+        "Harita varlıkları",
+        "Direkler"
+      ],
+      "color": "#F76B15",
+      "geometry": "point",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        },
+        {
+          "name": "Tur",
+          "kind": "text",
+          "alias": "Tür",
+          "domain": "direk-tur"
+        }
+      ],
+      "codes": [
+        "DRK"
+      ]
+    },
+    {
+      "id": "agac",
+      "title": "Ağaç",
+      "theme": "Yeşil alan",
+      "layer": [
+        "Harita varlıkları",
+        "Ağaçlar"
+      ],
+      "color": "#30A46C",
+      "geometry": "point",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        },
+        {
+          "name": "Cins",
+          "kind": "text",
+          "length": 50
+        },
+        {
+          "name": "GovdeCapi",
+          "kind": "decimal",
+          "alias": "Gövde çapı (cm)",
+          "scale": 0,
+          "min": "0"
+        }
+      ],
+      "codes": [
+        "AGC"
+      ]
+    },
+    {
+      "id": "kapi",
+      "title": "Kapı",
+      "theme": "Adres",
+      "layer": [
+        "Harita varlıkları",
+        "Kapılar"
+      ],
+      "color": "#8E4EC6",
+      "geometry": "point",
+      "fields": [
+        {
+          "name": "KapiNo",
+          "kind": "text",
+          "alias": "Kapı no",
+          "length": 20,
+          "required": true
+        }
+      ],
+      "codes": [
+        "KAP"
+      ]
+    },
+    {
+      "id": "bordur",
+      "title": "Bordür",
+      "theme": "Ulaşım",
+      "layer": [
+        "Harita varlıkları",
+        "Bordürler"
+      ],
+      "color": "#8A94A6",
+      "geometry": "line",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        }
+      ],
+      "codes": [
+        "BRD"
+      ]
+    },
+    {
+      "id": "yol-kenari",
+      "title": "Yol kenarı",
+      "theme": "Ulaşım",
+      "layer": [
+        "Harita varlıkları",
+        "Yol kenarları"
+      ],
+      "color": "#6E56CF",
+      "geometry": "line",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        }
+      ],
+      "codes": [
+        "YK"
+      ]
+    },
+    {
+      "id": "duvar",
+      "title": "Duvar",
+      "theme": "Yapı",
+      "layer": [
+        "Harita varlıkları",
+        "Duvarlar"
+      ],
+      "color": "#A18072",
+      "geometry": "line",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        }
+      ],
+      "codes": [
+        "DVR"
+      ]
+    },
+    {
+      "id": "bina-izi",
+      "title": "Bina izi",
+      "theme": "Yapı",
+      "layer": [
+        "Harita varlıkları",
+        "Bina izleri"
+      ],
+      "color": "#C8A165",
+      "geometry": "area",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        },
+        {
+          "name": "KatSayisi",
+          "kind": "integer",
+          "alias": "Kat sayısı",
+          "min": "0",
+          "max": "200"
+        }
+      ],
+      "codes": [
+        "BNA"
+      ]
+    },
+    {
+      "id": "yesil-alan",
+      "title": "Yeşil alan",
+      "theme": "Yeşil alan",
+      "layer": [
+        "Harita varlıkları",
+        "Yeşil alanlar"
+      ],
+      "color": "#46A758",
+      "geometry": "area",
+      "fields": [
+        {
+          "name": "Ad",
+          "kind": "text",
+          "length": 50
+        }
+      ],
+      "codes": [
+        "YSL"
+      ]
+    }
+  ]
+}

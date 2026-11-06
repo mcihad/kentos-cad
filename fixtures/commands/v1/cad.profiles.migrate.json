@@ -56472,7 +56472,7 @@
             "status": "failed",
             "error": {
               "code": "unknown_profile",
-              "message": "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel.",
+              "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari.",
               "path": "name"
             }
           },
@@ -57164,7 +57164,7 @@
             "status": "failed",
             "error": {
               "code": "unknown_profile",
-              "message": "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin içindeki profiller: park-bahce.",
+              "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin içindeki profiller: park-bahce.",
               "path": "name"
             }
           },
@@ -57862,7 +57862,7 @@
             "status": "failed",
             "error": {
               "code": "unknown_profile",
-              "message": "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin içindeki profiller: park-bahce; çizimin “profiller” klasöründe de “yok.profil.json” yok.",
+              "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin içindeki profiller: park-bahce; çizimin “profiller” klasöründe de “yok.profil.json” yok.",
               "path": "name"
             }
           },
@@ -58553,7 +58553,7 @@
             "status": "failed",
             "error": {
               "code": "unknown_profile",
-              "message": "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin “profiller” klasöründe de “yok.profil.json” yok.",
+              "message": "“yok” adlı veri profili yok; KentOS'un profilleri: tucbs-temel, harita-varliklari; çizimin “profiller” klasöründe de “yok.profil.json” yok.",
               "path": "name"
             }
           },
