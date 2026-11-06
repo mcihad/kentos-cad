@@ -9303,6 +9303,63 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::MAP_WORK_QUERY.into(),
+            version: crate::MAP_WORK_QUERY_VERSION,
+            title: "Harita işini sorgula".into(),
+            summary: "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (ölçüm kampanyası, referans kaynak, çalışma verisi, tasarım, denetim sonucu, teslim paketi) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (kampanya ya da referans katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. \
+                      Retler: not_a_map_project, invalid_uid, entity_not_found."
+                .into(),
+            aliases: vec!["haritaisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapWorkQuery>(),
+            output: schema::<crate::MapWorkTree>(),
+            plan: Some(schema::<crate::MapWorkTree>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dosyaları okuyarak, bir noktanın kaynağıyla".into(),
+                input: json!({ "deep": true, "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::MAP_WORK_EDIT.into(),
+            version: crate::MAP_WORK_EDIT_VERSION,
+            title: "Harita işini düzenle".into(),
+            summary: "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. \
+                      Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, approval_stale, layer_locked, work_full."
+                .into(),
+            aliases: vec!["haritaisiduzenle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapWorkEdit>(),
+            output: schema::<crate::MapWorkEdited>(),
+            plan: Some(schema::<crate::MapWorkEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "GNSS kampanyası, dosyasıyla".into(),
+                    input: json!({ "operation": { "op": "add", "kind": "campaign", "name": "GNSS 2026-10", "layers": ["gnss"], "file": "/veri/kampanya.nmea" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Taşınan ortofotoyu yeniden bağla".into(),
+                    input: json!({ "operation": { "op": "relink", "item": "is-2", "file": "/arsiv/ortofoto.tif" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
             version: crate::FILE_EXPORT_LANDXML_VERSION,
             title: "LandXML dışa aktar".into(),
@@ -15508,6 +15565,8 @@ mod tests {
                     crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
+                    crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
+                    crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
                         serde_json::from_value::<crate::StakeoutQuery>(e.input.clone()).map(|_| ())
@@ -16436,6 +16495,8 @@ mod tests {
                         crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
+                        crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
+                        crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {
                             serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())

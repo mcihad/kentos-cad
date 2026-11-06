@@ -17,6 +17,12 @@
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
+  Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188, geçici): öğeler (kampanya, referans, çalışma, tasarım,
+  denetim, teslim; katmanları ve varsa dosyası ile SHA-256 revizyonu) ve türetme kayıtları (nesneler, kaynak öğe,
+  revizyon, işlem). Anlam katman profilinde (nesne katmanının ya da üstündeki grubun öğesinin), ilişki kayıttadır; yeni
+  nesne türü yok. `map.work.query`/`.edit`; Harita işi paneli ve Öznitelikler'in Kaynağı bölümü yalnız Harita'da.
+  Onay ofisin teslim kaydıdır, kurum onayı değildir. Komutların kaydı kendiliğinden yazması sonraki iştir.
 - **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](../../plan/road.md), [ADR 0900](../../docs/adr/0900-road-terrain-surface.md)–[0911](../../docs/adr/0911-road-project-tree-views-and-rebuild.md)).**
   Ayrı ürün modülü (`CadWork::Road`, `Module::Road`, `kentos-yol`; dal `road-01-yuzey`'den birleşti). Hesap
   `crates/shared/road` (`kentos-road`: kısıtlı Delaunay `kentos.cdt/1`, aks ve km denklemleri, düşey kurplar, tip kesit

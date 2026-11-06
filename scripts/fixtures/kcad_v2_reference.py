@@ -365,6 +365,8 @@ def settings(s):
                 "tableStyles": (opaque, False),
                 # Schema 180 (docs/adr/1000 §2): the review notes, as their JSON.
                 "reviewNotes": (opaque, False),
+                # Schema 188 (docs/adr/1200 §2): a map project's work structure, as its JSON.
+                "mapWork": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2428,6 +2430,9 @@ def document(d):
     if any("textStyle" in st for st in d["settings"].get("dimensionStyles", [])):
         # A dimension style that names the text style of its value (docs/adr/1023).
         schema = max(schema, 186)
+    if "mapWork" in d["settings"]:
+        # A map project's work structure (docs/adr/1200 §2).
+        schema = max(schema, 188)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3373,7 +3378,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-187.kcad"] = container(root(cmap(parts), version=uint(187)))
+    files["schema-version-189.kcad"] = container(root(cmap(parts), version=uint(189)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5670,6 +5675,26 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
+    # files, an approved design, a delivery package and a derivation of the GNSS point; schema 186 refuses the field
+    # (187 is another branch's), an architecture project's work structure, a layer in two items, a derivation from an
+    # item without a file, an object in two derivations and a draft status written are refused.
+    mapped = load("map-work.json")
+    mapped_data = document(mapped)
+    assert mapped_data.count(b"\x67version\x18\xbc") == 1, "a map's work structure is schema 188"
+    out["map-work.kcad"] = container(mapped_data)
+    out["broken/map-work-in-schema-186.kcad"] = container(
+        mapped_data.replace(b"\x67version\x18\xbc", b"\x67version\x18\xba"))
+    for name, change in (
+            ("not-map", lambda d: d["settings"].update({"cadWork": "architecture"})),
+            ("shared-layer", lambda d: d["settings"]["mapWork"]["items"][2].update({"layers": ["gnss"]})),
+            ("no-file-source", lambda d: d["settings"]["mapWork"]["derivations"][0].update({"source": "is-3"})),
+            ("object-twice", lambda d: d["settings"]["mapWork"]["derivations"].append(
+                {**d["settings"]["mapWork"]["derivations"][0], "id": "tr-2"})),
+            ("draft-written", lambda d: d["settings"]["mapWork"]["items"][0].update({"status": "draft"}))):
+        broken_work = copy.deepcopy(mapped)
+        change(broken_work)
+        out[f"broken/map-work-{name}.kcad"] = container(document(broken_work))
     # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
     # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
     dimmed = load("dimension-text-style.json")

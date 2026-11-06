@@ -497,6 +497,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub road: Option<crate::RoadSettings>,
+    /// A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
+    /// derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub map_work: Option<crate::MapWork>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
