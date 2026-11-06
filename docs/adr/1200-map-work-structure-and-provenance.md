@@ -93,7 +93,7 @@ Tarih: 2026-11-06. plan/map-cad.md MAP-01. Durum: taslak; ilk dilim aşağıda, 
 ## Aşamalar
 
 MAP-01.1 (bu dilim): §1–§5. Ortak durumlar `scripts/fixtures/map_work_cases.py` (bağımsız; SHA-256 hashlib ile, kurallar
-ve cümleler bu ADR'den): `map.work.query` 22, `map.work.edit` 40.
+ve cümleler bu ADR'den): `map.work.query` 22, `map.work.edit` 40. `.kcad` şema 188 örnekleri bağımsız okuyucu ve yazıcıyla. Masaüstü testi (`map_work_panel_tests.rs`): aynı projede GNSS kampanyası, iki ortofoto, CAD altlığı ve tasarım yüzeyi; seçilen her nesnenin Kaynağı satırları; kampanya panelden yeni dosyaya bağlanınca iki türetme “Güncel değil”, geri alma güncel getirir; panelden öğe ekleme, denetime gönderme ve onay; `.kcad`'e yazılıp yeniden açılınca aynı öğeler, türetmeler ve nesne kaynağı, okuma revizyonu ve kirli durumu değiştirmez; Mimari, GIS ve Yol'da panel ve satırlar yok. Resimler açık geniş ve koyu dar (`.run/gui-evidence/harita-isi-{guncel,kaynak-degisti}-*`).
 
 ## Sonra
 
