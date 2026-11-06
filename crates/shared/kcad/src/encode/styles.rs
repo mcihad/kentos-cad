@@ -54,6 +54,10 @@ impl<'d> Encoder<'d> {
             if let Some(file) = &s.font_file {
                 f.push(("fontFile", Val::Text(file)));
             }
+            // Schema 184 (docs/adr/1120 §4).
+            if let Some(file) = &s.big_font_file {
+                f.push(("bigFontFile", Val::Text(file)));
+            }
             self.at(Seg::Index(i), |e| e.style_map(f))?;
         }
         self.close();

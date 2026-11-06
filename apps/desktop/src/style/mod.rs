@@ -160,6 +160,8 @@ impl Styles {
                 walls: None,
                 instancing: self.instancing,
                 curve_lod: self.curve_lod,
+                // CAD line types along the source curve, as the sheet and the PDF (docs/adr/1122).
+                cad_phase: true,
             },
             view_colors: kentos_native_style::color::ViewColors {
                 mode: kentos_native_style::color::ColorMode::from_key(

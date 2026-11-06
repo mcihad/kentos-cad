@@ -522,6 +522,10 @@ mod review_scenes;
 #[cfg(test)]
 mod long_pattern_scenes;
 #[cfg(test)]
+mod linetype_font_scenes;
+#[cfg(test)]
+mod curve_dash_scenes;
+#[cfg(test)]
 mod stretch_scenes;
 mod style_impact;
 #[cfg(test)]

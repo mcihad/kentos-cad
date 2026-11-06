@@ -387,20 +387,22 @@ fn text_mark_workload_limit_is_a_visible_read_only_preflight_error() {
 
 #[test]
 fn geometric_width_patterns_are_inspected_before_pdf_delivery() {
-    for mode in ["short","long","text","unavailable","missing","shape","dense","dot","builtin"] {
+    // ADR 1121: a dot on a band with width is drawn (its cross-section); one where the band is 0 wide is refused.
+    for mode in ["short","long","text","unavailable","missing","shape","dense","dot","dot_zero","builtin"] {
         let (mut raw,page)=source();
         let def=match mode {
             "dense" => json!({"name":"P","unit":"paper","elements":[{"length":0.00001},{"length":-0.00001}]}),
-            "dot" => json!({"name":"P","unit":"paper","elements":[{"length":0.},{"length":-2.}]}),
+            "dot" | "dot_zero" => json!({"name":"P","unit":"paper","elements":[{"length":0.},{"length":-2.}]}),
             _ => pattern(mode),
         };
         if mode!="missing" {raw["settings"]["lineTypes"]=json!([def]);}
         raw["entities"][0]=json!({"kind":"polyline","id":1,"layerId":"cizim","attrs":{},
             "pts":[{"x":0.,"y":0.},{"x":2.,"y":0.}],"widths":[[0.1,0.3],[0.,0.]],"linePattern":"P"});
         if mode=="builtin" {raw["entities"][0].as_object_mut().unwrap().remove("linePattern");raw["entities"][0]["lineType"]=json!("dashed");}
+        if mode=="dot_zero" {raw["entities"][0]["widths"]=json!([[0.,0.3],[0.,0.]]);}
         let (doc,book)=document(raw,page);
         let before=doc.to_snapshot_v2();
-        let blocked=matches!(mode,"unavailable"|"missing"|"shape"|"dense"|"dot");
+        let blocked=matches!(mode,"unavailable"|"missing"|"shape"|"dense"|"dot_zero");
         assert_eq!(!losses(&doc,&book).is_empty(),blocked,"{mode}");
         let pdf=book::book_pdf(&doc,&[],"Test","2026-11-04");
         if blocked {assert_eq!(pdf.err().unwrap().code,"linetype_unsupported","{mode}");}

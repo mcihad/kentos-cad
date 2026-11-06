@@ -472,11 +472,16 @@ pub struct View {
     pub instancing: bool,
     /// The drawing area's own (docs/adr/1063 §3): curves' strokes with coarser detail levels for far views.
     pub curve_lod: bool,
+    /// The drawing's own looks (`MODE_SET`) dash a CAD line type along the source
+    /// curve itself (docs/adr/1122); off, the renderer measures the drawn chords
+    /// (the web's build and the frozen answers until it opts in).
+    pub cad_phase: bool,
 }
 
 impl PartialEq for View {
     fn eq(&self, o: &Self) -> bool {
         self.position_low == o.position_low && self.plot_precision == o.plot_precision && self.fills == o.fills
+            && self.cad_phase == o.cad_phase
             && self.area_edges == o.area_edges
             && self.walls == o.walls
             && self.instancing == o.instancing
@@ -502,6 +507,7 @@ impl Default for View {
             walls: None,
             instancing: false,
             curve_lod: false,
+            cad_phase: false,
         }
     }
 }
@@ -665,6 +671,7 @@ pub fn build_layer_in(
         plot_scale,
         aspects: &program.aspects,
         screen,
+        cad_phase: view.cad_phase,
         moment: store.time_window().map(|w| match w {
             kentos_geometry_core::time::Window::Instant(a) => a,
             kentos_geometry_core::time::Window::Range(_, b) => b - 1.0,
@@ -2401,6 +2408,8 @@ pub fn compile_one(v: &Json) -> Result<String, String> {
         plot_scale: values.scale,
         aspects: &aspects,
         screen: false,
+        // A preview may ask for the drawing's CAD dash (`"cadPhase": true`, docs/adr/1122).
+        cad_phase: matches!(v.get("cadPhase"), Json::Bool(true)),
         moment: None,
     };
     let sink: &mut dyn Sink = &mut out;

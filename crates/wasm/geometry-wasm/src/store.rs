@@ -1289,6 +1289,7 @@ impl GeometryStore {
                 walls: None,
                 instancing: false,
                 curve_lod: false,
+                cad_phase: false,
             },
             frame,
         )

@@ -258,7 +258,10 @@ fn look(doc: &Document, screen_scale: f64) -> Look {
         hairlines: false,
         hold_weights: false,
         origin: scene::scene_origin(doc),
-        view_build: Default::default(),
+        view_build: kentos_native_style::View {
+            cad_phase: true,
+            ..Default::default()
+        },
         view_colors: Default::default(),
         phasing: Default::default(),
         reading_unit: kentos_native_style::reading_unit(doc.model.settings()),

@@ -1,0 +1,76 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "SHX unifont and Big Font",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 100.0,
+    "textStyles": [
+      {
+        "id": "uni",
+        "name": "Uni",
+        "font": "barlow",
+        "fontFile": "kentos-uni.shx",
+        "bigFontFile": "kentos-big.shx"
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "uids": [],
+  "styles": {
+    "items": [
+      {
+        "id": "shx:kentos-uni.shx",
+        "kind": "asset",
+        "name": "kentos-uni.shx",
+        "path": [
+          "CAD",
+          "SHX"
+        ],
+        "format": "shx",
+        "file": "kentos-uni.shx",
+        "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiB1bmlmb250IDEuMA0KGgYAAAAaAEtlbnRPUyBUZXN0IFVuaWZvbnQACAIAAAAAIAAEAAACgAAtAAwAAA5MAkQBYAIIAvwAUwALAABgRGhEYAIIAvgAVQASAAAChAEJAPgGAAAIAAACCAL4AF4BDwAABwBTAgj7AAEsAggFAgA=",
+        "sha256": "b6ff600d27d6e1e73084fde5c4051bf3ad00a843e663ca85c19804bdef0763b6"
+      },
+      {
+        "id": "shx:kentos-big.shx",
+        "kind": "asset",
+        "name": "kentos-big.shx",
+        "path": [
+          "CAD",
+          "SHX"
+        ],
+        "format": "shx",
+        "file": "kentos-big.shx",
+        "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBiaWdmb250IDEuMA0KGggABgABAIEAnwAAAAAAAAAAAAAAGQBTAAAAAQAGAGwAAABAgQoAcgAAAEGBEAB8AAAAQoEFAIwAAABLZW50T1MgVGVzdCBCaWcgRm9udAAIAgAAACQCLDAAAICEiIwCCAoAAAACRAGAAgj8BAGMAggGAAAABwFwAA==",
+        "sha256": "51ac3ed0e6e37958196b62acd79ea1a7ef23c76e575413082243b54494be9df8"
+      }
+    ],
+    "categories": []
+  }
+}

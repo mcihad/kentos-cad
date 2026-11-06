@@ -276,6 +276,8 @@ pub(super) struct Features {
     pub(super) review_notes: bool,
     /// Schema 181 (docs/adr/1001 §1): patterns past 12 elements.
     pub(super) long_patterns: bool,
+    /// Schema 184 (docs/adr/1120 §4): a text style's Big Font file.
+    pub(super) shx_fonts: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -575,6 +577,7 @@ impl Features {
             standard_docs: schema >= crate::SCHEMA_WITH_STANDARD_DOCS,
             review_notes: schema >= crate::SCHEMA_WITH_REVIEW_NOTES,
             long_patterns: schema >= crate::SCHEMA_WITH_LONG_PATTERNS,
+            shx_fonts: schema >= crate::SCHEMA_WITH_SHX_FONTS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

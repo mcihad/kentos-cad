@@ -195,6 +195,7 @@ fn every_step_is_the_references() {
             plot_scale: c["plotScale"].as_f64().expect("plotScale"),
             aspects: &aspects,
             screen: false,
+            cad_phase: false,
             moment: None,
         };
         let unit = match c["unit"].as_str() {

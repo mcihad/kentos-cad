@@ -180714,6 +180714,13 @@
     "TextStyleDef": {
       "description": "A named text style (docs/adr/0183 §2).",
       "properties": {
+        "bigFontFile": {
+          "description": "The Big Font (SHX) a DXF STYLE named beside its font (group 4), written\nback as it came (docs/adr/1120 §4; KCAD schema 184).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "bold": {
           "type": "boolean"
         },

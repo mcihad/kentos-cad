@@ -604,10 +604,12 @@ impl App {
                             height: None,
                             width_factor: None,
                             font_file: None,
+                            big_font_file: None,
                         });
                         s.id = id.clone();
                         s.name = name;
                         s.font_file = None;
+                        s.big_font_file = None;
                         w.text.push(s);
                     }
                     Kind::Dimension => {
@@ -1007,6 +1009,13 @@ impl App {
                 "Yazı tipi dosyası",
                 label::caption(f.clone()),
                 Some("DXF dosyasından; DXF’e aynen yazılır.".to_owned()),
+            ));
+        }
+        if let Some(f) = &s.big_font_file {
+            form = form.push(words::field(
+                "Big Font dosyası",
+                label::caption(f.clone()),
+                Some("DXF dosyasından; SHX yazı fontunun yanında çizilir, DXF’e aynen yazılır.".to_owned()),
             ));
         }
         form.into()

@@ -1,8 +1,9 @@
 //! Bounded SHX shape programs, independent of fonts, the filesystem and any
-//! renderer. See Autodesk's Special Codes Reference and ADR 0930.
+//! renderer. See Autodesk's Special Codes Reference, ADR 0930 and ADR 1120.
 //!
-//! Classic AutoCAD-86 shapes 1.0/1.1 only. Unsupported formats fail explicitly;
-//! a requested shape is either completely decoded or returns no geometry.
+//! AutoCAD-86 shapes 1.0/1.1, unifont 1.0 and bigfont 1.0. Unsupported forms
+//! (an extended Big Font's scaled `7,0` primitive) fail explicitly; a requested
+//! shape or text run is either completely decoded or returns no geometry.
 use crate::{
     Vec2,
     geom::bulge::bulge_arc,
@@ -22,11 +23,104 @@ struct Shape<'a> {
     code: &'a [u8],
 }
 
+/// The compiled file's form, from its signature (ADR 1120 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Kind {
+    /// `AutoCAD-86 shapes 1.0/1.1`: one-byte numbers, one-byte subshape operand.
+    Shapes,
+    /// `AutoCAD-86 unifont 1.0`: Unicode numbers, a two-byte subshape operand.
+    Unifont,
+    /// `AutoCAD-86 bigfont 1.0`: two-byte codes behind escape (lead) byte ranges.
+    BigFont,
+}
+
+/// A text font's descriptor: shape 0 of a shapes/big font, the definition
+/// record of a unifont. `above` is the capital height in vector units.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FontInfo {
+    pub above: u8,
+    pub below: u8,
+    pub modes: u8,
+    /// Unifont only: 0 Unicode, 1 packed multibyte, 2 shape file.
+    pub encoding: Option<u8>,
+    /// Unifont only, bit coded: 1 the font may not be embedded, 2 read-only embedding.
+    pub embed: Option<u8>,
+    /// Extended Big Font descriptor (`height, 0, modes, width, 0`).
+    pub extended: bool,
+}
+
 /// Source coordinates are vector units, deliberately not normalized to a
 /// font's capital height. LIN's S parameter scales a single vector unit.
 #[derive(Clone, Debug)]
 pub struct ShapeFile<'a> {
+    kind: Kind,
     shapes: BTreeMap<u16, Shape<'a>>,
+    font: Option<FontInfo>,
+    /// Big Font escape (lead byte) ranges, inclusive.
+    ranges: Vec<(u16, u16)>,
+}
+
+const SHAPES_10: &[u8] = b"AutoCAD-86 shapes 1.0\r\n\x1a";
+const SHAPES_11: &[u8] = b"AutoCAD-86 shapes 1.1\r\n\x1a";
+const UNIFONT: &[u8] = b"AutoCAD-86 unifont 1.0\r\n\x1a";
+const BIGFONT: &[u8] = b"AutoCAD-86 bigfont 1.0\r\n\x1a";
+
+/// The form a signature names, before anything else is read.
+pub fn kind_of(data: &[u8]) -> Option<Kind> {
+    if data.starts_with(SHAPES_10) || data.starts_with(SHAPES_11) {
+        Some(Kind::Shapes)
+    } else if data.starts_with(UNIFONT) {
+        Some(Kind::Unifont)
+    } else if data.starts_with(BIGFONT) {
+        Some(Kind::BigFont)
+    } else {
+        None
+    }
+}
+
+/// A record's name and its NUL-terminated program.
+fn split(record: &[u8]) -> Result<(&[u8], &[u8]), String> {
+    let n = record
+        .iter()
+        .position(|v| *v == 0)
+        .ok_or("SHX şekil adı sonlandırılmamış.")?;
+    Ok((&record[..n], &record[n + 1..]))
+}
+
+/// `above, below, modes, 0`, a unifont's `above, below, modes, encoding,
+/// type, 0` or an extended Big Font's `height, 0, modes, width, 0`.
+fn descriptor(kind: Kind, rest: &[u8]) -> Result<FontInfo, String> {
+    let info = match (kind, rest) {
+        (Kind::Unifont, [above, below, modes, encoding, embed, 0]) => FontInfo {
+            above: *above,
+            below: *below,
+            modes: *modes,
+            encoding: Some(*encoding),
+            embed: Some(*embed),
+            extended: false,
+        },
+        (Kind::Shapes | Kind::BigFont, [above, below, modes, 0]) => FontInfo {
+            above: *above,
+            below: *below,
+            modes: *modes,
+            encoding: None,
+            embed: None,
+            extended: false,
+        },
+        (Kind::BigFont, [height, 0, modes, _width, 0]) => FontInfo {
+            above: *height,
+            below: 0,
+            modes: *modes,
+            encoding: None,
+            embed: None,
+            extended: true,
+        },
+        _ => return Err("SHX yazı fontu tanımı (0 numaralı kayıt) geçersiz.".into()),
+    };
+    if info.above == 0 || !matches!(info.modes, 0 | 2) || info.encoding.is_some_and(|e| e > 2) {
+        return Err("SHX yazı fontu tanımının yükseklik/kip/kodlama değeri geçersiz.".into());
+    }
+    Ok(info)
 }
 
 struct Bytes<'a> {
@@ -61,11 +155,58 @@ impl<'a> ShapeFile<'a> {
         if data.len() > MAX_BYTES {
             return Err("SHX kaynağı 4 MiB sınırını aşıyor.".into());
         }
-        if !data.starts_with(b"AutoCAD-86 shapes 1.0\r\n\x1a")
-            && !data.starts_with(b"AutoCAD-86 shapes 1.1\r\n\x1a")
-        {
-            return Err("Bu SHX biçimi desteklenmiyor; AutoCAD-86 shapes 1.0/1.1 gerekli.".into());
+        match kind_of(data) {
+            Some(Kind::Shapes) => Self::read_shapes(data),
+            Some(Kind::Unifont) => Self::read_unifont(data),
+            Some(Kind::BigFont) => Self::read_bigfont(data),
+            None => Err("Bu SHX biçimi desteklenmiyor; AutoCAD-86 shapes 1.0/1.1, unifont 1.0 \
+                         veya bigfont 1.0 gerekli."
+                .into()),
         }
+    }
+
+    fn empty(kind: Kind) -> Self {
+        Self {
+            kind,
+            shapes: BTreeMap::new(),
+            font: None,
+            ranges: Vec::new(),
+        }
+    }
+
+    fn insert(
+        &mut self,
+        names: &mut BTreeSet<Vec<u8>>,
+        number: u16,
+        record: &'a [u8],
+    ) -> Result<(), String> {
+        let (name, code) = split(record)?;
+        if number == 0 {
+            // The classic text font descriptor, not executable code. A shape
+            // file may carry another record 0; it simply is not a text font.
+            self.font = descriptor(self.kind, code).ok();
+            return Ok(());
+        }
+        if code.last() != Some(&0) {
+            return Err("SHX şekil programı sonlandırılmamış.".into());
+        }
+        if !name.is_empty() && !names.insert(name.to_ascii_lowercase()) {
+            return Err("SHX içinde aynı adlı birden fazla şekil var.".into());
+        }
+        if self.shapes.insert(number, Shape { name, code }).is_some() {
+            return Err("SHX dizin kaydı yinelenmiş.".into());
+        }
+        Ok(())
+    }
+
+    fn done(self) -> Result<Self, String> {
+        if self.shapes.is_empty() {
+            return Err("SHX içinde çizilebilir şekil yok.".into());
+        }
+        Ok(self)
+    }
+
+    fn read_shapes(data: &'a [u8]) -> Result<Self, String> {
         let mut b = Bytes { data, at: 24 };
         let first = b.word()?;
         let last = b.word()?;
@@ -86,35 +227,158 @@ impl<'a> ShapeFile<'a> {
         if index.first().map(|s| s.0) != Some(first) || index.last().map(|s| s.0) != Some(last) {
             return Err("SHX dizininin ilk/son şekli uyuşmuyor.".into());
         }
-        let mut shapes = BTreeMap::new();
+        let mut out = Self::empty(Kind::Shapes);
         let mut names = BTreeSet::new();
         for (number, len) in index {
             let record = b.take(len)?;
-            let n = record
-                .iter()
-                .position(|v| *v == 0)
-                .ok_or("SHX şekil adı sonlandırılmamış.")?;
-            let name = &record[..n];
-            let code = &record[n + 1..];
-            if code.last() != Some(&0) {
-                return Err("SHX şekil programı sonlandırılmamış.".into());
-            }
-            // Record zero is the classic font descriptor, not executable code.
-            if number == 0 {
-                continue;
-            }
-            if !name.is_empty() && !names.insert(name.to_ascii_lowercase()) {
-                return Err("SHX içinde aynı adlı birden fazla şekil var.".into());
-            }
-            shapes.insert(number, Shape { name, code });
+            out.insert(&mut names, number, record)?;
         }
         if b.take(3)? != b"EOF" || b.at != data.len() {
             return Err("SHX dosya sonu geçersiz.".into());
         }
-        if shapes.is_empty() {
-            return Err("SHX içinde çizilebilir şekil yok.".into());
+        out.done()
+    }
+
+    /// Records follow one another after the definition record; there is no
+    /// index (ADR 1120 §2). The 32-bit count includes the definition record.
+    fn read_unifont(data: &'a [u8]) -> Result<Self, String> {
+        let mut b = Bytes {
+            data,
+            at: UNIFONT.len(),
+        };
+        let low = b.word()?;
+        let high = b.word()?;
+        let count = u32::from(low) | (u32::from(high) << 16);
+        if !(2..=65_537).contains(&count) {
+            return Err("SHX unifont kayıt sayısı geçersiz.".into());
         }
-        Ok(Self { shapes })
+        let def = usize::from(b.word()?);
+        let (_, rest) = split(b.take(def)?)?;
+        let mut out = Self::empty(Kind::Unifont);
+        out.font = Some(descriptor(Kind::Unifont, rest)?);
+        let mut names = BTreeSet::new();
+        for _ in 1..count {
+            let number = b.word()?;
+            let len = usize::from(b.word()?);
+            if number == 0 || len < 2 {
+                return Err("SHX unifont kaydı geçersiz.".into());
+            }
+            let record = b.take(len)?;
+            out.insert(&mut names, number, record)?;
+        }
+        if b.at != data.len() {
+            return Err("SHX unifont dosyasının sonunda beklenmeyen veri var.".into());
+        }
+        out.done()
+    }
+
+    /// An index of (code, length, absolute offset) entries; all-zero entries
+    /// are empty slots. The first header word is read, not interpreted.
+    fn read_bigfont(data: &'a [u8]) -> Result<Self, String> {
+        let mut b = Bytes {
+            data,
+            at: BIGFONT.len(),
+        };
+        let _header = b.word()?;
+        let count = usize::from(b.word()?);
+        let nranges = usize::from(b.word()?);
+        if count == 0 || nranges == 0 || nranges > 256 {
+            return Err("SHX bigfont dizini veya kaçış aralığı sayısı geçersiz.".into());
+        }
+        let mut out = Self::empty(Kind::BigFont);
+        for _ in 0..nranges {
+            let (begin, end) = (b.word()?, b.word()?);
+            if begin > end || end > 0xff || begin == 0 {
+                return Err("SHX bigfont kaçış aralığı geçersiz.".into());
+            }
+            out.ranges.push((begin, end));
+        }
+        let mut index = Vec::with_capacity(count);
+        for _ in 0..count {
+            let number = b.word()?;
+            let len = usize::from(b.word()?);
+            let low = b.word()?;
+            let high = b.word()?;
+            let offset = usize::from(low) | (usize::from(high) << 16);
+            if number == 0 && len == 0 && offset == 0 {
+                continue;
+            }
+            index.push((number, len, offset));
+        }
+        let start = b.at;
+        let mut names = BTreeSet::new();
+        let mut numbers = BTreeSet::new();
+        for (number, len, offset) in index {
+            let end = offset.checked_add(len).ok_or("SHX bigfont kaydı taşmış.")?;
+            if len < 2 || offset < start || end > data.len() || !numbers.insert(number) {
+                return Err("SHX bigfont dizin kaydı geçersiz veya yinelenmiş.".into());
+            }
+            out.insert(&mut names, number, &data[offset..end])?;
+        }
+        if numbers.contains(&0) && out.font.is_none() {
+            return Err("SHX bigfont yazı fontu tanımı geçersiz.".into());
+        }
+        out.done()
+    }
+
+    pub fn kind(&self) -> Kind {
+        self.kind
+    }
+    /// The text font descriptor, when the file is a text font.
+    pub fn font(&self) -> Option<FontInfo> {
+        self.font
+    }
+
+    /// The shape number of a character in a shapes 1.0/1.1 or unifont text
+    /// font. A classic font is addressed by a code page the file does not
+    /// name: only ASCII is unambiguous (ADR 1120 §3).
+    pub fn glyph(&self, ch: char) -> Result<u16, String> {
+        let font = self
+            .font
+            .ok_or("SHX dosyası bir yazı fontu değil (yazı fontu tanımı yok).")?;
+        let code = u32::from(ch);
+        let number = match self.kind {
+            Kind::Shapes if code < 0x80 => code as u16,
+            Kind::Shapes => {
+                return Err(format!(
+                    "“{ch}” (U+{code:04X}) klasik SHX fontunda kod sayfasına bağlıdır; dosya kod \
+                     sayfasını bildirmez. Bir unifont kullanın."
+                ));
+            }
+            Kind::Unifont if font.encoding != Some(0) => {
+                return Err("SHX unifont kodlaması Unicode değil; karakterler çözülemez.".into());
+            }
+            Kind::Unifont => u16::try_from(code)
+                .map_err(|_| format!("“{ch}” (U+{code:X}) SHX unifont aralığının dışında."))?,
+            Kind::BigFont => {
+                return Err(
+                    "Big Font tek başına yazı fontu değildir; karakteri \\M+ koduyla verin.".into(),
+                );
+            }
+        };
+        if self.shapes.contains_key(&number) {
+            Ok(number)
+        } else {
+            Err(format!("“{ch}” (U+{code:04X}) karakteri SHX fontunda yok."))
+        }
+    }
+
+    /// A Big Font character by its two-byte code (lead byte in an escape range).
+    pub fn big_glyph(&self, code: u16) -> Result<u16, String> {
+        if self.kind != Kind::BigFont || self.font.is_none() {
+            return Err("SHX dosyası bir Big Font değil.".into());
+        }
+        let lead = code >> 8;
+        if !self.ranges.iter().any(|(b, e)| (*b..=*e).contains(&lead)) {
+            return Err(format!(
+                "{code:04X} kodunun ilk baytı Big Font kaçış aralıklarında değil."
+            ));
+        }
+        if self.shapes.contains_key(&code) {
+            Ok(code)
+        } else {
+            Err(format!("{code:04X} kodlu karakter Big Font içinde yok."))
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -163,6 +427,77 @@ impl<'a> ShapeFile<'a> {
         vm.flush();
         Ok(vm.paths)
     }
+}
+
+/// A character of an SHX text: a Unicode character for the primary font, or a
+/// Big Font code given as AutoCAD's `\M+cXXXX` (c 1–5, the code page index;
+/// XXXX the two-byte code, ADR 1120 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextChar {
+    Char(char),
+    Big(u16),
+}
+
+pub fn text_chars(text: &str) -> Vec<TextChar> {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = Vec::with_capacity(chars.len());
+    let mut i = 0;
+    while i < chars.len() {
+        let code = chars.get(i..i + 8).and_then(|w| {
+            let head: String = w[..3].iter().collect();
+            let hex: String = w[4..].iter().collect();
+            (head.eq_ignore_ascii_case("\\m+")
+                && ('1'..='5').contains(&w[3])
+                && hex.chars().all(|c| c.is_ascii_hexdigit()))
+            .then(|| u16::from_str_radix(&hex, 16).ok())
+            .flatten()
+        });
+        if let Some(code) = code {
+            out.push(TextChar::Big(code));
+            i += 8;
+        } else {
+            out.push(TextChar::Char(chars[i]));
+            i += 1;
+        }
+    }
+    out
+}
+
+/// A text run: each glyph's program from its own file, the pen carried from
+/// one glyph's end to the next (a glyph's last pen-up move is its advance).
+/// Every glyph starts with the pen down and its own font's scale, so the
+/// result is in capital heights: 1 is the text height (ADR 1120 §3).
+pub fn draw_text<'a, 'b>(run: &[(&'a ShapeFile<'b>, u16)]) -> Result<Vec<Vec<Vec2>>, String> {
+    let Some(&(first, _)) = run.first() else {
+        return Ok(Vec::new());
+    };
+    let mut vm = Vm {
+        file: first,
+        at: Vec2::new(0., 0.),
+        pen: true,
+        scale: 1.,
+        stack: Vec::new(),
+        active: Vec::new(),
+        paths: Vec::new(),
+        path: Vec::new(),
+        points: 0,
+        steps: 0,
+    };
+    for &(file, number) in run {
+        let font = file
+            .font
+            .ok_or("SHX dosyası bir yazı fontu değil (yazı fontu tanımı yok).")?;
+        vm.flush();
+        vm.file = file;
+        vm.pen = true;
+        vm.scale = 1. / f64::from(font.above);
+        vm.run(number)?;
+        if !vm.stack.is_empty() {
+            return Err("SHX konum yığını dengeli değil.".into());
+        }
+    }
+    vm.flush();
+    Ok(vm.paths)
 }
 
 struct Vm<'a, 'b> {
@@ -327,8 +662,26 @@ impl Vm<'_, '_> {
                     self.at = self.stack.pop().ok_or("SHX konum yığını boş.")?;
                 }
                 5 | 6 => {}
+                // A unifont's operand is two bytes, high first ("the compiler
+                // always uses two bytes"); a Big Font's `7,0` is the extended
+                // form with a scaled primitive, refused rather than guessed.
                 7 => {
-                    let n = u16::from(b.byte()?);
+                    let n = match self.file.kind {
+                        Kind::Shapes => u16::from(b.byte()?),
+                        Kind::Unifont => u16::from_be_bytes([b.byte()?, b.byte()?]),
+                        Kind::BigFont => match b.byte()? {
+                            0 => {
+                                b.take(6)?;
+                                if apply {
+                                    return Err("Genişletilmiş Big Font alt şekli (7,0) \
+                                                desteklenmiyor; eksik çıktı üretilmedi."
+                                        .into());
+                                }
+                                continue;
+                            }
+                            n => u16::from(n),
+                        },
+                    };
                     if apply {
                         self.run(n)?;
                     }
@@ -544,6 +897,12 @@ mod tests {
         assert!(ShapeFile::read(&file(&[(1, "A", &[0]), (1, "B", &[0])])).is_err());
         assert!(ShapeFile::read(&file(&[(1, "A", &[0]), (2, "a", &[0])])).is_err());
         assert!(ShapeFile::read(b"AutoCAD-86 unifont 1.0\r\n\x1a").is_err());
+        assert!(ShapeFile::read(b"AutoCAD-86 bigfont 1.0\r\n\x1a").is_err());
+        assert!(ShapeFile::read(b"AutoCAD-86 shapes 2.0\r\n\x1a").is_err());
         assert!(ShapeFile::read(&vec![0; MAX_BYTES + 1]).is_err());
     }
 }
+
+#[cfg(test)]
+#[path = "shx_font_tests.rs"]
+mod font_tests;

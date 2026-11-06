@@ -53,6 +53,21 @@ pub fn ellipse_point(e: &EllipseGeom, t: f64) -> Vec2 {
     )
 }
 
+/// The drawn outline's point: the centre plus each axis term in turn, left to right. This is the
+/// order the style compiler's frozen answers were recorded with (fixtures/style/v1/cases.json, the
+/// same bits through WASM); `ellipse_point`'s single origin addition, which the constraint solver
+/// needs for its correctly rounded endpoints (ADR 0835), differs from it in the last digit at map
+/// coordinates and must not change what is drawn (ADR 1123).
+fn drawn_point(e: &EllipseGeom, t: f64) -> Vec2 {
+    let m = minor_axis(e);
+    let c = cos(t);
+    let s = sin(t);
+    Vec2::new(
+        e.c.x + e.major.x * c + m.x * s,
+        e.c.y + e.major.y * c + m.y * s,
+    )
+}
+
 /// dP/dt (not normalised).
 pub fn ellipse_derivative(e: &EllipseGeom, t: f64) -> Vec2 {
     let m = minor_axis(e);
@@ -104,7 +119,7 @@ pub fn tessellate_ellipse(e: &EllipseGeom, per_turn: f64) -> Vec<Vec2> {
     let mut out = Vec::new();
     let mut i = 0.0;
     while i < end {
-        out.push(ellipse_point(e, e.t0 + (sw * i) / n));
+        out.push(drawn_point(e, e.t0 + (sw * i) / n));
         i += 1.0;
     }
     out

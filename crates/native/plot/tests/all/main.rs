@@ -36,3 +36,4 @@ mod drawing_set;
 mod source_snapshot;
 
 mod line_types;
+mod curve_dashes;

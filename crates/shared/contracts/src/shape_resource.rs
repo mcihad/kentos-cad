@@ -31,6 +31,19 @@ pub fn uses(types: &[crate::LineTypeDef], file: &str) -> usize {
         .count()
 }
 
+/// Text styles whose SHX font or Big Font is this resource (ADR 1120 §4): a
+/// resource they draw with is in use like a linetype's shape file.
+pub fn font_uses(styles: &[crate::TextStyleDef], file: &str) -> usize {
+    let named = |f: &Option<String>| {
+        f.as_deref()
+            .is_some_and(|f| id(source_name(f)) == id(file))
+    };
+    styles
+        .iter()
+        .filter(|s| named(&s.font_file) || named(&s.big_font_file))
+        .count()
+}
+
 pub fn read(item: &Value) -> Result<Vec<u8>, String> {
     if !is_resource(item) {
         return Err("SHX kaynak öğesi gerekli.".into());
@@ -59,12 +72,56 @@ pub fn read(item: &Value) -> Result<Vec<u8>, String> {
     if item["sha256"].as_str() != Some(sha256_hex(&bytes).as_str()) {
         return Err("SHX kaynak özeti uyuşmuyor.".into());
     }
-    if !bytes.starts_with(b"AutoCAD-86 shapes 1.0\r\n\x1a")
-        && !bytes.starts_with(b"AutoCAD-86 shapes 1.1\r\n\x1a")
-    {
-        return Err("Bu SHX biçimi desteklenmiyor; shapes 1.0/1.1 gerekli.".into());
-    }
+    embeddable(&bytes)?;
     Ok(bytes)
+}
+
+const UNIFONT: &[u8] = b"AutoCAD-86 unifont 1.0\r\n\x1a";
+const BIGFONT: &[u8] = b"AutoCAD-86 bigfont 1.0\r\n\x1a";
+
+/// Whether a valid resource is a unifont or a Big Font: KCAD schema 184 and
+/// `.kstil` readers before it do not know these forms (ADR 1120 §4).
+pub fn is_font_form(item: &Value) -> bool {
+    read(item).is_ok_and(|b| b.starts_with(UNIFONT) || b.starts_with(BIGFONT))
+}
+
+/// The forms KentOS reads (ADR 0930, ADR 1120). A unifont whose definition
+/// record says it may not be embedded (type bit 1, Autodesk's Unicode font
+/// description) is not put into a project; read-only embedding (bit 2) is
+/// what a project resource is, since its bytes are never edited.
+fn embeddable(bytes: &[u8]) -> Result<(), String> {
+    if bytes.starts_with(b"AutoCAD-86 shapes 1.0\r\n\x1a")
+        || bytes.starts_with(b"AutoCAD-86 shapes 1.1\r\n\x1a")
+        || bytes.starts_with(BIGFONT)
+    {
+        return Ok(());
+    }
+    if !bytes.starts_with(UNIFONT) {
+        return Err(
+            "Bu SHX biçimi desteklenmiyor; shapes 1.0/1.1, unifont 1.0 veya bigfont 1.0 gerekli."
+                .into(),
+        );
+    }
+    let at = UNIFONT.len() + 4;
+    let def = bytes
+        .get(at..at + 2)
+        .map(|b| usize::from(u16::from_le_bytes([b[0], b[1]])))
+        .ok_or("SHX unifont tanımı yarım kalmış.")?;
+    let record = bytes
+        .get(at + 2..at + 2 + def)
+        .ok_or("SHX unifont tanımı yarım kalmış.")?;
+    let name = record
+        .iter()
+        .position(|b| *b == 0)
+        .ok_or("SHX unifont tanımı geçersiz.")?;
+    match &record[name + 1..] {
+        [_, _, _, _, embed, 0] if embed & 1 == 0 => Ok(()),
+        [_, _, _, _, _, 0] => Err(
+            "Bu SHX unifont yazı tipinin tanımı gömülmesine izin vermiyor (tür 1); projeye eklenmedi."
+                .into(),
+        ),
+        _ => Err("SHX unifont tanımı geçersiz.".into()),
+    }
 }
 
 pub fn item(file: &str, bytes: &[u8]) -> Result<Value, String> {
@@ -108,5 +165,23 @@ mod tests {
         bad["data"] = json!("https://example.org/fence.shx");
         assert!(read(&bad).is_err());
         assert!(check_items(&[a.clone(), a]).is_err());
+    }
+    #[test]
+    fn unifont_and_bigfont_are_resources_unless_the_font_forbids_embedding() {
+        let unifont = |embed: u8| {
+            let mut b = UNIFONT.to_vec();
+            b.extend(2u32.to_le_bytes());
+            b.extend(8u16.to_le_bytes());
+            b.extend([b'U', 0, 4, 1, 0, 0, embed, 0]);
+            b
+        };
+        assert!(item("u.shx", &unifont(0)).is_ok());
+        assert!(item("u.shx", &unifont(2)).is_ok(), "read-only embedding");
+        for forbidden in [1, 3] {
+            assert!(item("u.shx", &unifont(forbidden)).unwrap_err().contains("izin vermiyor"));
+        }
+        assert!(item("u.shx", &unifont(0)[..UNIFONT.len() + 7]).is_err());
+        assert!(item("b.shx", b"AutoCAD-86 bigfont 1.0\r\n\x1a").is_ok());
+        assert!(item("x.shx", b"AutoCAD-86 shapes 2.0\r\n\x1a").is_err());
     }
 }

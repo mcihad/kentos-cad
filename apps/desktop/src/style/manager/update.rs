@@ -649,10 +649,13 @@ impl App {
             && kentos_commands::shape_resource::uses(
                 &doc.model.settings().line_types,
                 item.text("file").unwrap_or(""),
+            ) + kentos_commands::shape_resource::font_uses(
+                &doc.model.settings().text_styles,
+                item.text("file").unwrap_or(""),
             ) > 0
         {
             self.manager_say(
-                "Bu SHX kaynağını çizgi tipleri kullanıyor; önce onların kaynak bağını kaldırın.",
+                "Bu SHX kaynağını çizgi tipleri veya yazı stilleri kullanıyor; önce onların kaynak bağını kaldırın.",
                 true,
             );
             return;

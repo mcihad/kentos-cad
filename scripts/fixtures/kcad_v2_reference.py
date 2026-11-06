@@ -557,6 +557,8 @@ def text_styles(styles):
         "height": (f64, False),
         "widthFactor": (f64, False),
         "fontFile": (text, False),
+        # Schema 184 (docs/adr/1120 §4): the Big Font beside an SHX font.
+        "bigFontFile": (text, False),
     }
     for st in styles:
         assert st.get("widthFactor", 2.0) != 1.0, "genişlik çarpanı 1 yazılmaz"
@@ -2406,6 +2408,13 @@ def document(d):
     if d["settings"].get("approvedSheetTemplates"):
         # The sheet template revisions an office standard approved (docs/adr/1100 §3).
         schema = max(schema, 183)
+    if any("bigFontFile" in s for s in d["settings"].get("textStyles", [])) or any(
+            i.get("kind") == "asset" and i.get("format") == "shx"
+            and base64.b64decode(i["data"].split(",", 1)[1]).startswith(
+                (b"AutoCAD-86 unifont 1.0\r\n\x1a", b"AutoCAD-86 bigfont 1.0\r\n\x1a"))
+            for i in d.get("styles", {}).get("items", [])):
+        # A Big Font beside a text style's font, an SHX unifont or Big Font resource (docs/adr/1120 §4).
+        schema = max(schema, 184)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3351,7 +3360,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-184.kcad"] = container(root(cmap(parts), version=uint(184)))
+    files["schema-version-185.kcad"] = container(root(cmap(parts), version=uint(185)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4828,6 +4837,23 @@ def build():
     duplicate_shape["styles"]["items"]*=2
     out["broken/shape-resource-duplicate.kcad"]=container(document(duplicate_shape))
     out["broken/shape-resources-in-schema-163.kcad"]=container(shapes.replace(b"\x67version\x18\xa4",b"\x67version\x18\xa3"))
+    # Schema 184 (docs/adr/1120 §4): a text style's Big Font beside its SHX font and the unifont/Big Font
+    # resources (fixtures/shx/v1); schema 183 refuses the field, a Big Font that is not an .shx file and a
+    # unifont whose definition forbids embedding are bad values.
+    shx_fonts = load("shx-fonts.json")
+    shx_fonts_data = document(shx_fonts)
+    assert shx_fonts_data.count(b"\x67version\x18\xb8") == 1, "SHX fonts are schema 184"
+    out["shx-fonts.kcad"] = container(shx_fonts_data)
+    out["broken/shx-fonts-in-schema-183.kcad"] = container(
+        shx_fonts_data.replace(b"\x67version\x18\xb8", b"\x67version\x18\xb7"))
+    not_shx = copy.deepcopy(shx_fonts)
+    not_shx["settings"]["textStyles"][0]["bigFontFile"] = "kentos-big.ttf"
+    out["broken/shx-fonts-big-font-not-shx.kcad"] = container(document(not_shx))
+    sealed = copy.deepcopy(shx_fonts)
+    raw = (Path(__file__).resolve().parents[2] / "fixtures" / "shx" / "v1" / "kentos-uni-noembed.shx").read_bytes()
+    sealed["styles"]["items"][0]["data"] = "data:application/x-autocad-shx;base64," + base64.b64encode(raw).decode()
+    sealed["styles"]["items"][0]["sha256"] = hashlib.sha256(raw).hexdigest()
+    out["broken/shx-fonts-not-embeddable.kcad"] = container(document(sealed))
     unicode_text = document(load("text-engine.json"))
     assert unicode_text.count(b"\x67version\x18\xa3") == 1
     out["text-engine.kcad"] = container(unicode_text)

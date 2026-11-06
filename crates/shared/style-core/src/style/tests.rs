@@ -41,6 +41,7 @@ fn units_turn_paper_mm_into_metres_and_keep_px_for_drawn_sizes() {
         plot_scale,
         aspects: &aspects,
         screen: false,
+        cad_phase: false,
         moment: None,
     };
     assert_eq!(to_world(1.0, Unit::Mm, &env(1000.0)), 1.0);
@@ -61,6 +62,7 @@ fn screen_sized_symbols_draw_paper_mm_as_px_and_keep_placement_in_metres() {
         plot_scale: 2000.0,
         aspects: &aspects,
         screen: true,
+        cad_phase: false,
         moment: None,
     };
     // Drawn sizes: 25.4 mm is 96 px whatever the scale, so zooming does not change them.

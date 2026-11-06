@@ -136,6 +136,83 @@ fn polygons(ops: Vec<OutlineOp>) -> Result<Vec<Vec<Vec<[f64; 2]>>>, String> {
         .collect())
 }
 
+/// An attached SHX resource's bytes by the file a definition names (only its
+/// basename; never a disk or network lookup, ADR 0930).
+fn attached(
+    resources: &kentos_contracts::ProjectStyles,
+    file: &str,
+    what: &str,
+) -> Result<Vec<u8>, String> {
+    let file = kentos_contracts::shape_resource::source_name(file);
+    let id = kentos_contracts::shape_resource::id(file);
+    let mut items = resources.items.iter().filter(|i| {
+        kentos_contracts::shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str())
+    });
+    let item = items
+        .next()
+        .ok_or_else(|| format!("{what} için “{file}” kaynağı projeye eklenmemiş."))?;
+    if items.next().is_some() {
+        return Err(format!("“{file}” SHX kaynağı yinelenmiş."));
+    }
+    kentos_contracts::shape_resource::read(item)
+}
+
+/// A linetype text in an SHX font (and its Big Font): open strokes in capital
+/// heights, the style's width factor and slant applied (ADR 1120 §3). Every
+/// character resolves or the whole text fails: no character becomes a gap.
+fn shx_text(
+    style: &kentos_contracts::TextStyleDef,
+    font_file: &str,
+    text: &str,
+    resources: &kentos_contracts::ProjectStyles,
+) -> Result<Vec<Vec<[f64; 2]>>, String> {
+    use kentos_geometry_core::text::shx::{ShapeFile, TextChar, draw_text, text_chars};
+    let what = format!("“{}” yazı stilinin SHX yazı fontu", style.name);
+    let primary_bytes = attached(resources, font_file, &what)?;
+    let primary = ShapeFile::read(&primary_bytes).map_err(|e| format!("{what}: {e}"))?;
+    let big_bytes = match style.big_font_file.as_deref() {
+        Some(file) => Some(attached(
+            resources,
+            file,
+            &format!("“{}” yazı stilinin Big Font'u", style.name),
+        )?),
+        None => None,
+    };
+    let big = match &big_bytes {
+        Some(b) => Some(ShapeFile::read(b).map_err(|e| format!("Big Font: {e}"))?),
+        None => None,
+    };
+    let mut run = Vec::new();
+    for c in text_chars(text) {
+        match c {
+            TextChar::Char(ch) => run.push((&primary, primary.glyph(ch).map_err(|e| format!("{what}: {e}"))?)),
+            TextChar::Big(code) => {
+                let big = big.as_ref().ok_or_else(|| {
+                    format!(
+                        "“{}” yazı stilinin Big Font'u yok; \\M+ kodlu {code:04X} karakteri çizilemez.",
+                        style.name
+                    )
+                })?;
+                run.push((big, big.big_glyph(code)?));
+            }
+        }
+    }
+    let paths = draw_text(&run).map_err(|e| format!("{what}: {e}"))?;
+    if paths.is_empty() {
+        return Err(format!("{what}: yazının çizilebilir konturu yok."));
+    }
+    let width = style.width_factor.unwrap_or(1.);
+    let lean = tan(style.oblique.unwrap_or(0.).to_radians());
+    Ok(paths
+        .into_iter()
+        .map(|p| {
+            p.into_iter()
+                .map(|v| [(v.x + v.y * lean) * width, v.y])
+                .collect()
+        })
+        .collect())
+}
+
 pub(super) fn prepare(
     def: &LineTypeDef,
     settings: &ProjectSettings,
@@ -158,21 +235,7 @@ pub(super) fn prepare(
     for e in &def.elements {
         if let Some(shape) = &e.shape {
             let file = kentos_contracts::shape_resource::source_name(&shape.file);
-            let id = kentos_contracts::shape_resource::id(file);
-            let mut items = resources.items.iter().filter(|i| {
-                kentos_contracts::shape_resource::is_resource(i)
-                    && i["id"].as_str() == Some(id.as_str())
-            });
-            let item = items.next().ok_or_else(|| {
-                format!(
-                    "“{}” SHX şekli için “{}” kaynağı projeye eklenmemiş.",
-                    shape.name, shape.file
-                )
-            })?;
-            if items.next().is_some() {
-                return Err(format!("“{file}” SHX kaynağı yinelenmiş."));
-            }
-            let bytes = kentos_contracts::shape_resource::read(item)?;
+            let bytes = attached(resources, &shape.file, &format!("“{}” SHX şekli", shape.name))?;
             let paths = kentos_geometry_core::text::shx::ShapeFile::read(&bytes)
                 .and_then(|f| f.draw(&shape.name))
                 .map_err(|e| format!("“{}” SHX şekli (“{file}”): {e}", shape.name))?;
@@ -209,11 +272,33 @@ pub(super) fn prepare(
         {
             return Err(format!("“{}” yazı stili bulunamadı.", text.style));
         }
+        let p = &text.place;
+        let height = style
+            .and_then(|s| s.height)
+            .filter(|h| *h > 0.)
+            .map_or_else(
+                || paper(p.scale),
+                |h| h * settings.plot_scale / plot_scale * p.scale,
+            );
+        if let Some(s) = style
+            && let Some(file) = s.font_file.as_deref()
+            && fonts::resolve(file).1 == fonts::FontMatch::Shx
+        {
+            let paths = shx_text(s, file, &text.text, resources)?;
+            marks.push(json!({"at":at,"cap":1.,"height":height,"x":paper(p.x),"y":paper(p.y),
+                "rotation":p.rotation,"absolute":p.absolute,"upright":p.upright,"polygons":[],"paths":paths}));
+            continue;
+        }
         if let Some(file) = style.and_then(|s| s.font_file.as_deref())
             && fonts::resolve(file).1.substituted()
         {
             return Err(format!(
                 "“{file}” yazı tipi çizilemiyor; kaynak değiştirilmedi."
+            ));
+        }
+        if let Some(big) = style.and_then(|s| s.big_font_file.as_deref()) {
+            return Err(format!(
+                "“{big}” Big Font'u yalnız bir SHX yazı fontunun yanında çizilir; kaynak değiştirilmedi."
             ));
         }
         let font = Font::from_id(
@@ -256,14 +341,6 @@ pub(super) fn prepare(
             }
             glyphs.extend(p);
         }
-        let p = &text.place;
-        let height = style
-            .and_then(|s| s.height)
-            .filter(|h| *h > 0.)
-            .map_or_else(
-                || paper(p.scale),
-                |h| h * settings.plot_scale / plot_scale * p.scale,
-            );
         marks.push(
             json!({"at":at,"cap":cap,"height":height,"x":paper(p.x),"y":paper(p.y),
             "rotation":p.rotation,"absolute":p.absolute,"upright":p.upright,"polygons":glyphs}),
@@ -379,5 +456,103 @@ mod tests {
                 .unwrap()
                 .contains("missing.shx")
         );
+    }
+    fn shx_fonts() -> kentos_contracts::ProjectStyles {
+        let item =
+            |file: &str, bytes: &[u8]| kentos_contracts::shape_resource::item(file, bytes).unwrap();
+        kentos_contracts::ProjectStyles {
+            items: vec![
+                item(
+                    "kentos-uni.shx",
+                    include_bytes!("../../../../../fixtures/shx/v1/kentos-uni.shx"),
+                ),
+                item(
+                    "kentos-big.shx",
+                    include_bytes!("../../../../../fixtures/shx/v1/kentos-big.shx"),
+                ),
+            ],
+            categories: Vec::new(),
+        }
+    }
+    fn shx_settings(text: &str, style: Value) -> ProjectSettings {
+        serde_json::from_value(json!({"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":50.,
+            "textStyles":[style],
+            "lineTypes":[{"name":"SU","unit":"paper","elements":[{"length":6.},{"length":-1.},
+                {"length":0.,"text":{"text":text,"style":"Uni","scale":2.,"x":0.5,"y":-1.}},{"length":-6.}]}]})).unwrap()
+    }
+    /// The independent reader's runs (scripts/fixtures/shx_font_reference.py) are what the
+    /// linetype draws: exact, every value a binary fraction of the capital height 8.
+    #[test]
+    fn shx_unifont_and_big_font_text_marks_match_the_independent_reader() {
+        let expected: Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/shx/v1/expected.json"))
+                .unwrap();
+        let resources = shx_fonts();
+        let style = json!({"id":"u","name":"Uni","font":"barlow","fontFile":"C:\\Fonts\\KENTOS-UNI.SHX","bigFontFile":"kentos-big.shx"});
+        for (text, paths) in expected["runs"].as_object().unwrap() {
+            let settings = shx_settings(text, style.clone());
+            for scale in [1., 20., 100.] {
+                let types = LineTypes::at_scale_with_resources(&settings, &resources, scale);
+                assert_eq!(types.loss("SU"), None, "{text}");
+                let raw = types.apply(Some("SU"), json!({"type":"simpleLine"}));
+                let m = &raw["cadMarks"]["marks"][0];
+                assert_eq!(&m["paths"], paths, "{text}");
+                assert_eq!(m["cap"], 1.);
+                assert_eq!(m["polygons"], json!([]));
+                assert!((m["height"].as_f64().unwrap() - 2.).abs() < 1e-12, "paper S");
+                assert!((raw["cadMarks"]["period"].as_f64().unwrap() - 13.).abs() < 1e-12);
+            }
+        }
+        // Width factor and slant shape the strokes: x' = (x + y·tan 30°)·0.5.
+        let mut slanted = style.clone();
+        slanted["widthFactor"] = json!(0.5);
+        slanted["oblique"] = json!(30.);
+        let types = LineTypes::with_resources(&shx_settings("ŞU", slanted), &resources);
+        let raw = types.apply(Some("SU"), json!({"type":"simpleLine"}));
+        let got = &raw["cadMarks"]["marks"][0]["paths"][0][5];
+        let lean = tan(30_f64.to_radians());
+        assert_eq!(got[0].as_f64().unwrap(), (0.75 + lean) * 0.5);
+        assert_eq!(got[1].as_f64().unwrap(), 1.);
+    }
+    #[test]
+    fn a_missing_shx_glyph_font_or_big_font_is_a_loss_not_a_gap() {
+        let resources = shx_fonts();
+        let style = json!({"id":"u","name":"Uni","font":"barlow","fontFile":"kentos-uni.shx"});
+        let loss = |text: &str, style: &Value, resources: &kentos_contracts::ProjectStyles| {
+            LineTypes::with_resources(&shx_settings(text, style.clone()), resources)
+                .loss("SU")
+                .unwrap_or_default()
+        };
+        for (text, words) in [
+            ("SQU", "“Q” (U+0051) karakteri SHX fontunda yok"),
+            ("S\\M+18140", "Big Font'u yok"),
+        ] {
+            assert!(loss(text, &style, &resources).contains(words), "{text}");
+        }
+        let mut with_big = style.clone();
+        with_big["bigFontFile"] = json!("kentos-big.shx");
+        for (text, words) in [
+            ("S\\M+18150", "Big Font içinde yok"),
+            ("S\\M+14141", "kaçış"),
+        ] {
+            assert!(loss(text, &with_big, &resources).contains(words), "{text}");
+        }
+        let mut absent = style.clone();
+        absent["bigFontFile"] = json!("absent-big.shx");
+        assert!(loss("SU", &absent, &resources).contains("absent-big.shx"));
+        let none = kentos_contracts::ProjectStyles {
+            items: Vec::new(),
+            categories: Vec::new(),
+        };
+        assert!(loss("SU", &style, &none).contains("kentos-uni.shx"));
+        let mut ttf = json!({"id":"u","name":"Uni","font":"barlow","fontFile":"Barlow-Regular.ttf","bigFontFile":"kentos-big.shx"});
+        assert!(loss("SU", &ttf, &resources).contains("yalnız bir SHX yazı fontunun yanında"));
+        ttf.as_object_mut().unwrap().remove("bigFontFile");
+        assert_eq!(loss("SU", &ttf, &resources), "");
+        let refused = kentos_contracts::shape_resource::item(
+            "kentos-uni-noembed.shx",
+            include_bytes!("../../../../../fixtures/shx/v1/kentos-uni-noembed.shx"),
+        );
+        assert!(refused.unwrap_err().contains("izin vermiyor"));
     }
 }

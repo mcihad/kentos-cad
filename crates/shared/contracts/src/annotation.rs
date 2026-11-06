@@ -722,6 +722,11 @@ pub struct TextStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub font_file: Option<String>,
+    /// The Big Font (SHX) a DXF STYLE named beside its font (group 4), written
+    /// back as it came (docs/adr/1120 §4; KCAD schema 184).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub big_font_file: Option<String>,
 }
 
 /// A named leader style (docs/adr/0326 §4): its arrowhead, the arrowhead's length in the note's height, the note's
@@ -946,6 +951,16 @@ impl TextStyleDef {
         }
         if self.font_file.as_deref().is_some_and(str::is_empty) {
             return Some(format!("“{name}” yazı stilinin yazı tipi dosyası boş"));
+        }
+        if let Some(big) = self.big_font_file.as_deref()
+            && (big.is_empty()
+                || big.len() > 255
+                || big.chars().any(char::is_control)
+                || !big.to_ascii_lowercase().ends_with(".shx"))
+        {
+            return Some(format!(
+                "“{name}” yazı stilinin Big Font dosyası “{big}”; boş olmayan, en çok 255 baytlık bir .shx dosya adı olmalı"
+            ));
         }
         None
     }
