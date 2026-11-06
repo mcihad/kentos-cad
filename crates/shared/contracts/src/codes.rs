@@ -1977,6 +1977,14 @@ codes! {
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
     /// Alternatif etkisi (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
+    /// Düzenleme dağıtım taslağı (docs/adr/1460): rounded values that do not add up while the remainder rule is `reject`.
+    NEEDS_RULE = "needs_rule", Failed, false, "Yuvarlanan değerler toplamı tutmuyor ve artık kuralı yok; hiçbir şey dağıtılmadı.";
+    /// A parcel's records that disagree on its registered area (docs/adr/1460).
+    AREA_MISMATCH = "area_mismatch", Failed, false, "Parselin tapu alanı kayıtlarında farklı.";
+    /// A holder twice in one parcel (docs/adr/1460).
+    DUPLICATE_HOLDER = "duplicate_holder", Failed, false, "Hak sahibi aynı parselde iki kez var.";
+    /// A parcel whose shares do not add up to exactly 1 (docs/adr/1460).
+    SHARES_NOT_WHOLE = "shares_not_whole", Failed, false, "Parselin payları toplamı tam 1 değil.";
     /// GNSS baz ağı (docs/adr/1380): no baseline given.
     NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
     /// GNSS baz ağı: a station named twice.

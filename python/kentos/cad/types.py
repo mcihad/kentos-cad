@@ -72181,6 +72181,258 @@ class RastersReprojected(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReadjustmentDistribute(_Model):
+    """Input of `cad.readjustment.distribute` v1: the rule package and the records, in order.
+
+    Refusals, in this order: `invalid_input` (`rules.*`: an empty id, source or jurisdiction, a deduction off [0, 1),
+    places over 6, an unknown mode or rule; `entries`: none), then record by record `invalid_input`
+    (`entries[i].area` not plain decimal text or finer than the policy's places, `entries[i].share` not `n/d` with
+    d > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),
+    `duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's
+    shares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is
+    `reject`).
+    """
+    rules: ReadjustmentRules
+    entries: list[ReadjustmentEntry]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules.to_json()
+        out["entries"] = [e0.to_json() for e0 in self.entries]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentDistribute:
+        return cls(
+            rules=ReadjustmentRules.from_json(data["rules"]),
+            entries=[ReadjustmentEntry.from_json(e0) for e0 in data["entries"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentDistributed(_Model):
+    """Output of `cad.readjustment.distribute` v1: the package's id and release, whether the result is a draft (always
+    here: no official decision is enabled), the totals (registered, the deduction's exact and rounded value, its
+    remainder and the parcels it went to, net, the holders' sum) and whether they are kept exactly, the parcels in the
+    records' order and the holders' totals in their first appearance's order.
+    Attributes:
+        release: Unit: count.
+    """
+    rules: str
+    release: int
+    draft: bool
+    registered: str
+    deduction_exact: str
+    deduction: str
+    deduction_remainder: str
+    deduction_remainder_to: list[str]
+    net: str
+    held: str
+    conserved: bool
+    parcels: list[ReadjustmentParcel]
+    holders: list[ReadjustmentHolder]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules
+        out["release"] = self.release
+        out["draft"] = self.draft
+        out["registered"] = self.registered
+        out["deductionExact"] = self.deduction_exact
+        out["deduction"] = self.deduction
+        out["deductionRemainder"] = self.deduction_remainder
+        out["deductionRemainderTo"] = list(self.deduction_remainder_to)
+        out["net"] = self.net
+        out["held"] = self.held
+        out["conserved"] = self.conserved
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        out["holders"] = [e0.to_json() for e0 in self.holders]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentDistributed:
+        return cls(
+            rules=data["rules"],
+            release=data["release"],
+            draft=data["draft"],
+            registered=data["registered"],
+            deduction_exact=data["deductionExact"],
+            deduction=data["deduction"],
+            deduction_remainder=data["deductionRemainder"],
+            deduction_remainder_to=list(data["deductionRemainderTo"]),
+            net=data["net"],
+            held=data["held"],
+            conserved=data["conserved"],
+            parcels=[ReadjustmentParcel.from_json(e0) for e0 in data["parcels"]],
+            holders=[ReadjustmentHolder.from_json(e0) for e0 in data["holders"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentEntry(_Model):
+    """A record: the parcel, the holder (an id, not a name: personal data stays in its own access-controlled record), the
+    parcel's registered area (decimal text, square metres; the same on every record of the parcel) and the holder's
+    share (`n/d`).
+    """
+    parcel: str
+    holder: str
+    area: str
+    share: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parcel"] = self.parcel
+        out["holder"] = self.holder
+        out["area"] = self.area
+        out["share"] = self.share
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentEntry:
+        return cls(
+            parcel=data["parcel"],
+            holder=data["holder"],
+            area=data["area"],
+            share=data["share"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentHolder(_Model):
+    """A holder's total over the parcels."""
+    holder: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["holder"] = self.holder
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentHolder:
+        return cls(
+            holder=data["holder"],
+            value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentParcel(_Model):
+    """A parcel: its registered area, its deduction at the policy's places, its net area, the remainder its holders'
+    split had and the holder it went to (none when there was none), and its holders' parts in the records' order.
+    """
+    parcel: str
+    area: str
+    deduction: str
+    net: str
+    remainder: str
+    remainder_to: list[str]
+    parts: list[ReadjustmentPart]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parcel"] = self.parcel
+        out["area"] = self.area
+        out["deduction"] = self.deduction
+        out["net"] = self.net
+        out["remainder"] = self.remainder
+        out["remainderTo"] = list(self.remainder_to)
+        out["parts"] = [e0.to_json() for e0 in self.parts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentParcel:
+        return cls(
+            parcel=data["parcel"],
+            area=data["area"],
+            deduction=data["deduction"],
+            net=data["net"],
+            remainder=data["remainder"],
+            remainder_to=list(data["remainderTo"]),
+            parts=[ReadjustmentPart.from_json(e0) for e0 in data["parts"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentPart(_Model):
+    """A holder's entitlement in a parcel: the exact share, the exact value (net × share, a fraction `n/d` of square
+    metres) and the value at the policy's places after the remainder.
+    """
+    holder: str
+    share: str
+    exact: str
+    value: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["holder"] = self.holder
+        out["share"] = self.share
+        out["exact"] = self.exact
+        out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentPart:
+        return cls(
+            holder=data["holder"],
+            share=data["share"],
+            exact=data["exact"],
+            value=data["value"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentRules(_Model):
+    """A rule package: who issues it, the document it rests on, when it holds and its release, whether it is approved,
+    the deduction ratio (decimal text in [0, 1)), and the numeric policy: places, rounding mode (`half_even`,
+    `half_away_from_zero`, …) and remainder rule (`reject`, `largest_remainder`).
+    Attributes:
+        release: Unit: count.
+        scale: Unit: count.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    approved: bool
+    deduction: str
+    scale: int
+    rounding: str
+    remainder: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["approved"] = self.approved
+        out["deduction"] = self.deduction
+        out["scale"] = self.scale
+        out["rounding"] = self.rounding
+        out["remainder"] = self.remainder
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            approved=data["approved"],
+            deduction=data["deduction"],
+            scale=data["scale"],
+            rounding=data["rounding"],
+            remainder=data["remainder"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecipeLevel(_Model):
     """The level a recipe draws (docs/adr/0716's map level): its id, the level under it faint with `below`."""
     id: str
@@ -123893,6 +124145,13 @@ __all__ = [
     "RayEntity",
     "RayEntityGeometry",
     "ReadableShapeWork",
+    "ReadjustmentDistribute",
+    "ReadjustmentDistributed",
+    "ReadjustmentEntry",
+    "ReadjustmentHolder",
+    "ReadjustmentParcel",
+    "ReadjustmentPart",
+    "ReadjustmentRules",
     "RebindReviewNoteOp",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",

@@ -67,6 +67,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-08 / ADR 1400: `cad.parcels.check`'in web işleyicisi, Parsel alan denetimi penceresi; web'in `cad.parcels.create`'i numarayı adada arasın (üç yeni ortak durum).
 - MAP-09 / ADR 1420: `cad.zoning.check`'in web işleyicisi, İmar planı denetimi penceresi; web'in profil listesi üç yerleşik profili (imar-plani) söylesin.
 - MAP-10 / ADR 1440: `cad.scenarios.impact`'in web işleyicisi ve Alternatif etkisi penceresi.
+- MAP-11 / ADR 1460: `cad.readjustment.distribute`'in web işleyicisi ve Düzenleme dağıtım taslağı penceresi.
 - MAP-03 / ADR 1340: `map.survey.query` ve `map.survey.edit`'in web işleyicisi, RINEX başlığı okuyucusunun WASM'ı,
   `io/kcad.ts` şema 194 (`mapSurvey`), GNSS arşivi paneli ve Öznitelikler › GNSS ölçümü, şerit komutları (`map.survey`,
   `map.survey.import`, `map.survey.select`) ve resimleri.

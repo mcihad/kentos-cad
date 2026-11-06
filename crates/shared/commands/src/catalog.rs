@@ -9328,6 +9328,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
+        CommandDescriptor {
+            id: crate::CAD_READJUSTMENT_DISTRIBUTE.into(),
+            version: crate::CAD_READJUSTMENT_DISTRIBUTE_VERSION,
+            title: "Düzenleme dağıtım taslağı".into(),
+            summary: "Arazi düzenlemesinin ilk sayılarını tekrarlanabilir bir taslak olarak hesaplar, karar olarak değil: her parselin tapu alanı (ondalık yazı, yazıldığı gibi), kural paketinin kesinti oranıyla kesinti, net alan ve her hak sahibinin kesin payından (1/3, 1/3 kalır) hakkı. \
+                      Kural paketi (rules) kurumunu, kaynak belgesini, yürürlüğünü, sürümünü, onayını, kesinti oranını (deduction, [0, 1)) ve sayı politikasını (scale ≤ 6, rounding: half_even…, remainder: reject | largest_remainder) taşır; hiçbir oran kodda sabit değildir. Kesintinin kesin toplamı bir kez yuvarlanır ve parsellere alanlarıyla dağıtılır, net alan hak sahiplerine paylarıyla; her artığın kime gittiği söylenir. Toplamlar kesin denetlenir (conserved). Sayılar ondalık yazıdır, float değil. Sonuç her zaman taslaktır (draft); resmî karar verilmez. \
+                      Retler: invalid_input, area_mismatch, duplicate_holder, shares_not_whole, needs_rule."
+                .into(),
+            aliases: vec!["duzenlemedagitim".into(), "18madde".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ReadjustmentDistribute>(),
+            output: schema::<crate::ReadjustmentDistributed>(),
+            plan: Some(schema::<crate::ReadjustmentDistributed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Sentetik iki parsel, %40 kesinti, iki basamak".into(),
+                input: json!({ "rules": { "id": "ornek-paket", "release": 1, "jurisdiction": "Örnek kurum", "source": "Örnek belge", "effective": "2026-01-01", "approved": false, "deduction": "0.40", "scale": 2, "rounding": "half_even", "remainder": "largest_remainder" }, "entries": [ { "parcel": "101/1", "holder": "H1", "area": "1000", "share": "1/3" }, { "parcel": "101/1", "holder": "H2", "area": "1000", "share": "2/3" } ] }),
+                output: None,
+            }],
+        },
         // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
         CommandDescriptor {
             id: crate::CAD_SCENARIOS_IMPACT.into(),
@@ -15922,6 +15949,7 @@ mod tests {
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
+                    crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16868,6 +16896,7 @@ mod tests {
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
+                        crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),

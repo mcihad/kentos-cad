@@ -418,6 +418,8 @@ pub enum Dialog {
     Zoning,
     /// Alternatif etkisi (impact_window.rs, docs/adr/1440); its state is `App::impact`.
     Impact,
+    /// Düzenleme dağıtım taslağı (readjustment_window.rs, docs/adr/1460); its state is `App::readjustment`.
+    Readjustment,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
@@ -837,6 +839,7 @@ pub enum Message {
     ParcelsCheck(crate::parcels_check_window::Event),
     Zoning(crate::zoning_window::Event),
     Impact(crate::impact_window::Event),
+    Readjustment(crate::readjustment_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
@@ -1496,6 +1499,7 @@ pub struct App {
     pub(crate) parcels_check: crate::parcels_check_window::State,
     pub(crate) zoning: crate::zoning_window::State,
     pub(crate) impact: crate::impact_window::State,
+    pub(crate) readjustment: crate::readjustment_window::State,
     /// Alternatif etkisi's base stamps saved this session, by scenario (docs/adr/1440 §3).
     pub(crate) impact_stamps: crate::impact_window::Stamps,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
@@ -1948,6 +1952,7 @@ impl App {
             parcels_check: Default::default(),
             zoning: Default::default(),
             impact: Default::default(),
+            readjustment: Default::default(),
             impact_stamps: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
@@ -2724,6 +2729,7 @@ impl App {
             Message::ParcelsCheck(event) => return self.parcels_check_event(event),
             Message::Zoning(event) => return self.zoning_event(event),
             Message::Impact(event) => return self.impact_event(event),
+            Message::Readjustment(event) => return self.readjustment_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
@@ -3579,6 +3585,7 @@ impl App {
             "parcels.check" => return self.open_parcels_check(),
             "zoning.check" => return self.open_zoning(),
             "scenario.impact" => return self.open_impact(),
+            "readjustment.distribute" => return self.open_readjustment(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
             "map.workSource" => {
                 self.map_work_show_source();

@@ -1,0 +1,2488 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.readjustment.distribute",
+ "commandVersion": 1,
+ "title": "Düzenleme dağıtım taslağı",
+ "note": "ADR 1460. Bağımsız başvuru scripts/fixtures/readjustment_cases.py: Python fractions ve elle yuvarlama; KentOS kodu yok. Veriler sentetiktir; kural paketi yürürlükteki mevzuat değildir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Düzenleme dağıtım taslağı",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "uids": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "iki parsel, %40 kesinti, iki basamak; artıkların gittiği yer",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1500.50",
+       "deductionExact": "600.2",
+       "deduction": "600.20",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "900.30",
+       "held": "900.30",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "400.00",
+         "net": "600.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "200/1",
+           "value": "200.00"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "400/1",
+           "value": "400.00"
+          }
+         ]
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "200.20",
+         "net": "300.30",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "200.00"
+        },
+        {
+         "holder": "H2",
+         "value": "550.15"
+        },
+        {
+         "holder": "H3",
+         "value": "150.15"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "uygula: salt okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1500.50",
+       "deductionExact": "600.2",
+       "deduction": "600.20",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "900.30",
+       "held": "900.30",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "400.00",
+         "net": "600.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "200/1",
+           "value": "200.00"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "400/1",
+           "value": "400.00"
+          }
+         ]
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "200.20",
+         "net": "300.30",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "200.00"
+        },
+        {
+         "holder": "H2",
+         "value": "550.15"
+        },
+        {
+         "holder": "H3",
+         "value": "150.15"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "üçte birler: 0,01'lik artık en çok eksik kalana",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100.01",
+        "share": "1/3"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100.01",
+        "share": "1/3"
+       },
+       {
+        "parcel": "P",
+        "holder": "H3",
+        "area": "100.01",
+        "share": "1/3"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "100.01",
+       "deductionExact": "40.004",
+       "deduction": "40.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "60.01",
+       "held": "60.01",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "100.01",
+         "deduction": "40.00",
+         "net": "60.01",
+         "remainder": "0.01",
+         "remainderTo": [
+          "H1"
+         ],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "6001/300",
+           "value": "20.01"
+          },
+          {
+           "holder": "H2",
+           "share": "1/3",
+           "exact": "6001/300",
+           "value": "20.00"
+          },
+          {
+           "holder": "H3",
+           "share": "1/3",
+           "exact": "6001/300",
+           "value": "20.00"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "20.01"
+        },
+        {
+         "holder": "H2",
+         "value": "20.00"
+        },
+        {
+         "holder": "H3",
+         "value": "20.00"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "yedide birler",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H3",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H4",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H5",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H6",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H7",
+        "area": "100",
+        "share": "1/7"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "100.00",
+       "deductionExact": "40",
+       "deduction": "40.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "60.00",
+       "held": "60.00",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "100",
+         "deduction": "40.00",
+         "net": "60.00",
+         "remainder": "0.01",
+         "remainderTo": [
+          "H1"
+         ],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.58"
+          },
+          {
+           "holder": "H2",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H3",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H4",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H5",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H6",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H7",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "8.58"
+        },
+        {
+         "holder": "H2",
+         "value": "8.57"
+        },
+        {
+         "holder": "H3",
+         "value": "8.57"
+        },
+        {
+         "holder": "H4",
+         "value": "8.57"
+        },
+        {
+         "holder": "H5",
+         "value": "8.57"
+        },
+        {
+         "holder": "H6",
+         "value": "8.57"
+        },
+        {
+         "holder": "H7",
+         "value": "8.57"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "artık kuralı reject: artık varsa ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "reject"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100.01",
+        "share": "1/3"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100.01",
+        "share": "1/3"
+       },
+       {
+        "parcel": "P",
+        "holder": "H3",
+        "area": "100.01",
+        "share": "1/3"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "needs_rule",
+       "message": "Yuvarlanan değerler toplamı 0.01 kadar tutmuyor ve kural paketinin artık kuralı “reject”; hiçbir şey dağıtılmadı. Artık kuralı onaylı bir pakette verin.",
+       "path": "entries[0].share"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "artık kuralı reject: artık yoksa geçer",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "reject"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/2"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "100.00",
+       "deductionExact": "40",
+       "deduction": "40.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "60.00",
+       "held": "60.00",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "100",
+         "deduction": "40.00",
+         "net": "60.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/2",
+           "exact": "30/1",
+           "value": "30.00"
+          },
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "30/1",
+           "value": "30.00"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "30.00"
+        },
+        {
+         "holder": "H2",
+         "value": "30.00"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "yarımda çifte yuvarlama",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "10.05",
+        "share": "1/2"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "10.05",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "10.05",
+       "deductionExact": "0",
+       "deduction": "0.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "10.05",
+       "held": "10.05",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "10.05",
+         "deduction": "0.00",
+         "net": "10.05",
+         "remainder": "0.01",
+         "remainderTo": [
+          "H1"
+         ],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/2",
+           "exact": "201/40",
+           "value": "5.03"
+          },
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "201/40",
+           "value": "5.02"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "5.03"
+        },
+        {
+         "holder": "H2",
+         "value": "5.02"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "yarımda sıfırdan uzağa",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0",
+       "scale": 2,
+       "rounding": "half_away_from_zero",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "10.05",
+        "share": "1/2"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "10.05",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "10.05",
+       "deductionExact": "0",
+       "deduction": "0.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "10.05",
+       "held": "10.05",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "10.05",
+         "deduction": "0.00",
+         "net": "10.05",
+         "remainder": "-0.01",
+         "remainderTo": [
+          "H1"
+         ],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/2",
+           "exact": "201/40",
+           "value": "5.02"
+          },
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "201/40",
+           "value": "5.03"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "5.02"
+        },
+        {
+         "holder": "H2",
+         "value": "5.03"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sıfıra doğru: artık daha büyük",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "toward_zero",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H3",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H4",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H5",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H6",
+        "area": "100",
+        "share": "1/7"
+       },
+       {
+        "parcel": "P",
+        "holder": "H7",
+        "area": "100",
+        "share": "1/7"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "100.00",
+       "deductionExact": "40",
+       "deduction": "40.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "60.00",
+       "held": "60.00",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "100",
+         "deduction": "40.00",
+         "net": "60.00",
+         "remainder": "0.01",
+         "remainderTo": [
+          "H1"
+         ],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.58"
+          },
+          {
+           "holder": "H2",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H3",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H4",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H5",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H6",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          },
+          {
+           "holder": "H7",
+           "share": "1/7",
+           "exact": "60/7",
+           "value": "8.57"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "8.58"
+        },
+        {
+         "holder": "H2",
+         "value": "8.57"
+        },
+        {
+         "holder": "H3",
+         "value": "8.57"
+        },
+        {
+         "holder": "H4",
+         "value": "8.57"
+        },
+        {
+         "holder": "H5",
+         "value": "8.57"
+        },
+        {
+         "holder": "H6",
+         "value": "8.57"
+        },
+        {
+         "holder": "H7",
+         "value": "8.57"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "basamak 0",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 0,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1000",
+       "deductionExact": "400",
+       "deduction": "400",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "600",
+       "held": "600",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "400",
+         "net": "600",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "200/1",
+           "value": "200"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "400/1",
+           "value": "400"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "200"
+        },
+        {
+         "holder": "H2",
+         "value": "400"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kesinti 0: net tapu alanı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1500.50",
+       "deductionExact": "0",
+       "deduction": "0.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "1500.50",
+       "held": "1500.50",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "0.00",
+         "net": "1000.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "1000/3",
+           "value": "333.33"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "2000/3",
+           "value": "666.67"
+          }
+         ]
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "0.00",
+         "net": "500.50",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "1001/4",
+           "value": "250.25"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "1001/4",
+           "value": "250.25"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "333.33"
+        },
+        {
+         "holder": "H2",
+         "value": "916.92"
+        },
+        {
+         "holder": "H3",
+         "value": "250.25"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "büyük alan, ince oran",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.333333",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "A",
+        "holder": "H1",
+        "area": "123456789.12",
+        "share": "3/7"
+       },
+       {
+        "parcel": "A",
+        "holder": "H2",
+        "area": "123456789.12",
+        "share": "4/7"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "123456789.12",
+       "deductionExact": "41152221.88773696",
+       "deduction": "41152221.89",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "82304567.23",
+       "held": "82304567.23",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "A",
+         "area": "123456789.12",
+         "deduction": "41152221.89",
+         "net": "82304567.23",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "3/7",
+           "exact": "24691370169/700",
+           "value": "35273385.96"
+          },
+          {
+           "holder": "H2",
+           "share": "4/7",
+           "exact": "8230456723/175",
+           "value": "47031181.27"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "35273385.96"
+        },
+        {
+         "holder": "H2",
+         "value": "47031181.27"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "hak sahibinin parseller üzerinden toplamı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/3",
+        "holder": "H1",
+        "area": "250",
+        "share": "1/1"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "1750.50",
+       "deductionExact": "700.2",
+       "deduction": "700.20",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "1050.30",
+       "held": "1050.30",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "101/1",
+         "area": "1000",
+         "deduction": "400.00",
+         "net": "600.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/3",
+           "exact": "200/1",
+           "value": "200.00"
+          },
+          {
+           "holder": "H2",
+           "share": "2/3",
+           "exact": "400/1",
+           "value": "400.00"
+          }
+         ]
+        },
+        {
+         "parcel": "101/2",
+         "area": "500.50",
+         "deduction": "200.20",
+         "net": "300.30",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          },
+          {
+           "holder": "H3",
+           "share": "1/2",
+           "exact": "3003/20",
+           "value": "150.15"
+          }
+         ]
+        },
+        {
+         "parcel": "101/3",
+         "area": "250",
+         "deduction": "100.00",
+         "net": "150.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/1",
+           "exact": "150/1",
+           "value": "150.00"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "350.00"
+        },
+        {
+         "holder": "H2",
+         "value": "550.15"
+        },
+        {
+         "holder": "H3",
+         "value": "150.15"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bütün alanlar sıfır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "0",
+        "share": "1/1"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "0.00",
+       "deductionExact": "0",
+       "deduction": "0.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "0.00",
+       "held": "0.00",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "0",
+         "deduction": "0.00",
+         "net": "0.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/1",
+           "exact": "0/1",
+           "value": "0.00"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "0.00"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "payda sadeleşir: 2/4 = 1/2",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "2/4"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "ornek-paket",
+       "release": 1,
+       "draft": true,
+       "registered": "100.00",
+       "deductionExact": "40",
+       "deduction": "40.00",
+       "deductionRemainder": "0",
+       "deductionRemainderTo": [],
+       "net": "60.00",
+       "held": "60.00",
+       "conserved": true,
+       "parcels": [
+        {
+         "parcel": "P",
+         "area": "100",
+         "deduction": "40.00",
+         "net": "60.00",
+         "remainder": "0",
+         "remainderTo": [],
+         "parts": [
+          {
+           "holder": "H1",
+           "share": "1/2",
+           "exact": "30/1",
+           "value": "30.00"
+          },
+          {
+           "holder": "H2",
+           "share": "1/2",
+           "exact": "30/1",
+           "value": "30.00"
+          }
+         ]
+        }
+       ],
+       "holders": [
+        {
+         "holder": "H1",
+         "value": "30.00"
+        },
+        {
+         "holder": "H2",
+         "value": "30.00"
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "tapu alanı basamaktan ince",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100.125",
+        "share": "1/1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. kaydın tapu alanı “100.125” eksi olmayan, en çok 2 basamaklı düz bir ondalık yazı olmalı.",
+       "path": "entries[0].area"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "pay paydası sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/0"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. kaydın payı “1/0” n/d biçiminde değil (payda sıfır olamaz).",
+       "path": "entries[0].share"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "pay biçimi yanlış",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "0.5"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. kaydın payı “0.5” n/d biçiminde değil (payda sıfır olamaz).",
+       "path": "entries[0].share"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "paylar toplamı 1 değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/3"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100",
+        "share": "1/3"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "shares_not_whole",
+       "message": "“P” parselinin payları toplamı 2/3, tam 1 değil.",
+       "path": "entries[0].share"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı parselde farklı tapu alanı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/2"
+       },
+       {
+        "parcel": "P",
+        "holder": "H2",
+        "area": "100.5",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "area_mismatch",
+       "message": "“P” parselinin tapu alanı kayıtlarda farklı: 100 ve 100.5.",
+       "path": "entries[1].area"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı parselde aynı hak sahibi iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/2"
+       },
+       {
+        "parcel": "P",
+        "holder": "H1",
+        "area": "100",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "duplicate_holder",
+       "message": "“H1” “P” parselinde iki kez var; payları tek kayıtta toplayın.",
+       "path": "entries[1].holder"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kayıt yok: parsel, hak sahibi, tapu alanı ve pay verin.",
+       "path": "entries"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş hak sahibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "P",
+        "holder": " ",
+        "area": "100",
+        "share": "1/1"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1. kaydın parseli ya da hak sahibi boş.",
+       "path": "entries[0].holder"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kural paketinin kaynağı boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "  ",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kural paketinin kaynak belgesi boş; kuralın dayanağı yazılmadan dağıtım yapılmaz.",
+       "path": "rules.source"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kesinti oranı 1",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "1",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kesinti oranı “1” 0 ile 1 arasında (1 hariç) bir ondalık yazı olmalı.",
+       "path": "rules.deduction"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kesinti oranı eksi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "-0.1",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kesinti oranı “-0.1” 0 ile 1 arasında (1 hariç) bir ondalık yazı olmalı.",
+       "path": "rules.deduction"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "basamak 7",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 7,
+       "rounding": "half_even",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Basamak 7 en çok 6 olabilir.",
+       "path": "rules.scale"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen yuvarlama",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "bankers",
+       "remainder": "largest_remainder"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“bankers” bir yuvarlama yönü değil (half_even, half_away_from_zero …).",
+       "path": "rules.rounding"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen artık kuralı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "rules": {
+       "id": "ornek-paket",
+       "release": 1,
+       "jurisdiction": "Örnek kurum (sentetik)",
+       "source": "Sentetik deneme belgesi; yürürlükteki mevzuat değildir",
+       "effective": "2026-01-01",
+       "approved": false,
+       "deduction": "0.40",
+       "scale": 2,
+       "rounding": "half_even",
+       "remainder": "last"
+      },
+      "entries": [
+       {
+        "parcel": "101/1",
+        "holder": "H1",
+        "area": "1000",
+        "share": "1/3"
+       },
+       {
+        "parcel": "101/1",
+        "holder": "H2",
+        "area": "1000",
+        "share": "2/3"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H2",
+        "area": "500.50",
+        "share": "1/2"
+       },
+       {
+        "parcel": "101/2",
+        "holder": "H3",
+        "area": "500.50",
+        "share": "1/2"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“last” bir artık kuralı değil (reject, largest_remainder).",
+       "path": "rules.remainder"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

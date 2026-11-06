@@ -2381,6 +2381,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
+    Entry {
+        id: "cad.readjustment.distribute",
+        refusals: &[&["invalid_input", "area_mismatch", "duplicate_holder", "shares_not_whole", "needs_rule"]],
+        warnings: &[],
+        targets: none,
+    },
     // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
     Entry {
         id: "cad.scenarios.impact",

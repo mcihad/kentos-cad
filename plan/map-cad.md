@@ -666,6 +666,13 @@ kesin yuvarlamayı bağımsız hesapla doğrula. Daha sonra sahibiyle seçilecek
 anonim gerçek örneği yetkili uzman/kurumla karşılaştır. Bu ikinci kabul
 olmadan madde tamamlanamaz ve “resmî işlem hazır” denemez.
 
+**6 Kasım 2026 — Düzenleme dağıtım taslağı ([ADR 1460](../docs/adr/1460-readjustment-distribution-draft.md)).** Kapsam
+işareti: **Harita + CBS**. Araştırma: 3194/18 ve Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik (DOP %45'e kadar, oran
+yedi basamak; ikincil kaynaklar), Netcad Netmap/Netkamu/Nettop. Kanıtlanan (kabulün ilk adımı): kural paketi veri olarak
+(kurum, belge, yürürlük, sürüm, oran, sayı politikası; kodda oran yok), kesin pay ve ondalıkla kesinti/net/hak, artığın
+kime gittiği, toplamın kesin korunumu; sonuç hep taslak (`cad.readjustment.distribute`, 30 ortak durum, Python fractions).
+Açık: değer esaslı dağıtım, kamulaştırma/toplulaştırma, kapsam geometrisi, itiraz/sürüm, yetkiler ve ikinci kabul.
+
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K22]–[K24], [K04], [K40].

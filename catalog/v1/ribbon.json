@@ -851,6 +851,10 @@
         "size": "small"
        },
        {
+        "command": "readjustment.distribute",
+        "size": "small"
+       },
+       {
         "command": "tool.topology",
         "size": "small"
        },
@@ -3555,6 +3559,10 @@
        },
        {
         "command": "parcels.check",
+        "size": "small"
+       },
+       {
+        "command": "readjustment.distribute",
         "size": "small"
        }
       ],

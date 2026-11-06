@@ -8152,6 +8152,22 @@
    "tests": 0
   },
   {
+   "id": "readjustment.distribute",
+   "kind": "command",
+   "title": "Düzenleme dağıtım taslağı…",
+   "level": "query",
+   "via": [
+    "cad.readjustment.distribute"
+   ],
+   "operation": null,
+   "python": "kentos.cad.readjustment.distribute",
+   "mcp": "cad.readjustment.distribute",
+   "note": "Pencere kural paketini ve CSV kayıtlarını cad.readjustment.distribute'e verir, sonucu gösterir (salt okunur, her zaman taslak); Sonucu kaydet CSV yazar (ADR 1460).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "retainingWall.editor",
    "kind": "command",
    "title": "İstinat duvarı…",

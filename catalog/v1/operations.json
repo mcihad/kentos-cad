@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "readjustment.distribute": {
+      "level": "query",
+      "via": [
+        "cad.readjustment.distribute"
+      ],
+      "note": "Pencere kural paketini ve CSV kayıtlarını cad.readjustment.distribute'e verir, sonucu gösterir (salt okunur, her zaman taslak); Sonucu kaydet CSV yazar (ADR 1460)."
+    },
     "scenario.impact": {
       "level": "query",
       "via": [

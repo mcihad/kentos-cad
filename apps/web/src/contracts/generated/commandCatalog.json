@@ -54635,6 +54635,239 @@
       ]
     },
     {
+      "id": "cad.readjustment.distribute",
+      "version": 1,
+      "title": "Düzenleme dağıtım taslağı",
+      "summary": "Arazi düzenlemesinin ilk sayılarını tekrarlanabilir bir taslak olarak hesaplar, karar olarak değil: her parselin tapu alanı (ondalık yazı, yazıldığı gibi), kural paketinin kesinti oranıyla kesinti, net alan ve her hak sahibinin kesin payından (1/3, 1/3 kalır) hakkı. Kural paketi (rules) kurumunu, kaynak belgesini, yürürlüğünü, sürümünü, onayını, kesinti oranını (deduction, [0, 1)) ve sayı politikasını (scale ≤ 6, rounding: half_even…, remainder: reject | largest_remainder) taşır; hiçbir oran kodda sabit değildir. Kesintinin kesin toplamı bir kez yuvarlanır ve parsellere alanlarıyla dağıtılır, net alan hak sahiplerine paylarıyla; her artığın kime gittiği söylenir. Toplamlar kesin denetlenir (conserved). Sayılar ondalık yazıdır, float değil. Sonuç her zaman taslaktır (draft); resmî karar verilmez. Retler: invalid_input, area_mismatch, duplicate_holder, shares_not_whole, needs_rule.",
+      "aliases": [
+        "duzenlemedagitim",
+        "18madde"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.readjustment.distribute` v1: the rule package and the records, in order.\n\nRefusals, in this order: `invalid_input` (`rules.*`: an empty id, source or jurisdiction, a deduction off [0, 1),\nplaces over 6, an unknown mode or rule; `entries`: none), then record by record `invalid_input`\n(`entries[i].area` not plain decimal text or finer than the policy's places, `entries[i].share` not `n/d` with\nd > 0, `entries[i].holder` or `.parcel` empty), `area_mismatch` (`entries[i].area`: a parcel's records disagree),\n`duplicate_holder` (`entries[i].holder`: twice in one parcel), `shares_not_whole` (`entries[i].share`: a parcel's\nshares do not add up to exactly 1; the first record of the parcel), then `needs_rule` (a remainder and the rule is\n`reject`).",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/$defs/ReadjustmentEntry"
+            },
+            "type": "array"
+          },
+          "rules": {
+            "$ref": "#/$defs/ReadjustmentRules"
+          }
+        },
+        "required": [
+          "rules",
+          "entries"
+        ],
+        "title": "ReadjustmentDistribute",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.readjustment.distribute` v1: the package's id and release, whether the result is a draft (always\nhere: no official decision is enabled), the totals (registered, the deduction's exact and rounded value, its\nremainder and the parcels it went to, net, the holders' sum) and whether they are kept exactly, the parcels in the\nrecords' order and the holders' totals in their first appearance's order.",
+        "properties": {
+          "conserved": {
+            "type": "boolean"
+          },
+          "deduction": {
+            "type": "string"
+          },
+          "deductionExact": {
+            "type": "string"
+          },
+          "deductionRemainder": {
+            "type": "string"
+          },
+          "deductionRemainderTo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "draft": {
+            "type": "boolean"
+          },
+          "held": {
+            "type": "string"
+          },
+          "holders": {
+            "items": {
+              "$ref": "#/$defs/ReadjustmentHolder"
+            },
+            "type": "array"
+          },
+          "net": {
+            "type": "string"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ReadjustmentParcel"
+            },
+            "type": "array"
+          },
+          "registered": {
+            "type": "string"
+          },
+          "release": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rules": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rules",
+          "release",
+          "draft",
+          "registered",
+          "deductionExact",
+          "deduction",
+          "deductionRemainder",
+          "deductionRemainderTo",
+          "net",
+          "held",
+          "conserved",
+          "parcels",
+          "holders"
+        ],
+        "title": "ReadjustmentDistributed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.readjustment.distribute` v1: the package's id and release, whether the result is a draft (always\nhere: no official decision is enabled), the totals (registered, the deduction's exact and rounded value, its\nremainder and the parcels it went to, net, the holders' sum) and whether they are kept exactly, the parcels in the\nrecords' order and the holders' totals in their first appearance's order.",
+        "properties": {
+          "conserved": {
+            "type": "boolean"
+          },
+          "deduction": {
+            "type": "string"
+          },
+          "deductionExact": {
+            "type": "string"
+          },
+          "deductionRemainder": {
+            "type": "string"
+          },
+          "deductionRemainderTo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "draft": {
+            "type": "boolean"
+          },
+          "held": {
+            "type": "string"
+          },
+          "holders": {
+            "items": {
+              "$ref": "#/$defs/ReadjustmentHolder"
+            },
+            "type": "array"
+          },
+          "net": {
+            "type": "string"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ReadjustmentParcel"
+            },
+            "type": "array"
+          },
+          "registered": {
+            "type": "string"
+          },
+          "release": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "rules": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rules",
+          "release",
+          "draft",
+          "registered",
+          "deductionExact",
+          "deduction",
+          "deductionRemainder",
+          "deductionRemainderTo",
+          "net",
+          "held",
+          "conserved",
+          "parcels",
+          "holders"
+        ],
+        "title": "ReadjustmentDistributed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "area_mismatch",
+          "duplicate_holder",
+          "shares_not_whole",
+          "needs_rule"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Sentetik iki parsel, %40 kesinti, iki basamak",
+          "input": {
+            "entries": [
+              {
+                "area": "1000",
+                "holder": "H1",
+                "parcel": "101/1",
+                "share": "1/3"
+              },
+              {
+                "area": "1000",
+                "holder": "H2",
+                "parcel": "101/1",
+                "share": "2/3"
+              }
+            ],
+            "rules": {
+              "approved": false,
+              "deduction": "0.40",
+              "effective": "2026-01-01",
+              "id": "ornek-paket",
+              "jurisdiction": "Örnek kurum",
+              "release": 1,
+              "remainder": "largest_remainder",
+              "rounding": "half_even",
+              "scale": 2,
+              "source": "Örnek belge"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.scenarios.impact",
       "version": 1,
       "title": "Alternatif etkisi",
@@ -99433,6 +99666,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok."
+    },
+    {
+      "code": "needs_rule",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yuvarlanan değerler toplamı tutmuyor ve artık kuralı yok; hiçbir şey dağıtılmadı."
+    },
+    {
+      "code": "area_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parselin tapu alanı kayıtlarında farklı."
+    },
+    {
+      "code": "duplicate_holder",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hak sahibi aynı parselde iki kez var."
+    },
+    {
+      "code": "shares_not_whole",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parselin payları toplamı tam 1 değil."
     },
     {
       "code": "no_baselines",
@@ -167735,6 +167992,168 @@
         "zoom",
         "x",
         "y"
+      ],
+      "type": "object"
+    },
+    "ReadjustmentEntry": {
+      "additionalProperties": false,
+      "description": "A record: the parcel, the holder (an id, not a name: personal data stays in its own access-controlled record), the\nparcel's registered area (decimal text, square metres; the same on every record of the parcel) and the holder's\nshare (`n/d`).",
+      "properties": {
+        "area": {
+          "type": "string"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "parcel": {
+          "type": "string"
+        },
+        "share": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "parcel",
+        "holder",
+        "area",
+        "share"
+      ],
+      "type": "object"
+    },
+    "ReadjustmentHolder": {
+      "description": "A holder's total over the parcels.",
+      "properties": {
+        "holder": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "holder",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ReadjustmentParcel": {
+      "description": "A parcel: its registered area, its deduction at the policy's places, its net area, the remainder its holders'\nsplit had and the holder it went to (none when there was none), and its holders' parts in the records' order.",
+      "properties": {
+        "area": {
+          "type": "string"
+        },
+        "deduction": {
+          "type": "string"
+        },
+        "net": {
+          "type": "string"
+        },
+        "parcel": {
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/ReadjustmentPart"
+          },
+          "type": "array"
+        },
+        "remainder": {
+          "type": "string"
+        },
+        "remainderTo": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "parcel",
+        "area",
+        "deduction",
+        "net",
+        "remainder",
+        "remainderTo",
+        "parts"
+      ],
+      "type": "object"
+    },
+    "ReadjustmentPart": {
+      "description": "A holder's entitlement in a parcel: the exact share, the exact value (net × share, a fraction `n/d` of square\nmetres) and the value at the policy's places after the remainder.",
+      "properties": {
+        "exact": {
+          "type": "string"
+        },
+        "holder": {
+          "type": "string"
+        },
+        "share": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "holder",
+        "share",
+        "exact",
+        "value"
+      ],
+      "type": "object"
+    },
+    "ReadjustmentRules": {
+      "additionalProperties": false,
+      "description": "A rule package: who issues it, the document it rests on, when it holds and its release, whether it is approved,\nthe deduction ratio (decimal text in [0, 1)), and the numeric policy: places, rounding mode (`half_even`,\n`half_away_from_zero`, …) and remainder rule (`reject`, `largest_remainder`).",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "deduction": {
+          "type": "string"
+        },
+        "effective": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "remainder": {
+          "type": "string"
+        },
+        "rounding": {
+          "type": "string"
+        },
+        "scale": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "release",
+        "jurisdiction",
+        "source",
+        "effective",
+        "approved",
+        "deduction",
+        "scale",
+        "rounding",
+        "remainder"
       ],
       "type": "object"
     },

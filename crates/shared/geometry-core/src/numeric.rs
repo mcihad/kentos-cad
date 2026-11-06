@@ -334,6 +334,8 @@ impl Ratio {
 pub struct Distribution {
     pub parts: Vec<String>,
     pub remainder: String,
+    /// The parts the remainder's units went to, by their place, in the order given (one unit each time).
+    pub given: Vec<usize>,
 }
 
 /// Splits `total` by `weights`, each part rounded to `scale` by `mode`. When the
@@ -355,6 +357,66 @@ pub fn distribute(
         .iter()
         .map(|w| parse_decimal(w).and_then(Ratio::of_decimal))
         .collect::<Result<Vec<_>, _>>()?;
+    split(t, &ws, scale, mode, rule)
+}
+
+/// Splits `total` by exact shares (hisse: 1/3 stays 1/3), as [`distribute`] does by decimal weights: each part
+/// rounded to `scale` by `mode`, the remainder by `rule`.
+pub fn distribute_shares(
+    total: &str,
+    shares: &[Share],
+    scale: u32,
+    mode: RoundingMode,
+    rule: RemainderRule,
+) -> Result<Distribution, NumericError> {
+    if scale > MAX_SCALE {
+        return Err(NumericError::ScaleOutOfRange);
+    }
+    let t = Ratio::of_decimal(parse_decimal(total)?)?;
+    let ws = shares
+        .iter()
+        .map(|s| {
+            let num = i128::try_from(s.numerator).map_err(|_| NumericError::Overflow)?;
+            let den = i128::try_from(s.denominator).map_err(|_| NumericError::Overflow)?;
+            Ok(Ratio { num, den }.reduced())
+        })
+        .collect::<Result<Vec<_>, NumericError>>()?;
+    split(t, &ws, scale, mode, rule)
+}
+
+/// The exact product of two decimals as decimal text (the product of two decimals is a decimal: no rounding).
+pub fn multiply_exact(a: &str, b: &str) -> Result<String, NumericError> {
+    let (x, y) = (parse_decimal(a)?, parse_decimal(b)?);
+    let scale = x.scale() + y.scale();
+    if scale > MAX_SCALE {
+        return Err(NumericError::ScaleOutOfRange);
+    }
+    let p = Ratio::of_decimal(x)?.mul(Ratio::of_decimal(y)?)?;
+    Ok(format_decimal(p.round(scale, RoundingMode::HalfEven)?.normalize()))
+}
+
+/// The exact sum of decimals as decimal text.
+pub fn sum_exact(values: &[&str]) -> Result<String, NumericError> {
+    let mut s = Decimal::ZERO;
+    for v in values {
+        s = s.checked_add(parse_decimal(v)?).ok_or(NumericError::Overflow)?;
+    }
+    Ok(format_decimal(s.normalize()))
+}
+
+/// The exact difference `a − b` as decimal text.
+pub fn subtract_exact(a: &str, b: &str) -> Result<String, NumericError> {
+    let d = parse_decimal(a)?.checked_sub(parse_decimal(b)?).ok_or(NumericError::Overflow)?;
+    Ok(format_decimal(d.normalize()))
+}
+
+fn split(
+    t: Ratio,
+    ws: &[Ratio],
+    scale: u32,
+    mode: RoundingMode,
+    rule: RemainderRule,
+) -> Result<Distribution, NumericError> {
     let wsum = ws
         .iter()
         .try_fold(Ratio { num: 0, den: 1 }, |a, w| a.add(*w))?;
@@ -387,6 +449,7 @@ pub fn distribute(
         return Ok(Distribution {
             parts: parts.into_iter().map(format_decimal).collect(),
             remainder: "0".into(),
+            given: Vec::new(),
         });
     }
     if rule == RemainderRule::Reject {
@@ -415,12 +478,15 @@ pub fn distribute(
     });
     let step =
         Decimal::try_from_i128_with_scale(sign, scale).map_err(|_| NumericError::Overflow)?;
+    let mut given = Vec::new();
     for k in 0..steps.num.unsigned_abs() as usize {
         let i = order[k % order.len()].1;
         parts[i] += step;
+        given.push(i);
     }
     Ok(Distribution {
         parts: parts.into_iter().map(format_decimal).collect(),
         remainder,
+        given,
     })
 }
