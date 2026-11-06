@@ -263,14 +263,16 @@ class AnnotationStyleKind(_StrEnum):
     - ``dimension``
     - ``leader``: A leader style (docs/adr/0326 §4).
     - ``wall``: A wall style (docs/adr/0339 §2): its walls take its components, ends and fill.
+    - ``table``: A table style (docs/adr/1126, 1127 §2): its tables draw it where they set nothing themselves, so an update
     """
     TEXT = "text"
     DIMENSION = "dimension"
     LEADER = "leader"
     WALL = "wall"
+    TABLE = "table"
 
 
-AnnotationStyleKindName = Literal["text", "dimension", "leader", "wall"]
+AnnotationStyleKindName = Literal["text", "dimension", "leader", "wall", "table"]
 """The names of :class:`AnnotationStyleKind`, for a plain string."""
 
 
@@ -82680,7 +82682,8 @@ class StandardInstallRow(_Model):
             (`release`, `units`, `revision`), none when no library has the type or template at all.
         library: Blocks and sheet templates: the library the definition is read from (`kentos-ofis`, `sistem`).
         uses: Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
-            templates: the sheets made from that template, which are never changed. Unit: count.
+            templates: the sheets made from that template, which are never changed; table styles: the tables of the drawing
+            and of its block definitions that follow the drawing's style of that name (docs/adr/1127 §1). Unit: count.
     """
     kind: StandardResourceKind | StandardResourceKindName
     name: str
@@ -83869,8 +83872,12 @@ class StylesEdit(_Model):
     `style_not_found` (update's id, rename's and remove's `style`, each of
     export's `styles`), `duplicate_style` (create's given id the table has),
     `invalid_library` (import's text not such a file, or of the other kind);
-    `invalid_style` (the table it would leave, by `text_styles_problem` or
-    `dimension_styles_problem`: the names, then each style's values).
+    `invalid_style` (the table it would leave, by `text_styles_problem`,
+    `dimension_styles_problem` or for table styles `table_style_defs_problem`:
+    the names, then each style's values).
+
+    A text style renamed renames it in the table styles' cell styles that name it (its letters' case aside, as
+    line types' texts follow it), so a table style keeps its text style (docs/adr/1127 §2).
     Attributes:
         dimension: Create's and update's dimension style.
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -83880,6 +83887,8 @@ class StylesEdit(_Model):
         replace: Import: true, a style whose name the table has is updated from the file.
         style: Rename's and remove's style, by its id.
         styles: Export's styles, by id; absent: every style of the kind.
+        table: Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw
+            it as they are, none is written.
         text: Create's and update's text style.
         wall: Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
             the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
@@ -83894,6 +83903,7 @@ class StylesEdit(_Model):
     replace: bool | None | Unset = UNSET
     style: str | None | Unset = UNSET
     styles: list[str] | None | Unset = UNSET
+    table: TableStyleDef | None | Unset = UNSET
     text: TextStyleDef | None | Unset = UNSET
     wall: WallStyleDef | None | Unset = UNSET
 
@@ -83917,6 +83927,8 @@ class StylesEdit(_Model):
             out["style"] = self.style
         if self.styles is not UNSET:
             out["styles"] = None if self.styles is None else list(self.styles)
+        if self.table is not UNSET:
+            out["table"] = None if self.table is None else self.table.to_json()
         if self.text is not UNSET:
             out["text"] = None if self.text is None else self.text.to_json()
         if self.wall is not UNSET:
@@ -83936,6 +83948,7 @@ class StylesEdit(_Model):
             replace=data.get("replace", UNSET),
             style=data.get("style", UNSET),
             styles=UNSET if "styles" not in data else None if data["styles"] is None else list(data["styles"]),
+            table=UNSET if "table" not in data else None if data["table"] is None else TableStyleDef.from_json(data["table"]),
             text=UNSET if "text" not in data else None if data["text"] is None else TextStyleDef.from_json(data["text"]),
             wall=UNSET if "wall" not in data else None if data["wall"] is None else WallStyleDef.from_json(data["wall"]),
         )
@@ -102671,6 +102684,8 @@ class TableEntityGeometry(EntityGeometry):
         overrides: The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
         source: Where its rows came from; absent: written by hand.
         styles: Its cells' styles, formulas and fields (docs/adr/0327); absent in an edit: the table's kept.
+        table_style: The table style it follows, by its id among the project's (`ProjectSettings.table_styles`, docs/adr/1127
+            §3); null: none. Absent in an edit: the table's kept.
         text_style: The project's text style it follows, by its id; absent: Standart.
     """
     TAG_VALUE: ClassVar[str] = "table"
@@ -102694,6 +102709,7 @@ class TableEntityGeometry(EntityGeometry):
     overrides: list[str] | Unset = UNSET
     source: TableSource | None | Unset = UNSET
     styles: list[CellStyle] | None | Unset = UNSET
+    table_style: str | None | Unset = UNSET
     text_style: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -102732,6 +102748,8 @@ class TableEntityGeometry(EntityGeometry):
             out["source"] = None if self.source is None else self.source.to_json()
         if self.styles is not UNSET:
             out["styles"] = None if self.styles is None else [e0.to_json() for e0 in self.styles]
+        if self.table_style is not UNSET:
+            out["tableStyle"] = self.table_style
         if self.text_style is not UNSET:
             out["textStyle"] = self.text_style
         return out
@@ -102759,6 +102777,7 @@ class TableEntityGeometry(EntityGeometry):
             overrides=list(data["overrides"]) if "overrides" in data else UNSET,
             source=UNSET if "source" not in data else None if data["source"] is None else TableSource.from_json(data["source"]),
             styles=UNSET if "styles" not in data else None if data["styles"] is None else [CellStyle.from_json(e0) for e0 in data["styles"]],
+            table_style=data.get("tableStyle", UNSET),
             text_style=data.get("textStyle", UNSET),
         )
 

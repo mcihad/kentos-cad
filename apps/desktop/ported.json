@@ -328,6 +328,7 @@
     "style.manager",
     "style.textStyles",
     "style.dimensionStyles",
+    "style.tableStyles",
     "table.insert",
     "table.edit",
     "table.update",

@@ -355,6 +355,32 @@ pub fn set_geometries(doc: &mut Document, changes: &[(Slot, Entity)]) -> Vec<Str
     said(edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// Tablo stili ▾ (docs/adr/1127 §3): the tables among `slots` made to follow the project's table style `id` (none:
+/// no style, their own look), in one step “Değiştir” through `cad.entities.edit`'s `tableStyle`; a table that already
+/// follows it is left. What to say: the command's refusal (a locked layer refuses them all).
+pub fn apply_table_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) -> Vec<String> {
+    let changes: Vec<EntityEdit> = slots
+        .iter()
+        .filter_map(|&slot| {
+            let entity = doc.get(slot)?;
+            let Entity::Table(t) = entity else { return None };
+            if t.table_style.as_deref() == id {
+                return None;
+            }
+            let mut geometry = edit_geometry(shape(entity))?;
+            if let kentos_commands::EntityGeometry::Table { table_style, .. } = &mut geometry {
+                *table_style = Some(id.map(str::to_owned));
+            }
+            Some(EntityEdit::Update { uid: doc.uid(slot)?.to_string(), geometry })
+        })
+        .collect();
+    if changes.is_empty() {
+        return Vec::new();
+    }
+    let input = EntitiesEdit { operation: EditOperation::Properties, changes, expected_revision: None };
+    said(edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// Texts given new words in one step “Bul ve değiştir” (`cad.entities.edit`'s
 /// `replaceText`, docs/adr/0145 §6), each keeping the rest of its geometry;
 /// what to say: the command's refusal.
