@@ -662,22 +662,25 @@ pub(super) fn settings_from_env(app: &mut App) {
     app.apply_settings();
 }
 
-/// `KENTOS_PERF_SHORTCUTS` (docs/adr/1063, 1064): the drawing area's shortcuts a run measures, `off` (the plain build,
-/// the "önce" of a comparison), `instancing`, `lod` or `line` (one of them), `adr1063` (the first two, without the
-/// long strokes' levels: the "önce" of ADR 1064); unset, all three (the app's own).
+/// `KENTOS_PERF_SHORTCUTS` (docs/adr/1063, 1064, 1065): the drawing area's shortcuts a run measures, `off` (the plain
+/// build, the "önce" of a comparison), `instancing`, `lod` or `line` (one of them), `adr1063` (the first two, without
+/// the long strokes' levels: the "önce" of ADR 1064), `adr1064` (the three, without the blocks' far proxy: the "önce"
+/// of ADR 1065); unset, all four (the app's own).
 pub(super) fn shortcuts_from_env(app: &mut App) {
     let asked = std::env::var("KENTOS_PERF_SHORTCUTS").unwrap_or_default();
-    let (instancing, lod, line) = match asked.as_str() {
-        "off" => (false, false, false),
-        "instancing" => (true, false, false),
-        "lod" => (false, true, false),
-        "line" => (false, false, true),
-        "adr1063" => (true, true, false),
-        _ => (true, true, true),
+    let (instancing, lod, line, proxy) = match asked.as_str() {
+        "off" => (false, false, false, false),
+        "instancing" => (true, false, false, false),
+        "lod" => (false, true, false, false),
+        "line" => (false, false, true, false),
+        "adr1063" => (true, true, false, false),
+        "adr1064" => (true, true, true, false),
+        _ => (true, true, true, true),
     };
     app.styles.instancing = instancing;
     app.styles.curve_lod = lod;
     app.styles.line_lod = line;
+    app.styles.block_proxy = proxy;
     // A moving view's turned texts from their pictures kept for another quarter pixel (docs/adr/1064 §6): with the
     // long strokes' levels, off in the "önce" of ADR 1064.
     crate::label_picture::set_nearest_while_moving(!matches!(asked.as_str(), "off" | "adr1063"));

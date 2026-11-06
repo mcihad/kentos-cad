@@ -68,6 +68,9 @@ pub struct Styles {
     /// Long strokes with simplified far levels (docs/adr/1064 §2); like the curves' levels, it changes only what is
     /// smaller than the tolerance far away.
     pub(crate) line_lod: bool,
+    /// Instanced blocks' far proxy (docs/adr/1065 §2): an insert shown at most a few pixels draws the box round its
+    /// definition's strokes.
+    pub(crate) block_proxy: bool,
 }
 
 impl std::fmt::Debug for Styles {
@@ -101,6 +104,7 @@ impl Styles {
             instancing: true,
             curve_lod: true,
             line_lod: true,
+            block_proxy: true,
         }
     }
 
@@ -165,6 +169,7 @@ impl Styles {
                 instancing: self.instancing,
                 curve_lod: self.curve_lod,
                 line_lod: self.line_lod,
+                block_proxy: self.block_proxy,
                 // CAD line types along the source curve, as the sheet and the PDF (docs/adr/1122).
                 cad_phase: true,
             },

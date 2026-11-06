@@ -716,6 +716,7 @@ impl StyledGpu {
             batches.push(GpuBatch {
                 own: placed,
                 level: 0,
+                proxied: false,
                 raster,
                 cloud,
                 service,
@@ -838,14 +839,17 @@ impl StyledGpu {
                 usage: wgpu::BufferUsages::VERTEX,
             })
         };
+        // The definition's own vertices, then its far proxy's (docs/adr/1065 §2).
+        let (floats, per_item) = if stroke { (STROKE_FLOATS, 6) } else { (AREA_FLOATS, 1) };
+        let own_vertices = (inst.definition() / floats) as u32 * per_item;
+        let proxy = inst
+            .proxy
+            .map(|p| own_vertices..own_vertices + (p.len / floats) as u32 * per_item);
         Some(Placed {
             bytes: ((mesh.len() + instances.len()) * 4) as u64,
-            vertices: if stroke {
-                (mesh.len() / STROKE_FLOATS) as u32
-            } else {
-                (mesh.len() / AREA_FLOATS) as u32
-            },
-            per_item: if stroke { 6 } else { 1 },
+            vertices: own_vertices,
+            proxy,
+            per_item,
             mesh: make("kentos.styled.definition", &mesh),
             instances: make("kentos.styled.instances", &instances),
             count: (instances.len() / INSTANCE_GPU_FLOATS) as u32,
@@ -903,10 +907,11 @@ impl StyledGpu {
             for layer in &mut view.layers {
                 let batches = &layer.source.layer.batches;
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
-                    // A curve's detail level for this view (docs/adr/1063 §3).
+                    // A curve's detail level for this view (docs/adr/1063 §3), a block's far proxy (docs/adr/1065 §2).
                     g.level = b.lod.as_ref().map_or(0, |lod| {
                         lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
                     });
+                    g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
@@ -1142,10 +1147,11 @@ impl StyledGpu {
                 }
                 let batches = &layer.source.layer.batches;
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
-                    // A curve's detail level for this view (docs/adr/1063 §3).
+                    // A curve's detail level for this view (docs/adr/1063 §3), a block's far proxy (docs/adr/1065 §2).
                     g.level = b.lod.as_ref().map_or(0, |lod| {
                         lod.level(frame.scale, b.instances.as_ref().map_or(1.0, |i| i.scale))
                     });
+                    g.proxied = b.instances.as_ref().is_some_and(|i| i.proxied(frame.scale));
                     g.visible = b.in_scale(frame.scale_denominator)
                         && b.in_view(box_, px_per_m, frame.dpr)
                         && b.legible(px_per_m, frame.dpr);
@@ -1538,13 +1544,19 @@ impl StyledGpu {
                 ),
                 _ => b.level,
             };
+            // The lens sees its own scale: its blocks' proxy is its own too (docs/adr/1065 §2).
+            let proxied = match (seen, source.and_then(|s| s.instances.as_ref())) {
+                (Some((_, px_per_m, dpr)), Some(inst)) => inst.proxied(px_per_m / dpr.max(1e-9)),
+                _ => b.proxied,
+            };
             let lod = source.and_then(|s| s.lod.as_ref());
             if let Some(placed) = &b.own {
                 pass.set_vertex_buffer(0, placed.mesh.slice(..));
                 pass.set_vertex_buffer(1, placed.instances.slice(..));
                 let floats = if matches!(b.pipe, Pipe::StrokeInstanced) { STROKE_FLOATS } else { AREA_FLOATS };
-                match lod {
-                    Some(lod) => {
+                match (lod, placed.proxy.clone().filter(|_| proxied)) {
+                    (_, Some(proxy)) => pass.draw(proxy, 0..placed.count),
+                    (Some(lod), None) => {
                         for r in lod.ranges(level) {
                             let (a, z) = ((r.start / floats) as u32 * placed.per_item, (r.end / floats) as u32 * placed.per_item);
                             if z > a {
@@ -1552,7 +1564,7 @@ impl StyledGpu {
                             }
                         }
                     }
-                    None => pass.draw(0..placed.vertices, 0..placed.count),
+                    (None, None) => pass.draw(0..placed.vertices, 0..placed.count),
                 }
             } else {
                 pass.set_vertex_buffer(0, vertex.slice(b.bytes.clone()));
@@ -1678,6 +1690,8 @@ struct Placed {
     /// Its definition's vertices (six a stroke segment, one an area's corner), and vertices per item of the core's.
     vertices: u32,
     per_item: u32,
+    /// Its definition's far proxy's vertices, after the definition's own (docs/adr/1065 §2).
+    proxy: Option<Range<u32>>,
     count: u32,
     bytes: u64,
 }
@@ -1687,6 +1701,8 @@ struct GpuBatch {
     own: Option<Placed>,
     /// Its curves' detail level this frame (docs/adr/1063 §3).
     level: usize,
+    /// An instanced batch whose definition this frame draws as its far proxy (docs/adr/1065 §2).
+    proxied: bool,
     /// A raster's paint (docs/adr/0204 §5): its tiles in view are drawn instead of its frame.
     raster: Option<super::raster_tiles::RasterPaint>,
     /// A map service's paint (docs/adr/0208 §3, §9): its picture tiles are

@@ -2808,6 +2808,16 @@ başarım durumudur (resim tutuluyor, stilli geçiş 0; ağır yükten sonra 2,1
 16,7 ms (kalan pay bloklar, 17 ms: ~1 px'lik yerleşimin ayrı parçaları), uzakta uzun çizgilerin mürekkep yoğunluğu
 değişti (sahibinin kararı), görünümün tamponları 10⁶'da 709 → 959 MB, duruştaki yeniden yerleşim ~50 ms. Madde `[~]`.
 
+**Blokların uzak vekili (6 Kasım 2026, [ADR 1065](../docs/adr/1065-far-block-proxy.md)):** Örnekle çizilen bir blok
+tanımının en az 12 segmentli her çizgi batch'i, tanımla bir kez kurulan bir vekil taşır: çizgilerini saran kutunun dört
+kenarı. En büyük yerleşim tanımı ekranda en çok 3 px gösterdiğinde kare tanımın çizgileri yerine vekili çizer; her
+yerleşim yine çizilir, kendi batch'inin renginde (ByBlock/ByLayer kuruluşta çözülmüş), dolgular eskisi gibi. Yalnız
+çizim alanı; kâğıt/pafta/PDF kapalı, ayar yok. Aynı izle, önce → sonra: 10⁵ uzak kaydırma GPU p50 25,1 → **12,1 ms**
+(blok katmanı 16,4 → 3,6), tekerlek 20,6 → 16,3 ms; 10⁶ kaydırma 287 → 121 ms. Yakın görünümler piksel piksel aynı
+(`perf::stability` doğrular; 10⁵ 1:200 resmi 0 fark), uzakta en çok 58/255'lik fark, görünür piksel 0; bellek ve ilk
+kare değişmedi. **Tutmayan:** 10⁶'da uzak görünüm 60 Hz değil (121 ms), 10⁶ açılışın ilk karesi ve Hepsini seç ~2 s.
+Madde `[~]`.
+
 ### CAD-ADV-20 — Her 2B yeteneği Python, MCP, AI ve eklenti üzerinden aynı doğrulukla sun [~]
 
 **Öncelik:** P0; sona bırakılacak ayrı ek iş değildir. **Kod:** [C02], [C03], [C32].

@@ -119,6 +119,36 @@ struct DefBatch {
     bounds: [f64; 4],
     w: f64,
     h: f64,
+    /// Its far proxy (docs/adr/1065 §2): the box round its strokes as four segments, drawn instead of them where the
+    /// largest insert shows the definition at most [`BLOCK_PROXY_PX`]; empty for areas and for a batch of few
+    /// strokes. `extent` is the box's larger side, in the definition's units.
+    proxy: Vec<f64>,
+    extent: f64,
+}
+
+/// The most logical pixels a block definition's strokes span on the screen (at the largest insert's scale) for its
+/// far proxy to be drawn instead of them (docs/adr/1065 §2).
+pub const BLOCK_PROXY_PX: f64 = 3.0;
+/// The fewest segments a definition's batch draws at its coarsest level before it comes with a proxy: the proxy's own
+/// four would save little below this.
+const PROXY_LEAST_SEGMENTS: usize = 12;
+
+/// The box `b` (a batch's, from the definition's base) as the four segments of a stroke batch, start lengths 0 and no
+/// end caps (a closed path's); a box that is a point is one segment of no length (a dot).
+fn proxy_box(b: &[f64; 4]) -> Vec<f64> {
+    let [x0, y0, x1, y1] = *b;
+    let corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)];
+    let mut out = Vec::with_capacity(4 * 6);
+    for i in 0..4 {
+        let (a, c) = (corners[i], corners[(i + 1) % 4]);
+        if js_hypot(c.0 - a.0, c.1 - a.1) >= 1e-12 {
+            out.extend([a.0, a.1, c.0, c.1, 0.0, 0.0]);
+        }
+    }
+    if out.is_empty() {
+        out.extend([x0, y0, x0, y0, 0.0, 0.0]);
+    }
+    out
 }
 
 impl Entry {
@@ -181,6 +211,8 @@ pub struct BatchSink {
     lod: Option<usize>,
     /// A long stroke drawn by itself (no curve level asked) comes with its far levels too (docs/adr/1064 §2).
     line_lod: bool,
+    /// A definition being recorded comes with its far proxy (docs/adr/1065 §2).
+    block_proxy: bool,
 }
 
 /// How many styles of a kind are remembered.
@@ -275,6 +307,7 @@ impl BatchSink {
             refused: false,
             lod: None,
             line_lod: false,
+            block_proxy: false,
         }
     }
 
@@ -303,12 +336,18 @@ impl BatchSink {
         self.line_lod = on;
     }
 
+    /// Whether the definition being recorded comes with its far proxy (docs/adr/1065 §2): the drawing area only.
+    pub fn set_block_proxy(&mut self, on: bool) {
+        self.block_proxy = on;
+    }
+
     /// The recorded definition's batches, in the order they were met; none when refused.
     pub fn into_def(mut self, id: usize) -> Option<Def> {
         if self.refused || self.group != 0 {
             return None;
         }
         self.triangulate();
+        let proxies = self.block_proxy;
         let mut batches = Vec::with_capacity(self.entries.len());
         for e in self.entries {
             let lods: usize = e.lods.iter().map(Vec::len).sum();
@@ -318,6 +357,14 @@ impl BatchSink {
             if e.tile != [0.0, 0.0] || e.kind == Kind::Marker || e.group != 0 || e.scale != Scale::default() {
                 return None;
             }
+            // A far proxy for strokes that draw many segments even at their coarsest level (docs/adr/1065 §2).
+            let coarsest = e.data.len() + e.lods.last().map_or(0, Vec::len);
+            let boxed = e.bounds.iter().all(|v| v.is_finite()) && e.bounds[0] <= e.bounds[2] && e.bounds[1] <= e.bounds[3];
+            let (proxy, extent) = if proxies && e.kind == Kind::Stroke && boxed && coarsest / 6 >= PROXY_LEAST_SEGMENTS {
+                (proxy_box(&e.bounds), js_max(e.bounds[2] - e.bounds[0], e.bounds[3] - e.bounds[1]))
+            } else {
+                (Vec::new(), 0.0)
+            };
             batches.push(DefBatch {
                 kind: e.kind,
                 raw: e.raw,
@@ -329,6 +376,8 @@ impl BatchSink {
                 bounds: e.bounds,
                 w: e.w,
                 h: e.h,
+                proxy,
+                extent,
             });
         }
         Some(Def { id, batches })
@@ -645,12 +694,21 @@ impl BatchSink {
                 num(&mut json, max);
             }
             // An instanced batch's numbers are its definition's (its own levels with them), then its instances.
+            // Its definition's far proxy after the levels (docs/adr/1065 §2), and its extent.
             let empty: &[Vec<f64>] = &[];
-            let (main, levels, own): (&[f64], &[Vec<f64>], Option<&[f64]>) = match &e.inst {
-                Some((def, j)) => (def.batches[*j].data.as_slice(), def.batches[*j].lods.as_slice(), Some(e.data.as_slice())),
-                None => (e.data.as_slice(), if e.lods.is_empty() { empty } else { e.lods.as_slice() }, None),
+            let (main, levels, proxy, own): (&[f64], &[Vec<f64>], &[f64], Option<&[f64]>) = match &e.inst {
+                Some((def, j)) => (
+                    def.batches[*j].data.as_slice(),
+                    def.batches[*j].lods.as_slice(),
+                    def.batches[*j].proxy.as_slice(),
+                    Some(e.data.as_slice()),
+                ),
+                None => (e.data.as_slice(), if e.lods.is_empty() { empty } else { e.lods.as_slice() }, &[], None),
             };
-            let total = main.len() + levels.iter().map(Vec::len).sum::<usize>() + own.map_or(0, <[f64]>::len);
+            let total = main.len()
+                + levels.iter().map(Vec::len).sum::<usize>()
+                + proxy.len()
+                + own.map_or(0, <[f64]>::len);
             json.push_str(",\"from\":");
             num(&mut json, data.len() as f64);
             json.push_str(",\"len\":");
@@ -669,6 +727,15 @@ impl BatchSink {
                 num(&mut json, (own.len() / INSTANCE_FLOATS) as f64);
                 json.push_str(",\"k\":");
                 num(&mut json, e.kmax);
+                if let Some((def, j)) = &e.inst
+                    && !proxy.is_empty()
+                {
+                    json.push_str(",\"proxy\":[");
+                    num(&mut json, proxy.len() as f64);
+                    json.push(',');
+                    num(&mut json, def.batches[*j].extent);
+                    json.push(']');
+                }
                 json.push('}');
             }
             json.push_str(",\"bounds\":[");
@@ -701,6 +768,7 @@ impl BatchSink {
             let all = || {
                 main.iter()
                     .chain(levels.iter().flatten())
+                    .chain(proxy.iter())
                     .chain(own.into_iter().flatten())
             };
             data.extend(all().map(|&x| x as f32));
