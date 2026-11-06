@@ -573,6 +573,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         unit: None,
         text_styles: Vec::new(),
         dimension_styles: Vec::new(),
+        table_styles: Vec::new(),
     }
 }
 
@@ -1088,6 +1089,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         unit: None,
         text_styles: Vec::new(),
         dimension_styles: Vec::new(),
+        table_styles: Vec::new(),
     });
     let r = read(&text);
     // Long values came in pieces and control characters in caret notation: the attributes are back as they were.
@@ -1153,6 +1155,7 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         unit: None,
         text_styles: Vec::new(),
         dimension_styles: Vec::new(),
+        table_styles: Vec::new(),
     });
     let r = read(&text);
     assert!(r.entities.is_empty() && r.layers.is_empty());

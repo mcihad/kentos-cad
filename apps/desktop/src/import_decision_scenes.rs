@@ -21,8 +21,20 @@ fn decisions(app: &mut App) {
     crate::files_testing::drive(app, task);
 }
 
+/// docs/adr/1128: a file whose ACAD_TABLE follows another program's table style (`table-styles.dxf`): the Stil
+/// decisions, what of the style KentOS cannot keep, and the style no table follows, left out.
+/// `KENTOS_SHOTS_ONLY=okuma-tablo-stili`.
+fn table_styles(app: &mut App) {
+    crate::files_testing::make_cad(app);
+    app.picker = Picker::File(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/exchange/v1/table-styles.dxf"),
+    );
+    let task = app.run("file.import.dxf");
+    crate::files_testing::drive(app, task);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("okuma-kararlari", decisions)]
+    vec![("okuma-kararlari", decisions), ("okuma-tablo-stili", table_styles)]
 }
 
 #[cfg(test)]

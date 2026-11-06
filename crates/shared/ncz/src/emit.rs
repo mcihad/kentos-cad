@@ -1190,6 +1190,7 @@ pub fn read(
         blocks: Vec::new(),
         text_styles: Vec::new(),
         dimension_styles: Vec::new(),
+        table_styles: Vec::new(),
         unit: None,
     };
     kentos_formats::import::summarise(&mut result);
@@ -1333,6 +1334,7 @@ mod tests {
             blocks: Vec::new(),
             text_styles: Vec::new(),
             dimension_styles: Vec::new(),
+            table_styles: Vec::new(),
             unit: None,
         };
         kentos_formats::import::summarise(&mut result);

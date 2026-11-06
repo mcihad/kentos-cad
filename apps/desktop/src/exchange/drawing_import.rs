@@ -881,6 +881,7 @@ impl App {
             dimension: result.dimension_styles.clone(),
             line_types: result.line_types.clone(),
             line_type_scale: result.line_type_scale,
+            table: result.table_styles.clone(),
         };
         let Some(doc) = &mut self.document else {
             return Task::none();

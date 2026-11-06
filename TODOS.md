@@ -112,6 +112,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `borderColor`) ve `plain_lines`/`borders` WASM'a açılmadı; web tablo çizimi `styled_table`'ı, stil derlemesinin
   `table_borders`'ı almaz. `cad.styles.edit`'in `table` türü, `cad.entities.edit`'in `tableStyle`'ı, Tablo stilleri
   penceresi ve özelliklerin Tablo stili satırı web'de yok.
+- CAD-ADV-12 / ADR 1128: DXF TABLESTYLE okuma/yazma ortak `kentos-formats`'ta; web'in DXF içe aktarımı
+  `ImportResult.tableStyles`'ı projeye almaz (`apps/web/src/io/apply.ts`), dışa aktarımı `DxfWriteInput.tableStyles`'ı
+  doldurmaz; içe aktarma raporunun yeni `style` konusu web'in kelime listesinde yok (WASM yeniden derlemesi).
 - CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
   `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
   stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya

@@ -388,6 +388,8 @@ pub enum ImportDecisionTopic {
     Layer,
     /// Paper space: layouts, their size and viewports.
     Paper,
+    /// Styles: the table styles (TABLESTYLE) and what of them KentOS cannot keep (docs/adr/1128 §4).
+    Style,
 }
 
 /// One decision the reader took, counted where it took it (docs/adr/1010).
@@ -520,6 +522,12 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
+    /// The table styles (a DXF's TABLESTYLE objects, docs/adr/1128 §4): KentOS's own exactly from its data, another
+    /// program's that a table follows from their groups, sizes in paper mm at the scale the options gave. The app
+    /// takes a style of a name the project has as that one; another keeps its id when the project has none such.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
+    pub table_styles: Vec<crate::TableStyleDef>,
     /// The unit the file's lengths were read in and why (a DXF's,
     /// docs/adr/0257 §1); none for a format without units.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1382,6 +1390,11 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionStyleDef>>", optional))]
     pub dimension_styles: Vec<DimensionStyleDef>,
+    /// The project's table styles (docs/adr/1128 §3): each a TABLESTYLE object in the ACAD_TABLESTYLE dictionary,
+    /// carrying itself in its KENTOS data; a table's INSERT names its style's object.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TableStyleDef>>", optional))]
+    pub table_styles: Vec<crate::TableStyleDef>,
     /// The project's line types (docs/adr/0313 §6): each an LTYPE record, the layers and objects that draw with one
     /// name it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
