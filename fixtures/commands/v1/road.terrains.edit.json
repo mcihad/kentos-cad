@@ -1104,6 +1104,3583 @@
       ]
     },
     {
+      "name": "Nokta ekle: boş bir yere",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addPoint",
+                  "x": 20.0,
+                  "y": 25.0,
+                  "z": 102.9
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 20.0,
+                      "y": 25.0,
+                      "z": 102.9
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "09b9458e8675e6ab77a4e573a0c9cba96bf358616be53b79889b567fb6a915a9",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 14,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 20.0,
+                      "y": 25.0,
+                      "z": 102.9
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Nokta ekle: kaydı olan yere eklenmez, söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addPoint",
+                  "x": 21.0,
+                  "y": 24.0,
+                  "z": 99.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 21.0,
+                      "y": 24.0,
+                      "z": 99.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "occupied"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: o yerde zaten bir kayıt var; kotunu Kot değiştir ile verin.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 21.0,
+                      "y": 24.0,
+                      "z": 99.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kot değiştir: noktanın kotu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "setHeight",
+                  "x": 21.0,
+                  "y": 24.0,
+                  "z": 103.5
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "setHeight",
+                      "x": 21.0,
+                      "y": 24.0,
+                      "z": 103.5
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "46d2e0b27c0145a9d8c7dbdd039abae83cf00875ca42753fccbb6841357d6c84",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.5
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "setHeight",
+                      "x": 21.0,
+                      "y": 24.0,
+                      "z": 103.5
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kot değiştir: kırık hattın köşesi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "setHeight",
+                  "x": 35.0,
+                  "y": 15.0,
+                  "z": 102.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "setHeight",
+                      "x": 35.0,
+                      "y": 15.0,
+                      "z": 102.25
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "1adc9fd557251b058e9161db1b3c5ba4cca04a8ec904d3fe23f5e4ba18200857",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.10882352941177
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "setHeight",
+                      "x": 35.0,
+                      "y": 15.0,
+                      "z": 102.25
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kot değiştir: o yerde nokta yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "setHeight",
+                  "x": 25.0,
+                  "y": 25.0,
+                  "z": 103.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "setHeight",
+                      "x": 25.0,
+                      "y": 25.0,
+                      "z": 103.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "no_point"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: o yerde nokta ya da kırık hat köşesi yok.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "setHeight",
+                      "x": 25.0,
+                      "y": 25.0,
+                      "z": 103.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Sırayla: eklenen noktanın kotu değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addPoint",
+                  "x": 25.0,
+                  "y": 20.0,
+                  "z": 102.0
+                },
+                {
+                  "op": "setHeight",
+                  "x": 25.0,
+                  "y": 20.0,
+                  "z": 102.5
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 25.0,
+                      "y": 20.0,
+                      "z": 102.0
+                    },
+                    {
+                      "op": "setHeight",
+                      "x": 25.0,
+                      "y": 20.0,
+                      "z": 102.5
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "b6f425d07d7666469631f32846f753e275b24214cc9e09996f7e6aba6df9d399",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 14,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.12142857142857
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 25.0,
+                      "y": 20.0,
+                      "z": 102.0
+                    },
+                    {
+                      "op": "setHeight",
+                      "x": 25.0,
+                      "y": 20.0,
+                      "z": 102.5
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kenar ekle: iki köşe arasında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 21.0,
+                  "ay": 24.0,
+                  "bx": 35.0,
+                  "by": 15.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 35.0,
+                      "by": 15.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "f3eaf7caa0e3e30f50120cf1c6b7820a9232a896895983b78964750fa7d0caa4",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 7,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 35.0,
+                      "by": 15.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kenar ekle: kırık hattı kesen kenar yapılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 21.0,
+                  "ay": 24.0,
+                  "bx": 10.0,
+                  "by": 5.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 10.0,
+                      "by": 5.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "ed7ad609c3ed69ec42e5d5f51136ae5101820ec9d7cd7406ccfb0dd19cdeb725",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "crosses"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 10.0,
+                      "by": 5.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kenar ekle: sınıra oturtulan köşeden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 2.0,
+                  "ay": 28.0,
+                  "bx": 21.0,
+                  "by": 24.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 2.0,
+                      "ay": 28.0,
+                      "bx": 21.0,
+                      "by": 24.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "3e9d2293f85c8f44a914882226d6e1db060c74fd06c1c8f465693ff5e5d69a50",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 7,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 2.0,
+                      "ay": 28.0,
+                      "bx": 21.0,
+                      "by": 24.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kenar ekle: sınırı kesen kenar yapılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 0.0,
+                  "ay": 0.0,
+                  "bx": 21.0,
+                  "by": 24.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 0.0,
+                      "ay": 0.0,
+                      "bx": 21.0,
+                      "by": 24.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "a8c4d091c7469a46d566a743909baa0402e55d46f5491c031b09d68889f40e05",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "crosses"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 0.0,
+                      "ay": 0.0,
+                      "bx": 21.0,
+                      "by": 24.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kenar ekle: bir ucu köşe değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 21.0,
+                  "ay": 24.0,
+                  "bx": 25.0,
+                  "by": 25.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 25.0,
+                      "by": 25.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "3f6a4b9b4167b68e723106d8b9c8bc9ede777c48b53e32ba98391f20af1185a7",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "no_corner"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: bir ucu yüzeyin köşesi değil.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 25.0,
+                      "by": 25.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Kenar ekle: önceki kenarı kesen yapılmaz",
+      "note": "ikincisi birincisini kesmiyorsa yapılır; kesiyorsa söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 21.0,
+                  "ay": 24.0,
+                  "bx": 35.0,
+                  "by": 15.0
+                },
+                {
+                  "op": "addEdge",
+                  "ax": 30.0,
+                  "ay": 5.0,
+                  "bx": 40.0,
+                  "by": 30.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 35.0,
+                      "by": 15.0
+                    },
+                    {
+                      "op": "addEdge",
+                      "ax": 30.0,
+                      "ay": 5.0,
+                      "bx": 40.0,
+                      "by": 30.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "8943de8e36ff86f364bf5d81243a4b7325c185d7a2d3aa6b2fff0b639b0ca0c3",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[1]",
+                    "role": "edits",
+                    "why": "crosses"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 7,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[1] (düzenleme) kullanılamadı: bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 35.0,
+                      "by": 15.0
+                    },
+                    {
+                      "op": "addEdge",
+                      "ax": 30.0,
+                      "ay": 5.0,
+                      "bx": 40.0,
+                      "by": 30.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Üçgen sil: içerideki üçgen",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "removeTriangle",
+                  "x": 20.0,
+                  "y": 20.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "removeTriangle",
+                      "x": 20.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "d34979cc1e298f45b64c2dc7d9003d05f5c7bb4b547d772774c8578e8e93bbcb",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 11,
+                  "constrained": 6,
+                  "area": 801.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "removed": 1,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "removeTriangle",
+                      "x": 20.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Üçgen sil: dışarıda üçgen yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "removeTriangle",
+                  "x": 50.0,
+                  "y": 50.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "removeTriangle",
+                      "x": 50.0,
+                      "y": 50.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "f4caa5b54e1a0566d92fb34984d36525d63e6073b8eebb210a7a1fdb5d2f9d4e",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "no_triangle"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: o yerde yüzeyin üçgeni yok.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "removeTriangle",
+                      "x": 50.0,
+                      "y": 50.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Üçgen sil: aynı yer iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "removeTriangle",
+                  "x": 20.0,
+                  "y": 20.0
+                },
+                {
+                  "op": "removeTriangle",
+                  "x": 20.0,
+                  "y": 20.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "removeTriangle",
+                      "x": 20.0,
+                      "y": 20.0
+                    },
+                    {
+                      "op": "removeTriangle",
+                      "x": 20.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "a4b495b1e3fb601590d63330739a500ca482a0e6972cc17e3a8302bf66f922f7",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[1]",
+                    "role": "edits",
+                    "why": "no_triangle"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 11,
+                  "constrained": 6,
+                  "area": 801.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "removed": 1,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[1] (düzenleme) kullanılamadı: o yerde yüzeyin üçgeni yok.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "removeTriangle",
+                      "x": 20.0,
+                      "y": 20.0
+                    },
+                    {
+                      "op": "removeTriangle",
+                      "x": 20.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Dört düzenleme birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addPoint",
+                  "x": 20.0,
+                  "y": 25.0,
+                  "z": 102.9
+                },
+                {
+                  "op": "setHeight",
+                  "x": 21.0,
+                  "y": 24.0,
+                  "z": 103.5
+                },
+                {
+                  "op": "addEdge",
+                  "ax": 21.0,
+                  "ay": 24.0,
+                  "bx": 35.0,
+                  "by": 15.0
+                },
+                {
+                  "op": "removeTriangle",
+                  "x": 6.0,
+                  "y": 10.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 20.0,
+                      "y": 25.0,
+                      "z": 102.9
+                    },
+                    {
+                      "op": "setHeight",
+                      "x": 21.0,
+                      "y": 24.0,
+                      "z": 103.5
+                    },
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 35.0,
+                      "by": 15.0
+                    },
+                    {
+                      "op": "removeTriangle",
+                      "x": 6.0,
+                      "y": 10.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current",
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "170316eacab296778f34598e57b94573e287533b84b62184566b80cc8682fb12",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 14,
+                  "triangles": 13,
+                  "constrained": 7,
+                  "area": 888.5,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "removed": 1,
+                  "minZ": 100.16,
+                  "maxZ": 103.5
+                }
+              }
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 20.0,
+                      "y": 25.0,
+                      "z": 102.9
+                    },
+                    {
+                      "op": "setHeight",
+                      "x": 21.0,
+                      "y": 24.0,
+                      "z": 103.5
+                    },
+                    {
+                      "op": "addEdge",
+                      "ax": 21.0,
+                      "ay": 24.0,
+                      "bx": 35.0,
+                      "by": 15.0
+                    },
+                    {
+                      "op": "removeTriangle",
+                      "x": 6.0,
+                      "y": 10.0
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
       "name": "Olmayan katman: uyarıyla yazılır",
       "steps": [
         {
@@ -3398,6 +6975,114 @@
               "code": "invalid_terrain",
               "message": "Yüzey kurallarına uymuyor: en uzun dış kenar 0'dan büyük olmalı.",
               "path": "surface.maxEdge"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set'te iki ucu aynı yerde kenar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Mevcut zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addEdge",
+                  "ax": 1.0,
+                  "ay": 2.0,
+                  "bx": 1.0,
+                  "by": 2.0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_terrain",
+              "message": "Yüzey kurallarına uymuyor: kenarın iki ucu aynı yerde.",
+              "path": "surface.edits[0]"
             }
           },
           "expect": {

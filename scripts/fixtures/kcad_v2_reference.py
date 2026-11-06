@@ -2506,6 +2506,9 @@ def document(d):
     if "road" in d["settings"] and d["settings"].get("cadWork") == "map":
         # A map project's terrain surfaces (docs/adr/1520).
         schema = max(schema, 195)
+    if any(s.get("edits") for s in d["settings"].get("road", {}).get("surfaces", [])):
+        # A terrain surface's edits (docs/adr/1560).
+        schema = max(schema, 196)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3464,7 +3467,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-196.kcad"] = container(root(cmap(parts), version=uint(196)))
+    files["schema-version-197.kcad"] = container(root(cmap(parts), version=uint(197)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5804,6 +5807,17 @@ def build():
     aligned = copy.deepcopy(mapped)
     aligned["settings"]["road"]["alignments"] = load("road-work.json")["settings"]["road"]["alignments"]
     out["broken/map-surfaces-alignment.kcad"] = container(document(aligned))
+    # Schema 196 (docs/adr/1560): a surface's edits (a point added, a height set, an edge put in, a triangle taken
+    # out); schema 195 refuses them, and an edge with both ends at one place is refused.
+    edited = load("surface-edits.json")
+    edited_data = document(edited)
+    assert edited_data.count(b"\x67version\x18\xc4") == 1, "a surface's edits are schema 196"
+    out["surface-edits.kcad"] = container(edited_data)
+    out["broken/surface-edits-in-schema-195.kcad"] = container(
+        edited_data.replace(b"\x67version\x18\xc4", b"\x67version\x18\xc3"))
+    pointless = copy.deepcopy(edited)
+    pointless["settings"]["road"]["surfaces"][0]["edits"][2].update({"bx": 0.0, "by": 0.0})
+    out["broken/surface-edits-edge-of-no-length.kcad"] = container(document(pointless))
     surveyed = load("map-survey.json")
     surveyed_data = document(surveyed)
     assert surveyed_data.count(b"\x67version\x18\xc2") == 1, "a map's GNSS archive is schema 194"

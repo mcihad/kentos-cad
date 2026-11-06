@@ -164,7 +164,7 @@ pub enum TerrainState {
 pub struct TerrainLeft {
     /// The object's or the layer's id.
     pub id: String,
-    /// `points`, `breaklines`, `boundary`, `voids`.
+    /// `points`, `breaklines`, `boundary`, `voids`, or `edits` (its id `edits[k]`, docs/adr/1560).
     pub role: String,
     pub why: String,
 }
@@ -218,6 +218,15 @@ pub struct TerrainFigures {
     /// Outer triangles left out by the edge method.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub trimmed: u32,
+    /// Triangles its edits took out (docs/adr/1560); unwritten when none.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub removed: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// Where a place is on a surface.

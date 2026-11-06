@@ -11496,6 +11496,32 @@ class SuperelevationMethod(_Union):
         return _variant(_SUPERELEVATION_METHOD, "SuperelevationMethod", "method", data).from_json(data)
 
 
+class SurfaceEdit(_Union):
+    """An edit of a terrain surface (docs/adr/1560), as Civil 3D's surface definition keeps them: Nokta ekle (a point at
+    a place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge
+    between the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept
+    triangle at the place goes).
+
+    One of:
+
+    - :class:`AddPointSurfaceEdit` (``op: addPoint``)
+    - :class:`SetHeightSurfaceEdit` (``op: setHeight``)
+    - :class:`AddEdgeSurfaceEdit` (``op: addEdge``)
+    - :class:`RemoveTriangleSurfaceEdit` (``op: removeTriangle``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "op"
+
+    @property
+    def op(self) -> str:
+        """The name of the variant (``op`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurfaceEdit:
+        return _variant(_SURFACE_EDIT, "SurfaceEdit", "op", data).from_json(data)
+
+
 class SurveyWork(_Union):
     """What is computed.
 
@@ -92544,6 +92570,7 @@ class TerrainFigures(_Model):
         trimmed: Outer triangles left out by the edge method. Unit: count.
         max_z: Unit: elevation.
         min_z: Unit: elevation.
+        removed: Triangles its edits took out (docs/adr/1560); unwritten when none. Unit: count.
     """
     vertices: int
     triangles: int
@@ -92554,6 +92581,7 @@ class TerrainFigures(_Model):
     trimmed: int
     max_z: float | None | Unset = UNSET
     min_z: float | None | Unset = UNSET
+    removed: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -92568,6 +92596,8 @@ class TerrainFigures(_Model):
             out["maxZ"] = None if self.max_z is None else float(self.max_z)
         if self.min_z is not UNSET:
             out["minZ"] = None if self.min_z is None else float(self.min_z)
+        if self.removed is not UNSET:
+            out["removed"] = self.removed
         return out
 
     @classmethod
@@ -92582,6 +92612,7 @@ class TerrainFigures(_Model):
             trimmed=data["trimmed"],
             max_z=UNSET if "maxZ" not in data else None if data["maxZ"] is None else float(data["maxZ"]),
             min_z=UNSET if "minZ" not in data else None if data["minZ"] is None else float(data["minZ"]),
+            removed=data.get("removed", UNSET),
         )
 
 
@@ -92703,7 +92734,7 @@ class TerrainLeft(_Model):
     `wrong_kind`, `not_closed`, `too_few`.
     Attributes:
         id: The object's or the layer's id.
-        role: `points`, `breaklines`, `boundary`, `voids`.
+        role: `points`, `breaklines`, `boundary`, `voids`, or `edits` (its id `edits[k]`, docs/adr/1560).
     """
     id: str
     role: str
@@ -92963,6 +92994,9 @@ class TerrainSurfaceDef(_Model):
         breaklines: The breaklines: each line's and polyline's path, every vertex with an elevation.
         built: The digest (64 lower-case hex digits) of the sources it was last made and accepted from; absent: never.
         clouds: The ground points taken from point clouds into its point layers (docs/adr/0928 §2), each layer's record.
+        edits: The edits made on it, in their order (docs/adr/1560; `.kcad` schema 196): a point added, a point's height set,
+            an edge put in between two corners, a triangle taken out. Made again with the surface from its sources: an
+            edit that no longer fits is said back, not dropped.
         excluded: The point records left out of it (docs/adr/0916 §6; a repair: a spike, a shot twice): each place, exactly as the
             record's; the drawing's points stay as they are.
         max_edge: The edge method: an outer triangle whose outer edge is longer than this is left out, m; absent: none. Unit: m.
@@ -92976,6 +93010,7 @@ class TerrainSurfaceDef(_Model):
     breaklines: SurfaceSources | Unset = UNSET
     built: str | None | Unset = UNSET
     clouds: list[SurfaceCloudDef] | Unset = UNSET
+    edits: list[SurfaceEdit] | Unset = UNSET
     excluded: list[SurfaceExclusion] | Unset = UNSET
     max_edge: float | None | Unset = UNSET
     points: SurfaceSources | Unset = UNSET
@@ -92994,6 +93029,8 @@ class TerrainSurfaceDef(_Model):
             out["built"] = self.built
         if self.clouds is not UNSET:
             out["clouds"] = [e0.to_json() for e0 in self.clouds]
+        if self.edits is not UNSET:
+            out["edits"] = [e0.to_json() for e0 in self.edits]
         if self.excluded is not UNSET:
             out["excluded"] = [e0.to_json() for e0 in self.excluded]
         if self.max_edge is not UNSET:
@@ -93015,6 +93052,7 @@ class TerrainSurfaceDef(_Model):
             breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
             built=data.get("built", UNSET),
             clouds=[SurfaceCloudDef.from_json(e0) for e0 in data["clouds"]] if "clouds" in data else UNSET,
+            edits=[SurfaceEdit.from_json(e0) for e0 in data["edits"]] if "edits" in data else UNSET,
             excluded=[SurfaceExclusion.from_json(e0) for e0 in data["excluded"]] if "excluded" in data else UNSET,
             max_edge=UNSET if "maxEdge" not in data else None if data["maxEdge"] is None else float(data["maxEdge"]),
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
@@ -118972,6 +119010,122 @@ class StationsSuperelevationMethod(SuperelevationMethod):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddPointSurfaceEdit(SurfaceEdit):
+    """
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    TAG_VALUE: ClassVar[str] = "addPoint"
+    x: float
+    y: float
+    z: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "addPoint"}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddPointSurfaceEdit:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetHeightSurfaceEdit(SurfaceEdit):
+    """
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    TAG_VALUE: ClassVar[str] = "setHeight"
+    x: float
+    y: float
+    z: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "setHeight"}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetHeightSurfaceEdit:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddEdgeSurfaceEdit(SurfaceEdit):
+    """
+    Attributes:
+        ax: Unit: length.
+        ay: Unit: length.
+        bx: Unit: length.
+        by: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "addEdge"
+    ax: float
+    ay: float
+    bx: float
+    by: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "addEdge"}
+        out["ax"] = float(self.ax)
+        out["ay"] = float(self.ay)
+        out["bx"] = float(self.bx)
+        out["by"] = float(self.by)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddEdgeSurfaceEdit:
+        return cls(
+            ax=float(data["ax"]),
+            ay=float(data["ay"]),
+            bx=float(data["bx"]),
+            by=float(data["by"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveTriangleSurfaceEdit(SurfaceEdit):
+    """
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "removeTriangle"
+    x: float
+    y: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "removeTriangle"}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveTriangleSurfaceEdit:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TraverseSurveyWork(SurveyWork):
     """Poligon hesabı (docs/adr/0070): from `start` oriented on `back`, the angles (at the start, at every new point
     and, oriented at the end, at the end) and the legs' lengths; a connected traverse ends on `end` (oriented on
@@ -122049,6 +122203,9 @@ _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSub
 _SUPERELEVATION_METHOD: dict[str, type[SuperelevationMethod]] = {"curves": CurvesSuperelevationMethod, "stations": StationsSuperelevationMethod}
 
 
+_SURFACE_EDIT: dict[str, type[SurfaceEdit]] = {"addPoint": AddPointSurfaceEdit, "setHeight": SetHeightSurfaceEdit, "addEdge": AddEdgeSurfaceEdit, "removeTriangle": RemoveTriangleSurfaceEdit}
+
+
 _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
 
 
@@ -122104,6 +122261,7 @@ __all__ = [
     "AddArmLeaderEdit",
     "AddAssetsPaperOp",
     "AddConstraintEdit",
+    "AddEdgeSurfaceEdit",
     "AddEntityEdit",
     "AddFitCurveEdit",
     "AddGuidePaperOp",
@@ -122114,6 +122272,7 @@ __all__ = [
     "AddMembersModulesOperation",
     "AddMembersOptionsOperation",
     "AddParameterEdit",
+    "AddPointSurfaceEdit",
     "AddReviewNoteOp",
     "AddSheetPaperOp",
     "AddSlabsOperation",
@@ -124877,6 +125036,7 @@ __all__ = [
     "RemoveRelationsOp",
     "RemoveReviewNoteOp",
     "RemoveSheetPaperOp",
+    "RemoveTriangleSurfaceEdit",
     "RemoveVariantPaperOp",
     "RenameDomainMigrationStep",
     "RenameFieldMigrationStep",
@@ -125115,6 +125275,7 @@ __all__ = [
     "SetExportPaperOp",
     "SetFrame",
     "SetFramesPaperOp",
+    "SetHeightSurfaceEdit",
     "SetInsertsClipOperation",
     "SetItemPropsPaperOp",
     "SetItemsPaperOp",
@@ -125484,6 +125645,7 @@ __all__ = [
     "SuperelevationsWidened",
     "SuperelevationsWritten",
     "SurfaceCloudDef",
+    "SurfaceEdit",
     "SurfaceExclusion",
     "SurfaceSources",
     "SurveyAdjust",

@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 196 (docs/adr/1560): a terrain surface's edits.
+    if doc.settings.road.as_ref().is_some_and(|r| r.surfaces.iter().any(|s| !s.edits.is_empty())) {
+        return crate::SCHEMA_WITH_SURFACE_EDITS;
+    }
     // Schema 195 (docs/adr/1520): a map project's terrain surfaces.
     if doc.settings.road.is_some() && doc.settings.cad_work == Some(kentos_contracts::CadWork::Map) {
         return crate::SCHEMA_WITH_MAP_SURFACES;

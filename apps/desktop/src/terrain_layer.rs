@@ -22,6 +22,8 @@ use crate::app::Message;
 struct Edges {
     plain: Vec<[[f64; 2]; 2]>,
     constrained: Vec<[[f64; 2]; 2]>,
+    /// The triangles edits took out (docs/adr/1560): outlined and faintly filled in the danger colour.
+    removed: Vec<[[f64; 2]; 3]>,
 }
 
 fn edges_of(surface: &kentos_road::surface::Surface) -> Edges {
@@ -41,6 +43,7 @@ fn edges_of(surface: &kentos_road::surface::Surface) -> Edges {
         }
     }
     out.constrained = surface.constrained.iter().map(|[a, b]| [at(*a), at(*b)]).collect();
+    out.removed = surface.removed_triangles().into_iter().map(|t| t.map(at)).collect();
     out
 }
 
@@ -154,6 +157,17 @@ impl canvas::Program<Message> for Layer<'_> {
                     &path(&s.constrained, 0.0),
                     Stroke::default().with_width(1.6).with_color(self.danger),
                 );
+                for t in &s.removed {
+                    let [a, b, c] = t.map(screen);
+                    let hole = Path::new(|p| {
+                        p.move_to(Point::new(a[0] as f32, a[1] as f32));
+                        p.line_to(Point::new(b[0] as f32, b[1] as f32));
+                        p.line_to(Point::new(c[0] as f32, c[1] as f32));
+                        p.close();
+                    });
+                    frame.fill(&hole, Color { a: 0.14, ..self.danger });
+                    frame.stroke(&hole, Stroke::default().with_width(1.0).with_color(Color { a: 0.7, ..self.danger }));
+                }
             }
         })]
     }

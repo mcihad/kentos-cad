@@ -86,6 +86,27 @@ pub struct Window {
     interval: String,
     major: String,
     layer: Option<String>,
+    /// Düzenlemeler (docs/adr/1560): the tool whose pick is awaited, the height typed, and the chosen definition made
+    /// now with its edits (what each came to before it is saved).
+    pub(crate) picking: Option<crate::terrain_edits::EditTool>,
+    /// The right side shows Düzenlemeler instead of the sources.
+    pub(crate) edits_pane: bool,
+    pub(crate) edit_z: String,
+    pub(crate) edit_report: Option<TerrainReport>,
+}
+
+impl Window {
+    /// The chosen surface's definition as the window has it.
+    pub(crate) fn chosen_def(&self) -> Option<&TerrainSurfaceDef> {
+        self.chosen.and_then(|i| self.rows.get(i)).map(|r| &r.def)
+    }
+
+    /// An edit at the end of the chosen surface's edits.
+    pub(crate) fn push_edit(&mut self, edit: kentos_commands::SurfaceEdit) {
+        if let Some(r) = self.chosen.and_then(|i| self.rows.get_mut(i)) {
+            r.def.edits.push(edit);
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -106,6 +127,13 @@ pub enum Event {
     Major(String),
     ContourLayer(String),
     Contours,
+    /// Düzenlemeler (docs/adr/1560): a tool's pick on the drawing, the height typed, the last edit or all taken back.
+    EditTool(crate::terrain_edits::EditTool),
+    /// Kaynaklar (false) or Düzenlemeler.
+    Pane(bool),
+    EditZ(String),
+    EditUndo,
+    EditClear,
     /// LandXML al…: the file to take, asked; then the file chosen (none: given up).
     LandXml,
     LandXmlChosen(Option<std::path::PathBuf>),
@@ -188,8 +216,13 @@ impl App {
             interval: contour_interval(doc.model.settings().plot_scale).to_owned(),
             major: "5".to_owned(),
             layer,
+            picking: None,
+            edits_pane: false,
+            edit_z: String::new(),
+            edit_report: None,
         });
         self.dialog = Some(Dialog::Terrains);
+        self.refresh_edit_report();
     }
 
     /// Yeni yüzey from the ribbon: the window with a new surface chosen.
@@ -240,6 +273,7 @@ impl App {
                     built: None,
                     clouds: Vec::new(),
                     excluded: Vec::new(),
+                    edits: Vec::new(),
                 }));
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -304,6 +338,19 @@ impl App {
                     r.tolerance = text;
                 }
             }
+            Event::EditTool(tool) => return self.start_terrain_edit(tool),
+            Event::EditZ(text) => w.edit_z = text,
+            Event::Pane(edits) => w.edits_pane = edits,
+            Event::EditUndo => {
+                if let Some(r) = chosen {
+                    r.def.edits.pop();
+                }
+            }
+            Event::EditClear => {
+                if let Some(r) = chosen {
+                    r.def.edits.clear();
+                }
+            }
             Event::Interval(text) => w.interval = text,
             Event::Major(text) => w.major = text,
             Event::ContourLayer(id) => w.layer = Some(id),
@@ -337,6 +384,8 @@ impl App {
         if let Some(words) = warning {
             self.warn(words.to_owned());
         }
+        // The chosen definition made again: what its edits come to (docs/adr/1560).
+        self.refresh_edit_report();
         Task::none()
     }
 
@@ -593,7 +642,7 @@ impl App {
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
             None => container(label::caption("Bir yüzey seçin ya da yeni bir yüzey oluşturun.")).padding(12).into(),
-            Some(r) => self.terrain_editor(r, report_of(&r.def.id), r.saved(&w.kept)),
+            Some(r) => self.terrain_editor(r, report_of(&r.def.id), r.saved(&w.kept), w),
         };
         let can_accept = chosen.is_some_and(|r| {
             r.saved(&w.kept)
@@ -640,7 +689,13 @@ impl App {
         Frame::new(TITLE).scroll(body).push(contours).footer(footer).width(760.0).modal(msg(Event::Cancel))
     }
 
-    fn terrain_editor<'a>(&'a self, r: &'a Row, report: Option<&'a TerrainReport>, saved: bool) -> Element<'a, Message> {
+    fn terrain_editor<'a>(
+        &'a self,
+        r: &'a Row,
+        report: Option<&'a TerrainReport>,
+        saved: bool,
+        w: &'a Window,
+    ) -> Element<'a, Message> {
         let layers = self.relation_layers();
         let d = &r.def;
         let checks = |chosen: &[String], on: fn(String) -> Event| {
@@ -675,11 +730,35 @@ impl App {
             Some(_) => "Değişiklik kaydedilince yüzey yeniden kurulur.".to_owned(),
             None => "Kaydedilince kurulur.".to_owned(),
         };
-        Column::new()
+        // Kaynaklar or Düzenlemeler (docs/adr/1560): one at a time, so the edits are in sight without scrolling.
+        let pane = kentos_ui::widget::segmented::Segmented::new(
+            [Pane(false), Pane(true)],
+            Pane(w.edits_pane),
+            |p| msg(Event::Pane(p.0)),
+        );
+        let head = Column::new()
             .spacing(10)
-            // Clear of the scroll bar.
             .padding(iced::Padding::default().right(14))
             .push(words::field("Ad", name, None))
+            .push(pane);
+        if w.edits_pane {
+            return head
+                .push(label::caption(status))
+                .push(self.terrain_edits_view(
+                    d,
+                    w.edit_report.as_ref().filter(|rep| rep.id == d.id).or(report.filter(|_| saved)),
+                    &w.edit_z,
+                ))
+                .push(
+                    label::caption(
+                        "Düzenlemeler yüzeyin tarifindedir: Kaydet onları yazar, yüzey her kurulduğunda sırayla \
+                         uygulanır. Bugünkü kaynaklarla yapılamayan düzenleme silinmez, söylenir.",
+                    )
+                    .style(muted),
+                )
+                .into();
+        }
+        head
             .push(words::field("Nokta katmanları", checks(&d.points.layers, Event::PointLayer), None))
             .extend((!d.points.uids.is_empty()).then(|| {
                 label::caption(format!("ve kimliğiyle {} nokta nesnesi", d.points.uids.len())).style(muted).into()
@@ -722,6 +801,10 @@ impl App {
             Control::Press(VOIDS) => Some(msg(Event::Voids)),
             Control::Press(CONTOURS) => Some(msg(Event::Contours)),
             Control::Press(LANDXML) => Some(msg(Event::LandXml)),
+            Control::Press("Kaynaklar") => Some(msg(Event::Pane(false))),
+            Control::Press("Düzenlemeler") => Some(msg(Event::Pane(true))),
+            Control::Press(crate::terrain_edits::UNDO_EDIT) => Some(msg(Event::EditUndo)),
+            Control::Press(crate::terrain_edits::CLEAR_EDITS) => Some(msg(Event::EditClear)),
             Control::Press(words) => match w.rows.iter().position(|r| r.def.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
@@ -730,9 +813,21 @@ impl App {
             Control::Fill("En uzun dış kenar (m)", text) => Some(msg(Event::MaxEdge(text.to_owned()))),
             Control::Fill("Kot toleransı (m)", text) => Some(msg(Event::Tolerance(text.to_owned()))),
             Control::Fill("Aralık (m)", text) => Some(msg(Event::Interval(text.to_owned()))),
+            Control::Fill("Kot (m)", text) => Some(msg(Event::EditZ(text.to_owned()))),
+
             Control::Fill("Ana eğri her", text) => Some(msg(Event::Major(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
+    }
+}
+
+/// Kaynaklar or Düzenlemeler (`true`), as the segmented control shows them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Pane(bool);
+
+impl std::fmt::Display for Pane {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if self.0 { "Düzenlemeler" } else { "Kaynaklar" })
     }
 }
 

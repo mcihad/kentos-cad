@@ -183256,6 +183256,135 @@
       ],
       "type": "object"
     },
+    "SurfaceEdit": {
+      "description": "An edit of a terrain surface (docs/adr/1560), as Civil 3D's surface definition keeps them: Nokta ekle (a point at\na place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge\nbetween the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept\ntriangle at the place goes).",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "addPoint",
+              "type": "string"
+            },
+            "x": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "y": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "z": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "elevation"
+            }
+          },
+          "required": [
+            "op",
+            "x",
+            "y",
+            "z"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "setHeight",
+              "type": "string"
+            },
+            "x": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "y": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "z": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "elevation"
+            }
+          },
+          "required": [
+            "op",
+            "x",
+            "y",
+            "z"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "ax": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "ay": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "bx": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "by": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "op": {
+              "const": "addEdge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "ax",
+            "ay",
+            "bx",
+            "by"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "removeTriangle",
+              "type": "string"
+            },
+            "x": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "y": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            }
+          },
+          "required": [
+            "op",
+            "x",
+            "y"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "SurfaceExclusion": {
       "additionalProperties": false,
       "description": "A point record left out of a surface: its place (docs/adr/0916 §6).",
@@ -188438,6 +188567,13 @@
           ],
           "x-unit": "elevation"
         },
+        "removed": {
+          "description": "Triangles its edits took out (docs/adr/1560); unwritten when none.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
         "split": {
           "description": "Breakline pieces split at a corner on them.",
           "format": "uint32",
@@ -188613,7 +188749,7 @@
           "type": "string"
         },
         "role": {
-          "description": "`points`, `breaklines`, `boundary`, `voids`.",
+          "description": "`points`, `breaklines`, `boundary`, `voids`, or `edits` (its id `edits[k]`, docs/adr/1560).",
           "type": "string"
         },
         "why": {
@@ -188942,6 +189078,13 @@
           "description": "The ground points taken from point clouds into its point layers (docs/adr/0928 §2), each layer's record.",
           "items": {
             "$ref": "#/$defs/SurfaceCloudDef"
+          },
+          "type": "array"
+        },
+        "edits": {
+          "description": "The edits made on it, in their order (docs/adr/1560; `.kcad` schema 196): a point added, a point's height set,\nan edge put in between two corners, a triangle taken out. Made again with the surface from its sources: an\nedit that no longer fits is said back, not dropped.",
+          "items": {
+            "$ref": "#/$defs/SurfaceEdit"
           },
           "type": "array"
         },

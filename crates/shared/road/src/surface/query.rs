@@ -68,7 +68,7 @@ impl Surface {
                 triangle: Some(self.kept_index[t as usize]),
             },
             Kind::Void => none(Place::Void),
-            Kind::Outside | Kind::Trimmed => none(Place::Outside),
+            Kind::Outside | Kind::Trimmed | Kind::Removed => none(Place::Outside),
         }
     }
 }

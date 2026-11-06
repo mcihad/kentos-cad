@@ -125,6 +125,11 @@ impl Made {
                     role: l.role.to_owned(),
                     why: l.why.to_owned(),
                 })
+                .chain(self.skipped_edits().map(|(id, why)| TerrainLeft {
+                    id,
+                    role: "edits".to_owned(),
+                    why: why.to_owned(),
+                }))
                 .collect(),
             figures: self.surface.as_ref().ok().map(|s| {
                 let f = s.figures();
@@ -139,21 +144,30 @@ impl Made {
                     merged: count(s.report.merged),
                     split: count(s.report.split),
                     trimmed: count(s.report.trimmed),
+                    removed: count(s.report.removed),
                 }
             }),
             problem: self.surface.as_ref().err().cloned(),
         }
     }
 
+    /// The edits the core could not do on the surface made now (docs/adr/1560): `edits[k]` and why.
+    fn skipped_edits(&self) -> impl Iterator<Item = (String, &'static str)> + '_ {
+        self.surface
+            .iter()
+            .flat_map(|s| s.report.skipped.iter())
+            .map(|s| (format!("edits[{}]", s.edit), s.why))
+    }
+
     /// The warnings of what it could not use.
     pub(crate) fn warnings(&self) -> Vec<CommandWarning> {
-        self.gathered
-            .left
-            .iter()
-            .map(|l| CommandWarning {
+        let left = self.gathered.left.iter().map(|l| (l.id.clone(), l.role, l.why));
+        let skipped = self.skipped_edits().map(|(id, why)| (id, "edits", why));
+        left.chain(skipped)
+            .map(|(id, role, why)| CommandWarning {
                 code: codes::TERRAIN_SOURCE_LEFT.into(),
-                message: format!("{} ({}) kullanılamadı: {}.", l.id, role_words(l.role), why_words(l.why)),
-                path: Some(l.role.to_owned()),
+                message: format!("{id} ({}) kullanılamadı: {}.", role_words(role), why_words(why)),
+                path: Some(role.to_owned()),
             })
             .collect()
     }
@@ -189,17 +203,24 @@ fn role_words(role: &str) -> &'static str {
         "points" => "nokta",
         "breaklines" => "kırık hat",
         "boundary" => "sınır",
+        "edits" => "düzenleme",
         _ => "boşluk",
     }
 }
 
-fn why_words(why: &str) -> &'static str {
+/// Why a source or an edit could not be used, in the user's words (a report's `left[].why`).
+pub fn why_words(why: &str) -> &'static str {
     match why {
         "missing" => "çizimde yok",
         "no_height" => "kotu eksik",
         "arc_edge" => "yaylı kenarı var",
         "wrong_kind" => "türü uymuyor",
         "not_closed" => "kapalı değil",
+        "occupied" => "o yerde zaten bir kayıt var; kotunu Kot değiştir ile verin",
+        "no_point" => "o yerde nokta ya da kırık hat köşesi yok",
+        "no_corner" => "bir ucu yüzeyin köşesi değil",
+        "crosses" => "bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor",
+        "no_triangle" => "o yerde yüzeyin üçgeni yok",
         _ => "köşesi az",
     }
 }
@@ -212,6 +233,13 @@ pub(crate) fn with_surfaces(doc: &Document, list: Vec<TerrainSurfaceDef>) -> Pro
         road: (!road.is_empty()).then_some(road),
         ..doc.settings().clone()
     }
+}
+
+/// One definition made from the drawing now, saved or not (the window's edits, docs/adr/1560): its report and its
+/// surface (none when none is made).
+pub fn made_of(doc: &Document, def: &TerrainSurfaceDef) -> (TerrainReport, Option<Surface>) {
+    let made = make(doc, def);
+    (made.report(def), made.surface.ok())
 }
 
 /// The road project's surfaces as their sources make them now, for the desktop's drawing and window (plan/road.md

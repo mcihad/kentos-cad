@@ -348,6 +348,81 @@ pub struct TerrainSurfaceDef {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceExclusion>>", optional))]
     pub excluded: Vec<SurfaceExclusion>,
+    /// The edits made on it, in their order (docs/adr/1560; `.kcad` schema 196): a point added, a point's height set,
+    /// an edge put in between two corners, a triangle taken out. Made again with the surface from its sources: an
+    /// edit that no longer fits is said back, not dropped.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SurfaceEdit>>", optional))]
+    pub edits: Vec<SurfaceEdit>,
+}
+
+/// An edit of a terrain surface (docs/adr/1560), as Civil 3D's surface definition keeps them: Nokta ekle (a point at
+/// a place no record has), Kot değiştir (every point record at the place takes the height), Kenar ekle (a TIN edge
+/// between the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept
+/// triangle at the place goes).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(tag = "op", rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SurfaceEdit {
+    #[serde(rename_all = "camelCase")]
+    AddPoint {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        x: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        y: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+        z: f64,
+    },
+    #[serde(rename_all = "camelCase")]
+    SetHeight {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        x: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        y: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+        z: f64,
+    },
+    #[serde(rename_all = "camelCase")]
+    AddEdge {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        ax: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        ay: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        bx: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        by: f64,
+    },
+    #[serde(rename_all = "camelCase")]
+    RemoveTriangle {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        x: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        y: f64,
+    },
+}
+
+/// The most edits one surface keeps.
+pub const MOST_SURFACE_EDITS: usize = 10_000;
+
+impl SurfaceEdit {
+    /// Why it cannot be kept (a number not finite, an edge of no length), in the user's words; none when it can.
+    pub fn problem(&self) -> Option<&'static str> {
+        let finite = |v: &[f64]| v.iter().all(|x| x.is_finite());
+        match self {
+            Self::AddPoint { x, y, z } | Self::SetHeight { x, y, z } if !finite(&[*x, *y, *z]) => {
+                Some("düzenlemenin yeri ve kotu sonlu sayılar olmalı")
+            }
+            Self::AddEdge { ax, ay, bx, by } if !finite(&[*ax, *ay, *bx, *by]) => {
+                Some("kenarın iki ucu sonlu sayılar olmalı")
+            }
+            Self::AddEdge { ax, ay, bx, by } if ax == bx && ay == by => Some("kenarın iki ucu aynı yerde"),
+            Self::RemoveTriangle { x, y } if !finite(&[*x, *y]) => Some("silinen üçgenin yeri sonlu iki sayı olmalı"),
+            _ => None,
+        }
+    }
 }
 
 /// A point record left out of a surface: its place (docs/adr/0916 §6).
@@ -1736,6 +1811,12 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         places.sort_unstable();
         if places.windows(2).any(|w| w[0] == w[1]) {
             return fail(at("excluded"), "bir yer dışarıda bırakılanlarda iki kez");
+        }
+        if s.edits.len() > MOST_SURFACE_EDITS {
+            return fail(at("edits"), "bir yüzeyin en çok 10 000 düzenlemesi olur");
+        }
+        if let Some((k, words)) = s.edits.iter().enumerate().find_map(|(k, e)| e.problem().map(|w| (k, w))) {
+            return fail(at(&format!("edits[{k}]")), words);
         }
     }
     alignments_problem(&road.alignments)
@@ -3644,6 +3725,7 @@ mod tests {
             built: None,
             clouds: Vec::new(),
             excluded: Vec::new(),
+            edits: Vec::new(),
         }
     }
 

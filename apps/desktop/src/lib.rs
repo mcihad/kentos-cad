@@ -422,6 +422,7 @@ mod road_views_window_tests;
 #[cfg(test)]
 mod road_exchange_tests;
 mod terrain_layer;
+mod terrain_edits;
 mod terrain_window;
 #[cfg(test)]
 mod terrain_window_tests;

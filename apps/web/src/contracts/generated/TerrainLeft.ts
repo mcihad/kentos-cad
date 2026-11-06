@@ -10,6 +10,6 @@ export type TerrainLeft = {
  */
 id: string, 
 /**
- * `points`, `breaklines`, `boundary`, `voids`.
+ * `points`, `breaklines`, `boundary`, `voids`, or `edits` (its id `edits[k]`, docs/adr/1560).
  */
 role: string, why: string, };

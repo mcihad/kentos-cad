@@ -39,6 +39,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCreate) -> Result<Checke
         built: None,
         clouds: Vec::new(),
         excluded: Vec::new(),
+        edits: Vec::new(),
     };
     let mut list = own.to_vec();
     list.push(def.clone());

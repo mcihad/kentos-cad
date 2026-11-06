@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `195`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-196.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `196`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-197.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -881,6 +881,13 @@ projesinde de yazılır, ama yalnız `surfaces` taşır; hizalama, profil, kesit
 `bad_value`'dur. Yazıcı 195'i harita projesinde `road` varken seçer; 194 ve öncesi harita projesinin `road`'unu
 `bad_value` sayar (`broken/map-surfaces-in-schema-194.kcad`). Örnek `map-surfaces.json/.kcad`; bozuk
 `broken/map-surfaces-alignment.kcad`.
+
+**Şema 196** (ADR 1560; MAP-14): arazi yüzeyinin düzenlemeleri, `road.surfaces[].edits`: sıralı, en çok 10 000, her biri
+`op`'u ile: `addPoint` (`x`, `y`, `z`), `setHeight` (`x`, `y`, `z`), `addEdge` (`ax`, `ay`, `bx`, `by`; iki uç ayrı
+yerde), `removeTriangle` (`x`, `y`); sayılar sonlu; boş liste yazılmaz; kurala uymayan `bad_value`. Yazıcı 196'yı bir
+yüzeyin düzenlemesi varken seçer; 195 ve öncesi alanı `unknown_field` sayar
+(`broken/surface-edits-in-schema-195.kcad`). Örnek `surface-edits.json/.kcad`; bozuk
+`broken/surface-edits-edge-of-no-length.kcad`.
 
 **Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
 `decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri

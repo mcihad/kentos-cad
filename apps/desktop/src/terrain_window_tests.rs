@@ -243,3 +243,128 @@ fn the_contour_interval_starts_by_the_scale() {
         ["5", "2", "1", "1", "1"]
     );
 }
+
+/// Düzenlemeler (docs/adr/1560): each tool steps the window aside for a pick on the drawing, its edit goes to the
+/// chosen definition with what it came to, Sonuncuyu kaldır takes the last back, Kaydet writes them and the surface
+/// made again from its sources keeps them.
+#[test]
+fn the_surface_is_edited_by_picks_and_kaydet_writes_the_edits() {
+    use crate::terrain_edits::EditTool;
+    use kentos_commands::SurfaceEdit;
+    let at = |x: f64, y: f64| Some(kentos_interaction::Vec2 { x, y });
+    let mut app = app("map");
+    made(&mut app);
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::EditZ("104,5".into()));
+    send(&mut app, W::EditTool(EditTool::AddPoint));
+    assert!(app.dialog.is_none(), "the window steps aside for the pick");
+    assert!(app.terrain_picked(at(25.0, 25.0)));
+    assert_eq!(app.dialog, Some(Dialog::Terrains), "and comes back");
+    send(&mut app, W::EditZ("103,5".into()));
+    send(&mut app, W::EditTool(EditTool::SetHeight));
+    assert!(app.terrain_picked(at(21.2, 23.9)));
+    send(&mut app, W::EditTool(EditTool::RemoveTriangle));
+    assert!(app.terrain_picked(at(6.0, 10.0)));
+    // A pick outside the surface makes no edit, and says why.
+    send(&mut app, W::EditTool(EditTool::RemoveTriangle));
+    assert!(app.terrain_picked(at(500.0, 500.0)));
+    // Esc: none.
+    send(&mut app, W::EditTool(EditTool::FlipEdge));
+    assert!(app.terrain_picked(None));
+    assert!(!app.terrain_picked(at(1.0, 1.0)), "no pick is awaited any more");
+    let w = app.terrain_window.as_ref().expect("the window");
+    let edits = w.chosen_def().expect("a surface").edits.clone();
+    assert_eq!(edits.len(), 3, "{edits:?}");
+    assert_eq!(edits[0], SurfaceEdit::AddPoint { x: 25.0, y: 25.0, z: 104.5 });
+    assert_eq!(edits[1], SurfaceEdit::SetHeight { x: 21.0, y: 24.0, z: 103.5 });
+    assert!(matches!(edits[2], SurfaceEdit::RemoveTriangle { .. }));
+    let report = w.edit_report.as_ref().expect("made with its edits");
+    assert_eq!(report.figures.as_ref().map(|f| f.removed), Some(1));
+    assert!(report.left.iter().all(|l| l.role != "edits"), "{:?}", report.left);
+    // Sonuncuyu kaldır, then the triangle again.
+    send(&mut app, W::EditUndo);
+    assert_eq!(app.terrain_window.as_ref().and_then(|w| w.chosen_def()).map(|d| d.edits.len()), Some(2));
+    send(&mut app, W::EditTool(EditTool::RemoveTriangle));
+    assert!(app.terrain_picked(at(6.0, 10.0)));
+    send(&mut app, W::Save);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let saved = &doc.settings().road.as_ref().expect("road settings").surfaces[0];
+    assert_eq!(saved.edits.len(), 3);
+    // The drawing's surface is made with them.
+    let (_, report, surface) = kentos_native_application::road_terrains::made_surfaces(doc).remove(0);
+    assert_eq!(report.figures.as_ref().map(|f| f.removed), Some(1));
+    let s = surface.expect("a surface");
+    assert_eq!(s.height(25.0, 25.0).z, Some(104.5));
+    assert_eq!(s.height(21.0, 24.0).z, Some(103.5));
+    assert_eq!(s.height(6.0, 10.0).z, None, "the triangle is out");
+}
+
+/// The window's Düzenlemeler with its edits, and the drawing's surface with them, wide light and narrow dark;
+/// `.run/gui-evidence/yuzey-duzenle-1560/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib terrain_window_tests::screens_edits -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "writes pictures"]
+fn screens_edits() {
+    use crate::terrain_edits::EditTool;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yuzey-duzenle-1560");
+    std::fs::create_dir_all(&out).expect("a folder");
+    // The pick through the tool itself: the coordinates typed on the command line (Y, X), as a user may.
+    let pick = |app: &mut App, x: f64, y: f64| {
+        let _ = app.update(Message::CommandInput(format!("{x},{y}")));
+        let _ = app.update(Message::CommandSubmitted);
+    };
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = app("map");
+        app.program = Some(kentos_launch::Module::Map);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        made(&mut app);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::RibbonTab("terrain"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-yuzey-once-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Pane(true));
+        send(&mut app, W::EditZ("104,5".into()));
+        send(&mut app, W::EditTool(EditTool::AddPoint));
+        pick(&mut app, 25.0, 25.0);
+        assert_eq!(app.dialog, Some(Dialog::Terrains), "the pick came back through the tool");
+        send(&mut app, W::EditZ("103,5".into()));
+        send(&mut app, W::EditTool(EditTool::SetHeight));
+        pick(&mut app, 21.2, 23.9);
+        send(&mut app, W::EditTool(EditTool::RemoveTriangle));
+        pick(&mut app, 6.0, 10.0);
+        send(&mut app, W::EditTool(EditTool::RemoveTriangle));
+        pick(&mut app, 30.0, 26.0);
+        // An edge put in that a later source would cross is said, not dropped: here one crossing the breakline.
+        if let Some(w) = app.terrain_window.as_mut() {
+            w.push_edit(kentos_commands::SurfaceEdit::AddEdge { ax: 21.0, ay: 24.0, bx: 10.0, by: 5.0 });
+        }
+        app.refresh_edit_report();
+        send(&mut app, W::EditZ(String::new()));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-duzenlemeler-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        send(&mut app, W::Save);
+        app.selection.clear();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("3-yuzey-sonra-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

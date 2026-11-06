@@ -98,6 +98,40 @@ pub struct SurfaceInput {
     pub tolerance: Option<f64>,
     #[serde(default)]
     pub edge: EdgeMethod,
+    /// TIN edges put in between two corners (ADR 1560: Kenar ekle, Kenar çevir), after the breaklines; absent from the
+    /// digest's input when none, so a surface without edits keeps its digest.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edges: Vec<ForcedEdge>,
+    /// Places whose kept triangle is taken out (ADR 1560: Üçgen sil).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<RemovedAt>,
+}
+
+/// An edge put in between the corners at `from` and `to` (exact places); `edit` is its index in the definition's
+/// edits, to say it back when it cannot be put in.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ForcedEdge {
+    pub from: [f64; 2],
+    pub to: [f64; 2],
+    pub edit: u32,
+}
+
+/// The kept triangle at `at` taken out; `edit` is its index in the definition's edits.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemovedAt {
+    pub at: [f64; 2],
+    pub edit: u32,
+}
+
+/// An edit that could not be done on the surface made now (ADR 1560 §2): its index and why (`no_corner`: an end is
+/// no corner; `crosses`: it crosses a breakline, a ring or an earlier edge; `no_triangle`: no kept triangle there).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Skipped {
+    pub edit: u32,
+    pub why: &'static str,
 }
 
 /// Why no surface is made: a stable code, the reason in Turkish and, where there is one, the place.
@@ -136,6 +170,8 @@ enum Kind {
     Void,
     /// Taken off the outer edge by the edge method.
     Trimmed,
+    /// Taken out by an edit (ADR 1560: Üçgen sil).
+    Removed,
 }
 
 /// What was done to make the surface, said back to the user.
@@ -148,6 +184,11 @@ pub struct Report {
     pub split: usize,
     /// Triangles the edge method took off.
     pub trimmed: usize,
+    /// Triangles edits took out, and the edits that could not be done (ADR 1560); unwritten when none.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub removed: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub skipped: Vec<Skipped>,
 }
 
 /// A terrain surface: its corners (x, y, z), the triangles kept (counter-clockwise), its constrained edges and
@@ -335,6 +376,55 @@ fn check(input: &SurfaceInput) -> Result<f64, SurfaceError> {
     Ok(tolerance)
 }
 
+fn is_zero(n: &usize) -> bool {
+    *n == 0
+}
+
+impl Surface {
+    /// The triangles its edits took out (ADR 1560 §2), as corner triples: drawn apart, they are no part of it.
+    pub fn removed_triangles(&self) -> Vec<[u32; 3]> {
+        self.kinds
+            .iter()
+            .enumerate()
+            .filter(|(_, k)| **k == Kind::Removed)
+            .map(|(t, _)| self.mesh.corners(t as u32))
+            .collect()
+    }
+}
+
+/// Whether the segments `e` and `p` (corner pairs) cross or overlap anywhere but at a shared end (exact signs).
+fn crosses(xy: &[Vec2], e: (u32, u32), p: (u32, u32)) -> bool {
+    let shared = [p.0, p.1].iter().filter(|c| **c == e.0 || **c == e.1).count();
+    if shared == 2 {
+        return true;
+    }
+    let (a, b, c, d) = (xy[e.0 as usize], xy[e.1 as usize], xy[p.0 as usize], xy[p.1 as usize]);
+    let (d1, d2) = (orient2d(a, b, c), orient2d(a, b, d));
+    let (d3, d4) = (orient2d(c, d, a), orient2d(c, d, b));
+    if shared == 1 {
+        // One end in common: they overlap only when collinear and pointing the same way from it.
+        if d1 != 0.0 || d2 != 0.0 {
+            return false;
+        }
+        let (o, x, y) = if e.0 == p.0 || e.0 == p.1 {
+            (a, b, if e.0 == p.0 { d } else { c })
+        } else {
+            (b, a, if e.1 == p.0 { d } else { c })
+        };
+        return (x.x - o.x) * (y.x - o.x) + (x.y - o.y) * (y.y - o.y) > 0.0;
+    }
+    let between = |s: Vec2, t: Vec2, q: Vec2| {
+        q.x >= s.x.min(t.x) && q.x <= s.x.max(t.x) && q.y >= s.y.min(t.y) && q.y <= s.y.max(t.y)
+    };
+    if (d1 > 0.0 && d2 < 0.0 || d1 < 0.0 && d2 > 0.0) && (d3 > 0.0 && d4 < 0.0 || d3 < 0.0 && d4 > 0.0) {
+        return true;
+    }
+    d1 == 0.0 && between(a, b, c)
+        || d2 == 0.0 && between(a, b, d)
+        || d3 == 0.0 && between(c, d, a)
+        || d4 == 0.0 && between(c, d, b)
+}
+
 /// A path's pieces as corner index pairs.
 fn pairs(n: usize, closed: bool) -> Vec<(usize, usize)> {
     let mut out: Vec<(usize, usize)> = (0..n.saturating_sub(1)).map(|i| (i, i + 1)).collect();
@@ -404,12 +494,45 @@ pub fn build(input: &SurfaceInput) -> Result<Surface, SurfaceError> {
             }
         }
     }
+    // Kenar ekle / Kenar çevir (ADR 1560 §2): between two corners (a ring's draped corner too), unless an end is no
+    // corner or it crosses a piece put in before it (a breakline, a ring, an earlier edge).
+    let mut skipped = Vec::new();
+    for e in &input.edges {
+        let (Some(&a), Some(&b)) = (corners.at.get(&key(e.from[0], e.from[1])), corners.at.get(&key(e.to[0], e.to[1])))
+        else {
+            skipped.push(Skipped { edit: e.edit, why: "no_corner" });
+            continue;
+        };
+        if a == b {
+            skipped.push(Skipped { edit: e.edit, why: "no_corner" });
+            continue;
+        }
+        if pieces.iter().any(|p| crosses(&corners.xy, (a, b), (p.a, p.b))) {
+            skipped.push(Skipped { edit: e.edit, why: "crosses" });
+            continue;
+        }
+        pieces.push(Piece { a, b, breakline: false });
+    }
     let (mesh, split) = triangulate(&corners, &pieces, tolerance)?;
     let mut kinds = classify(&mesh, &corners.xy, input);
     let trimmed = match input.edge {
         EdgeMethod::None => 0,
         EdgeMethod::MaxEdge { length } => trim(&mesh, &corners.xy, &mut kinds, length),
     };
+    // Üçgen sil (ADR 1560 §2): the kept triangle at each place goes; none there is said back.
+    let mut removed = 0;
+    let mut start = 0;
+    for r in &input.removed {
+        match mesh.locate(&corners.xy, r.at, start) {
+            Some(t) if kinds[t as usize] == Kind::Kept => {
+                kinds[t as usize] = Kind::Removed;
+                removed += 1;
+                start = t;
+            }
+            _ => skipped.push(Skipped { edit: r.edit, why: "no_triangle" }),
+        }
+    }
+    skipped.sort_by_key(|s| s.edit);
     let mut kept_index = vec![NONE; kinds.len()];
     let mut triangles = Vec::new();
     for (t, kind) in kinds.iter().enumerate() {
@@ -436,6 +559,8 @@ pub fn build(input: &SurfaceInput) -> Result<Surface, SurfaceError> {
             merged: corners.merged,
             split,
             trimmed,
+            removed,
+            skipped,
         },
         mesh,
         kinds,

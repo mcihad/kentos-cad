@@ -16,4 +16,8 @@ split: number,
 /**
  * Outer triangles left out by the edge method.
  */
-trimmed: number, };
+trimmed: number, 
+/**
+ * Triangles its edits took out (docs/adr/1560); unwritten when none.
+ */
+removed?: number, };

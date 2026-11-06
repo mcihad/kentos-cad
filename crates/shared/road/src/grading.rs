@@ -310,6 +310,8 @@ pub fn grade(p: &Platform, terrain: &Surface, offset: f64) -> Result<Graded, Gra
         voids: Vec::new(),
         tolerance: None,
         edge: Default::default(),
+        edges: Vec::new(),
+        removed: Vec::new(),
     };
     match surface::build(&input) {
         Ok(design) => {

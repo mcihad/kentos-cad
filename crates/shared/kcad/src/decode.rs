@@ -1510,6 +1510,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş yol ayarı yazılmaz"));
                 }
+                // Schema 196 (docs/adr/1560): a surface's edits.
+                if !has.surface_edits && v.surfaces.iter().any(|s| !s.edits.is_empty()) {
+                    return Err(r.fail_at(Code::UnknownField, at, "yüzey düzenlemeleri şema 196 ister"));
+                }
                 if !has.road_pavement && road_has_pavement(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "tip kesitin üstyapısı ve kübajın kuralı şema 166 ister"));
                 }

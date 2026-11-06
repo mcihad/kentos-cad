@@ -17,10 +17,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use kentos_contracts::{Entity, LayerNode, PathEntity, TerrainSurfaceDef};
+use kentos_contracts::{Entity, LayerNode, PathEntity, SurfaceEdit, TerrainSurfaceDef};
 use serde::Serialize;
 
-use crate::surface::{Breakline, EdgeMethod, Ring, SpotPoint, SurfaceInput, ALGORITHM};
+use crate::surface::{Breakline, EdgeMethod, ForcedEdge, RemovedAt, Ring, SpotPoint, SurfaceInput, ALGORITHM};
 
 /// One object of the drawing as a source sees it.
 #[derive(Clone, Copy, Debug)]
@@ -184,6 +184,47 @@ pub fn gather<'a>(
         }
     }
 
+    // The edits (ADR 1560 §2), in their order: a point where no record is; a height for every point record and
+    // breakline vertex at the place; the edges and the triangles taken out go to the core, which says back the ones
+    // it cannot do.
+    let mut edges = Vec::new();
+    let mut removed = Vec::new();
+    for (k, e) in def.edits.iter().enumerate() {
+        let id = format!("edits[{k}]");
+        let edit = u32::try_from(k).unwrap_or(u32::MAX);
+        let at = |x: f64, y: f64| place(x, y);
+        match *e {
+            SurfaceEdit::AddPoint { x, y, z } => {
+                let here = at(x, y);
+                let taken = points.iter().any(|p| at(p.x, p.y) == here)
+                    || breaklines.iter().flat_map(|b| &b.points).any(|p| at(p[0], p[1]) == here)
+                    || out.contains(&here);
+                if taken {
+                    leave(&mut left, &id, "edits", "occupied");
+                } else {
+                    points.push(SpotPoint { x, y, z, source: Some(id) });
+                }
+            }
+            SurfaceEdit::SetHeight { x, y, z } => {
+                let here = at(x, y);
+                let mut n = 0;
+                for p in points.iter_mut().filter(|p| at(p.x, p.y) == here) {
+                    p.z = z;
+                    n += 1;
+                }
+                for p in breaklines.iter_mut().flat_map(|b| b.points.iter_mut()).filter(|p| at(p[0], p[1]) == here) {
+                    p[2] = z;
+                    n += 1;
+                }
+                if n == 0 {
+                    leave(&mut left, &id, "edits", "no_point");
+                }
+            }
+            SurfaceEdit::AddEdge { ax, ay, bx, by } => edges.push(ForcedEdge { from: [ax, ay], to: [bx, by], edit }),
+            SurfaceEdit::RemoveTriangle { x, y } => removed.push(RemovedAt { at: [x, y], edit }),
+        }
+    }
+
     let mut ring = |uid: &str, role: &'static str| -> Option<Ring> {
         let Some(o) = by_uid.get(uid) else {
             leave(&mut left, uid, role, "missing");
@@ -213,6 +254,8 @@ pub fn gather<'a>(
             Some(length) => EdgeMethod::MaxEdge { length },
             None => EdgeMethod::None,
         },
+        edges,
+        removed,
     };
     let digest = digest_of(&input);
     let unmatched = def.excluded.iter().filter(|e| !hit.contains(&place(e.x, e.y))).map(|e| [e.x, e.y]).collect();

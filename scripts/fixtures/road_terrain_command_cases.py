@@ -190,6 +190,38 @@ def gather(d):
                 else:
                     breaklines += [(pts, closed, uid) for pts, closed in r]
 
+    # The edits (ADR 1560 §2), in their order: a point where no record is; a height for every point record and
+    # breakline vertex at the place; the edges and the triangles taken out go to the surface.
+    edges, removed = [], []
+    breaklines = [([list(p) for p in pts], closed, s) for pts, closed, s in breaklines]
+    for k, e in enumerate(d.get("edits", [])):
+        eid = f"edits[{k}]"
+        if e["op"] == "addPoint":
+            here = (e["x"], e["y"])
+            taken = any((x, y) == here for x, y, _, _ in points) or any(
+                (p[0], p[1]) == here for pts, _, _ in breaklines for p in pts)
+            if taken:
+                left.append((eid, "edits", "occupied"))
+            else:
+                points.append((e["x"], e["y"], e["z"], eid))
+        elif e["op"] == "setHeight":
+            here, n = (e["x"], e["y"]), 0
+            for i, (x, y, _, s) in enumerate(points):
+                if (x, y) == here:
+                    points[i] = (x, y, e["z"], s)
+                    n += 1
+            for pts, _, _ in breaklines:
+                for p in pts:
+                    if (p[0], p[1]) == here:
+                        p[2] = e["z"]
+                        n += 1
+            if n == 0:
+                left.append((eid, "edits", "no_point"))
+        elif e["op"] == "addEdge":
+            edges.append(((e["ax"], e["ay"]), (e["bx"], e["by"]), k))
+        else:
+            removed.append(((e["x"], e["y"]), k))
+
     def ring(uid, role):
         if uid not in by_uid:
             left.append((uid, role, "missing"))
@@ -203,7 +235,7 @@ def gather(d):
     boundary = ring(d["boundary"], "boundary") if "boundary" in d else None
     voids = [r for r in (ring(v, "voids") for v in d.get("voids", [])) if r]
     return {"points": points, "breaklines": breaklines, "boundary": boundary, "voids": voids,
-            "tolerance": d.get("tolerance"), "maxEdge": d.get("maxEdge")}, left
+            "tolerance": d.get("tolerance"), "maxEdge": d.get("maxEdge"), "edges": edges, "removed": removed}, left
 
 
 def digest(g):
@@ -219,6 +251,11 @@ def digest(g):
         inp["boundary"] = {"points": [[float(c) for c in p] for p in r], "source": s}
     if g["tolerance"] is not None:
         inp["tolerance"] = float(g["tolerance"])
+    if g.get("edges"):
+        inp["edges"] = [{"from": [float(a[0]), float(a[1])], "to": [float(b[0]), float(b[1])], "edit": k}
+                        for a, b, k in g["edges"]]
+    if g.get("removed"):
+        inp["removed"] = [{"at": [float(p[0]), float(p[1])], "edit": k} for p, k in g["removed"]]
     text = protocol_cases.canonical({"algorithm": ALGORITHM, "input": inp})
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -287,14 +324,70 @@ def build(g):
             ids.append(at[p])
         for k in range(len(ids)):
             segs.append((ids[k], ids[(k + 1) % len(ids)]))
+    # Kenar ekle (ADR 1560 §2): between two corners (a ring's draped corner too), unless an end is no corner or it crosses a piece put in before.
+    skipped = []
+    for a_, b_, k in g.get("edges", []):
+        if a_ not in at or b_ not in at or at[a_] == at[b_]:
+            skipped.append((k, "no_corner"))
+            continue
+        a, b = at[a_], at[b_]
+        if any(crosses(xy_, (a, b), s) for s in segs):
+            skipped.append((k, "crosses"))
+            continue
+        segs.append((a, b))
     voids = [r for r, _ in g["voids"]]
     tris = tri.triangulate(xy_, segs, [tri.inside_point(v) for v in voids] or None, clip=bool(g["boundary"]))
     trimmed = 0
     if g["maxEdge"] is not None:
         tris, trimmed = tri.trim(xy_, tris, set(map(frozenset, segs)), g["maxEdge"])
+    # Üçgen sil (ADR 1560 §2): the kept triangle strictly around each place goes; none there is said back.
+    tris = [tuple(t) for t in tris]
+    removed = 0
+    for q, k in g.get("removed", []):
+        hit = next((t for t in tris if strictly_around(xy_, t, q)), None)
+        if hit is None:
+            skipped.append((k, "no_triangle"))
+        else:
+            tris.remove(hit)
+            removed += 1
+    skipped.sort()
     pieces, split = tri.split_at_points(xy_, segs)
     return {"xy": xy_, "z": z, "tris": tris, "constrained": len({tuple(sorted(s)) for s in pieces}),
-            "merged": merged, "split": split, "trimmed": trimmed, "voids": voids}
+            "merged": merged, "split": split, "trimmed": trimmed, "voids": voids, "removed": removed,
+            "skipped": skipped}
+
+
+def orient(a, b, c):
+    return (F(b[0]) - F(a[0])) * (F(c[1]) - F(a[1])) - (F(b[1]) - F(a[1])) * (F(c[0]) - F(a[0]))
+
+
+def crosses(xy, e, p):
+    """Whether segments e and p (corner pairs) cross or overlap anywhere but at a shared end (exact fractions)."""
+    shared = len({p[0], p[1]} & {e[0], e[1]})
+    if shared == 2:
+        return True
+    a, b, c, d = xy[e[0]], xy[e[1]], xy[p[0]], xy[p[1]]
+    d1, d2, d3, d4 = orient(a, b, c), orient(a, b, d), orient(c, d, a), orient(c, d, b)
+    if shared == 1:
+        if d1 != 0 or d2 != 0:
+            return False
+        o, x = (a, b) if e[0] in p else (b, a)
+        common = e[0] if e[0] in p else e[1]
+        y = xy[p[1]] if p[0] == common else xy[p[0]]
+        return (F(x[0]) - F(o[0])) * (F(y[0]) - F(o[0])) + (F(x[1]) - F(o[1])) * (F(y[1]) - F(o[1])) > 0
+
+    def between(s, t, q):
+        return min(s[0], t[0]) <= q[0] <= max(s[0], t[0]) and min(s[1], t[1]) <= q[1] <= max(s[1], t[1])
+    if (d1 > 0 > d2 or d1 < 0 < d2) and (d3 > 0 > d4 or d3 < 0 < d4):
+        return True
+    return (d1 == 0 and between(a, b, c)) or (d2 == 0 and between(a, b, d)) or (
+        d3 == 0 and between(c, d, a)) or (d4 == 0 and between(c, d, b))
+
+
+def strictly_around(xy, t, q):
+    a, b, c = [xy[i] for i in t]
+    s1, s2, s3 = orient(a, b, q), orient(b, c, q), orient(c, a, q)
+    return (s1 > 0 and s2 > 0 and s3 > 0) or (s1 < 0 and s2 < 0 and s3 < 0)
 
 
 def figures(s):
@@ -307,6 +400,8 @@ def figures(s):
     hs = [s["z"][i] for i in used]
     out = {"vertices": len(s["xy"]), "triangles": len(s["tris"]), "constrained": s["constrained"], "area": float(area),
            "merged": s["merged"], "split": s["split"], "trimmed": s["trimmed"]}
+    if s.get("removed"):
+        out["removed"] = s["removed"]
     if hs:
         out["minZ"], out["maxZ"] = float(min(hs)), float(max(hs))
     return out
@@ -425,9 +520,12 @@ def section(s, line):
 
 # ── The answers ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-ROLE = {"points": "nokta", "breaklines": "kırık hat", "boundary": "sınır", "voids": "boşluk"}
+ROLE = {"points": "nokta", "breaklines": "kırık hat", "boundary": "sınır", "voids": "boşluk", "edits": "düzenleme"}
 WHY = {"missing": "çizimde yok", "no_height": "kotu eksik", "arc_edge": "yaylı kenarı var", "wrong_kind": "türü uymuyor",
-       "not_closed": "kapalı değil", "too_few": "köşesi az"}
+       "not_closed": "kapalı değil", "too_few": "köşesi az",
+       "occupied": "o yerde zaten bir kayıt var; kotunu Kot değiştir ile verin",
+       "no_point": "o yerde nokta ya da kırık hat köşesi yok", "no_corner": "bir ucu yüzeyin köşesi değil",
+       "crosses": "bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor", "no_triangle": "o yerde yüzeyin üçgeni yok"}
 PROBLEM = {
     "too_few_points": "kotlu yer üçten az ya da hepsi bir doğru üstünde",
     "height_ambiguous": "bir yerde iki farklı kot var",
@@ -450,8 +548,17 @@ def made(d):
     return g, left, digest(g), s
 
 
+def all_left(d):
+    """What the gathering left, then the edits the surface could not do (ADR 1560)."""
+    _, left, _, s = made(d)
+    if not isinstance(s, Unbuildable):
+        left = left + [(f"edits[{k}]", "edits", why) for k, why in s["skipped"]]
+    return left
+
+
 def report(d):
-    _, left, dig, s = made(d)
+    _, _, dig, s = made(d)
+    left = all_left(d)
     unbuildable = isinstance(s, Unbuildable)
     built = d.get("built")
     state = "unbuildable" if unbuildable else ("new" if built is None else "current" if built == dig else "stale")
@@ -468,7 +575,7 @@ def report(d):
 
 
 def warnings(d):
-    _, left = gather(d)
+    left = all_left(d)
     return [{"code": "terrain_source_left", "message": f"{i} ({ROLE[r]}) kullanılamadı: {WHY[w]}.", "path": r}
             for i, r, w in left]
 
@@ -662,6 +769,36 @@ def edit_cases():
     me["maxEdge"] = 25.0
     me2 = {**me, "built": base["built"]}
     case("Kenar yöntemi değişir: eskidi", {"operation": "set", "surface": me}, put(1, me2), report(me2))
+    # The edits (ADR 1560): each made on the surface of the sources, in their order; one that no longer fits is said.
+    def edited(name, edits, note=None):
+        e = {k: v for k, v in base.items() if k != "built"}
+        e["edits"] = edits
+        e2 = {**e, "built": base["built"]}
+        case(name, {"operation": "set", "surface": e}, put(1, e2), report(e2), note=note)
+    edited("Nokta ekle: boş bir yere", [{"op": "addPoint", "x": 20.0, "y": 25.0, "z": 102.9}])
+    edited("Nokta ekle: kaydı olan yere eklenmez, söylenir", [{"op": "addPoint", "x": 21.0, "y": 24.0, "z": 99.0}])
+    edited("Kot değiştir: noktanın kotu", [{"op": "setHeight", "x": 21.0, "y": 24.0, "z": 103.5}])
+    edited("Kot değiştir: kırık hattın köşesi", [{"op": "setHeight", "x": 35.0, "y": 15.0, "z": 102.25}])
+    edited("Kot değiştir: o yerde nokta yok", [{"op": "setHeight", "x": 25.0, "y": 25.0, "z": 103.0}])
+    edited("Sırayla: eklenen noktanın kotu değişir",
+           [{"op": "addPoint", "x": 25.0, "y": 20.0, "z": 102.0}, {"op": "setHeight", "x": 25.0, "y": 20.0, "z": 102.5}])
+    edited("Kenar ekle: iki köşe arasında", [{"op": "addEdge", "ax": 21.0, "ay": 24.0, "bx": 35.0, "by": 15.0}])
+    edited("Kenar ekle: kırık hattı kesen kenar yapılmaz", [{"op": "addEdge", "ax": 21.0, "ay": 24.0, "bx": 10.0, "by": 5.0}])
+    edited("Kenar ekle: sınıra oturtulan köşeden", [{"op": "addEdge", "ax": 2.0, "ay": 28.0, "bx": 21.0, "by": 24.0}])
+    edited("Kenar ekle: sınırı kesen kenar yapılmaz", [{"op": "addEdge", "ax": 0.0, "ay": 0.0, "bx": 21.0, "by": 24.0}])
+    edited("Kenar ekle: bir ucu köşe değil", [{"op": "addEdge", "ax": 21.0, "ay": 24.0, "bx": 25.0, "by": 25.0}])
+    edited("Kenar ekle: önceki kenarı kesen yapılmaz",
+           [{"op": "addEdge", "ax": 21.0, "ay": 24.0, "bx": 35.0, "by": 15.0},
+            {"op": "addEdge", "ax": 30.0, "ay": 5.0, "bx": 40.0, "by": 30.0}],
+           "ikincisi birincisini kesmiyorsa yapılır; kesiyorsa söylenir")
+    edited("Üçgen sil: içerideki üçgen", [{"op": "removeTriangle", "x": 20.0, "y": 20.0}])
+    edited("Üçgen sil: dışarıda üçgen yok", [{"op": "removeTriangle", "x": 50.0, "y": 50.0}])
+    edited("Üçgen sil: aynı yer iki kez", [{"op": "removeTriangle", "x": 20.0, "y": 20.0},
+                                          {"op": "removeTriangle", "x": 20.0, "y": 20.0}])
+    edited("Dört düzenleme birlikte",
+           [{"op": "addPoint", "x": 20.0, "y": 25.0, "z": 102.9}, {"op": "setHeight", "x": 21.0, "y": 24.0, "z": 103.5},
+            {"op": "addEdge", "ax": 21.0, "ay": 24.0, "bx": 35.0, "by": 15.0},
+            {"op": "removeTriangle", "x": 6.0, "y": 10.0}])
     lost = {k: v for k, v in base.items() if k != "built"}
     lost["points"] = {"layers": ["zemin", "yok"]}
     lost2 = {**lost, "built": base["built"]}
@@ -683,6 +820,10 @@ def edit_cases():
             failed("invalid_terrain", "Özet (built) yazılmaz; yüzeyi kabul etmek için accept kullanın.", "surface.built"))
     refused("set'te geçersiz en uzun kenar", {"operation": "set", "surface": {**renamed, "maxEdge": -1.0}},
             failed("invalid_terrain", "Yüzey kurallarına uymuyor: en uzun dış kenar 0'dan büyük olmalı.", "surface.maxEdge"))
+    zero = {k: v for k, v in renamed.items()}
+    zero["edits"] = [{"op": "addEdge", "ax": 1.0, "ay": 2.0, "bx": 1.0, "by": 2.0}]
+    refused("set'te iki ucu aynı yerde kenar", {"operation": "set", "surface": zero},
+            failed("invalid_terrain", "Yüzey kurallarına uymuyor: kenarın iki ucu aynı yerde.", "surface.edits[0]"))
     refused("set'te olmayan yüzey", {"operation": "set", "surface": {**renamed, "id": "t-9", "name": "Yeni"}},
             failed("unknown_terrain", "“t-9” kimlikli yüzey projede yok. Var olan bir yüzeyin kimliğini verin.", "surface.id"))
     refused("accept'te olmayan yüzey", {"operation": "accept", "id": "t-9"},
@@ -744,6 +885,16 @@ def query_cases():
     q("Kot ve kesit birlikte", {"surface": "t-3", "at": [[20.0, 15.0]], "along": [[0.0, 15.0], [40.0, 15.0]]},
       {"surfaces": [report(open_)], "heights": [height(s_open, [20.0, 15.0])],
        "section": section(s_open, [[0.0, 15.0], [40.0, 15.0]])})
+    edited = accepted({**{k: v for k, v in full.items() if k != "built"}, "id": "t-7", "name": "Düzenlenmiş",
+                       "edits": [{"op": "addPoint", "x": 25.0, "y": 25.0, "z": 104.5},
+                                 {"op": "removeTriangle", "x": 6.0, "y": 10.0}]})
+    s_edit = build(gather(edited)[0])
+    eplaces = [[25.0, 25.0], [6.0, 10.0], [24.0, 24.0]]
+    cases.append({"name": "Düzenlenmiş yüzeyde kot: eklenen nokta, silinen üçgen",
+                  "setup": setup(start + [edited]),
+                  "steps": [step("execute", {"surface": "t-7", "at": eplaces},
+                                 completed({"surfaces": [report(edited)], "heights": [height(s_edit, p) for p in eplaces]}),
+                                 {**UNCHANGED, "road": road_of(start + [edited])}, W)]})
     q("Kurulamayan yüzeyde kot yok", {"surface": "t-5", "at": [[10.0, 10.0]]}, {"surfaces": [report(weak)]})
     q("Kesit: sınırın ve boşluğun kenarı boyunca", {"surface": "t-2", "along": [[2.0, 2.0], [38.0, 2.0], [38.0, 28.0]]},
       {"surfaces": [report(full)], "section": section(s_full, [[2.0, 2.0], [38.0, 2.0], [38.0, 28.0]])})

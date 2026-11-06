@@ -801,6 +801,14 @@ panelleri Harita'da açılır (Tesviye, Drenaj Yol'da kalır); `.kcad` şema 195
 yazar; eğri aralığı m. 78(1)(c)'ye göre ölçekten başlar. Açık: düzenleme adımları ve geçmişten yeniden üretim, aynı
 XY/farklı Z raporu, bölgesel yeniden kurma ve revizyon bağı, m. 78(1)(e–g) kartografik kurallar, gerçek veri ölçümü.
 
+**7 Kasım 2026 — Yüzey düzenlemeleri ([ADR 1560](../docs/adr/1560-terrain-surface-edits.md)).** Kapsam: **Harita +
+Yol**. Araştırma: Civil 3D yüzey tanımının Edits listesi (Add Point, Modify Point, Add Line, Swap Edge…), BricsCAD TIN
+tanımları; BÖHHBÜY m. 63(1) morfoloji, m. 45(1)(c) karakteristik noktalar. Kanıtlanan: tarifin sıralı `edits`'i (nokta
+ekle, kot değiştir, kenar ekle/çevir, üçgen sil) her kuruluşta kaynaklardan sonra uygulanır; yapılamayan silinmez,
+nedeniyle söylenir; `.kcad` şema 196; 17+1 bağımsız (Triangle) durum; masaüstünde çizimden seçimli dört araç, silinen
+üçgen çizimde görünür. Açık: sınır/kırık hattın pencereden düzenlenmesi, yüzey birleştir, bölgesel yeniden kurma ve
+revizyon bağı, düzenlemeyi kapatma.
+
 **Kabul:** bordür kırık hattı, gölet deliği, şev, aynı XY/farklı Z ve
 kaynak nokta revizyonu içeren yüzey kur. Kırık hat korunumu, sınır dışı
 üçgenler, kot sorgusu ve kontur bağımsız başvuruyla doğrulansın. Save–reopen
