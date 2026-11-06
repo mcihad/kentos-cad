@@ -179,6 +179,8 @@ pub struct BatchSink {
     refused: bool,
     /// The detail level the strokes that follow go to (docs/adr/1063 §3); above 0 nothing else is kept.
     lod: Option<usize>,
+    /// A long stroke drawn by itself (no curve level asked) comes with its far levels too (docs/adr/1064 §2).
+    line_lod: bool,
 }
 
 /// How many styles of a kind are remembered.
@@ -272,6 +274,7 @@ impl BatchSink {
             recording: false,
             refused: false,
             lod: None,
+            line_lod: false,
         }
     }
 
@@ -293,6 +296,11 @@ impl BatchSink {
     /// also comes coarser, `Some(k)` its level `k` (nothing but strokes kept), none what has no levels.
     pub fn set_lod(&mut self, lod: Option<usize>) {
         self.lod = lod;
+    }
+
+    /// Whether a long stroke comes with its far levels (docs/adr/1064 §2): the screen's drawing area only, never paper.
+    pub fn set_line_lod(&mut self, on: bool) {
+        self.line_lod = on;
     }
 
     /// The recorded definition's batches, in the order they were met; none when refused.
@@ -723,6 +731,20 @@ impl BatchSink {
     }
 }
 
+/// A path's segments through its `kept` vertices (indices into `pts`, in order) as a stroke batch takes them: each
+/// from the tile's base `t`, its start's length along the path (`along`), its end caps when the path is `open`.
+fn push_segments(out: &mut Vec<f64>, pts: &[Vec2], along: &[f64], kept: &[usize], open: bool, [tx, ty]: [f64; 2]) {
+    let count = kept.len().saturating_sub(1);
+    for (j, w) in kept.windows(2).enumerate() {
+        let (a, b) = (pts[w[0]], pts[w[1]]);
+        if js_hypot(b.x - a.x, b.y - a.y) < 1e-12 {
+            continue;
+        }
+        let ends = if open && j == 0 { 1.0 } else { 0.0 } + if open && j + 1 == count { 2.0 } else { 0.0 };
+        out.extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, along[w[0]], ends]);
+    }
+}
+
 impl Sink for BatchSink {
     fn stroke(&mut self, style: &StrokeStyle, path: &[Vec2], closed: bool) {
         if self.hide_strokes {
@@ -772,6 +794,39 @@ impl Sink for BatchSink {
         let n = path.len();
         let count = if closed { n } else { n.saturating_sub(1) };
         let mut d = 0.0;
+        // A long path by itself: as it is at level 0, simplified at the far ones (docs/adr/1064 §2).
+        if self.line_lod && lod.is_none() && n >= super::line_lod::LEAST_POINTS {
+            let mut pts = path.to_vec();
+            if closed {
+                pts.push(path[0]);
+            }
+            let tolerances = CURVE_LEVELS.map(|ceiling| CURVE_TOLERANCE_PX / ceiling);
+            if let Some(levels) = super::line_lod::levels(&pts, &tolerances) {
+                let Entry { lods, bounds, .. } = e;
+                if lods.len() <= CURVE_LEVELS.len() {
+                    lods.resize_with(CURVE_LEVELS.len() + 1, Vec::new);
+                }
+                // Each vertex's length along the path as level 0 measures it: a level's dash starts where it did.
+                let mut along = Vec::with_capacity(pts.len());
+                for (i, a) in pts.iter().enumerate() {
+                    along.push(d);
+                    if let Some(b) = pts.get(i + 1) {
+                        let len = js_hypot(b.x - a.x, b.y - a.y);
+                        if len >= 1e-12 {
+                            d += len;
+                        }
+                    }
+                }
+                let all: Vec<usize> = (0..pts.len()).collect();
+                for (l, kept) in std::iter::once(&all).chain(levels.iter()).enumerate() {
+                    push_segments(&mut lods[l], &pts, &along, kept, !closed, [tx, ty]);
+                }
+                for p in &pts {
+                    grow_box(bounds, p.x - ox, p.y - oy);
+                }
+                return;
+            }
+        }
         // A curve's level goes to its own list (docs/adr/1063 §3); the box grows the same.
         let Entry {
             data, lods, bounds, ..

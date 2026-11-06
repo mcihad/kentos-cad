@@ -88,6 +88,8 @@ fn bands(
         band_memo: memo,
         band_key: 7,
         bands_out: Some(()),
+        moving: false,
+        held: None,
     };
     let mut ink = Collect {
         doc,
@@ -185,4 +187,35 @@ fn the_text_kept_after_random_changes_is_a_fresh_reads() {
     assert!(changes > 10, "{changes}");
     assert!(taken > 100, "{taken}");
     assert!(kept_bands > 50, "{kept_bands}");
+}
+
+/// While the view moves (docs/adr/1064 §6) a grown text is drawn as high as its placing drew it: the same scale, to
+/// the bit, whatever the view's; its anchor where the view has it; Kaybolmasın never below the true size.
+#[test]
+fn a_moving_view_draws_a_grown_text_as_high_as_its_placing() {
+    use kentos_interaction::spatial::Grow;
+    use kentos_render_wgpu::Camera;
+    let anchor = kentos_render_wgpu::Vec2::new(486_010.0, 4_420_005.0);
+    let g = Grow { k: 3.7, anchor: Vec2::new(anchor.x, anchor.y) };
+    let placed = 0.2626;
+    for scale in [0.3051, 0.4784, 0.7503] {
+        let view = Camera {
+            center: kentos_render_wgpu::Vec2::new(486_000.0, 4_420_000.0),
+            scale,
+            width: 1440.0,
+            height: 900.0,
+            ..Camera::default()
+        };
+        let held = super::held_grown(view, g, (placed, true));
+        assert_eq!(held.scale.to_bits(), (placed * g.k).to_bits());
+        let (a, b) = (view.world_to_screen(anchor), held.world_to_screen(anchor));
+        assert!((a[0] - b[0]).abs() < 1e-6 && (a[1] - b[1]).abs() < 1e-6, "{a:?} {b:?}");
+    }
+    // Zoomed in past where the text reads at its true size: Kaybolmasın draws it so, Ekranda sabit as placed.
+    let view = Camera { scale: 2.0, width: 1440.0, height: 900.0, ..Camera::default() };
+    assert_eq!(super::held_grown(view, g, (placed, true)).scale, 2.0);
+    assert_eq!(super::held_grown(view, g, (placed, false)).scale, placed * g.k);
+    // A text its placing drew at its true size stays as the view has it.
+    let plain = Grow { k: 1.0, anchor: g.anchor };
+    assert_eq!(super::held_grown(view, plain, (placed, true)).scale, 2.0);
 }

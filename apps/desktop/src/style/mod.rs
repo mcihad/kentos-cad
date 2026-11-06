@@ -65,6 +65,9 @@ pub struct Styles {
     /// `perf::stability`).
     pub(crate) instancing: bool,
     pub(crate) curve_lod: bool,
+    /// Long strokes with simplified far levels (docs/adr/1064 §2); like the curves' levels, it changes only what is
+    /// smaller than the tolerance far away.
+    pub(crate) line_lod: bool,
 }
 
 impl std::fmt::Debug for Styles {
@@ -97,6 +100,7 @@ impl Styles {
             project: None,
             instancing: true,
             curve_lod: true,
+            line_lod: true,
         }
     }
 
@@ -160,6 +164,7 @@ impl Styles {
                 walls: None,
                 instancing: self.instancing,
                 curve_lod: self.curve_lod,
+                line_lod: self.line_lod,
                 // CAD line types along the source curve, as the sheet and the PDF (docs/adr/1122).
                 cad_phase: true,
             },

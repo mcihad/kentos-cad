@@ -40,6 +40,8 @@ mod architecture;
 // Binding a large database table (docs/adr/0757).
 mod bind;
 mod clouds;
+// Where a pointer frame's GPU time goes on the mixed drawing (docs/adr/1064 §5).
+mod cursor;
 mod file;
 mod frame;
 // A large mixed 2D drawing: open, frames, keys, commands, cancel, memory (docs/adr/1062).
