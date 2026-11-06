@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""The CAD-ADV-20 acceptance detail (docs/adr/1004), written without KentOS code: a plate of four lines held by
-constraints with the parameters `genislik` (8 m) and `yukseklik` (4 m), an associative dimension on its bottom edge,
-the width changed by its parameter (to 10, then to 1200 cm), undone, a write against a stale revision, a change set
-whose second step meets a locked layer, a request sent twice and a save–open. Python (test_acceptance_detail.py)
+"""The CAD-ADV-20 acceptance detail (docs/adr/1004, docs/adr/1011), written without KentOS code: a plate of four lines
+held by constraints with the parameters `genislik` (8 m) and `yukseklik` (4 m), an associative dimension on its bottom
+edge and an associative hatch inside it (its area the plate's, w × h), the width changed by its parameter (to 10, then
+to 1200 cm), undone, a write against a stale revision, a change set whose second step meets a locked layer, a script
+that fails half way (Python: a group whose body raises; MCP, which runs no script: the same steps as one change set
+whose last step names an object the drawing lacks), a job cancelled before it is looked at, a request sent twice, a
+save–open and a 1:50 detail sheet of the plate. Python (test_acceptance_detail.py)
 and the MCP server (tests/acceptance_detail.rs) replay the same file; every expected value here is worked out from the
 rectangle's sides (the dimension measures the bottom edge, its length the width).
 
@@ -33,7 +36,7 @@ SETUP = {
     "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                  "plotScale": 20, "workspace": "cad", "drawingUnit": "m"},
     "origin": {"x": 0, "y": 0},
-    "layers": [layer("cizim", "Çizim"), layer("kilitli", "Kilitli", locked=True)],
+    "layers": [layer("cizim", "Çizim"), layer("tarama", "Tarama"), layer("kilitli", "Kilitli", locked=True)],
     "activeLayer": "cizim",
     # Drawn roughly: the constraints make it a rectangle.
     "entities": [line(1, (0, 0), (6, 0.3)), line(2, (6, 0.3), (6.2, 4)), line(3, (6.2, 4), (0, 4.1)),
@@ -73,14 +76,21 @@ def plate(w, h):
             "l3": {"a": [w, h], "b": [0.0, h]}, "l4": {"a": [0.0, h], "b": [0.0, 0.0]}}
 
 
-def at(w, h, dim=True):
+def at(w, h, dim=True, hatch=True):
     out = {"points": plate(w, h)}
     if dim:
         out["points"]["dim"] = {"a": [0.0, 0.0], "b": [w, 0.0]}
         out["lengths"] = {"dim": w, "l1": w, "l2": h}
     else:
         out["lengths"] = {"l1": w, "l2": h}
+    if hatch:
+        # The hatch fills the plate: its area is the rectangle's.
+        out["areas"] = {"hatch": w * h}
     return out
+
+
+# An id no object of the drawing has: the failing step of the script that stops half way.
+GONE = "0192f5a2-0000-7000-8000-00000000ffff"
 
 
 def width(expression):
@@ -89,12 +99,16 @@ def width(expression):
 
 STEPS = [
     {"name": "Kısıtlar: dikdörtgen, sol alt köşe sabit, genişlik 8 m, yükseklik 4 m", "command": "cad.constraints.edit",
-     "input": {"edit": {"kind": "add", "constraints": RULES}}, "expect": at(8.0, 4.0, dim=False)},
+     "input": {"edit": {"kind": "add", "constraints": RULES}}, "expect": at(8.0, 4.0, dim=False, hatch=False)},
     {"name": "İlişkili ölçü alt kenarın iki ucuna bağlanır", "command": "cad.entities.create",
      "input": {"layerId": "cizim", "objects": [{"geometry": {"kind": "dimension", "a": {"x": 0, "y": 0}, "b": {"x": 0, "y": 0},
                 "offset": -0.6, "height": 0.25,
                 "refs": {"a": {"uid": "$l1", "place": {"kind": "start"}}, "b": {"uid": "$l1", "place": {"kind": "end"}}}}}]},
-     "as": ["dim"], "expect": at(8.0, 4.0)},
+     "as": ["dim"], "expect": at(8.0, 4.0, hatch=False)},
+    {"name": "İlişkili tarama plakanın içine: alanı 8 × 4", "command": "cad.entities.hatch",
+     "input": {"region": {"kind": "point", "at": {"x": 4, "y": 2}, "way": "lines"}, "pattern": {"name": "Dolu"},
+               "layerId": "tarama"},
+     "as": ["hatch"], "expect": at(8.0, 4.0)},
     {"name": "Genişlik parametresi 10: plaka ve ölçü izler", "command": "cad.parameters.edit", "input": width("10"),
      "expect": at(10.0, 4.0)},
     {"name": "Birimli değer 1200cm: 12 m", "command": "cad.parameters.edit", "input": width("1200cm"), "expect": at(12.0, 4.0)},
@@ -106,11 +120,22 @@ STEPS = [
          {"command": "cad.parameters.edit", "input": width("11")},
          {"command": "cad.entities.transform", "input": {"uids": ["$locked"], "transform": {"kind": "move", "dx": 1.0, "dy": 0.0}}}]},
      "refuse": "layer_locked", "expect": at(10.0, 4.0)},
+    {"name": "Betik yarıda çöker: ilk adım da yazılmaz", "crash": {"label": "Yarım betik", "steps": [
+         {"command": "cad.parameters.edit", "input": width("14")},
+         {"command": "cad.entities.transform", "input": {"uids": [GONE], "transform": {"kind": "move", "dx": 1.0, "dy": 0.0}}}]},
+     "expect": at(10.0, 4.0)},
+    {"name": "İş olarak başlatılan genişlik 30, bakılmadan durdurulur: hiçbir şey yazılmaz",
+     "job": {"command": "cad.parameters.edit", "input": width("30")}, "cancel": True, "expect": at(10.0, 4.0)},
     {"name": "Aynı istek iki kez: yükseklik bir kez 5 olur", "command": "cad.parameters.edit",
      "input": {"edits": [{"kind": "set", "name": "yukseklik", "expression": "5"}]}, "requestId": "detay-yukseklik-5",
      "twice": True, "expect": at(10.0, 5.0)},
     {"name": "Kaydet ve aç: kaynak, bağ ve parametreler aynı", "reopen": True, "expect": at(10.0, 5.0)},
-    {"name": "Açılan çizimde genişlik 9: ölçü bağı korunmuş", "command": "cad.parameters.edit", "input": width("9"),
+    {"name": "Açılan çizimde genişlik 9: ölçü ve tarama bağı korunmuş", "command": "cad.parameters.edit", "input": width("9"),
+     "expect": at(9.0, 5.0)},
+    # 10 × 6 m of ground at 1:50 is 200 × 120 mm of paper: inside the A3 template's 370 × 208 mm drawing area.
+    {"name": "1:50 detay paftası: plakanın görünümü kilitli, ölçeği 1/50", "command": "cad.sheets.details",
+     "input": {"details": [{"name": "Plaka", "bounds": [-0.5, -0.5, 9.5, 5.5], "ratio": {"paper": 1.0, "model": 50.0}}]},
+     "output": {"sheets.0.maps.0.scale": 50.0, "details.0.denominator": 50.0, "details.0.name": "Plaka"},
      "expect": at(9.0, 5.0)},
 ]
 

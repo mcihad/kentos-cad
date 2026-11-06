@@ -1,7 +1,8 @@
 //! CAD-ADV-20 acceptance (docs/adr/1004) through the MCP server: the parametric plate of
 //! fixtures/acceptance/v1/detail.json (written by scripts/fixtures/acceptance_detail.py without KentOS code) replayed
 //! as a model would, tool call after tool call. Python replays the same file (python/tests/test_acceptance_detail.py):
-//! the same points, lengths, refusals, undo, request replay and save–open.
+//! the same points, lengths, areas, refusals, undo, request replay, save–open, a failed half-way script, a cancelled
+//! job and a detail sheet (docs/adr/1011).
 
 use std::collections::BTreeMap;
 
@@ -38,6 +39,14 @@ fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
         Value::Object(map) => Value::Object(map.iter().map(|(k, v)| (k.clone(), bind(v, names))).collect()),
         other => other.clone(),
     }
+}
+
+/// The value at a dotted path (`sheets.0.maps.0.scale`).
+fn at_path<'a>(value: &'a Value, path: &str) -> &'a Value {
+    path.split('.').fold(value, |v, key| match key.parse::<usize>() {
+        Ok(i) => &v[i],
+        Err(_) => &v[key],
+    })
 }
 
 /// The command's own result: at the top, or under `result` when the call went by the protocol.
@@ -83,6 +92,9 @@ fn the_plate_follows_its_parameters_and_refusals_write_nothing_as_the_scenario_s
             let answer = tool(&mut server, command, arguments.clone());
             let content = answer["structuredContent"].clone();
             let result = result_of(&content);
+            for (path, want) in step["output"].as_object().into_iter().flatten() {
+                assert_eq!(at_path(&result["output"], path), want, "{name}: output.{path}: {}", content);
+            }
             if let Some(code) = step["refuse"].as_str() {
                 assert!(matches!(result["status"].as_str(), Some("failed" | "conflict")), "{name}: {answer}");
                 assert_eq!(result["error"]["code"], code, "{name}: {answer}");
@@ -101,6 +113,32 @@ fn the_plate_follows_its_parameters_and_refusals_write_nothing_as_the_scenario_s
                 assert_eq!(again["replayed"], true, "{name}: answered from before: {again}");
                 assert_eq!(revision(&mut server, &drawing), after, "{name}: applied once");
             }
+        } else if let Some(crash) = step.get("crash") {
+            // A model runs no script: the steps a script would take are one change set, its last step the one that
+            // fails. Nothing of it is written.
+            let steps = bind(&crash["steps"], &names);
+            let answer = tool(
+                &mut server,
+                "cad.changeset.apply",
+                json!({ "drawing": drawing, "label": crash["label"], "steps": steps }),
+            );
+            let content = answer["structuredContent"].clone();
+            let result = result_of(&content);
+            assert!(matches!(result["status"].as_str(), Some("failed" | "conflict")), "{name}: {answer}");
+            assert_eq!(revision(&mut server, &drawing), before, "{name}: nothing of it is written");
+        } else if let Some(job) = step.get("job") {
+            let started = call(
+                &mut server,
+                "drawing.job.start",
+                json!({ "drawing": drawing, "command": job["command"], "input": bind(&job["input"], &names) }),
+            );
+            let id = started["id"].clone();
+            if step["cancel"] == true {
+                call(&mut server, "drawing.job.cancel", json!({ "drawing": drawing, "id": id }));
+            }
+            let over = call(&mut server, "drawing.job.wait", json!({ "drawing": drawing, "id": id }));
+            assert_eq!(over["phase"], "cancelled", "{name}: {over}");
+            assert_eq!(revision(&mut server, &drawing), before, "{name}: nothing is written");
         } else if let Some(label) = step["undo"].as_str() {
             let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
             assert_eq!(undone["step"], label, "{name}");
@@ -120,6 +158,11 @@ fn the_plate_follows_its_parameters_and_refusals_write_nothing_as_the_scenario_s
                     assert!((g - w).abs() <= tol, "{name}: {key}.{end}.{axis} {g} ≠ {w}");
                 }
             }
+        }
+        for (key, want) in expect["areas"].as_object().into_iter().flatten() {
+            let got = call(&mut server, "drawing.measure", json!({ "drawing": drawing, "uid": names[key] }));
+            let g = got["area"].as_f64().expect("an area");
+            assert!((g - want.as_f64().unwrap()).abs() <= 1e-6, "{name}: {key} area {g} ≠ {want}");
         }
         for (key, want) in expect["lengths"].as_object().into_iter().flatten() {
             let got = call(&mut server, "drawing.measure", json!({ "drawing": drawing, "uid": names[key] }));

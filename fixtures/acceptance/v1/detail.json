@@ -38,6 +38,20 @@
     "children": []
    },
    {
+    "id": "tarama",
+    "name": "Tarama",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
     "id": "kilitli",
     "name": "Kilitli",
     "type": "layer",
@@ -538,6 +552,89 @@
    }
   },
   {
+   "name": "İlişkili tarama plakanın içine: alanı 8 × 4",
+   "command": "cad.entities.hatch",
+   "input": {
+    "region": {
+     "kind": "point",
+     "at": {
+      "x": 4,
+      "y": 2
+     },
+     "way": "lines"
+    },
+    "pattern": {
+     "name": "Dolu"
+    },
+    "layerId": "tarama"
+   },
+   "as": [
+    "hatch"
+   ],
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       8.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       8.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       8.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 8.0,
+     "l1": 8.0,
+     "l2": 4.0
+    },
+    "areas": {
+     "hatch": 32.0
+    }
+   }
+  },
+  {
    "name": "Genişlik parametresi 10: plaka ve ölçü izler",
    "command": "cad.parameters.edit",
    "input": {
@@ -606,6 +703,9 @@
      "dim": 10.0,
      "l1": 10.0,
      "l2": 4.0
+    },
+    "areas": {
+     "hatch": 40.0
     }
    }
   },
@@ -678,6 +778,9 @@
      "dim": 12.0,
      "l1": 12.0,
      "l2": 4.0
+    },
+    "areas": {
+     "hatch": 48.0
     }
    }
   },
@@ -741,6 +844,9 @@
      "dim": 10.0,
      "l1": 10.0,
      "l2": 4.0
+    },
+    "areas": {
+     "hatch": 40.0
     }
    }
   },
@@ -817,6 +923,9 @@
      "dim": 10.0,
      "l1": 10.0,
      "l2": 4.0
+    },
+    "areas": {
+     "hatch": 40.0
     }
    }
   },
@@ -911,6 +1020,182 @@
      "dim": 10.0,
      "l1": 10.0,
      "l2": 4.0
+    },
+    "areas": {
+     "hatch": 40.0
+    }
+   }
+  },
+  {
+   "name": "Betik yarıda çöker: ilk adım da yazılmaz",
+   "crash": {
+    "label": "Yarım betik",
+    "steps": [
+     {
+      "command": "cad.parameters.edit",
+      "input": {
+       "edits": [
+        {
+         "kind": "set",
+         "name": "genislik",
+         "expression": "14"
+        }
+       ]
+      }
+     },
+     {
+      "command": "cad.entities.transform",
+      "input": {
+       "uids": [
+        "0192f5a2-0000-7000-8000-00000000ffff"
+       ],
+       "transform": {
+        "kind": "move",
+        "dx": 1.0,
+        "dy": 0.0
+       }
+      }
+     }
+    ]
+   },
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 4.0
+    },
+    "areas": {
+     "hatch": 40.0
+    }
+   }
+  },
+  {
+   "name": "İş olarak başlatılan genişlik 30, bakılmadan durdurulur: hiçbir şey yazılmaz",
+   "job": {
+    "command": "cad.parameters.edit",
+    "input": {
+     "edits": [
+      {
+       "kind": "set",
+       "name": "genislik",
+       "expression": "30"
+      }
+     ]
+    }
+   },
+   "cancel": true,
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       10.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       4.0
+      ]
+     },
+     "l3": {
+      "a": [
+       10.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       4.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       4.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       10.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 10.0,
+     "l1": 10.0,
+     "l2": 4.0
+    },
+    "areas": {
+     "hatch": 40.0
     }
    }
   },
@@ -985,6 +1270,9 @@
      "dim": 10.0,
      "l1": 10.0,
      "l2": 5.0
+    },
+    "areas": {
+     "hatch": 50.0
     }
    }
   },
@@ -1048,11 +1336,14 @@
      "dim": 10.0,
      "l1": 10.0,
      "l2": 5.0
+    },
+    "areas": {
+     "hatch": 50.0
     }
    }
   },
   {
-   "name": "Açılan çizimde genişlik 9: ölçü bağı korunmuş",
+   "name": "Açılan çizimde genişlik 9: ölçü ve tarama bağı korunmuş",
    "command": "cad.parameters.edit",
    "input": {
     "edits": [
@@ -1120,6 +1411,97 @@
      "dim": 9.0,
      "l1": 9.0,
      "l2": 5.0
+    },
+    "areas": {
+     "hatch": 45.0
+    }
+   }
+  },
+  {
+   "name": "1:50 detay paftası: plakanın görünümü kilitli, ölçeği 1/50",
+   "command": "cad.sheets.details",
+   "input": {
+    "details": [
+     {
+      "name": "Plaka",
+      "bounds": [
+       -0.5,
+       -0.5,
+       9.5,
+       5.5
+      ],
+      "ratio": {
+       "paper": 1.0,
+       "model": 50.0
+      }
+     }
+    ]
+   },
+   "output": {
+    "sheets.0.maps.0.scale": 50.0,
+    "details.0.denominator": 50.0,
+    "details.0.name": "Plaka"
+   },
+   "expect": {
+    "points": {
+     "l1": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       9.0,
+       0.0
+      ]
+     },
+     "l2": {
+      "a": [
+       9.0,
+       0.0
+      ],
+      "b": [
+       9.0,
+       5.0
+      ]
+     },
+     "l3": {
+      "a": [
+       9.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       5.0
+      ]
+     },
+     "l4": {
+      "a": [
+       0.0,
+       5.0
+      ],
+      "b": [
+       0.0,
+       0.0
+      ]
+     },
+     "dim": {
+      "a": [
+       0.0,
+       0.0
+      ],
+      "b": [
+       9.0,
+       0.0
+      ]
+     }
+    },
+    "lengths": {
+     "dim": 9.0,
+     "l1": 9.0,
+     "l2": 5.0
+    },
+    "areas": {
+     "hatch": 45.0
     }
    }
   }

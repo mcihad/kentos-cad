@@ -1,6 +1,7 @@
 """CAD-ADV-20 acceptance (docs/adr/1004): the parametric plate of fixtures/acceptance/v1/detail.json (written by
 scripts/fixtures/acceptance_detail.py without KentOS code) replayed through the Python library, step by step, every
-expected point and length held to it. The MCP server replays the same file (crates/native/mcp/tests/acceptance_detail.rs):
+expected point, length and area held to it, with the half-way script, the cancelled job and the detail sheet of
+docs/adr/1011. The MCP server replays the same file (crates/native/mcp/tests/acceptance_detail.rs):
 both hosts answer the same values, refusals and undo from the one command catalog."""
 
 from __future__ import annotations
@@ -25,6 +26,16 @@ def bind(value: Any, names: dict[str, str]) -> Any:
     if isinstance(value, dict):
         return {k: bind(v, names) for k, v in value.items()}
     return value
+
+
+def at_path(value: Any, path: str) -> Any:
+    for key in path.split("."):
+        value = value[int(key)] if key.isdigit() else value[key]
+    return value
+
+
+class ScriptCrash(RuntimeError):
+    """The script's own failure half way (docs/adr/1011)."""
 
 
 def status_of(answer: dict[str, Any]) -> tuple[str, Any]:
@@ -53,11 +64,28 @@ class AcceptanceDetail(unittest.TestCase):
                     self.assertEqual(status, "completed", f"{name}: {answer}")
                     if isinstance(step.get("as"), list):
                         names.update(zip(step["as"], result["output"]["created"]))
+                    for path, want in step.get("output", {}).items():
+                        self.assertEqual(at_path(result["output"], path), want, f"{name}: output.{path}")
                 if step.get("twice"):
                     after = doc.info()
                     again = doc.run(step["command"], bind(step["input"], names), request_id=step["requestId"])
                     self.assertTrue(again.get("replayed"), f"{name}: answered from before")
                     self.assertEqual(doc.info(), after, f"{name}: applied once")
+            elif "crash" in step:
+                # The script runs the steps in a group and fails after the last; the group takes all of it back.
+                crash = step["crash"]
+                with self.assertRaises(ScriptCrash, msg=name):
+                    with doc.group(crash["label"]):
+                        for inner in crash["steps"]:
+                            doc.run(inner["command"], bind(inner["input"], names))
+                        raise ScriptCrash("betik yarıda çöktü")
+                self.assertEqual(doc.info(), before, f"{name}: nothing of it is written")
+            elif "job" in step:
+                job = doc.start(step["job"]["command"], bind(step["job"]["input"], names))
+                if step.get("cancel"):
+                    job.cancel()
+                self.assertEqual(job.wait().phase, "cancelled", name)
+                self.assertEqual(doc.info(), before, f"{name}: nothing is written")
             elif "undo" in step:
                 self.assertEqual(doc.undo(), step["undo"], name)
             elif step.get("reopen"):
@@ -68,6 +96,8 @@ class AcceptanceDetail(unittest.TestCase):
                     got = (e[end]["x"], e[end]["y"])
                     for g, w in zip(got, want[end]):
                         self.assertAlmostEqual(g, w, delta=tol, msg=f"{name}: {key}.{end}")
+            for key, want in step["expect"].get("areas", {}).items():
+                self.assertAlmostEqual(doc.measure(names[key]).area, want, delta=1e-6, msg=f"{name}: {key} area")
             for key, want in step["expect"].get("lengths", {}).items():
                 self.assertAlmostEqual(doc.measure(names[key]).length, want, delta=1e-6, msg=f"{name}: {key}")
 

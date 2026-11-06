@@ -2651,6 +2651,11 @@ dosyayı oynatır ve ilk koşuda aynı sonuçları verir: kısıtlarla dikdörtg
 kaydet–aç. Masaüstünde aynı adımlar Parametreler penceresiyle görüntülendi. Pafta/iptal bu senaryoda değil (oda
 senaryosu ve protokol testlerinde); eklenti ve AI sağlayıcı kabulü açık; madde `[~]`.
 
+**Tarama, pafta, çöken betik ve iptal (6 Kasım 2026, [ADR 1011](../docs/adr/1011-host-acceptance-hatch-sheet-crash-and-cancel.md)):**
+Aynı senaryo Python ve MCP'de ilişkili taramayı (alanı her adımda w × h), yarıda çöken betiği (Python'da grup
+istisnayla geri alınır; MCP'de aynı adımlar tek değişiklik kümesi olarak reddedilir), bakılmadan durdurulan işi ve 1:50
+detay paftasını da oynatır; ilk koşuda iki konak aynı sonucu verdi. Açık: eklenti ve AI sağlayıcı kabulü.
+
 ## Teslim sırası ve ortak kabul
 
 Ana görev sayısı 20'dir. Aşağıdaki aşamalar bu maddelerin uygulanma
