@@ -334,6 +334,12 @@ katmanında alan üretmeye çalışan UI/API aynı tür kuralını uygulamalı.
 Kaynak kısıtı değiştir, kilitli komşu ve çelişkili ilişkiyi dene. Çift onay,
 imleç sıçraması, ölçekten doğan konum değişimi ve kısmi Undo olmamalı.
 
+**Yaylı kenarda paralel kaydırma (6 Kasım 2026, [ADR 1024](../docs/adr/1024-parallel-shift-on-arcs.md)):**
+Paralel kaydır artık yaylı kenarı (aynı merkezli yay) ve yay komşusunu (kendi çemberinde) kaydırır; hiçbir yay kirişe
+dönmez, hedef alan yaylı durumda ikiye bölmeyle bulunur, düz durum aynen kalır. Harita koordinatında yaylı bordür dahil
+12 yeni durum bağımsız mpmath başvurusuyla (50 basamak) sınandı; etkileşim izi ve resim bakıldı. Kalıcı ilişki, ortak
+sınır, kot/eğim hedefi ve çok parçalı nesne açık; madde `[ ]` kalır.
+
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 
 **Öncelik:** P0. **Kod dayanağı:** [K17], [K18], [K19].
