@@ -88,6 +88,11 @@
 - `kentos-kcad`: 236/236 (geçerli örnek sayısı 200 → 201; yeni bilinçli örnek). `kcad_v2_reference.py --check`:
   1596 dosya tutarlı. `kentos-formats`: STYLE grup 4 okuma ve yazma–geri okuma testleri. `kentos-contracts`:
   kaynak testleri ve `fixtures/text/v1/styles.json`'un 22 yeni bağımsız `bigFontFile` durumu (110 durum).
+- Python (yeniden derlenen SDK, `python/tests/test_line_type_shx_fonts.py`, 3 test): `cad.styles.edit` ile
+  `bigFontFile`'lı stil, fontlar eklenmeden kayıp (dosya adıyla), `cad.library.edit` ile eklenince kayıpsız ön
+  denetim (plan = execute), kullanılan Big Font'un silinmesinin reddi, KCAD'den yeniden açma; eksik karakter ve
+  Big Font kodu kayıp; `.ttf` Big Font reddi, belge değişmez. Önceki `test_sheet_line_types` 3/3 geçti. MCP
+  sunucusuyla ayrı test çalıştırılmadı (aynı komutlar, katalog güncel).
 - Gerçek masaüstü ekranları (`.run/shots/arac-shx-yazi-{cizim,yakin,pencere,kayip}-*.png`, repoya alınmaz):
   doğru, yay ve dairede unifont ve Big Font yazısı; 1,2 m yazı 46 px (38,3 px/m'de 3 m tire 115 px); kayıplı
   tipin seçiminde karakter ve font adlı açıklama.
