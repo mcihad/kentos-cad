@@ -9,7 +9,8 @@ import type { VelocityModel } from "./VelocityModel";
  *
  * Refusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`
  * (a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side
- * is the project's and the project has none), `invalid_heights` (a side's heights against their rules),
+ * is the project's and the project has none), `unsupported_srid` (a side is the project's and its stored EPSG code
+ * is not one the registry resolves, docs/adr/1230 §1), `invalid_heights` (a side's heights against their rules),
  * `invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:
  * `no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is
  * a grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other

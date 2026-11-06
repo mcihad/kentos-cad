@@ -13,7 +13,7 @@
 use kentos_commands::{
     CommandResult, CommandWarning, DimensionStyleDef, DrawingFont, DrawingStandard, LayerNode,
     LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardConflict, StandardIssue,
-    StandardIssueKind, StandardOrigin, StandardProvenance, StandardsApplied, StandardsApply,
+    StandardIssueKind, StandardIssueState, StandardOrigin, StandardProvenance, StandardsApplied, StandardsApply,
     StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
     StandardsResolve, StandardsResolved, TextStyleDef, TranslateRule, built_in_standard,
     built_in_standards, fold_name, font_id, font_label, pattern_matches, standard_problem,
@@ -854,6 +854,8 @@ pub fn issues(doc: &Document, standard: &DrawingStandard) -> Vec<StandardIssue> 
             objects: count(objects),
             fixable,
             message,
+            state: StandardIssueState::Open,
+            reason: None,
         });
     };
     // The standard's layers.
@@ -1411,29 +1413,66 @@ pub fn execute_check(
 }
 
 fn report(doc: &Document, input: &StandardsCheck) -> CommandResult<StandardsReport> {
-    let standard = match standard_of(input.name.as_deref(), input.standard.as_ref()) {
-        Ok(s) => s,
-        Err(stop) => return stop.into(),
-    };
-    if let Err(stop) = check_resources(input.resources.as_ref()) {
-        return stop.into();
+    match checked_report(doc, input.name.as_deref(), input.standard.as_ref(), input.resources.as_ref(), input.origin.as_ref()) {
+        Ok(r) => CommandResult::Completed { output: r, warnings: Vec::new() },
+        Err(stop) => stop.into(),
     }
+}
+
+/// The check's report, its findings marked accepted or lapsed by the project's accepted findings against the
+/// standard's source (docs/adr/1129 §2); `cad.standards.exceptions` reads the same.
+pub(crate) fn checked_report(
+    doc: &Document,
+    name: Option<&str>,
+    given: Option<&DrawingStandard>,
+    resources: Option<&kentos_commands::StandardResources>,
+    origin: Option<&kentos_commands::StandardOrigin>,
+) -> Result<StandardsReport, Stop> {
+    let standard = standard_of(name, given)?;
+    check_resources(resources)?;
     let mut issues = issues(doc, &standard);
-    if let Some(resources) = &input.resources {
-        match resource_issues(doc, resources) {
-            Ok(found) => issues.extend(found),
-            Err(stop) => return stop.into(),
-        }
+    if let Some(resources) = resources {
+        issues.extend(resource_issues(doc, resources)?);
     }
-    CommandResult::Completed {
-        output: StandardsReport {
-            standard: standard.name.clone(),
-            fixable: count(issues.iter().filter(|i| i.fixable).count()),
-            issues,
-            revision: doc.revision().to_string(),
-        },
-        warnings: Vec::new(),
+    let origin = source_of(&standard, origin);
+    let (mut accepted, mut lapsed) = (0, 0);
+    for issue in &mut issues {
+        let Some(e) = doc.settings().standard_exceptions.iter().find(|e| names(e, issue, &origin)) else { continue };
+        issue.state = if e.revision == origin.revision && e.expected == issue.expected && e.found == issue.found {
+            accepted += 1;
+            StandardIssueState::Accepted
+        } else {
+            lapsed += 1;
+            StandardIssueState::Lapsed
+        };
+        issue.reason = Some(e.reason.clone());
     }
+    Ok(StandardsReport {
+        standard: standard.name.clone(),
+        fixable: count(issues.iter().filter(|i| i.fixable).count()),
+        accepted: count(accepted),
+        lapsed: count(lapsed),
+        issues,
+        revision: doc.revision().to_string(),
+    })
+}
+
+/// The source accepted findings are bound to: the one given, else the standard's name without a revision.
+pub(crate) fn source_of(
+    standard: &DrawingStandard,
+    origin: Option<&kentos_commands::StandardOrigin>,
+) -> kentos_commands::StandardOrigin {
+    origin.cloned().unwrap_or_else(|| kentos_commands::StandardOrigin { id: standard.name.clone(), revision: String::new() })
+}
+
+/// A finding's kind as the check names it (`layerColor`).
+pub(crate) fn kind_name(kind: StandardIssueKind) -> String {
+    serde_json::to_value(kind).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default()
+}
+
+/// Whether the accepted finding `e` names `issue` against `origin` (its revision and values aside).
+pub(crate) fn names(e: &kentos_commands::StandardException, issue: &StandardIssue, origin: &kentos_commands::StandardOrigin) -> bool {
+    e.kind == kind_name(issue.kind) && e.subject == issue.subject && e.layer == issue.layer && e.standard == origin.id
 }
 
 fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Result<(), Stop> {
@@ -1710,6 +1749,8 @@ fn resource_issues(
             objects: count(objects),
             fixable: false,
             message,
+            state: StandardIssueState::Open,
+            reason: None,
         });
     }
     for expected in &resources.hatch_patterns {
@@ -1758,6 +1799,8 @@ fn resource_issues(
             objects: count(objects),
             fixable: false,
             message,
+            state: StandardIssueState::Open,
+            reason: None,
         });
     }
     for expected in &resources.blocks {
@@ -1788,6 +1831,8 @@ fn resource_issues(
                     "“{}” yayımlanmış bloğu çizimde yok; kitaplıktan açıkça yükleyin.{impact}",
                     expected.name,
                 ),
+                state: StandardIssueState::Open,
+                reason: None,
             });
             continue;
         };
@@ -1809,6 +1854,8 @@ fn resource_issues(
                     "“{}” bloğunun yayın kimliği veya sürümü ofis standardından farklı; eşlemeyi inceleyin.{impact}",
                     expected.name,
                 ),
+                state: StandardIssueState::Open,
+                reason: None,
             });
         }
         if let Some(unit) = expected.units.filter(|unit| found.units != Some(*unit)) {
@@ -1824,6 +1871,8 @@ fn resource_issues(
                     "“{}” bloğunun çizim birimi ofis standardından farklı; ölçeği veya bloğu kendiliğinden değiştirmeyin.{impact}",
                     expected.name,
                 ),
+                state: StandardIssueState::Open,
+                reason: None,
             });
         }
     }
@@ -1877,6 +1926,8 @@ fn resource_issues(
             objects: count(direct),
             fixable: false,
             message,
+            state: StandardIssueState::Open,
+            reason: None,
         });
     }
     for expected in &resources.text_style_definitions {
@@ -1932,6 +1983,8 @@ fn resource_issues(
             objects: count(direct),
             fixable: false,
             message,
+            state: StandardIssueState::Open,
+            reason: None,
         });
     }
     for expected in &resources.dimension_style_definitions {
@@ -1983,6 +2036,8 @@ fn resource_issues(
             objects: count(direct),
             fixable: false,
             message,
+            state: StandardIssueState::Open,
+            reason: None,
         });
     }
     // Table styles (docs/adr/1126 §6): by name, every cell style compared; the tables that follow a differing local
@@ -2031,6 +2086,8 @@ fn resource_issues(
                 objects: count(direct),
                 fixable: false,
                 message,
+                state: StandardIssueState::Open,
+                reason: None,
             });
         }
     }
@@ -2064,6 +2121,8 @@ fn resource_issues(
                         "“{}” paftasının şablon kökeni ofis standardındaki onaylı şablon sürümüyle uyuşmuyor; pafta kendiliğinden yeniden oluşturulmaz.",
                         sheet.name
                     ),
+                    state: StandardIssueState::Open,
+                    reason: None,
                 });
             }
         }

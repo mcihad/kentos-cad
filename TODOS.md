@@ -127,6 +127,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - CAD-ADV-12 / ADR 1128: DXF TABLESTYLE okuma/yazma ortak `kentos-formats`'ta; web'in DXF içe aktarımı
   `ImportResult.tableStyles`'ı projeye almaz (`apps/web/src/io/apply.ts`), dışa aktarımı `DxfWriteInput.tableStyles`'ı
   doldurmaz; içe aktarma raporunun yeni `style` konusu web'in kelime listesinde yok (WASM yeniden derlemesi).
+- CAD-ADV-12 / ADR 1129: `.kcad` şema 190 (`settings.standardExceptions`) web codec'inde yok; `cad.standards.exceptions`,
+  denetimin `origin`'i, bulgunun `state`/`reason`'ı ve raporun `accepted`/`lapsed` sayıları web'in standart penceresinde
+  yok (TS türleri üretildi).
 - CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
   `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
   stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya

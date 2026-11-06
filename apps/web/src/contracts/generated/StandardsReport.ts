@@ -17,4 +17,8 @@ issues: Array<StandardIssue>,
 /**
  * How many of them `cad.standards.apply` fixes.
  */
-fixable: number, revision: string, };
+fixable: number, 
+/**
+ * How many are accepted, and how many lapsed (docs/adr/1129 §2): still listed, counted apart.
+ */
+accepted?: number, lapsed?: number, revision: string, };

@@ -148,6 +148,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         standard_docs: _,
         approved_sheet_templates: _,
         table_styles: _,
+        standard_exceptions: _,
         review_notes: _,
         heights: _,
         coordinate_epoch: _,
