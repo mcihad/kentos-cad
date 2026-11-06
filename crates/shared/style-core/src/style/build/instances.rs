@@ -136,6 +136,7 @@ impl Instancer {
                 *made += 1;
                 let mut rec = BatchSink::recorder();
                 rec.set_line_lod(view.line_lod && !view.plot_precision);
+                rec.set_block_proxy(view.block_proxy && !view.plot_precision);
                 for (k, piece) in flat.pieces.iter().enumerate() {
                     let shape = &piece.shape;
                     // A construction line is clipped to the view's box, which a definition's base knows nothing of.
@@ -336,5 +337,59 @@ mod tests {
         assert_eq!(paths[0].0.len(), 8);
         assert_eq!(paths[0].0[0], Vec2::new(12.0, 0.0));
         assert!(paths[0].0[2].y > 1.99);
+    }
+
+    /// A definition of many strokes comes with its far proxy, the box round them after its own numbers; one of few
+    /// strokes, or recorded without the view asking, comes without (docs/adr/1065 §2).
+    #[test]
+    fn a_definition_of_many_strokes_comes_with_the_box_round_them() {
+        use kentos_geometry_core::api::json::Json;
+        use super::super::super::batch::BLOCK_PROXY_PX;
+        use super::super::super::prim::{PrimUnit, Sink as _, StrokeStyle};
+        let style = StrokeStyle {
+            color: "#000000".into(),
+            opacity: 1.0,
+            width: 0.3,
+            unit: PrimUnit::Px,
+            dash: None,
+            dash_offset: 0.0,
+            line_type_loss: None,
+            cap: "round".into(),
+            join: "round".into(),
+            blur: 0.0,
+            level: 0.0,
+            ground: false,
+        };
+        let batch = |segments: usize, proxy: bool| {
+            let mut rec = BatchSink::recorder();
+            rec.set_block_proxy(proxy);
+            for i in 0..segments {
+                let x = i as f64 * 0.5;
+                rec.stroke(&style, &[Vec2::new(x, 0.0), Vec2::new(x + 0.25, 2.0)], false);
+            }
+            let def = Arc::new(rec.into_def(1).expect("a definition"));
+            let mut sink = BatchSink::new(Vec2::new(0.0, 0.0));
+            for k in [1.0, 1.5] {
+                assert!(sink.instance(&def, &[k, 0.0, 0.0, k, 10.0 * k, 0.0], k));
+            }
+            let out = sink.finish();
+            let Ok(Json::Arr(list)) = Json::parse(&out.json) else {
+                panic!("{}", out.json);
+            };
+            let inst = list.iter().find(|b| !matches!(b.get("inst"), Json::Null)).cloned().expect("instanced");
+            (inst, out.data.len())
+        };
+        let (inst, len) = batch(12, true);
+        let Json::Arr(proxy) = inst.get("inst").get("proxy").clone() else {
+            panic!("a proxy: {inst:?}");
+        };
+        // Four segments of six numbers; the box's larger side: 0.5 · 11 + 0.25 wide, 2 high.
+        assert!(matches!(proxy[0], Json::Num(n) if n == 24.0), "{proxy:?}");
+        assert!(matches!(proxy[1], Json::Num(e) if (e - 5.75).abs() < 1e-12), "{proxy:?}");
+        assert_eq!(len, 12 * 6 + 24 + 2 * super::super::super::batch::INSTANCE_FLOATS);
+        // At the largest insert's scale (1.5) the proxy is drawn from 3 px over 5.75 · 1.5 on.
+        assert!(BLOCK_PROXY_PX / (5.75 * 1.5) > 0.3);
+        assert!(matches!(batch(11, true).0.get("inst").get("proxy"), Json::Null));
+        assert!(matches!(batch(12, false).0.get("inst").get("proxy"), Json::Null));
     }
 }

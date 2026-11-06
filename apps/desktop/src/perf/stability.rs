@@ -260,18 +260,21 @@ fn stability() {
             ("en-uzak-düzey", mid, kentos_native_style::batches::CURVE_LEVELS[2] * 0.5),
         ])
         .collect();
-    // Each shortcut: what is on with it and without it (instancing, curve levels, line levels), and its pictures' name.
+    // Each shortcut: what is on with it and without it (instancing, curve levels, line levels, the blocks' far proxy,
+    // docs/adr/1065 §4), and its pictures' name.
     for (shortcut, with, without, tag) in [
-        ("blok örnekleme", [true, false, false], [false; 3], "örnekleme"),
-        ("eğri düzeyleri", [false, true, false], [false; 3], "düzeyleri"),
-        ("çizgi düzeyleri", [true, true, true], [true, true, false], "cizgi-düzeyleri"),
+        ("blok örnekleme", [true, false, false, false], [false; 4], "örnekleme"),
+        ("eğri düzeyleri", [false, true, false, false], [false; 4], "düzeyleri"),
+        ("çizgi düzeyleri", [true, true, true, false], [true, true, false, false], "cizgi-düzeyleri"),
+        ("blok vekili", [true; 4], [true, true, true, false], "blok-vekili"),
     ] {
         for &(name, c, s) in &shortcut_views {
             let set = |app: &mut App, on: bool| {
-                let [i, l, line] = if on { with } else { without };
+                let [i, l, line, proxy] = if on { with } else { without };
                 app.styles.instancing = i;
                 app.styles.curve_lod = l;
                 app.styles.line_lod = line;
+                app.styles.block_proxy = proxy;
             };
             set(&mut app, true);
             let on = shot(&mut app, &mut h, c, s);
@@ -293,6 +296,7 @@ fn stability() {
     app.styles.instancing = true;
     app.styles.curve_lod = true;
     app.styles.line_lod = true;
+    app.styles.block_proxy = true;
     // Snaps at source points from each view, 10 px apart.
     let (_, circle) = middle(&app, 6);
     let (_, line) = middle(&app, 0);
@@ -390,6 +394,14 @@ fn stability() {
         }
         // The long strokes' levels draw level 0 above the first ceiling: nearer than 1:950 nothing changes
         // (docs/adr/1064 §4); farther the change is reported.
+        // The blocks' far proxy draws only where an insert is a few pixels: from 1 px a metre on, nothing changes
+        // (docs/adr/1065 §4); farther the change is reported.
+        if row["shortcut"] == "blok vekili" {
+            if row["pxPerM"].as_f64().is_some_and(|s| s >= 1.0) {
+                assert_eq!(row["onAgainstOff"]["visible"], 0, "near, the blocks draw as before: {row}");
+            }
+            continue;
+        }
         if row["shortcut"] == "çizgi düzeyleri" {
             if row["pxPerM"].as_f64().is_some_and(|s| s > kentos_native_style::batches::CURVE_LEVELS[0]) {
                 assert_eq!(row["onAgainstOff"]["visible"], 0, "near, the long strokes draw as before: {row}");

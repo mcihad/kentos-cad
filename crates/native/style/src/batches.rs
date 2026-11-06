@@ -447,6 +447,33 @@ pub struct Instances {
     pub mesh: usize,
     pub count: u32,
     pub scale: f64,
+    /// The definition's far proxy (docs/adr/1065 §2): its last `len` numbers of the `mesh` (after the levels), drawn
+    /// instead of the rest where `extent` (definition units) times the view's logical px a metre times `scale` is at
+    /// most [`BLOCK_PROXY_PX`]; none without one.
+    pub proxy: Option<Proxy>,
+}
+
+/// An instanced batch's far proxy (docs/adr/1065 §2).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Proxy {
+    pub len: usize,
+    pub extent: f64,
+}
+
+/// The most logical pixels a definition's strokes span for its proxy to be drawn (the core's, docs/adr/1065 §2).
+pub use kentos_style_core::style::batch::BLOCK_PROXY_PX;
+
+impl Instances {
+    /// Whether a view at `px_per_m` logical px a metre draws the proxy instead of the definition.
+    pub fn proxied(&self, px_per_m: f64) -> bool {
+        self.proxy
+            .is_some_and(|p| p.extent * self.scale * px_per_m <= BLOCK_PROXY_PX)
+    }
+
+    /// The definition's own numbers, the proxy's left out.
+    pub fn definition(&self) -> usize {
+        self.mesh - self.proxy.map_or(0, |p| p.len)
+    }
 }
 
 /// Numbers per instance of an instanced batch (the core's, docs/adr/1063 §2).
@@ -472,10 +499,16 @@ fn instances_of(d: &Value) -> Option<Instances> {
     let count = inst.get("count")?.as_f64()?.max(0.0) as u32;
     let len = n(d, "len") as usize;
     let mesh = len.checked_sub(count as usize * kentos_style_core::style::batch::INSTANCE_FLOATS)?;
+    let proxy = inst.get("proxy").and_then(Value::as_array).and_then(|p| {
+        let len = p.first()?.as_f64()?.max(0.0) as usize;
+        let extent = p.get(1)?.as_f64()?;
+        (len > 0 && len <= mesh && extent.is_finite()).then_some(Proxy { len, extent })
+    });
     Some(Instances {
         mesh,
         count,
         scale: inst.get("k").and_then(Value::as_f64).unwrap_or(1.0),
+        proxy,
     })
 }
 

@@ -2,7 +2,8 @@
 //! 19) on the GPU, far (all of it), near (1:200 over its middle cell: texts, a dimension, a dense hatch, the nested
 //! blocks) and close (1:20 over the middle cell's nested block: its texts, 0.3 m circles and solid triangles).
 //! The far views again without the long strokes' levels (`-duzeysiz`, docs/adr/1064 §4), and the 100 000 objects'
-//! drawing far with and without them, for the difference pictures.
+//! drawing far with and without them, for the difference pictures; that drawing far without the blocks' far proxy
+//! (`-vekilsiz`, docs/adr/1065 §4) and near at 1:200.
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650, on the GPU with
 //! `KENTOS_SNAPSHOT_BACKEND=wgpu`:
 //!
@@ -56,6 +57,23 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("buyuk-100k-uzak-duzeysiz", |app| {
             app.styles.line_lod = false;
             open_of(app, 100_000);
+        }),
+        ("buyuk-100k-uzak-vekilsiz", |app| {
+            app.styles.block_proxy = false;
+            open_of(app, 100_000);
+        }),
+        ("buyuk-100k-yakin", |app| {
+            open_of(app, 100_000);
+            let e = mixed::extent(100_000);
+            app.viewport.camera.center = Vec2::new((e[0] + e[2]) / 2.0, (e[1] + e[3]) / 2.0);
+            app.viewport.camera.scale = 1.0 / (200.0 * 0.000_264_58);
+        }),
+        ("buyuk-100k-yakin-vekilsiz", |app| {
+            app.styles.block_proxy = false;
+            open_of(app, 100_000);
+            let e = mixed::extent(100_000);
+            app.viewport.camera.center = Vec2::new((e[0] + e[2]) / 2.0, (e[1] + e[3]) / 2.0);
+            app.viewport.camera.scale = 1.0 / (200.0 * 0.000_264_58);
         }),
         ("buyuk-yakin", |app| {
             open(app);

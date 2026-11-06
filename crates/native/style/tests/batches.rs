@@ -199,6 +199,7 @@ fn builds_the_web_s_batches() {
                 instancing: false,
                 curve_lod: false,
                 line_lod: false,
+                block_proxy: false,
                 // The web's recorded build: chord-measured dashes (docs/adr/1122).
                 cad_phase: false,
             },

@@ -1291,6 +1291,7 @@ impl GeometryStore {
                 curve_lod: false,
                 // The web draws no long strokes' levels yet (docs/adr/1064, TODOS.md §0.2).
                 line_lod: false,
+                block_proxy: false,
                 cad_phase: false,
             },
             frame,

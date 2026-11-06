@@ -474,6 +474,9 @@ pub struct View {
     pub curve_lod: bool,
     /// The drawing area's own (docs/adr/1064 §2): a long stroke's far levels, simplified within the curves' tolerance.
     pub line_lod: bool,
+    /// The drawing area's own (docs/adr/1065 §2): an instanced definition's strokes drawn as the box round them where
+    /// the largest insert shows them at most `batch::BLOCK_PROXY_PX`.
+    pub block_proxy: bool,
     /// The drawing's own looks (`MODE_SET`) dash a CAD line type along the source
     /// curve itself (docs/adr/1122); off, the renderer measures the drawn chords
     /// (the web's build and the frozen answers until it opts in).
@@ -489,6 +492,7 @@ impl PartialEq for View {
             && self.instancing == o.instancing
             && self.curve_lod == o.curve_lod
             && self.line_lod == o.line_lod
+            && self.block_proxy == o.block_proxy
             && match (self.map, o.map) {
                 (None, None) => true,
                 (Some(a), Some(b)) => std::ptr::eq(a, b),
@@ -511,6 +515,7 @@ impl Default for View {
             instancing: false,
             curve_lod: false,
             line_lod: false,
+            block_proxy: false,
             cad_phase: false,
         }
     }
