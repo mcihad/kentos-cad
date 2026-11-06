@@ -2,7 +2,7 @@
 
 Tarih: 2026-11-06. plan/map-cad.md MAP-10 (alt maddeler: alternatifin sınırı = tasarım katmanları ve yerine geçtiği
 mevcut durum; kaynaklı, birimli karşılaştırma; değişimin hangi karardan geldiği; taban değişince alternatifin
-eskimesi; tek puan yerine ölçütler ve veri eksikleri). Durum: taslak. İlgili: [ADR 0210](0210-time-and-scenarios.md)
+eskimesi; tek puan yerine ölçütler ve veri eksikleri). Durum: taslak. İlgili: [ADR 0210](0210-temporal-layers-and-scenarios.md)
 (senaryolar), [ADR 1420](1420-zoning-plan-typed-check.md) (imar planı profili).
 
 ## Dayanak
