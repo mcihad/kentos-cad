@@ -390,12 +390,125 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
         out.push(text_style(doc, &t.face, resolved.as_ref()));
     }
     if let Entity::Insert(i) = e
-        && let Some(x) = doc.block(i.block).and_then(|b| b.xref.as_ref())
-        && let Some(part) = xref_layers(doc, x)
+        && let Some(def) = doc.block(i.block)
     {
-        out.push(part);
+        if let Some(part) = block_parts(doc, base, &node.style, def) {
+            out.push(part);
+        }
+        if let Some(x) = def.xref.as_ref()
+            && let Some(part) = xref_layers(doc, x)
+        {
+            out.push(part);
+        }
     }
     out
+}
+
+/// A block's own parts (docs/adr/1018): for colour, line type and line weight, how many of the definition's objects
+/// draw their own value, the insert's (ByBlock) or their layer's (a `byLayer` part; an object on the block's layer
+/// `""` takes the insert's layer), and the values each source gives through this insert. The rule is `resolve_look`'s, the renderer's. A nested insert is counted as one part, as it draws itself;
+/// its own parts are explained by selecting it in the block editor. None for a definition without objects.
+fn block_parts(
+    doc: &Document,
+    insert: &kentos_commands::EntityBase,
+    insert_layer: &LayerStyle,
+    def: &kentos_commands::BlockDefinition,
+) -> Option<Explained> {
+    use kentos_commands::{LookSource, OwnLook, resolve_look};
+    if def.entities.is_empty() {
+        return None;
+    }
+    let through = resolve_look(
+        OwnLook {
+            color: insert.color.as_deref(),
+            line_weight: insert.line_weight,
+            look: &insert.look,
+        },
+        insert_layer,
+        None,
+    );
+    // Per look part (colour, line type, weight) and source (own, block, layer): the count and the values, in order.
+    let mut tally: [[(u32, Vec<String>); 3]; 3] = Default::default();
+    let index = |s: LookSource| match s {
+        LookSource::Own => 0,
+        LookSource::Block => 1,
+        LookSource::Layer => 2,
+    };
+    for part in &def.entities {
+        let b = part.base();
+        let style = if b.layer_id.is_empty() {
+            insert_layer
+        } else {
+            doc.layers().get(&b.layer_id).map_or(insert_layer, |n| &n.style)
+        };
+        let r = resolve_look(
+            OwnLook {
+                color: b.color.as_deref(),
+                line_weight: b.line_weight,
+                look: &b.look,
+            },
+            style,
+            Some(&through),
+        );
+        let pattern = || b.look.line_pattern.clone();
+        let values = [
+            r.color.clone(),
+            pattern()
+                .filter(|_| r.from[1] == LookSource::Own)
+                .unwrap_or_else(|| r.line_type.label().to_owned()),
+            weight(r.line_weight),
+        ];
+        for (k, (from, value)) in [r.from[0], r.from[1], r.from[3]].into_iter().zip(values).enumerate() {
+            let cell = &mut tally[k][index(from)];
+            cell.0 += 1;
+            if !cell.1.contains(&value) {
+                cell.1.push(value);
+            }
+        }
+    }
+    let n = u32::try_from(def.entities.len()).unwrap_or(u32::MAX);
+    let names = ["Renk", "Çizgi tipi", "Kalınlık"];
+    let origins = [Origin::Object, Origin::Block, Origin::Layer];
+    let words = ["kendi değeri", "bloktan (ByBlock)", "katmandan (ByLayer)"];
+    let mut chain = Vec::new();
+    for (k, name) in names.iter().enumerate() {
+        for (j, (count, values)) in tally[k].iter().enumerate() {
+            if *count == 0 {
+                continue;
+            }
+            let shown: Vec<&str> = values.iter().take(3).map(String::as_str).collect();
+            let more = values.len().saturating_sub(3);
+            chain.push(Link {
+                origin: origins[j],
+                value: if more > 0 {
+                    format!("{} +{more}", shown.join(", "))
+                } else {
+                    shown.join(", ")
+                },
+                note: format!("{name}: {count}/{n} parça {}", words[j]),
+                wins: false,
+            });
+        }
+    }
+    let by_block = tally.iter().map(|t| t[1].0).max().unwrap_or(0);
+    let own = tally.iter().map(|t| t[0].0).max().unwrap_or(0);
+    let origin = if by_block >= own.max(tally.iter().map(|t| t[2].0).max().unwrap_or(0)) {
+        Origin::Block
+    } else if own > 0 {
+        Origin::Object
+    } else {
+        Origin::Layer
+    };
+    Some(Explained {
+        part: "blockParts",
+        label: "Blok parçaları",
+        value: format!("“{}” · {n} parça", def.name),
+        origin,
+        chain,
+        viewports: Vec::new(),
+        printed: Vec::new(),
+        resets: Vec::new(),
+    })
 }
 
 /// An external reference's layers (docs/adr/1110 §3): three levels apart — the source's look, the drawing's own

@@ -309,8 +309,48 @@ fn value_origin(app: &mut App, slot: u32) {
     let _ = app.update(Message::Properties(crate::properties::Event::Toggle("modelAppearance")));
 }
 
+/// docs/adr/1018: an insert of KAPI, red on A-DUVAR; its four lines take their colour from the insert (ByBlock), their
+/// own green, A-DUVAR (ByLayer on the block's layer) and Ağaç (ByLayer on their own layer).
+fn block_origin(app: &mut App) {
+    let style = |color: &str, w: f64| serde_json::json!({"color": color, "lineType": "continuous", "lineWeight": w});
+    let line = |id: u32, layer: &str, a: [f64; 2], b: [f64; 2], extra: serde_json::Value| {
+        let mut e = serde_json::json!({"kind": "line", "id": id, "layerId": layer, "attrs": {},
+            "a": {"x": a[0], "y": a[1]}, "b": {"x": b[0], "y": b[1]}});
+        e.as_object_mut().expect("an object").extend(extra.as_object().expect("an object").clone());
+        e
+    };
+    let block = "0192f5a1-4444-7000-8000-000000000201";
+    let layer = |id: &str, name: &str, color: &str, w: f64| serde_json::json!({"id": id, "name": name, "type": "layer",
+        "visible": true, "locked": false, "expanded": true, "style": style(color, w), "children": []});
+    let snapshot = serde_json::json!({
+        "format": "kentos.document", "version": 2, "name": "Blok parçalarının kökeni",
+        "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
+            "plotScale": 50.0, "workspace": "cad"},
+        "origin": {"x": 0.0, "y": 0.0},
+        "layers": [layer("duvar", "A-DUVAR", "#E5484D", 0.5), layer("agac", "Ağaç", "#2f9e44", 0.18)],
+        "activeLayer": "duvar",
+        "blocks": [{"id": block, "name": "KAPI", "base": {"x": 0.0, "y": 0.0}, "entities": [
+            line(1, "", [0.0, 0.0], [0.9, 0.0], serde_json::json!({})),
+            line(2, "", [0.0, 0.0], [0.0, 0.9], serde_json::json!({"color": "#00ff00"})),
+            line(3, "", [0.9, 0.0], [0.9, 0.9], serde_json::json!({"byLayer": ["color"]})),
+            line(4, "agac", [0.0, 0.9], [0.9, 0.9], serde_json::json!({"byLayer": ["color"]}))]}],
+        "entities": [{"kind": "insert", "id": 1, "layerId": "duvar", "attrs": {}, "color": "#ff0000", "block": block,
+            "p": {"x": 0.0, "y": 0.0}, "scale": 4.0, "rotation": 0.0}],
+        "uids": ["0192f5a1-4444-7000-8000-000000000301"],
+        "styles": {"items": [], "categories": []}
+    });
+    let doc = Document::from_v2(serde_json::from_value(snapshot).expect("the drawing"), None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::make_cad(app);
+    crate::elevation_scenes::select(app, &[kentos_domain::Slot(1)]);
+    crate::elevation_scenes::panel_room(app);
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("geometry")));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("modelAppearance")));
+}
+
 pub(crate) fn origin_scenes() -> Vec<Scene> {
     vec![
+        ("deger-kokeni-blok", block_origin),
         ("deger-kokeni-katman", |app| value_origin(app, 2)),
         // docs/adr/1015: siyah.ctb's pen 1 given to the layer and applied to sheet a-101: Baskıda says black, 0.50 mm.
         ("deger-kokeni-baski", |app| {

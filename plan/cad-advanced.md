@@ -2132,6 +2132,12 @@ Kişisel palet ayar klasöründedir, çizime karışmaz. Açık: tablo stili kay
 içi tek parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi. Ek (ADR 1017): kurulum penceresi **Kitaplık
 ekle…** ile proje `.kblok`'unu KentOS kitaplıklarından önce arar; bulut kitaplığı ve Python/MCP'den kitaplık seçimi açık.
 
+**Blok parçalarının kökeni (6 Kasım 2026, ADR 1018):** “Bu değer nereden geliyor?” bir yerleştirmede tanımın
+parçalarını da sayar: renk, çizgi tipi ve kalınlık için kaç parçanın kendi değerini, bloğunkini (ByBlock) ya da
+katmanınkini (ByLayer) çizdiğini ve bu yerleştirmeden çizilen değerleri söyler; kural çizicinin `resolve_look`'udur.
+Uygulama testi ve gerçek penceredeki `deger-kokeni-blok` resmi doğrulandı. İç içe blokların parçaları tek seviyede
+açılmaz.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

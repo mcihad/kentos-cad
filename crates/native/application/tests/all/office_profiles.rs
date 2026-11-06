@@ -392,3 +392,56 @@ fn the_value_origin_says_what_the_sheets_plot_profile_prints() {
     assert!(part("lineWeight").printed.iter().any(|l| l.ends_with("“siyah” profili: 0.5 mm")), "{:?}", part("lineWeight").printed);
     let _ = Slot(0);
 }
+
+/// docs/adr/1018: “Bu değer nereden geliyor?” on an insert says where each of the block's parts takes its colour,
+/// line type and weight from. KAPI's four lines, the insert red on A-DUVAR (#E5484D, 0.5 mm): one plain on the block's
+/// layer (ByBlock: red), one green of its own, one ByLayer colour on the block's layer (the insert's layer: #E5484D),
+/// one ByLayer colour on Ağaç (#2f9e44). Every line type and weight is the insert's, as none has its own.
+#[test]
+fn the_value_origin_of_an_insert_counts_where_the_blocks_parts_take_their_look() {
+    let style = |color: &str, w: f64| json!({"color": color, "lineType": "continuous", "lineWeight": w});
+    let line = |id: u32, layer: &str, extra: Value| {
+        let mut e = json!({"kind": "line", "id": id, "layerId": layer, "attrs": {}, "a": {"x": 0.0, "y": f64::from(id)},
+            "b": {"x": 1.0, "y": f64::from(id)}});
+        e.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+        e
+    };
+    let block = "0192f5a1-4444-7000-8000-000000000001";
+    let snapshot = json!({
+        "format": "kentos.document", "version": 2, "name": "Blok kökeni",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+            "plotScale": 50.0, "workspace": "cad"},
+        "origin": {"x": 0.0, "y": 0.0},
+        "layers": [
+            {"id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": style("fg", 0.25), "children": []},
+            {"id": DUVAR, "name": "A-DUVAR", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": style("#E5484D", 0.5), "children": []},
+            {"id": "agac", "name": "Ağaç", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": style("#2f9e44", 0.18), "children": []}],
+        "activeLayer": "0",
+        "blocks": [{"id": block, "name": "KAPI", "base": {"x": 0.0, "y": 0.0}, "entities": [
+            line(1, "", json!({})),
+            line(2, "", json!({"color": "#00ff00"})),
+            line(3, "", json!({"byLayer": ["color"]})),
+            line(4, "agac", json!({"byLayer": ["color"]}))]}],
+        "entities": [
+            {"kind": "insert", "id": 1, "layerId": DUVAR, "attrs": {}, "color": "#ff0000", "block": block,
+             "p": {"x": 10.0, "y": 10.0}, "scale": 1.0, "rotation": 0.0}],
+        "uids": ["0192f5a1-4444-7000-8000-000000000101"],
+        "styles": {"items": [], "categories": []}
+    });
+    let doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
+    let explained = kentos_native_application::appearance_origin::explain(&doc, Slot(1));
+    let parts = explained.iter().find(|p| p.part == "blockParts").expect("the block's parts");
+    assert_eq!((parts.value.as_str(), parts.origin.label()), ("“KAPI” · 4 parça", "Blok"));
+    let said: Vec<(&str, &str, &str)> = parts.chain.iter().map(|l| (l.origin.label(), l.value.as_str(), l.note.as_str())).collect();
+    let continuous = kentos_commands::LineType::Continuous.label();
+    assert_eq!(said, [
+        ("Nesne", "#00ff00", "Renk: 1/4 parça kendi değeri"),
+        ("Blok", "#ff0000", "Renk: 1/4 parça bloktan (ByBlock)"),
+        ("Katman", "#E5484D, #2f9e44", "Renk: 2/4 parça katmandan (ByLayer)"),
+        ("Blok", continuous, "Çizgi tipi: 4/4 parça bloktan (ByBlock)"),
+        ("Blok", "0.5 mm", "Kalınlık: 4/4 parça bloktan (ByBlock)"),
+    ]);
+    // The insert's own colour is still explained as the insert's.
+    let color = explained.iter().find(|p| p.part == "color").unwrap();
+    assert_eq!((color.value.as_str(), color.origin.label()), ("#ff0000", "Nesne"));
+}
