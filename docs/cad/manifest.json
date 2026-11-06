@@ -4159,6 +4159,22 @@
    "tests": 0
   },
   {
+   "id": "file.recover",
+   "kind": "command",
+   "title": "Bozuk çizimi kurtar…",
+   "level": "semantic",
+   "via": [
+    "file.recover"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.recover",
+   "mcp": "file.recover",
+   "note": "Kurtar file.recover'ı yürütür (ADR 1013): kopyayı kaynağın yanına yazar, sonucu Komut geçmişine yazar ve kopyayı açar.",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.save",
    "kind": "command",
    "title": "Kaydet",
