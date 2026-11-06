@@ -58613,6 +58613,300 @@ class OptionsQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoGsd(_Model):
+    """A scale's largest ground sampling distance (metres).
+    Attributes:
+        scale: Unit: count.
+        gsd: Unit: length.
+    """
+    scale: int
+    gsd: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scale"] = self.scale
+        out["gsd"] = float(self.gsd)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoGsd:
+        return cls(
+            scale=data["scale"],
+            gsd=float(data["gsd"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoPoint(_Model):
+    """A point: its name, its role (`check`: independent; `fit`: one the image's georeference was fitted to), its error
+    image − ground in east, north and (when both have one) height, and its horizontal error (metres).
+    Attributes:
+        dx: Unit: length.
+        dy: Unit: length.
+        d: Unit: length.
+        dz: Unit: length.
+    """
+    name: str
+    role: str
+    dx: float
+    dy: float
+    d: float
+    dz: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["role"] = self.role
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["d"] = float(self.d)
+        if self.dz is not UNSET:
+            out["dz"] = None if self.dz is None else float(self.dz)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoPoint:
+        return cls(
+            name=data["name"],
+            role=data["role"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            d=float(data["d"]),
+            dz=UNSET if "dz" not in data else None if data["dz"] is None else float(data["dz"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoRules(_Model):
+    """A rule package: who issues it, the document, when it holds, its release; KOH_X,Y's limit in centimetres as
+    `xy[0]·S² + xy[1]·S + xy[2]` (S the scale's denominator), KOH_Z's as `zFactor` × that, the largest ground sampling
+    distance by scale and the share it may vary by.
+    Attributes:
+        release: Unit: count.
+        xy: Unit: measure.
+        z_factor: Unit: measure.
+        gsd_tolerance: Unit: measure.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    xy: list[float]
+    z_factor: float
+    gsd: list[OrthoGsd]
+    gsd_tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["xy"] = [float(e0) for e0 in self.xy]
+        out["zFactor"] = float(self.z_factor)
+        out["gsd"] = [e0.to_json() for e0 in self.gsd]
+        out["gsdTolerance"] = float(self.gsd_tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            xy=[float(e0) for e0 in data["xy"]],
+            z_factor=float(data["zFactor"]),
+            gsd=[OrthoGsd.from_json(e0) for e0 in data["gsd"]],
+            gsd_tolerance=float(data["gsdTolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoStats(_Model):
+    """A set of points' statistics (metres): how many, RMSE in east and north, KOH_X,Y = √(Σ(dx² + dy²) / 2n), the
+    radial RMSE, the mean error in east and north (bias), the largest horizontal error, and KOH_Z over the points with
+    heights on both sides (with their number).
+    Attributes:
+        n: Unit: count.
+        rmse_x: Unit: length.
+        rmse_y: Unit: length.
+        koh_xy: Unit: length.
+        rmse_r: Unit: length.
+        mean_x: Unit: length.
+        mean_y: Unit: length.
+        max_d: Unit: length.
+        n_z: Unit: count.
+        koh_z: Unit: length.
+    """
+    n: int
+    rmse_x: float
+    rmse_y: float
+    koh_xy: float
+    rmse_r: float
+    mean_x: float
+    mean_y: float
+    max_d: float
+    n_z: int
+    koh_z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["n"] = self.n
+        out["rmseX"] = float(self.rmse_x)
+        out["rmseY"] = float(self.rmse_y)
+        out["kohXy"] = float(self.koh_xy)
+        out["rmseR"] = float(self.rmse_r)
+        out["meanX"] = float(self.mean_x)
+        out["meanY"] = float(self.mean_y)
+        out["maxD"] = float(self.max_d)
+        out["nZ"] = self.n_z
+        if self.koh_z is not UNSET:
+            out["kohZ"] = None if self.koh_z is None else float(self.koh_z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoStats:
+        return cls(
+            n=data["n"],
+            rmse_x=float(data["rmseX"]),
+            rmse_y=float(data["rmseY"]),
+            koh_xy=float(data["kohXy"]),
+            rmse_r=float(data["rmseR"]),
+            mean_x=float(data["meanX"]),
+            mean_y=float(data["meanY"]),
+            max_d=float(data["maxD"]),
+            n_z=data["nZ"],
+            koh_z=UNSET if "kohZ" not in data else None if data["kohZ"] is None else float(data["kohZ"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoCheck(_Model):
+    """Input of `cad.orthophoto.check` v1: the orthophoto (a raster's persistent id), the layer of the points measured on
+    the ground and the layer of the same points read on the image, the attribute that names a point (none: `Ad`), the
+    scale's denominator (none: the project's plot scale) and the rule package (none: KentOS's BÖHHBÜY 2018).
+
+    Refusals: `invalid_uid`, `entity_not_found` (`raster`), `not_a_raster` (`raster`), `layer_not_found` (`known`,
+    `observed`), `crs_mismatch` (`raster`: its coordinate system is not the project's), `invalid_input` (`scale` 0;
+    `rules`: empty id or source, a limit not finite).
+    Attributes:
+        scale: Unit: count.
+    """
+    raster: str
+    known: str
+    observed: str
+    field: str | None | Unset = UNSET
+    rules: OrthoRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["raster"] = self.raster
+        out["known"] = self.known
+        out["observed"] = self.observed
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoCheck:
+        return cls(
+            raster=data["raster"],
+            known=data["known"],
+            observed=data["observed"],
+            field=data.get("field", UNSET),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else OrthoRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoChecked(_Model):
+    """Output of `cad.orthophoto.check` v1: the package (id, source), the scale, the image's ground sampling distance
+    (the square root of a pixel's area), the package's limit for it at that scale and whether it holds (none when the
+    package names no such scale), the matched points, the names on one side only, the check points' and the fit
+    points' statistics, the KOH limits (metres) and whether the check points hold to them (none without check points
+    or heights), whether KOH_X,Y is under half a pixel (finer than reading the image: the result may flatter it), and notes.
+    Attributes:
+        scale: Unit: count.
+        gsd: Unit: length.
+        limit_xy: Unit: length.
+        limit_z: Unit: length.
+        gsd_limit: Unit: length.
+    """
+    rules: str
+    source: str
+    scale: int
+    gsd: float
+    points: list[OrthoPoint]
+    unmatched: list[str]
+    check: OrthoStats
+    limit_xy: float
+    limit_z: float
+    below_pixel: bool
+    notes: list[str]
+    fit: OrthoStats | None | Unset = UNSET
+    gsd_limit: float | None | Unset = UNSET
+    gsd_ok: bool | None | Unset = UNSET
+    passed_xy: bool | None | Unset = UNSET
+    passed_z: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules
+        out["source"] = self.source
+        out["scale"] = self.scale
+        out["gsd"] = float(self.gsd)
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["unmatched"] = list(self.unmatched)
+        out["check"] = self.check.to_json()
+        out["limitXy"] = float(self.limit_xy)
+        out["limitZ"] = float(self.limit_z)
+        out["belowPixel"] = self.below_pixel
+        out["notes"] = list(self.notes)
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else self.fit.to_json()
+        if self.gsd_limit is not UNSET:
+            out["gsdLimit"] = None if self.gsd_limit is None else float(self.gsd_limit)
+        if self.gsd_ok is not UNSET:
+            out["gsdOk"] = self.gsd_ok
+        if self.passed_xy is not UNSET:
+            out["passedXy"] = self.passed_xy
+        if self.passed_z is not UNSET:
+            out["passedZ"] = self.passed_z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoChecked:
+        return cls(
+            rules=data["rules"],
+            source=data["source"],
+            scale=data["scale"],
+            gsd=float(data["gsd"]),
+            points=[OrthoPoint.from_json(e0) for e0 in data["points"]],
+            unmatched=list(data["unmatched"]),
+            check=OrthoStats.from_json(data["check"]),
+            limit_xy=float(data["limitXy"]),
+            limit_z=float(data["limitZ"]),
+            below_pixel=data["belowPixel"],
+            notes=list(data["notes"]),
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else OrthoStats.from_json(data["fit"]),
+            gsd_limit=UNSET if "gsdLimit" not in data else None if data["gsdLimit"] is None else float(data["gsdLimit"]),
+            gsd_ok=data.get("gsdOk", UNSET),
+            passed_xy=data.get("passedXy", UNSET),
+            passed_z=data.get("passedZ", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageEmbedded(_Model):
     """A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.
     Attributes:
@@ -123563,6 +123857,12 @@ __all__ = [
     "OrdinateDimensionMeasure",
     "OriginHatchEdit",
     "OriginUcsTo",
+    "OrthoGsd",
+    "OrthoPoint",
+    "OrthoRules",
+    "OrthoStats",
+    "OrthophotoCheck",
+    "OrthophotoChecked",
     "OverriddenExtractValue",
     "PackageEmbedded",
     "PackageLeft",

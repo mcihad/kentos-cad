@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, extract, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, parameters, parcels, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs, zoning  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, extract, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs, zoning  # noqa: E402  isort: skip
 
 __all__ = [
     "AcceptMapSurveyOperation",
@@ -2149,6 +2149,12 @@ __all__ = [
     "OrdinateDimensionMeasure",
     "OriginHatchEdit",
     "OriginUcsTo",
+    "OrthoGsd",
+    "OrthoPoint",
+    "OrthoRules",
+    "OrthoStats",
+    "OrthophotoCheck",
+    "OrthophotoChecked",
     "Outcome",
     "OverriddenExtractValue",
     "PackageEmbedded",
@@ -4096,6 +4102,7 @@ __all__ = [
     "openings",
     "openingtypes",
     "options",
+    "orthophoto",
     "parameters",
     "parcels",
     "plotstyles",

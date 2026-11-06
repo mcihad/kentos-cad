@@ -706,6 +706,14 @@ karşılaştır; yanlış CRS, düşey veri ve erişilemeyen kaynak durumların�
 Görüntüden türeyen nesne kaynağa izlenebilsin. İptal ve çevrimdışı açılış
 orijinal dosyayı değiştirmesin; yanlış kalite sonucu üretmesin.
 
+**6 Kasım 2026 — Ortofoto doğruluk denetimi ([ADR 1480](../docs/adr/1480-orthophoto-accuracy-check.md)).** Kapsam
+işareti: **CAD + CBS** (raster bağlam sekmesi). Araştırma: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 54, 61(2), 67(5)-(6),
+91 resmî metinden; Pix4D kalite raporu (GCP ile bağımsız denetim noktası ayrımı); ASPRS Edition 2 (RMSE, en az 30
+nokta). Kanıtlanan: uyum ve bağımsız denetim noktaları ayrı, KOH_X,Y/KOH_Z, ortalama (yönlü) ve en büyük hata, m. 91(2)
+sınırları ve m. 54 YÖA kural paketiyle (veri), yarım piksel altı uyarısı, yanlış CRS reddi (`cad.orthophoto.check`,
+27 ortak durum). Açık: iki zamanlı ortofoto karşılaştırması ve mozaik kayıklığı, otomatik eşleme, kalite raporu
+aktarımı, türeyen nesnenin izi, DSM/DTM.
+
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

@@ -3,6 +3,20 @@
   "version": 1,
   "commands": [
     {
+      "id": "raster.accuracy",
+      "title": "Ortofoto doğruluğu…",
+      "short": "Doğruluk",
+      "icon": "orthoAccuracy",
+      "description": "Seçili ortofotoyu arazide ölçülmüş noktalarla ve aynı noktaların görüntüde okunan yerleriyle denetler (cad.orthophoto.check; ADR 1480): denetim noktalarının KOH_X,Y ve KOH_Z'si BÖHHBÜY m. 91(2) sınırlarıyla, yer örnekleme aralığı m. 54 ile; oturtmanın uyum noktaları ayrı, ortalama (yönlü) ve en büyük hata, yarım piksel altı uyarısı. Salt okunur; görüntünün koordinatları değişmez. Harita ve CBS'de raster sekmesinde.",
+      "aliases": [
+        "ORTOFOTODOGRULUK",
+        "KOH"
+      ],
+      "shortcuts": [],
+      "category": "Raster",
+      "status": "implemented"
+    },
+    {
       "id": "readjustment.distribute",
       "title": "Düzenleme dağıtım taslağı…",
       "short": "Dağıtım taslağı",
@@ -4658,6 +4672,7 @@
   ],
   "icons": {
     "gradeBetween": "<path d=\"M2.5 15.5L17.5 6.5\" stroke-width=\"1.4\"/><circle cx=\"2.5\" cy=\"15.5\" r=\"1.2\" stroke-width=\"1.1\"/><circle cx=\"17.5\" cy=\"6.5\" r=\"1.2\" stroke-width=\"1.1\"/><path d=\"M10 11v6.5M10 17.5h7.5\" stroke-width=\"0.9\" stroke-dasharray=\"1.2 1\"/><path d=\"M12.5 4.5l3-3\" stroke-width=\"0.9\"/><circle cx=\"12.6\" cy=\"1.8\" r=\"0.7\" stroke-width=\"0.8\"/><circle cx=\"15.4\" cy=\"4.2\" r=\"0.7\" stroke-width=\"0.8\"/>",
+    "orthoAccuracy": "<path d=\"M2.5 3.5h13v10h-13z\" stroke-width=\"1.1\"/><path d=\"M2.5 11.5l3.5-3.5 3 2.5 2.5-2 4 3.5\" stroke-width=\"0.9\"/><circle cx=\"15\" cy=\"15\" r=\"3\" stroke-width=\"1.1\"/><path d=\"M15 11.2v1.6M15 17.2v1.6M11.2 15h1.6M17.2 15h1.6\" stroke-width=\"0.9\"/><path d=\"M13.6 16.4l.9-.9\" stroke-width=\"1.1\"/>",
     "readjustment": "<path d=\"M2.5 3h15v14h-15z\" stroke-width=\"1.1\"/><path d=\"M10 3v14M2.5 10h15\" stroke-width=\"0.8\" stroke-dasharray=\"1.4 1\"/><path d=\"M5 6.5h2.5M12.5 6.5h2.5M5 13.5h2.5\" stroke-width=\"0.9\"/><circle cx=\"13.7\" cy=\"13.5\" r=\"1.6\" stroke-width=\"0.9\"/>",
     "scenarioImpact": "<path d=\"M2.5 4h6v12h-6z\" stroke-width=\"1.1\"/><path d=\"M11.5 4h6v12h-6z\" stroke-width=\"1.1\" stroke-dasharray=\"1.6 1\"/><path d=\"M4 12h3M4 9h3M13 10h3M13 13h3\" stroke-width=\"0.8\"/><path d=\"M8.8 2.5h2.4M10 1.3v2.4\" stroke-width=\"0.9\"/>",
     "zoningCheck": "<path d=\"M2.5 3.5h11v11h-11z\" stroke-width=\"1.2\"/><path d=\"M2.5 9h6.5V3.5M9 9v5.5\" stroke-width=\"0.9\"/><path d=\"M4.2 5.3h2.6M10.6 11.2h1.6\" stroke-width=\"0.8\"/><circle cx=\"15\" cy=\"15\" r=\"2.8\" stroke-width=\"1.1\"/><path d=\"M17 17l2 2\" stroke-width=\"1.3\"/>",

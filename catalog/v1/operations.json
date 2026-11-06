@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "raster.accuracy": {
+      "level": "query",
+      "via": [
+        "cad.orthophoto.check"
+      ],
+      "note": "Pencere seçili rasteri cad.orthophoto.check ile denetler (salt okunur); CSV kaydet noktaların hatalarını yazar (ADR 1480)."
+    },
     "readjustment.distribute": {
       "level": "query",
       "via": [

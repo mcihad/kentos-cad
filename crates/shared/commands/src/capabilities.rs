@@ -2381,6 +2381,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Ortofoto doğruluk denetimi (plan/map-cad.md MAP-12, docs/adr/1480).
+    Entry {
+        id: "cad.orthophoto.check",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "layer_not_found", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
     // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
     Entry {
         id: "cad.readjustment.distribute",

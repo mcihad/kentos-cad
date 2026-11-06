@@ -54635,6 +54635,312 @@
       ]
     },
     {
+      "id": "cad.orthophoto.check",
+      "version": 1,
+      "title": "Ortofoto doğruluk denetimi",
+      "summary": "Bir ortofotoyu (raster) arazide ölçülmüş noktalarla (known katmanı, GNSS) ve aynı noktaların görüntüde okunan yerleriyle (observed katmanı) adlarına göre (field, ilk değer Ad) denetler: her noktanın hatası (görüntü − arazi) doğu, kuzey ve iki yanda kot varsa yükseklikte; bağımsız denetim noktalarının KOH_X,Y'si (√(Σ(dx²+dy²)/2n)), radyal RMSE, ortalama (yönlü) hata, en büyük hata ve KOH_Z'si. Görüntünün oturtulduğu kontrol noktaları (georef) uyum noktasıdır, doğruluğa sayılmaz. Sınırlar kural paketindendir (rules; ilk değer BÖHHBÜY 2018 m. 91(2): KOH_X,Y (cm) ≤ −1,665·10⁻⁶·S² + 0,01745·S − 1,166, KOH_Z ≤ 1,33·KOH_X,Y; m. 54 yer örnekleme aralığı). Yer örnekleme aralığı pikselin alanının karekökü; KOH_X,Y yarım pikselden küçükse belowPixel (görüntüyü okuma inceliğinin altında: sonuç iyimser olabilir). Salt okunur: görüntünün koordinatları hiç değişmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input.",
+      "aliases": [
+        "ortofotodogruluk",
+        "koh"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.orthophoto.check` v1: the orthophoto (a raster's persistent id), the layer of the points measured on\nthe ground and the layer of the same points read on the image, the attribute that names a point (none: `Ad`), the\nscale's denominator (none: the project's plot scale) and the rule package (none: KentOS's BÖHHBÜY 2018).\n\nRefusals: `invalid_uid`, `entity_not_found` (`raster`), `not_a_raster` (`raster`), `layer_not_found` (`known`,\n`observed`), `crs_mismatch` (`raster`: its coordinate system is not the project's), `invalid_input` (`scale` 0;\n`rules`: empty id or source, a limit not finite).",
+        "properties": {
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "known": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "raster": {
+            "type": "string"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "raster",
+          "known",
+          "observed"
+        ],
+        "title": "OrthophotoCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.check` v1: the package (id, source), the scale, the image's ground sampling distance\n(the square root of a pixel's area), the package's limit for it at that scale and whether it holds (none when the\npackage names no such scale), the matched points, the names on one side only, the check points' and the fit\npoints' statistics, the KOH limits (metres) and whether the check points hold to them (none without check points\nor heights), whether KOH_X,Y is under half a pixel (finer than reading the image: the result may flatter it), and notes.",
+        "properties": {
+          "belowPixel": {
+            "type": "boolean"
+          },
+          "check": {
+            "$ref": "#/$defs/OrthoStats"
+          },
+          "fit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gsd": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "gsdLimit": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "gsdOk": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "limitXy": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "limitZ": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "passedXy": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "passedZ": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/OrthoPoint"
+            },
+            "type": "array"
+          },
+          "rules": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "source": {
+            "type": "string"
+          },
+          "unmatched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "source",
+          "scale",
+          "gsd",
+          "points",
+          "unmatched",
+          "check",
+          "limitXy",
+          "limitZ",
+          "belowPixel",
+          "notes"
+        ],
+        "title": "OrthophotoChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.check` v1: the package (id, source), the scale, the image's ground sampling distance\n(the square root of a pixel's area), the package's limit for it at that scale and whether it holds (none when the\npackage names no such scale), the matched points, the names on one side only, the check points' and the fit\npoints' statistics, the KOH limits (metres) and whether the check points hold to them (none without check points\nor heights), whether KOH_X,Y is under half a pixel (finer than reading the image: the result may flatter it), and notes.",
+        "properties": {
+          "belowPixel": {
+            "type": "boolean"
+          },
+          "check": {
+            "$ref": "#/$defs/OrthoStats"
+          },
+          "fit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gsd": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "gsdLimit": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "gsdOk": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "limitXy": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "limitZ": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "passedXy": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "passedZ": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/OrthoPoint"
+            },
+            "type": "array"
+          },
+          "rules": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "source": {
+            "type": "string"
+          },
+          "unmatched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "source",
+          "scale",
+          "gsd",
+          "points",
+          "unmatched",
+          "check",
+          "limitXy",
+          "limitZ",
+          "belowPixel",
+          "notes"
+        ],
+        "title": "OrthophotoChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_raster",
+          "crs_mismatch",
+          "layer_not_found",
+          "invalid_input"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ortofotoyu GNSS denetim noktalarıyla, 1/1000",
+          "input": {
+            "known": "gnss",
+            "observed": "ortofoto-okuma",
+            "raster": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+            "scale": 1000
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.readjustment.distribute",
       "version": 1,
       "title": "Düzenleme dağıtım taslağı",
@@ -151962,6 +152268,204 @@
           "type": "string"
         }
       ]
+    },
+    "OrthoGsd": {
+      "additionalProperties": false,
+      "description": "A scale's largest ground sampling distance (metres).",
+      "properties": {
+        "gsd": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "scale": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "scale",
+        "gsd"
+      ],
+      "type": "object"
+    },
+    "OrthoPoint": {
+      "description": "A point: its name, its role (`check`: independent; `fit`: one the image's georeference was fitted to), its error\nimage − ground in east, north and (when both have one) height, and its horizontal error (metres).",
+      "properties": {
+        "d": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "dx": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "dy": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "dz": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "role",
+        "dx",
+        "dy",
+        "d"
+      ],
+      "type": "object"
+    },
+    "OrthoRules": {
+      "additionalProperties": false,
+      "description": "A rule package: who issues it, the document, when it holds, its release; KOH_X,Y's limit in centimetres as\n`xy[0]·S² + xy[1]·S + xy[2]` (S the scale's denominator), KOH_Z's as `zFactor` × that, the largest ground sampling\ndistance by scale and the share it may vary by.",
+      "properties": {
+        "effective": {
+          "type": "string"
+        },
+        "gsd": {
+          "items": {
+            "$ref": "#/$defs/OrthoGsd"
+          },
+          "type": "array"
+        },
+        "gsdTolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "measure"
+        },
+        "id": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "source": {
+          "type": "string"
+        },
+        "xy": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "measure"
+        },
+        "zFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "measure"
+        }
+      },
+      "required": [
+        "id",
+        "release",
+        "jurisdiction",
+        "source",
+        "effective",
+        "xy",
+        "zFactor",
+        "gsd",
+        "gsdTolerance"
+      ],
+      "type": "object"
+    },
+    "OrthoStats": {
+      "description": "A set of points' statistics (metres): how many, RMSE in east and north, KOH_X,Y = √(Σ(dx² + dy²) / 2n), the\nradial RMSE, the mean error in east and north (bias), the largest horizontal error, and KOH_Z over the points with\nheights on both sides (with their number).",
+      "properties": {
+        "kohXy": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "kohZ": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "maxD": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "meanX": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "meanY": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "n": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "nZ": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "rmseR": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "rmseX": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "rmseY": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "n",
+        "rmseX",
+        "rmseY",
+        "kohXy",
+        "rmseR",
+        "meanX",
+        "meanY",
+        "maxD",
+        "nZ"
+      ],
+      "type": "object"
     },
     "PackageEmbedded": {
       "description": "A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.",

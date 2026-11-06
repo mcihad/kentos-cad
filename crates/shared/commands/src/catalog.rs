@@ -9328,6 +9328,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Ortofoto doğruluk denetimi (plan/map-cad.md MAP-12, docs/adr/1480).
+        CommandDescriptor {
+            id: crate::CAD_ORTHOPHOTO_CHECK.into(),
+            version: crate::CAD_ORTHOPHOTO_CHECK_VERSION,
+            title: "Ortofoto doğruluk denetimi".into(),
+            summary: "Bir ortofotoyu (raster) arazide ölçülmüş noktalarla (known katmanı, GNSS) ve aynı noktaların görüntüde okunan yerleriyle (observed katmanı) adlarına göre (field, ilk değer Ad) denetler: her noktanın hatası (görüntü − arazi) doğu, kuzey ve iki yanda kot varsa yükseklikte; bağımsız denetim noktalarının KOH_X,Y'si (√(Σ(dx²+dy²)/2n)), radyal RMSE, ortalama (yönlü) hata, en büyük hata ve KOH_Z'si. Görüntünün oturtulduğu kontrol noktaları (georef) uyum noktasıdır, doğruluğa sayılmaz. \
+                      Sınırlar kural paketindendir (rules; ilk değer BÖHHBÜY 2018 m. 91(2): KOH_X,Y (cm) ≤ −1,665·10⁻⁶·S² + 0,01745·S − 1,166, KOH_Z ≤ 1,33·KOH_X,Y; m. 54 yer örnekleme aralığı). Yer örnekleme aralığı pikselin alanının karekökü; KOH_X,Y yarım pikselden küçükse belowPixel (görüntüyü okuma inceliğinin altında: sonuç iyimser olabilir). Salt okunur: görüntünün koordinatları hiç değişmez. \
+                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input."
+                .into(),
+            aliases: vec!["ortofotodogruluk".into(), "koh".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OrthophotoCheck>(),
+            output: schema::<crate::OrthophotoChecked>(),
+            plan: Some(schema::<crate::OrthophotoChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ortofotoyu GNSS denetim noktalarıyla, 1/1000".into(),
+                input: json!({ "raster": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "known": "gnss", "observed": "ortofoto-okuma", "scale": 1000 }),
+                output: None,
+            }],
+        },
         // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
         CommandDescriptor {
             id: crate::CAD_READJUSTMENT_DISTRIBUTE.into(),
@@ -15950,6 +15977,7 @@ mod tests {
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16897,6 +16925,7 @@ mod tests {
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
+                        crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),

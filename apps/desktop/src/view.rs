@@ -2100,6 +2100,7 @@ impl App {
             Asking::Zoning => self.zoning_view(),
             Asking::Impact => self.impact_view(),
             Asking::Readjustment => self.readjustment_view(),
+            Asking::Ortho => self.ortho_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),
             Asking::LayerPurge => self.layer_purge_view(),

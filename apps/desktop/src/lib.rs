@@ -71,6 +71,7 @@ mod parcels_check_window;
 mod zoning_window;
 mod impact_window;
 mod readjustment_window;
+mod ortho_window;
 mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
@@ -340,6 +341,8 @@ mod zoning_window_tests;
 mod impact_window_tests;
 #[cfg(test)]
 mod readjustment_window_tests;
+#[cfg(test)]
+mod ortho_window_tests;
 #[cfg(test)]
 mod map_menus_tests;
 mod map_survey_panel_tests;

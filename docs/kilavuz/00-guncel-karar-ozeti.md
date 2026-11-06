@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Ortofoto doğruluk denetimi (6 Kasım 2026; MAP-12, [ADR 1480](../../docs/adr/1480-orthophoto-accuracy-check.md)).**
+  `cad.orthophoto.check` (raster sekmesi, salt okunur): bağımsız denetim noktaları, BÖHHBÜY m. 91(2)/54 kural paketi
+  `catalog/v1/rules/ortofoto-bohhbuy-2018.json`.
 - **Düzenleme dağıtım taslağı (6 Kasım 2026; MAP-11, [ADR 1460](../../docs/adr/1460-readjustment-distribution-draft.md)).**
   `cad.readjustment.distribute` (Harita + CBS, salt okunur, hep taslak): oranlar kural paketinin verisi, sayılar kesin.
 - **Alternatif etkisi (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).**

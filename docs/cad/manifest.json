@@ -8038,6 +8038,22 @@
    "tests": 0
   },
   {
+   "id": "raster.accuracy",
+   "kind": "command",
+   "title": "Ortofoto doğruluğu…",
+   "level": "query",
+   "via": [
+    "cad.orthophoto.check"
+   ],
+   "operation": null,
+   "python": "kentos.cad.orthophoto.check",
+   "mcp": "cad.orthophoto.check",
+   "note": "Pencere seçili rasteri cad.orthophoto.check ile denetler (salt okunur); CSV kaydet noktaların hatalarını yazar (ADR 1480).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.add",
    "kind": "command",
    "title": "Raster ekle…",

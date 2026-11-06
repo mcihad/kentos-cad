@@ -61,6 +61,7 @@ use crate::parcels_check;
 use crate::zoning_check;
 use crate::scenarios_impact;
 use crate::readjustment;
+use crate::orthophoto_check;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -544,6 +545,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_READJUSTMENT_DISTRIBUTE => {
                 $then!(readjustment, kentos_commands::ReadjustmentDistribute)
+            }
+            kentos_commands::CAD_ORTHOPHOTO_CHECK => {
+                $then!(orthophoto_check, kentos_commands::OrthophotoCheck)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)
