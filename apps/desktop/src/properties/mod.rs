@@ -578,6 +578,15 @@ impl App {
             let at = panel.sections.len().min(1);
             panel.sections.insert(at, section);
         }
+        // One accepted GNSS point, or an object made from accepted points: its measurement (docs/adr/1340 §1); read
+        // only, a map's and a GIS's.
+        if let [slot] = selected.as_slice()
+            && self.shows_property_rows(crate::module_surfaces::PropertyRows::Survey)
+            && let Some(section) = survey_section(doc, *slot)
+        {
+            let at = panel.sections.len().min(1);
+            panel.sections.insert(at, section);
+        }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
         if selected.is_empty()
@@ -2586,6 +2595,67 @@ impl App {
 /// Kaynağı (docs/adr/1200 §4): the object's role in the map's work, its item, the source it was derived from, the
 /// source's revision then (its first 12 hex digits), the operation and whether it is up to date; none outside a map
 /// project's work structure.
+/// An accepted GNSS point's measurement (docs/adr/1340 §1, §6): its mark, record and revision, its state and why,
+/// its method and solutions with their roles, the mark's height, σ, the epoch it is given in, the coordinate chain and
+/// its older results; or the accepted points an object was made from. HDOP and a fix are not accuracies.
+fn survey_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
+    let uid = doc.model.uid(slot)?.to_string();
+    let found = kentos_native_application::map_survey::object_of(&doc.model, &uid)?;
+    let mut out = Vec::new();
+    if let Some(p) = &found.point {
+        let r = &p.result;
+        out.push(rows::Row::text("İşaret", p.mark.clone()));
+        out.push(rows::Row::text("Kabul edilen nokta", format!("{} · {}. revizyon", p.id, r.revision)));
+        out.push(rows::Row::text("Durum", crate::map_survey_panel::state_words(p.state)));
+        for why in &p.why {
+            out.push(rows::Row::note(why));
+        }
+        out.push(rows::Row::text("Yöntem", r.method.title()));
+        for s in &found.solutions {
+            let mut roles = Vec::new();
+            if s.latest {
+                roles.push("son ölçülen");
+            }
+            if s.accepted {
+                roles.push("kabul edilen");
+            }
+            if s.adjusted {
+                roles.push("dengelemede");
+            }
+            if s.excluded.is_some() {
+                roles.push("dışlandı");
+            }
+            out.push(rows::Row::text(
+                s.id.clone(),
+                format!("{} · {}", crate::map_survey_panel::kind_words(s.kind), roles.join(", ")),
+            ));
+        }
+        out.push(rows::Row::text("İşaret yüksekliği", format!("{:.3} m (elipsoit)", r.height)));
+        if let Some(g) = r.sigma {
+            out.push(rows::Row::text("σ K/D/Y", format!("{:.1} / {:.1} / {:.1} mm", g[0] * 1000.0, g[1] * 1000.0, g[2] * 1000.0)));
+        }
+        out.push(rows::Row::text(
+            "Epok",
+            r.target_epoch.map_or_else(|| "söylenmedi".to_owned(), |e| format!("{e:.2}")),
+        ));
+        out.push(rows::Row::text(
+            "Koordinat zinciri",
+            if r.chain == "complete" { "Tam" } else { "Sınırlı: hassas dönüşüm sayılmaz" },
+        ));
+        if p.history > 0 {
+            out.push(rows::Row::text("Eski sonuç", format!("{} (raporları korunur)", p.history)));
+        }
+    }
+    if let Some(u) = &found.used {
+        out.push(rows::Row::text("Dayandığı kayıt", format!("{} · {}", u.id, u.operation)));
+        out.push(rows::Row::text("Güncellik", crate::map_survey_panel::state_words(u.state)));
+        for why in &u.why {
+            out.push(rows::Row::note(why));
+        }
+    }
+    Some(rows::Section { id: "mapSurvey".into(), title: "GNSS ölçümü".into(), rows: out })
+}
+
 fn map_work_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
     let uid = doc.model.uid(slot)?.to_string();
     let found = kentos_native_application::map_work::source_of(&doc.model, &uid)?;

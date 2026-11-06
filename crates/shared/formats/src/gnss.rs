@@ -13,6 +13,7 @@ use crate::text;
 pub mod gpx;
 pub mod gpx_write;
 pub mod nmea;
+pub mod rinex;
 
 /// Reads a GNSS file: GPX when it begins with `<`, else NMEA.
 pub fn read(bytes: &[u8]) -> GnssRead {

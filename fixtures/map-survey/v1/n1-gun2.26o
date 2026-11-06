@@ -1,0 +1,12 @@
+     2.11           OBSERVATION DATA    G (GPS)             RINEX VERSION / TYPE
+N1                                                          MARKER NAME         
+KENTOS              OFIS                                    OBSERVER / AGENCY   
+1830456             LEICA GS18          8.10                REC # / TYPE / VERS 
+1830456             LEIGS18         NONE                    ANT # / TYPE        
+  4194423.0000  2466101.5000  4055712.2500                  APPROX POSITION XYZ 
+        1.6100        0.0000        0.0000                  ANTENNA: DELTA H/E/N
+    15.000                                                  INTERVAL            
+  2026    11     4     8     0    0.0000000     GPS         TIME OF FIRST OBS   
+  2026    11     4     9     0    0.0000000     GPS         TIME OF LAST OBS    
+                                                            END OF HEADER       
+> 2026 11 03 09 30  0.0000000  0 12

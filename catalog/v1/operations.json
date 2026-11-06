@@ -1130,6 +1130,25 @@
       "level": "query",
       "python": "kentos.address"
     },
+    "map.survey": {
+      "level": "semantic",
+      "via": [
+        "map.survey.edit",
+        "map.survey.query"
+      ],
+      "note": "Panelin satırları map.survey.query'nin cevabı; arazi ölçümü ekleme, dışlama, dışlamayı kaldırma, alıcı çözümü, kabul ve yeniden üretme map.survey.edit'e gider (ADR 1340 §4)."
+    },
+    "map.survey.import": {
+      "level": "semantic",
+      "via": [
+        "map.survey.edit"
+      ],
+      "note": "Seçilen dosya map.survey.edit session ile okunur ve oturum olur (ADR 1340 §4)."
+    },
+    "map.survey.select": {
+      "level": "session",
+      "note": "Kabul edilen noktaların kimlikleri map.survey.query'den; yalnız seçim (ADR 1340 §1)."
+    },
     "address.data": {
       "level": "semantic",
       "via": [

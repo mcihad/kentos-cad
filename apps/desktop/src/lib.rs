@@ -132,6 +132,7 @@ mod blocks_panel;
 mod navigator;
 mod road_project_panel;
 mod map_work_panel;
+mod map_survey_panel;
 mod bottom;
 mod calc;
 mod catalog;
@@ -315,6 +316,7 @@ mod map_work_panel_tests;
 mod map_work_tools_tests;
 #[cfg(test)]
 mod scale_summary_tests;
+mod map_survey_panel_tests;
 #[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]

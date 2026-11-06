@@ -543,6 +543,8 @@ SCHEMA_WITH_ROAD_GRADES = 191
 SCHEMA_WITH_ROAD_OVE = 192
 # docs/adr/1201 §1: a map work item's file keeps its path from the project file's folder (`relative`).
 SCHEMA_WITH_MAP_WORK_RELATIVE = 193
+# docs/adr/1340 §5: a map project's GNSS archive (`settings.mapSurvey`).
+SCHEMA_WITH_MAP_SURVEY = 194
 def grades_from_percent(road):
     """A road project's settings written before schema 191 (docs/adr/0977): its grades were percent, each is divided
     by 100 (the same IEEE division KentOS makes). Anything not shaped as expected is left for the checks to refuse."""
@@ -915,7 +917,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3473,6 +3475,7 @@ class _Schema:
         self.leader_text_styles = version >= SCHEMA_WITH_LEADER_TEXT_STYLES
         self.map_work = version >= SCHEMA_WITH_MAP_WORK
         self.map_work_relative = version >= SCHEMA_WITH_MAP_WORK_RELATIVE
+        self.map_survey = version >= SCHEMA_WITH_MAP_SURVEY
         self.standard_exceptions = version >= SCHEMA_WITH_STANDARD_EXCEPTIONS
         self.long_patterns = version >= SCHEMA_WITH_LONG_PATTERNS
         self.shape_resources = version >= SCHEMA_WITH_SHAPE_RESOURCES
@@ -4456,9 +4459,14 @@ class _Schema:
                 **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
                 **({"road": (self.road_, False)} if self.road_work else {}),
                 **({"mapWork": (self.map_work_, False)} if self.map_work else {}),
+                **({"mapSurvey": (self.map_survey_, False)} if self.map_survey else {}),
             }
         )(v)
         # A map's work structure is a map project's (docs/adr/1200 §2).
+        # A map's GNSS archive is a map project's (docs/adr/1340 §5).
+        if "mapSurvey" in s and s.get("cadWork") != "map":
+            self.path.append("mapSurvey")
+            self.fail("bad_value", "GNSS arşivi yalnız harita projesinin olur (cadWork map)")
         if "mapWork" in s and s.get("cadWork") != "map":
             self.path.append("mapWork")
             self.fail("bad_value", "harita işi yalnız harita projesinin olur (cadWork map)")
@@ -6294,6 +6302,224 @@ class _Schema:
             if a > b:
                 self.fail("bad_value", "profiller ve eşlemeler adlarının sırasıyla yazılır (aynı adda önce profil)")
         return lst
+
+    def map_survey_(self, v):
+        """Schema 194 (docs/adr/1340 §2, §5): a map project's GNSS archive, never empty, its empty lists unwritten: its
+        campaigns (kp-N), sessions (os-N, of a campaign; a mark; times YYYY-MM-DDThh:mm:ss[.f]Z, the end not before the
+        start; an antenna 0–100 m, slant with 0 < radius < height, a radius and an offset only when slant; a file with
+        its SHA-256 (rinex, nmea or gpx); positions only from an NMEA or GPX file, at most 86 400), solutions (cz-N, of a
+        session; latitude ±90, longitude ±180, an EPSG code, an epoch 1900–2100, the antenna applied 0–100 m, σ above 0,
+        a covariance whose leading minors are above 0, positions from..to within the session's), accepted points (kn-N,
+        a mark once, an object once, revisions 1, 2 … with the result last, its solutions of its mark) and uses (kb-N,
+        objects once, points with a revision they had). Ids are unique across the lists."""
+        def numbered(t, prefix):
+            n = t[len(prefix):] if t.startswith(prefix) else ""
+            return n != "" and n[0] != "0" and len(n) <= 9 and all(c in "0123456789" for c in n)
+
+        def named(t, most=200):
+            return 0 < len(t) <= most and t.strip() == t
+
+        def when(t):
+            m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?Z", t)
+            if not m:
+                return None
+            y, mo, d, h, mi, s = (int(m.group(k)) for k in range(1, 7))
+            leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0
+            days = [31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+            if not (1900 <= y <= 2100 and 1 <= mo <= 12 and 1 <= d <= days[mo - 1] and h <= 23 and mi <= 59 and s <= 60):
+                return None
+            return (y, mo, d, h, mi, s, (m.group(7) or "").rstrip("0"))
+
+        def finite(x):
+            return x == x and x not in (float("inf"), float("-inf"))
+
+        def fail(words):
+            self.fail("bad_value", words)
+
+        number = self.float
+        u32 = self.uint(32)
+        texts = self.array(self.text)
+        file_ = self.fields({"path": (self.text, True), "revision": (self.text, True),
+                             "format": (self.enum(("rinex", "nmea", "gpx", "report")), True)})
+        grid = self.fields({"name": (self.text, True), "sha256": (self.text, True)})
+        campaign = self.fields({"id": (self.text, True), "name": (self.text, True), "work": (self.text, False),
+                                "operator": (self.text, False), "epoch": (number, False), "velocity": (grid, False)})
+        antenna = self.fields({"type": (self.text, False), "serial": (self.text, False), "height": (number, True),
+                               "reference": (self.enum(("arp", "slant")), False), "radius": (number, False),
+                               "offset": (number, False), "east": (number, False), "north": (number, False)})
+        receiver = self.fields({"type": (self.text, True), "serial": (self.text, False), "firmware": (self.text, False)})
+        facts = self.fields({"version": (self.text, True), "markerNumber": (self.text, False),
+                             "interval": (number, False), "approximate": (self.array(number), False)})
+        position = self.fields({"kind": (self.text, True), "name": (self.text, False), "lat": (number, True),
+                                "lon": (number, True), "height": (number, False), "geoid": (number, False),
+                                "ellipsoidal": (number, False), "time": (self.text, False), "fix": (self.text, False),
+                                "satellites": (u32, False), "hdop": (number, False), "line": (u32, True)})
+        session = self.fields({
+            "id": (self.text, True), "campaign": (self.text, True), "mark": (self.text, True),
+            "start": (self.text, False), "end": (self.text, False),
+            "timeSystem": (self.enum(("gps", "utc", "glo", "gal", "bdt", "qzs", "irn")), False),
+            "receiver": (receiver, False), "antenna": (antenna, False), "operator": (self.text, False),
+            "file": (file_, False), "rinex": (facts, False), "observations": (self.array(position), False)})
+        solution = self.fields({
+            "id": (self.text, True), "session": (self.text, True),
+            "kind": (self.enum(("receiver", "processed", "ppp")), True),
+            "lat": (number, True), "lon": (number, True), "height": (number, True), "srid": (u32, True),
+            "epoch": (number, False), "antennaApplied": (number, True), "fix": (self.text, False),
+            "epochs": (u32, False), "satellites": (u32, False), "hdop": (number, False),
+            "sigma": (self.array(number), False), "covariance": (self.array(number), False),
+            "correction": (self.text, False), "age": (number, False), "report": (file_, False),
+            "recipe": (self.text, False), "from": (u32, False), "to": (u32, False), "fixes": (texts, False),
+            "excluded": (self.text, False), "adjust": (self.bool, False)})
+        used = self.fields({"session": (self.text, True), "height": (number, True)})
+        result = self.fields({
+            "revision": (u32, True), "solutions": (texts, True),
+            "method": (self.enum(("single", "mean", "weighted")), True), "lat": (number, True),
+            "lon": (number, True), "height": (number, True), "srid": (u32, True), "epoch": (number, False),
+            "targetEpoch": (number, False), "antenna": (self.array(used), True), "sigma": (self.array(number), False),
+            "x": (number, True), "y": (number, True), "z": (number, False),
+            "chain": (self.enum(("complete", "limited")), True), "reasons": (texts, False)})
+        point = self.fields({"id": (self.text, True), "mark": (self.text, True), "uid": (self.text, True),
+                             "result": (result, True), "history": (self.array(result), False)})
+        revision = self.fields({"point": (self.text, True), "revision": (u32, True)})
+        use = self.fields({"id": (self.text, True), "operation": (self.text, True), "uids": (texts, True),
+                           "points": (self.array(revision), True)})
+        w = self.fields({"campaigns": (self.array(campaign), False), "sessions": (self.array(session), False),
+                         "solutions": (self.array(solution), False), "points": (self.array(point), False),
+                         "uses": (self.array(use), False)})(v)
+        if not any(w.values()):
+            fail("boş GNSS arşivi yazılmaz")
+        if any(k in w and not w[k] for k in w):
+            fail("boş liste yazılmaz")
+        lists = {k: w.get(k, []) for k in ("campaigns", "sessions", "solutions", "points", "uses")}
+        for k, most in (("campaigns", 1000), ("sessions", 10_000), ("solutions", 100_000), ("points", 10_000),
+                        ("uses", 10_000)):
+            if len(lists[k]) > most:
+                fail(f"en çok {most} kayıt olur")
+        ids = set()
+        prefix = {"campaigns": "kp-", "sessions": "os-", "solutions": "cz-", "points": "kn-", "uses": "kb-"}
+        for k, p in prefix.items():
+            for r in lists[k]:
+                if not numbered(r["id"], p) or r["id"] in ids:
+                    fail("kaydın kimliği geçersiz ya da yinelenmiş")
+                ids.add(r["id"])
+        camps = {c["id"]: c for c in lists["campaigns"]}
+        for c in lists["campaigns"]:
+            if not named(c["name"]) or ("operator" in c and not named(c["operator"])):
+                fail("ad ya da operatör geçersiz")
+            if "work" in c and not numbered(c["work"], "is-"):
+                fail("bağlı harita işi öğesi is-N olur")
+            if "epoch" in c and not (finite(c["epoch"]) and 1900 <= c["epoch"] <= 2100):
+                fail("epok 1900–2100 olur")
+            g = c.get("velocity")
+            if g and (not named(g["name"]) or not re.fullmatch(r"[0-9a-f]{64}", g["sha256"])):
+                fail("hız ızgarası geçersiz")
+        sessions = {}
+        for s in lists["sessions"]:
+            sessions[s["id"]] = s
+            if s["campaign"] not in camps or not named(s["mark"]) or ("operator" in s and not named(s["operator"])):
+                fail("oturumun arazi ölçümü, işareti ya da operatörü geçersiz")
+            a, b = (when(s[k]) if k in s else None for k in ("start", "end"))
+            if ("start" in s and a is None) or ("end" in s and b is None) or (a and b and b < a):
+                fail("oturumun zamanları geçersiz")
+            r = s.get("receiver")
+            if r and (not named(r["type"]) or any(k in r and not named(r[k]) for k in ("serial", "firmware"))):
+                fail("alıcı geçersiz")
+            an = s.get("antenna")
+            if an:
+                slant = an.get("reference") == "slant"
+                if not (finite(an["height"]) and 0 <= an["height"] <= 100):
+                    fail("anten yüksekliği 0–100 m olur")
+                if slant and not ("radius" in an and finite(an["radius"]) and 0 < an["radius"] < an["height"]):
+                    fail("eğik yükseklikte yarıçap 0 ile yükseklik arasında olur")
+                if not slant and ("radius" in an or "offset" in an or an.get("reference") == "arp"):
+                    fail("yarıçap ve ofset yalnız eğik yükseklikte; arp yazılmaz")
+                for k in ("offset", "east", "north"):
+                    if k in an and not (finite(an[k]) and abs(an[k]) <= 100):
+                        fail("anten değeri en çok 100 m olur")
+                if any(k in an and not named(an[k]) for k in ("type", "serial")):
+                    fail("antenin türü ya da seri no'su geçersiz")
+            f = s.get("file")
+            if f and (f["path"].strip() == "" or f["path"].strip() != f["path"]
+                      or not re.fullmatch(r"[0-9a-f]{64}", f["revision"]) or f["format"] == "report"):
+                fail("oturumun dosyası geçersiz")
+            obs = s.get("observations", [])
+            if len(obs) > 86_400 or (obs and not (f and f["format"] in ("nmea", "gpx"))):
+                fail("ham ölçümler yalnız NMEA ya da GPX dosyasından, en çok 86 400")
+            if any(not (finite(o["lat"]) and finite(o["lon"])) for o in obs):
+                fail("ham ölçümün konumu sonlu olmalı")
+        sols = {}
+        for x in lists["solutions"]:
+            sols[x["id"]] = x
+            s = sessions.get(x["session"])
+            if s is None:
+                fail("çözümün oturumu arşivde olmalı")
+            if not (finite(x["lat"]) and -90 <= x["lat"] <= 90 and finite(x["lon"]) and -180 <= x["lon"] <= 180):
+                fail("enlem ya da boylam aralık dışında")
+            if not (finite(x["height"]) and abs(x["height"]) <= 100_000) or x["srid"] == 0:
+                fail("yükseklik ya da çerçeve geçersiz")
+            if "epoch" in x and not (finite(x["epoch"]) and 1900 <= x["epoch"] <= 2100):
+                fail("epok 1900–2100 olur")
+            if not (finite(x["antennaApplied"]) and 0 <= x["antennaApplied"] <= 100):
+                fail("uygulanmış anten yüksekliği 0–100 m olur")
+            if "hdop" in x and not (finite(x["hdop"]) and x["hdop"] >= 0):
+                fail("HDOP eksi olamaz")
+            if "sigma" in x and (len(x["sigma"]) != 3 or not all(finite(g) and g > 0 for g in x["sigma"])):
+                fail("σ üç pozitif sayı olur")
+            if "covariance" in x:
+                c = x["covariance"]
+                if len(c) != 6 or not all(finite(g) for g in c):
+                    fail("kovaryans altı sayı olur")
+                nn, ne, nu, ee, eu, uu = c
+                m2 = nn * ee - ne * ne
+                m3 = nn * (ee * uu - eu * eu) - ne * (ne * uu - eu * nu) + nu * (ne * eu - ee * nu)
+                if not (nn > 0 and m2 > 0 and m3 > 0):
+                    fail("kovaryans pozitif tanımlı olmalı")
+            if "age" in x and not (finite(x["age"]) and x["age"] >= 0):
+                fail("düzeltme yaşı eksi olamaz")
+            for k, most in (("fix", 200), ("correction", 200), ("recipe", 2000), ("excluded", 500)):
+                if k in x and not named(x[k], most):
+                    fail("metin geçersiz")
+            rep = x.get("report")
+            if rep and (rep["format"] != "report" or not re.fullmatch(r"[0-9a-f]{64}", rep["revision"])):
+                fail("işleme raporu geçersiz")
+            if ("from" in x) != ("to" in x) or ("from" in x and not (
+                    x["from"] <= x["to"] < len(s.get("observations", [])))):
+                fail("ham ölçüm aralığı oturumun içinde olmalı")
+            if x.get("adjust") is False:
+                fail("varsayılan değer yazılmaz")
+        marks, objects = set(), set()
+        points = {}
+        for p in lists["points"]:
+            points[p["id"]] = p
+            if not named(p["mark"]) or p["mark"] in marks:
+                fail("bir işaretin tek kabul edilen noktası olur")
+            marks.add(p["mark"])
+            if p["uid"] in objects or p["uid"] == "00000000-0000-0000-0000-000000000000":
+                fail("noktanın nesnesi tek olur")
+            objects.add(p["uid"])
+            hist = p.get("history", [])
+            if len(hist) > 100 or p["result"]["revision"] != len(hist) + 1 or any(
+                    r["revision"] != k + 1 for k, r in enumerate(hist)):
+                fail("revizyonlar 1'den sırayla, bugünkü sonuncu")
+            if not p["result"]["solutions"]:
+                fail("kabul edilen noktanın en az bir çözümü olur")
+            for sid in p["result"]["solutions"]:
+                x = sols.get(sid)
+                if x is None or sessions[x["session"]]["mark"] != p["mark"]:
+                    fail("noktanın çözümleri arşivde ve işaretinin olmalı")
+        used_objects = set()
+        for u in lists["uses"]:
+            if not named(u["operation"]) or not u["uids"] or not u["points"]:
+                fail("dayanan geçersiz")
+            for x in u["uids"]:
+                if x in used_objects:
+                    fail("bir nesne tek dayananda olur")
+                used_objects.add(x)
+            for pr in u["points"]:
+                p = points.get(pr["point"])
+                if p is None or not 1 <= pr["revision"] <= p["result"]["revision"]:
+                    fail("dayananın noktası ve revizyonu geçerli olmalı")
+        return w
 
     def map_work_(self, v):
         """Schema 188 (docs/adr/1200 §2): a map project's work structure, never empty: its items (at most 1000, each

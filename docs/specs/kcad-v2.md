@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `193`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-194.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `194`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-195.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -860,6 +860,21 @@ karakter), isteğe bağlı `by` ve `at`; boş liste yazılmaz, aynı tür, konu 
 bilinmeyen alan `unknown_field`). Yazıcı 190'ı yalnız kabul edilmiş bulgu varken seçer; 189 ve öncesi alanı
 `unknown_field` sayar (`broken/standard-exceptions-in-schema-189.kcad`). Örnek `standard-exceptions.json/.kcad`; bozuklar
 `broken/standard-exceptions-{unknown-field,reason,duplicate}.kcad`.
+
+**Şema 194** (ADR 1340 §5; MAP-03): ayarların `mapSurvey`'i, harita projesinin GNSS
+arşivi (sözleşmenin `MapSurvey`'inin JSON'u; 9 harfli anahtarlar arasında `lineTypes`'tan sonra). Beş liste, her kayıt
+baştaki sıfırsız ve listeler arasında tek kimlikle: `campaigns` (`kp-N`; ad, harita işi öğesi `is-N`, operatör, epok
+kararı 1900–2100, hız ızgarası adı ve SHA-256'sı), `sessions` (`os-N`; arazi ölçümü, işaret, `YYYY-AA-GGTss:dd:sn[.k]Z`
+zamanları — bitiş başlangıçtan önce değil —, zaman sistemi, alıcı, anten: 0–100 m, `slant` ise 0 < yarıçap < yükseklik,
+yarıçap ve ofset yalnız `slant`'ta, `arp` yazılmaz; dosya `rinex`/`nmea`/`gpx` SHA-256'sıyla; RINEX başlık bilgileri; ham
+ölçümler yalnız NMEA/GPX dosyasından, en çok 86 400), `solutions` (`cz-N`; oturum, tür `receiver`/`processed`/`ppp`,
+enlem ±90, boylam ±180, elipsoit yüksekliği, EPSG kodu, epok, uygulanmış anten 0–100 m, σ > 0, öncü küçükleri pozitif
+kovaryans KK KD KY DD DY YY, yaş ≥ 0, rapor dosyası, tarif ≤ 2000, `from..to` oturumun ham ölçümleri içinde, dışlama
+nedeni ≤ 500, `adjust` yalnız true), `points` (`kn-N`; bir işaretin tek noktası, tek nesne, revizyonlar 1'den sırayla
+ve bugünkü sonuncu, çözümleri işaretinin), `uses` (`kb-N`; bir nesne tek kayıtta, noktaları ve geçerli revizyonları).
+Boş yapı ve boş liste yazılmaz; yalnız `cadWork: map` projesinin olur; kurala uymayan `bad_value`. Yazıcı 194'ü yalnız
+`mapSurvey` varken seçer; 193 ve öncesi alanı `unknown_field` sayar (`broken/map-survey-in-schema-193.kcad`). Örnek
+`map-survey.json/.kcad`; bozuklar `broken/map-survey-{not-map,mark-twice,covariance,revision-gap}.kcad`.
 
 **Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
 `decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri

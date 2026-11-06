@@ -5118,6 +5118,53 @@
    "tests": 0
   },
   {
+   "id": "map.survey",
+   "kind": "command",
+   "title": "GNSS arşivi",
+   "level": "semantic",
+   "via": [
+    "map.survey.edit",
+    "map.survey.query"
+   ],
+   "operation": null,
+   "python": "Connection: map.survey.edit, Connection: map.survey.query",
+   "mcp": "map.survey.edit, map.survey.query",
+   "note": "Panelin satırları map.survey.query'nin cevabı; arazi ölçümü ekleme, dışlama, dışlamayı kaldırma, alıcı çözümü, kabul ve yeniden üretme map.survey.edit'e gider (ADR 1340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "map.survey.import",
+   "kind": "command",
+   "title": "Ölçüm oturumu ekle…",
+   "level": "semantic",
+   "via": [
+    "map.survey.edit"
+   ],
+   "operation": null,
+   "python": "Connection: map.survey.edit",
+   "mcp": "map.survey.edit",
+   "note": "Seçilen dosya map.survey.edit session ile okunur ve oturum olur (ADR 1340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "map.survey.select",
+   "kind": "command",
+   "title": "Kabul edilen noktalar",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Kabul edilen noktaların kimlikleri map.survey.query'den; yalnız seçim (ADR 1340 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.workRelease",
    "kind": "command",
    "title": "Bağımsız yap",

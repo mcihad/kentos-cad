@@ -1,0 +1,6 @@
+Baz işleme raporu (örnek)
+Nokta: N1
+Yazılım: TBC 5.90
+Efemeris: kesin (IGS)
+Yükseklik maskesi: 10°
+Anten modeli: IGS20 ANTEX

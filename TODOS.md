@@ -60,6 +60,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yeniden bağlamada dış başvurunun geçmesi, bağlamsal sekmelerin Harita işi paneli (`map.workSource`, `map.workRelease`)
   ve panelin Seçimi türet satırı.
 - MAP-02 / ADR 1231: `cad.crs.factors`'ın web işleyicisi ve durum çubuğu ölçek menüsünün Ölçeklerin özeti alt menüsü.
+- MAP-03 / ADR 1340: `map.survey.query` ve `map.survey.edit`'in web işleyicisi, RINEX başlığı okuyucusunun WASM'ı,
+  `io/kcad.ts` şema 194 (`mapSurvey`), GNSS arşivi paneli ve Öznitelikler › GNSS ölçümü, şerit komutları (`map.survey`,
+  `map.survey.import`, `map.survey.select`) ve resimleri.
 - CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
   `unavailable`, `library`, `uses`), `kentos-ofis` kitaplığının web'de okunması, `io/kcad.ts` şema 183
   (`approvedSheetTemplates`), Standart kaynaklarını kur penceresinin Kitaplık/Kullanım sütunları ve Öznitelikler'in

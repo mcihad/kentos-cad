@@ -93,6 +93,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             coordinate_epoch: None,
             road: None,
             map_work: None,
+            map_survey: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
         view_templates: Vec::new(),

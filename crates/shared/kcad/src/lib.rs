@@ -825,11 +825,13 @@ pub const SCHEMA_WITH_ROAD_GRADES: u32 = 191;
 pub const SCHEMA_WITH_ROAD_OVE: u32 = 192;
 /// Schema 193 (docs/adr/1201 §1): a map work item's file keeps its path from the project file's folder (`relative`).
 pub const SCHEMA_WITH_MAP_WORK_RELATIVE: u32 = 193;
+/// Schema 194 (docs/adr/1340 §5): a map project's GNSS survey archive (`settings.mapSurvey`).
+pub const SCHEMA_WITH_MAP_SURVEY: u32 = 194;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 191] = [
+pub const SCHEMAS: [u32; 192] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1021,6 +1023,7 @@ pub const SCHEMAS: [u32; 191] = [
     SCHEMA_WITH_ROAD_GRADES,
     SCHEMA_WITH_ROAD_OVE,
     SCHEMA_WITH_MAP_WORK_RELATIVE,
+    SCHEMA_WITH_MAP_SURVEY,
 ];
 
 /// The file a drawing is saved as.

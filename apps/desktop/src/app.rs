@@ -58,12 +58,15 @@ pub enum Panel {
     RoadProject,
     /// Harita işi: a map project's items and derivations with their states (map_work_panel.rs, docs/adr/1200 §4).
     MapWork,
+    /// GNSS arşivi: a map project's arazi ölçümleri, solutions and accepted points (map_survey_panel.rs,
+    /// docs/adr/1340 §6).
+    MapSurvey,
     Properties,
 }
 
 impl Panel {
     /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
-    pub(crate) const ALL: [Panel; 9] = [
+    pub(crate) const ALL: [Panel; 10] = [
         Panel::Layers,
         Panel::Processing,
         Panel::Blocks,
@@ -72,6 +75,7 @@ impl Panel {
         Panel::Navigator,
         Panel::RoadProject,
         Panel::MapWork,
+        Panel::MapSurvey,
         Panel::Properties,
     ];
 
@@ -85,6 +89,7 @@ impl Panel {
             Panel::Navigator => "Gezgin",
             Panel::RoadProject => "Yol projesi",
             Panel::MapWork => "Harita işi",
+            Panel::MapSurvey => "GNSS arşivi",
             Panel::Properties => "Öznitelikler",
         }
     }
@@ -99,6 +104,7 @@ impl Panel {
             Panel::Navigator => crate::icons::from_web(Some("navigator")),
             Panel::RoadProject => crate::icons::from_web(Some("corridorEditor")),
             Panel::MapWork => crate::icons::from_web(Some("sourceLinked")),
+            Panel::MapSurvey => crate::icons::from_web(Some("gnssArchive")),
             Panel::Properties => Icon::Properties,
         }
     }
@@ -116,6 +122,7 @@ impl Panel {
             Panel::Navigator,
             Panel::RoadProject,
             Panel::MapWork,
+            Panel::MapSurvey,
         ] {
             if crate::module_surfaces::shows_panel_in(program, panel) {
                 docks.dock(panel, Side::Right);
@@ -645,6 +652,7 @@ pub enum Message {
     Navigator(crate::navigator::Event),
     RoadProject(crate::road_project_panel::Event),
     MapWork(crate::map_work_panel::Event),
+    MapSurvey(crate::map_survey_panel::Event),
     /// Şablonlar panel (templates_panel.rs).
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
@@ -1053,6 +1061,7 @@ pub struct App {
     pub(crate) navigator: crate::navigator::PanelState,
     pub(crate) road_project: crate::road_project_panel::PanelState,
     pub(crate) map_work: crate::map_work_panel::PanelState,
+    pub(crate) map_survey: crate::map_survey_panel::PanelState,
     /// The Şablonlar panel (templates_panel.rs), and the templates drawn with
     /// in this session, the newest first (templates.rs).
     pub(crate) templates_panel: crate::templates_panel::PanelState,
@@ -1674,6 +1683,7 @@ impl App {
             navigator: crate::navigator::PanelState::default(),
             road_project: crate::road_project_panel::PanelState::default(),
             map_work: crate::map_work_panel::PanelState::default(),
+            map_survey: crate::map_survey_panel::PanelState::default(),
             templates_panel: crate::templates_panel::PanelState::default(),
             office_palettes: Default::default(),
             sources: crate::sources::SourcesPanel::default(),
@@ -2571,6 +2581,7 @@ impl App {
             Message::Navigator(event) => return self.navigator_event(event),
             Message::RoadProject(e) => return self.road_project_event(e),
             Message::MapWork(e) => return self.map_work_event(e),
+            Message::MapSurvey(e) => return self.map_survey_event(e),
             Message::TemplatesPanel(event) => return self.templates_panel_event(event),
             Message::Sources(event) => return self.sources_event(event),
             Message::Db(event) => return self.db_event(event),
@@ -3532,6 +3543,16 @@ impl App {
             "address.search" => return self.open_address_search(),
             "address.reverse" => return self.start_tool(kentos_interaction::address_reverse::ID),
             "address.data" => return self.open_address_data(),
+            // GNSS arşivi (map_survey_panel.rs, docs/adr/1340 §6).
+            "map.survey" => {
+                self.show_map_survey();
+                return Task::none();
+            }
+            "map.survey.import" => return self.map_survey_event(crate::map_survey_panel::Event::Import),
+            "map.survey.select" => {
+                self.select_accepted_points();
+                return Task::none();
+            }
             "address.compare" => return self.open_address_compare(),
             // docs/adr/0583: a layer's source system and the map's.
             "layer.crs" => self.layer_crs_run(false),

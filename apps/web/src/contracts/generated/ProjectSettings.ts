@@ -21,6 +21,7 @@ import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { LineageRecord } from "./LineageRecord";
+import type { MapSurvey } from "./MapSurvey";
 import type { MapWork } from "./MapWork";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
@@ -281,4 +282,10 @@ road?: RoadSettings,
  * A map project's work structure (plan/map-cad.md MAP-01, docs/adr/1200): its items and what the objects were
  * derived from; absent: none. Only a CAD project drawn for a map has it (`.kcad` schema 188).
  */
-mapWork?: MapWork, };
+mapWork?: MapWork, 
+/**
+ * A map project's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340): campaigns, sessions, solutions,
+ * accepted points and what was made from them; absent: none. Only a CAD project drawn for a map has it (`.kcad`
+ * schema 194).
+ */
+mapSurvey?: MapSurvey, };

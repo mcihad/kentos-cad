@@ -134,6 +134,9 @@ pub(crate) enum PropertyRows {
     Separators,
     /// Kaynağı: where the selected object comes from in the map's work (docs/adr/1200 §4): a map's.
     MapWork,
+    /// GNSS ölçümü: an accepted point's quality, solutions and state, read only (docs/adr/1340 §1): a map's and a
+    /// GIS's.
+    Survey,
 }
 
 /// What one module's program shows.
@@ -240,6 +243,7 @@ const MAP: Surfaces = Surfaces {
         Panel::Templates,
         Panel::Sources,
         Panel::MapWork,
+        Panel::MapSurvey,
         Panel::Properties,
     ],
     cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap],
@@ -273,6 +277,7 @@ const MAP: Surfaces = Surfaces {
         PropertyRows::Services,
         PropertyRows::Mask,
         PropertyRows::MapWork,
+        PropertyRows::Survey,
     ],
     parcels: true,
     sheet: ProjectType::ZoningPlan,
@@ -386,7 +391,7 @@ const GIS: Surfaces = Surfaces {
     ],
     formats: Formats::All,
     sources: &[SourceSection::Databases, SourceSection::Services],
-    rows: &[PropertyRows::Crs, PropertyRows::Services],
+    rows: &[PropertyRows::Crs, PropertyRows::Services, PropertyRows::Survey],
     parcels: true,
     sheet: ProjectType::Gis,
     cloud: Some(ProjectType::Gis),

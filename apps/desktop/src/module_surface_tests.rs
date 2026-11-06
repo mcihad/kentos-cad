@@ -254,7 +254,7 @@ fn each_program_docks_its_own_panels() {
         (MIMARI, &[Layers, Blocks, Templates, Navigator, Properties]),
         (
             HARITA,
-            &[Layers, Processing, Blocks, Templates, Sources, MapWork, Properties],
+            &[Layers, Processing, Blocks, Templates, Sources, MapWork, MapSurvey, Properties],
         ),
         (GIS, &[Layers, Processing, Templates, Sources, Properties]),
     ];

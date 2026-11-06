@@ -369,6 +369,8 @@ def settings(s):
                 "reviewNotes": (opaque, False),
                 # Schema 188 (docs/adr/1200 §2): a map project's work structure, as its JSON.
                 "mapWork": (opaque, False),
+                # Schema 194 (docs/adr/1340 §5): a map project's GNSS archive, as its JSON.
+                "mapSurvey": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2498,6 +2500,9 @@ def document(d):
     if any("relative" in (i.get("file") or {}) for i in d["settings"].get("mapWork", {}).get("items", [])):
         # A map work item's file with its path from the project file's folder (docs/adr/1201 §1).
         schema = max(schema, 193)
+    if "mapSurvey" in d["settings"]:
+        # A map project's GNSS archive (docs/adr/1340 §5).
+        schema = max(schema, 194)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3456,7 +3461,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-194.kcad"] = container(root(cmap(parts), version=uint(194)))
+    files["schema-version-195.kcad"] = container(root(cmap(parts), version=uint(195)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5781,6 +5786,26 @@ def build():
     bad_led = copy.deepcopy(led)
     bad_led["settings"]["leaderStyles"][0]["textStyle"] = ""
     out["broken/leader-text-style-empty.kcad"] = container(document(bad_led))
+    # Schema 194 (docs/adr/1340 §5): a map project's GNSS archive: an arazi ölçümü of two RINEX sessions and an NMEA
+    # one with its positions, four solutions (one excluded), an accepted point and a use; schema 192 refuses the field
+    # (193 is another branch's), and an architecture project's archive, a mark accepted twice, a covariance that is not
+    # positive definite and an accepted point whose revisions skip are refused.
+    surveyed = load("map-survey.json")
+    surveyed_data = document(surveyed)
+    assert surveyed_data.count(b"\x67version\x18\xc2") == 1, "a map's GNSS archive is schema 194"
+    out["map-survey.kcad"] = container(surveyed_data)
+    out["broken/map-survey-in-schema-193.kcad"] = container(
+        surveyed_data.replace(b"\x67version\x18\xc2", b"\x67version\x18\xc1"))
+    for name, change in (
+            ("not-map", lambda d: (d["settings"].update({"cadWork": "architecture"}), d["settings"].pop("mapWork"))),
+            ("mark-twice", lambda d: d["settings"]["mapSurvey"]["points"].append(
+                {**d["settings"]["mapSurvey"]["points"][0], "id": "kn-2", "uid": "0192f5c0-1340-7000-8000-000000000003"})),
+            ("covariance", lambda d: d["settings"]["mapSurvey"]["solutions"][0].update(
+                {"covariance": [0.0001, 0.0002, 0.0, 0.0001, 0.0, 0.0004]})),
+            ("revision-gap", lambda d: d["settings"]["mapSurvey"]["points"][0]["result"].update({"revision": 2}))):
+        broken_survey = copy.deepcopy(surveyed)
+        change(broken_survey)
+        out[f"broken/map-survey-{name}.kcad"] = container(document(broken_survey))
     # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
     # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
     # item without a file, an object in two derivations and a draft status written are refused.

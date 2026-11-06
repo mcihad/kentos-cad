@@ -96,6 +96,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         coordinate_epoch: None,
         road: None,
         map_work: None,
+        map_survey: None,
         named_ucs: Vec::new(),
         named_views: Vec::new(),
         forms: Vec::new(),

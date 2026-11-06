@@ -287,6 +287,11 @@ pub(crate) enum Op {
         before: std::sync::Arc<Option<kentos_contracts::MapWork>>,
         after: std::sync::Arc<Option<kentos_contracts::MapWork>>,
     },
+    /// A map project's GNSS archive (docs/adr/1340 §2), before and after.
+    MapSurvey {
+        before: std::sync::Arc<Option<kentos_contracts::MapSurvey>>,
+        after: std::sync::Arc<Option<kentos_contracts::MapSurvey>>,
+    },
     /// The review notes (docs/adr/1000 §3), before and after: a note is not an object but its change is a step.
     ReviewNotes {
         before: std::sync::Arc<Vec<kentos_contracts::ReviewNote>>,
@@ -720,6 +725,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::MapWork { before, after } => Op::MapWork {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::MapSurvey { before, after } => Op::MapSurvey {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1476,6 +1485,7 @@ impl Document {
                 | Op::TemplateSettings { .. }
                 | Op::ReviewNotes { .. }
                 | Op::MapWork { .. }
+                | Op::MapSurvey { .. }
                 | Op::PatternTables { .. }
                 | Op::ApprovedSheetTemplates { .. }
                 | Op::StyleTables(_)
@@ -1770,6 +1780,10 @@ impl Document {
             }
             Op::MapWork { after, .. } => {
                 self.settings.map_work = after.as_ref().clone();
+                return;
+            }
+            Op::MapSurvey { after, .. } => {
+                self.settings.map_survey = after.as_ref().clone();
                 return;
             }
             Op::PatternTables { after, .. } => {

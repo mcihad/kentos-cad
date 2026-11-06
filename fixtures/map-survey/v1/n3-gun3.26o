@@ -1,0 +1,10 @@
+     4.00           OBSERVATION DATA    M                   RINEX VERSION / TYPE
+N3                                                          MARKER NAME         
+KENTOS              OFIS                                    OBSERVER / AGENCY   
+5123K40001          TRIMBLE R10         5.52                REC # / TYPE / VERS 
+1441112222          TRM57971.00     NONE                    ANT # / TYPE        
+  4194500.0000  2466000.0000  4055700.0000                  APPROX POSITION XYZ 
+        1.2000        0.1000        0.0000                  ANTENNA: DELTA H/E/N
+  2026    11     5     7    15   30.5000000     GPS         TIME OF FIRST OBS   
+                                                            END OF HEADER       
+> 2026 11 03 09 30  0.0000000  0 12

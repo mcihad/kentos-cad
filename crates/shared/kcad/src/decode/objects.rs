@@ -287,6 +287,8 @@ pub(super) struct Features {
     /// Schema 188 (docs/adr/1200 §2): a map project's work structure.
     pub(super) map_work: bool,
     pub(super) map_work_relative: bool,
+    /// Schema 194 (docs/adr/1340 §5): a map project's GNSS archive.
+    pub(super) map_survey: bool,
     /// Schema 190 (docs/adr/1129): the accepted standards findings.
     pub(super) standard_exceptions: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
@@ -600,6 +602,7 @@ impl Features {
             leader_text_styles: schema >= crate::SCHEMA_WITH_LEADER_TEXT_STYLES,
             map_work: schema >= crate::SCHEMA_WITH_MAP_WORK,
             map_work_relative: schema >= crate::SCHEMA_WITH_MAP_WORK_RELATIVE,
+            map_survey: schema >= crate::SCHEMA_WITH_MAP_SURVEY,
             standard_exceptions: schema >= crate::SCHEMA_WITH_STANDARD_EXCEPTIONS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
