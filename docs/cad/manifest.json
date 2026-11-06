@@ -5357,6 +5357,22 @@
    "tests": 0
   },
   {
+   "id": "pointcloud.overlap",
+   "kind": "command",
+   "title": "Tarama uyumu…",
+   "level": "query",
+   "via": [
+    "cad.pointclouds.overlap"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.overlap",
+   "mcp": "cad.pointclouds.overlap",
+   "note": "Pencere iki bulutu cad.pointclouds.overlap ile karşılaştırır (salt okunur); CSV kaydet en kötü hücreleri ve kontrol noktalarını yazar (ADR 1500).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "pointcloud.profile",
    "kind": "command",
    "title": "Nokta bulutu profili…",

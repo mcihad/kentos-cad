@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "pointcloud.overlap": {
+      "level": "query",
+      "via": [
+        "cad.pointclouds.overlap"
+      ],
+      "note": "Pencere iki bulutu cad.pointclouds.overlap ile karşılaştırır (salt okunur); CSV kaydet en kötü hücreleri ve kontrol noktalarını yazar (ADR 1500)."
+    },
     "raster.accuracy": {
       "level": "query",
       "via": [

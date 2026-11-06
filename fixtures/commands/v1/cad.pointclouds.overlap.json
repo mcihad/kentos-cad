@@ -1,0 +1,3029 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.pointclouds.overlap",
+ "commandVersion": 1,
+ "title": "Tarama uyumu denetimi",
+ "note": "ADR 1500. Bağımsız başvuru scripts/fixtures/pointcloud_overlap_cases.py: düzlem uydurma ve istatistik elle; bulutlar sentetik metin bulutlarıdır; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tarama uyumu",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tarama",
+    "name": "Taramalar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gnss",
+    "name": "GNSS kontrol noktaları",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "tarama",
+  "entities": [
+   {
+    "kind": "pointcloud",
+    "id": 1,
+    "layerId": "tarama",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tarama-a.xyz",
+      "format": "xyz",
+      "count": 1791,
+      "bounds": [
+       487000.019,
+       4420000.004,
+       850.017,
+       487029.968,
+       4420019.996,
+       851.875
+      ]
+     }
+    ],
+    "bounds": [
+     487000.019,
+     4420000.004,
+     850.017,
+     487029.968,
+     4420019.996,
+     851.875
+    ],
+    "count": 1791,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "tarama",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tarama-b.xyz",
+      "format": "xyz",
+      "count": 1791,
+      "bounds": [
+       487010.015,
+       4420000.002,
+       850.552,
+       487039.986,
+       4420019.99,
+       852.411
+      ]
+     }
+    ],
+    "bounds": [
+     487010.015,
+     4420000.002,
+     850.552,
+     487039.986,
+     4420019.99,
+     852.411
+    ],
+    "count": 1791,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "tarama",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tarama-c.xyz",
+      "format": "xyz",
+      "count": 1791,
+      "bounds": [
+       487010.004,
+       4420000.013,
+       850.758,
+       487039.97,
+       4420019.996,
+       852.644
+      ]
+     }
+    ],
+    "bounds": [
+     487010.004,
+     4420000.013,
+     850.758,
+     487039.97,
+     4420019.996,
+     852.644
+    ],
+    "count": 1791,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 4,
+    "layerId": "tarama",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tarama-d.xyz",
+      "format": "xyz",
+      "count": 1791,
+      "bounds": [
+       487010.015,
+       4420000.002,
+       850.552,
+       487039.986,
+       4420019.99,
+       852.411
+      ]
+     }
+    ],
+    "bounds": [
+     487010.015,
+     4420000.002,
+     850.552,
+     487039.986,
+     4420019.99,
+     852.411
+    ],
+    "count": 1791,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "point",
+    "id": 5,
+    "layerId": "gnss",
+    "attrs": {
+     "Ad": "K1"
+    },
+    "p": {
+     "x": 487005.3,
+     "y": 4420005.7
+    },
+    "z": 850.379
+   },
+   {
+    "kind": "point",
+    "id": 6,
+    "layerId": "gnss",
+    "attrs": {
+     "Ad": "K2"
+    },
+    "p": {
+     "x": 487015.4,
+     "y": 4420012.6
+    },
+    "z": 851.022
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "gnss",
+    "attrs": {
+     "Ad": "K3"
+    },
+    "p": {
+     "x": 487025.7,
+     "y": 4420004.4
+    },
+    "z": 851.373
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "gnss",
+    "attrs": {
+     "Ad": "K4"
+    },
+    "p": {
+     "x": 487034.6,
+     "y": 4420015.3
+    },
+    "z": 852.036
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "gnss",
+    "attrs": {
+     "Ad": "K5"
+    },
+    "p": {
+     "x": 487022.2,
+     "y": 4420009.1
+    },
+    "z": 851.292
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "gnss",
+    "attrs": {
+     "Ad": "Kotsuz"
+    },
+    "p": {
+     "x": 487012.0,
+     "y": 4420003.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5c0-1500-7000-8000-000000000001",
+   "0192f5c0-1500-7000-8000-000000000002",
+   "0192f5c0-1500-7000-8000-000000000003",
+   "0192f5c0-1500-7000-8000-000000000004",
+   "0192f5c0-1500-7000-8000-000000000005",
+   "0192f5c0-1500-7000-8000-000000000006",
+   "0192f5c0-1500-7000-8000-000000000007",
+   "0192f5c0-1500-7000-8000-000000000008",
+   "0192f5c0-1500-7000-8000-000000000009",
+   "0192f5c0-1500-7000-8000-00000000000a"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "A ile B: eğimli zemin, 4 cm sistematik kayma; GNSS kontrolüyle",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "control": "gnss"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [
+        {
+         "name": "K1",
+         "z": 850.379,
+         "dzA": 0.003742850429830469
+        },
+        {
+         "name": "K2",
+         "z": 851.022,
+         "dzA": -0.0024374508850542043,
+         "dzB": 0.040906453614752536
+        },
+        {
+         "name": "K3",
+         "z": 851.373,
+         "dzA": 0.00046493706531691714,
+         "dzB": 0.04074686486228529
+        },
+        {
+         "name": "K4",
+         "z": 852.036,
+         "dzB": 0.03904868227152747
+        },
+        {
+         "name": "K5",
+         "z": 851.292,
+         "dzA": 0.003560565192969989,
+         "dzB": 0.04068823797069854
+        }
+       ],
+       "controlA": {
+        "n": 4,
+        "kohZ": 0.002865479328368492,
+        "mean": 0.0013327254507657926,
+        "passed": true
+       },
+       "controlB": {
+        "n": 4,
+        "kohZ": 0.040354607047226154,
+        "mean": 0.04034755967981596,
+        "passed": true
+       },
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "A ile D: yoldaki araç (örtülmüş yol) en kötü hücrelerde, sınırı aşar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000004"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.09873851213109214,
+       "mean": 0.052997985005383726,
+       "std": 0.0833097074969715,
+       "max": 0.6405838674064626,
+       "limit": 0.08,
+       "passed": false,
+       "worst": [
+        {
+         "x": 487023.0,
+         "y": 4420009.0,
+         "dz": 0.6405838674064626
+        },
+        {
+         "x": 487021.0,
+         "y": 4420009.0,
+         "dz": 0.6279924454922821
+        },
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "uygula: salt okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "control": "gnss"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [
+        {
+         "name": "K1",
+         "z": 850.379,
+         "dzA": 0.003742850429830469
+        },
+        {
+         "name": "K2",
+         "z": 851.022,
+         "dzA": -0.0024374508850542043,
+         "dzB": 0.040906453614752536
+        },
+        {
+         "name": "K3",
+         "z": 851.373,
+         "dzA": 0.00046493706531691714,
+         "dzB": 0.04074686486228529
+        },
+        {
+         "name": "K4",
+         "z": 852.036,
+         "dzB": 0.03904868227152747
+        },
+        {
+         "name": "K5",
+         "z": 851.292,
+         "dzA": 0.003560565192969989,
+         "dzB": 0.04068823797069854
+        }
+       ],
+       "controlA": {
+        "n": 4,
+        "kohZ": 0.002865479328368492,
+        "mean": 0.0013327254507657926,
+        "passed": true
+       },
+       "controlB": {
+        "n": 4,
+        "kohZ": 0.040354607047226154,
+        "mean": 0.04034755967981596,
+        "passed": true
+       },
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "control": "gnss"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kontrolsüz: mutlak doğruluk bilinmez notu",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "A ile C: 25 cm kaymış şerit sınırı aşar",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000003"
+      ],
+      "control": "gnss"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.2496764208313923,
+       "mean": 0.24958955143792422,
+       "std": 0.006585661105028784,
+       "max": 0.2650711075552863,
+       "limit": 0.08,
+       "passed": false,
+       "worst": [
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.2650711075552863
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.264256277954928
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.26308861075210643
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.2625233940008229
+        },
+        {
+         "x": 487019.0,
+         "y": 4420005.0,
+         "dz": 0.26149982488834667
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.26066258738001125
+        },
+        {
+         "x": 487023.0,
+         "y": 4420001.0,
+         "dz": 0.26057622679547876
+        },
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.2604711651437128
+        },
+        {
+         "x": 487021.0,
+         "y": 4420017.0,
+         "dz": 0.25926506772486846
+        },
+        {
+         "x": 487011.0,
+         "y": 4420013.0,
+         "dz": 0.2589027258704846
+        },
+        {
+         "x": 487025.0,
+         "y": 4420013.0,
+         "dz": 0.25771786313396206
+        },
+        {
+         "x": 487027.0,
+         "y": 4420007.0,
+         "dz": 0.25771382196319337
+        },
+        {
+         "x": 487027.0,
+         "y": 4420005.0,
+         "dz": 0.2574797765372523
+        },
+        {
+         "x": 487029.0,
+         "y": 4420007.0,
+         "dz": 0.2572345232081261
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.25638598069303953
+        },
+        {
+         "x": 487023.0,
+         "y": 4420019.0,
+         "dz": 0.256318636727201
+        },
+        {
+         "x": 487017.0,
+         "y": 4420001.0,
+         "dz": 0.2563131823957292
+        },
+        {
+         "x": 487017.0,
+         "y": 4420007.0,
+         "dz": 0.25622494165918397
+        },
+        {
+         "x": 487019.0,
+         "y": 4420011.0,
+         "dz": 0.25611912278543514
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.2550023626274651
+        }
+       ],
+       "control": [
+        {
+         "name": "K1",
+         "z": 850.379,
+         "dzA": 0.003742850429830469
+        },
+        {
+         "name": "K2",
+         "z": 851.022,
+         "dzA": -0.0024374508850542043,
+         "dzB": 0.2524899990370386
+        },
+        {
+         "name": "K3",
+         "z": 851.373,
+         "dzA": 0.00046493706531691714,
+         "dzB": 0.2511276490831733
+        },
+        {
+         "name": "K4",
+         "z": 852.036,
+         "dzB": 0.24929903813142573
+        },
+        {
+         "name": "K5",
+         "z": 851.292,
+         "dzA": 0.003560565192969989,
+         "dzB": 0.2467986539593312
+        }
+       ],
+       "controlA": {
+        "n": 4,
+        "kohZ": 0.002865479328368492,
+        "mean": 0.0013327254507657926,
+        "passed": true
+       },
+       "controlB": {
+        "n": 4,
+        "kohZ": 0.2499379331739967,
+        "mean": 0.24992883505274222,
+        "passed": false
+       },
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "B ile A: sıra farkın işaretini çevirir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000002",
+       "0192f5c0-1500-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": -0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": -0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": -0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": -0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": -0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": -0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": -0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": -0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": -0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": -0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": -0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": -0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": -0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": -0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": -0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": -0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": -0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": -0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": -0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": -0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": -0.04604659059612004
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "1 m hücre",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "cell": 1.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 1.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        211,
+        216
+       ],
+       "cells": 46,
+       "area": 46.0,
+       "degenerate": 0,
+       "rmsdZ": 0.04451289634751016,
+       "mean": 0.04069050196671776,
+       "std": 0.018046633784191503,
+       "max": 0.11877515530920846,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487023.5,
+         "y": 4420016.5,
+         "dz": 0.11877515530920846
+        },
+        {
+         "x": 487024.5,
+         "y": 4420016.5,
+         "dz": 0.06583638432459793
+        },
+        {
+         "x": 487025.5,
+         "y": 4420003.5,
+         "dz": 0.06247589106533269
+        },
+        {
+         "x": 487017.5,
+         "y": 4420006.5,
+         "dz": 0.060613374523654784
+        },
+        {
+         "x": 487024.5,
+         "y": 4420011.5,
+         "dz": 0.0570886975723397
+        },
+        {
+         "x": 487011.5,
+         "y": 4420002.5,
+         "dz": 0.055125206564298423
+        },
+        {
+         "x": 487020.5,
+         "y": 4420010.5,
+         "dz": 0.052645810450712816
+        },
+        {
+         "x": 487013.5,
+         "y": 4420013.5,
+         "dz": 0.051643786048202855
+        },
+        {
+         "x": 487016.5,
+         "y": 4420013.5,
+         "dz": 0.05115914285318013
+        },
+        {
+         "x": 487014.5,
+         "y": 4420009.5,
+         "dz": 0.0508155930455132
+        },
+        {
+         "x": 487023.5,
+         "y": 4420013.5,
+         "dz": 0.05073462085590563
+        },
+        {
+         "x": 487027.5,
+         "y": 4420018.5,
+         "dz": 0.05021522447373172
+        },
+        {
+         "x": 487027.5,
+         "y": 4420010.5,
+         "dz": 0.04701622447498721
+        },
+        {
+         "x": 487013.5,
+         "y": 4420002.5,
+         "dz": 0.04681546665301539
+        },
+        {
+         "x": 487010.5,
+         "y": 4420003.5,
+         "dz": 0.04598773009524848
+        },
+        {
+         "x": 487026.5,
+         "y": 4420018.5,
+         "dz": 0.04596020245651289
+        },
+        {
+         "x": 487015.5,
+         "y": 4420005.5,
+         "dz": 0.045182712076325515
+        },
+        {
+         "x": 487015.5,
+         "y": 4420001.5,
+         "dz": 0.045106394473123146
+        },
+        {
+         "x": 487020.5,
+         "y": 4420011.5,
+         "dz": 0.04368991645810638
+        },
+        {
+         "x": 487012.5,
+         "y": 4420019.5,
+         "dz": 0.042397163119176184
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "5 m hücre",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "cell": 5.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 5.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        24,
+        24
+       ],
+       "cells": 16,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.04109374732301772,
+       "mean": 0.041029229230566955,
+       "std": 0.0023018292277264965,
+       "max": 0.04546792508438102,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487017.5,
+         "y": 4420012.5,
+         "dz": 0.04546792508438102
+        },
+        {
+         "x": 487027.5,
+         "y": 4420002.5,
+         "dz": 0.045309113310622706
+        },
+        {
+         "x": 487027.5,
+         "y": 4420017.5,
+         "dz": 0.04310426609822571
+        },
+        {
+         "x": 487012.5,
+         "y": 4420007.5,
+         "dz": 0.04307946740971147
+        },
+        {
+         "x": 487022.5,
+         "y": 4420012.5,
+         "dz": 0.04258859195738296
+        },
+        {
+         "x": 487027.5,
+         "y": 4420012.5,
+         "dz": 0.04200220022778467
+        },
+        {
+         "x": 487022.5,
+         "y": 4420017.5,
+         "dz": 0.041455021641354506
+        },
+        {
+         "x": 487027.5,
+         "y": 4420007.5,
+         "dz": 0.040588742530303534
+        },
+        {
+         "x": 487022.5,
+         "y": 4420002.5,
+         "dz": 0.04056173766787197
+        },
+        {
+         "x": 487017.5,
+         "y": 4420007.5,
+         "dz": 0.03957564769723376
+        },
+        {
+         "x": 487012.5,
+         "y": 4420017.5,
+         "dz": 0.03931987805515291
+        },
+        {
+         "x": 487022.5,
+         "y": 4420007.5,
+         "dz": 0.03921987424917006
+        },
+        {
+         "x": 487017.5,
+         "y": 4420002.5,
+         "dz": 0.03920799983404777
+        },
+        {
+         "x": 487012.5,
+         "y": 4420002.5,
+         "dz": 0.03902668943840126
+        },
+        {
+         "x": 487012.5,
+         "y": 4420012.5,
+         "dz": 0.03813155047657801
+        },
+        {
+         "x": 487017.5,
+         "y": 4420017.5,
+         "dz": 0.037828962010848954
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "hücrede en az 20 nokta",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "least": 20
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        4,
+        0
+       ],
+       "cells": 0,
+       "area": 0.0,
+       "degenerate": 0,
+       "rmsdZ": 0.0,
+       "mean": 0.0,
+       "std": 0.0,
+       "max": 0.0,
+       "limit": 0.08,
+       "worst": [],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz.",
+        "Örtüşen hücre yok: iki bulut aynı yeri yeterli noktayla kaplamıyor."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kontrol çevresi 1 m",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "control": "gnss",
+      "radius": 1.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [
+        {
+         "name": "K1",
+         "z": 850.379
+        },
+        {
+         "name": "K2",
+         "z": 851.022,
+         "dzA": -0.003034062851611452,
+         "dzB": 0.04522564669412077
+        },
+        {
+         "name": "K3",
+         "z": 851.373,
+         "dzA": -0.00020649758914714766,
+         "dzB": 0.039899278528764626
+        },
+        {
+         "name": "K4",
+         "z": 852.036,
+         "dzB": 0.03818553473627162
+        },
+        {
+         "name": "K5",
+         "z": 851.292,
+         "dzA": 0.006800615753945749,
+         "dzB": 0.04023272689278201
+        }
+       ],
+       "controlA": {
+        "n": 3,
+        "kohZ": 0.004301029073553883,
+        "mean": 0.0011866851043957165,
+        "passed": true
+       },
+       "controlB": {
+        "n": 4,
+        "kohZ": 0.04096986368765939,
+        "mean": 0.04088579671298476,
+        "passed": true
+       },
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "1/500: KOH_Z sınırı daha sıkı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "control": "gnss",
+      "scale": 500
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [
+        {
+         "name": "K1",
+         "z": 850.379,
+         "dzA": 0.003742850429830469
+        },
+        {
+         "name": "K2",
+         "z": 851.022,
+         "dzA": -0.0024374508850542043,
+         "dzB": 0.040906453614752536
+        },
+        {
+         "name": "K3",
+         "z": 851.373,
+         "dzA": 0.00046493706531691714,
+         "dzB": 0.04074686486228529
+        },
+        {
+         "name": "K4",
+         "z": 852.036,
+         "dzB": 0.03904868227152747
+        },
+        {
+         "name": "K5",
+         "z": 851.292,
+         "dzA": 0.003560565192969989,
+         "dzB": 0.04068823797069854
+        }
+       ],
+       "controlA": {
+        "n": 4,
+        "kohZ": 0.002865479328368492,
+        "mean": 0.0013327254507657926,
+        "passed": true
+       },
+       "controlB": {
+        "n": 4,
+        "kohZ": 0.040354607047226154,
+        "mean": 0.04034755967981596,
+        "passed": true
+       },
+       "limitZ": 0.09499857499999999,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "başka kural paketi: 3 cm",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "rules": {
+       "id": "deneme-3cm",
+       "release": 1,
+       "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 4/h yalnız tanımlar)",
+       "source": "Deneme paketi (sentetik): 3 cm",
+       "effective": "2018-06-26",
+       "interswath": 0.03,
+       "xy": [
+        -1.665e-06,
+        0.01745,
+        -1.166
+       ],
+       "zFactor": 1.33
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "deneme-3cm",
+       "source": "Deneme paketi (sentetik): 3 cm",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.03,
+       "passed": false,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır deneme-3cm paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "yalnız sınıf 2: metin bulutu sınıf 0, nokta kalmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "classes": [
+       2
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        0,
+        0
+       ],
+       "filled": [
+        0,
+        0
+       ],
+       "cells": 0,
+       "area": 0.0,
+       "degenerate": 0,
+       "rmsdZ": 0.0,
+       "mean": 0.0,
+       "std": 0.0,
+       "max": 0.0,
+       "limit": 0.08,
+       "worst": [],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz.",
+        "Örtüşen hücre yok: iki bulut aynı yeri yeterli noktayla kaplamıyor."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "sınıf 0 süzgeci bütün noktaları alır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "classes": [
+       0
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 100,
+       "area": 400.0,
+       "degenerate": 0,
+       "rmsdZ": 0.041549705451146314,
+       "mean": 0.04099798500538555,
+       "std": 0.0067485738178669945,
+       "max": 0.06377522180775941,
+       "limit": 0.08,
+       "passed": true,
+       "worst": [
+        {
+         "x": 487011.0,
+         "y": 4420009.0,
+         "dz": 0.06377522180775941
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "dz": 0.058124845893644306
+        },
+        {
+         "x": 487029.0,
+         "y": 4420001.0,
+         "dz": 0.05807499899083268
+        },
+        {
+         "x": 487025.0,
+         "y": 4420011.0,
+         "dz": 0.05313904307092798
+        },
+        {
+         "x": 487027.0,
+         "y": 4420001.0,
+         "dz": 0.05195140664375231
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "dz": 0.051474147697263106
+        },
+        {
+         "x": 487011.0,
+         "y": 4420017.0,
+         "dz": 0.05069174359095996
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "dz": 0.050633120550060084
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "dz": 0.050516171321191905
+        },
+        {
+         "x": 487011.0,
+         "y": 4420011.0,
+         "dz": 0.04867231052639909
+        },
+        {
+         "x": 487023.0,
+         "y": 4420017.0,
+         "dz": 0.04866553482747804
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.04842963385033272
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "dz": 0.047786854531182144
+        },
+        {
+         "x": 487025.0,
+         "y": 4420017.0,
+         "dz": 0.04769663970898819
+        },
+        {
+         "x": 487023.0,
+         "y": 4420003.0,
+         "dz": 0.04736992264975015
+        },
+        {
+         "x": 487011.0,
+         "y": 4420019.0,
+         "dz": 0.04650947984725917
+        },
+        {
+         "x": 487015.0,
+         "y": 4420003.0,
+         "dz": 0.04638893781589104
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.04626739481682307
+        },
+        {
+         "x": 487029.0,
+         "y": 4420005.0,
+         "dz": 0.04622944167044807
+        },
+        {
+         "x": 487015.0,
+         "y": 4420019.0,
+         "dz": 0.04604659059612004
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir.",
+        "Kontrol noktası yok: bulutların mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "B ile C: örtüşen ama kaymış",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000002",
+       "0192f5c0-1500-7000-8000-000000000003"
+      ],
+      "control": "gnss"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "cell": 2.0,
+       "read": [
+        1791,
+        1791
+       ],
+       "taken": [
+        1791,
+        1791
+       ],
+       "filled": [
+        150,
+        150
+       ],
+       "cells": 150,
+       "area": 600.0,
+       "degenerate": 0,
+       "rmsdZ": 0.2089112054113279,
+       "mean": 0.2088126014237643,
+       "std": 0.006417883845489608,
+       "max": 0.23123777849968974,
+       "limit": 0.08,
+       "passed": false,
+       "worst": [
+        {
+         "x": 487019.0,
+         "y": 4420003.0,
+         "dz": 0.23123777849968974
+        },
+        {
+         "x": 487025.0,
+         "y": 4420013.0,
+         "dz": 0.22482221063910401
+        },
+        {
+         "x": 487039.0,
+         "y": 4420003.0,
+         "dz": 0.22415615926672672
+        },
+        {
+         "x": 487027.0,
+         "y": 4420005.0,
+         "dz": 0.22348932654551845
+        },
+        {
+         "x": 487033.0,
+         "y": 4420011.0,
+         "dz": 0.22255102891620027
+        },
+        {
+         "x": 487025.0,
+         "y": 4420019.0,
+         "dz": 0.22246735648593585
+        },
+        {
+         "x": 487035.0,
+         "y": 4420007.0,
+         "dz": 0.22108506901270175
+        },
+        {
+         "x": 487013.0,
+         "y": 4420001.0,
+         "dz": 0.2184917696931734
+        },
+        {
+         "x": 487023.0,
+         "y": 4420019.0,
+         "dz": 0.2179920191730389
+        },
+        {
+         "x": 487011.0,
+         "y": 4420013.0,
+         "dz": 0.21791194545323833
+        },
+        {
+         "x": 487023.0,
+         "y": 4420005.0,
+         "dz": 0.2171088253335256
+        },
+        {
+         "x": 487027.0,
+         "y": 4420007.0,
+         "dz": 0.21709222673825934
+        },
+        {
+         "x": 487019.0,
+         "y": 4420019.0,
+         "dz": 0.21689968876421517
+        },
+        {
+         "x": 487033.0,
+         "y": 4420019.0,
+         "dz": 0.2168887069246921
+        },
+        {
+         "x": 487027.0,
+         "y": 4420013.0,
+         "dz": 0.21664147370495357
+        },
+        {
+         "x": 487019.0,
+         "y": 4420005.0,
+         "dz": 0.21663665846688218
+        },
+        {
+         "x": 487027.0,
+         "y": 4420009.0,
+         "dz": 0.21635999641762282
+        },
+        {
+         "x": 487039.0,
+         "y": 4420009.0,
+         "dz": 0.21632458689907708
+        },
+        {
+         "x": 487023.0,
+         "y": 4420001.0,
+         "dz": 0.2162735065862762
+        },
+        {
+         "x": 487029.0,
+         "y": 4420019.0,
+         "dz": 0.21625599918399985
+        }
+       ],
+       "control": [
+        {
+         "name": "K1",
+         "z": 850.379
+        },
+        {
+         "name": "K2",
+         "z": 851.022,
+         "dzA": 0.040906453614752536,
+         "dzB": 0.2524899990370386
+        },
+        {
+         "name": "K3",
+         "z": 851.373,
+         "dzA": 0.04074686486228529,
+         "dzB": 0.2511276490831733
+        },
+        {
+         "name": "K4",
+         "z": 852.036,
+         "dzA": 0.03904868227152747,
+         "dzB": 0.24929903813142573
+        },
+        {
+         "name": "K5",
+         "z": 851.292,
+         "dzA": 0.04068823797069854,
+         "dzB": 0.2467986539593312
+        }
+       ],
+       "controlA": {
+        "n": 4,
+        "kohZ": 0.040354607047226154,
+        "mean": 0.04034755967981596,
+        "passed": true
+       },
+       "controlB": {
+        "n": 4,
+        "kohZ": 0.2499379331739967,
+        "mean": 0.24992883505274222,
+        "passed": false
+       },
+       "limitZ": 0.1944327,
+       "notes": [
+        "Her hücrede bulutun noktalarına düzlem uydurulur; fark iki düzlemin hücre merkezindeki değerlerinin farkıdır (ikinci − birinci), eğim fark sayılmaz.",
+        "Şeritler arası sınır lidar-uyum-ornek paketinin örnek değeridir; Türk mevzuatında LiDAR şerit uyumu ölçütü yok, kurum kendi değerini verir."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "tek bulut",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "İki ayrı nokta bulutu verin: karşılaştırılacak iki tarama.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı bulut iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000001"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "İki ayrı nokta bulutu verin: karşılaştırılacak iki tarama.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bulut değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000005"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pointcloud",
+       "message": "Verilen nesne bir nokta bulutu değil; bir nokta bulutunun kimliğini verin.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "x"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan bulut",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000063"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-1500-7000-8000-000000000063” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "hücre 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "cell": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hücre kenarı sonlu ve sıfırdan büyük olmalı (yazılan 0).",
+       "path": "cell"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "en az 2 nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "least": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bir düzlem için hücrede en az 3 nokta gerekir.",
+       "path": "least"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kontrol katmanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "control": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” katmanı çizimde yok.",
+       "path": "control"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "ölçek 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "scale": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Ölçek paydası 0 olamaz.",
+       "path": "scale"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kural paketinin kaynağı boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1500-7000-8000-000000000001",
+       "0192f5c0-1500-7000-8000-000000000002"
+      ],
+      "rules": {
+       "id": "lidar-uyum-ornek",
+       "release": 1,
+       "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 4/h yalnız tanımlar)",
+       "source": "",
+       "effective": "2018-06-26",
+       "interswath": 0.08,
+       "xy": [
+        -1.665e-06,
+        0.01745,
+        -1.166
+       ],
+       "zFactor": 1.33
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kural paketinin kimliği ya da kaynağı boş; sınırın dayanağı yazılmadan denetim yapılmaz.",
+       "path": "rules"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

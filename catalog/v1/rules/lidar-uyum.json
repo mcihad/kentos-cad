@@ -1,0 +1,10 @@
+{
+ "id": "lidar-uyum-ornek",
+ "release": 1,
+ "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 4/h yalnız tanımlar)",
+ "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+ "effective": "2018-06-26",
+ "interswath": 0.08,
+ "xy": [-1.665e-6, 0.01745, -1.166],
+ "zFactor": 1.33
+}

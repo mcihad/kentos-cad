@@ -69,6 +69,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-10 / ADR 1440: `cad.scenarios.impact`'in web işleyicisi ve Alternatif etkisi penceresi.
 - MAP-11 / ADR 1460: `cad.readjustment.distribute`'in web işleyicisi ve Düzenleme dağıtım taslağı penceresi.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
+- MAP-13 / ADR 1500: `cad.pointclouds.overlap`'in web işleyicisi ve Tarama uyumu penceresi.
 - MAP-03 / ADR 1340: `map.survey.query` ve `map.survey.edit`'in web işleyicisi, RINEX başlığı okuyucusunun WASM'ı,
   `io/kcad.ts` şema 194 (`mapSurvey`), GNSS arşivi paneli ve Öznitelikler › GNSS ölçümü, şerit komutları (`map.survey`,
   `map.survey.import`, `map.survey.select`) ve resimleri.

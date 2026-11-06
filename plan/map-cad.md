@@ -754,6 +754,14 @@ işle. LOD değişirken ölçülen noktanın kimliği/değeri değişmesin. Kayn
 sınıfları korunsun, düzeltme geri alınsın; kayıt ve nesne çıkarımı bağımsız
 kontrolle değerlendirilsin. Gerçek veri/süre/bellek raporu olmadan “milyar nokta hızlı” denmesin.
 
+**6 Kasım 2026 — Tarama uyumu denetimi ([ADR 1500](../docs/adr/1500-scan-overlap-check.md)).** Kapsam işareti:
+**Harita + CBS**. Araştırma: BÖHHBÜY LiDAR'a ölçüt vermiyor (yalnız m. 4/h tanım; m. 91(2) KOH_Z ürün için); USGS LBS
+QL2 şeritler arası RMSDz ≤ 8 cm (örnek, bağlayıcı değil); TBC/Cyclone/TerraMatch'te kayıt ve şerit uyumu ayrı iş.
+Kanıtlanan: iki taramanın tam çözünürlükte, hücre düzlemleriyle (eğim fark sayılmaz) RMSDz, sistematik kayma, en kötü
+hücreler; GNSS kontrol noktalarında her taramanın KOH_Z'si; kontrolsüz bulut “ölçüye kesin hazır” sayılmaz
+(`cad.pointclouds.overlap`, 26 ortak durum: eğimli zemin, kaymış şerit, yoldaki araç). Açık: ICP/kayıt, kalıcı kayıt
+kimliği, sınıf düzeltme katmanı, kesit düzenleme, çıkarım, gerçek veri ölçümü.
+
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 
 **Öncelik:** P1, MAP-02/03/07 üzerine. **Kod:** [K28]–[K30], [K03].

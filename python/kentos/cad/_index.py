@@ -187,6 +187,7 @@ COMMANDS: dict[str, Any] = {
     "cad.plotstyles.import": plotstyles.import_,
     "cad.point.create": point.create,
     "cad.pointclouds.describe": pointclouds.describe,
+    "cad.pointclouds.overlap": pointclouds.overlap,
     "cad.pointclouds.profile": pointclouds.profile,
     "cad.pointclouds.query": pointclouds.query,
     "cad.pointclouds.region": pointclouds.region,

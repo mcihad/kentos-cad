@@ -2381,6 +2381,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
+    Entry {
+        id: "cad.pointclouds.overlap",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input", "layer_not_found", "too_many_cloud_points"]],
+        warnings: &["cloud_source_unreadable"],
+        targets: none,
+    },
     // Ortofoto doğruluk denetimi (plan/map-cad.md MAP-12, docs/adr/1480).
     Entry {
         id: "cad.orthophoto.check",

@@ -422,6 +422,8 @@ pub enum Dialog {
     Readjustment,
     /// Ortofoto doğruluğu (ortho_window.rs, docs/adr/1480); its state is `App::ortho`.
     Ortho,
+    /// Tarama uyumu (overlap_window.rs, docs/adr/1500); its state is `App::overlap`.
+    Overlap,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
@@ -843,6 +845,7 @@ pub enum Message {
     Impact(crate::impact_window::Event),
     Readjustment(crate::readjustment_window::Event),
     Ortho(crate::ortho_window::Event),
+    Overlap(crate::overlap_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
@@ -1504,6 +1507,7 @@ pub struct App {
     pub(crate) impact: crate::impact_window::State,
     pub(crate) readjustment: crate::readjustment_window::State,
     pub(crate) ortho: crate::ortho_window::State,
+    pub(crate) overlap: crate::overlap_window::State,
     /// Alternatif etkisi's base stamps saved this session, by scenario (docs/adr/1440 §3).
     pub(crate) impact_stamps: crate::impact_window::Stamps,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
@@ -1958,6 +1962,7 @@ impl App {
             impact: Default::default(),
             readjustment: Default::default(),
             ortho: Default::default(),
+            overlap: Default::default(),
             impact_stamps: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
@@ -2736,6 +2741,7 @@ impl App {
             Message::Impact(event) => return self.impact_event(event),
             Message::Readjustment(event) => return self.readjustment_event(event),
             Message::Ortho(event) => return self.ortho_event(event),
+            Message::Overlap(event) => return self.overlap_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
@@ -3593,6 +3599,7 @@ impl App {
             "scenario.impact" => return self.open_impact(),
             "readjustment.distribute" => return self.open_readjustment(),
             "raster.accuracy" => return self.open_ortho(),
+            "pointcloud.overlap" => return self.open_overlap(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
             "map.workSource" => {
                 self.map_work_show_source();

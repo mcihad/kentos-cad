@@ -54635,6 +54635,472 @@
       ]
     },
     {
+      "id": "cad.pointclouds.overlap",
+      "version": 1,
+      "title": "Tarama uyumu denetimi",
+      "summary": "Aynı yerin iki taramasını (şerit, oturum; uids: iki nokta bulutu) örtüştükleri yerde tam çözünürlükte karşılaştırır: hücre ızgarasında (cell, ilk değer 2 m) her bulutun noktalarına düzlem uydurulur (eğim fark sayılmaz), iki düzlemin hücre merkezindeki farkı (ikinci − birinci); en az least (ilk değer 4) noktalı hücrelerde RMSDz, ortalama (sistematik kayma), standart sapma, en büyük fark ve en kötü 20 hücre; classes ile sınıf süzgeci. control (nokta katmanı, ad alanı field) verilirse her bulutun kontrol noktası çevresindeki (radius) düzleminin noktaya farkı ve KOH_Z'si. Sınırlar kural paketindendir (rules; ilk değer KentOS örneği: şeritler arası 8 cm RMSDz, USGS QL2'den, Türk mevzuatı değil; KOH_Z BÖHHBÜY m. 91(2)). Kontrolsüz bulut ölçüye kesin hazır sayılmaz. Salt okunur; hiçbir bulut taşınmaz. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.",
+      "aliases": [
+        "taramauyumu",
+        "seritfarki",
+        "rmsdz"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.overlap` v1: the two clouds (`uids`, exactly two), the cell's side (metres; none: 2), the\nfewest points a cloud must have in a cell (none: 4), the classes taken (none: all), the layer of the control points\n(none: no control), their name attribute (none: `Ad`) and the reach around one (metres; none: the cell's side), the\nscale's denominator (none: the project's), the rule package (none: KentOS's example) and the drawing's file (its\nfolder resolves a relative source).\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud` (`uids[i]`), `invalid_input` (`uids`: not two\ndifferent clouds; `cell`, `radius` not finite and over 0; `least` under 3; `scale` 0; `rules`: an empty id or\nsource, a limit not finite), `layer_not_found` (`control`), `too_many_cloud_points`.",
+        "properties": {
+          "cell": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "classes": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "index"
+          },
+          "control": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "least": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "radius": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CloudRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "scale"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "PointCloudsOverlap",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.overlap` v1: the package, the cell, the points read and taken per cloud, the cells each\ncloud fills, the cells both fill and their area, the cells left out because a plane was not defined, RMSDz, mean,\nstandard deviation and largest |dz| over the overlap and whether RMSDz holds (none without overlap), the worst\ncells (at most 20, by |dz|), the control points with each cloud's statistics and KOH_Z's limit, and notes.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m2"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "control": {
+            "items": {
+              "$ref": "#/$defs/OverlapControl"
+            },
+            "type": "array"
+          },
+          "controlA": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OverlapControlStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "controlB": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OverlapControlStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "degenerate": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "filled": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "count"
+          },
+          "limit": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "limitZ": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "max": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "mean": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "passed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "read": {
+            "items": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "count"
+          },
+          "rmsdZ": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "rules": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "std": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "taken": {
+            "items": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "count"
+          },
+          "worst": {
+            "items": {
+              "$ref": "#/$defs/OverlapCell"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "source",
+          "cell",
+          "read",
+          "taken",
+          "filled",
+          "cells",
+          "area",
+          "degenerate",
+          "rmsdZ",
+          "mean",
+          "std",
+          "max",
+          "limit",
+          "worst",
+          "control",
+          "limitZ",
+          "notes"
+        ],
+        "title": "PointCloudsOverlapped",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.overlap` v1: the package, the cell, the points read and taken per cloud, the cells each\ncloud fills, the cells both fill and their area, the cells left out because a plane was not defined, RMSDz, mean,\nstandard deviation and largest |dz| over the overlap and whether RMSDz holds (none without overlap), the worst\ncells (at most 20, by |dz|), the control points with each cloud's statistics and KOH_Z's limit, and notes.",
+        "properties": {
+          "area": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m2"
+          },
+          "cell": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "cells": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "control": {
+            "items": {
+              "$ref": "#/$defs/OverlapControl"
+            },
+            "type": "array"
+          },
+          "controlA": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OverlapControlStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "controlB": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OverlapControlStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "degenerate": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "filled": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "count"
+          },
+          "limit": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "limitZ": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "max": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "mean": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "passed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "read": {
+            "items": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "count"
+          },
+          "rmsdZ": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "rules": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "std": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "taken": {
+            "items": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "count"
+          },
+          "worst": {
+            "items": {
+              "$ref": "#/$defs/OverlapCell"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "source",
+          "cell",
+          "read",
+          "taken",
+          "filled",
+          "cells",
+          "area",
+          "degenerate",
+          "rmsdZ",
+          "mean",
+          "std",
+          "max",
+          "limit",
+          "worst",
+          "control",
+          "limitZ",
+          "notes"
+        ],
+        "title": "PointCloudsOverlapped",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_input",
+          "layer_not_found",
+          "too_many_cloud_points"
+        ],
+        "warnings": [
+          "cloud_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki şerit, 2 m hücre, GNSS kontrolüyle",
+          "input": {
+            "control": "gnss",
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.orthophoto.check",
       "version": 1,
       "title": "Ortofoto doğruluk denetimi",
@@ -113160,6 +113626,61 @@
       ],
       "type": "string"
     },
+    "CloudRules": {
+      "additionalProperties": false,
+      "description": "The rule package: who issues it, the document, when it holds; the interswath RMSDz limit (metres) and KOH_Z's limit\nin centimetres as `zFactor × (xy[0]·S² + xy[1]·S + xy[2])`.",
+      "properties": {
+        "effective": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "interswath": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "source": {
+          "type": "string"
+        },
+        "xy": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "measure"
+        },
+        "zFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "measure"
+        }
+      },
+      "required": [
+        "id",
+        "release",
+        "jurisdiction",
+        "source",
+        "effective",
+        "interswath",
+        "xy",
+        "zFactor"
+      ],
+      "type": "object"
+    },
     "CloudSource": {
       "description": "One file of a cloud.",
       "properties": {
@@ -152464,6 +152985,99 @@
         "meanY",
         "maxD",
         "nZ"
+      ],
+      "type": "object"
+    },
+    "OverlapCell": {
+      "description": "A cell both clouds fill: its centre and the second cloud's plane minus the first's there (metres).",
+      "properties": {
+        "dz": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "dz"
+      ],
+      "type": "object"
+    },
+    "OverlapControl": {
+      "description": "A control point: its name, its height, and each cloud's plane minus it there (none where the cloud has too few\npoints around it, or they lie on a line).",
+      "properties": {
+        "dzA": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "dzB": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "name": {
+          "type": "string"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "name",
+        "z"
+      ],
+      "type": "object"
+    },
+    "OverlapControlStats": {
+      "description": "A cloud's control statistics: how many control points it reached, KOH_Z and the mean (metres), and whether KOH_Z\nholds to the limit (none without one).",
+      "properties": {
+        "kohZ": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "n": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "n",
+        "kohZ",
+        "mean"
       ],
       "type": "object"
     },

@@ -21149,6 +21149,51 @@ class CloudRegionPart(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CloudRules(_Model):
+    """The rule package: who issues it, the document, when it holds; the interswath RMSDz limit (metres) and KOH_Z's limit
+    in centimetres as `zFactor × (xy[0]·S² + xy[1]·S + xy[2])`.
+    Attributes:
+        release: Unit: version.
+        interswath: Unit: length.
+        xy: Unit: measure.
+        z_factor: Unit: measure.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    interswath: float
+    xy: list[float]
+    z_factor: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["interswath"] = float(self.interswath)
+        out["xy"] = [float(e0) for e0 in self.xy]
+        out["zFactor"] = float(self.z_factor)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            interswath=float(data["interswath"]),
+            xy=[float(e0) for e0 in data["xy"]],
+            z_factor=float(data["zFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CloudSource(_Model):
     """One file of a cloud.
     Attributes:
@@ -58907,6 +58952,101 @@ class OrthophotoChecked(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OverlapCell(_Model):
+    """A cell both clouds fill: its centre and the second cloud's plane minus the first's there (metres).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        dz: Unit: length.
+    """
+    x: float
+    y: float
+    dz: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["dz"] = float(self.dz)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OverlapCell:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            dz=float(data["dz"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OverlapControl(_Model):
+    """A control point: its name, its height, and each cloud's plane minus it there (none where the cloud has too few
+    points around it, or they lie on a line).
+    Attributes:
+        z: Unit: elevation.
+        dz_a: Unit: length.
+        dz_b: Unit: length.
+    """
+    name: str
+    z: float
+    dz_a: float | None | Unset = UNSET
+    dz_b: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["z"] = float(self.z)
+        if self.dz_a is not UNSET:
+            out["dzA"] = None if self.dz_a is None else float(self.dz_a)
+        if self.dz_b is not UNSET:
+            out["dzB"] = None if self.dz_b is None else float(self.dz_b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OverlapControl:
+        return cls(
+            name=data["name"],
+            z=float(data["z"]),
+            dz_a=UNSET if "dzA" not in data else None if data["dzA"] is None else float(data["dzA"]),
+            dz_b=UNSET if "dzB" not in data else None if data["dzB"] is None else float(data["dzB"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OverlapControlStats(_Model):
+    """A cloud's control statistics: how many control points it reached, KOH_Z and the mean (metres), and whether KOH_Z
+    holds to the limit (none without one).
+    Attributes:
+        n: Unit: count.
+        koh_z: Unit: length.
+        mean: Unit: length.
+    """
+    n: int
+    koh_z: float
+    mean: float
+    passed: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["n"] = self.n
+        out["kohZ"] = float(self.koh_z)
+        out["mean"] = float(self.mean)
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OverlapControlStats:
+        return cls(
+            n=data["n"],
+            koh_z=float(data["kohZ"]),
+            mean=float(data["mean"]),
+            passed=data.get("passed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageEmbedded(_Model):
     """A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.
     Attributes:
@@ -64224,6 +64364,172 @@ class PointCloudsDescribed(_Model):
         return cls(
             clouds=[CloudDescribed.from_json(e0) for e0 in data["clouds"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsOverlap(_Model):
+    """Input of `cad.pointclouds.overlap` v1: the two clouds (`uids`, exactly two), the cell's side (metres; none: 2), the
+    fewest points a cloud must have in a cell (none: 4), the classes taken (none: all), the layer of the control points
+    (none: no control), their name attribute (none: `Ad`) and the reach around one (metres; none: the cell's side), the
+    scale's denominator (none: the project's), the rule package (none: KentOS's example) and the drawing's file (its
+    folder resolves a relative source).
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud` (`uids[i]`), `invalid_input` (`uids`: not two
+    different clouds; `cell`, `radius` not finite and over 0; `least` under 3; `scale` 0; `rules`: an empty id or
+    source, a limit not finite), `layer_not_found` (`control`), `too_many_cloud_points`.
+    Attributes:
+        cell: Unit: length.
+        classes: Unit: index.
+        least: Unit: count.
+        radius: Unit: length.
+        scale: Unit: scale.
+    """
+    uids: list[str]
+    cell: float | None | Unset = UNSET
+    classes: list[int] | None | Unset = UNSET
+    control: str | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    least: int | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    rules: CloudRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
+        if self.classes is not UNSET:
+            out["classes"] = None if self.classes is None else list(self.classes)
+        if self.control is not UNSET:
+            out["control"] = self.control
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.least is not UNSET:
+            out["least"] = self.least
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsOverlap:
+        return cls(
+            uids=list(data["uids"]),
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            classes=UNSET if "classes" not in data else None if data["classes"] is None else list(data["classes"]),
+            control=data.get("control", UNSET),
+            drawing=data.get("drawing", UNSET),
+            field=data.get("field", UNSET),
+            least=data.get("least", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else CloudRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsOverlapped(_Model):
+    """Output of `cad.pointclouds.overlap` v1: the package, the cell, the points read and taken per cloud, the cells each
+    cloud fills, the cells both fill and their area, the cells left out because a plane was not defined, RMSDz, mean,
+    standard deviation and largest |dz| over the overlap and whether RMSDz holds (none without overlap), the worst
+    cells (at most 20, by |dz|), the control points with each cloud's statistics and KOH_Z's limit, and notes.
+    Attributes:
+        cell: Unit: length.
+        read: Unit: count.
+        taken: Unit: count.
+        filled: Unit: count.
+        cells: Unit: count.
+        area: Unit: m2.
+        degenerate: Unit: count.
+        rmsd_z: Unit: length.
+        mean: Unit: length.
+        std: Unit: length.
+        max: Unit: length.
+        limit: Unit: length.
+        limit_z: Unit: length.
+    """
+    rules: str
+    source: str
+    cell: float
+    read: list[int]
+    taken: list[int]
+    filled: list[int]
+    cells: int
+    area: float
+    degenerate: int
+    rmsd_z: float
+    mean: float
+    std: float
+    max: float
+    limit: float
+    worst: list[OverlapCell]
+    control: list[OverlapControl]
+    limit_z: float
+    notes: list[str]
+    control_a: OverlapControlStats | None | Unset = UNSET
+    control_b: OverlapControlStats | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules
+        out["source"] = self.source
+        out["cell"] = float(self.cell)
+        out["read"] = list(self.read)
+        out["taken"] = list(self.taken)
+        out["filled"] = list(self.filled)
+        out["cells"] = self.cells
+        out["area"] = float(self.area)
+        out["degenerate"] = self.degenerate
+        out["rmsdZ"] = float(self.rmsd_z)
+        out["mean"] = float(self.mean)
+        out["std"] = float(self.std)
+        out["max"] = float(self.max)
+        out["limit"] = float(self.limit)
+        out["worst"] = [e0.to_json() for e0 in self.worst]
+        out["control"] = [e0.to_json() for e0 in self.control]
+        out["limitZ"] = float(self.limit_z)
+        out["notes"] = list(self.notes)
+        if self.control_a is not UNSET:
+            out["controlA"] = None if self.control_a is None else self.control_a.to_json()
+        if self.control_b is not UNSET:
+            out["controlB"] = None if self.control_b is None else self.control_b.to_json()
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsOverlapped:
+        return cls(
+            rules=data["rules"],
+            source=data["source"],
+            cell=float(data["cell"]),
+            read=list(data["read"]),
+            taken=list(data["taken"]),
+            filled=list(data["filled"]),
+            cells=data["cells"],
+            area=float(data["area"]),
+            degenerate=data["degenerate"],
+            rmsd_z=float(data["rmsdZ"]),
+            mean=float(data["mean"]),
+            std=float(data["std"]),
+            max=float(data["max"]),
+            limit=float(data["limit"]),
+            worst=[OverlapCell.from_json(e0) for e0 in data["worst"]],
+            control=[OverlapControl.from_json(e0) for e0 in data["control"]],
+            limit_z=float(data["limitZ"]),
+            notes=list(data["notes"]),
+            control_a=UNSET if "controlA" not in data else None if data["controlA"] is None else OverlapControlStats.from_json(data["controlA"]),
+            control_b=UNSET if "controlB" not in data else None if data["controlB"] is None else OverlapControlStats.from_json(data["controlB"]),
+            passed=data.get("passed", UNSET),
         )
 
 
@@ -122290,6 +122596,7 @@ __all__ = [
     "CloudRenderName",
     "CloudReturns",
     "CloudReturnsName",
+    "CloudRules",
     "CloudSource",
     "CloudSourceDescribed",
     "CloudStats",
@@ -123863,6 +124170,9 @@ __all__ = [
     "OrthoStats",
     "OrthophotoCheck",
     "OrthophotoChecked",
+    "OverlapCell",
+    "OverlapControl",
+    "OverlapControlStats",
     "OverriddenExtractValue",
     "PackageEmbedded",
     "PackageLeft",
@@ -124176,6 +124486,8 @@ __all__ = [
     "PointCloudStyle",
     "PointCloudsDescribe",
     "PointCloudsDescribed",
+    "PointCloudsOverlap",
+    "PointCloudsOverlapped",
     "PointCloudsProfile",
     "PointCloudsProfiled",
     "PointCloudsQueried",

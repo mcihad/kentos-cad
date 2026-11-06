@@ -9328,6 +9328,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_OVERLAP.into(),
+            version: crate::CAD_POINTCLOUDS_OVERLAP_VERSION,
+            title: "Tarama uyumu denetimi".into(),
+            summary: "Aynı yerin iki taramasını (şerit, oturum; uids: iki nokta bulutu) örtüştükleri yerde tam çözünürlükte karşılaştırır: hücre ızgarasında (cell, ilk değer 2 m) her bulutun noktalarına düzlem uydurulur (eğim fark sayılmaz), iki düzlemin hücre merkezindeki farkı (ikinci − birinci); en az least (ilk değer 4) noktalı hücrelerde RMSDz, ortalama (sistematik kayma), standart sapma, en büyük fark ve en kötü 20 hücre; classes ile sınıf süzgeci. \
+                      control (nokta katmanı, ad alanı field) verilirse her bulutun kontrol noktası çevresindeki (radius) düzleminin noktaya farkı ve KOH_Z'si. Sınırlar kural paketindendir (rules; ilk değer KentOS örneği: şeritler arası 8 cm RMSDz, USGS QL2'den, Türk mevzuatı değil; KOH_Z BÖHHBÜY m. 91(2)). Kontrolsüz bulut ölçüye kesin hazır sayılmaz. Salt okunur; hiçbir bulut taşınmaz. \
+                      Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points."
+                .into(),
+            aliases: vec!["taramauyumu".into(), "seritfarki".into(), "rmsdz".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PointCloudsOverlap>(),
+            output: schema::<crate::PointCloudsOverlapped>(),
+            plan: Some(schema::<crate::PointCloudsOverlapped>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki şerit, 2 m hücre, GNSS kontrolüyle".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"], "control": "gnss" }),
+                output: None,
+            }],
+        },
         // Ortofoto doğruluk denetimi (plan/map-cad.md MAP-12, docs/adr/1480).
         CommandDescriptor {
             id: crate::CAD_ORTHOPHOTO_CHECK.into(),
@@ -15978,6 +16005,7 @@ mod tests {
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16926,6 +16954,7 @@ mod tests {
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
