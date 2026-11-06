@@ -135815,6 +135815,13 @@
         "name": {
           "description": "As a text style's.",
           "type": "string"
+        },
+        "textStyle": {
+          "description": "The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an\nembedded SHX file, the font draws the note. Schema 187.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

@@ -1641,6 +1641,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "leaderStyles" if has.multileader => {
                 let (l, at): (Vec<kentos_contracts::LeaderStyleDef>, usize) =
                     objects::json_part(r, "kılavuz stilleri")?;
+                // Schema 187 (docs/adr/1025): a leader style's text style.
+                if !has.leader_text_styles && l.iter().any(|s| s.text_style.is_some()) {
+                    return Err(r.fail_at(Code::UnknownField, at, "kılavuz stilinin yazı stili belge şeması 187 gerektirir"));
+                }
                 if let Some((field, words)) =
                     l.iter().find_map(kentos_contracts::LeaderStyleDef::problem)
                 {

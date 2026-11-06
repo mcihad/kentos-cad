@@ -796,7 +796,8 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
             keys(
                 item,
                 &format!("resources.leaderStyles[{i}]"),
-                &["id", "name", "height", "arrow", "arrowSize", "mask"],
+                // docs/adr/1025: the note's text style, by name.
+                &["id", "name", "height", "arrow", "arrowSize", "mask", "textStyle"],
             )?;
         }
     }

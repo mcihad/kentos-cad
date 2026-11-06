@@ -756,12 +756,25 @@ pub struct LeaderStyleDef {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mask: bool,
+    /// The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an
+    /// embedded SHX file, the font draws the note. Schema 187.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub text_style: Option<String>,
 }
 
 impl LeaderStyleDef {
     /// What is wrong with it: the field and the refusal's words (as the other styles say theirs).
     pub fn problem(&self) -> Option<(&'static str, String)> {
         let name = &self.name;
+        if let Some(t) = &self.text_style
+            && (t.trim().is_empty() || t.trim() != t || t.len() > 256 || t.chars().any(char::is_control))
+        {
+            return Some((
+                "textStyle",
+                format!("“{name}” kılavuz stilinin yazı stili adı “{t}” geçersiz: boş olmayan, kenarı boşluksuz, en çok 256 bayt olmalı"),
+            ));
+        }
         if !mm_holds(self.height, true) {
             return Some((
                 "height",
@@ -1186,6 +1199,12 @@ pub fn dimension_text_style<'a>(
     texts: &'a [TextStyleDef],
 ) -> Option<&'a TextStyleDef> {
     let name = dimension.text_style.as_deref()?;
+    texts.iter().find(|s| s.name.eq_ignore_ascii_case(name))
+}
+
+/// The project text style a leader style writes its note in (docs/adr/1025), as [`dimension_text_style`].
+pub fn leader_text_style<'a>(leader: &LeaderStyleDef, texts: &'a [TextStyleDef]) -> Option<&'a TextStyleDef> {
+    let name = leader.text_style.as_deref()?;
     texts.iter().find(|s| s.name.eq_ignore_ascii_case(name))
 }
 

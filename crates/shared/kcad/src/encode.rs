@@ -2161,6 +2161,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 187 (docs/adr/1025): a leader style that names the text style of its note.
+    if doc.settings.leader_styles.iter().any(|s| s.text_style.is_some()) {
+        return crate::SCHEMA_WITH_LEADER_TEXT_STYLES;
+    }
     // Schema 186 (docs/adr/1023): a dimension style that names the text style of its value.
     if doc.settings.dimension_styles.iter().any(|s| s.text_style.is_some()) {
         return crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES;

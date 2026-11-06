@@ -48731,6 +48731,8 @@ class LeaderStyleDef(_Model):
         height: The note's height on paper, mm. Unit: paper-mm.
         arrow: Absent: a filled arrow.
         arrow_size: Times the note's height; absent: 1. Unit: 1.
+        text_style: The project text style its note is written in, by its name (docs/adr/1025): when that style's font is an
+            embedded SHX file, the font draws the note. Schema 187.
     """
     id: str
     name: str
@@ -48738,6 +48740,7 @@ class LeaderStyleDef(_Model):
     arrow: LeaderArrow | LeaderArrowName | None | Unset = UNSET
     arrow_size: float | None | Unset = UNSET
     mask: bool | Unset = UNSET
+    text_style: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -48750,6 +48753,8 @@ class LeaderStyleDef(_Model):
             out["arrowSize"] = None if self.arrow_size is None else float(self.arrow_size)
         if self.mask is not UNSET:
             out["mask"] = self.mask
+        if self.text_style is not UNSET:
+            out["textStyle"] = self.text_style
         return out
 
     @classmethod
@@ -48761,6 +48766,7 @@ class LeaderStyleDef(_Model):
             arrow=UNSET if "arrow" not in data else None if data["arrow"] is None else _enum_in(LeaderArrow, data["arrow"]),
             arrow_size=UNSET if "arrowSize" not in data else None if data["arrowSize"] is None else float(data["arrowSize"]),
             mask=data.get("mask", UNSET),
+            text_style=data.get("textStyle", UNSET),
         )
 
 

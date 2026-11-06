@@ -109,6 +109,8 @@ pub enum Event {
     Arrow(usize),
     Size(String),
     Mask(bool),
+    /// The text style its note is written in, by name (docs/adr/1025); none: the typeface.
+    TextStyle(Option<String>),
     Save,
     Close,
 }
@@ -415,6 +417,11 @@ impl App {
                         s.mask = *on;
                     }
                 }
+                Event::TextStyle(name) => {
+                    if let Some(s) = w.current() {
+                        s.text_style.clone_from(name);
+                    }
+                }
                 _ => {}
             }
         }
@@ -644,6 +651,30 @@ impl App {
                         "Notun zemini",
                         Some(msg(Event::Mask(!s.mask))),
                     ))
+                    .push(words::field(
+                        "Yazı stili",
+                        {
+                            // The drawing's text styles by name; an SHX one's embedded font draws the note.
+                            let names: Vec<String> = self
+                                .document
+                                .as_ref()
+                                .map(|d| d.model.settings().text_styles.iter().map(|t| t.name.clone()).collect())
+                                .unwrap_or_default();
+                            let chosen = s
+                                .text_style
+                                .as_deref()
+                                .map(|n| names.iter().position(|x| x.eq_ignore_ascii_case(n)).map_or(0, |i| i + 1))
+                                .unwrap_or(0);
+                            let picked = names.clone();
+                            Select::new(
+                                std::iter::once(Choice::new("Yok (yazı tipi)"))
+                                    .chain(names.iter().map(|n| Choice::new(n.clone()))),
+                                Some(chosen),
+                                move |i| msg(Event::TextStyle(i.checked_sub(1).and_then(|i| picked.get(i).cloned()))),
+                            )
+                        },
+                        Some("SHX yazı stili notu kendi fontuyla çizer".to_owned()),
+                    ))
                     .into()
             }
             None => label::caption("Bir stil seçin.").into(),
@@ -693,6 +724,7 @@ impl StylesWindow {
             arrow: None,
             arrow_size: None,
             mask: false,
+            text_style: None,
         });
         self.choose(self.styles.len() - 1);
     }

@@ -282,6 +282,8 @@ pub(super) struct Features {
     pub(super) table_styles: bool,
     /// Schema 186 (docs/adr/1023): a dimension style's text style.
     pub(super) dimension_text_styles: bool,
+    /// Schema 187 (docs/adr/1025): a leader style's text style.
+    pub(super) leader_text_styles: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -584,6 +586,7 @@ impl Features {
             shx_fonts: schema >= crate::SCHEMA_WITH_SHX_FONTS,
             table_styles: schema >= crate::SCHEMA_WITH_TABLE_STYLES,
             dimension_text_styles: schema >= crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES,
+            leader_text_styles: schema >= crate::SCHEMA_WITH_LEADER_TEXT_STYLES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

@@ -1833,6 +1833,11 @@ ekranda, PDF'de ve CPU baskısında fontun çizgileridir, çizilemeyen değer ha
 DIMTXSTY'nin stilini korur (ezdxf başvurusu). Standart paketi `textStyle`'ı ve Big Font'u kabul eder; masaüstü
 penceresinde Yazı stili seçimi. DXF dışa aktarma DIMTXSTY'yi yazar. Kılavuz ve tablo yazısı açık.
 
+**Kılavuz notu SHX ile (6 Kasım 2026, [ADR 1025](../docs/adr/1025-leader-styles-write-their-note-in-a-text-style.md)):**
+Kılavuz stili notunu bir yazı stiliyle yazar (`textStyle`, `.kcad` şema 187); SHX yazı stilinde not ekranda, PDF'de
+ve CPU baskısında fontun çizgileridir, çizilemeyen not hatadır, pafta ön denetimi kılavuzları da sorar. Bağımsız
+başvuru durumuyla test edildi; pencere resmi bakıldı. DXF MLEADERSTYLE yazı stili ve tablo hücresi SHX'i açık.
+
 **Kâğıt çizgisinin noktası (6 Kasım 2026, ADR 1124 ek):** Pafta çizgisi, şekil ve dikdörtgenin kendi tire
 listesindeki sıfır boylu tire PDF'de ve SVG'de yuvarlak, çizgi kalınlığında nokta basılır (yol iki kez: tireler, sonra
 noktalar). PDF akışı ve SVG testleriyle; ifraz altın PDF'i değişmedi; 600 dpi resme bakıldı.

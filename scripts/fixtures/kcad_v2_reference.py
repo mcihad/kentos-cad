@@ -2428,6 +2428,9 @@ def document(d):
     if any("textStyle" in st for st in d["settings"].get("dimensionStyles", [])):
         # A dimension style that names the text style of its value (docs/adr/1023).
         schema = max(schema, 186)
+    if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
+        # A leader style that names the text style of its note (docs/adr/1025).
+        schema = max(schema, 187)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -3373,7 +3376,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-187.kcad"] = container(root(cmap(parts), version=uint(187)))
+    files["schema-version-188.kcad"] = container(root(cmap(parts), version=uint(188)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5670,6 +5673,17 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 187 (docs/adr/1025): a leader style naming its note's text style; schema 186 refuses the field, an empty
+    # name is refused.
+    led = load("leader-text-style.json")
+    led_data = document(led)
+    assert led_data.count(b"\x67version\x18\xbb") == 1, "a leader style's text style is schema 187"
+    out["leader-text-style.kcad"] = container(led_data)
+    out["broken/leader-text-style-in-schema-186.kcad"] = container(
+        led_data.replace(b"\x67version\x18\xbb", b"\x67version\x18\xba"))
+    bad_led = copy.deepcopy(led)
+    bad_led["settings"]["leaderStyles"][0]["textStyle"] = ""
+    out["broken/leader-text-style-empty.kcad"] = container(document(bad_led))
     # Schema 186 (docs/adr/1023): a dimension style naming its value's text style (an SHX one) beside one without;
     # schema 185 refuses the field; an empty name and one with spaces at its ends are refused.
     dimmed = load("dimension-text-style.json")

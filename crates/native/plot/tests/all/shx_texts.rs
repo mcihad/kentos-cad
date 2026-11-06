@@ -328,3 +328,60 @@ fn a_dimension_writes_its_value_in_its_styles_shx_font() {
         assert_eq!(refused.err().map(|e| e.code).as_deref(), Some("text_shx_unsupported"));
     }
 }
+
+/// docs/adr/1025: a leader whose style names an SHX text style writes its note in that font: the note “SU” 2.5 high,
+/// level, is the reference case “Sol taban” (left baseline) moved to where the leader puts its note; a leader whose
+/// style names none keeps its typeface; a note the font cannot draw is an error that stops the PDF.
+#[test]
+fn a_leaders_note_is_written_in_its_styles_shx_font() {
+    let expected = expected();
+    let case = expected["texts"].as_array().unwrap().iter().find(|c| c["name"] == "Sol taban").unwrap().clone();
+    for (named, words) in [(true, "SU"), (false, "SU"), (true, "SAU")] {
+        let (doc, b) = drawn(&case, 100, &["kentos-uni.shx", "kentos-big.shx"], None);
+        let mut raw = serde_json::to_value(doc.to_snapshot()).unwrap();
+        let layer = raw["entities"][0]["layerId"].clone();
+        let mut style = json!({"id": "not", "name": "Not", "height": 2.5});
+        if named {
+            style["textStyle"] = json!("SHX");
+        }
+        raw["settings"]["leaderStyles"] = json!([style]);
+        raw["entities"] = json!([{"kind": "leader", "id": 1, "layerId": layer, "attrs": {},
+            "pts": [{"x": 6.0, "y": 16.0}, {"x": 9.0, "y": 19.0}], "text": words, "height": 2.5, "rotation": 0.0,
+            "leaderStyle": "not", "lineWeight": 0.35}]);
+        let sheets = doc.sheets().cloned();
+        let mut doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+        doc.set_sheets(sheets).unwrap();
+        if words == "SAU" {
+            let errors = findings(&doc, &b, "text_shx_unsupported");
+            assert_eq!(errors.len(), 1, "{errors:?}");
+            assert!(errors[0].message.contains("Kılavuz notu") && errors[0].message.contains("U+0041"), "{}", errors[0].message);
+            assert_eq!(book::book_pdf(&doc, &[], "Test", "2026-11-06").err().map(|e| e.code).as_deref(), Some("text_shx_unsupported"));
+            continue;
+        }
+        let mut spatial = Spatial::new();
+        spatial.reload(&doc);
+        let render = book::base_inputs(&doc, "Test", "2026-11-06");
+        let list = display::display_list(&b, "ground", &render).unwrap();
+        let map = list.prims.iter().find_map(|p| if let Prim::Map(m) = p { Some(m) } else { None }).unwrap();
+        let labels = kentos_plot::labels::map_labels(&doc, &spatial, map);
+        let note = labels.iter().find(|l| l.text == "SU").expect("the note's label");
+        if !named {
+            assert!(note.shx.is_none(), "no text style: the typeface, as before");
+            continue;
+        }
+        let (paths, weight) = note.shx.as_ref().expect("drawn in the SHX font");
+        assert!((weight - 0.35).abs() < 1e-12);
+        let (dx, dy) = (note.at.x - 10.0, note.at.y - 20.0);
+        let want = case["paths"].as_array().unwrap();
+        assert_eq!(paths.len(), want.len());
+        for (got, want) in paths.iter().zip(want) {
+            for (g, w) in got.iter().zip(want.as_array().unwrap()) {
+                assert!((g[0] - (w[0].as_f64().unwrap() + dx)).abs() < 1e-9 && (g[1] - (w[1].as_f64().unwrap() + dy)).abs() < 1e-9,
+                    "{g:?} {w} + ({dx}, {dy})");
+            }
+        }
+        assert!(findings(&doc, &b, "text_shx_unsupported").is_empty() && findings(&doc, &b, "text_font_substituted").is_empty());
+        let (_, texts) = vectors(&doc, &b, 100.);
+        assert_eq!(texts, 0, "no substitute face written for the note");
+    }
+}
