@@ -447,3 +447,26 @@ fn screens_span() {
         println!("{}", file.display());
     }
 }
+
+/// Yer left empty (docs/adr/0991): the profile goes under everything drawn, its frame's top 20 paper mm under the
+/// drawing's box at 1:1000, so none of its objects reaches into that box.
+#[test]
+fn an_empty_place_draws_the_profile_under_the_drawing() {
+    let mut app = kgm_app();
+    let _ = app.update(Message::Run("profile.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::DrawLayer("0".into()));
+    let before_ids: std::collections::HashSet<u32> =
+        app.document.as_ref().expect("doc").model.entities().map(|e| e.base().id).collect();
+    let doc = &app.document.as_ref().expect("doc").model;
+    app.spatial.sync(doc);
+    let before = app.spatial.extent().expect("a drawing");
+    send(&mut app, W::Draw);
+    let doc = &app.document.as_ref().expect("doc").model;
+    let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
+    assert!(!new.is_empty(), "the profile is drawn");
+    app.spatial.sync(doc);
+    let drawn = app.spatial.store().extent(Some(&new)).expect("its box");
+    assert!(drawn.max_y < before.min_y, "the profile ({}) stays under the drawing ({})", drawn.max_y, before.min_y);
+    assert!((drawn.min_x - before.min_x).abs() < 50.0, "from the drawing's left edge, the heights' texts left of it");
+}

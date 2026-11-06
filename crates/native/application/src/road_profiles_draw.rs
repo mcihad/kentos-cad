@@ -705,7 +705,7 @@ pub(crate) fn view(
 
 /// How tall KGM's slope and platform rows over a view are (docs/adr/0989), in drawing units, with texts `height` paper
 /// millimetres high.
-pub(crate) fn corridor_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
+pub fn corridor_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
     crate::road_corridor_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
 }
 

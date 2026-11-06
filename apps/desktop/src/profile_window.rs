@@ -571,13 +571,8 @@ impl App {
             return;
         }
         let kept = doc.model.road_profiles().to_vec();
-        // The drawing goes under the alignments, where nothing is drawn yet.
-        let (mut x0, mut y0) = (f64::INFINITY, f64::INFINITY);
-        for p in doc.model.road_alignments().iter().flat_map(|a| a.pis.iter()) {
-            x0 = x0.min(p.x);
-            y0 = y0.min(p.y);
-        }
-        let place = if x0.is_finite() { format!("{}; {}", trimmed(x0), trimmed(y0 - 300.0)) } else { "0; 0".into() };
+        // Docs/adr/0991: Yer empty, the drawing goes under everything drawn when it is drawn.
+        let place = String::new();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         self.profile_window = Some(Window {
             chosen: (!kept.is_empty()).then_some(0),
@@ -921,13 +916,19 @@ impl App {
             self.warn("Önce boykesiti kaydedin; kaydedilmiş boykesit çizilir.".to_owned());
             return Task::none();
         }
+        // Docs/adr/0991: Yer left empty, the profile goes under the drawing.
+        let auto = w.place.trim().is_empty();
         let parts: Vec<Option<f64>> =
             w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
-        let [Some(x), Some(y)] = parts[..] else {
-            self.warn("Yeri “Y; X” olarak yazın.".to_owned());
-            return Task::none();
+        let (x, y) = match parts[..] {
+            [Some(x), Some(y)] => (x, y),
+            _ if auto => (0.0, 0.0),
+            _ => {
+                self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
+                return Task::none();
+            }
         };
-        let input = kentos_commands::ProfilesDraw {
+        let mut input = kentos_commands::ProfilesDraw {
             profile: r.id.clone(),
             layer_id: w.layer.clone().unwrap_or_default(),
             at: [x, y],
@@ -945,6 +946,16 @@ impl App {
             span: number(&w.span).ok().flatten(),
             expected_revision: None,
         };
+        if auto {
+            // Drawn at the origin first (nothing written), then moved down by how far its frame reaches over it.
+            let up = match self.document.as_mut().map(|doc| {
+                kentos_native_application::road_profiles_draw::plan(&ExecutionContext::new(&mut doc.model), &input)
+            }) {
+                Some(kentos_commands::CommandResult::Completed { output, .. }) => output.frame[1][1],
+                _ => 0.0,
+            };
+            input.at = self.under_drawing(up);
+        }
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
@@ -1144,7 +1155,7 @@ impl App {
         let mut line = row![
             label::strong("Çizime"),
             words::field("Katman", layer, None),
-            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
+            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Çizimin altı", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
             words::field("Bantlar", container(bands).width(130), None),
             // Docs/adr/0990: KGM's kot taşıma, the frame a fixed span of elevation high.
             words::field("Kot aralığı (m)", kentos_ui::widget::text_field("Sığdır", &w.span).on_input(|t| msg(Event::Span(t))).width(80), None),

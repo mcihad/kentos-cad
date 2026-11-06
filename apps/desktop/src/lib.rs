@@ -350,6 +350,7 @@ mod road_profile_fit_window_tests;
 mod road_profile_fit_window;
 #[cfg(test)]
 mod road_alignment_fit_window_tests;
+mod road_place;
 mod road_sheets_window;
 mod road_views_window;
 mod road_exchange;
