@@ -142,6 +142,34 @@ pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Save
     Saved { changed, locked, said: Vec::new() }
 }
 
+/// Saves the table styles (docs/adr/1127 §2): the table, then the tables of a removed style, which lose the link and
+/// draw as themselves, in one step “Tablo stili”; those on locked layers left and counted. A changed style writes no
+/// table: its tables draw it where they set nothing themselves (`styled`). A block's table naming a removed style
+/// draws as itself, the block unchanged.
+pub fn save_table_styles(doc: &mut Document, next: Vec<kentos_commands::TableStyleDef>) -> Saved {
+    let mut settings = doc.settings().clone();
+    settings.table_styles = next;
+    doc.set_settings(settings);
+    let kept: std::collections::HashSet<String> = doc.settings().table_styles.iter().map(|s| s.id.clone()).collect();
+    let (mut updates, mut locked) = (Vec::new(), 0);
+    for e in doc.entities() {
+        let Entity::Table(t) = e else { continue };
+        if t.table_style.as_ref().is_none_or(|id| kept.contains(id)) {
+            continue;
+        }
+        if doc.layers().is_locked(&t.base.layer_id) {
+            locked += 1;
+            continue;
+        }
+        updates.push((Slot(t.base.id), Entity::Table(kentos_commands::TableEntity { table_style: None, ..t.clone() })));
+    }
+    let changed = updates.len();
+    if changed > 0 {
+        doc.update_many(updates, "Tablo stili");
+    }
+    Saved { changed, locked, said: Vec::new() }
+}
+
 /// The walls that take a style table, and how many a locked layer keeps.
 pub type WallFollowers = (Vec<(Slot, Entity)>, usize);
 
@@ -231,6 +259,18 @@ pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
                 && now.name != old.name
             {
                 text.style.clone_from(&now.name);
+            }
+        }
+    }
+    // The table styles' cell styles name their text style by its name (docs/adr/1127 §2): a renamed one with it.
+    for style in &mut settings.table_styles {
+        for cell in [&mut style.title, &mut style.header, &mut style.data].into_iter().flatten() {
+            if let Some(name) = &mut cell.text_style
+                && let Some(old) = before.values().find(|s| s.name.eq_ignore_ascii_case(name))
+                && let Some(now) = next.iter().find(|s| s.id == old.id)
+                && now.name != old.name
+            {
+                name.clone_from(&now.name);
             }
         }
     }

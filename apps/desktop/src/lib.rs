@@ -70,6 +70,7 @@ mod architecture_ribbon;
 mod architecture_template;
 mod quantities;
 mod wall_styles;
+mod table_style_window;
 mod app;
 mod app_menu;
 mod appearance;

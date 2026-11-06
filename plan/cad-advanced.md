@@ -2196,6 +2196,16 @@ tablonun izlediğini hiç; tablo stilinin adlandırdığı yazı stili kullanıl
 (kurulum 26, denetim 10, fark 4). Açık: tablo stili penceresi ve düzenleme komutu, DXF TABLESTYLE, hücre türüne göre
 yükseklik/kenar boşluğu/kenar çizgisi çizimi, tablo yönü.
 
+**Tablo stilinin sonu (6 Kasım 2026, [ADR 1127](../docs/adr/1127-table-styles-drawn-and-edited.md)):** Saklanan
+yükseklik, yatay ve dikey kenar boşluğu, kenar çizgisi kalınlığı ve rengi artık çizilir: çekirdeğin hücre bakışı
+(`CellLook`) satır türüne göre yazı yüksekliğini ve iç boşluğu verir, çizgiler üst/sol hücrenin bakışını alır, bakışlı
+kenarlar stil derlemesinde kendi kalınlık ve renkleriyle çizilir (ekran, PDF, CPU resmi aynı yoldan); stilsiz tablo bit
+bit aynıdır. 1:100 ve 1:500'de bağımsız başvurunun hücre kutularıyla çizim sınaması geçer. `cad.styles.edit` tablo stili
+türünü aldı (37 ortak vaka), tablonun stili `cad.entities.edit`'in `tableStyle`'ıyla verilir ve kaldırılır (20 vaka);
+`edit_geometry` gidiş-dönüşü stili artık düşürmez. Masaüstünde Tablo stilleri penceresi (§7.19 iskeleti) ve
+özelliklerde Tablo stili satırı; kurulum penceresinin Kullanım sütunu “N tablo” der. Açık: DXF TABLESTYLE, dikey hizalama
+ve satırın yazıya göre büyümesi, kenar başına ayrı bakış.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

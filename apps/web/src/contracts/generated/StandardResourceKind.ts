@@ -4,4 +4,4 @@
  * A kind of named resource a bound office standard carries (docs/adr/1002 §1); a block is a library publication's
  * reference and a sheet template an approved template revision (docs/adr/1100 §2–§3).
  */
-export type StandardResourceKind = "lineType" | "hatchPattern" | "textStyle" | "dimensionStyle" | "leaderStyle" | "block" | "sheetTemplate";
+export type StandardResourceKind = "lineType" | "hatchPattern" | "textStyle" | "dimensionStyle" | "leaderStyle" | "tableStyle" | "block" | "sheetTemplate";

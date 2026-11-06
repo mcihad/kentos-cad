@@ -23,7 +23,8 @@ fields?: Array<string>,
 library?: string, 
 /**
  * Blocks: the drawing's inserts of its definition of that name, which follow a replaced definition; sheet
- * templates: the sheets made from that template, which are never changed.
+ * templates: the sheets made from that template, which are never changed; table styles: the tables of the drawing
+ * and of its block definitions that follow the drawing's style of that name (docs/adr/1127 §1).
  */
 uses?: number, 
 /**

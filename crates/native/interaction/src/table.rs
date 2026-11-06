@@ -118,6 +118,7 @@ pub fn new_table(
         frame: look.frame,
         face: look.face.clone(),
         source,
+        table_style: None,
     };
     fit(doc, &mut geometry);
     if cells.cells.iter().all(|r| r.iter().all(String::is_empty))

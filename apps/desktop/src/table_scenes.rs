@@ -145,6 +145,7 @@ fn titled(app: &mut App, p: [f64; 2], height: f64) {
         frame: t.frame,
         face: t.face,
         source: t.source,
+        table_style: None,
     };
     let entity = kentos_native_application::geometry::entity_of(&geometry, base);
     let _ = doc.model.update(slot, entity);

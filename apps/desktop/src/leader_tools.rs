@@ -474,6 +474,7 @@ impl App {
             text: None,
             dimension: None,
             leader,
+            table: None,
             styles: None,
             library: None,
             replace: None,

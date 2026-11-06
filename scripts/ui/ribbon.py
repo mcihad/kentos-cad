@@ -346,7 +346,7 @@ CAD = [
             "dimension.space", "dimension.break", "dimension.unbreak"]),
         P("Kılavuz", "leader", [L("tool.leader"), S("leader.styles")],
           overflow=["leader.addArm", "leader.bindTip", "leader.removeArm", "leader.align", "leader.collect", "leader.blocks"]),
-        P("Tablo", "table", [L("table.insert"), S("table.edit"), S("table.update")],
+        P("Tablo", "table", [L("table.insert"), S("table.edit"), S("table.update"), S("style.tableStyles")],
           overflow=["table.link", "table.export", "table.extract", "table.blockSchedule"]),
         P("Tarama", "hatch", [L("tool.hatch"), S("tool.hatchSelected"), S("tool.hatchEdit")]),
         # A map sheet's north arrow (docs/adr/0802): KentOS Mimari has it in Belgele › İşaret.
@@ -682,7 +682,7 @@ CONTEXTUAL = [
     {"id": "ctx.table", "label": "Tablo", "kinds": ["table"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Tablo", "table", [L("table.edit"), S("table.update"), S("table.link"), S("table.export"), S("table.blockSchedule")]),
+        P("Tablo", "table", [L("table.edit"), S("table.update"), S("table.link"), S("table.export"), S("table.blockSchedule"), S("style.tableStyles")]),
     ]},
     {"id": "ctx.image", "label": "Resim", "kinds": ["image"], "modes": ["cad"], "panels": [
         SEL,

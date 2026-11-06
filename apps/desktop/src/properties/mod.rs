@@ -185,6 +185,8 @@ pub enum Event {
     /// to the objects; none, Standart.
     TextStyle(Vec<Slot>, Option<String>),
     DimensionStyle(Vec<Slot>, Option<String>),
+    /// Tablo stili ▾ (docs/adr/1127 §3): the tables made to follow the table style; none, no style.
+    TableStyle(Vec<Slot>, Option<String>),
 }
 
 /// A grid's, column's, stair's or ramp's field a cell edits (docs/adr/0343 §5): words, a length in the project's
@@ -1065,6 +1067,7 @@ impl App {
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }
+            Event::TableStyle(slots, id) => properties::apply_table_style(model, &slots, id.as_deref()),
             Event::LeaderArrow(slots, arrow) => properties::change_leaders(model, &slots, |l| {
                 (l.arrow != arrow).then(|| LeaderEntity { arrow, ..l.clone() })
             }),

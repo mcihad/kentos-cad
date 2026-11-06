@@ -303,6 +303,13 @@ pub struct CellLook {
     pub color: Option<String>,
     pub fill: Option<String>,
     pub decimals: Option<usize>,
+    /// A table style's cell style (docs/adr/1127 §1): its words' height and its horizontal and vertical margins,
+    /// metres; its borders' weight on the paper (mm) and colour. None draws the table's own.
+    pub height: Option<f64>,
+    pub margin: Option<f64>,
+    pub vmargin: Option<f64>,
+    pub border_weight: Option<f64>,
+    pub border_color: Option<String>,
 }
 
 crate::json_struct!(CellLook {
@@ -314,7 +321,12 @@ crate::json_struct!(CellLook {
     bold,
     color,
     fill,
-    decimals
+    decimals,
+    height,
+    margin,
+    vmargin,
+    border_weight => "borderWeight",
+    border_color => "borderColor"
 });
 
 impl CellLook {

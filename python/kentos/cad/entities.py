@@ -1844,9 +1844,12 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
     katman, renk ve verileriyle böyle çıkarır); remove nesneyi siler. Bir nesne tek bir
     değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3
     köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan
-    nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
-    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
+    nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. Tablonun
+    geometrisindeki tableStyle izlediği tablo stilinin kimliğidir (docs/adr/1127 §3):
+    verilmezse tablonunki kalır, null stili kaldırır, projede olmayan kimlik
+    unknown_style ile reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine
+    değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.edit"
@@ -1894,9 +1897,11 @@ class _EntitiesEdit(LocalCommand[EntitiesEdit, EntitiesEdited, EntitiesEditPlan]
         Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın
         halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne
         değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-        ile gider.
+        Tablonun geometrisindeki tableStyle izlediği tablo stilinin kimliğidir
+        (docs/adr/1127 §3): verilmezse tablonunki kalır, null stili kaldırır, projede
+        olmayan kimlik unknown_style ile reddedilir. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez;
+        bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.

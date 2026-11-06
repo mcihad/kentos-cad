@@ -15,6 +15,11 @@ file?: string,
  */
 face: DrawingFont, how: FontMatch, 
 /**
+ * Its SHX font, and its Big Font when it names one, are embedded in the project and read (ADR 1125): its
+ * texts are drawn in the font's own strokes, not in `face`, and it is no `font_substituted`. Absent: false.
+ */
+embedded?: boolean, 
+/**
  * How many texts of the drawing take the style.
  */
 texts: number, };

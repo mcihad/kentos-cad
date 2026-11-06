@@ -135,6 +135,11 @@ pub fn core_looks(styles: &[kentos_commands::CellStyle]) -> Option<Vec<kentos_ge
                 color: s.color.clone(),
                 fill: s.fill.clone(),
                 decimals: s.decimals.map(|d| d as usize),
+                height: None,
+                margin: None,
+                vmargin: None,
+                border_weight: None,
+                border_color: None,
             })
             .collect()
     })
@@ -166,6 +171,60 @@ pub fn core_table(t: &TableEntity) -> Shape {
         }),
         face: core_face(&t.face),
     }
+}
+
+/// A table as its table style draws it (docs/adr/1126 §3, 1127 §1): [`kentos_commands::styled`]'s table, then, under
+/// every cell style of its own, each kind of row (title, heading, data; `table_style_rows`) given its cell style's
+/// words' height and horizontal and vertical margins, from the paper's millimetres to metres at the project's plot
+/// scale, and its borders' weight (paper mm) and colour. A table without a style the project has is [`core_table`]'s.
+pub fn styled_table(t: &TableEntity, settings: &kentos_commands::ProjectSettings) -> Shape {
+    let mut shape = core_table(&kentos_commands::styled(t, settings));
+    let Some(style) = t
+        .table_style
+        .as_deref()
+        .and_then(|id| settings.table_styles.iter().find(|s| s.id == id))
+    else {
+        return shape;
+    };
+    // Paper millimetres on the ground at 1:plot scale.
+    let ground = |mm: Option<f64>| mm.map(|v| v * settings.plot_scale / 1000.0);
+    let cols = t.columns.len();
+    let mut kinds = Vec::new();
+    for ((first, count), cell) in kentos_commands::table_style_rows(t)
+        .into_iter()
+        .zip([&style.title, &style.header, &style.data])
+    {
+        let Some(cell) = cell else { continue };
+        let drawn = cell.height.is_some()
+            || cell.horizontal_margin.is_some()
+            || cell.vertical_margin.is_some()
+            || cell.border_weight.is_some()
+            || cell.border_color.is_some();
+        if count == 0 || cols == 0 || !drawn {
+            continue;
+        }
+        kinds.push(kentos_geometry_core::entity::CellLook {
+            row: first,
+            col: 0,
+            rows: count,
+            cols,
+            align: None,
+            bold: None,
+            color: None,
+            fill: None,
+            decimals: None,
+            height: ground(cell.height),
+            margin: ground(cell.horizontal_margin),
+            vmargin: ground(cell.vertical_margin),
+            border_weight: cell.border_weight,
+            border_color: cell.border_color.clone(),
+        });
+    }
+    if let (Shape::Table { styles, .. }, false) = (&mut shape, kinds.is_empty()) {
+        kinds.extend(styles.take().unwrap_or_default());
+        *styles = Some(kinds);
+    }
+    shape
 }
 
 fn core_range(m: &kentos_commands::CellRange) -> kentos_geometry_core::entity::CellRange {
@@ -1746,6 +1805,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             styles,
             formulas,
             fields,
+            table_style,
             p,
             rotation,
             height,
@@ -1778,7 +1838,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             face,
             source,
             breaks: None,
-            table_style: None,
+            // Absent: none here; an edit keeps the table's (edit.rs, docs/adr/1127 §3).
+            table_style: table_style.flatten(),
         }),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
         EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),
@@ -1805,6 +1866,10 @@ pub fn edit_geometry_of(entity: &Entity, shape: Shape) -> Option<EntityGeometry>
     ) = (kentos_commands::annotative_of(entity), &mut g)
     {
         *annotative = Some(Box::new(scales.clone()));
+    }
+    // A table's style goes with it (docs/adr/1127 §3): the core's shape does not carry it.
+    if let (Entity::Table(t), EntityGeometry::Table { table_style, .. }) = (entity, &mut g) {
+        *table_style = Some(t.table_style.clone());
     }
     Some(g)
 }
@@ -2084,6 +2149,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             frame,
             face: contract_face(face),
             source: contract_source(source),
+            table_style: None,
         },
         s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
         s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
