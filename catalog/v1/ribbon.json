@@ -1470,6 +1470,10 @@
        {
         "command": "table.update",
         "size": "small"
+       },
+       {
+        "command": "style.tableStyles",
+        "size": "small"
        }
       ],
       "overflow": [
@@ -5668,6 +5672,10 @@
       },
       {
        "command": "table.blockSchedule",
+       "size": "small"
+      },
+      {
+       "command": "style.tableStyles",
        "size": "small"
       }
      ]

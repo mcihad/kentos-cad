@@ -267,6 +267,34 @@ fn own_findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding>
             }
         }
         Entity::Leader(l) => {
+            // Its note in its leader style's SHX text style (docs/adr/1025), as a text is (ADR 1125).
+            if let Some(note) = l.text.as_deref()
+                && let Some(t) = crate::shx_text::leader_note(
+                    doc.settings(),
+                    l.leader_style.as_deref(),
+                    l.pts.last().copied().unwrap_or(kentos_commands::Vec2 { x: 0.0, y: 0.0 }),
+                    l.rotation,
+                    l.height,
+                    note,
+                )
+                && let Some(style) = crate::shx_text::style_of(doc.settings(), &t)
+            {
+                let at = vec![t.p];
+                match crate::shx_text::Fonts::of(style, doc.styles()) {
+                    Ok(fonts) => {
+                        if let Err(why) = crate::shx_text::lay_out(&fonts, &t) {
+                            out.push(finding(uid, &[], "text_shx_unsupported", InspectionSeverity::Error, at,
+                                format!("Kılavuz notu “{}” yazı stilinin gömülü SHX fontuyla çizilemiyor: {why} Ekranda yerine yazı tipiyle çizilir; çıktı teslim edilmez.",
+                                    style.name),
+                                "Kılavuz stilinin yazı stilini eksik karakteri içeren bir SHX fontuna bağlayın ya da yazı stilini değiştirin; not sessizce başka fonta çevrilmez."));
+                        }
+                    }
+                    Err(why) => out.push(finding(uid, &[], "text_font_substituted", InspectionSeverity::Warning, at,
+                        format!("Özgün font: {} · Çizilen font: {}. Kılavuz notunun SHX fontu çizilemiyor: {why}",
+                            style.font_file.as_deref().unwrap_or_default(), style.font.label()),
+                        "SHX kaynağını Çizgi tipleri › SHX ekle… ya da cad.library.edit ile projeye ekleyin; not o zaman özgün fontla çizilir.")),
+                }
+            }
             let arms = std::iter::once((l.tip.as_ref(), l.pts.first()))
                 .chain(l.arms.iter().map(|a| (a.tip.as_ref(), a.pts.first())));
             let mut sources = Vec::new();

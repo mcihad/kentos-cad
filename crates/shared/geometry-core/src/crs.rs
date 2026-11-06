@@ -79,7 +79,8 @@ crate::json_tagged!(
 );
 
 impl System {
-    fn datum(&self) -> Datum {
+    /// The datum its coordinates rest on: a local system's is its base's, the Pseudo-Mercator's WGS 84.
+    pub fn datum(&self) -> Datum {
         match self {
             System::Geographic { datum } | System::Tm { datum, .. } => datum.clone(),
             System::Mercator {} => Datum::Wgs84,

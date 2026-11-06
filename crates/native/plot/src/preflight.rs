@@ -179,7 +179,8 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                 if matches!(e, Entity::Raster(_) | Entity::PointCloud(_)) {
                     out.push(finding(&m.item,"plot_provider_unsupported",format!("{id} numaralı raster/nokta bulutu bu çıktı hattında çizilemiyor; eksik pafta üretilmeyecek."),"Baskı için desteklenen bir resim altlığı hazırlayın veya bu katmanı viewportta baskıdan çıkarın.",Severity::Error));
                 }
-                if matches!(e, Entity::Dimension(_) | Entity::Text(_) | Entity::Table(_))
+                // A leader's note too: its SHX text style (docs/adr/1025).
+                if matches!(e, Entity::Dimension(_) | Entity::Text(_) | Entity::Table(_) | Entity::Leader(_))
                     && let Some(uid) = doc.uid(kentos_domain::Slot(id))
                 {
                     for f in kentos_native_application::drawing_inspect::annotations::findings(doc, uid, e)

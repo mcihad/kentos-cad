@@ -145,9 +145,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -233,9 +302,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -321,9 +459,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -420,9 +627,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (GeoTIFF, alan)",
+           "sha256": "024029237ef7f792768d1468be160225a8176cabc0e7b005f37da9979995d5e9"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (GeoTIFF, alan)",
+          "sha256": "024029237ef7f792768d1468be160225a8176cabc0e7b005f37da9979995d5e9",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -519,9 +795,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (GeoTIFF, nokta)",
+           "sha256": "b139c82dc30e390e141b18292f825dc7fd1f5ca597b5652879abb5c0f826eed4"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (GeoTIFF, nokta)",
+          "sha256": "b139c82dc30e390e141b18292f825dc7fd1f5ca597b5652879abb5c0f826eed4",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -542,7 +887,7 @@
      "input": {
       "points": [
        {
-        "x": 602658.4887365606,
+        "x": 602658.4887365601,
         "y": 4419300.27750015,
         "z": 900.0
        }
@@ -559,8 +904,8 @@
       "output": {
        "points": [
         {
-         "x": 89426.47057858249,
-         "y": 4429471.54246027,
+         "x": 89426.47057858133,
+         "y": 4429471.542460269,
          "z": 917.4270202375088
         }
        ],
@@ -626,12 +971,83 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 2.1
+       },
+       "chain": {
+        "source": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "epsg",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown",
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor); ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -734,9 +1150,95 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 3855,
+          "name": "EGM2008 height",
+          "unit": "m",
+          "geoid": {
+           "name": "EGM (sentetik, 1°)",
+           "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         },
+         {
+          "kind": "geoid",
+          "name": "EGM (sentetik, 1°)",
+          "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78",
+          "extent": {
+           "west": 0.0,
+           "south": -90.0,
+           "east": 359.0,
+           "north": 90.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -833,9 +1335,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 8050,
+          "name": "MSL height (ft)",
+          "unit": "ft",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -940,9 +1511,78 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 3855,
+          "name": "EGM2008 height",
+          "unit": "m",
+          "geoid": {
+           "name": "EGM (sentetik, 1°)",
+           "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "unknown"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "EGM (sentetik, 1°)",
+          "sha256": "07cc1f236be766e8825c821683002ac40f05c5184e38b9a651fd7b6f90f5ef78",
+          "extent": {
+           "west": 0.0,
+           "south": -90.0,
+           "east": 359.0,
+           "north": 90.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1038,6 +1678,70 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "unknown"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "points_outside",
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
@@ -1045,6 +1749,11 @@
         "code": "points_outside",
         "message": "1 noktanın hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında); yerleri boş.",
         "path": "points"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bazı noktalar izdüşümün ya da ızgaranın kapsamı dışında; kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
        }
       ]
      },
@@ -1132,6 +1841,70 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epochSource": "none"
+        },
+        "bases": [
+         "unknown"
+        ],
+        "grids": [
+         {
+          "kind": "geoid",
+          "name": "TG-20 (sentetik)",
+          "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "points_outside",
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
@@ -1139,6 +1912,11 @@
         "code": "points_outside",
         "message": "1 noktanın hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında); yerleri boş.",
         "path": "points"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bazı noktalar izdüşümün ya da ızgaranın kapsamı dışında; kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
        }
       ]
      },
@@ -1195,9 +1973,9 @@
       "output": {
        "points": [
         {
-         "x": 454670.68519118556,
+         "x": 454670.68519118614,
          "y": 4288792.909540992,
-         "z": 1099.9687792304903
+         "z": 1099.968779232353
         },
         {
          "x": 587241.8610872071,
@@ -1248,9 +2026,76 @@
         "topologyTolerance": 0.001,
         "displayDecimals": 3,
         "displayStep": 0.001
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epoch": 2005.0,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epoch": 2026.5,
+         "epochSource": "given"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "accuracy_unknown",
+         "height_accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bir adımın yatay doğruluğu bilinmiyor; kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor).",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1294,7 +2139,7 @@
        "points": [
         {
          "x": 454670.68511041126,
-         "y": 4288792.909571486
+         "y": 4288792.909571484
         }
        ],
        "unreached": [],
@@ -1340,9 +2185,65 @@
         "topologyTolerance": 0.001,
         "displayDecimals": 3,
         "displayStep": 0.001
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epoch": 2005.0,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epoch": 2026.5,
+         "epochSource": "given"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bir adımın yatay doğruluğu bilinmiyor.",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1363,7 +2264,7 @@
      "input": {
       "points": [
        {
-        "x": 602658.4887365606,
+        "x": 602658.4887365601,
         "y": 4419300.27750015,
         "z": 900.0
        }
@@ -1392,9 +2293,9 @@
       "output": {
        "points": [
         {
-         "x": 89425.69081174495,
+         "x": 89425.69081174443,
          "y": 4429471.848155088,
-         "z": 941.2515526330099
+         "z": 941.2515526339412
         }
        ],
        "unreached": [],
@@ -1459,12 +2360,81 @@
         "topologyTolerance": 0.001,
         "displayDecimals": 3,
         "displayStep": 0.001
+       },
+       "chain": {
+        "source": {
+         "srid": 2320,
+         "name": "ED50 / TM30",
+         "family": "transverseMercator",
+         "datum": "ED50",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epoch": 1990.0,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "ellipsoidal",
+          "name": "elipsoit yüksekliği",
+          "unit": "m"
+         },
+         "epoch": 2024.0,
+         "epochSource": "given"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "epsg",
+         "epsg",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "accuracy_unknown",
+         "height_accuracy_unknown",
+         "unofficial_operation"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [
        {
         "code": "unofficial_operation",
         "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       },
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bir adımın yatay doğruluğu bilinmiyor; kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor); ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
        }
       ]
@@ -1509,8 +2479,8 @@
       "output": {
        "points": [
         {
-         "x": 454670.82691751124,
-         "y": 4288792.856237876,
+         "x": 454670.8269175118,
+         "y": 4288792.856237875,
          "z": 1072.4
         }
        ],
@@ -1559,9 +2529,85 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformationVertical": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epoch": 2005.0,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20 (sentetik)",
+           "sha256": "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+          }
+         },
+         "epoch": 2020.0,
+         "epochSource": "given"
+        },
+        "bases": [
+         "exact",
+         "unknown",
+         "exact"
+        ],
+        "grids": [
+         {
+          "kind": "velocity",
+          "name": "Anadolu hız alanı (sentetik)",
+          "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802",
+          "extent": {
+           "west": 25.0,
+           "south": 35.0,
+           "east": 46.0,
+           "north": 43.0
+          }
+         }
+        ],
+        "status": "limited",
+        "reasons": [
+         "accuracy_unknown"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bir adımın yatay doğruluğu bilinmiyor.",
+        "path": "to"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1643,6 +2689,41 @@
         "displayDecimals": 3,
         "displayStep": 0.001,
         "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epoch": 2023.5,
+         "epochSource": "given"
+        },
+        "target": {
+         "srid": 5256,
+         "name": "TUREF / TM36",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epoch": 2023.5,
+         "epochSource": "given"
+        },
+        "bases": [
+         "exact",
+         "exact"
+        ],
+        "grids": [],
+        "status": "complete",
+        "reasons": [],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
        }
       },
       "warnings": [

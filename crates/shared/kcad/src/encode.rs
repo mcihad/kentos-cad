@@ -2183,6 +2183,10 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     if doc.settings.map_work.is_some() {
         return crate::SCHEMA_WITH_MAP_WORK;
     }
+    // Schema 187 (docs/adr/1025): a leader style that names the text style of its note.
+    if doc.settings.leader_styles.iter().any(|s| s.text_style.is_some()) {
+        return crate::SCHEMA_WITH_LEADER_TEXT_STYLES;
+    }
     // Schema 186 (docs/adr/1023): a dimension style that names the text style of its value.
     if doc.settings.dimension_styles.iter().any(|s| s.text_style.is_some()) {
         return crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES;

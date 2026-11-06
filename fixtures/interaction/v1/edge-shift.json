@@ -2,7 +2,7 @@
  "format": "kentos.interaction-trace",
  "version": 1,
  "id": "edge-shift",
- "title": "Paralel kaydır: çizgi, kilitli parsel ve yay kenar söylenir; karenin kenarı 2 m dışarı yazılır (komşular uzar), Ctrl+Z önce kenarı bırakır sonra geri alır; yamuğun üst kenarı Alan ile 180 m²'ye (yanlış ve ulaşılamayan alan söylenir); yolun orta kenarı imleçle 3 m sağa; komşusunu aşan uzaklık söylenir",
+ "title": "Paralel kaydır: çizgi ve kilitli parsel söylenir, yay kenar seçilir; karenin kenarı 2 m dışarı yazılır (komşular uzar), Ctrl+Z önce kenarı bırakır sonra geri alır; yamuğun üst kenarı Alan ile 180 m²'ye (yanlış ve ulaşılamayan alan söylenir); yolun orta kenarı imleçle 3 m sağa; komşusunu aşan uzaklık söylenir",
  "source": "tools/edgeShiftTool.ts; kentos_interaction::edge_shift; docs/adr/0191",
  "covers": [
   "CAD-29"
@@ -68,13 +68,18 @@
     42.5,
     -5
    ],
-   "note": "Yay kenar kaydırılmaz.",
+   "note": "Yay kenar da seçilir: yay kendi çemberinde kayar (docs/adr/1024).",
    "expect": {
-    "log": "warn",
-    "logged": [
-     "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır."
-    ],
-    "points": 0
+    "points": 1,
+    "prompt": "Paralel kaydır: uzaklığı yazın ya da yerine tıklayın (dışarı artı) [Alan (A)]"
+   }
+  },
+  {
+   "key": "Esc",
+   "note": "Esc yay kenarı bırakır.",
+   "expect": {
+    "points": 0,
+    "prompt": "Paralel kaydır: kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)"
    }
   },
   {

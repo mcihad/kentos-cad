@@ -637,8 +637,9 @@ fn material(out: &mut Out, handle: &str, name: &str) {
     );
 }
 
-/// OBJECTS: the root dictionary and what it names.
-pub fn objects(out: &mut Out, papers: &[Paper<'_>]) {
+/// OBJECTS: the root dictionary and what it names; `table_styles` the TABLESTYLE objects written for the project's
+/// table styles and `table_entries` their names and handles in ACAD_TABLESTYLE (docs/adr/1128 §3).
+pub fn objects(out: &mut Out, papers: &[Paper<'_>], table_styles: &str, table_entries: &[(String, String)]) {
     out.section("OBJECTS");
     fixed(
         out,
@@ -700,13 +701,18 @@ pub fn objects(out: &mut Out, papers: &[Paper<'_>]) {
         ],
     );
     dictionary(out, "14", &[]);
-    dictionary(out, "15", &[]);
+    dictionary(
+        out,
+        "15",
+        &table_entries.iter().map(|(n, h)| (n.as_str(), h.as_str())).collect::<Vec<_>>(),
+    );
     dictionary(out, "16", &[]);
     layout(out, "1A", "Model", "1024", "0", "17", None);
     if papers.is_empty() { layout(out, "1E", "Layout1", "0", "1", "1B", None); }
     for (i, p) in papers.iter().enumerate() {
         layout(out, &format!("{:X}", p.layout), &super::blocks::one_line(&p.data.name), "0", &(i + 1).to_string(), &format!("{:X}", p.record), Some(p.data));
     }
+    out.s.push_str(table_styles);
     material(out, "1F", "ByBlock");
     material(out, "20", "ByLayer");
     material(out, "21", "Global");

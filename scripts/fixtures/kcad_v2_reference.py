@@ -2433,6 +2433,9 @@ def document(d):
     if "mapWork" in d["settings"]:
         # A map project's work structure (docs/adr/1200 §2).
         schema = max(schema, 188)
+    if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
+        # A leader style that names the text style of its note (docs/adr/1025).
+        schema = max(schema, 187)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
@@ -5675,16 +5678,26 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 187 (docs/adr/1025): a leader style naming its note's text style; schema 186 refuses the field, an empty
+    # name is refused.
+    led = load("leader-text-style.json")
+    led_data = document(led)
+    assert led_data.count(b"\x67version\x18\xbb") == 1, "a leader style's text style is schema 187"
+    out["leader-text-style.kcad"] = container(led_data)
+    out["broken/leader-text-style-in-schema-186.kcad"] = container(
+        led_data.replace(b"\x67version\x18\xbb", b"\x67version\x18\xba"))
+    bad_led = copy.deepcopy(led)
+    bad_led["settings"]["leaderStyles"][0]["textStyle"] = ""
+    out["broken/leader-text-style-empty.kcad"] = container(document(bad_led))
     # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
-    # files, an approved design, a delivery package and a derivation of the GNSS point; schema 186 refuses the field
-    # (187 is another branch's), an architecture project's work structure, a layer in two items, a derivation from an
+    # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
     # item without a file, an object in two derivations and a draft status written are refused.
     mapped = load("map-work.json")
     mapped_data = document(mapped)
     assert mapped_data.count(b"\x67version\x18\xbc") == 1, "a map's work structure is schema 188"
     out["map-work.kcad"] = container(mapped_data)
-    out["broken/map-work-in-schema-186.kcad"] = container(
-        mapped_data.replace(b"\x67version\x18\xbc", b"\x67version\x18\xba"))
+    out["broken/map-work-in-schema-187.kcad"] = container(
+        mapped_data.replace(b"\x67version\x18\xbc", b"\x67version\x18\xbb"))
     for name, change in (
             ("not-map", lambda d: d["settings"].update({"cadWork": "architecture"})),
             ("shared-layer", lambda d: d["settings"]["mapWork"]["items"][2].update({"layers": ["gnss"]})),

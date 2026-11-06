@@ -9,6 +9,7 @@ import type { Entity } from "./Entity";
 import type { EntityId } from "./EntityId";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { ReportItem } from "./ReportItem";
+import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { WallDetail } from "./WallDetail";
 
@@ -60,6 +61,11 @@ unit?: DrawingUnit,
  * STYLE or DIMSTYLE record, the objects that follow one name it.
  */
 textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, 
+/**
+ * The project's table styles (docs/adr/1128 §3): each a TABLESTYLE object in the ACAD_TABLESTYLE dictionary,
+ * carrying itself in its KENTOS data; a table's INSERT names its style's object.
+ */
+tableStyles?: Array<TableStyleDef>, 
 /**
  * The project's line types (docs/adr/0313 §6): each an LTYPE record, the layers and objects that draw with one
  * name it.

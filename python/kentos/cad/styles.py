@@ -23,6 +23,7 @@ from .types import (  # noqa: F401
     StylesEdit,
     StylesEdited,
     StylesImpact,
+    TableStyleDef,
     TextStyleDef,
     WallStyleDef,
 )
@@ -49,7 +50,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
     verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini,
     taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update
-    ve import'ta material_not_found ile reddedilir (docs/adr/0791).
+    ve import'ta material_not_found ile reddedilir (docs/adr/0791). Tablo stili (kind
+    table, docs/adr/1127 §2) başlık, sütun başı ve veri hücre stilleriyle tablosunu
+    kendi değeri olmayan yerde çizdirir: update ve rename tablo yazmaz; remove stilin
+    tablolarının bağını tek adımda (“Tablo stili”) kaldırır. Yazı stili yeniden
+    adlandırılınca tablo stillerinin hücre stilleri onu yeni adıyla anar.
     """
     __slots__ = ()
     id = "cad.styles.edit"
@@ -75,6 +80,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
+        table: TableStyleDef | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
         wall: WallStyleDef | None | Unset = UNSET,
         request_id: str | None = None,
@@ -97,7 +103,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin
         malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı
         bileşen create, update ve import'ta material_not_found ile reddedilir
-        (docs/adr/0791).
+        (docs/adr/0791). Tablo stili (kind table, docs/adr/1127 §2) başlık, sütun başı ve
+        veri hücre stilleriyle tablosunu kendi değeri olmayan yerde çizdirir: update ve
+        rename tablo yazmaz; remove stilin tablolarının bağını tek adımda (“Tablo stili”)
+        kaldırır. Yazı stili yeniden adlandırılınca tablo stillerinin hücre stilleri onu
+        yeni adıyla anar.
 
         Args:
             doc: The drawing it works on.
@@ -111,6 +121,8 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             replace: Import: true, a style whose name the table has is updated from the file.
             style: Rename's and remove's style, by its id.
             styles: Export's styles, by id; absent: every style of the kind.
+            table: Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw
+                it as they are, none is written.
             text: Create's and update's text style.
             wall: Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
                 the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
@@ -137,6 +149,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             replace=replace,
             style=style,
             styles=_opt(styles, lambda x: list(x)),
+            table=table,
             text=text,
             wall=wall,
         ), request_id=request_id, expected=expected)
@@ -156,6 +169,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
+        table: TableStyleDef | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
         wall: WallStyleDef | None | Unset = UNSET,
     ) -> StylesEdited:
@@ -173,6 +187,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             replace=replace,
             style=style,
             styles=_opt(styles, lambda x: list(x)),
+            table=table,
             text=text,
             wall=wall,
         ))
@@ -192,6 +207,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
+        table: TableStyleDef | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
         wall: WallStyleDef | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -209,6 +225,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             replace=replace,
             style=style,
             styles=_opt(styles, lambda x: list(x)),
+            table=table,
             text=text,
             wall=wall,
         ))
@@ -228,6 +245,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         replace: bool | None | Unset = UNSET,
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
+        table: TableStyleDef | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
         wall: WallStyleDef | None | Unset = UNSET,
         op: str = "execute",
@@ -250,6 +268,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             replace=replace,
             style=style,
             styles=_opt(styles, lambda x: list(x)),
+            table=table,
             text=text,
             wall=wall,
         ), op=op, request_id=request_id, expected=expected)

@@ -227,6 +227,7 @@ pub fn read_in(
         dimension: result.dimension_styles,
         line_types: result.line_types,
         line_type_scale: result.line_type_scale,
+        table: result.table_styles,
         cad_source: Some(crate::cad_layouts::Source {
             file: path
                 .file_name()

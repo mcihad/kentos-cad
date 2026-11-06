@@ -73,9 +73,23 @@ pub struct StyleNames {
     text: HashMap<String, String>,
     synthetic: BTreeMap<(usize, bool, bool), String>,
     dims: HashMap<String, String>,
+    /// The project's table styles' TABLESTYLE objects' handles, by the style's id (docs/adr/1128 §3).
+    pub tables: HashMap<String, u64>,
 }
 
 impl StyleNames {
+    /// The TABLESTYLE object's handle of the project's table style `id`.
+    pub fn table_handle(&self, id: &str) -> Option<u64> {
+        self.tables.get(id).copied()
+    }
+
+    /// The STYLE record a table style's cell style names by `name` (the project's text style of that name, case
+    /// aside); none: Standard.
+    pub fn text_named<'a>(&'a self, text_styles: &[TextStyleDef], name: &str) -> Option<&'a str> {
+        let s = text_styles.iter().find(|s| s.name.eq_ignore_ascii_case(name))?;
+        self.text.get(&s.id).map(String::as_str)
+    }
+
     /// The names of `text_styles` and `dimension_styles`, each unique (case
     /// aside) and not Standard's, and those the styleless faces of `entities`
     /// and the typefaces of their dimensions' values need.

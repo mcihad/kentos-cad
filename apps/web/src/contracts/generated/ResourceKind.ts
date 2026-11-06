@@ -3,4 +3,4 @@
 /**
  * A named resource's kind.
  */
-export type ResourceKind = "layer" | "group" | "block" | "textStyle" | "dimensionStyle";
+export type ResourceKind = "layer" | "group" | "block" | "textStyle" | "dimensionStyle" | "tableStyle";

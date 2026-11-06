@@ -48,6 +48,7 @@ except ImportError:
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import crs_transform_cases as ct  # noqa: E402
+import crs_chain_rules as chain  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.crs.transform.json"
@@ -416,6 +417,9 @@ def transformed(points, frm=None, to=None, uncertainty=None, within=None, op="ex
                     "output": {"points": out, "unreached": unreached, "operation": rec, "report": report},
                     "warnings": warnings},
          "expect": SAME, "within": within or tol}
+    # The coordinate chain (docs/adr/1230), from the ADR's rules and PROJ's database.
+    (fe, fs), (te, ts), stated = chain.epoch_sources(se, de, "srid" not in (frm or {}), "srid" not in (to or {}))
+    chain.add(s, chain.side(entry(src), sh, fe, fs), chain.side(entry(dst), dh, te, ts), stated)
     return s
 
 

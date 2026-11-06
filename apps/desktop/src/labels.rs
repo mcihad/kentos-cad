@@ -1631,6 +1631,8 @@ impl Labels<'_> {
         let mut current: Option<Placed> = None;
         // The tables whose cells' fills are drawn this frame (docs/adr/0327 §1): under their words, once.
         let mut filled: std::collections::HashSet<Slot> = std::collections::HashSet::new();
+        // The last table's shape as its table style draws it (docs/adr/1127 §1): its cells come one after another.
+        let mut drawn_table: Option<(Slot, kentos_geometry_core::entity::Shape)> = None;
         // A part painted as bands alone before, in the same look, of the same object, is its bands again
         // (docs/adr/0786 §3); what a part draws besides is counted.
         let mut memo = self.band_memo.as_ref().map(|m| m.borrow_mut());
@@ -1798,7 +1800,11 @@ impl Labels<'_> {
                         },
                         Entity::Table(t),
                     ) => {
-                        // As its table style draws it where it sets nothing itself (docs/adr/1126 §3).
+                        // As its table style draws it where it sets nothing itself (docs/adr/1126 §3, 1127 §1).
+                        if drawn_table.as_ref().is_none_or(|(of, _)| *of != slot) {
+                            let shape = kentos_native_application::geometry::styled_table(t, self.doc.settings());
+                            drawn_table = Some((slot, shape));
+                        }
                         let drawn = kentos_commands::styled(t, self.doc.settings());
                         let t: &kentos_commands::TableEntity = &drawn;
                         let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
@@ -1806,10 +1812,17 @@ impl Labels<'_> {
                         };
                         // The line of its words this place stands for (docs/adr/1030 §7).
                         let words = kentos_geometry_core::geom::table::cell_line(words, *line);
+                        let geom = drawn_table
+                            .as_ref()
+                            .and_then(|(_, shape)| kentos_geometry_core::geom::table::table_geom(shape));
+                        // Its cell style's height, else the table's (docs/adr/1127 §1).
+                        let height = geom
+                            .as_ref()
+                            .and_then(|g| g.style_at(*row, *col).height)
+                            .unwrap_or(t.height);
                         // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
                         if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
-                            let shape = kentos_native_application::geometry::core_table(t);
-                            if let Some(g) = kentos_geometry_core::geom::table::table_geom(&shape) {
+                            if let Some(g) = &geom {
                                 for f in g.fills() {
                                     let q = f.corners.map(|p| self.screen(p));
                                     let (cx, cy) = (
@@ -1849,7 +1862,7 @@ impl Labels<'_> {
                                 text: words,
                                 at: self.screen(*at),
                                 angle: (-rotation.to_radians()) as f32,
-                                size: (t.height * self.camera.get().scale) as f32,
+                                size: (height * self.camera.get().scale) as f32,
                                 font,
                                 anchor: Anchor::LeftBaseline,
                                 color,
@@ -1879,6 +1892,21 @@ impl Labels<'_> {
                         let Some(note) = l.text.as_deref() else {
                             continue;
                         };
+                        // In its leader style's SHX text style (docs/adr/1025).
+                        if let Some(mut t) = kentos_native_application::shx_text::leader_note(
+                            self.doc.settings(),
+                            l.leader_style.as_deref(),
+                            kentos_commands::Vec2 { x: at.x, y: at.y },
+                            *rotation,
+                            l.height,
+                            note,
+                        ) {
+                            t.mask = *mask > 0.0;
+                            let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                            if self.shx_text(frame, slot, &t, ink) {
+                                continue;
+                            }
+                        }
                         let (font, lean) = face_font(&Default::default(), self.font, true, None);
                         self.draw(
                             frame,

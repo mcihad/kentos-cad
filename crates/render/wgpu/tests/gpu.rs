@@ -147,6 +147,7 @@ impl Gpu {
                     scale_factor: scale,
                     settings,
                     keep_picture: self.keep,
+                    moving: false,
                     overlays: self.overlays,
                 },
             )

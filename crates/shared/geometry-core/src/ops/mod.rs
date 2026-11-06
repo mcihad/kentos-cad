@@ -25,6 +25,7 @@ pub mod dimension_set;
 pub mod dimension_span;
 pub mod edge_labels;
 pub mod edge_shift;
+pub mod edge_shift_arcs;
 pub mod edgematch;
 pub mod edges;
 pub mod elevation;

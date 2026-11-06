@@ -1551,6 +1551,8 @@ codes! {
     NOTHING_TO_TRANSFORM = "nothing_to_transform", Failed, false, "Dönüştürülecek nokta yok ya da 100 000'den çok.";
     /// A side is the project's system and the project has none.
     NO_SYSTEM = "no_system", Failed, false, "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin.";
+    /// A side is the project's system and its stored EPSG code is not one the registry resolves (docs/adr/1230 §1).
+    UNSUPPORTED_SRID = "unsupported_srid", Failed, false, "Projenin kayıtlı EPSG kodu KentOS'un çözdüğü sistemler arasında yok; projeye kayıttaki bir sistemi atayın ya da tarafın sistemini EPSG koduyla verin.";
     /// A source uncertainty not 0 or more.
     INVALID_UNCERTAINTY = "invalid_uncertainty", Failed, false, "Kaynağın belirsizliği 0 ya da büyük sonlu bir sayı olmalı.";
     /// A datum of the project's without a way to WGS 84.
@@ -1579,6 +1581,8 @@ codes! {
     VERTICAL_CRS = "vertical_crs", Warning, false, "Dosya kotların düşey sistemini söylüyor; kotlar olduğu gibi alındı.";
     /// Some points have no value in the target.
     POINTS_OUTSIDE = "points_outside", Warning, false, "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında).";
+    /// The coordinate chain is limited: not a precise transformation (docs/adr/1230 §3).
+    CHAIN_LIMITED = "chain_limited", Warning, false, "Dönüşüm zinciri sınırlı: bir adımın doğruluğu, epok, kot ya da kapsam eksik; sonuç hassas dönüşüm değil.";
 
     // ── The sheet book (docs/adr/0252 §2) and the sheet core's refusals ─
     /// No operation given.

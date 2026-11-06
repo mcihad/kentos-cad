@@ -101,12 +101,22 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Web'in yazı katmanı gömülü SHX fontlu yazıyı çizmez: `shx_text::place` (WASM'a taşınabilir, DOM'suz) ile Canvas/
   WebGPU çizgileri, `cad.fonts.report`'un `embedded` alanı (TS türü üretilmedi), `text_shx_unsupported` bulgusunun
   inceleme başlığı ve DXF aktarımının yanına yazılan SHX yazı fontları web'de yok.
+- MAP-06 / ADR 1024: web Paralel kaydır aracı yay kenarı artık seçer (WASM `edgeShift*`), ama web izi
+  (`tools/edgeShiftTool.ts`, `edgeShift.wasm.test.ts`) yeni vakalarla yeniden koşulmadı.
+- CAD-ADV-11 / ADR 1025: `.kcad` şema 187 (`LeaderStyleDef.textStyle`) web codec'inde yok; web kılavuz notu SHX çizmez.
 - CAD-ADV-11 / ADR 1023: `.kcad` şema 186 (`DimensionStyleDef.textStyle`) web codec'inde yok; web ölçü değeri SHX
   yazı stilini çizmez (`shx_text::dimension_value` WASM'a taşınabilir), ölçü stili penceresinde Yazı stili seçimi yok.
 - CAD-ADV-12 / ADR 1126: `.kcad` şema 185 (`settings.tableStyles`, tablonun `tableStyle`'ı) web codec'inde ve sütun
   aktarımında (`apps/web/src/io/columns.ts`'in tablo JSON yan kanalı) yok; web tablo çizimi `styled`'ı almaz (WASM
   yeniden derlemesi), standart penceresi `tableStyle` satırlarını ve `tableStyleDefinition` bulgularını göstermez. TS türleri
   (`TableStyleDef`, `TableCellStyleDef`) üretildi, web kodu onları kullanmıyor.
+- CAD-ADV-12 / ADR 1127: çekirdeğin `CellLook` alanları (`height`, `margin`, `vmargin`, `borderWeight`,
+  `borderColor`) ve `plain_lines`/`borders` WASM'a açılmadı; web tablo çizimi `styled_table`'ı, stil derlemesinin
+  `table_borders`'ı almaz. `cad.styles.edit`'in `table` türü, `cad.entities.edit`'in `tableStyle`'ı, Tablo stilleri
+  penceresi ve özelliklerin Tablo stili satırı web'de yok.
+- CAD-ADV-12 / ADR 1128: DXF TABLESTYLE okuma/yazma ortak `kentos-formats`'ta; web'in DXF içe aktarımı
+  `ImportResult.tableStyles`'ı projeye almaz (`apps/web/src/io/apply.ts`), dışa aktarımı `DxfWriteInput.tableStyles`'ı
+  doldurmaz; içe aktarma raporunun yeni `style` konusu web'in kelime listesinde yok (WASM yeniden derlemesi).
 - CAD-ADV-16 / ADR 1130: `cad.plotstyles.import` işleyicisi (WASM'da aynı `kentos_sheet::plot_profile::acad::read`),
   `PlotProfile.source` (biçim, SHA-256, dosya adı) için `io/` ve pafta tasarımcısının Baskı profilleri penceresi, Baskı
   stili tablosu penceresi (`sheet.plotStyles`: kalem/stil önizlemesi, kayıp satırları, katmana elle kalem, paftaya
@@ -1282,6 +1292,8 @@ Liste:
   gelince geoit ve hız ızgaralarının cihaz kitaplığı (IndexedDB `kentos.grids`'in yanında; GTX ve GeoTIFF), çekirdeğin
   `crs::geoid`'i WASM'a; `DeclaredCrs.vertical` ve `vertical_crs` uyarısı web'in içe aktarma pencerelerinde (TS türleri üretildi:
   `DeclaredVertical`, `VelocityModel`, `StepKind`, `HeightMethod`); bileşik `.prj` ve GeoJSON URN'ü biçim çekirdeğinde ortak.
+- [ ] `MAP-02` koordinat zinciri (ADR 1230, 6 Kasım): web'de gerekenler: `cad.crs.transform`'un web işleyicisi gelince çıktının
+  `chain`'i (taraflar, ızgaraların kutusu, dayanaklar, karar, bütçe), `unsupported_srid` ve `chain_limited`; TS türleri üretilmedi.
 - [ ] `CBS-07` harita sisteminde rasterler, resimler ve bulutlar (ADR 0630, 25 Ekim): web'de gerekenler: ADR 0583'ün harita
   sistemi web'e gelince raster geçişinde karoların ağı (`MapProjection::grid_cells` ve `grid` WASM'a), resim partisinin
   `"warped":true` x, y, u, v sayıları (stil çekirdeği ortak; WebGPU ve WebGL2'de raster boru hattıyla resmin dokusu), nokta bulutu

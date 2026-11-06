@@ -371,6 +371,8 @@ pub enum Dialog {
     AnnotationStyles,
     /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6); the window is `App::wall_styles`.
     WallStyles,
+    /// Tablo stilleri (table_style_window.rs, docs/adr/1127 §4); the window is `App::table_style_window`.
+    TableStyleDefs,
     /// Birleşimleri denetle (wall_joins.rs, docs/adr/0340 §6); the window is `App::wall_joins`.
     WallJoins,
     /// Kapı ve pencere tipleri (opening_types_window.rs, docs/adr/0772); the window is `App::opening_types`.
@@ -794,6 +796,7 @@ pub enum Message {
     FormPreview(crate::forms::entry::Event),
     AnnotationStyles(crate::annotation_styles::Event),
     WallStyles(crate::wall_styles::Event),
+    TableStyleDefs(crate::table_style_window::Event),
     WallJoins(crate::wall_joins::Event),
     OpeningTypes(crate::opening_types_window::Event),
     Materials(crate::materials_window::Event),
@@ -1432,6 +1435,8 @@ pub struct App {
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
     /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6).
     pub(crate) wall_styles: Option<crate::wall_styles::Window>,
+    /// Tablo stilleri (table_style_window.rs, docs/adr/1127 §4).
+    pub(crate) table_style_window: Option<crate::table_style_window::Window>,
     /// Birleşimleri denetle's window (wall_joins.rs, docs/adr/0340 §6).
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
     /// Kapı ve pencere tipleri's window (opening_types_window.rs, docs/adr/0772).
@@ -1883,6 +1888,7 @@ impl App {
             form_on_create: None,
             annotation_styles: None,
             wall_styles: None,
+            table_style_window: None,
             wall_joins: None,
             opening_types: None,
             materials: None,
@@ -2650,6 +2656,7 @@ impl App {
             Message::FormPreview(event) => return self.form_preview_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::WallStyles(event) => return self.wall_styles_event(event),
+            Message::TableStyleDefs(event) => return self.table_style_window_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
             Message::OpeningTypes(event) => return self.opening_types_event(event),
             Message::Materials(event) => return self.materials_event(event),
@@ -3371,6 +3378,10 @@ impl App {
             "table.blockSchedule" => self.place_block_schedule(),
             // Yazı ve ölçü stilleri (docs/adr/0183 §5).
             "style.textStyles" => self.open_annotation_styles(crate::annotation_styles::Kind::Text),
+            // Tablo stilleri (docs/adr/1127 §4).
+            "style.tableStyles" => {
+                return self.table_style_window_event(crate::table_style_window::Event::Open);
+            }
             // Duvar stilleri (docs/adr/0339 §6).
             "arch.wallStyles" => self.open_wall_styles(),
             "arch.wallJoinCheck" => self.open_wall_joins(),

@@ -18,7 +18,7 @@
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
-  Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188, geçici): öğeler (kampanya, referans, çalışma, tasarım,
+  Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
   denetim, teslim; katmanları ve varsa dosyası ile SHA-256 revizyonu) ve türetme kayıtları (nesneler, kaynak öğe,
   revizyon, işlem). Anlam katman profilinde (nesne katmanının ya da üstündeki grubun öğesinin), ilişki kayıttadır; yeni
   nesne türü yok. `map.work.query`/`.edit`; Harita işi paneli ve Öznitelikler'in Kaynağı bölümü yalnız Harita'da.

@@ -8,6 +8,7 @@ import type { Entity } from "./Entity";
 import type { ImportLayer } from "./ImportLayer";
 import type { ImportReport } from "./ImportReport";
 import type { LineTypeDef } from "./LineTypeDef";
+import type { TableStyleDef } from "./TableStyleDef";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { UnitDecision } from "./UnitDecision";
 
@@ -53,6 +54,12 @@ blocks?: Array<BlockDefinition>,
  * and gives the others new ids and names the project does not have yet.
  */
 textStyles?: Array<TextStyleDef>, dimensionStyles?: Array<DimensionStyleDef>, 
+/**
+ * The table styles (a DXF's TABLESTYLE objects, docs/adr/1128 §4): KentOS's own exactly from its data, another
+ * program's that a table follows from their groups, sizes in paper mm at the scale the options gave. The app
+ * takes a style of a name the project has as that one; another keeps its id when the project has none such.
+ */
+tableStyles?: Array<TableStyleDef>, 
 /**
  * The unit the file's lengths were read in and why (a DXF's,
  * docs/adr/0257 §1); none for a format without units.

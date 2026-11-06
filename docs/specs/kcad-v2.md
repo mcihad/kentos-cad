@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `188`; 187 başka dalın geçici numarası, bu dalda okunmaz); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-189.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `188`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-189.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -832,16 +832,20 @@ Yazıcı 182'yi yalnız bunlardan biri olan bir tablo varken seçer. 181 ve önc
 `broken/table-breaks-in-schema-181.kcad`, `broken/table-lines-in-schema-181.kcad`,
 `broken/table-extraction-in-schema-181.kcad`.
 
-**Şema 188** (ADR 1200 §2; MAP-01, dalda geçici numara): ayarların `mapWork`'ü, harita projesinin iş yapısı
+**Şema 188** (ADR 1200 §2; MAP-01): ayarların `mapWork`'ü, harita projesinin iş yapısı
 (sözleşmenin `MapWork`'ünün JSON'u; 7 harfli anahtarlar arasında `mapSrid`'den sonra). `items`: kimlik `is-N` (baştaki
 sıfırsız, tek), `kind` (`campaign`, `reference`, `working`, `design`, `check`, `delivery`), 1–200 karakterlik kenarı
 boşluksuz `name`, `draft` değilse `status` (`review`, `approved`), varsa `layers` (bir katman tek öğede), varsa `file`
 (`path` boş olmayan, `revision` 64 küçük onaltılık haneli SHA-256); `derivations`: kimlik `tr-N`, dosyası olan bir
 öğe `source`, SHA-256 `revision`, 1–200 karakterlik `operation`, 1–1 000 000 küçük harfli UUID `uids` (bir nesne tek
 kayıtta). Boş yapı, `draft` durumu ve boş liste yazılmaz; yalnız `cadWork: map` projesinin olur; kurala uymayan
-`bad_value`. Yazıcı 188'i yalnız `mapWork` varken seçer; 186 ve öncesi alanı `unknown_field` sayar
-(`broken/map-work-in-schema-186.kcad`). Örnek `map-work.json/.kcad`; bozuklar
+`bad_value`. Yazıcı 188'i yalnız `mapWork` varken seçer; 187 ve öncesi alanı `unknown_field` sayar
+(`broken/map-work-in-schema-187.kcad`). Örnek `map-work.json/.kcad`; bozuklar
 `broken/map-work-{not-map,shared-layer,no-file-source,object-twice,draft-written}.kcad`.
+
+**Şema 187** (ADR 1025; CAD-ADV-11): kılavuz stilinin `textStyle`'ı (notun yazıldığı proje yazı stili, adıyla; ad
+kuralı şema 186'nınki). Yazıcı 187'yi yalnız bir kılavuz stili `textStyle` taşıyınca seçer; 186 ve öncesi alanı
+`unknown_field` sayar (`broken/leader-text-style-in-schema-186.kcad`). Örnek `leader-text-style.json/.kcad`.
 
 **Şema 186** (ADR 1023; CAD-ADV-11): ölçü stilinin `textStyle`'ı (değerin yazıldığı proje yazı stili, adıyla; boş
 olmayan, kenarı boşluksuz, en çok 256 bayt metin; yoksa `bad_value`). Yazıcı 186'yı yalnız bir ölçü stili `textStyle`

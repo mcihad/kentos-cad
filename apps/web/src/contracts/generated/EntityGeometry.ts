@@ -351,6 +351,11 @@ source?: TableSource,
  */
 styles?: Array<CellStyle>, formulas?: Array<CellFormula>, fields?: Array<CellField>, 
 /**
+ * The table style it follows, by its id among the project's (`ProjectSettings.table_styles`, docs/adr/1127
+ * §3); null: none. Absent in an edit: the table's kept.
+ */
+tableStyle?: string | null, 
+/**
  * The project's text style it follows, by its id; absent: Standart.
  */
 textStyle?: string, 

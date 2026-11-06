@@ -484,6 +484,8 @@ pub const PORTED: &[&str] = &[
     // Yazı stilleri and Ölçü stilleri (docs/adr/0183 §5).
     "style.textStyles",
     "style.dimensionStyles",
+    // Tablo stilleri (docs/adr/1127 §4).
+    "style.tableStyles",
     // Tablo ekle, Tabloyu düzenle and Tabloyu güncelle (tables/, docs/adr/0184).
     "table.insert",
     "table.edit",

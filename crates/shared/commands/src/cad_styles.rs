@@ -30,6 +30,9 @@ pub enum AnnotationStyleKind {
     Leader,
     /// A wall style (docs/adr/0339 §2): its walls take its components, ends and fill.
     Wall,
+    /// A table style (docs/adr/1126, 1127 §2): its tables draw it where they set nothing themselves, so an update
+    /// writes no table; a removed one's tables lose the link in one undo step, “Tablo stili”.
+    Table,
 }
 
 /// What `cad.styles.edit` does.
@@ -88,8 +91,12 @@ pub const ANNOTATION_STYLES_FORMAT: &str = "kentos.annotation-styles";
 /// `style_not_found` (update's id, rename's and remove's `style`, each of
 /// export's `styles`), `duplicate_style` (create's given id the table has),
 /// `invalid_library` (import's text not such a file, or of the other kind);
-/// `invalid_style` (the table it would leave, by `text_styles_problem` or
-/// `dimension_styles_problem`: the names, then each style's values).
+/// `invalid_style` (the table it would leave, by `text_styles_problem`,
+/// `dimension_styles_problem` or for table styles `table_style_defs_problem`:
+/// the names, then each style's values).
+///
+/// A text style renamed renames it in the table styles' cell styles that name it (its letters' case aside, as
+/// line types' texts follow it), so a table style keeps its text style (docs/adr/1127 §2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -123,6 +130,11 @@ pub struct StylesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub wall: Option<crate::WallStyleDef>,
+    /// Create's and update's table style (docs/adr/1127 §2): checked by `table_style_defs_problem`; its tables draw
+    /// it as they are, none is written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table: Option<crate::TableStyleDef>,
     /// Export's styles, by id; absent: every style of the kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

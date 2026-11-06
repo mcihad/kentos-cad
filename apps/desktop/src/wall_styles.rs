@@ -290,6 +290,7 @@ impl App {
             dimension: None,
             leader: None,
             wall,
+            table: None,
             styles: None,
             library: None,
             replace: None,

@@ -2076,6 +2076,7 @@ impl App {
             Asking::FormAudit => self.form_audit_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::WallStyles => self.wall_styles_view(),
+            Asking::TableStyleDefs => self.table_style_window_view(),
             Asking::ArchTemplate => self.architecture_template_view(),
             Asking::WallJoins => self.wall_joins_view(),
             Asking::OpeningTypes => self.opening_types_view(),

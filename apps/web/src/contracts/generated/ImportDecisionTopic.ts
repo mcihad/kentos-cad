@@ -3,4 +3,4 @@
 /**
  * What a decision of the reader is about (docs/adr/1010).
  */
-export type ImportDecisionTopic = "unit" | "ocs" | "block" | "layer" | "paper";
+export type ImportDecisionTopic = "unit" | "ocs" | "block" | "layer" | "paper" | "style";

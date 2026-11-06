@@ -1,0 +1,94 @@
+{
+ "entities": [
+  {
+   "kind": "table",
+   "id": 1,
+   "layerId": "tablo",
+   "attrs": {},
+   "p": {
+    "x": 10.0,
+    "y": 20.0
+   },
+   "rotation": 0.0,
+   "height": 0.25,
+   "rows": [
+    0.6,
+    0.5
+   ],
+   "columns": [
+    2.0,
+    2.0
+   ],
+   "cells": [
+    [
+     "Ada",
+     "Alan"
+    ],
+    [
+     "101",
+     "512"
+    ]
+   ],
+   "header": true,
+   "tableStyle": "ofis-cetvel"
+  }
+ ],
+ "layers": [
+  {
+   "id": "tablo",
+   "name": "TABLO",
+   "path": [
+    "TABLO"
+   ],
+   "color": "ink",
+   "visible": true,
+   "locked": false,
+   "lineType": "continuous",
+   "lineWeight": 0.25
+  }
+ ],
+ "scale": 100.0,
+ "lengthDecimals": 3,
+ "grads": false,
+ "textStyles": [
+  {
+   "id": "t1",
+   "name": "A-TABLO",
+   "font": "barlow",
+   "fontFile": "romans.shx"
+  }
+ ],
+ "tableStyles": [
+  {
+   "id": "ofis-cetvel",
+   "name": "CETVEL",
+   "title": {
+    "align": "center",
+    "height": 3.5,
+    "fill": "#ff0000",
+    "borderWeight": 0.5,
+    "borderColor": "#0000ff"
+   },
+   "header": {
+    "height": 2.5,
+    "color": "#00ff00"
+   },
+   "data": {
+    "textStyle": "A-TABLO",
+    "align": "right",
+    "height": 2.0,
+    "horizontalMargin": 1.5,
+    "verticalMargin": 1.0,
+    "borderWeight": 0.25
+   }
+  },
+  {
+   "id": "yerel-sade",
+   "name": "SADE",
+   "data": {
+    "align": "left",
+    "color": "#ff00ff"
+   }
+  }
+ ]
+}

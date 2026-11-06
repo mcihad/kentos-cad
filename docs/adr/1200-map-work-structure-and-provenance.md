@@ -57,11 +57,11 @@ Tarih: 2026-11-06. plan/map-cad.md MAP-01. Durum: taslak; ilk dilim aşağıda, 
      kaydıdır; kurum (TKGM, belediye) onayı değildir, KentOS'ta kurum onayı yoktur; hiçbir denetim durumu
      kendiliğinden değiştirmez. Katmanlarında güncel olmayan türetilmiş nesne olan öğe onaylanmaz (`approval_stale`);
      onaydan sonra kaynağı değişen öğe `stale` görünür.
-2. **Kalıcılık: `.kcad` şema 188** (geçici numara; birleşmede yeniden numaralanır). `mapWork` ayarların 7 harfli
+2. **Kalıcılık: `.kcad` şema 188** (şema 187 kılavuz stilinin yazı stilidir, ADR 1025). `mapWork` ayarların 7 harfli
    anahtarları arasında `mapSrid`'den sonra, JSON olarak yazılır; yalnız `cadWork: map` projesinin olur; boş yapı,
    `draft` durumu ve boş listeler yazılmaz; okuyucu kuralları ve yazıcının biçimini denetler. Bağımsız okuyucu
-   `tools/kcad/kcad.py` ve yazıcı `scripts/fixtures/kcad_v2_reference.py` aynı kuralla: `map-work.kcad`, şema 186'da
-   (187 başka dalın) reddedilen, mimari projede, iki öğede katman, dosyasız öğeden türetme, iki kayıtta nesne ve yazılmış
+   `tools/kcad/kcad.py` ve yazıcı `scripts/fixtures/kcad_v2_reference.py` aynı kuralla: `map-work.kcad`, şema 187'de
+   reddedilen, mimari projede, iki öğede katman, dosyasız öğeden türetme, iki kayıtta nesne ve yazılmış
    `draft` örnekleri.
 3. **Komutlar.** `map.work.query` (salt okunur; salt okunur kullanıcı da okur): öğeler (nesne sayısı, dosyası ve
    durumu: `found`/`missing`; `deep` ile SHA-256 okunarak `current`/`changed`/`missing`), türetmeler (`current`,

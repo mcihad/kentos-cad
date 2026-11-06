@@ -85,6 +85,8 @@ pub struct Styles {
     /// The file's line types with patterns and its line type scale (docs/adr/0313 §6).
     pub line_types: Vec<kentos_commands::LineTypeDef>,
     pub line_type_scale: Option<f64>,
+    /// The file's table styles (a DXF's TABLESTYLE objects, docs/adr/1128 §4), the tables naming them by their ids.
+    pub table: Vec<kentos_commands::TableStyleDef>,
 }
 
 /// The styles ready to go in (docs/adr/0183 §7; the web's `importedStyles`):
@@ -102,6 +104,9 @@ struct ImportedStyles {
     /// (docs/adr/0313 §6).
     line_types: Vec<kentos_commands::LineTypeDef>,
     line_type_scale: Option<f64>,
+    /// The file's table styles the project takes (docs/adr/1128 §4), and the file's id → the project's.
+    table: Vec<kentos_commands::TableStyleDef>,
+    table_ids: HashMap<String, Option<String>>,
 }
 
 /// Two style names the same, case aside (the tables' rule).
@@ -177,6 +182,28 @@ impl ImportedStyles {
                 out.line_types.push(t);
             }
         }
+        // A table style of a name the project has is that one; another keeps its id when the project has none such
+        // (KentOS's own come back as they were), else takes a new one; one the table rules refuse is none.
+        for mut s in styles.table {
+            let read = s.id.clone();
+            let id = match settings.table_styles.iter().find(|p| same_name(&p.name, &s.name)) {
+                Some(p) => Some(p.id.clone()),
+                None => {
+                    let taken = |id: &str| settings.table_styles.iter().chain(&out.table).any(|p| p.id == id);
+                    if s.id.starts_with("dxf-table-") || taken(&s.id) {
+                        s.id = Uuid::now_v7().to_string();
+                    }
+                    let table: Vec<kentos_commands::TableStyleDef> =
+                        settings.table_styles.iter().chain(&out.table).chain(std::iter::once(&s)).cloned().collect();
+                    kentos_commands::table_style_defs_problem(&table).is_none().then(|| {
+                        let id = s.id.clone();
+                        out.table.push(s);
+                        id
+                    })
+                }
+            };
+            out.table_ids.insert(read, id);
+        }
         out.line_type_scale = styles.line_type_scale.filter(|s| {
             settings.line_type_scale.is_none() && *s <= kentos_commands::MAX_LINE_TYPE_SCALE
         });
@@ -189,6 +216,10 @@ impl ImportedStyles {
         match e {
             Entity::Text(t) => t.face.text_style = to(t.face.text_style.take()),
             Entity::Dimension(d) => d.look.dim_style = to(d.look.dim_style.take()),
+            // A table's table style (docs/adr/1128 §4): the project's it became, else none.
+            Entity::Table(t) => {
+                t.table_style = t.table_style.take().and_then(|id| self.table_ids.get(&id).cloned().flatten());
+            }
             _ => {}
         }
     }
@@ -197,10 +228,12 @@ impl ImportedStyles {
     /// (docs/adr/0183 §1); undoing the import leaves them, unused.
     fn add(&mut self, doc: &mut Document) -> (usize, usize) {
         let added = (self.text.len(), self.dimension.len());
-        if added != (0, 0) || !self.line_types.is_empty() || self.line_type_scale.is_some() {
+        if added != (0, 0) || !self.line_types.is_empty() || self.line_type_scale.is_some() || !self.table.is_empty()
+        {
             let mut settings = doc.settings().clone();
             settings.text_styles.append(&mut self.text);
             settings.dimension_styles.append(&mut self.dimension);
+            settings.table_styles.append(&mut self.table);
             settings.line_types.append(&mut self.line_types);
             if let Some(s) = self.line_type_scale.take() {
                 settings.line_type_scale = Some(s);

@@ -163,6 +163,8 @@ struct Fields {
     source: Option<TableSource>,
     /// A table's parts (docs/adr/1030 §7).
     breaks: Option<kentos_contracts::TableBreaks>,
+    /// The table style a table follows (docs/adr/1128 §3).
+    table_style: Option<String>,
     /// A NURBS curve's own fields (docs/adr/0259).
     degree: Option<u32>,
     ctrl: Option<Vec<Vec2>>,
@@ -499,7 +501,7 @@ impl Fields {
                 },
                 source: self.source,
                 breaks: self.breaks,
-                table_style: None,
+                table_style: self.table_style,
             }),
             other => {
                 return Err(E::unknown_variant(
@@ -634,6 +636,8 @@ impl<'de> Deserialize<'de> for Wire {
                         "grid" => f.grid = map.next_value()?,
                         "frame" => f.frame = map.next_value()?,
                         "source" => f.source = map.next_value()?,
+                        "breaks" => f.breaks = map.next_value()?,
+                        "tableStyle" => f.table_style = map.next_value()?,
                         "degree" => f.degree = Some(map.next_value()?),
                         "ctrl" => f.ctrl = Some(map.next_value()?),
                         "knots" => f.knots = Some(map.next_value()?),
@@ -741,6 +745,8 @@ struct Input {
     #[serde(default)]
     dimension_styles: Vec<kentos_contracts::DimensionStyleDef>,
     #[serde(default)]
+    table_styles: Vec<kentos_contracts::TableStyleDef>,
+    #[serde(default)]
     line_types: Vec<kentos_contracts::LineTypeDef>,
     #[serde(default)]
     line_type_scale: Option<f64>,
@@ -774,6 +780,7 @@ impl<'de> Deserialize<'de> for WriteInput {
             unit: i.unit,
             text_styles: i.text_styles,
             dimension_styles: i.dimension_styles,
+            table_styles: i.table_styles,
             line_types: i.line_types,
             line_type_scale: i.line_type_scale,
         }))

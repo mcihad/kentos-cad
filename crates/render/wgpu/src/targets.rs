@@ -12,7 +12,10 @@
 //! - **A kept picture:** a view that keeps its picture between frames (the
 //!   desktop's drawing area) draws the scene again only when what it shows
 //!   changed; otherwise the resolved texture it holds is composed as it is
-//!   (renderer.rs).
+//!   (renderer.rs). While the view is panned, the kept picture moved by the
+//!   pan's whole device pixels is the new one but for the strips the pan
+//!   uncovered, drawn alone (docs/adr/1067): `scratch` holds the moved part
+//!   meanwhile, and `held` says what and where the picture shows.
 //!
 //! The textures are made for a size and a sample count and made again when
 //! either changes. A replaced texture is dropped: wgpu keeps it alive until
@@ -233,12 +236,50 @@ pub struct Targets {
     /// (docs/adr/0226 §4, copied from).
     pub(crate) resolve_texture: wgpu::Texture,
     pub(crate) resolve: wgpu::TextureView,
+    /// The moved part of the kept picture while the strips a pan uncovered are drawn (docs/adr/1067 §2).
+    pub(crate) scratch: wgpu::Texture,
     bind_group: wgpu::BindGroup,
     /// Bytes of the textures, for the frame's statistics and the settings window.
     pub bytes: u64,
     /// The key of the picture the resolved texture holds, once drawn
     /// (renderer.rs, a kept picture); new targets hold none.
     kept: Mutex<Option<u64>>,
+    /// What the kept picture shows but for the camera's place (a key of its content) and where it was drawn; none
+    /// for a picture a pan may not move (docs/adr/1067 §2).
+    held: Mutex<Option<(u64, Place)>>,
+}
+
+/// Where a picture was drawn (docs/adr/1067 §2): the camera's centre from the origin, the origin, the picture pixels a
+/// world unit, the picture's size and its turn.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Place {
+    pub center: [f64; 2],
+    pub origin: [f64; 2],
+    pub px_per_unit: f64,
+    pub size: [u32; 2],
+    pub twist: f64,
+}
+
+impl Place {
+    /// The whole picture pixels a picture drawn at `self` moves by to be the picture at `now` (x right, y down); none
+    /// when anything but the centre differs, the view is turned, or the move is not whole pixels (to a thousandth),
+    /// is nothing, or uncovers the whole picture.
+    pub fn shift_to(&self, now: &Place) -> Option<[i32; 2]> {
+        let same = self.origin.map(f64::to_bits) == now.origin.map(f64::to_bits)
+            && self.px_per_unit.to_bits() == now.px_per_unit.to_bits()
+            && self.size == now.size
+            && self.twist == 0.0
+            && now.twist == 0.0;
+        if !same || !(self.px_per_unit > 0.0) {
+            return None;
+        }
+        let dx = (self.center[0] - now.center[0]) * self.px_per_unit;
+        let dy = (now.center[1] - self.center[1]) * self.px_per_unit;
+        let (rx, ry) = (dx.round(), dy.round());
+        let whole = (dx - rx).abs() < 1e-3 && (dy - ry).abs() < 1e-3;
+        let inside = rx.abs() < f64::from(self.size[0]) && ry.abs() < f64::from(self.size[1]);
+        (whole && inside && (rx != 0.0 || ry != 0.0)).then_some([rx as i32, ry as i32])
+    }
 }
 
 impl Targets {
@@ -270,9 +311,17 @@ impl Targets {
             format,
             wgpu::TextureUsages::RENDER_ATTACHMENT
                 | wgpu::TextureUsages::TEXTURE_BINDING
-                | wgpu::TextureUsages::COPY_SRC,
+                | wgpu::TextureUsages::COPY_SRC
+                | wgpu::TextureUsages::COPY_DST,
         ));
         let resolve = resolve_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let scratch = device.create_texture(&texture_descriptor(
+            "kentos.cad2d.picture.moved",
+            size,
+            1,
+            format,
+            wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::COPY_DST,
+        ));
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("kentos.cad2d.compose"),
             layout: &compose.layout,
@@ -300,10 +349,23 @@ impl Targets {
             msaa,
             resolve_texture,
             resolve,
+            scratch,
             bind_group,
-            bytes: pixels * texel * (u64::from(samples.max(1)) + u64::from(samples > 1)),
+            // The multisampled samples, the picture and the moved part.
+            bytes: pixels * texel * (u64::from(samples.max(1)) + u64::from(samples > 1) + 1),
             kept: Mutex::new(None),
+            held: Mutex::new(None),
         }
+    }
+
+    /// What the kept picture shows but for the camera's place, and where (docs/adr/1067 §2).
+    pub fn held(&self) -> Option<(u64, Place)> {
+        *self.held.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// The kept picture shows `content` drawn at `place`; none: a pan may not move it.
+    pub fn hold(&self, held: Option<(u64, Place)>) {
+        *self.held.lock().unwrap_or_else(PoisonError::into_inner) = held;
     }
 
     /// Whether the resolved texture holds the picture of `key`.
@@ -372,5 +434,29 @@ impl Targets {
                 },
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod place_tests {
+    use super::Place;
+
+    fn at(x: f64, y: f64) -> Place {
+        Place { center: [x, y], origin: [486_000.0, 4_420_000.0], px_per_unit: 2.0, size: [100, 80], twist: 0.0 }
+    }
+
+    /// A pan by whole pixels moves the picture (x right, y down); a fraction, a turn, another scale or a move past
+    /// the picture does not (docs/adr/1067 §1).
+    #[test]
+    fn only_a_pan_by_whole_pixels_moves_the_picture() {
+        // The camera 4.5 m west and 2 m north: the picture moves 9 px right and 4 px down.
+        assert_eq!(at(10.0, 5.0).shift_to(&at(5.5, 7.0)), Some([9, 4]));
+        assert_eq!(at(10.0, 5.0).shift_to(&at(10.25, 5.0)), None, "half a pixel");
+        assert_eq!(at(10.0, 5.0).shift_to(&at(10.0, 5.0)), None, "nothing to move");
+        assert_eq!(at(10.0, 5.0).shift_to(&at(10.0 - 60.0, 5.0)), None, "past the picture");
+        let turned = Place { twist: 0.1, ..at(5.5, 7.0) };
+        assert_eq!(at(10.0, 5.0).shift_to(&turned), None);
+        let scaled = Place { px_per_unit: 2.5, ..at(5.5, 7.0) };
+        assert_eq!(at(10.0, 5.0).shift_to(&scaled), None);
     }
 }

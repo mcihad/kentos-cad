@@ -165,7 +165,7 @@ yeniden bağlansın; güncel olmayan türevler gösterilsin. Kaydet–aç ve sal
 okunur kullanıcı aynı ilişkiyi korusun; mevcut Mimari/GIS yüzeyleri değişmesin.
 
 **6 Kasım 2026 — MAP-01.1 (dal `map-01-is-yapisi`, [ADR 1200](../docs/adr/1200-map-work-structure-and-provenance.md)).**
-Kanıtlanan alt maddeler: (1) iş yapısı — `settings.mapWork` (`.kcad` şema 188, geçici numara): altı türde öğe
+Kanıtlanan alt maddeler: (1) iş yapısı — `settings.mapWork` (`.kcad` şema 188): altı türde öğe
 (kampanya, referans, çalışma, tasarım, denetim, teslim), katmanları ve varsa dosyası (SHA-256 revizyonu); masaüstünde
 yalnız Harita'da Harita işi paneli, Katmanlar/Kaynaklar/İşlemler yerinde. (2) Kaynak / türetilmiş / bağımsız çizim —
 anlam katman profilinde, ilişki türetme kaydında (nesne, kaynak öğe, revizyon, işlem), yeni nesne türü yok; Öznitelikler'in
@@ -216,6 +216,19 @@ uzak iki bölge, yerel→gerçek koordinat ve epok/geoit örnekleri bağımsız
 başvuruyla sınansın. Zoom/pan, render orijini değişimi ve save–reopen ölçüm
 sonucunu değiştirmesin. Sayısal bütçe her işlem için tanımlansın; sadece f64
 kullanılmış olması doğruluk kanıtı sayılmasın.
+
+**6 Kasım 2026 ilerlemesi ([ADR 1230](../docs/adr/1230-coordinate-chain-epoch-grids-and-budget.md)), madde açık:**
+`cad.crs.transform`'un cevabı koordinat zincirini taşır: iki tarafın yatay sistemi (kod, aile, datum, birim, KentOS'un
+ve EPSG'nin eksen sırası, WGS 84 datum topluluğunun 2 m'si), düşey sistemi, epoku ve epokun nereden geldiği; okunan
+ızgaraların türü, SHA-256'sı, düğüm kutusu ve projenin doğruluğu; her adımın doğruluk dayanağı; `complete`/`limited`
+kararı ve nedenleri (`chain_limited` uyarısı); sayısal bütçe (1e-6 m, 1e-9°, 1e-6 m kot). Kayıtta olmayan proje kodu
+`unsupported_srid` ile reddedilir. Kanıtlananlar: E=500 000/N=4 400 000'de milimetre, Edirne–Hakkari, yerel → gerçek,
+hız ızgarasıyla epok, geoit ve ızgara dışı, tek yanda epok PROJ'a karşı 21 yeni ve 53 genişlemiş ortak durumla
+(`crs_chain_cases.py`, `crs_vertical_cases.py`, `geoid_cases.py`); zoom/pan, çizim orijini değişimi ve `.kcad`
+kaydet–aç ölçüyü ve İçine tıkla halkasını bit bit değiştirmez (masaüstü `coordinate_chain_tests`); işlem başına bütçe
+tablosu ADR 1230 §4'te. Açık: ölçek anlatımının tek özeti ve içe aktarmada birimin bir kez uygulandığının sınaması;
+sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması; önizlemede nokta başına fark; geoit ve hız modelinin doğruluğu;
+zamana bağlı Helmert ve resmî TUREF hız alanı; web.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 
@@ -349,6 +362,12 @@ katmanında alan üretmeye çalışan UI/API aynı tür kuralını uygulamalı.
 üzerinde mesafeli düzenleme yap; bağımsız geometri başvurusuyla karşılaştır.
 Kaynak kısıtı değiştir, kilitli komşu ve çelişkili ilişkiyi dene. Çift onay,
 imleç sıçraması, ölçekten doğan konum değişimi ve kısmi Undo olmamalı.
+
+**Yaylı kenarda paralel kaydırma (6 Kasım 2026, [ADR 1024](../docs/adr/1024-parallel-shift-on-arcs.md)):**
+Paralel kaydır artık yaylı kenarı (aynı merkezli yay) ve yay komşusunu (kendi çemberinde) kaydırır; hiçbir yay kirişe
+dönmez, hedef alan yaylı durumda ikiye bölmeyle bulunur, düz durum aynen kalır. Harita koordinatında yaylı bordür dahil
+12 yeni durum bağımsız mpmath başvurusuyla (50 basamak) sınandı; etkileşim izi ve resim bakıldı. Kalıcı ilişki, ortak
+sınır, kot/eğim hedefi ve çok parçalı nesne açık; madde `[ ]` kalır.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

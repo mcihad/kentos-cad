@@ -15,7 +15,7 @@ each cell style as a whole, numbers within 1e-9, a missing field apart from a pr
 `missing` (added by default; `add` or `keepLocal`), `same` (`keepLocal` only) or `differs` (kept by default;
 `replace` keeps the drawing's name and id so its tables follow, `renameIncoming` adds the standard's under a new name
 no table style of the drawing or of the standards has); an added style keeps its id, or takes `id-2`, `id-3` … when
-the drawing has it. Rows are the table styles in the standards' order. The check's findings follow the drawing
+the drawing has it; a row's `uses` counts the tables that follow the drawing's style of its name (ADR 1127 §1). Rows are the table styles in the standards' order. The check's findings follow the drawing
 standard's own (standards_cases.py's `issues`, read as data here): a missing style (`missingTableStyleDefinition`)
 and a differing one (`tableStyleDefinition`, its tables counted: those of the drawing in `objects`, those inside
 block definitions in the message), both not fixable, `expected` and `found` the appearances as compact JSON with
@@ -134,7 +134,14 @@ def resolved(docs):
 
 # ── cad.standards.install ─────────────────────────────────────────────────────
 
-def rows_of(local=LOCAL, docs=((A, A_TABLES), (B, B_TABLES))):
+def following(style_id, entities, blocks=()):
+    """The tables that follow table style `style_id` (docs/adr/1127 §1): the drawing's and its block definitions'."""
+    inside = [e for b in blocks for e in b.get("entities", [])]
+    return sum(1 for e in list(entities) + inside if e.get("kind") == "table" and e.get("tableStyle") == style_id)
+
+
+def rows_of(local=LOCAL, docs=((A, A_TABLES), (B, B_TABLES)), entities=None):
+    entities = setup()["entities"] if entities is None else entities
     out = []
     for t, origin in resolved(docs):
         mine = next((l for l in local if key(l["name"]) == key(t["name"])), None)
@@ -147,6 +154,9 @@ def rows_of(local=LOCAL, docs=((A, A_TABLES), (B, B_TABLES))):
              "action": "add" if status == "missing" else "keepLocal", "source": origin}
         if fields:
             r["fields"] = fields
+        uses = following(mine["id"], entities) if mine is not None else 0
+        if uses:
+            r["uses"] = uses
         out.append(r)
     return out
 
@@ -168,6 +178,8 @@ def with_choices(rows, **over):
             o["newName"] = r["newName"]
         if "fields" in r:
             o["fields"] = r["fields"]
+        if "uses" in r:
+            o["uses"] = r["uses"]
         o["source"] = r["source"]
         ordered.append(o)
     return ordered

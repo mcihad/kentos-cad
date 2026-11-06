@@ -19,6 +19,8 @@ mod acceptance_tests;
 #[cfg(test)]
 mod measure_probe_tests;
 #[cfg(test)]
+mod coordinate_chain_tests;
+#[cfg(test)]
 mod semantic_tool_tests;
 #[cfg(test)]
 mod annotative_sheet_tests;
@@ -70,6 +72,7 @@ mod architecture_ribbon;
 mod architecture_template;
 mod quantities;
 mod wall_styles;
+mod table_style_window;
 mod app;
 mod app_menu;
 mod appearance;

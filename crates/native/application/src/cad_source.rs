@@ -60,6 +60,7 @@ pub fn drawing(bytes: &[u8], path: &Path) -> Result<DocumentSnapshotV2, String> 
         dimension: read.dimension_styles,
         line_types: read.line_types,
         line_type_scale: read.line_type_scale,
+        table: read.table_styles,
     };
     crate::import_apply::apply_styled_import(&mut doc, read.entities, read.blocks, styles, &plan)?;
     let mut result = doc.to_snapshot_v2();

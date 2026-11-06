@@ -67,6 +67,9 @@ struct Incoming {
     look: Value,
     local: Option<Value>,
     source: StandardOrigin,
+    /// The tables of the drawing and of its block definitions that follow the drawing's table style of that name
+    /// (docs/adr/1127 §1); 0 for the other kinds.
+    uses: u32,
 }
 
 fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
@@ -83,6 +86,7 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             look: appearance(t),
             local: s.line_types.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
             source: origin(&p.line_types, &t.name),
+            uses: 0,
         });
     }
     for t in &r.resources.hatch_patterns {
@@ -92,6 +96,7 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             look: appearance(t),
             local: s.hatch_patterns.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
             source: origin(&p.hatch_patterns, &t.name),
+            uses: 0,
         });
     }
     for t in &r.resources.text_style_definitions {
@@ -101,6 +106,7 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             look: appearance(t),
             local: s.text_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
             source: origin(&p.text_style_definitions, &t.name),
+            uses: 0,
         });
     }
     for t in &r.resources.dimension_style_definitions {
@@ -110,6 +116,7 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             look: appearance(t),
             local: s.dimension_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
             source: origin(&p.dimension_style_definitions, &t.name),
+            uses: 0,
         });
     }
     for t in &r.resources.leader_styles {
@@ -119,20 +126,33 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             look: appearance(t),
             local: s.leader_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
             source: origin(&p.leader_styles, &t.name),
+            uses: 0,
         });
     }
     // Table styles (docs/adr/1126 §6): by name, every cell style compared.
     for t in &r.resources.table_style_definitions {
+        let mine = s.table_styles.iter().find(|l| key(&l.name) == key(&t.name));
         out.push(Incoming {
             kind: Kind::TableStyle,
             name: t.name.clone(),
             look: appearance(t),
-            local: s.table_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            local: mine.map(appearance),
             source: origin(&p.table_style_definitions, &t.name),
+            uses: mine.map_or(0, |m| tables_following(doc, &m.id)),
         });
     }
     out.sort_by_key(|i| i.kind);
     out
+}
+
+/// The tables of the drawing and of its block definitions that follow table style `id` (docs/adr/1127 §1).
+fn tables_following(doc: &Document, id: &str) -> u32 {
+    let follows = |e: &kentos_commands::Entity| {
+        matches!(e, kentos_commands::Entity::Table(t) if t.table_style.as_deref() == Some(id))
+    };
+    let n = doc.entities().filter(|e| follows(e)).count()
+        + doc.blocks().iter().flat_map(|b| &b.entities).filter(|e| follows(e)).count();
+    u32::try_from(n).unwrap_or(u32::MAX)
 }
 
 /// The names of `kind` the drawing has, folded.
@@ -180,7 +200,7 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
                 new_name: None,
                 fields,
                 library: None,
-                uses: 0,
+                uses: i.uses,
                 source: i.source.clone(),
             };
             (row, None)
