@@ -2613,7 +2613,7 @@ ya da eğik düzlem, boş Layout1, inç pafta) yalnız bu bölümdedir. ezdxf'in
 beklentiyle sınandı; Çizim al penceresi “Okuma kararları”nı gösterir. Açık: kapalı/genişlikli/kotlu yaylı yol, AutoCAD
 denetimi.
 
-### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [~]
+### CAD-ADV-18 — Çizim sağlığını kontrollü onarım ve kanıtlı kurtarmayla tamamla [x]
 
 **Öncelik:** P0 bütünlük/kurtarma; P1 ileri temizlik. **Kod:** [C28]–[C30].
 **Dayanak:** BricsCAD Drawing Health, Optimize ve zaman sınırlı arka
@@ -2676,6 +2676,15 @@ kalıcı kimliğiyle listelenir, kesikte kaybolan ayarlar boş çizimin değeriy
 `<ad>-kurtarilan.kcad` olarak yazılır, kaynak yalnız okunur. 22 bağımsız vaka ve yapıdan beklentili testler geçti;
 ilk koşu kesikten sonra sahte nesne okuyan bir hatayı gösterdi, düzeltildi. Açık: blok tanımı düzeyinde bölme, gerçek
 disk dolu senaryosu; madde `[~]`.
+
+**Kabulün kanıtı (6 Kasım 2026):** sınırları bilinen sorunlu çizimde önce sıfır yazımlı sağlık taraması, sonra
+seçilmiş onarım: ADR 1005 ve 1012 (41 bağımsız vaka; ölçülü/kısıtlı geometri reddedilir, tarif sırası, eşikleri ve
+kapsamıyla döner, kayma ve boy farkı ile yeniden bağlanan yerleştirmeler raporlanır). Kayıt sırasında gerçek süreç
+ölümü: ADR 1006 (on SIGKILL; dosya bayt bayt bir sürüm, paftalarıyla açılır). Disk dolu: gerçek ENOSPC (ADR 1006 eki);
+iptal: masaüstü kaydının her aşamada durdurulması önceki dosyayı ve kaydedilmemiş çizimi korur
+(`saving::tests::a_save_stopped_at_any_stage_before_the_rename_leaves_the_previous_file`). Açılışta bütçeli, iptalli,
+tekrar kullanılan salt okunur denetim: ADR 1009. Ayrı kurtarma kopyası ve katı okuyucudan ayrı kısmi okuma: ADR 1013.
+Açık kalan (maddeyi kapatmayı engellemez): çoklu çizgi kenarının açı onarımı, bir blok tanımının içini bölen kurtarma.
 
 ### CAD-ADV-19 — Büyük 2B çizimde akıcılığı ve görsel kararlılığı ölçerek koru [~]
 
