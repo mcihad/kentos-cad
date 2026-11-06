@@ -167,13 +167,22 @@ fn unit_text(n: u32, d: u32) -> String {
 }
 
 fn stroke_attrs(s: &Stroke) -> String {
+    let dash: Vec<f64> = s.dash.iter().map(|x| f64::from(*x)).collect();
+    stroke_attrs_as(s, &dash, 0.0, s.cap)
+}
+
+/// [`stroke_attrs`] with the dashes (µm), their offset and the ends given.
+fn stroke_attrs_as(s: &Stroke, dash: &[f64], offset: f64, cap: LineCap) -> String {
     let mut out = paint("stroke", &s.color);
     let _ = write!(out, r#" stroke-width="{}""#, s.width.max(1));
-    if !s.dash.is_empty() {
-        let d: Vec<String> = s.dash.iter().map(|x| x.to_string()).collect();
+    if !dash.is_empty() {
+        let d: Vec<String> = dash.iter().map(|x| x.to_string()).collect();
         let _ = write!(out, r#" stroke-dasharray="{}""#, d.join(" "));
+        if offset != 0.0 {
+            let _ = write!(out, r#" stroke-dashoffset="{offset}""#);
+        }
     }
-    match s.cap {
+    match cap {
         LineCap::Butt => {}
         LineCap::Round => out.push_str(r#" stroke-linecap="round""#),
         LineCap::Square => out.push_str(r#" stroke-linecap="square""#),
@@ -184,6 +193,28 @@ fn stroke_attrs(s: &Stroke) -> String {
         LineJoin::Bevel => out.push_str(r#" stroke-linejoin="bevel""#),
     }
     out
+}
+
+/// An element's paint as one or two attribute lists: a stroke with a dash of length zero (a dot) and butt or square
+/// ends is its dashes and fill, then the same element again with its dots alone, round-capped, as the PDF writes it
+/// (docs/adr/1124, ek).
+fn paints(fill: Option<&str>, stroke: Option<&Stroke>) -> Vec<String> {
+    let dash = |s: &Stroke| s.dash.iter().map(|x| f64::from(*x)).collect::<Vec<_>>();
+    let Some((s, split)) = stroke
+        .filter(|s| s.cap != LineCap::Round)
+        .and_then(|s| crate::pdf::dots::split(&dash(s), 0.0).map(|d| (s, d)))
+    else {
+        return vec![fill_stroke(fill, stroke)];
+    };
+    let mut first = match fill {
+        Some(f) => paint("fill", f),
+        None => r#" fill="none""#.to_owned(),
+    };
+    if let Some((d, offset)) = &split.dashes {
+        first.push_str(&stroke_attrs_as(s, d, *offset, s.cap));
+    }
+    let dots = format!(r#" fill="none"{}"#, stroke_attrs_as(s, &split.dots.0, split.dots.1, LineCap::Round));
+    vec![first, dots]
 }
 
 fn fill_stroke(fill: Option<&str>, stroke: Option<&Stroke>) -> String {
@@ -355,16 +386,18 @@ pub fn to_svg_plotted(
                 } else {
                     String::new()
                 };
-                let _ = writeln!(
-                    out,
-                    r#"<rect x="{}" y="{}" width="{}" height="{}"{radius}{}{}/>"#,
-                    rr.left,
-                    rr.top,
-                    rr.width,
-                    rr.height,
-                    fill_stroke(r.fill.as_deref(), r.stroke.as_ref()),
-                    rotation(r.rotation, rr)
-                );
+                for attrs in paints(r.fill.as_deref(), r.stroke.as_ref()) {
+                    let _ = writeln!(
+                        out,
+                        r#"<rect x="{}" y="{}" width="{}" height="{}"{radius}{}{}/>"#,
+                        rr.left,
+                        rr.top,
+                        rr.width,
+                        rr.height,
+                        attrs,
+                        rotation(r.rotation, rr)
+                    );
+                }
             }
             Prim::Path(pp) => {
                 let rule = if pp.even_odd {
@@ -372,12 +405,10 @@ pub fn to_svg_plotted(
                 } else {
                     ""
                 };
-                let _ = writeln!(
-                    out,
-                    r#"<path d="{}"{}{rule}/>"#,
-                    path_d(&pp.segments),
-                    fill_stroke(pp.fill.as_deref(), pp.stroke.as_ref())
-                );
+                let d = path_d(&pp.segments);
+                for attrs in paints(pp.fill.as_deref(), pp.stroke.as_ref()) {
+                    let _ = writeln!(out, r#"<path d="{d}"{attrs}{rule}/>"#);
+                }
             }
             Prim::Text(t) => {
                 let italic = if t.italic {
@@ -555,6 +586,22 @@ mod tests {
             text_content(&t),
             r#"Kot <tspan font-family="Arimo, Arial, sans-serif" font-weight="400">↑</tspan> 12"#
         );
+    }
+
+    /// docs/adr/1124 (ek): a paper line's dot (a dash of length zero) is drawn round, as in the PDF: the dashes with the
+    /// line's own ends, then the dots alone with round ends; a line without a dot keeps one attribute list.
+    #[test]
+    fn a_paper_lines_dot_is_drawn_round() {
+        let dotted = Stroke { dash: vec![1000, 1000, 0, 1000], ..Stroke::solid("#000000", 500) };
+        let got = paints(None, Some(&dotted));
+        assert_eq!(got.len(), 2, "{got:?}");
+        assert!(got[0].contains(r#"stroke-dasharray="1000 2000""#) && !got[0].contains("stroke-linecap"), "{got:?}");
+        assert!(got[1].contains(r#"stroke-dasharray="0 3000" stroke-dashoffset="1000""#)
+            && got[1].contains(r#"stroke-linecap="round""#) && got[1].contains(r#"fill="none""#), "{got:?}");
+        let plain = Stroke { dash: vec![1000, 1000], ..Stroke::solid("#000000", 500) };
+        assert_eq!(paints(Some("#ffffff"), Some(&plain)), vec![fill_stroke(Some("#ffffff"), Some(&plain))]);
+        let round = Stroke { cap: LineCap::Round, ..dotted };
+        assert_eq!(paints(None, Some(&round)).len(), 1, "round ends draw the dot already");
     }
 
     #[test]

@@ -792,3 +792,26 @@ fn frozen_glyph_pdf_rejects_unknown_profiles_missing_glyphs_and_invalid_placemen
         assert_eq!(to_pdf(&book,&inputs,&PdfOptions::default()).unwrap_err().code,"pdf_text_layout_invalid","case {kind}");
     }
 }
+
+/// docs/adr/1124's addendum picture: a paper line with dots (4 mm on, 1.5 off, a dot, 1.5 off; 0.7 mm, butt ends) on the
+/// ifraz sheet, written to `.run/gui-evidence/adr1124-kagit-nokta.pdf`. Run by hand; render with pdftoppm.
+#[test]
+#[ignore = "a picture for the eye, run by hand"]
+fn a_paper_line_with_dots_picture() {
+    let book = ifraz();
+    let mut v = serde_json::to_value(&book).unwrap();
+    for (i, y) in [(0, 200_000), (1, 230_000)] {
+        let dash = if i == 0 { serde_json::json!([4000, 1500, 0, 1500]) } else { serde_json::json!([0, 2500]) };
+        v["sheets"][0]["items"].as_array_mut().unwrap().push(serde_json::json!({
+            "id": format!("nokta-{i}"), "name": "Noktalı çizgi",
+            "frame": {"left": 40_000, "top": y, "width": 120_000, "height": 2_000},
+            "kind": {"type": "line", "points": [[0, 500_000], [1_000_000, 500_000]],
+                     "stroke": {"color": "#000000", "width": 700, "dash": dash}}}));
+    }
+    let book: SheetBook = serde_json::from_value(v).unwrap();
+    let inputs = inputs_for(&book);
+    let pdf = to_pdf(&book, &inputs, &PdfOptions::default()).unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence");
+    std::fs::create_dir_all(&out).unwrap();
+    std::fs::write(out.join("adr1124-kagit-nokta.pdf"), pdf).unwrap();
+}

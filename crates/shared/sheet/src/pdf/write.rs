@@ -425,14 +425,18 @@ pub(super) fn document_audited(
             let mut viewports = Vec::new();
             for p in &l.prims {
                 match p {
-                    Prim::Rect(r) => {
-                        page.rect(&r.rect, r.rotation, r.radius);
-                        page.paint(r.fill.as_deref(), r.stroke.as_ref(), false);
-                    }
-                    Prim::Path(pp) => {
-                        page.path(&pp.segments);
-                        page.paint(pp.fill.as_deref(), pp.stroke.as_ref(), pp.even_odd);
-                    }
+                    Prim::Rect(r) => page.paint_built(
+                        &|page| page.rect(&r.rect, r.rotation, r.radius),
+                        r.fill.as_deref(),
+                        r.stroke.as_ref(),
+                        false,
+                    ),
+                    Prim::Path(pp) => page.paint_built(
+                        &|page| page.path(&pp.segments),
+                        pp.fill.as_deref(),
+                        pp.stroke.as_ref(),
+                        pp.even_odd,
+                    ),
                     Prim::Text(t) => page.text(t),
                     Prim::Image(i) => {
                         let named = images.get(&i.asset).and_then(|n| n.as_ref());

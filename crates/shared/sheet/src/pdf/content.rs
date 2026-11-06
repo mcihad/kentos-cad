@@ -363,10 +363,44 @@ impl<'a> Page<'a> {
 
     // ── Painting ─────────────────────────────────────────────────────────
 
+    /// The path `build` makes, filled and/or stroked as [`paint`](Self::paint); a dash of length zero (a dot) with
+    /// butt or square ends prints as a round dot the line's width, as a model line's does (docs/adr/1124, ek): the
+    /// dashes and fill first, then the same path again with the dots alone, round-capped.
+    pub fn paint_built(
+        &mut self,
+        build: &dyn Fn(&mut Self),
+        fill: Option<&str>,
+        stroke: Option<&Stroke>,
+        even_odd: bool,
+    ) {
+        let dash = |s: &Stroke| s.dash.iter().map(|d| f64::from(*d) * PT).collect::<Vec<_>>();
+        let Some((s, split)) = stroke
+            .filter(|s| s.cap != LineCap::Round)
+            .and_then(|s| super::dots::split(&dash(s), 0.0).map(|d| (s, d)))
+        else {
+            build(self);
+            self.paint(fill, stroke, even_odd);
+            return;
+        };
+        build(self);
+        match &split.dashes {
+            Some((d, phase)) => self.paint_as(fill, Some((s, d, *phase, s.cap)), even_odd),
+            None => self.paint_as(fill, None, even_odd),
+        }
+        build(self);
+        self.paint_as(None, Some((s, &split.dots.0, split.dots.1, LineCap::Round)), false);
+    }
+
     /// The path just built filled and/or stroked; dropped when neither paints.
     pub fn paint(&mut self, fill: Option<&str>, stroke: Option<&Stroke>, even_odd: bool) {
+        let dash: Option<Vec<f64>> = stroke.map(|s| s.dash.iter().map(|d| f64::from(*d) * PT).collect());
+        self.paint_as(fill, stroke.zip(dash.as_deref()).map(|(s, d)| (s, d, 0.0, s.cap)), even_odd);
+    }
+
+    /// [`paint`](Self::paint) with the stroke's dashes (points), phase and ends given.
+    fn paint_as(&mut self, fill: Option<&str>, stroke: Option<(&Stroke, &[f64], f64, LineCap)>, even_odd: bool) {
         let fill = fill.and_then(color);
-        let line = stroke.and_then(|s| color(&s.color).map(|c| (s, c)));
+        let line = stroke.and_then(|(s, d, phase, cap)| color(&s.color).map(|c| ((s, d, phase, cap), c)));
         self.alpha_for(
             fill.map_or(1.0, |(_, a)| a),
             line.map_or(1.0, |(_, (_, a))| a),
@@ -374,21 +408,13 @@ impl<'a> Page<'a> {
         if let Some((rgb, _)) = fill {
             self.fill_rgb(rgb);
         }
-        if let Some((s, (rgb, _))) = line {
+        if let Some(((s, dash, phase, cap), (rgb, _))) = line {
             self.stroke_rgb(rgb);
-            self.line_style(
-                f64::from(s.width) * PT,
-                &s.dash
-                    .iter()
-                    .map(|d| f64::from(*d) * PT)
-                    .collect::<Vec<_>>(),
-                s.cap,
-                s.join,
-            );
+            self.line_style_phase(f64::from(s.width) * PT, dash, phase, cap, s.join);
         }
         self.note_paint(
             fill.is_some(),
-            line.map(|(s, _)| (f64::from(s.width) * PT).max(0.0)),
+            line.map(|((s, ..), _)| (f64::from(s.width) * PT).max(0.0)),
             even_odd,
         );
         match (fill.is_some(), line.is_some(), even_odd) {
@@ -401,14 +427,8 @@ impl<'a> Page<'a> {
         };
     }
 
-    /// A line's width, dashes (points), ends and corners.
-    /// Each part written when it is not the one in force.
-    pub fn line_style(&mut self, width: f64, dash: &[f64], cap: LineCap, join: LineJoin) {
-        self.line_style_phase(width, dash, 0.0, cap, join);
-    }
-
-    /// Same style with an explicit PDF pattern phase, in points. Fold in
-    /// Float64 before conversion, avoiding ambiguous negative PDF 1.7 phases.
+    /// A line's width, dashes (points), pattern phase (points), ends and corners; each part written when it is not
+    /// the one in force. The phase is folded in f64 before conversion, avoiding ambiguous negative PDF 1.7 phases.
     pub fn line_style_phase(&mut self, width: f64, dash: &[f64], phase: f64, cap: LineCap, join: LineJoin) {
         self.width(width.max(0.0) as f32);
         let cap = match cap {
@@ -702,10 +722,35 @@ mod tests {
         set(&mut page,2.); // same lengths, different phase must be written.
         page.restore();
         set(&mut page,10.); // restored phase: no redundant operator.
-        page.line_style(0.25,&[],LineCap::Butt,LineJoin::Round);
+        page.line_style_phase(0.25,&[],0.0,LineCap::Butt,LineJoin::Round);
         let stream=String::from_utf8(page.c.finish().to_vec()).unwrap();
         assert_eq!(stream.matches("[2 1 3] 10 d").count(),1,"{stream}");
         assert_eq!(stream.matches("[2 1 3] 2 d").count(),1,"{stream}");
         assert_eq!(stream.matches("[] 0 d").count(),1,"{stream}");
+    }
+
+    /// docs/adr/1124 (ek): a paper line's own dash of length zero prints as a round dot the line's width, as a model line's
+    /// does (ADR 1124): the path is stroked twice, its dashes with its own ends, then its dots alone round-capped; a
+    /// line without a dot is written once, as before. 1 mm on, 1 off, a dot, 1 off (period 3 mm): dashes [1 2] mm
+    /// from 0, dots [0 3] mm at phase 1 mm (the dot is 2 mm in).
+    #[test]
+    fn a_paper_lines_dot_prints_round() {
+        let fonts = Fonts::default();
+        let mut page = Page::new(297_000, &fonts);
+        let stroke = Stroke { dash: vec![1000, 1000, 0, 1000], ..Stroke::solid("#000000", 500) };
+        let build = |p: &mut Page<'_>| {
+            p.move_to([10_000.0, 10_000.0]);
+            p.line_to([50_000.0, 10_000.0]);
+        };
+        page.paint_built(&build, None, Some(&stroke), false);
+        let plain = Stroke { dash: vec![1000, 1000], ..Stroke::solid("#000000", 500) };
+        page.paint_built(&build, None, Some(&plain), false);
+        let stream = String::from_utf8(page.c.finish().to_vec()).unwrap();
+        let mm = 72.0 / 25.4;
+        let num = |v: f64| format!("{}", v as f32);
+        assert_eq!(stream.lines().filter(|l| *l == "S").count(), 3, "two strokes for the dotted line, one for the plain: {stream}");
+        assert!(stream.contains(&format!("[{} {}] 0 d", num(mm), num(2.0 * mm))), "the dashes: {stream}");
+        assert!(stream.contains(&format!("[0 {}] {} d", num(3.0 * mm), num(mm))), "the dots: {stream}");
+        assert_eq!(stream.lines().filter(|l| *l == "1 J").count(), 1, "round ends only for the dots: {stream}");
     }
 }

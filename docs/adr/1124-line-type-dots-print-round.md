@@ -73,3 +73,13 @@
   vuruş için yeniden kurulamaz; CAD çizgi tipi bu yoldan geçmez.
 - Baskı stilinin `square` ucunda kare nokta seçeneği yok (nokta yuvarlak); AutoCAD çıktısıyla karşılaştırma yapılmadı.
 - Dört pikselden kısa desende (çok uzak görünüm) nokta eski ortalama örtüyle çizilir.
+
+## 5. Ek (6 Kasım 2026): kâğıt öğesinin noktası
+
+§4'ün ilk sınırı kapandı. Kâğıt öğesinin (pafta çizgisi, şekil, dikdörtgen) kendi tire listesindeki sıfır boylu tire de
+yuvarlak, çizgi kalınlığında nokta basılır: PDF'de `Page::paint_built` yolu kuran işlevi alır, yolu iki kez kurar
+(tireler ve dolgu kendi uçlarıyla, sonra yalnız noktalar yuvarlak uçla, `dots::split`'in aynı kuralıyla); SVG'de
+(`svg.rs`, ekran ve CPU resmi) aynı öğe ikinci kez, yalnız noktalarıyla yazılır. Noktasız çizgi tek vuruştur, ifraz
+altın PDF'i değişmedi. Kanıt: `pdf::content::tests::a_paper_lines_dot_prints_round` (akış: tireler `[1 2] 0 d`, noktalar
+`[0 3] 1 d` + `1 J`, düz çizgi tek `S`), `svg::tests::a_paper_lines_dot_is_drawn_round`; resim
+`.run/gui-evidence/adr1124-kagit-nokta-1.png` (600 dpi, ifraz paftasında iki noktalı kâğıt çizgisi), bakıldı.

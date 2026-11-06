@@ -1826,6 +1826,10 @@ satırlık yazısı, gömülü SHX stilindeyse yazı nesnesi gibi fontun çizgil
 yerleştirmede aynı çıktığı test edildi; `shx-blok-metin` resmi bakıldı. Çok satırlı blok yazısı, boyut, kılavuz ve
 tablo yazısı açık.
 
+**Kâğıt çizgisinin noktası (6 Kasım 2026, ADR 1124 ek):** Pafta çizgisi, şekil ve dikdörtgenin kendi tire
+listesindeki sıfır boylu tire PDF'de ve SVG'de yuvarlak, çizgi kalınlığında nokta basılır (yol iki kez: tireler, sonra
+noktalar). PDF akışı ve SVG testleriyle; ifraz altın PDF'i değişmedi; 600 dpi resme bakıldı.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].
