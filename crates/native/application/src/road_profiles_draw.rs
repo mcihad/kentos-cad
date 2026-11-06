@@ -577,9 +577,10 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             Some(RED),
         ));
     }
-    // The project's ends on the design line (docs/adr/0987; KGM 2019 şartname s. 5: "Proje başı ve sonunda kot ve
-    // koordinat değerleri yazılacaktır"; the June 2024 sample sheets: a red leader from the line's end to PROJE BAŞI,
-    // KM : 0+000.00 and KOT = 964.670). The leader runs 12 mm away from the frame's nearer edge; the words read down.
+    // The project's ends on the design line (docs/adr/0987, 0999; KGM 2019 şartname s. 5: "Proje başı ve sonunda kot
+    // ve koordinat değerleri yazılacaktır"; the June 2024 sample sheets, p. 8 and 12): a red leader from the line's end
+    // slanted 10 mm into the frame and 20 mm away from its nearer edge, a red flag along the frame from its foot with
+    // PROJE BAŞI over it and KM : 0+000.00 under it, and beside the point KM = 0+000.00 and KOT = 964.670.
     if let (Some(&first), Some(&last)) = (c.pvis.first(), c.pvis.last()) {
         let pitch = 1.6 * h;
         for (words, (s, z), start) in [("PROJE BAŞI", first, true), ("PROJE SONU", last, false)] {
@@ -588,22 +589,51 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             }
             let p = [x(s), ys(s, z)];
             let down = p[1] > 0.5 * (y0 + y1);
-            // Slanted 6 mm into the frame, off its edge, as the 2024 sheets draw it.
-            let inward = if start { 6.0 * mm } else { -6.0 * mm };
-            let end = [p[0] + inward, if down { p[1] - 12.0 * mm } else { p[1] + 12.0 * mm }];
-            out.push(line(p, end, Some(RED), Some(0.25)));
-            let (dx, align) = if start { (0.5 * h, TextAlign::MiddleLeft) } else { (-0.5 * h, TextAlign::MiddleRight) };
-            let lines = [words.to_owned(), format!("KM : {}", km_text(c.built.alignment.km(s), 2)), format!("KOT = {z:.3}")];
-            for (i, l) in lines.into_iter().enumerate() {
-                // Down: from the leader's end downward; up: the last line at the leader's end.
-                let k = if down { -(i as f64) } else { (2 - i) as f64 };
-                let mut words = text([end[0] + dx, end[1] + k * pitch], l, h, align, if i == 0 { Some(RED) } else { None });
-                // Masked: the grid's lines and the ground line ran through them (Y81's first picture).
-                if let EntityGeometry::Text { mask, .. } = &mut words.geometry {
-                    *mask = true;
-                }
-                out.push(words);
-            }
+            let dir = if start { 1.0 } else { -1.0 };
+            let v = if down { -1.0 } else { 1.0 };
+            // 10 mm in and 20 mm away, the 2024 sheets' 1:2 slope: at 6 by 12 mm the flag's KM : stood on the point's
+            // KM = and KOT = (Y93's first picture).
+            let foot = [p[0] + dir * 10.0 * mm, p[1] + v * 20.0 * mm];
+            out.push(line(p, foot, Some(RED), Some(0.25)));
+            // The flag: 9 text heights along, half one thick, its far end slanted as the 2024 sheets' ribbon.
+            let (len, thick) = (9.0 * h, 0.5 * h);
+            let (near_y, far_y) = (foot[1], foot[1] + v * thick);
+            let flag = [
+                [foot[0], near_y],
+                [foot[0] + dir * (len + thick), near_y],
+                [foot[0] + dir * len, far_y],
+                [foot[0], far_y],
+                [foot[0], near_y],
+            ];
+            out.push(object(
+                EntityGeometry::Hatch {
+                    ring: flag.iter().map(|q| Vec2 { x: q[0], y: q[1] }).collect(),
+                    holes: None,
+                    pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
+                    assoc: None,
+                    boundary: None,
+                    annotative: None,
+                },
+                Some(RED),
+                None,
+            ));
+            let km = km_text(c.built.alignment.km(s), 2);
+            let (over, under) = if down { (near_y, far_y) } else { (far_y, near_y) };
+            let side = |bottom: bool| match (start, bottom) {
+                (true, true) => TextAlign::BottomLeft,
+                (true, false) => TextAlign::TopLeft,
+                (false, true) => TextAlign::BottomRight,
+                (false, false) => TextAlign::TopRight,
+            };
+            let tx = foot[0] + dir * 0.5 * h;
+            out.push(masked(text([tx, over + 0.3 * h], words.to_owned(), h, side(true), None)));
+            out.push(masked(text([tx, under - 0.3 * h], format!("KM : {km}"), h, side(false), None)));
+            // Beside the point, past the leader's side away from the frame's edge.
+            let align = if start { TextAlign::MiddleLeft } else { TextAlign::MiddleRight };
+            let bx = p[0] + dir * 3.0 * h;
+            let (y_km, y_kot) = if down { (p[1] - 1.2 * h, p[1] - 1.2 * h - pitch) } else { (p[1] + 1.2 * h + pitch, p[1] + 1.2 * h) };
+            out.push(masked(text([bx, y_km], format!("KM = {km}"), h, align, None)));
+            out.push(masked(text([bx, y_kot], format!("KOT = {z:.3}"), h, align, None)));
         }
     }
     // KGM's slope and platform rows right above the frame (docs/adr/0989): the names' column, a line over each row,
