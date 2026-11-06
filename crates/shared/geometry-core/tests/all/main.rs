@@ -80,6 +80,7 @@ mod tiles;
 mod time;
 mod topology;
 mod topology_incremental;
+mod topology_quality;
 mod topology_rules;
 mod vertex_points;
 mod vertex_table;

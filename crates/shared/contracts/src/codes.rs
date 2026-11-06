@@ -1725,6 +1725,8 @@ codes! {
     NO_RESUME = "no_resume", Failed, false, "Bu teslim klasörünün durdurulmuş bir yayını yok; yayını baştan başlatın.";
     /// Sheet publication: the drawing, its resources or the options changed since the stopped publication (docs/adr/1090 §7).
     RESUME_STALE = "resume_stale", Failed, false, "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın.";
+    /// Update publication: `previous` names a folder without a readable publication (docs/adr/1320 §3).
+    NO_PREVIOUS = "no_previous", Failed, false, "Önceki teslim klasöründe okunabilir bir yayın (yayin.json) yok; güncellenecek teslimin klasörünü verin.";
 
     // ── The change set (docs/adr/0253 §8) ───────────────────────────────
     /// No step given.
@@ -1844,6 +1846,10 @@ codes! {
     FINDING_NOT_FOUND = "finding_not_found", Failed, false, "Çizimin bugünkü denetiminde bu anahtarla bulgu ya da istisna yok; önce denetleyin (cad.topology.check, cad.arch.audit).";
     /// A fix the finding does not offer, that has no answer, or that would change a row outside a bound part (docs/adr/0589).
     FIX_UNAVAILABLE = "fix_unavailable", Failed, false, "Bu düzeltme bu bulguya uygulanamaz.";
+    /// A repair step naming a finding left on purpose (docs/adr/1260 §4).
+    REPAIR_REFUSED_EXCEPTION = "repair_refused_exception", Failed, false, "Bulgu istisna: bilerek bırakıldı; onarmadan önce istisnayı kaldırın.";
+    /// A repair that would move a source vertex past the quality profile's acceptance threshold (docs/adr/1260 §4).
+    REPAIR_BEYOND_ACCEPTANCE = "repair_beyond_acceptance", Failed, false, "Onarım bir kaynak köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı.";
     /// A topology check whose bound part's neighbours could not all be read (docs/adr/0589 §1).
     TOPOLOGY_INCOMPLETE = "topology_incomplete", Warning, false, "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz.";
     /// An exception whose finding changed since it was marked: its objects' geometry (docs/adr/0589 §3), or its words

@@ -38,6 +38,7 @@ pub mod gis_export;
 pub mod package;
 pub mod publish;
 mod publish_status;
+mod publish_update;
 pub mod recover;
 mod sheet_resources;
 mod sheet_preflight;

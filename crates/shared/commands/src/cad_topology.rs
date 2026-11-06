@@ -104,6 +104,29 @@ pub struct TopologyFinding {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub lapsed: bool,
+    /// Where it is in its life cycle (docs/adr/1260 §1).
+    pub state: TopologyFindingState,
+    /// The reason its review gave (an exception's, an error mark's, a lapsed one's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reason: Option<String>,
+}
+
+/// A finding's place in its life cycle (docs/adr/1260 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TopologyFindingState {
+    /// Değerlendirilmedi: no review names it.
+    Open,
+    /// Hata: reviewed and confirmed, to be put right.
+    Error,
+    /// İstisna: reviewed and left on purpose.
+    Exception,
+    /// Yeniden değerlendir: a review named it, but its objects' geometry or its rule changed since.
+    Lapsed,
 }
 
 /// A bound layer's part whose neighbours could not all be read, and why.
@@ -226,6 +249,11 @@ pub struct TopologyChecked {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub lapsed: u32,
+    /// The findings confirmed as errors (docs/adr/1260 §1): of the open ones.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub errors: u32,
     /// The rules checked, and those whose layer (or other layer) the project does not have.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub rules: u32,
@@ -265,8 +293,10 @@ pub enum TopologyExceptionOperation {
     /// İstisna yap: the finding left on purpose, bound to its objects' geometry as it is now (a lapsed exception is
     /// marked again, on the new geometry).
     Mark,
-    /// İstisnayı kaldır.
+    /// İstisnayı ya da hata işaretini kaldır: the finding is not reviewed again.
     Unmark,
+    /// Hata olarak işaretle (docs/adr/1260 §1): reviewed and confirmed, to be put right; bound like an exception.
+    Error,
 }
 
 /// Input of `cad.topology.exceptions` v1: the findings of `keys` (lasting keys a check gave) marked or unmarked. The
@@ -282,6 +312,16 @@ pub enum TopologyExceptionOperation {
 pub struct TopologyExceptions {
     pub operation: TopologyExceptionOperation,
     pub keys: Vec<String>,
+    /// Why (docs/adr/1260 §1), for `mark` and `error`: kept on each mark; required when the project has a quality
+    /// profile. Not blank, at most 500 characters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reason: Option<String>,
+    /// What an exception covers (`mark` only): absent or `finding`, the finding at its place; `objects`, every finding of
+    /// its rule between the same objects.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<crate::TopologyScope>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

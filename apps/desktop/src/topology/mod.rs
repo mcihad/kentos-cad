@@ -14,10 +14,15 @@
 //! (`topology_rules::incremental::recheck`): the same findings as checking all.
 //! A finding keeps its lasting key across checks; the chosen rows follow it.
 //!
+//! The review (docs/adr/1260, `review.rs`): Durum says each finding's place in its life cycle (not reviewed, error,
+//! exception, to review again) with its reason; Hata işaretle and İstisna yap write Gerekçe's words; Tarifle onar
+//! plans a repair recipe of the chosen findings and shows what it would do before Uygula writes it.
+//!
 //! A check of many objects goes to its own thread (docs/adr/0756, `running.rs`): the bar under the tab's bar moves on
 //! smoothly as it goes and Durdur ends it; the drawing is not held meanwhile.
 
 mod plan;
+mod review;
 pub(crate) mod rules;
 mod running;
 mod view;
@@ -32,7 +37,7 @@ use std::sync::Arc;
 use iced::Task;
 use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, EntityEdit, TopologyExceptionOperation,
-    TopologyExceptions, TopologySettings,
+    TopologySettings,
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::arrangement::Area;
@@ -41,7 +46,7 @@ use kentos_geometry_core::ops::topology_rules::{self as core, Finding, fix};
 use kentos_interaction::{Level, Vec2, ViewChange};
 use kentos_native_application::geometry::edit_geometry;
 use kentos_native_application::topology_check::{self, Gathered};
-use kentos_native_application::{ExecutionContext, edit, topology_exceptions};
+use kentos_native_application::{ExecutionContext, edit};
 
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
@@ -100,6 +105,10 @@ pub(crate) struct TopologyPanel {
     /// A check going on its own thread (docs/adr/0756), and the next one's id.
     pub running: Option<Running>,
     next: u64,
+    /// Gerekçe: the words a mark is written with (docs/adr/1260 §1).
+    pub reason: String,
+    /// The repair recipe planned and shown (docs/adr/1260 §4).
+    pub recipe: Option<review::Recipe>,
 }
 
 /// What follows a check's answer.
@@ -140,6 +149,14 @@ pub enum Event {
     Fix(&'static str),
     /// İstisna yap (true) or İstisnayı kaldır (false) on the chosen rows.
     Exception(bool),
+    /// Hata işaretle on the chosen rows (docs/adr/1260 §1).
+    Error,
+    /// Gerekçe typed.
+    Reason(String),
+    /// Tarifle onar: the chosen rows' recipe planned and shown; Uygula writes it, Vazgeç drops it.
+    Recipe,
+    Apply,
+    Drop,
     /// What a check on its own thread said, by its id.
     Ran(u64, Reply),
     /// Durdur: the check going on ends.
@@ -475,7 +492,18 @@ impl App {
             }
             Event::Press(at) => self.topology_press(at),
             Event::Fix(key) => return self.topology_fix(key),
-            Event::Exception(on) => return self.topology_exceptions(on),
+            Event::Exception(on) => {
+                return self.topology_review(if on {
+                    TopologyExceptionOperation::Mark
+                } else {
+                    TopologyExceptionOperation::Unmark
+                });
+            }
+            Event::Error => return self.topology_review(TopologyExceptionOperation::Error),
+            Event::Reason(t) => self.topology.reason = t,
+            Event::Recipe => self.topology_plan_recipe(),
+            Event::Apply => return self.topology_apply_recipe(),
+            Event::Drop => self.topology.recipe = None,
         }
         Task::none()
     }
@@ -640,67 +668,6 @@ impl App {
         self.topology.previews = previews;
     }
 
-    /// İstisna yap or İstisnayı kaldır on the chosen findings through `cad.topology.exceptions` (docs/adr/0589 §3):
-    /// the project's settings (not an undo step), each exception bound to its objects' geometry; checked again.
-    fn topology_exceptions(&mut self, on: bool) -> Task<Message> {
-        let chosen = self.topology.selected.clone();
-        let Some(c) = self.topology_checked() else {
-            return Task::none();
-        };
-        let keys: Vec<String> = chosen
-            .iter()
-            .filter_map(|&at| c.findings.get(at))
-            .filter(|f| {
-                if on {
-                    !f.exception
-                } else {
-                    f.exception || c.g.lapsed(f)
-                }
-            })
-            .map(|f| c.key(f))
-            .collect();
-        if keys.is_empty() {
-            return Task::none();
-        }
-        let Some(doc) = self.document.as_mut() else {
-            return Task::none();
-        };
-        let input = TopologyExceptions {
-            operation: if on {
-                TopologyExceptionOperation::Mark
-            } else {
-                TopologyExceptionOperation::Unmark
-            },
-            keys,
-            expected_revision: None,
-        };
-        let n =
-            match topology_exceptions::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-                CommandResult::Completed { output, .. } => output.changed,
-                CommandResult::Failed { error }
-                | CommandResult::Conflict { error }
-                | CommandResult::NeedsInput { error } => {
-                    self.warn(error.message);
-                    return Task::none();
-                }
-                CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
-            };
-        let keys: Vec<String> = chosen
-            .iter()
-            .filter_map(|&at| {
-                self.topology_checked()
-                    .and_then(|c| c.findings.get(at).map(|f| c.key(f)))
-            })
-            .collect();
-        let said = if on {
-            format!("{n} bulgu istisna yapıldı.")
-        } else {
-            format!("{n} bulgunun istisnası kaldırıldı.")
-        };
-        // Checked again (the exceptions are part of the rules' stamp); the chosen rows follow their keys.
-        self.topology_run(Work::Check, Then::Marked { keys, said })
-    }
-
     /// Whether İstisna yap marks (some chosen row is open) or unmarks.
     pub(crate) fn topology_marking(&self) -> bool {
         let Some(c) = self.topology_checked() else {
@@ -727,6 +694,15 @@ impl App {
             Control::Press(texts::UNMARK) => (!self.topology.selected.is_empty()
                 && !self.topology_marking())
             .then(|| Message::Topology(Event::Exception(false))),
+            Control::Press(texts::ERROR) => (!self.topology.selected.is_empty())
+                .then(|| Message::Topology(Event::Error)),
+            Control::Press(texts::RECIPE) => (!self.topology.selected.is_empty())
+                .then(|| Message::Topology(Event::Recipe)),
+            Control::Press(texts::APPLY) => self
+                .topology_recipe()
+                .map(|_| Message::Topology(Event::Apply)),
+            Control::Press(texts::DROP) => msg(Event::Drop),
+            Control::Fill(texts::REASON, t) => msg(Event::Reason(t.to_owned())),
             Control::Press(texts::OPEN) => msg(Event::Filter(Filter::Open)),
             Control::Press(texts::EXCEPTIONS) => msg(Event::Filter(Filter::Exception)),
             Control::Press(texts::ALL) => msg(Event::Filter(Filter::All)),

@@ -401,6 +401,22 @@ değişimiyle artımlı/tam denetim sonuçları eşleşsin. İptal kaynak geomet
 değiştirmesin. Bir onarım tarifi yeniden açılan projede aynı bulgulara
 uygulandığında aynı değişiklik kümesini üretsin.
 
+**İlerleme (6 Kasım 2026, dal `map-07-topoloji-kalite`, [ADR 1260](../docs/adr/1260-topology-quality-review-and-repair-recipe.md)):**
+kanıtlanan alt maddeler: bulgunun yaşam döngüsü (`state`: değerlendirilmedi, hata, istisna, yeniden değerlendir) ve
+`cad.topology.exceptions`'ın `error`/`reason`/`scope`'u; işaretin nesne kimliği, geometri özeti, kural sürümü
+(`ruleDigest`), gerekçesi ve kapsamı, geometri ya da kural değişince düşmesi; kurum/iş kalite profili (ad, depolama
+hassasiyeti, kabul eşiği; tolerans hassasiyetin en az iki katı) ve profilin gerekçe istemesi; `cad.topology.repair`
+onarım tarifi (adım sırası ve düzeltmesi, adım öncesi yeniden denetim, nesne başına alan önce/sonra, bit bit yerinde
+kalan ve taşınan kaynak köşe, en uzak/toplam taşınma, alan farkı, önce/sonra açık bulgu; istisna, kilitli komşu ve kabul
+eşiği retleri; tek geri alma adımı); `.kcad` şema 189; masaüstü Durum sütunu, Gerekçe, Hata işaretle, Tarifle
+onar ve kural penceresinde profil. Kabulün üç satırı: yaylı komşu, delikli alan ve yeniden okunan komşu ile artımlı/tam
+denetim eşitliği (`topology_quality.rs`; kilitli komşu tarif retiyle ortak durumda); iptalin kaynak geometriyi
+değiştirmemesi (`topology_repair::tests`); yeniden açılan projede aynı tarifin aynı değişiklik kümesi (ortak durum
+`reopen`). **Açık:** ortak sınırın bütün yetkili komşularda atomik düzenlenmesi ve kilitli/yetkisiz komşu, yay, delik,
+üçlü birleşim, çoklu köşe için açıklanabilir ret; büyük toplu snap/temizliğin (ADR 0148) taşınma raporu; bağlı kaynak
+satırının değiştiği artımlı denetimin uygulama düzeyinde (band) sınanması; GIS Processing/veri formu yolu; GUI'de
+gerçek fare/klavye ile tarif akışı kanıtı ve büyük veri ölçümü. Madde açık kalır.
+
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
 **Öncelik:** P1 teknik veri modeli; resmî işlemler son aşama kapısında.
@@ -784,6 +800,20 @@ veri için farklı alan/metraj değeri basmamalıdır.
 zoom boyunca yazı/ölçü, grid ve çizgi konumu gözle denetlensin. Bir
 yüzey/parsel revizyonu yalnız ilgili sayfaları güncellesin. PDF'deki
 koordinat/ölçü bağımsız okuyucuda sınansın; resmî profil onaysızken genel çıktı çalışabilsin.
+
+**6 Kasım 2026, ilk dilim (ADR 1320, dal `map-18-pafta-teslim`):** her yayın `yayin.json`'a sayfaların kaynak
+dökümünü yazar (görünüm penceresinin bastığı, tablosunun okuduğu nesneler kalıcı kimlikleriyle; her nesnenin yuva
+kimliği olmadan içerik özeti; pafta kaydının ve katman/stil/blok/ayar/kitap parçalarının özetleri).
+`file.publish.status` her sayfanın teslim tarihini ve kaynak değişimini verir (değişen, giren, çıkan nesneler; pafta
+düzeni; değişen parçalar). `file.publish.sheets {previous}` önceki teslimin güncellemesini yeni klasöre kurar: sayfası
+aynı çizen ve PDF'i sağlam pafta baytı baytına ve kendi tarihiyle kopyalanır, değişenler bugünün tarihiyle yeniden
+üretilir, revizyonu ilerletilmemiş değişen paftaya `revision_unchanged` uyarısı; önceki teslim değişmez. Masaüstü
+yayın penceresinde Durum satırları ve Güncelle. Kanıt: 25 bağımsız ortak durum (`sheet_update_cases.py`); aynı 60
+parsel 1:500/1:1000/1:5000'de, 20 m kenar 40/20/4 mm, çerçeve köşeleri GDAL'ın GeoPDF okumasında 1 mm içinde, bir
+parselin değişimi yalnız onu gösteren sayfaları yeniden üretiyor. **Kalan:** atlas sayfalarının kaynak dökümü, tek
+PDF ve devam ettirilebilir güncelleme; anotasyon/tabloların kaynak kimliği ve revizyonuna bağlanması, CAD gerçek boylu
+yazı ile GIS dinamik etiketin ayrılması, datum/epok/kalite notları ve kurum eksen adları, resmî profil kapısı, eksik
+kaynak/okunmayan anotasyon bulguları. Madde açık kalır.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

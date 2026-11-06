@@ -17,11 +17,11 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 232 | 248 | 47 | 50 | 577 |
+| semantic | 232 | 249 | 47 | 50 | 578 |
 | geometry | 1 | 5 | 1 | 2 | 9 |
 | processing | 0 | 131 | 22 | 2 | 155 |
 | none | 0 | 14 | 6 | 2 | 22 |
-| query | 12 | 21 | 2 | 9 | 44 |
+| query | 12 | 20 | 2 | 9 | 43 |
 | session | 18 | 71 | 59 | 9 | 157 |
 | host | 3 | 20 | 14 | 0 | 37 |
 | **toplam** | 266 | 510 | 151 | 74 | 1001 |

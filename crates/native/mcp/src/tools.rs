@@ -608,6 +608,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.edit"
             | "cad.entities.transform"
             | "cad.entities.set"
+            // A topology repair recipe changes and deletes the findings' objects (docs/adr/1260 §4).
+            | "cad.topology.repair"
             | "cad.blocks.define"
             | "cad.blocks.edit"
             // It moves inserts to another block and may purge the first (docs/adr/0317 §3).

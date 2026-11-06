@@ -106,9 +106,29 @@ def rules_json(rules):
     return [dict(r, value=float(r["value"])) if "value" in r else r for r in rules]
 
 
-def setup(rules=RULES, exceptions=(), layers=("parsel",)):
+# ── the review's marks (ADR 1260) ─────────────────────────────────────
+
+PROFILE = {"name": "Kadastro güncelleme", "edition": "2026/1", "precision": 0.0001, "acceptance": 0.05}
+RULE_ENGINE = 1
+
+
+def rule_digest(r):
+    """A rule's version (ADR 1260 §3): SHA-256 of the engine edition, the kind, the layer, the other layer and the value
+    in effect as the 16 hexadecimal digits of its IEEE 754 bits (the kind's default when none; `-` when the kind takes
+    none), each closed by a zero byte; the first 8 bytes."""
+    defaults = {"mustNotHaveSlivers": 0.1, "mustNotHaveShortEdges": 0.05,
+                "mustNotHaveSmallAngles": 5.0 * (math.pi / 180.0)}
+    v = float(r["value"]) if "value" in r else defaults.get(r["kind"])
+    pieces = [f"kentos.topology-rule/{RULE_ENGINE}", r["kind"], r["layer"], r.get("other", ""),
+              "-" if v is None else struct.pack(">d", v).hex()]
+    return hashlib.sha256(b"".join(p.encode() + b"\0" for p in pieces)).hexdigest()[:16]
+
+
+def setup(rules=RULES, exceptions=(), layers=("parsel",), profile=None):
     objs = drawing_objs()
     topology = {"tolerance": float(T), "rules": rules_json(rules)}
+    if profile is not None:
+        topology["profile"] = profile
     if exceptions:
         topology["exceptions"] = list(exceptions)
     return {
@@ -125,14 +145,23 @@ def setup(rules=RULES, exceptions=(), layers=("parsel",)):
     }
 
 
-def found(objs, rules, exceptions=(), lapsed=(), outside=()):
-    """The findings as the command says them: the reference's, with key, uids, kind, exception and lapse. `lapsed`
-    are exceptions (rule, uids, at) whose digest no longer holds: they do not make a finding an exception."""
+def names(x, rule, uids, at):
+    """Whether a mark names a finding (ADR 1260 §1): its rule, its objects in order and, unless it covers them
+    anywhere (`scope` `objects`), its place within the tolerance."""
+    return x["rule"] == rule and x["objects"] == uids and (x.get("scope") == "objects" or (
+        (F(x["at"]["x"]) - F(at["x"])) ** 2 + (F(x["at"]["y"]) - F(at["y"])) ** 2 <= T * T))
+
+
+def found(objs, rules, exceptions=(), lapsed=(), outside=(), errors=()):
+    """The findings as the command says them: the reference's, with key, uids, kind, exception, lapse and their place
+    in the life cycle (ADR 1260 §1). `lapsed` are marks (rule, uids, at) whose digest or rule version no longer holds:
+    they do not make a finding an exception; `errors` are error marks that hold. A mark's `reason` is the finding's."""
     holding = [x for x in exceptions if x not in lapsed]
     out = []
     # The reference's grid wants a pair: a rule over fewer than two areas finds nothing.
     rules = [r for r in rules if r["kind"] != "mustNotOverlap" or len(tr.of_layer(objs, r["layer"], tr.AREA)) > 1]
-    for f in tr.run(objs, rules, T, holding):
+    for f in tr.run(objs, rules, T):
+        f["exception"] = any(names(x, f["rule"], [objs[k].uid for k in f["objects"]], f["at"]) for x in holding)
         uids = [objs[k].uid for k in f["objects"]]
         rule = next(r for r in rules if r["id"] == f["rule"])
         if all(objs[k].uid in outside for k in f["objects"]):
@@ -149,10 +178,20 @@ def found(objs, rules, exceptions=(), lapsed=(), outside=()):
             g["measureKind"] = f["measureKind"]
         g["fixes"] = f["fixes"]
         g["exception"] = f["exception"]
-        near = lambda x: x["rule"] == f["rule"] and x["objects"] == uids and (  # noqa: E731
-            (F(x["at"]["x"]) - F(f["at"]["x"])) ** 2 + (F(x["at"]["y"]) - F(f["at"]["y"])) ** 2 <= T * T)
-        if not f["exception"] and any(near(x) for x in lapsed):
+        near = lambda x: names(x, f["rule"], uids, f["at"])  # noqa: E731
+        error = next((x for x in errors if near(x)), None)
+        gone = next((x for x in lapsed if near(x)), None)
+        if f["exception"]:
+            g["state"], mark = "exception", next(x for x in holding if near(x))
+        elif error is not None:
+            g["state"], mark = "error", error
+        elif gone is not None:
             g["lapsed"] = True
+            g["state"], mark = "lapsed", gone
+        else:
+            g["state"], mark = "open", None
+        if mark is not None and "reason" in mark:
+            g["reason"] = mark["reason"]
         out.append(g)
     return out
 
@@ -161,9 +200,12 @@ def answer(findings, rules=2, objects=5, limit=None, missing=0, neighbours=0, in
     shown = findings if limit is None else findings[:limit]
     exc = sum(1 for f in findings if f["exception"])
     lapsed = sum(1 for f in findings if f.get("lapsed"))
+    errors = sum(1 for f in findings if f["state"] == "error")
     out = {"findings": shown, "total": len(findings), "open": len(findings) - exc, "exceptions": exc}
     if lapsed:
         out["lapsed"] = lapsed
+    if errors:
+        out["errors"] = errors
     out["rules"] = rules
     if missing:
         out["missing"] = missing
@@ -488,7 +530,7 @@ def exc_cases():
 
     def held(xs):
         return {"settings": {"topology": {"tolerance": float(T), "rules": rules_json(RULES),
-                                          "exceptions": [dict(x, digest=ANY) for x in xs]}}}
+                                          "exceptions": [dict(x, digest=ANY, ruleDigest=rule_digest(next(r for r in RULES if r["id"] == x["rule"]))) for x in xs]}}}
 
     c("istisna yap: bulgu istisna olur, ayarlarda geometrisinin özetiyle",
       mark([over["key"]], 1, 1, expect={"revision": "changed", "canUndo": False, "dirty": True, **held([x1])}),
@@ -541,6 +583,78 @@ def exc_cases():
       step({"operation": "mark", "keys": [over["key"]], "expectedRevision": "x"},
            failed("invalid_revision", "Beklenen sürüm “x” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı "
                   "yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision")))
+    # The review's life cycle (ADR 1260 §1): an error mark, a reason, a cover, a profile that asks for reasons, a
+    # rule's version.
+    def marked(op, keys, changed, exceptions, reason=None, scope=None, expect=None):
+        inp = {"operation": op, "keys": keys}
+        if reason is not None:
+            inp["reason"] = reason
+        if scope is not None:
+            inp["scope"] = scope
+        return step(inp, edited(changed, exceptions), expect or {"revision": "changed" if changed else "same"})
+
+    def bad(inp, code, message, path):
+        return step(inp, failed(code, message, path))
+
+    why = "Sayısallaştırma hatası; ölçüyle düzeltilecek"
+    xe = dict(x1, decision="error", reason=why)
+    v1 = rule_digest(R1)
+    c("hata diye onayla: bulgu hata, açık sayılır, errors sayılır",
+      marked("error", [over["key"]], 1, 1, reason=why),
+      check(answer(found(objs, RULES, errors=[xe]))))
+    c("hata işareti gerekçesini, kural sürümünü ve geometri özetini tutar",
+      marked("error", [over["key"]], 1, 1, reason=why, expect={
+          "revision": "changed", "canUndo": False, "dirty": True,
+          "settings": {"topology": {"tolerance": float(T), "rules": rules_json(RULES), "exceptions": [
+              dict(x1, digest=ANY, reason=why, decision="error", ruleDigest=v1)]}}}))
+    c("gerekçesiz hata işareti de olur (profil yokken)", marked("error", [over["key"]], 1, 1),
+      check(answer(found(objs, RULES, errors=[x1]))))
+    c("hata işareti istisnaya çevrilir: işaret değişir, bir kalır",
+      marked("error", [over["key"]], 1, 1, reason=why), marked("mark", [over["key"]], 1, 1, reason="Ortak duvar"),
+      check(answer(found(objs, RULES, exceptions=[dict(x1, reason="Ortak duvar")]))))
+    c("aynı karar ve gerekçe yeniden yazılmaz", marked("error", [over["key"]], 1, 1, reason=why),
+      marked("error", [over["key"]], 0, 1, reason=why))
+    c("hata işareti kaldırılır", marked("error", [over["key"]], 1, 1), unmark([over["key"]], 1, 0), check(answer(fs)))
+    c("istisna nesneleri kapsar: yeri tutmasa da aynı nesneler arasındaki bulgu istisna",
+      check(answer(found(objs, RULES, exceptions=[dict(x1, scope="objects", at={"x": float(E), "y": float(N)})]))),
+      setup_=setup(exceptions=[dict(x1, scope="objects", at={"x": float(E), "y": float(N)})]))
+    c("yerine bağlı istisna başka yerdeki bulguyu kapsamaz",
+      check(answer(found(objs, RULES))), setup_=setup(exceptions=[dict(x1, at={"x": float(E), "y": float(N)})]))
+    c("kapsamı nesneler olan istisna yazılır",
+      marked("mark", [over["key"]], 1, 1, reason="Ortak duvar", scope="objects", expect={
+          "revision": "changed", "settings": {"topology": {"tolerance": float(T), "rules": rules_json(RULES),
+                                                           "exceptions": [dict(x1, digest=ANY, reason="Ortak duvar",
+                                                                               scope="objects", ruleDigest=v1)]}}}))
+    c("kapsam yalnız istisnanın", bad({"operation": "error", "keys": [over["key"]], "scope": "objects"},
+                                      "invalid_input", "Kapsam yalnız istisnanın (mark) alanıdır.", "scope"))
+    c("boş gerekçe reddedilir", bad({"operation": "mark", "keys": [over["key"]], "reason": "   "}, "invalid_input",
+                                    "İşaretin gerekçe boş; 1 ile 500 karakter arasında, boş olmayan bir gerekçe yazın.",
+                                    "reason"))
+    c("500 karakterden uzun gerekçe reddedilir",
+      bad({"operation": "mark", "keys": [over["key"]], "reason": "a" * 501}, "invalid_input",
+          "İşaretin gerekçe 500 karakteri aşıyor; 1 ile 500 karakter arasında, boş olmayan bir gerekçe yazın.", "reason"))
+    c("kaldırırken gerekçe yazılmaz",
+      bad({"operation": "unmark", "keys": [over["key"]], "reason": why}, "invalid_input",
+          "Gerekçe yalnız işaretlerken (mark, error) yazılır; unmark gerekçe almaz.", "reason"))
+    c("kalite profili gerekçe ister",
+      bad({"operation": "mark", "keys": [over["key"]]}, "reason_required",
+          "Projenin kalite profili (“Kadastro güncelleme”) her istisnanın ve hata işaretinin gerekçesini ister; reason'ı yazın.",
+          "reason"), setup_=setup(profile=PROFILE))
+    c("kalite profiliyle gerekçeli istisna yazılır",
+      marked("mark", [over["key"]], 1, 1, reason="Ortak duvar"),
+      check(answer(found(objs, RULES, exceptions=[dict(x1, reason="Ortak duvar")]))), setup_=setup(profile=PROFILE))
+    stale = dict(x1, ruleDigest="0000000000000000", decision="error", reason=why)
+    c("kural değişince hata işareti düşer: bulgu yeniden değerlendirilmeli, uyarılır",
+      check(answer(found(objs, RULES, lapsed=[stale])),
+            [{"code": "exception_lapsed",
+              "message": "1 işaretin kuralı işaretlendikten sonra değişti; bulguları yeniden değerlendirilmeli."}]),
+      setup_=setup(exceptions=[stale]))
+    c("kuralın bugünkü sürümüyle işaret tutar",
+      check(answer(found(objs, RULES, errors=[dict(x1, ruleDigest=v1, decision="error", reason=why)]))),
+      setup_=setup(exceptions=[dict(x1, ruleDigest=v1, decision="error", reason=why)]))
+    c("düşen hata işareti yeniden işaretlenir",
+      marked("error", [over["key"]], 1, 1, reason=why), check(answer(found(objs, RULES, errors=[xe]))),
+      setup_=setup(exceptions=[stale]))
     # The part: an exception of a finding with a row outside.
     fs_p, objs_p, _, warn = part_answer(AREA)
     xp = exc_of(fs_p[0])

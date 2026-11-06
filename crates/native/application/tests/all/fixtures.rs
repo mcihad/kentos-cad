@@ -142,7 +142,7 @@ use kentos_native_application::{
 };
 use kentos_native_application::{extract_run, extract_table};
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
-use kentos_native_application::{topology_check, topology_exceptions};
+use kentos_native_application::{topology_check, topology_exceptions, topology_repair};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -507,6 +507,11 @@ impl Input for kentos_commands::StandardsConflicts {
     }
 }
 impl Input for kentos_commands::StandardsInstall {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::TopologyRepair {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -5826,6 +5831,9 @@ fn run_op(
         kentos_commands::CAD_TOPOLOGY_EXCEPTIONS => {
             run!(topology_exceptions, kentos_commands::TopologyExceptions)
         }
+        kentos_commands::CAD_TOPOLOGY_REPAIR => {
+            run!(topology_repair, kentos_commands::TopologyRepair)
+        }
         kentos_commands::CAD_PROCESSING_TOOLS => {
             run!(processing_tools, kentos_commands::ProcessingTools)
         }
@@ -6153,6 +6161,15 @@ fn run_step(
                     ));
                 }
             }
+        }
+        // The project saved as a .kcad file and opened again (docs/adr/1260 §5): what follows runs on what the file
+        // keeps, the undo chain gone.
+        "reopen" => {
+            let bytes = kentos_kcad::encode(&doc.to_snapshot_v2())
+                .map_err(|e| format!("{at}: .kcad yazılamadı: {e}"))?;
+            let snapshot =
+                kentos_kcad::decode(&bytes).map_err(|e| format!("{at}: .kcad okunamadı: {e}"))?;
+            *doc = Document::from_snapshot_v2(snapshot).map_err(|e| format!("{at}: {e}"))?;
         }
         op @ ("undo" | "redo") => {
             let label = if op == "undo" { doc.undo() } else { doc.redo() };

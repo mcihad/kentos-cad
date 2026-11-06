@@ -41,4 +41,11 @@ resumable?: boolean,
  * rest are made. Refused unless the drawing, its linked resources, the title context and the options are the ones
  * it started with (`resume_stale`).
  */
-resume?: boolean, };
+resume?: boolean, 
+/**
+ * An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
+ * whose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has
+ * its bytes is copied byte for byte with its own publication date; the rest are made again with today's. The
+ * earlier folder is left as it is. Separate PDFs only; not with `resume`.
+ */
+previous?: string, };

@@ -4949,7 +4949,24 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.topology.exceptions",
-        refusals: &[&["invalid_input", "finding_not_found"], REVISION],
+        refusals: &[&["invalid_input", "reason_required", "finding_not_found"], REVISION],
+        warnings: &[],
+        targets: none,
+    },
+    // Topoloji onarım tarifi (docs/adr/1260 §4).
+    Entry {
+        id: "cad.topology.repair",
+        refusals: &[
+            &["invalid_input"],
+            REVISION,
+            &[
+                "finding_not_found",
+                "repair_refused_exception",
+                "fix_unavailable",
+                "layer_locked",
+                "repair_beyond_acceptance",
+            ],
+        ],
         warnings: &[],
         targets: none,
     },
@@ -7128,6 +7145,7 @@ const ENTRIES: &[Entry] = &[
             "integrity_failed",
             "no_resume",
             "resume_stale",
+            "no_previous",
         ]],
         warnings: &[],
         targets: none,

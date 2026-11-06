@@ -2297,7 +2297,7 @@ Gerekçeli istisna dışında bütün satırlar kanıtlı; o satır açık oldu�
 **Gerekçeli istisna (6 Kasım 2026, [ADR 1129](../docs/adr/1129-accepted-standards-findings.md)):** *“Geçerli istisna
 gerekçeyle saklanabilsin”* artık kanıtlı. `cad.standards.exceptions` bir denetim bulgusunu (tür, konu, katman)
 standardın kaynağına ve revizyonuna bağlı, kabul anındaki değerleriyle, zorunlu gerekçe ve isteğe bağlı kim/ne
-zamanla kabul eder ya da kabulü geri alır; kabuller projededir (`.kcad` şema 190, geçici numara). `cad.standards.check`
+zamanla kabul eder ya da kabulü geri alır; kabuller projededir (`.kcad` şema 190). `cad.standards.check`
 kabul edilen bulguyu gizlemez: `accepted` olarak listeler ve ayrı sayar; paketin revizyonu ya da çizimdeki değer
 değişince `lapsed` der. Çizim standardı penceresinde Gerekçe, Gerekçeyle kabul et ve Kabulü geri al. Kanıt:
 `office_profiles.rs` `an_accepted_finding_survives_a_reopen_and_lapses_on_the_next_revision` (kabul, kaydedip açınca

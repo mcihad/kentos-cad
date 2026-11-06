@@ -4,7 +4,7 @@
   gerekçeyle saklanabilsin; eski projeyi açmak standardı uygulama izni sayılmasın”.
 - **Bağlam belgesi:** ADR 0312 (standart denetimi ve uygulaması), 1002 ve 1100 (ofis paketi), 1128 (CAD-ADV-12 kabulü),
   0589 §3 ve 1260 §2 (topoloji istisnası; MAP-07, `origin/map-07-topoloji-kalite`).
-- **Şema:** `.kcad` 190 (dalda geçici numara; birleşmede yeniden numaralanır).
+- **Şema:** `.kcad` 190.
 - **Web:** ertelendi (ADR 0228), TODOS.md §0.2.
 
 ## 1. Araştırma

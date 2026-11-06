@@ -465,6 +465,7 @@ pub mod viewmarks;
 pub mod spaces_finish;
 pub mod navigator;
 pub mod sheets_set;
+pub mod sheets_sources;
 pub mod pdf_underlay;
 pub mod xrefs;
 mod xrefs_bind;
@@ -536,6 +537,7 @@ pub mod style_tables;
 pub mod styles_edit;
 pub mod topology_check;
 pub mod topology_exceptions;
+pub mod topology_repair;
 pub mod topology_follow;
 pub mod transform;
 pub mod trim;
@@ -1435,6 +1437,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_TOPOLOGY_EXCEPTIONS,
         kentos_commands::CAD_TOPOLOGY_EXCEPTIONS_VERSION,
+    ),
+    // Topoloji onarım tarifi ([`topology_repair`], docs/adr/1260 §4).
+    (
+        kentos_commands::CAD_TOPOLOGY_REPAIR,
+        kentos_commands::CAD_TOPOLOGY_REPAIR_VERSION,
     ),
     // Adres verisini denetle ([`addresses_check`], docs/adr/0579).
     (

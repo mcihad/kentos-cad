@@ -812,14 +812,17 @@ pub const SCHEMA_WITH_DIMENSION_TEXT_STYLES: u32 = 186;
 pub const SCHEMA_WITH_LEADER_TEXT_STYLES: u32 = 187;
 /// Schema 188 (docs/adr/1200 §2): a map project's work structure (`settings.mapWork`).
 pub const SCHEMA_WITH_MAP_WORK: u32 = 188;
+/// Schema 189 (docs/adr/1260): the topology settings' quality `profile` and an exception's `decision`, `reason`,
+/// `ruleDigest` and `scope`.
+pub const SCHEMA_WITH_TOPOLOGY_REVIEWS: u32 = 189;
 /// Schema 190 (docs/adr/1129): the standards findings the project accepts with a reason
-/// (`settings.standardExceptions`). Temporary number on the CAD-ADV-12 branch: renumbered on merge.
+/// (`settings.standardExceptions`).
 pub const SCHEMA_WITH_STANDARD_EXCEPTIONS: u32 = 190;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 187] = [
+pub const SCHEMAS: [u32; 188] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1006,6 +1009,7 @@ pub const SCHEMAS: [u32; 187] = [
     SCHEMA_WITH_DIMENSION_TEXT_STYLES,
     SCHEMA_WITH_LEADER_TEXT_STYLES,
     SCHEMA_WITH_MAP_WORK,
+    SCHEMA_WITH_TOPOLOGY_REVIEWS,
     SCHEMA_WITH_STANDARD_EXCEPTIONS,
 ];
 

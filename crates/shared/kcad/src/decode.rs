@@ -31,7 +31,8 @@ use kentos_contracts::{
     DrawingUnit, FieldChoice, FieldColumn, GeoidModel, HeightKind, HeightReference, LayerField,
     LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
     LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId,
-    ProjectSettings, ProjectStyles, SurveySettings, TopologyException, TopologyRule,
+    ProjectSettings, ProjectStyles, SurveySettings, TopologyDecision, TopologyException, TopologyProfile,
+    TopologyRule, TopologyScope,
     TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
     layer_states_problem,
 };
@@ -1400,7 +1401,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 layer_states = layer_states_list(r, has.labels, has.frozen, has.patterns)?
             }
             "topology" if has.topology => {
-                topology = Some(topology_settings(r, has.exception_digests)?)
+                topology = Some(topology_settings(r, has.exception_digests, has.topology_reviews)?)
             }
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
@@ -1882,9 +1883,14 @@ fn annotation_heights(r: &mut Reader<'_>) -> Result<AnnotationHeights, KcadError
 
 /// Schema 27's topology settings (docs/adr/0202 §7): the tolerance, the
 /// rules (`id`, `kind`, `layer`, `other`, `value`) and the exceptions (`at`,
-/// `rule`, `objects`; from schema 99 `digest`), checked whole as the contract checks them
-/// (`TopologySettings::problem`).
-fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettings, KcadError> {
+/// `rule`, `objects`; from schema 99 `digest`; from schema 189 `decision`, `reason`, `ruleDigest`, `scope`) and, from
+/// schema 189, the quality `profile` (`name`, `edition`, `precision`, `acceptance`, docs/adr/1260), checked whole as the
+/// contract checks them (`TopologySettings::problem`).
+fn topology_settings(
+    r: &mut Reader<'_>,
+    digests: bool,
+    reviews: bool,
+) -> Result<TopologySettings, KcadError> {
     let at = r.position();
     let mut t = TopologySettings::default();
     map(r, |r, key| {
@@ -1924,9 +1930,29 @@ fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettin
                 })?
             }
             "tolerance" => t.tolerance = Some(r.float()?),
+            "profile" if reviews => {
+                let (mut name, mut edition, mut precision, mut acceptance) = (None, None, None, None);
+                map(r, |r, key| {
+                    match key {
+                        "name" => name = Some(text(r)?),
+                        "edition" => edition = Some(text(r)?),
+                        "precision" => precision = Some(r.float()?),
+                        "acceptance" => acceptance = Some(r.float()?),
+                        _ => return Err(unknown(r)),
+                    }
+                    Ok(())
+                })?;
+                t.profile = Some(TopologyProfile {
+                    name: required(r, name, "name")?,
+                    edition,
+                    precision: required(r, precision, "precision")?,
+                    acceptance: required(r, acceptance, "acceptance")?,
+                });
+            }
             "exceptions" => {
                 t.exceptions = list(r, |r, _| {
                     let (mut at, mut rule, mut objects, mut digest) = (None, None, None, None);
+                    let (mut decision, mut reason, mut rule_digest, mut scope) = (None, None, None, None);
                     map(r, |r, key| {
                         match key {
                             "at" => at = Some(point(r)?),
@@ -1936,6 +1962,36 @@ fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettin
                                     Some(list(r, |r, _| id16(r).map(kentos_contracts::EntityId))?)
                             }
                             "digest" if digests => digest = Some(text(r)?),
+                            "decision" if reviews => {
+                                let at = r.position();
+                                decision = Some(match r.text()? {
+                                    "exception" => TopologyDecision::Exception,
+                                    "error" => TopologyDecision::Error,
+                                    k => {
+                                        return Err(r.fail_at(
+                                            Code::BadValue,
+                                            at,
+                                            &format!("“{k}” bilinen bir topoloji kararı değil"),
+                                        ));
+                                    }
+                                });
+                            }
+                            "reason" if reviews => reason = Some(text(r)?),
+                            "ruleDigest" if reviews => rule_digest = Some(text(r)?),
+                            "scope" if reviews => {
+                                let at = r.position();
+                                scope = Some(match r.text()? {
+                                    "finding" => TopologyScope::Finding,
+                                    "objects" => TopologyScope::Objects,
+                                    k => {
+                                        return Err(r.fail_at(
+                                            Code::BadValue,
+                                            at,
+                                            &format!("“{k}” bilinen bir istisna kapsamı değil"),
+                                        ));
+                                    }
+                                });
+                            }
                             _ => return Err(unknown(r)),
                         }
                         Ok(())
@@ -1945,6 +2001,10 @@ fn topology_settings(r: &mut Reader<'_>, digests: bool) -> Result<TopologySettin
                         objects: required(r, objects, "objects")?,
                         at: required(r, at, "at")?,
                         digest,
+                        decision,
+                        reason,
+                        rule_digest,
+                        scope,
                     })
                 })?
             }

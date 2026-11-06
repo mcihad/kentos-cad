@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- MAP-07 / ADR 1260: web'in Topoloji paneli ve `io/kcad.ts` şema 189 (kalite `profile`'ı; istisnanın `decision`,
+  `reason`, `ruleDigest`, `scope`'u), bulgunun `state`/`reason`'ı, `cad.topology.exceptions`'ın `error`/`reason`/`scope`'u
+  ve `cad.topology.repair`'in web işleyicisi; WASM `topologyCheck`'in istisnası `anywhere` almıyor (hep yerine bağlı).
 - MAP-01 / ADR 1200: `map.work.query` ve `map.work.edit`'in web işleyicisi, `io/kcad.ts` şema 188 (`mapWork`), Harita
   işi paneli ve Öznitelikler'in Kaynağı bölümü.
 - CAD-ADV-12 / ADR 1100: `cad.standards.install`'ın blok ve pafta şablonu satırları (`block`, `sheetTemplate`,
@@ -75,6 +78,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yayın penceresinde kapsam ve sayfa denetimi satırları, Durum ve Devam et, `file.publish.status` istemcisi;
   `SetFrame.detail`/`locked` ve `AffectReason::table` sözleri; pafta tasarımcısında detay başlığının `@olcek` okuması.
   TS türleri üretildi; WASM bağlayıcısı yok.
+- MAP-18 / ADR 1320: yayın penceresinde Durum satırlarının tarih ve kaynak değişimi (`changes`), Güncelle
+  (`previous`) ve kopyalanan/yeniden üretilen paftaların raporu; `file.publish.sheets.update.json` ortak durumlarının
+  web koşucusu. TS türleri üretildi (`PreviousPublication`, `SheetSourceChanges`, yeni alanlar).
 - CAD-ADV-18 / ADR 1009: açılışta sağlık denetimi yalnız masaüstü ayarıdır (`appearance.openHealthCheck`); web'de
   aynı denetim Worker'da, süre bütçesiyle eklenecekse ayarın konağına web yazılır.
 - CAD-ADV-12 / ADR 1014: Şablonlar panelinde Ofis paletleri bölümü `cad.standards.palettes`'e bağlanmalı; TS türleri üretildi.

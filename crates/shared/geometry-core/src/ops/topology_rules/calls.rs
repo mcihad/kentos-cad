@@ -273,6 +273,7 @@ fn check_op(
             rule: x.rule,
             objects: x.objects,
             at: x.at,
+            anywhere: false,
         })
         .collect();
     let checked = check(&objects, &rules, tolerance, &exceptions);

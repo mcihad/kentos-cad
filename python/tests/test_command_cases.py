@@ -656,7 +656,9 @@ class CommandCases(unittest.TestCase):
             fixture = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual((fixture["format"], fixture["version"]), ("kentos.command-cases", 1))
             if fixture.get("host")=="headless-file":
-                if fixture['command']=='file.publish.sheets':
+                if fixture.get('runner')=='publish-update':
+                    from publish_update_cases import run_fixture
+                elif fixture['command']=='file.publish.sheets':
                     from publish_cases import run_fixture
                 elif fixture['command']=='file.preflight.sheets':
                     from preflight_cases import run_fixture

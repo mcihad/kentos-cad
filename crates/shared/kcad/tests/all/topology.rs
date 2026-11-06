@@ -149,6 +149,10 @@ fn the_writer_refuses_what_the_reader_refuses() {
             objects: vec![EntityId([1; 16])],
             at: Vec2 { x: 0.0, y: 0.0 },
             digest: None,
+            decision: None,
+            reason: None,
+            rule_digest: None,
+            scope: None,
         }],
         ..Default::default()
     });
@@ -160,6 +164,10 @@ fn the_writer_refuses_what_the_reader_refuses() {
             objects: vec![EntityId([1; 16])],
             at: Vec2 { x: 0.0, y: 0.0 },
             digest: Some("00FF00FF00FF00FF".into()),
+            decision: None,
+            reason: None,
+            rule_digest: None,
+            scope: None,
         }],
         ..Default::default()
     });

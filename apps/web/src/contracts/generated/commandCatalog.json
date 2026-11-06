@@ -57285,7 +57285,7 @@
       "id": "cad.topology.check",
       "version": 1,
       "title": "Topolojiyi denetle",
-      "summary": "Projenin topoloji kurallarını (rules: bazılarının kimlikleri; verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez. Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. Her bulgu kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir; ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir. Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı). stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit, topology_rule_not_found, finding_not_found, fix_unavailable.",
+      "summary": "Projenin topoloji kurallarını (rules: bazılarının kimlikleri; verilmezse hepsi) çizimde çalıştırır; çizimi değiştirmez. Bağlı katmanın alan sınırlı parçasında (ADR 0510) alanın çevresindeki bant kaynağından okunur (dosyanın katmanın son eşleştiği sürümünden, veritabanının bugünkü hâlinden) ve komşu sayılır: parçanın nesnesiyle dışarıdaki satır arasındaki bulgu bulunur, dışarıdakilerin kendi aralarındaki bulgu parçanın değildir, verilmez. Komşular tam okunamazsa (dosya yok ya da başka sürümde, veritabanına ulaşılamıyor, parçanın nesnesi bandın dışına uzanıyor) complete false olur, incomplete nedenini söyler ve topology_incomplete uyarısı verilir: o katman temiz sayılmaz. Her bulgu kalıcı anahtarıyla (key), kuralıyla, sorunuyla, nesnelerinin kalıcı kimlikleriyle (dışarıdakiler outside'ta), yeri, ölçüsü, düzeltmeleri ve istisna durumuyla gelir; ilk limit tanesi (1–100 000, varsayılan 1 000) listelenir, sayılar hepsinindir. Geometri özetiyle yapılmış istisna, nesnelerin geometrisi değişince düşer: bulgu açık ve lapsed olur (exception_lapsed uyarısı); kural sürümüyle yapılmış işaret kural değişince de düşer. Her bulgunun state'i yaşam döngüsündeki yeridir (ADR 1260): open (değerlendirilmedi), error (hata diye onaylandı, düzeltilecek), exception (bilerek bırakıldı), lapsed (işaretlendikten sonra geometrisi ya da kuralı değişti, yeniden değerlendirilmeli); reason işaretin gerekçesidir, errors onaylanmış hata sayısı. stamp denetimin gördüğü durumdur: çizimin revizyonu, kuralların, toleransın ve istisnaların özeti, bağlı katmanların kaynak sürümü ve okunan bandın özeti. preview bir bulgunun bir düzeltmesini yazmadan önizler: değişecek nesneler alanları ya da uzunluklarıyla önce ve sonra, silinecekler, kaynağına yazılacak bağlı katmanlar (yazmak cad.entities.edit'in topologyFix'idir). Retler: invalid_limit, topology_rule_not_found, finding_not_found, fix_unavailable.",
       "aliases": [
         "topolojidenetle"
       ],
@@ -57343,6 +57343,13 @@
           "complete": {
             "description": "Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.",
             "type": "boolean"
+          },
+          "errors": {
+            "description": "The findings confirmed as errors (docs/adr/1260 §1): of the open ones.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "exceptions": {
             "format": "uint32",
@@ -57441,6 +57448,13 @@
           "complete": {
             "description": "Whether every neighbour a rule needs was read: false, no layer of `incomplete` is said to be clean.",
             "type": "boolean"
+          },
+          "errors": {
+            "description": "The findings confirmed as errors (docs/adr/1260 §1): of the open ones.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "exceptions": {
             "format": "uint32",
@@ -57573,7 +57587,7 @@
       "id": "cad.topology.exceptions",
       "version": 1,
       "title": "Topoloji istisnaları",
-      "summary": "Bulguları istisna yapar (mark) ya da istisnalarını kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Retler: invalid_input (anahtar yok ya da iki kez), finding_not_found; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Bulguları istisna yapar (mark), hata diye onaylar (error) ya da işaretlerini kaldırır (unmark); bulgular cad.topology.check'in verdiği kalıcı anahtarlarla (keys) ve çizimin bugünkü hâliyle anılır. İşaret gerekçeyi (reason; projenin kalite profili varsa zorunlu, yoksa reason_required), kuralın sürümünü ve istisnada kapsamı (scope: finding yerindeki bulgu, objects aynı nesneler arasındaki kuralın her bulgusu) taşır; kural değişince de düşer (ADR 1260). İstisna bulgunun kuralını, nesnelerini, yerini ve nesnelerin geometrisinin özetini tutar: geometri değişince istisna düşer, bulgu yeniden açılır; düşmüş istisnanın bulgusunu mark bugünkü geometriyle yeniden istisna yapar, unmark kaldırır. Zaten istisna olan (mark) ya da istisnası olmayan (unmark) bulgu sayılmaz. İstisnalar proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Retler: invalid_input (anahtar yok ya da iki kez), finding_not_found; expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -57605,6 +57619,24 @@
           },
           "operation": {
             "$ref": "#/$defs/TopologyExceptionOperation"
+          },
+          "reason": {
+            "description": "Why (docs/adr/1260 §1), for `mark` and `error`: kept on each mark; required when the project has a quality\nprofile. Not blank, at most 500 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TopologyScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What an exception covers (`mark` only): absent or `finding`, the finding at its place; `objects`, every finding of\nits rule between the same objects."
           }
         },
         "required": [
@@ -57675,6 +57707,7 @@
       "capabilities": {
         "refusals": [
           "invalid_input",
+          "reason_required",
           "finding_not_found",
           "invalid_revision",
           "revision_conflict"
@@ -57698,6 +57731,243 @@
               "3f9a0c12d4e5b678"
             ],
             "operation": "unmark"
+          }
+        },
+        {
+          "title": "Bir bulguyu gerekçesiyle hata diye onayla",
+          "input": {
+            "keys": [
+              "3f9a0c12d4e5b678"
+            ],
+            "operation": "error",
+            "reason": "Sayısallaştırma hatası; ölçüyle düzeltilecek"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.topology.repair",
+      "version": 1,
+      "title": "Topolojiyi onar (tarif)",
+      "summary": "Bir onarım tarifini uygular: adımlar (steps, 1–1000) sırayla, her biri bir bulgunun kalıcı anahtarı (key) ve uygulanacak düzeltmesi (fix: subtractFirst, removeVertex …; bulgunun sunduklarından). Her adımdan önce kurallar önceki adımların bıraktığı çizimde yeniden çalışır (GRASS v.clean'in her araçtan önce topolojiyi kurması gibi); anahtar o çizimdeki bulgunun anahtarıdır. Kör “hepsini onar” yoktur: her adım bulgusunu anar. Cevap uygulanan tarifi (adım başına kural, sorun, nesneler), değişen her nesneyi (alanı ya da uzunluğu önce ve sonra, silindiyse removed, kaynak köşelerinden yerinde kalan ve taşınan sayısı, en uzak ve toplam taşınma uzaklığı, onu değiştiren adımlar), bütün taşınan köşe sayısını ve uzaklıklarını (kalite profili varsa depolama hassasiyetinin altında taşınanlar belowPrecision; yine taşınmış sayılır, yuvarlanmaz), alanların toplamındaki değişimi ve önce/sonra açık bulgu sayısını verir. Plan aynı cevabı verir, yazmaz. Hepsi ya da hiçbiri, tek geri alma adımı (Topoloji düzelt). Retler: invalid_input, invalid_revision, revision_conflict, finding_not_found (steps[i].key), repair_refused_exception (istisna olan bulgu), fix_unavailable (steps[i].fix), layer_locked (steps[i]: kilitli katmandaki nesneyi değiştiren adım), repair_beyond_acceptance (bir kaynak köşeyi kalite profilinin kabul eşiğinden uzağa taşıyan adım). İptal edilen iş hiçbir şey yazmaz.",
+      "aliases": [
+        "topolojionar"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.topology.repair` v1: the recipe's steps, 1–1000, in the order they are applied; all or nothing, one\nundo step “Topoloji düzelt”.\n\nRefusals, in this order: `invalid_input` (no step, more than 1000), the revision (`invalid_revision`,\n`revision_conflict`), then step by step: `finding_not_found` (`steps[i].key`: the drawing as the steps before left\nit has no finding of that key), `repair_refused_exception` (`steps[i].key`: the finding is an exception, left on\npurpose), `fix_unavailable` (`steps[i].fix`: the finding does not offer the fix, the fix has no answer, or it would\nchange a row outside a bound part), `layer_locked` (`steps[i]`: an object it changes is on a locked layer); last\n`repair_beyond_acceptance` (`steps[i]`, the step that moved a source vertex farthest past the quality profile's\nacceptance threshold). A job asked to stop answers `cancelled` and writes nothing.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/$defs/TopologyRepairStep"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "title": "TopologyRepair",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.repair` v1, and its plan: the recipe as applied, the objects it changes in the drawing's\norder, the source vertices moved over them all (`moved`, `maxMoved`, `totalMoved`; `belowPrecision` of them by less\nthan the profile's storage precision, still moved and written as computed), the change of the areas' sum (square\nmetres; a deleted area's whole area), the open findings before and after (of every rule), and the revision after\n(a plan: before).",
+        "properties": {
+          "areaChange": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "belowPrecision": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/TopologyRepairChange"
+            },
+            "type": "array"
+          },
+          "maxMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "openAfter": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "openBefore": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "recipe": {
+            "items": {
+              "$ref": "#/$defs/TopologyRepairApplied"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "totalMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "recipe",
+          "changes",
+          "moved",
+          "maxMoved",
+          "totalMoved",
+          "areaChange",
+          "openBefore",
+          "openAfter",
+          "revision"
+        ],
+        "title": "TopologyRepaired",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.repair` v1, and its plan: the recipe as applied, the objects it changes in the drawing's\norder, the source vertices moved over them all (`moved`, `maxMoved`, `totalMoved`; `belowPrecision` of them by less\nthan the profile's storage precision, still moved and written as computed), the change of the areas' sum (square\nmetres; a deleted area's whole area), the open findings before and after (of every rule), and the revision after\n(a plan: before).",
+        "properties": {
+          "areaChange": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "belowPrecision": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/TopologyRepairChange"
+            },
+            "type": "array"
+          },
+          "maxMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "openAfter": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "openBefore": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "recipe": {
+            "items": {
+              "$ref": "#/$defs/TopologyRepairApplied"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "totalMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "recipe",
+          "changes",
+          "moved",
+          "maxMoved",
+          "totalMoved",
+          "areaChange",
+          "openBefore",
+          "openAfter",
+          "revision"
+        ],
+        "title": "TopologyRepaired",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "invalid_revision",
+          "revision_conflict",
+          "finding_not_found",
+          "repair_refused_exception",
+          "fix_unavailable",
+          "layer_locked",
+          "repair_beyond_acceptance"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki bulguyu sırayla onar",
+          "input": {
+            "steps": [
+              {
+                "fix": "subtractFirst",
+                "key": "3f9a0c12d4e5b678"
+              },
+              {
+                "fix": "removeVertex",
+                "key": "0a1b2c3d4e5f6071"
+              }
+            ]
           }
         }
       ]
@@ -90984,7 +91254,7 @@
       "id": "file.publish.sheets",
       "version": 1,
       "title": "Paftaları toplu yayınla",
-      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini ve kaynak sürümünü taşır; çizimin geri alması teslim dosyalarını kaldırmaz.",
+      "summary": "Seçilen paftaları açık sırasıyla tek veya ayrı PDF olarak yeni/boş bir teslim klasörüne yayınlar. Ayrı dosyalarda {index}, {sheet}, {id} ad şablonu; çakışan adlara sabit sayısal ek. Her pafta kendi dpi ayarını korur; açık dpi bütün yayın için geçerlidir. plan dosya yazmadan çıktı adlarını, kaynak pinini ve pafta bazlı kaynak/ön denetim raporunu verir; hatalı set yayınlanmaz. Bütün klasör tek seferde görünür olur; iptalde kısmi teslim bırakılmaz. İş ilerlemesi sayfa sınırlarında güncellenir. yayin.json çıktı özetlerini, kaynak sürümünü ve her sayfanın kaynak nesnelerini içerik özetleriyle taşır (docs/adr/1320 §2); çizimin geri alması teslim dosyalarını kaldırmaz. previous ile önceki bir teslimin güncellemesi yeni klasöre yayınlanır (docs/adr/1320 §3): sayfası aynı çizen ve PDF'i teslim edilen baytları taşıyan pafta baytı baytına ve kendi tarihiyle kopyalanır (carried), öbürleri bugünün tarihiyle yeniden üretilir; önceki teslim olduğu gibi kalır. Değişip revizyonu ilerletilmeyen paftaya revision_unchanged uyarısı. Yalnız ayrı PDF'lerle, devam ettirilebilir yayın olmadan; geo, layers, dpi ya da bağlı resimler önceki teslimdekinden başkaysa hiçbir sayfa kopyalanmaz.",
       "aliases": [
         "PAFTAYAYINLA"
       ],
@@ -91059,6 +91329,13 @@
             ],
             "description": "A plan's immutable document pin; changed source refuses publication before any file is exposed."
           },
+          "previous": {
+            "description": "An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet\nwhose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has\nits bytes is copied byte for byte with its own publication date; the rest are made again with today's. The\nearlier folder is left as it is. Separate PDFs only; not with `resume`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "resources": {
             "default": false,
             "description": "Also deliver the source drawing, local dependencies, bundled fonts and captured plot resources.",
@@ -91092,6 +91369,12 @@
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {
+          "carried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "files": {
             "items": {
               "$ref": "#/$defs/SheetPublishedFile"
@@ -91116,6 +91399,17 @@
           },
           "path": {
             "type": "string"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PreviousPublication"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the\npublished order (the others were made again)."
           },
           "ready": {
             "description": "True after full output/source checks; validate-only deliberately leaves this false.",
@@ -91174,6 +91468,12 @@
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {
+          "carried": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "files": {
             "items": {
               "$ref": "#/$defs/SheetPublishedFile"
@@ -91198,6 +91498,17 @@
           },
           "path": {
             "type": "string"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PreviousPublication"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `previous`: the earlier delivery, and the sheets whose pages were copied from it unchanged, in the\npublished order (the others were made again)."
           },
           "ready": {
             "description": "True after full output/source checks; validate-only deliberately leaves this false.",
@@ -91266,7 +91577,8 @@
           "package_incomplete",
           "integrity_failed",
           "no_resume",
-          "resume_stale"
+          "resume_stale",
+          "no_previous"
         ]
       },
       "examples": [
@@ -91277,6 +91589,14 @@
             "naming": "{index}-{sheet}",
             "path": "/tmp/pafta-teslimi"
           }
+        },
+        {
+          "title": "Önceki teslimin güncellemesi: yalnız değişen paftalar yeniden üretilir",
+          "input": {
+            "mode": "separate",
+            "path": "/tmp/pafta-teslimi-2",
+            "previous": "/tmp/pafta-teslimi"
+          }
         }
       ]
     },
@@ -91284,7 +91604,7 @@
       "id": "file.publish.status",
       "version": 1,
       "title": "Yayın durumu",
-      "summary": "Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği.",
+      "summary": "Bir teslim klasörünün son yayınını çizimin şimdiki hâliyle sayfa sayfa karşılaştırır (docs/adr/1090 §6); dosya yazmaz. Her paftanın sayfası başlık bağlamı (kullanıcı, tarih) olmadan yeniden çizilir ve içerik özeti yayındakiyle karşılaştırılır: current (aynı), stale (değişti; yeniden yayınlayın), failed (şimdi üretilemiyor), fileChanged (teslim edilen PDF eksik ya da değişmiş), removed (kitapta yok), unpublished (yayında yok), unknown (özetsiz eski yayın). Çizimin şimdiki kaynak pini (current) ile yayının kaynağı (published) ayrı verilir; stale yeniden üretilecek paftaları yayın sırasıyla listeler ve file.publish.sheets'in sheets girdisine olduğu gibi verilir. Durdurulan ya da başarısız devam edilebilir bir yayın (resumable) için stopped: neden, bitmiş ve kalan sayfalar, bulgular ve resume ile devam edilip edilemeyeceği. Her sayfanın teslim tarihi (date) ve kaynaklarının teslimden beri değişimi (changes, docs/adr/1320 §2): içeriği değişen, sayfaya giren ve sayfadan çıkan nesneler kalıcı kimlikleriyle, paftanın kendi kaydının değişip değişmediği ve değişen proje parçaları (settings, layers, styles, blocks, book, resources).",
       "aliases": [
         "YAYINDURUMU"
       ],
@@ -96232,6 +96552,12 @@
       "meaning": "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın."
     },
     {
+      "code": "no_previous",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Önceki teslim klasöründe okunabilir bir yayın (yayin.json) yok; güncellenecek teslimin klasörünü verin."
+    },
+    {
       "code": "no_steps",
       "kind": "failed",
       "retryable": false,
@@ -96584,6 +96910,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bu düzeltme bu bulguya uygulanamaz."
+    },
+    {
+      "code": "repair_refused_exception",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bulgu istisna: bilerek bırakıldı; onarmadan önce istisnayı kaldırın."
+    },
+    {
+      "code": "repair_beyond_acceptance",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Onarım bir kaynak köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı."
     },
     {
       "code": "topology_incomplete",
@@ -158154,6 +158492,33 @@
         }
       ]
     },
+    "PreviousPublication": {
+      "description": "The earlier delivery a publication updates (docs/adr/1320 §3).",
+      "properties": {
+        "date": {
+          "description": "Its publication date.",
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "description": "Its `yayin.json`'s SHA-256 when it was read.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SheetPublishPin",
+          "description": "Its source."
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "date",
+        "source"
+      ],
+      "type": "object"
+    },
     "ProcessingRan": {
       "description": "What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).",
       "properties": {
@@ -169962,6 +170327,24 @@
     },
     "SheetPublishStatus": {
       "properties": {
+        "changes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SheetSourceChanges"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What changed in its sources since the delivery (docs/adr/1320 §2); none when the delivery did not list them\n(made before, or a page with an atlas or unplaced viewport) or the sheet is gone."
+        },
+        "date": {
+          "description": "The date its delivered page was made with.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "digest": {
           "description": "The digest now.",
           "type": [
@@ -170046,6 +170429,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "date": {
+          "description": "The date its bytes were made with (the title context's): an update's carried page keeps its earlier one\n(docs/adr/1320 §3). None in publications made before.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "digest": {
           "description": "The page's content digest made without the title context (user, date): equal digests draw the same page.",
@@ -170194,6 +170584,48 @@
       "required": [
         "series",
         "sheets"
+      ],
+      "type": "object"
+    },
+    "SheetSourceChanges": {
+      "description": "A published page's sources against the drawing now (docs/adr/1320 §2), by persistent id in drawing order: the\nobjects it drew whose content changed, the ones it draws now and did not, the ones it drew and does not now\n(deleted, moved out, hidden), whether the sheet's own record changed, and which project parts every page draws\nwith changed. All empty when nothing it reads changed.",
+      "properties": {
+        "added": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "changed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "parts": {
+          "description": "Of `blocks`, `book` (masters, templates, profiles), `layers`, `resources` (linked pictures), `settings`,\n`styles`, in this order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "removed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sheet": {
+          "description": "The sheet's own items, page or drawing information.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "changed",
+        "added",
+        "removed",
+        "sheet",
+        "parts"
       ],
       "type": "object"
     },
@@ -183186,12 +183618,38 @@
       ],
       "type": "object"
     },
+    "TopologyDecision": {
+      "description": "A review's decision on a finding (docs/adr/1260 §1).",
+      "oneOf": [
+        {
+          "const": "exception",
+          "description": "İstisna: left on purpose.",
+          "type": "string"
+        },
+        {
+          "const": "error",
+          "description": "Hata: confirmed, to be put right.",
+          "type": "string"
+        }
+      ]
+    },
     "TopologyException": {
       "description": "A finding marked as left on purpose: its rule, its objects' persistent\nids in the finding's order, and its place.",
       "properties": {
         "at": {
           "$ref": "#/$defs/Vec2",
           "x-unit": "length"
+        },
+        "decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TopologyDecision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the review decided (docs/adr/1260 §1): absent, an exception (left on purpose); `error`, a confirmed\nerror to be put right. Schema 189."
         },
         "digest": {
           "description": "The objects' geometry when it was marked (docs/adr/0589 §3): 16 lowercase hexadecimal digits. The geometry\nchanged since, the exception lapses and its finding is open again; absent (marked before schema 99): kept while\nthe rule, the objects and the place are the same.",
@@ -183207,9 +183665,34 @@
           },
           "type": "array"
         },
+        "reason": {
+          "description": "Why, as the reviewer wrote it (not blank, at most [`TOPOLOGY_REASON_MAX`] characters). Schema 189.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "rule": {
           "description": "The rule's id.",
           "type": "string"
+        },
+        "ruleDigest": {
+          "description": "The rule's version when it was marked ([`rule_digest`]): the rule changed since, the mark lapses. Absent (marked\nbefore schema 189): kept whatever the rule. Schema 189.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TopologyScope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it covers: absent, the finding at its place; `objects`, every finding of the rule between these objects\nin this order wherever it is. Schema 189."
         }
       },
       "required": [
@@ -183229,7 +183712,12 @@
         },
         {
           "const": "unmark",
-          "description": "İstisnayı kaldır.",
+          "description": "İstisnayı ya da hata işaretini kaldır: the finding is not reviewed again.",
+          "type": "string"
+        },
+        {
+          "const": "error",
+          "description": "Hata olarak işaretle (docs/adr/1260 §1): reviewed and confirmed, to be put right; bound like an exception.",
           "type": "string"
         }
       ]
@@ -183289,9 +183777,20 @@
           "description": "The problem's key (`overlap`, `gap`, `sliver` …).",
           "type": "string"
         },
+        "reason": {
+          "description": "The reason its review gave (an exception's, an error mark's, a lapsed one's).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "rule": {
           "description": "The rule's id, and its kind's key.",
           "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/TopologyFindingState",
+          "description": "Where it is in its life cycle (docs/adr/1260 §1)."
         },
         "uids": {
           "description": "Its objects' persistent ids, in the order the finding says them.",
@@ -183309,9 +183808,35 @@
         "uids",
         "at",
         "fixes",
-        "exception"
+        "exception",
+        "state"
       ],
       "type": "object"
+    },
+    "TopologyFindingState": {
+      "description": "A finding's place in its life cycle (docs/adr/1260 §1).",
+      "oneOf": [
+        {
+          "const": "open",
+          "description": "Değerlendirilmedi: no review names it.",
+          "type": "string"
+        },
+        {
+          "const": "error",
+          "description": "Hata: reviewed and confirmed, to be put right.",
+          "type": "string"
+        },
+        {
+          "const": "exception",
+          "description": "İstisna: reviewed and left on purpose.",
+          "type": "string"
+        },
+        {
+          "const": "lapsed",
+          "description": "Yeniden değerlendir: a review named it, but its objects' geometry or its rule changed since.",
+          "type": "string"
+        }
+      ]
     },
     "TopologyFixAsk": {
       "description": "A fix asked to be previewed: the finding's lasting key and the fix's key (`subtractFirst`, `mergeNeighbour` …).",
@@ -183448,6 +183973,174 @@
       ],
       "type": "object"
     },
+    "TopologyProfile": {
+      "description": "A quality profile (docs/adr/1260 §2): three lengths kept apart. The check's tolerance (`TopologySettings::tolerance`)\nis the CAD nearness within which two places are one; `precision` is the step the coordinates are stored at (ArcGIS's\nXY resolution: the tolerance is at least twice it); `acceptance` is the institution's threshold: no repair moves a\nvertex of the source geometry farther than it. With a profile every exception and every error mark names its reason.",
+      "properties": {
+        "acceptance": {
+          "description": "Metres, finite, at least the precision.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "edition": {
+          "description": "The profile's own edition as its owner writes it (“2026/1”), at most 50 characters.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The profile's name: the institution's or the job's (“Kadastro güncelleme”), 1–200 characters.",
+          "type": "string"
+        },
+        "precision": {
+          "description": "Metres, within [`TOPOLOGY_PRECISIONS`]; the tolerance is at least twice it.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "name",
+        "precision",
+        "acceptance"
+      ],
+      "type": "object"
+    },
+    "TopologyRepairApplied": {
+      "description": "A step as applied: the finding it put right, its rule, its problem and its objects' persistent ids.",
+      "properties": {
+        "fix": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "problem": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "fix",
+        "rule",
+        "problem",
+        "uids"
+      ],
+      "type": "object"
+    },
+    "TopologyRepairChange": {
+      "description": "An object the recipe changes: its measures before and after (an area's area, a line's length), `removed` when it\nis deleted, how many of its source vertices stayed bit for bit and how many moved, the farthest and the total\ndistance they moved to the new geometry (metres), and the steps that changed it (0-based).",
+      "properties": {
+        "areaAfter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "areaBefore": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "kept": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "lengthAfter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "lengthBefore": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "maxMoved": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "moved": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "removed": {
+          "type": "boolean"
+        },
+        "steps": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "totalMoved": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "layer",
+        "kept",
+        "moved",
+        "maxMoved",
+        "totalMoved",
+        "steps"
+      ],
+      "type": "object"
+    },
+    "TopologyRepairStep": {
+      "description": "A step: the finding (its lasting key in the drawing as the steps before left it) and the fix (`subtractFirst`,\n`removeVertex` …; one the finding offers).",
+      "properties": {
+        "fix": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "fix"
+      ],
+      "type": "object"
+    },
     "TopologyRule": {
       "description": "A rule: its kind on a layer and, between layers, another layer.",
       "properties": {
@@ -183556,6 +184249,21 @@
         }
       ]
     },
+    "TopologyScope": {
+      "description": "What an exception covers (docs/adr/1260 §1).",
+      "oneOf": [
+        {
+          "const": "finding",
+          "description": "The finding at its place (within the tolerance).",
+          "type": "string"
+        },
+        {
+          "const": "objects",
+          "description": "Every finding of the rule between the same objects in the same order.",
+          "type": "string"
+        }
+      ]
+    },
     "TopologySettings": {
       "description": "The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).",
       "properties": {
@@ -183565,6 +184273,17 @@
             "$ref": "#/$defs/TopologyException"
           },
           "type": "array"
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TopologyProfile"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The institution's or the job's quality profile (docs/adr/1260 §2, `.kcad` schema 189): its name, the storage\nprecision of the coordinates and the acceptance threshold, apart from the check's tolerance above."
         },
         "rules": {
           "description": "The rules, in the order they are checked and listed.",
