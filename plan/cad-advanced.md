@@ -1836,7 +1836,9 @@ penceresinde Yazı stili seçimi. DXF dışa aktarma DIMTXSTY'yi yazar. Kılavuz
 **Kılavuz notu SHX ile (6 Kasım 2026, [ADR 1025](../docs/adr/1025-leader-styles-write-their-note-in-a-text-style.md)):**
 Kılavuz stili notunu bir yazı stiliyle yazar (`textStyle`, `.kcad` şema 187); SHX yazı stilinde not ekranda, PDF'de
 ve CPU baskısında fontun çizgileridir, çizilemeyen not hatadır, pafta ön denetimi kılavuzları da sorar. Bağımsız
-başvuru durumuyla test edildi; pencere resmi bakıldı. DXF MLEADERSTYLE yazı stili ve tablo hücresi SHX'i açık.
+başvuru durumuyla test edildi; pencere resmi bakıldı. Ek ([ADR 1026](../docs/adr/1026-table-cells-in-their-shx-face.md)):
+yüzü SHX yazı stili olan tablonun hücreleri de fontun çizgileriyle yazılır; çizilemeyen hücre adıyla hatadır. Böylece
+yazı, blok yazısı, ölçü, kılavuz ve tablo SHX ile çizilir. DXF MLEADERSTYLE yazı stili ve seçim kutusu genişliği açık.
 
 **Kâğıt çizgisinin noktası (6 Kasım 2026, ADR 1124 ek):** Pafta çizgisi, şekil ve dikdörtgenin kendi tire
 listesindeki sıfır boylu tire PDF'de ve SVG'de yuvarlak, çizgi kalınlığında nokta basılır (yol iki kez: tireler, sonra
