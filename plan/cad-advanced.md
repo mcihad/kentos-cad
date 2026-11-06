@@ -2121,7 +2121,7 @@ girdi); palet çizime kurulmaz, bağlı paketten okunur. `cad.standards.palettes
 hazır aracı tek adımda çalıştırır. 23 bağımsız vaka geçti. Açık: ofis aracını kişisel favoriye alma, tablo stili
 kaynağı, blok içi parçanın kökeni, masaüstünden proje/bulut kitaplığı seçimi.
 
-### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [~]
+### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].
 **Dayanak:** AutoCAD veri çıkarımı; çizim/kaynak seçimi, dış tabloyla
@@ -2289,6 +2289,23 @@ sığmayan hücre bildirimi, başlığı yinelenen parçalara bölme (`.kcad` 18
 listesi (31 adet), override'lı ölçü toplanmaz, dış açıklama tablosu anahtarla yenilenir, 43/128 m'lik üç çizgi
 1,01. Sınır: pafta kitabında tablonun başka paftaya devamı CAD-ADV-16'ya; masaüstü tablo düzenleyicide satır sonu
 yazma, görünürlük dışı dinamik eylemle gizlenen parça ve büyük çizimde önizleme ölçümü açık. Madde `[~]`.
+
+**Satır sonu, görünürlüğün gizlediği parça ve büyük çizimde önizleme (6 Kasım 2026, [ADR 1131](../docs/adr/1131-table-line-breaks-hidden-dynamic-pieces-and-extraction-preview-scale.md)):**
+Tabloyu düzenle'nin çubuğu çok satırlı bir yazı alanıdır: Enter hücreyi yazar, **Shift+Enter** ya da AutoCAD'deki gibi
+**Alt+Enter** hücrede yeni satır açar; ızgara satırları `↵` ile gösterir, Kaydet tek Undo, kısayol listesinde de. Dinamik
+bloğun görünürlük durumu parçayı artık kopyalandığı parçanın kimliğiyle gizler (`Dynamic::vary_split`): dizi eyleminin
+gizli parçadan yaptığı kopyalar çizicide görünmez, çıkarımda sayılmaz ve listelenmez; `notes.hiddenStates` ve uyarının
+sözü kaçının görünürlük durumundan, kaçının gizli katmandan sayılmadığını söyler; açıkça seçilince eylemlerin koyduğu
+yerde sayılırlar. Bağımsız başvuru dizi eylemini ve kaynağın görünürlüğünü yeniden yazdı (Kat 3: Sandalye 3 / 7, Sıra
+2 / 3; `cad.extract.run` 33, `cad.extract.table` 47 durum geçti). Çıkarım `Watch` ile ilerlemesini söyler ve 256 nesnede
+bir durdurmaya bakar; pencere 20 000 nesneden büyük çizimde önizlemeyi okuma kopyası üzerinde ayrı iş parçacığında yapar,
+“n / N nesne” ve **Durdur** gösterir, eski cevabı numarasıyla ayıklar. Yayın derlemesinde (Apple M5) 100 000 nesnelik
+önizleme ortanca **122 ms**, yerleşik bellek tepesi **+81 MB**, 20 ms'de istenen durdurma **5,5 ms**'de cevaplandı.
+Kabulün satırları: iki çizimden iç içe blok ve dizili parça listesi, gerçek ölçü ve override, anahtarlı dış tablo ve
+yenileme, tekil sayım, birimler, yuvarlamadan önce toplam ve kullanıcı düzeltmeleri ADR 1030'un bağımsız durumlarında;
+çok sayfalı çıktı tablo parçalarıyla (ADR 1030 §7, `table_parts_cases.py`) ve parçaların ayrı paftalara detay olarak
+dağılmasıyla (ADR 1090 §3, ADR 1112'nin 24 `table` durumu) kanıtlı. Sınırlar ADR 1030 §9 ve ADR 1131'de (parçaların elle
+konumu, web). Madde `[x]`.
 
 ### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [x]
 
@@ -2520,6 +2537,23 @@ silinen tablo/çizelge; sonradan verilen dondurma; retler; kitapsız proje); nat
 Masaüstü testleri (önizleme yazmaz, 1:5 detayın kâğıt eni model uzunluğundan, dondurma ve kilit pencerede, tek Undo,
 Kapat yazmaz) geçti; pencere 1440×900 ve 1100×650'de açık ve koyu görüntülendi, incelemede oranların sırası ve dar
 pencerede tablonun sütunları düzeltildi. Açık: ikili CTB/STB, AutoCAD/Acrobat ile karşı denetim. Madde `[~]`.
+
+**İkili CTB/STB baskı stili tabloları (6 Kasım 2026, [ADR 1130](../docs/adr/1130-autocad-plot-style-tables-ctb-stb.md)):**
+`cad.plotstyles.import` AutoCAD'in renge bağlı `.ctb`'sini (255 kalem, ACI 1–255) ve adlı `.stb`'sini pafta kitabına baskı
+profili olarak alır; dosya yalnız okunur, profil biçimini, SHA-256'sını ve adını taşır (`PlotProfile.source`). Üst bilgi
+(`PIAFILEVERSION_2.0,CTBVER1|STBVER1,compress`, `pmzlibcodec`, üç küçük-sonlu u32) ve zlib metni çekirdeğin okuyucusunda
+(`kentos_sheet::plot_profile::acad`); her alan açıkça eşlenir: RGB/ACI renk, gri tonlama, titreşimle tarama, kalınlık
+tablosu (µm), sürekli çizgi, uç ve birleşim aynen; ByLayer/ByBlock rengi, `mode_color`, kalem numaraları, 1–30 baskı
+çizgi tipleri, elmas uç/birleşim, dolgu desenleri, açıklama, değişik Normal, bilinmeyen alan ve ölçek çarpanı türü,
+ağırlığı (lost/approximate/note), stilleri ve dosyadaki değerleriyle raporlanır; sessiz kırpma yok. Kalem katmanın
+renginden tahmin edilmez: `assignments` katmana ya da kâğıt öğesine açıkça verir, `sheets` paftalara uygular; yayın
+mevcut profil yoluyla basar. Masaüstünde Çıktı › Pafta › **Baskı stili tablosu…** (`sheet.plotStyles`) planı yazmadan
+önizler (kalemler, kayıp satırları, katmana kalem, paftalar); İçe aktar tek Undo. Bağımsız `plot_style_cases.py` 17
+tabloyu belgelenen biçimden kendisi yazdı ve 37 ortak durumu kendi okuyucusundan çıkardı (native 37/37); MCP sınamasında
+CTB'nin 0,50 mm siyah 1. kalemi katmana verilip paftaya uygulanınca PDF'teki çizgi 0,50 mm siyah. Doğrulanamadığı için
+CTB/STB **yazıcısı yok**; üst bilginin sağlaması ve tablo dışı kalınlık sırası AutoCAD'le karşılaştırılmadı (rapor
+satırı olarak söylenir); UTF-8 dışı kod sayfası reddedilir. Açık: AutoCAD/Acrobat ile karşı denetim, gerçek CTB
+korpusu, baskı çizgi tiplerinin eşlenmesi. Madde `[~]`.
 
 ### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [~]
 

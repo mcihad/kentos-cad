@@ -38,6 +38,7 @@ mod dimension_sets;
 mod dimension_layout;
 mod dimension_spans;
 mod compare_timing;
+mod extract_timing;
 mod cog;
 mod create;
 mod curves_edit;

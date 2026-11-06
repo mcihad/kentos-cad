@@ -143,6 +143,37 @@ fn an_array_adds_a_copy_for_each_spacing_past_the_default() {
     assert_eq!(at(0.6).len(), 1);
 }
 
+/// A piece the visibility state hides is hidden with the array action's copies of it (docs/adr/1131 §2): the copies
+/// take the id of the piece they were made of.
+#[test]
+fn a_hidden_piece_hides_its_array_copies_too() {
+    let shelf = json!([{
+        "id": "0192f5a1-2900-7000-8000-0000000000c4", "name": "Raf", "base": { "x": 0.0, "y": 0.0 },
+        "entities": [
+            { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 1.2, "y": 0.0 } },
+            { "kind": "line", "id": 2, "layerId": "", "attrs": {}, "a": { "x": 0.6, "y": 0.0 }, "b": { "x": 0.6, "y": 0.05 } }
+        ],
+        "dynamic": {
+            "parameters": [
+                { "kind": "linear", "name": "Genişlik", "from": { "x": 0.0, "y": 0.0 }, "to": { "x": 1.2, "y": 0.0 } },
+                { "kind": "visibility", "name": "Görünüm", "states": [{ "name": "Dolu" }, { "name": "Boş", "hidden": [2] }] }
+            ],
+            "actions": [{ "kind": "array", "parameter": "Genişlik", "pieces": [2], "spacing": 0.6 }]
+        }
+    }]);
+    let b = blocks(shelf);
+    let at = |params: Value| {
+        let e = Entity::from_json(&parse(&json!({
+            "kind": "insert", "id": 1, "layerId": "", "attrs": {}, "block": "0192f5a1-2900-7000-8000-0000000000c4",
+            "p": { "x": 0.0, "y": 0.0 }, "scale": 1.0, "rotation": 0.0, "parameters": params
+        })))
+        .expect("an insert");
+        drawn(&b, &e.shape)
+    };
+    assert_eq!(at(json!({ "Genişlik": 2.4 })).len(), 4, "the frame and three dividers");
+    assert_eq!(at(json!({ "Genişlik": 2.4, "Görünüm": "Boş" })), ["çizgi (0, 0) (1.2, 0)"], "no divider, no copy");
+}
+
 #[test]
 fn a_default_visibility_state_hides_its_pieces_directly_and_through_a_plain_parent() {
     let mut doc: Value = serde_json::from_str(SAMPLE).unwrap();

@@ -437,6 +437,8 @@ pub enum Dialog {
     Extract,
     /// Detay paftaları (docs/adr/1112).
     SheetDetails,
+    /// Baskı stili tablosu (plot_styles_window.rs, docs/adr/1130); the window is `App::plot_styles`.
+    PlotStyles,
     /// Nokta editörü's batch operations (points/batch_view.rs, docs/adr/0153 §5); the window is
     /// `App::points.batch`.
     PointBatch,
@@ -824,6 +826,8 @@ pub enum Message {
     /// Veri çıkarımı (tables/extract.rs, docs/adr/1030 §8).
     Extract(crate::tables::extract::Event),
     SheetDetails(crate::sheet_details_window::Event),
+    /// Baskı stili tablosu (docs/adr/1130).
+    PlotStyles(crate::plot_styles_window::Event),
     /// Genel bakış and Büyüteç over the drawing (navigation_cards.rs).
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
@@ -1466,6 +1470,8 @@ pub struct App {
     pub(crate) extract: Option<crate::tables::extract::Extract>,
     /// Detay paftaları' window (docs/adr/1112).
     pub(crate) sheet_details: Option<crate::sheet_details_window::DetailSet>,
+    /// Baskı stili tablosu's window (docs/adr/1130).
+    pub(crate) plot_styles: Option<crate::plot_styles_window::PlotStyles>,
     /// Tabloyu güncelle waiting for its files (tables/update.rs).
     pub(crate) table_update: Option<crate::tables::update::Run>,
     /// Genel bakış and Büyüteç's session state (navigation_cards.rs, docs/adr/0181).
@@ -1893,6 +1899,7 @@ impl App {
             table_editor: None,
             extract: None,
             sheet_details: None,
+            plot_styles: None,
             table_update: None,
             navigation: Default::default(),
             lens_spots: Default::default(),
@@ -2041,6 +2048,12 @@ impl App {
                 Subscription::none()
             },
             if self.sheet_publish_running(){Subscription::run(crate::exchange::sheet_publish::ticks)}else{Subscription::none()},
+            // Veri çıkarımı's preview of a large drawing running on its own thread (docs/adr/1131 §3).
+            if self.extract.as_ref().is_some_and(|x| x.running.is_some()) {
+                Subscription::run(crate::tables::extract::ticks)
+            } else {
+                Subscription::none()
+            },
             // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
             if self.processing.batch_running() {
                 Subscription::run(crate::processing::batch::ticks)
@@ -2656,6 +2669,7 @@ impl App {
             Message::TableExport(event) => return self.table_export_event(event),
             Message::Extract(event) => return self.extract_event(event),
             Message::SheetDetails(event) => return self.sheet_details_event(event),
+            Message::PlotStyles(event) => return self.plot_styles_event(event),
             Message::Navigation(event) => self.navigation_event(event),
             Message::TextFile(file) => self.text_file_given(file),
             Message::ImageFile(file) => self.image_file_given(file),
@@ -3339,8 +3353,9 @@ impl App {
             "table.update" => return self.update_tables(),
             "table.export" => return self.export_selected_table(),
             // Veri çıkarımı (docs/adr/1030 §8).
-            "table.extract" => self.open_extract(),
+            "table.extract" => return self.open_extract(),
             "sheet.details" => self.open_sheet_details(),
+            "sheet.plotStyles" => self.open_plot_styles(),
             // Tablonun dosyası ve blok çizelgesi (docs/adr/0327 §4–§5).
             "table.link" => return self.link_table(),
             "table.blockSchedule" => self.place_block_schedule(),

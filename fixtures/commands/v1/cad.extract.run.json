@@ -953,6 +953,7 @@
        "occurrences": 31,
        "notes": {
         "hidden": 1,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [
          "Kat2"
@@ -1238,6 +1239,7 @@
        "occurrences": 31,
        "notes": {
         "hidden": 1,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [
          "Kat2"
@@ -1628,6 +1630,7 @@
        "occurrences": 20,
        "notes": {
         "hidden": 1,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -1872,6 +1875,7 @@
        "occurrences": 5,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -2046,6 +2050,7 @@
        "occurrences": 3,
        "notes": {
         "hidden": 1,
+        "hiddenStates": 1,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -2229,6 +2234,7 @@
        "occurrences": 4,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -2281,6 +2287,1073 @@
      }
     }
    ]
+  },
+  {
+   "name": "görünürlük durumunun gizlediği parça ve dizi eyleminin kopyaları sayılmaz, sayısı söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Sıralar",
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        }
+       ],
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Blok",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Sandalye",
+         "cells": [
+          "Sandalye",
+          "3"
+         ],
+         "values": [
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8300-000000000001/2",
+          "#0192f5a1-1030-7000-8300-000000000001/3",
+          "#0192f5a1-1030-7000-8300-000000000001/4"
+         ]
+        },
+        {
+         "key": "Sıra",
+         "cells": [
+          "Sıra",
+          "2"
+         ],
+         "values": [
+          null,
+          2.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8300-000000000001",
+          "#0192f5a1-1030-7000-8300-000000000002"
+         ]
+        }
+       ],
+       "occurrences": 5,
+       "notes": {
+        "hidden": 5,
+        "hiddenStates": 3,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "5"
+       ],
+       "totals": [
+        null,
+        5.0
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": [
+       {
+        "code": "extraction_hidden",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kat 3",
+    "uids": [
+     "0192f5a1-1030-7000-8300-000000000001",
+     "0192f5a1-1030-7000-8300-000000000002",
+     "0192f5a1-1030-7000-8300-000000000003"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50.0,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "a",
+      "name": "Genel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "a",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b001",
+      "name": "Sandalye",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.5
+         },
+         {
+          "x": 0.0,
+          "y": 0.5
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "S-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b002",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.75
+         },
+         {
+          "x": 0.0,
+          "y": 0.75
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "M-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0,
+        "constant": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b003",
+      "name": "Kapı",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.875,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.875,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.75,
+         "y": 0.0
+        }
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "visibility",
+         "name": "Tip",
+         "states": [
+          {
+           "name": "Tek",
+           "hidden": [
+            2
+           ]
+          },
+          {
+           "name": "Çift"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b006",
+      "name": "Sıra",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.0,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 0.5
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "linear",
+         "name": "Boy",
+         "from": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "to": {
+          "x": 1.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "visibility",
+         "name": "Görünüm",
+         "states": [
+          {
+           "name": "Dolu"
+          },
+          {
+           "name": "Boş",
+           "hidden": [
+            2
+           ]
+          }
+         ]
+        }
+       ],
+       "actions": [
+        {
+         "kind": "array",
+         "parameter": "Boy",
+         "pieces": [
+          2
+         ],
+         "spacing": 0.5
+        }
+       ]
+      }
+     }
+    ],
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b006",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Boy": 2.0
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b006",
+      "p": {
+       "x": 0.0,
+       "y": 3.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Boy": 2.0,
+       "Görünüm": "Boş"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "gizli",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b006",
+      "p": {
+       "x": 0.0,
+       "y": 6.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "gizli sıranın ve görünürlük durumunun gizlediği kopyalar açıkça seçilince sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "recipe": {
+       "name": "Sıralar, gizliler de",
+       "kinds": [
+        "insert"
+       ],
+       "scope": {
+        "nested": true,
+        "hidden": true
+       },
+       "columns": [
+        {
+         "label": "Blok",
+         "value": {
+          "of": "block"
+         }
+        },
+        {
+         "label": "Adet",
+         "value": {
+          "of": "count"
+         }
+        }
+       ],
+       "group": true,
+       "sort": [
+        {
+         "column": 0
+        }
+       ],
+       "total": true
+      },
+      "base": "$fixture:commands/v1/extract"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "headings": [
+        "Blok",
+        "Adet"
+       ],
+       "quantities": [
+        false,
+        true
+       ],
+       "rows": [
+        {
+         "key": "Sandalye",
+         "cells": [
+          "Sandalye",
+          "7"
+         ],
+         "values": [
+          null,
+          7.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8300-000000000001/2",
+          "#0192f5a1-1030-7000-8300-000000000001/3",
+          "#0192f5a1-1030-7000-8300-000000000001/4",
+          "#0192f5a1-1030-7000-8300-000000000002/2",
+          "#0192f5a1-1030-7000-8300-000000000002/3",
+          "#0192f5a1-1030-7000-8300-000000000002/4",
+          "#0192f5a1-1030-7000-8300-000000000003/2"
+         ]
+        },
+        {
+         "key": "Sıra",
+         "cells": [
+          "Sıra",
+          "3"
+         ],
+         "values": [
+          null,
+          3.0
+         ],
+         "members": [
+          "#0192f5a1-1030-7000-8300-000000000001",
+          "#0192f5a1-1030-7000-8300-000000000002",
+          "#0192f5a1-1030-7000-8300-000000000003"
+         ]
+        }
+       ],
+       "occurrences": 10,
+       "notes": {
+        "hidden": 0,
+        "hiddenStates": 0,
+        "unloaded": [],
+        "readApart": [],
+        "repeated": 0,
+        "angles": 0,
+        "overrides": 0,
+        "unmatched": [],
+        "unused": [],
+        "tooDeep": 0
+       },
+       "total": [
+        "Toplam",
+        "10"
+       ],
+       "totals": [
+        null,
+        10.0
+       ],
+       "read": [],
+       "revision": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kat 3",
+    "uids": [
+     "0192f5a1-1030-7000-8300-000000000001",
+     "0192f5a1-1030-7000-8300-000000000002",
+     "0192f5a1-1030-7000-8300-000000000003"
+    ],
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50.0,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "a",
+      "name": "Genel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "a",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b001",
+      "name": "Sandalye",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.0
+         },
+         {
+          "x": 0.5,
+          "y": 0.5
+         },
+         {
+          "x": 0.0,
+          "y": 0.5
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "S-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b002",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0.0,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.0
+         },
+         {
+          "x": 1.5,
+          "y": 0.75
+         },
+         {
+          "x": 0.0,
+          "y": 0.75
+         }
+        ]
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 3,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": -0.75
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 4,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       },
+       {
+        "kind": "insert",
+        "id": 5,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 1.0,
+         "y": 1.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "KOD",
+        "value": "M-01",
+        "p": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "height": 0.1,
+        "rotation": 0,
+        "constant": true
+       }
+      ]
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b003",
+      "name": "Kapı",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 0.875,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "line",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.875,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.75,
+         "y": 0.0
+        }
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "visibility",
+         "name": "Tip",
+         "states": [
+          {
+           "name": "Tek",
+           "hidden": [
+            2
+           ]
+          },
+          {
+           "name": "Çift"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     {
+      "id": "0192f5a1-1030-7000-8000-00000000b006",
+      "name": "Sıra",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "units": "m",
+      "entities": [
+       {
+        "kind": "line",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "a": {
+         "x": 0.0,
+         "y": 0.0
+        },
+        "b": {
+         "x": 1.0,
+         "y": 0.0
+        }
+       },
+       {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "",
+        "attrs": {},
+        "block": "0192f5a1-1030-7000-8000-00000000b001",
+        "p": {
+         "x": 0.0,
+         "y": 0.5
+        },
+        "scale": 1.0,
+        "rotation": 0.0
+       }
+      ],
+      "dynamic": {
+       "parameters": [
+        {
+         "kind": "linear",
+         "name": "Boy",
+         "from": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "to": {
+          "x": 1.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "visibility",
+         "name": "Görünüm",
+         "states": [
+          {
+           "name": "Dolu"
+          },
+          {
+           "name": "Boş",
+           "hidden": [
+            2
+           ]
+          }
+         ]
+        }
+       ],
+       "actions": [
+        {
+         "kind": "array",
+         "parameter": "Boy",
+         "pieces": [
+          2
+         ],
+         "spacing": 0.5
+        }
+       ]
+      }
+     }
+    ],
+    "entities": [
+     {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b006",
+      "p": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Boy": 2.0
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b006",
+      "p": {
+       "x": 0.0,
+       "y": 3.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "parameters": {
+       "Boy": 2.0,
+       "Görünüm": "Boş"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 3,
+      "layerId": "gizli",
+      "attrs": {},
+      "block": "0192f5a1-1030-7000-8000-00000000b006",
+      "p": {
+       "x": 0.0,
+       "y": 6.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+     }
+    ]
+   }
   },
   {
    "name": "iç içe alanlar ölçek ve dönüşle",
@@ -2382,6 +3455,7 @@
        "occurrences": 18,
        "notes": {
         "hidden": 1,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -2555,6 +3629,7 @@
        "occurrences": 5,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -2688,6 +3763,7 @@
        "occurrences": 2,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -2861,6 +3937,7 @@
        "occurrences": 3,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -3018,6 +4095,7 @@
        "occurrences": 5,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [],
         "repeated": 0,
@@ -4158,6 +5236,7 @@
        "occurrences": 0,
        "notes": {
         "hidden": 0,
+        "hiddenStates": 0,
         "unloaded": [
          "Kat2"
         ],
@@ -6124,6 +7203,7 @@
        "occurrences": 31,
        "notes": {
         "hidden": 1,
+        "hiddenStates": 0,
         "unloaded": [],
         "readApart": [
          "Kat2"

@@ -208,6 +208,17 @@ pub(crate) fn work_out(
     sources: &Sources,
     base: Option<&str>,
 ) -> Result<Extracted, Stop> {
+    work_out_watched(doc, recipe, sources, base, &kentos_formats::extract::Watch::default())
+}
+
+/// [`work_out`] that says how far it is and stops when asked (docs/adr/1131 §3).
+pub(crate) fn work_out_watched(
+    doc: &Document,
+    recipe: &ExtractionRecipe,
+    sources: &Sources,
+    base: Option<&str>,
+    watch: &kentos_formats::extract::Watch,
+) -> Result<Extracted, Stop> {
     let format = kentos_project::format::Format::of(doc.settings());
     let shown = |d: &kentos_commands::DimensionEntity, prefix: &str, unit: &str, value: f64| {
         format.dimension_value(
@@ -267,7 +278,7 @@ pub(crate) fn work_out(
         length: s.length_decimals,
         area: s.area_decimals,
     };
-    kentos_formats::extract::extract(recipe, &drawings, sources.join.as_deref(), decimals, &shown)
+    kentos_formats::extract::extract_watched(recipe, &drawings, sources.join.as_deref(), decimals, &shown, watch)
         .map_err(|(code, at, words)| fail(code, words, &format!("recipe.{at}")))
 }
 
@@ -285,6 +296,7 @@ fn notes_of(e: &Extracted) -> ExtractNotes {
     let count = |x: usize| u32::try_from(x).unwrap_or(u32::MAX);
     ExtractNotes {
         hidden: count(n.hidden),
+        hidden_states: count(n.hidden_states),
         unloaded: n.unloaded.clone(),
         read_apart: n.read_apart.clone(),
         repeated: count(n.repeated),
@@ -301,9 +313,18 @@ fn warnings_of(e: &Extracted) -> Vec<CommandWarning> {
     let n = &e.notes;
     let mut out = Vec::new();
     if n.hidden > 0 {
+        // The count says why: a dynamic block's visibility state, a hidden or frozen layer (docs/adr/1131 §2).
+        let layers = n.hidden - n.hidden_states.min(n.hidden);
+        let why = match (n.hidden_states, layers) {
+            (0, _) => format!("{} nesne gizli ya da dondurulmuş katmanda olduğu için", n.hidden),
+            (s, 0) => format!("{s} parça dinamik bloğun görünürlük durumu gizlediği için"),
+            (s, l) => format!(
+                "{s} parça dinamik bloğun görünürlük durumu gizlediği, {l} nesne gizli ya da dondurulmuş katmanda olduğu için"
+            ),
+        };
         out.push(warning(
             codes::EXTRACTION_HIDDEN,
-            format!("{} görünmeyen parça ya da gizli katmandaki nesne sayılmadı; saymak için Görünmeyen parçaları seçin.", n.hidden),
+            format!("{why} sayılmadı ve listelenmedi; saymak için Görünmeyen parçaları seçin."),
         ));
     }
     if !n.unloaded.is_empty() {
@@ -426,6 +447,14 @@ pub mod run {
         doc: &Document,
         input: &ExtractRun,
     ) -> Result<(ExtractRan, Vec<CommandWarning>), Stop> {
+        answer_watched(doc, input, &kentos_formats::extract::Watch::default())
+    }
+
+    fn answer_watched(
+        doc: &Document,
+        input: &ExtractRun,
+        watch: &kentos_formats::extract::Watch,
+    ) -> Result<(ExtractRan, Vec<CommandWarning>), Stop> {
         let (recipe, table) = match (&input.recipe, &input.table) {
             (Some(r), None) => (r.clone(), None),
             (None, Some(uid)) => {
@@ -457,7 +486,7 @@ pub mod run {
             input.drawing_path.as_deref(),
         )
         .map_err(unread)?;
-        let e = work_out(doc, &recipe, &sources, input.base.as_deref())?;
+        let e = work_out_watched(doc, &recipe, &sources, input.base.as_deref(), watch)?;
         let stale = table.map(|(_, x)| {
             let cells = e.cells(&recipe, decimals_of(doc));
             let keys: Vec<&str> = e.rows.iter().map(|r| r.key.as_str()).collect();
@@ -493,6 +522,27 @@ pub mod run {
 
     pub fn execute(cx: &mut ExecutionContext<'_>, input: ExtractRun) -> CommandResult<ExtractRan> {
         plan_in(cx.doc, &input)
+    }
+
+    /// [`plan_in`] that says how far it is and stops when asked (the window's preview of a large drawing on its own
+    /// thread, docs/adr/1131 §3): a stopped one is [`CommandResult::Cancelled`].
+    pub fn plan_watched(
+        doc: &Document,
+        input: &ExtractRun,
+        watch: &kentos_formats::extract::Watch,
+    ) -> CommandResult<ExtractRan> {
+        match answer_watched(doc, input, watch) {
+            Ok((output, warnings)) => CommandResult::Completed { output, warnings },
+            Err(stop) => {
+                let r: CommandResult<ExtractRan> = stop.into();
+                match r {
+                    CommandResult::Failed { error } if error.code == kentos_formats::extract::CANCELLED => {
+                        CommandResult::Cancelled
+                    }
+                    other => other,
+                }
+            }
+        }
     }
 }
 

@@ -96,6 +96,10 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("cad.drawing.take", "block_definition_differs", "Tanımı değişmiş bloğun yerleştirmesini alma review_take::a_changed_definition_makes_the_insert_note_stale_and_the_take_warns testinde sınanır."),
     ("cad.review.notes.edit", "too_many_review_replies", "200 yanıt sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
     ("cad.review.notes.edit", "too_many_review_notes", "10 000 not sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
+    // Baskı stili tablosu (docs/adr/1130).
+    ("cad.plotstyles.import", "plot_style_file_too_large", "4 MiB'tan büyük bir tablo ortak durum olarak repoya konmaz; sınır plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır."),
+    ("cad.plotstyles.import", "book_unreadable", "Ortak kurulum geçersiz kitap vermez; kitap cad.sheets.details'in aynı read_project_sheets yolundan okunur ve orada korunur (ADR 1090)."),
+    ("cad.plotstyles.import", "file_unreadable", "Okuma izni olmayan dosya ortak durumda kurulamaz (repo izinleri taşımaz); plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır."),
     // Veri çıkarımı (docs/adr/1030).
     ("cad.extract.run", "extraction_too_large", "Bir milyon oluşum sınırı ortak durumda yazılamayacak kadar büyük bir çizim ister; sınır kentos_formats::extract::Walk::counted'te tek yerdedir ve çıkarımı kesmeden reddeder."),
     ("cad.extract.table", "extraction_too_large", "cad.extract.run ile aynı sınır ve aynı kod; tablo komutu aynı çıkarımı çağırır."),
@@ -1434,4 +1438,37 @@ fn selections_beyond_the_limit_are_refused() {
         refusal(&mut doc, "cad.entities.select", list).as_deref(),
         Some("too_many_points")
     );
+}
+
+/// `cad.plotstyles.import`'s `plot_style_file_too_large` and `file_unreadable`, which no shared case reaches (see
+/// [`UNREACHED`]): a table past 4 MiB is refused before it is read, a file the user may not read says so.
+#[test]
+fn plot_style_files_beyond_the_limit_and_unreadable_files_are_refused() {
+    let (mut doc, _) = one_of_each_kind().into_values().next().expect("a drawing");
+    let dir = std::env::temp_dir().join(format!("kentos-ctb-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let big = dir.join("buyuk.ctb");
+    let mut bytes = b"PIAFILEVERSION_2.0,CTBVER1,compress\r\npmzlibcodec".to_vec();
+    bytes.resize(4 * 1024 * 1024 + 1, 0);
+    std::fs::write(&big, &bytes).expect("writes");
+    assert_eq!(
+        refusal(&mut doc, "cad.plotstyles.import", json!({ "path": big })).as_deref(),
+        Some("plot_style_file_too_large")
+    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let shut = dir.join("kapali.ctb");
+        std::fs::write(&shut, b"PIAFILEVERSION_2.0,CTBVER1").expect("writes");
+        std::fs::set_permissions(&shut, std::fs::Permissions::from_mode(0o000)).expect("chmod");
+        // A user who may read anything (root) reads it anyway; the refusal is then the reader's.
+        if std::fs::read(&shut).is_err() {
+            assert_eq!(
+                refusal(&mut doc, "cad.plotstyles.import", json!({ "path": shut })).as_deref(),
+                Some("file_unreadable")
+            );
+        }
+        let _ = std::fs::set_permissions(&shut, std::fs::Permissions::from_mode(0o644));
+    }
+    let _ = std::fs::remove_dir_all(dir);
 }

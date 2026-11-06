@@ -95,6 +95,9 @@ pub struct ExtractNotes {
     /// Hidden pieces and objects on hidden or frozen layers left out.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub hidden: u32,
+    /// Of those, the pieces a dynamic block's visibility state hides (an array action's copies of them too).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub hidden_states: u32,
     /// External references not loaded, by block name.
     pub unloaded: Vec<String>,
     /// External references not looked into: the recipe reads their drawing itself.

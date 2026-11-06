@@ -2839,6 +2839,27 @@ codes! {
     EXTRACTION_TOO_DEEP = "extraction_too_deep", Warning, false, "En derin düzeyden daha derin iç içe bloklara bakılmadı.";
     /// A refresh that would lose a hand edit or a user's row: the table is kept as it is.
     REFRESH_KEPT = "refresh_kept", Warning, false, "Yenileme elle girilen bir değeri ya da kullanıcı satırını kaybettirecekti; tablo olduğu gibi kaldı.";
+    // AutoCAD plot style tables (docs/adr/1130).
+    /// A plot style table file larger than its limit.
+    PLOT_STYLE_FILE_TOO_LARGE = "plot_style_file_too_large", Failed, false, "Baskı stili tablosu 4 MiB sınırını aşıyor.";
+    /// A file that is not an AutoCAD `.ctb`/`.stb` (its header).
+    UNSUPPORTED_PLOT_STYLE_FILE = "unsupported_plot_style_file", Failed, false, "Dosya bir AutoCAD baskı stili tablosu (.ctb/.stb) değil.";
+    /// A `.ctb`/`.stb` whose header, compressed text or fields do not read.
+    BAD_PLOT_STYLE_FILE = "bad_plot_style_file", Failed, false, "Baskı stili tablosu okunamadı: üst bilgisi, sıkıştırılmış metni ya da bir alanı bozuk.";
+    /// A table whose text is not UTF-8: its code page is unknown.
+    PLOT_STYLE_ENCODING = "plot_style_encoding", Failed, false, "Tablonun metni UTF-8 değil; kod sayfası bilinmediği için adlar okunamaz.";
+    /// A header that says CTB with a named table's text, or the other way round.
+    PLOT_STYLE_KIND_MISMATCH = "plot_style_kind_mismatch", Failed, false, "Üst bilgi ile tablonun türü çelişiyor: CTB renge bağlı, STB adlı tablodur.";
+    /// A plot style named twice in a table.
+    DUPLICATE_PLOT_STYLE = "duplicate_plot_style", Failed, false, "Aynı baskı stili tabloda iki kez var.";
+    /// A plot profile beyond its limits.
+    PLOT_PROFILE_TOO_LARGE = "plot_profile_too_large", Failed, false, "Baskı profili 4096 stil ya da 100000 atama sınırını aşıyor.";
+    /// A plot profile whose name, or whose source file, the book already has.
+    DUPLICATE_PLOT_PROFILE = "duplicate_plot_profile", Failed, false, "Kitapta bu adda ya da aynı dosyadan alınmış bir baskı profili var.";
+    /// An assignment twice for one target, or to a pen or style the table lacks.
+    BAD_PLOT_ASSIGNMENT = "bad_plot_assignment", Failed, false, "Atamanın hedefi tek olmalı; atanan kalem ya da stil tabloda bulunmalı.";
+    /// What a plot style table's reading could not carry as AutoCAD plots it.
+    PLOT_STYLE_LOSSES = "plot_style_losses", Warning, false, "Tablonun bazı alanları KentOS'ta aynı basılmıyor; rapor her birini adıyla söylüyor.";
     /// An old v1 file a save would write over.
     LEGACY_FILE = "legacy_file", Host, false, "Eski (v1) çizimin üzerine yazılmaz; kaydı yeni bir yola yapın.";
     /// A save with nowhere to go.

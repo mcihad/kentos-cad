@@ -2457,6 +2457,13 @@
       ],
       "note": "Seçim, sıra, adlandırma, kaynak raporu ve atomik teslim aynı dosya komutundadır; masaüstü aynı iptal edilebilir protokol işini kullanır."
     },
+    "sheet.plotStyles": {
+      "level": "semantic",
+      "via": [
+        "cad.plotstyles.import"
+      ],
+      "note": "Pencere tabloyu cad.plotstyles.import'un planıyla yazmadan önizler; İçe aktar aynı girdiyle komutu çalıştırır, profil ve paftaların baskı ayarı tek geri alma adımıdır (ADR 1130). Python ve MCP aynı komutu kullanır."
+    },
     "sheet.details": {
       "level": "semantic",
       "via": [

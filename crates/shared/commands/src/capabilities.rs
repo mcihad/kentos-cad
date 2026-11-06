@@ -5820,6 +5820,32 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.plotstyles.import",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "file_not_found",
+                "file_unreadable",
+                "plot_style_file_too_large",
+                "unsupported_plot_style_file",
+                "bad_plot_style_file",
+                "plot_style_encoding",
+                "plot_style_kind_mismatch",
+                "duplicate_plot_style",
+                "plot_profile_too_large",
+                "book_unreadable",
+                "duplicate_plot_profile",
+                "layer_not_found",
+                "unknown_item",
+                "bad_plot_assignment",
+                "unknown_sheet",
+            ],
+        ],
+        warnings: &["plot_style_losses"],
+        targets: none,
+    },
+    Entry {
         id: "cad.sheets.fit",
         refusals: &[
             REVISION,

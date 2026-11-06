@@ -27,6 +27,7 @@ Every expected row, count, quantity, key, path, total and cell is worked out her
 import argparse
 import copy
 import hashlib
+import math
 import json
 import sys
 from decimal import ROUND_HALF_UP, Decimal
@@ -156,6 +157,34 @@ def kat2():
                     "items": [{"uid": uids[4]}, {"uid": uids[5]}, {"uid": uids[6]}]}],
     }
 
+
+SIRA = "0192f5a1-1030-7000-8000-00000000b006"
+
+
+def kat3():
+    """A drawing of a dynamic Sıra (row) block (docs/adr/1131 §2): its frame and a Sandalye, an array action on its
+    linear Boy (0 → 1 m, 0.5 m apart) copying the Sandalye, a visibility state Boş hiding it. Two Sıra at Boy 2 m (three
+    Sandalye each): one Dolu, one Boş (its three hidden, the array's two copies too); a third Sıra at the default Boy on
+    a hidden layer."""
+    sira = {"id": SIRA, "name": "Sıra", "base": P(0, 0), "units": "m",
+            "entities": [line(1, "", (0, 0), (1, 0)), insert(2, "", SANDALYE, (0, 0.5))],
+            "dynamic": {"parameters": [{"kind": "linear", "name": "Boy", "from": P(0, 0), "to": P(1, 0)},
+                                       {"kind": "visibility", "name": "Görünüm",
+                                        "states": [{"name": "Dolu"}, {"name": "Boş", "hidden": [2]}]}],
+                        "actions": [{"kind": "array", "parameter": "Boy", "pieces": [2], "spacing": 0.5}]}}
+    ents = [insert(1, "mobilya", SIRA, (0, 0), parameters={"Boy": 2.0}),
+            insert(2, "mobilya", SIRA, (0, 3), parameters={"Boy": 2.0, "Görünüm": "Boş"}),
+            insert(3, "gizli", SIRA, (0, 6))]
+    return {
+        "format": "kentos.document", "version": 2, "name": "Kat 3", "uids": [uid(3, k) for k in range(1, 4)],
+        "settings": SETTINGS, "origin": P(0, 0),
+        "layers": [layer("a", "Genel"), layer("mobilya", "Mobilya"), layer("gizli", "Gizli", visible=False)],
+        "activeLayer": "a", "styles": {"items": [], "categories": []}, "blocks": blocks() + [sira],
+        "entities": ents,
+    }
+
+
+KAT3 = kat3()
 
 KAT2 = kat2()
 KAT2_BYTES = kv.container(kv.document(KAT2))
@@ -321,6 +350,33 @@ def dimension_shown(e, measured):
     return written
 
 
+def varied(dynamic, pieces, values):
+    """A dynamic block's pieces as an array action copies them (ADR 0319 §4): on a linear parameter from `from` to
+    `to` (its default the distance), `n = ⌊now/spacing + 1e-9⌋ − ⌊default/spacing + 1e-9⌋ + 1` (1 to 1000) items, the
+    chosen pieces copied `k · spacing` along the line for k = 1 … n − 1, each copy a new local id after the largest.
+    Each piece: (the piece as placed, its index in the definition, its local id)."""
+    params = {p["name"]: p for p in dynamic["parameters"]}
+    out = list(pieces)
+    next_id = max([q[2] for q in out], default=0) + 1
+    for a in dynamic.get("actions", []):
+        p = params.get(a["parameter"])
+        if a["kind"] != "array" or p is None or p["kind"] != "linear":
+            continue
+        dx, dy = p["to"]["x"] - p["from"]["x"], p["to"]["y"] - p["from"]["y"]
+        length = math.hypot(dx, dy)
+        now = values.get(p["name"], length)
+        held = lambda v: math.floor(v / a["spacing"] + 1e-9)
+        n = int(min(max(held(now) - held(length) + 1, 1), 1000))
+        chosen = [q for q in out if q[2] in a["pieces"]]
+        for k in range(1, n):
+            sx, sy = dx / length * a["spacing"] * k, dy / length * a["spacing"] * k
+            for piece, src, _ in chosen:
+                copy = dict(piece, id=next_id, p={"x": piece["p"]["x"] + sx, "y": piece["p"]["y"] + sy})
+                out.append((copy, src, next_id))
+                next_id += 1
+    return out
+
+
 def extract(recipe, docs, join_rows=None):
     """`docs`: (path, name, document) in the recipe's order; the open drawing's path is empty."""
     cols = recipe["columns"]
@@ -330,8 +386,8 @@ def extract(recipe, docs, join_rows=None):
     scope = recipe.get("scope", {})
     nested, xrefs, hidden_too = scope.get("nested", False), scope.get("xrefs", False), scope.get("hidden", False)
     whole = scope.get("arrays", "items") == "whole"
-    notes = dict(hidden=0, unloaded=[], readApart=[], repeated=0, angles=0, overrides=0, unmatched=[], unused=[],
-                 tooDeep=0)
+    notes = dict(hidden=0, hiddenStates=0, unloaded=[], readApart=[], repeated=0, angles=0, overrides=0,
+                 unmatched=[], unused=[], tooDeep=0)
     occ = []
     seen = set()
     read_paths = {p for p, _, _ in docs if p}
@@ -396,7 +452,12 @@ def extract(recipe, docs, join_rows=None):
                         item_of[it["uid"]] = k
         placed = set()
 
-        def visit(e, path, m, parent_layer, hidden, depth):
+        def hide(state):
+            notes["hidden"] += 1
+            if state:
+                notes["hiddenStates"] += 1
+
+        def visit(e, path, m, parent_layer, hidden, depth, state=False):
             lid = e["layerId"] or (parent_layer if parent_layer is not None else "")
             lname, lh = layers.get(lid, (lid, False))
             hid = hidden or lh
@@ -409,7 +470,7 @@ def extract(recipe, docs, join_rows=None):
                          and (not blocks_named or defn["name"].lower() in blocks_named))
                 if takes:
                     if hid and not hidden_too:
-                        notes["hidden"] += 1
+                        hide(state)
                     elif path in seen:
                         notes["repeated"] += 1
                     else:
@@ -432,19 +493,28 @@ def extract(recipe, docs, join_rows=None):
                     return
                 inner = compose(m, placement(e["p"], e["scale"], e["rotation"], defn["base"]))
                 hidden_ids = set()
+                pieces = [(piece, k, piece["id"]) for k, piece in enumerate(defn["entities"])]
                 if defn.get("dynamic"):
+                    values = e.get("parameters", {})
+                    params = {p["name"]: p for p in defn["dynamic"]["parameters"]}
+                    pieces = varied(defn["dynamic"], pieces, values)
                     for p in defn["dynamic"]["parameters"]:
                         if p["kind"] == "visibility":
-                            state = e.get("parameters", {}).get(p["name"], p["states"][0]["name"])
-                            hidden_ids |= set(next(s for s in p["states"] if s["name"] == state).get("hidden", []))
-                for k, piece in enumerate(defn["entities"]):
-                    seg = f"x:{x['objects'][k]}" if x is not None else str(piece["id"])
-                    visit(piece, f"{path}/{seg}", inner, lid, hid or piece["id"] in hidden_ids, depth + 1)
+                            st_ = values.get(p["name"], p["states"][0]["name"])
+                            hidden_ids |= set(next(s for s in p["states"] if s["name"] == st_).get("hidden", []))
+                # Drawn pieces first, then those the visibility state hides, by the id of the piece each is or was
+                # copied from (an array action's copies of a hidden piece are hidden with it, docs/adr/1131 §2).
+                order = ([q for q in pieces if defn["entities"][q[1]]["id"] not in hidden_ids]
+                         + [q for q in pieces if defn["entities"][q[1]]["id"] in hidden_ids])
+                for piece, k, local in order:
+                    seg = f"x:{x['objects'][k]}" if x is not None else str(local)
+                    by_state = defn["entities"][k]["id"] in hidden_ids
+                    visit(piece, f"{path}/{seg}", inner, lid, hid or by_state, depth + 1, state or by_state)
                 return
             if e["kind"] not in kinds or not takes_layer:
                 return
             if hid and not hidden_too:
-                notes["hidden"] += 1
+                hide(state)
                 return
             if path in seen:
                 notes["repeated"] += 1
@@ -590,6 +660,10 @@ METRAJ = {
                 col("Ağırlık", "computed", column=2, factor="7.5", unit="kg")],
     "group": True, "total": True,
 }
+ROWS = {
+    "name": "Sıralar", "kinds": ["insert"], "scope": {"nested": True},
+    "columns": [col("Blok", "block"), col("Adet", "count")], "group": True, "sort": [{"column": 0}], "total": True,
+}
 LEAVES = {
     "name": "Kapı kanatları", "kinds": ["line"], "layers": ["Kapı"], "scope": {"nested": True},
     "columns": [col("Tür", "kind"), col("Katman", "layer"), col("Uzunluk", "length", decimals=2)],
@@ -711,6 +785,17 @@ def runs():
     ok("dinamik bloğun gizli kanadı sayılmaz", {"recipe": LEAVES}, LEAVES)
     hidden = dict(LEAVES, scope={"nested": True, "hidden": True}, name="Gizliler de")
     ok("görünmeyen parçalar açıkça seçilince sayılır", {"recipe": hidden}, hidden)
+    # A dynamic block's visibility state hides a piece and the array action's copies of it (docs/adr/1131 §2).
+    rows = ok("görünürlük durumunun gizlediği parça ve dizi eyleminin kopyaları sayılmaz, sayısı söylenir",
+              {"recipe": ROWS}, ROWS, setup=KAT3)
+    assert rows["notes"]["hidden"] == 5 and rows["notes"]["hiddenStates"] == 3, rows["notes"]
+    by = {r["key"]: r["cells"] for r in rows["rows"]}
+    assert by["Sandalye"][1] == "3" and by["Sıra"][1] == "2", by
+    every = dict(ROWS, scope={"nested": True, "hidden": True}, name="Sıralar, gizliler de")
+    rows = ok("gizli sıranın ve görünürlük durumunun gizlediği kopyalar açıkça seçilince sayılır",
+              {"recipe": every}, every, setup=KAT3)
+    by = {r["key"]: r["cells"] for r in rows["rows"]}
+    assert by["Sandalye"][1] == "7" and by["Sıra"][1] == "3", by
     ok("iç içe alanlar ölçek ve dönüşle", {"recipe": AREAS}, AREAS)
     ok("dizi bütün sayılır, gizli katman dahil", {"recipe": WHOLE}, WHOLE)
     ok("dış referansın içi kaynak kimlikleriyle", {"recipe": XREFS_ONLY}, XREFS_ONLY)

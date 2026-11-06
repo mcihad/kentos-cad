@@ -97,7 +97,7 @@ pub const MOUSE_ACTIONS: [(&str, &str); 25] = [
 ];
 
 /// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
-pub const DRAWING_KEYS: [(&str, &str); 8] = [
+pub const DRAWING_KEYS: [(&str, &str); 9] = [
     (
         "Kenet adayları arasında ileri ve geri (imleç dururken)",
         "Tab / Shift+Tab",
@@ -129,6 +129,10 @@ pub const DRAWING_KEYS: [(&str, &str); 8] = [
     (
         "Duvarı kaydır'da kaydırma uzaklığı (kenarın soluna artı, sağına eksi)",
         "Sayı yazıp Enter",
+    ),
+    (
+        "Tabloyu düzenle'de hücrenin içinde yeni satır (Enter hücreyi yazar)",
+        "Shift+Enter / Alt+Enter",
     ),
 ];
 

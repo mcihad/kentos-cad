@@ -594,6 +594,8 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::arch_project_scenes::scenes());
     all.extend(crate::xref_scenes::scenes());
     all.extend(crate::sheet_detail_scenes::scenes());
+    all.extend(crate::plot_style_scenes::scenes());
+    all.extend(crate::extract_tail_scenes::scenes());
     all.extend(crate::flatten_scenes::scenes());
     all.extend(crate::underlay_scenes::scenes());
     all.extend(crate::layer_style_scenes::scenes());

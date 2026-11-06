@@ -181,6 +181,7 @@ impl Designer {
                             StyleKey::Named { name } => Some(name),
                             _ => None,
                         },
+                        source: None,
                     });
                     d.selected = Some(d.profiles.len() - 1);
                     d.entry = 0;

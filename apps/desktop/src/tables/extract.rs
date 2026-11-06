@@ -17,6 +17,13 @@
 //! ```
 
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
+use std::time::{Duration, Instant};
+
+use iced::futures::channel::{mpsc, oneshot};
+use iced::futures::{SinkExt, Stream};
+use kentos_formats::extract::Watch;
 
 use iced::widget::{button, row};
 use iced::{Center, Element, Task};
@@ -133,6 +140,32 @@ pub struct Extract {
     pub(crate) gap: String,
     pub(crate) result: Option<Result<ExtractRan, String>>,
     pub(crate) warnings: Vec<String>,
+    /// The preview running on its own thread (a drawing of more than [`PREVIEW_INLINE`] objects, docs/adr/1131 §3):
+    /// its number and its watch; a newer preview or Durdur stops it.
+    pub(crate) running: Option<(u64, Arc<Watch>)>,
+    /// The number of the last preview asked for: an older answer is dropped.
+    pub(crate) generation: u64,
+    /// How long the last finished preview took.
+    pub(crate) took: Option<Duration>,
+}
+
+/// The most objects a drawing has for its preview to run at once on the window's own thread; a larger one runs on
+/// its own thread with its progress and Durdur (docs/adr/1131 §3).
+pub(crate) const PREVIEW_INLINE: usize = 20_000;
+pub(crate) const STOP: &str = "Durdur";
+
+/// The window's ticks while a preview runs: its progress is drawn again.
+pub fn ticks() -> impl Stream<Item = Message> {
+    let (mut out, stream) = mpsc::channel(1);
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(Duration::from_millis(150));
+            if iced::futures::executor::block_on(out.send(msg(Event::Tick))).is_err() {
+                break;
+            }
+        }
+    });
+    stream
 }
 
 impl Default for Extract {
@@ -162,6 +195,9 @@ impl Default for Extract {
             gap: "1".into(),
             result: None,
             warnings: Vec::new(),
+            running: None,
+            generation: 0,
+            took: None,
         }
     }
 }
@@ -200,6 +236,11 @@ pub enum Event {
     Opened(Option<(PathBuf, String)>),
     Place,
     Close,
+    /// A preview's answer from its thread, by its number, and how long it took.
+    Previewed(u64, Box<Option<(CommandResult<ExtractRan>, Duration)>>),
+    /// Durdur: the running preview stops.
+    Stop,
+    Tick,
 }
 
 fn msg(e: Event) -> Message {
@@ -400,20 +441,39 @@ impl Extract {
     }
 }
 
+impl Extract {
+    /// A preview's answer kept: its rows and warnings, or why it could not be made.
+    pub(crate) fn take_answer(&mut self, answer: CommandResult<ExtractRan>) {
+        self.warnings.clear();
+        self.result = Some(match answer {
+            CommandResult::Completed { output, warnings } => {
+                self.warnings = warnings.into_iter().map(|w| w.message).collect();
+                Ok(output)
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
+            CommandResult::Cancelled => Err("Önizleme durduruldu; çizim değişmedi.".into()),
+            _ => Err("Yapılamadı.".into()),
+        });
+    }
+}
+
 impl App {
     /// Veri çıkarımı (`table.extract`).
-    pub(crate) fn open_extract(&mut self) {
+    pub(crate) fn open_extract(&mut self) -> Task<Message> {
         if self.document.is_none() {
-            return;
+            return Task::none();
         }
         let x = self.extract.take().unwrap_or_default();
         self.extract = Some(x);
-        self.extract_preview();
         self.dialog = Some(Dialog::Extract);
+        self.extract_preview()
     }
 
-    /// The rows `cad.extract.run` gives for the window's recipe (nothing written).
-    pub(crate) fn extract_preview(&mut self) {
+    /// The rows `cad.extract.run` gives for the window's recipe (nothing written): at once for a drawing of at most
+    /// [`PREVIEW_INLINE`] objects, else on its own thread over a reading copy, a running one stopped first.
+    pub(crate) fn extract_preview(&mut self) -> Task<Message> {
         let base = self
             .drawing_folder()
             .map(|b| b.to_string_lossy().into_owned());
@@ -423,7 +483,7 @@ impl App {
             .and_then(|d| d.path.as_ref())
             .map(|p| p.to_string_lossy().into_owned());
         let (Some(doc), Some(x)) = (&self.document, self.extract.as_mut()) else {
-            return;
+            return Task::none();
         };
         let input = ExtractRun {
             recipe: Some(x.recipe()),
@@ -432,17 +492,28 @@ impl App {
             drawing_path: own,
             expected_revision: None,
         };
-        x.warnings.clear();
-        x.result = Some(match extract_run::plan_in(&doc.model, &input) {
-            CommandResult::Completed { output, warnings } => {
-                x.warnings = warnings.into_iter().map(|w| w.message).collect();
-                Ok(output)
-            }
-            CommandResult::Failed { error }
-            | CommandResult::Conflict { error }
-            | CommandResult::NeedsInput { error } => Err(error.message),
-            _ => Err("Yapılamadı.".into()),
+        if let Some((_, w)) = x.running.take() {
+            w.stop.store(true, Ordering::Relaxed);
+        }
+        x.generation += 1;
+        if doc.model.len() <= PREVIEW_INLINE {
+            let started = Instant::now();
+            let answer = extract_run::plan_in(&doc.model, &input);
+            x.took = Some(started.elapsed());
+            x.take_answer(answer);
+            return Task::none();
+        }
+        let watch = Arc::new(Watch::default());
+        let generation = x.generation;
+        x.running = Some((generation, watch.clone()));
+        let copy = doc.model.reading_copy();
+        let (done, wait) = oneshot::channel();
+        std::thread::spawn(move || {
+            let started = Instant::now();
+            let answer = extract_run::plan_watched(&copy, &input, &watch);
+            let _ = done.send((answer, started.elapsed()));
         });
+        Task::perform(wait, move |answer| msg(Event::Previewed(generation, Box::new(answer.ok()))))
     }
 
     pub(crate) fn extract_event(&mut self, event: Event) -> Task<Message> {
@@ -595,12 +666,37 @@ impl App {
             }
             Event::Place => return self.extract_place(),
             Event::Close => {
+                if let Some((_, w)) = x.running.take() {
+                    w.stop.store(true, Ordering::Relaxed);
+                }
                 self.dialog = None;
                 return Task::none();
             }
+            Event::Previewed(generation, answer) => {
+                if x.generation == generation {
+                    x.running = None;
+                    match *answer {
+                        Some((answer, took)) => {
+                            x.took = Some(took);
+                            x.take_answer(answer);
+                        }
+                        None => x.result = Some(Err("Önizleme yarıda kaldı.".into())),
+                    }
+                }
+                return Task::none();
+            }
+            Event::Stop => {
+                if let Some((_, w)) = x.running.take() {
+                    w.stop.store(true, Ordering::Relaxed);
+                    x.result = Some(Err(
+                        "Önizleme durduruldu; çizim değişmedi. Kapsamı daraltıp yeniden deneyin.".into(),
+                    ));
+                }
+                return Task::none();
+            }
+            Event::Tick => return Task::none(),
         }
-        self.extract_preview();
-        Task::none()
+        self.extract_preview()
     }
 
     /// Tabloyu yerleştir: the window closes and the table hangs from the cursor.
@@ -734,6 +830,30 @@ impl App {
             .ghost(SAVE, Some(msg(Event::Save)))
             .ghost(OPEN, Some(msg(Event::Open)));
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
+        // A preview on its own thread: how far it is, and Durdur (docs/adr/1131 §3). The last rows stay meanwhile.
+        if let Some((_, w)) = &x.running {
+            let done = w.done.load(Ordering::Relaxed);
+            let total = w.total.load(Ordering::Relaxed).max(1);
+            let words = if done >= total {
+                format!(
+                    "Önizleme: {} nesnenin hepsi okundu, satırlar toplanıyor. Çizim değişmez.",
+                    road_dialog::grouped(total as f64, 0)
+                )
+            } else {
+                format!(
+                    "Önizleme okunuyor: {} / {} nesne (%{}). Çizim değişmez.",
+                    road_dialog::grouped(done as f64, 0),
+                    road_dialog::grouped(total as f64, 0),
+                    done * 100 / total
+                )
+            };
+            d = d
+                .empty("Önizleme kendi iş parçacığında hazırlanıyor; Durdur ile kesilebilir.")
+                .note(Banner::info(words))
+                .secondary(STOP, Some(msg(Event::Stop)));
+        } else if let Some(t) = x.took {
+            d = d.status(format!("Önizleme {} ms sürdü.", road_dialog::grouped(t.as_secs_f64() * 1000.0, 1)));
+        }
         match &x.result {
             Some(Err(why)) => d = d.note(Banner::info(why.clone())),
             Some(Ok(out)) => {

@@ -518,6 +518,7 @@ pub mod sheets_edit;
 pub mod sheets_create;
 pub mod sheets_fit;
 pub mod sheets_details;
+pub mod plot_styles_import;
 pub mod sheets_levels;
 pub mod snap_find;
 pub mod profile_files;
@@ -1932,6 +1933,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_SHEETS_LEVELS, kentos_commands::CAD_SHEETS_LEVELS_VERSION),
     // Detay paftaları ([`sheets_details`], docs/adr/1090 §2).
     (kentos_commands::CAD_SHEETS_DETAILS, kentos_commands::CAD_SHEETS_DETAILS_VERSION),
+    // Baskı stili tablosu içe aktar ([`plot_styles_import`], docs/adr/1130).
+    (kentos_commands::CAD_PLOTSTYLES_IMPORT, kentos_commands::CAD_PLOTSTYLES_IMPORT_VERSION),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (
         kentos_commands::CAD_SHEETS_EDIT,

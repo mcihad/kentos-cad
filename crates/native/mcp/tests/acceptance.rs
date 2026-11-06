@@ -1376,3 +1376,54 @@ fn agent_can_attach_portable_shx_and_clear_only_the_resolved_resource_finding() 
     assert_eq!(std::fs::read(&source).unwrap(), bytes);
     std::fs::remove_dir_all(root).unwrap();
 }
+
+/// An AutoCAD CTB taken as a project resource and used in publishing (docs/adr/1130): `cad.plotstyles.import` gives
+/// pen 1 (black, 0,50 mm in the table) to the drawing's layer and applies the profile to the sheet; the PDF's stroke of
+/// that layer is 0,50 mm black, where it was the layer's own width before.
+#[test]
+fn an_agent_imports_a_ctb_and_publishes_with_its_pen() {
+    let data: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/plot-ink.json"))
+            .unwrap();
+    let c = &data["cases"][17];
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-ctb-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let source = dir.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let mut setup = c["setup"].clone();
+    setup["settings"].as_object_mut().unwrap().remove("profile");
+    setup["settings"].as_object_mut().unwrap().remove("profileSnapshot");
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"savePageSetups","setups":[setup]},{"op":"addSheet","sheet":c["sheet"]},{"op":"applyPageSetup","sheet":"page","setup":"office"}]}),
+    );
+    let pen_of = |server: &mut Server, name: &str| {
+        let path = dir.join(name);
+        call(server, "drawing.exportPdf", json!({"drawing":drawing,"path":path}));
+        let pages = files::pdf_pages(&std::fs::read(&path).unwrap());
+        pages[0]
+            .ink
+            .iter()
+            .find(|p| p.segment.iter().zip([80., 72., 180., 72.]).all(|(a, b)| (a - b).abs() < 0.002))
+            .map(|p| (p.width, p.color.clone()))
+            .unwrap()
+    };
+    let (before, _) = pen_of(&mut server, "before.pdf");
+    assert!((before - 0.5).abs() > 0.01, "{before}");
+    let ctb = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1/plotstyles/siyah.ctb");
+    let imported = call(
+        &mut server,
+        "cad.plotstyles.import",
+        json!({"drawing":drawing,"path":ctb,"assignments":[{"target":{"type":"modelLayer","id":"cizim"},"key":{"type":"aci","index":1}}],"sheets":["page"]}),
+    );
+    assert_eq!(imported["output"]["styles"], 255, "{imported}");
+    assert_eq!(imported["output"]["applied"], json!(["page"]));
+    let (width, color) = pen_of(&mut server, "after.pdf");
+    assert!((width - 0.5).abs() < 0.0002, "{width}");
+    assert!(color.iter().take(3).all(|v| v.abs() < 0.002), "{color:?}");
+    std::fs::remove_dir_all(dir).unwrap();
+}
