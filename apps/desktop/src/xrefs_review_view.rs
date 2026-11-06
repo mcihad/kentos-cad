@@ -130,6 +130,28 @@ impl App {
                     .into(),
             );
         }
+        // The sheet viewports' own overrides of its layers (docs/adr/1110 §2): no reference operation touches them.
+        if !x.viewport_overrides.is_empty() {
+            lines.push(
+                label::caption(
+                    "Pafta pencerelerinin kendi ezmeleri (yeniden yükleme, Yolu değiştir ve Katmanları sıfırla dokunmaz):",
+                )
+                .into(),
+            );
+            for o in &x.viewport_overrides {
+                lines.push(
+                    label::caption(format!(
+                        "{} · {}: {} — {}",
+                        o.sheet,
+                        o.viewport,
+                        o.layer,
+                        kentos_native_application::xrefs_review::override_words(o)
+                    ))
+                    .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
+                    .into(),
+                );
+            }
+        }
         let mut body = Column::new()
             .spacing(6)
             .push(Column::with_children(lines).spacing(2));

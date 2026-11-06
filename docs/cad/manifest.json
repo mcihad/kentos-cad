@@ -8497,6 +8497,22 @@
    "tests": 1
   },
   {
+   "id": "sheet.details",
+   "kind": "command",
+   "title": "Detay paftaları…",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.details"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.details",
+   "mcp": "cad.sheets.details",
+   "note": "Pencere detayların tarifini cad.sheets.details'in planıyla yazmadan önizler; Paftaları kur aynı girdiyle komutu çalıştırır, set tek geri alma adımıdır (ADR 1090, 1112). Python ve MCP aynı komutu kullanır.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "sheet.distribute.hCenters",
    "kind": "command",
    "title": "Yatayda ortaları eşit dağıt",

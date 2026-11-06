@@ -152,6 +152,16 @@ fn read(path: &str, page: Option<u32>, at: &str) -> Result<Source, Stop> {
     })
 }
 
+/// A reference's source drawing as found at `path` (a KentOS, DXF or DWG drawing; a PDF page has no styles of its own):
+/// what Paketle reads of it for the resources it defines (docs/adr/1111 §1). None when it cannot be read.
+pub fn source_drawing(path: &Path) -> Option<DocumentSnapshotV2> {
+    let bytes = std::fs::read(path).ok()?;
+    if kentos_formats::pdf::is_pdf(&bytes) {
+        return None;
+    }
+    read(&path.display().to_string(), None, "path").ok().map(|s| s.drawing)
+}
+
 /// A reference to the open drawing itself, or through one of the source's attached references to it or to the
 /// source, is a cycle.
 fn cycle(drawing: Option<&str>, source: &Source, at: &str) -> Result<(), Stop> {
@@ -929,6 +939,7 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
                 content: review.as_ref().map(|r| r.content),
                 brings: review.as_ref().map(|r| r.brings.clone()).unwrap_or_default(),
                 layer_states: review.as_ref().map(|r| r.layer_states.clone()).unwrap_or_default(),
+                viewport_overrides: review.as_ref().map(|r| r.viewport_overrides.clone()).unwrap_or_default(),
                 candidates: review.map(|r| r.candidates).unwrap_or_default(),
             })
         })

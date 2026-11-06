@@ -488,6 +488,46 @@ pub struct XrefCandidate {
     pub digest: String,
 }
 
+/// A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2; AutoCAD's VP Freeze, VP Color …):
+/// that map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes
+/// it: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct XrefViewportOverride {
+    /// The sheet, by its name.
+    pub sheet: String,
+    /// The map item's id (what `cad.sheets.edit`'s `setViewport` takes).
+    pub item: String,
+    /// The map item, by its name.
+    pub viewport: String,
+    /// The layer (or group) by its path in the drawing's layer tree: `Dış başvuru: Plan / Mimari / Duvar`.
+    pub layer: String,
+    /// Not drawn in that viewport.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub frozen: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
+    /// On the paper, micrometres.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-um")))]
+    pub line_weight: Option<i32>,
+}
+
 /// The most files a review reads to find candidates, over all the references (docs/adr/1060 §2).
 pub const MAX_CANDIDATE_FILES: usize = 512;
 /// The largest file a review reads to find candidates, in bytes (docs/adr/1060 §2).
@@ -584,6 +624,10 @@ pub struct XrefInfo {
     /// `review`, one missing or changed: the files that may be it, those of the same content first.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub candidates: Vec<XrefCandidate>,
+    /// `review`: the sheet viewports' own overrides of its layers (docs/adr/1110 §2), in the book's order of sheets,
+    /// their items and the overrides.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub viewport_overrides: Vec<XrefViewportOverride>,
 }
 
 /// Output of `cad.xrefs.list` v1.

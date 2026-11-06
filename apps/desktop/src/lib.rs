@@ -56,6 +56,7 @@ mod import_decision_scenes;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
+mod sheet_details_window;
 mod flatten_window;
 mod xrefs_review_view;
 mod xrefs_watch;
@@ -731,6 +732,8 @@ mod viewmark_scenes;
 mod arch_project_scenes;
 #[cfg(test)]
 mod xref_scenes;
+#[cfg(test)]
+mod sheet_detail_scenes;
 #[cfg(test)]
 mod flatten_scenes;
 #[cfg(test)]

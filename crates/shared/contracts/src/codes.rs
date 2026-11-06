@@ -2009,6 +2009,9 @@ codes! {
     BATCH_ROWS_FAILED = "batch_rows_failed", Warning, false, "Toplu çalıştırmanın bazı satırları çalışıp durdu ve tek tek geri alındı; öteki satırlar yazıldı. Hangi satır ve neden: yanıtın failed listesi.";
     /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
     PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı.";
+    /// Resources the drawing or its references draw with that nothing in the package defines, or only a reference's
+    /// source does (docs/adr/1111 §2).
+    PACKAGE_RESOURCES = "package_resources", Warning, false, "Çizimin ya da dış başvurularının kullandığı bazı çizgi tipi, SHX şekil dosyası, tarama deseni, yazı stili ya da baskı stili pakette tanımlı değil ya da yalnız dış başvurunun kaynak dosyasında var; yanıtın resources bölümü hangileri olduğunu ve kimin kullandığını söyler. Eksikleri projeye ekleyip yeniden paketleyin.";
     /// A `.shp` path for an export of more than one Shapefile (docs/adr/0514).
     SEVERAL_SHAPEFILES = "several_shapefiles", Failed, false, "Dışa aktarma birden çok Shapefile yapıyor (birden çok katman ya da geometri türü); .shp yerine bir klasör ya da .zip verin.";
     /// A table that is a CAD derivative (docs/adr/0530): it is not bound, read into a layer or written back, since

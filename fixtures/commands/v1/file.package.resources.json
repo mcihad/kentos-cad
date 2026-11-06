@@ -1,0 +1,3272 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "file.package",
+  "commandVersion": 1,
+  "host": "headless-file",
+  "title": "Paketle: yazı tipi, SHX, çizgi tipi, desen ve baskı stili raporu",
+  "note": "scripts/fixtures/package_resource_cases.py yazar; ADR 1111'in kurallarından, KentOS kodu olmadan. Başsız sunucunun tests/headless/package_resources.rs'i çalıştırır.",
+  "cases": [
+    {
+      "name": "Boş çizim: katmanların sürekli çizgisi KentOS'la gelir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Kesikli katman ve noktalı nesne yerleşik tiplerdir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "dashed",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "b": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "lineType": "dotted"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "dashed",
+            "how": "builtIn",
+            "users": [
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "dotted",
+            "how": "builtIn",
+            "objects": 1
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Projenin desenli çizgi tipi katmanda: proje dosyasına gömülü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "lineTypes": [
+            {
+              "name": "GAZ",
+              "description": "Gaz hattı",
+              "unit": "paper",
+              "elements": [
+                {
+                  "length": 6.0
+                },
+                {
+                  "length": -2.0
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gaz",
+            "name": "Gaz",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "dashed",
+              "lineWeight": 0.25,
+              "linePattern": "GAZ"
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "GAZ",
+            "how": "embedded",
+            "users": [
+              "katman:Gaz"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Tanımsız desen katmanda eksik ve uyarılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gaz",
+            "name": "Gaz",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "dashed",
+              "lineWeight": 0.25,
+              "linePattern": "GAZ"
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "GAZ",
+            "how": "missing",
+            "users": [
+              "katman:Gaz"
+            ],
+            "note": "hiçbir yerde tanımlı değil; en yakın yerleşik tiple çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "1 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: GAZ (çizgi tipi, eksik). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tanımsız desen nesnede eksik, nesnesi sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "b": {
+              "x": 4.0,
+              "y": 1.0
+            },
+            "lineType": "dashed",
+            "linePattern": "SU"
+          },
+          {
+            "kind": "line",
+            "id": 2,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 2.0
+            },
+            "b": {
+              "x": 4.0,
+              "y": 2.0
+            },
+            "lineType": "dashed",
+            "linePattern": "SU"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001",
+          "0192f5c1-8a02-7000-8000-000000000002"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "SU",
+            "how": "missing",
+            "objects": 2,
+            "note": "hiçbir yerde tanımlı değil; en yakın yerleşik tiple çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "1 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: SU (çizgi tipi, eksik). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Desen adı büyük küçük harfe bakmadan projenin adıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "lineTypes": [
+            {
+              "name": "GAZ",
+              "description": "Gaz hattı",
+              "unit": "paper",
+              "elements": [
+                {
+                  "length": 6.0
+                },
+                {
+                  "length": -2.0
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "dashed",
+              "lineWeight": 0.25,
+              "linePattern": "gaz"
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "GAZ",
+            "how": "embedded",
+            "users": [
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Kullanılmayan proje çizgi tipi de gömülü listelenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "lineTypes": [
+            {
+              "name": "GAZ",
+              "description": "Gaz hattı",
+              "unit": "paper",
+              "elements": [
+                {
+                  "length": 6.0
+                },
+                {
+                  "length": -2.0
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "GAZ",
+            "how": "embedded"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Şekilli çizgi tipinin SHX dosyası kitaplıkta gömülü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "lineTypes": [
+            {
+              "name": "CIT",
+              "unit": "paper",
+              "elements": [
+                {
+                  "length": 2.0
+                },
+                {
+                  "length": 0.0,
+                  "shape": {
+                    "name": "CIRC1",
+                    "file": "ltypeshp.shx",
+                    "scale": 0.5
+                  }
+                },
+                {
+                  "length": -1.0
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [
+            {
+              "id": "shx:ltypeshp.shx",
+              "kind": "asset",
+              "name": "ltypeshp.shx",
+              "path": [
+                "CAD",
+                "SHX"
+              ],
+              "format": "shx",
+              "file": "ltypeshp.shx",
+              "data": "data:application/x-autocad-shx;base64,QXV0b0NBRC04NiBzaGFwZXMgMS4wDQoa",
+              "sha256": "5a4480d0d12aefb86f5a8ae8d75d993c1de01351a76e5bed60e27bad56319fd8"
+            }
+          ],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "shapeFile",
+            "name": "ltypeshp.shx",
+            "how": "embedded",
+            "file": "ltypeshp.shx",
+            "users": [
+              "çizgi tipi:CIT"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "CIT",
+            "how": "embedded"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Şekilli çizgi tipinin SHX dosyası yoksa eksik, dosya adıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "lineTypes": [
+            {
+              "name": "CIT",
+              "unit": "paper",
+              "elements": [
+                {
+                  "length": 2.0
+                },
+                {
+                  "length": 0.0,
+                  "shape": {
+                    "name": "CIRC1",
+                    "file": "C:\\Fonts\\LtypeShp.shx",
+                    "scale": 0.5
+                  }
+                },
+                {
+                  "length": -1.0
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "shapeFile",
+            "name": "ltypeshp.shx",
+            "how": "missing",
+            "file": "LtypeShp.shx",
+            "users": [
+              "çizgi tipi:CIT"
+            ],
+            "note": "projenin kitaplığında yok; çizgi tipinin şekilleri çizilemez"
+          },
+          {
+            "kind": "lineType",
+            "name": "CIT",
+            "how": "embedded"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "1 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: ltypeshp.shx (SHX şekil dosyası, eksik). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Yazı stilinin KentOS yüzü KentOS'la gelir, yazıları sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "textStyles": [
+            {
+              "id": "0192f5c1-8a02-7000-8000-0000000a0101",
+              "name": "Başlık",
+              "font": "barlow"
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "text": "Yazı 1",
+            "height": 0.5,
+            "rotation": 0.0,
+            "textStyle": "0192f5c1-8a02-7000-8000-0000000a0101"
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 2.0
+            },
+            "text": "Yazı 2",
+            "height": 0.5,
+            "rotation": 0.0,
+            "textStyle": "0192f5c1-8a02-7000-8000-0000000a0101"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001",
+          "0192f5c1-8a02-7000-8000-000000000002"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Başlık",
+            "how": "builtIn",
+            "file": "barlow",
+            "users": [
+              "stil:Başlık"
+            ],
+            "objects": 2
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Arial'ı adlandıran stil eşdeğer KentOS yüzüyle gelir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "textStyles": [
+            {
+              "id": "0192f5c1-8a02-7000-8000-0000000a0102",
+              "name": "Gövde",
+              "font": "barlow",
+              "fontFile": "arial.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Gövde",
+            "how": "builtIn",
+            "file": "arial.ttf",
+            "users": [
+              "stil:Gövde"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "SHX yazı tipli stil başka yüzle çizilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "textStyles": [
+            {
+              "id": "0192f5c1-8a02-7000-8000-0000000a0103",
+              "name": "Teknik",
+              "font": "barlow",
+              "fontFile": "romans.shx"
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 1.0
+            },
+            "text": "Yazı 1",
+            "height": 0.5,
+            "rotation": 0.0,
+            "textStyle": "0192f5c1-8a02-7000-8000-0000000a0103"
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Teknik",
+            "how": "substituted",
+            "file": "romans.shx",
+            "users": [
+              "stil:Teknik"
+            ],
+            "objects": 1,
+            "note": "KentOS'ta bu yazı tipi yok; yazıları yerine başka yüzle çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_left"
+          }
+        ]
+      }
+    },
+    {
+      "name": "KentOS'ta olmayan aile başka yüzle çizilir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "textStyles": [
+            {
+              "id": "0192f5c1-8a02-7000-8000-0000000a0104",
+              "name": "Eski",
+              "font": "barlow",
+              "fontFile": "Garamond.ttf"
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": []
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Eski",
+            "how": "substituted",
+            "file": "Garamond.ttf",
+            "users": [
+              "stil:Eski"
+            ],
+            "note": "KentOS'ta bu yazı tipi yok; yazıları yerine başka yüzle çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_left"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dolu, çizgili ve geçişli taramalar yerleşiktir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "hatch",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "ring": [
+              {
+                "x": 10.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.0,
+                "y": 2.0
+              },
+              {
+                "x": 10.0,
+                "y": 2.0
+              }
+            ],
+            "pattern": {
+              "type": "solid",
+              "angle": 0.0,
+              "spacing": 1.0
+            }
+          },
+          {
+            "kind": "hatch",
+            "id": 2,
+            "layerId": "cizim",
+            "attrs": {},
+            "ring": [
+              {
+                "x": 10.0,
+                "y": 2.0
+              },
+              {
+                "x": 12.0,
+                "y": 2.0
+              },
+              {
+                "x": 12.0,
+                "y": 3.0
+              },
+              {
+                "x": 10.0,
+                "y": 3.0
+              }
+            ],
+            "pattern": {
+              "type": "lines",
+              "angle": 45.0,
+              "spacing": 0.5
+            }
+          },
+          {
+            "kind": "hatch",
+            "id": 3,
+            "layerId": "cizim",
+            "attrs": {},
+            "ring": [
+              {
+                "x": 10.0,
+                "y": 3.0
+              },
+              {
+                "x": 12.0,
+                "y": 3.0
+              },
+              {
+                "x": 12.0,
+                "y": 4.0
+              },
+              {
+                "x": 10.0,
+                "y": 4.0
+              }
+            ],
+            "pattern": {
+              "type": "solid",
+              "angle": 0.0,
+              "spacing": 1.0
+            }
+          },
+          {
+            "kind": "hatch",
+            "id": 4,
+            "layerId": "cizim",
+            "attrs": {},
+            "ring": [
+              {
+                "x": 10.0,
+                "y": 4.0
+              },
+              {
+                "x": 12.0,
+                "y": 4.0
+              },
+              {
+                "x": 12.0,
+                "y": 5.0
+              },
+              {
+                "x": 10.0,
+                "y": 5.0
+              }
+            ],
+            "pattern": {
+              "type": "gradient",
+              "angle": 0.0,
+              "spacing": 1.0,
+              "gradient": {
+                "shape": "linear",
+                "color2": "#FFFFFF"
+              }
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001",
+          "0192f5c1-8a02-7000-8000-000000000002",
+          "0192f5c1-8a02-7000-8000-000000000003",
+          "0192f5c1-8a02-7000-8000-000000000004"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "gradient",
+            "how": "builtIn",
+            "objects": 1
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "lines",
+            "how": "builtIn",
+            "objects": 1
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "solid",
+            "how": "builtIn",
+            "objects": 2
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Çizgileri kendisinde olan desen gömülü sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "hatch",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "ring": [
+              {
+                "x": 10.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.0,
+                "y": 2.0
+              },
+              {
+                "x": 10.0,
+                "y": 2.0
+              }
+            ],
+            "pattern": {
+              "type": "pattern",
+              "angle": 0.0,
+              "spacing": 1.0,
+              "name": "ANSI31",
+              "scale": 1.0,
+              "lines": [
+                {
+                  "angle": 45.0,
+                  "origin": [
+                    0.0,
+                    0.0
+                  ],
+                  "offset": [
+                    0.0,
+                    3.175
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "ANSI31",
+            "how": "embedded",
+            "objects": 1,
+            "note": "desenin çizgileri taramanın kendisinde"
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Projenin deseni adıyla gömülü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "hatchPatterns": [
+            {
+              "name": "TUGLA",
+              "unit": "drawing",
+              "lines": [
+                {
+                  "angle": 45.0,
+                  "origin": [
+                    0.0,
+                    0.0
+                  ],
+                  "offset": [
+                    0.0,
+                    3.175
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "hatch",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "ring": [
+              {
+                "x": 10.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.0,
+                "y": 2.0
+              },
+              {
+                "x": 10.0,
+                "y": 2.0
+              }
+            ],
+            "pattern": {
+              "type": "pattern",
+              "angle": 0.0,
+              "spacing": 1.0,
+              "name": "tugla",
+              "scale": 1.0,
+              "lines": [
+                {
+                  "angle": 45.0,
+                  "origin": [
+                    0.0,
+                    0.0
+                  ],
+                  "offset": [
+                    0.0,
+                    3.175
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001"
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "TUGLA",
+            "how": "embedded",
+            "objects": 1
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Bloğun parçalarının çizgi tipi ve deseni de sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5c1-8a02-7000-8000-00000000b101",
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": 1.0,
+            "rotation": 0.0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000001"
+        ],
+        "blocks": [
+          {
+            "id": "0192f5c1-8a02-7000-8000-00000000b101",
+            "name": "Kapı",
+            "base": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "units": "m",
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                "lineType": "dashdot"
+              },
+              {
+                "kind": "hatch",
+                "id": 2,
+                "layerId": "cizim",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 10.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 3.0
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1.0,
+                  "name": "NET",
+                  "scale": 1.0,
+                  "lines": [
+                    {
+                      "angle": 45.0,
+                      "origin": [
+                        0.0,
+                        0.0
+                      ],
+                      "offset": [
+                        0.0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "dashdot",
+            "how": "builtIn",
+            "objects": 1
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "NET",
+            "how": "embedded",
+            "objects": 1,
+            "note": "desenin çizgileri taramanın kendisinde"
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Paftanın baskı profili kitapta gömülü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [],
+        "sheets": {
+          "book": {
+            "schema": "kentos.sheet/1",
+            "sheets": [
+              {
+                "id": "a-101",
+                "name": "A-101 Plan",
+                "page": {
+                  "paper": "a3",
+                  "orientation": "landscape",
+                  "size": {
+                    "width": 420000,
+                    "height": 297000
+                  },
+                  "margins": {
+                    "top": 10000,
+                    "right": 10000,
+                    "bottom": 10000,
+                    "left": 20000
+                  }
+                },
+                "items": [],
+                "plot": {
+                  "settings": {
+                    "profile": "p-1"
+                  }
+                }
+              },
+              {
+                "id": "a-102",
+                "name": "A-102 Kesit",
+                "page": {
+                  "paper": "a3",
+                  "orientation": "landscape",
+                  "size": {
+                    "width": 420000,
+                    "height": 297000
+                  },
+                  "margins": {
+                    "top": 10000,
+                    "right": 10000,
+                    "bottom": 10000,
+                    "left": 20000
+                  }
+                },
+                "items": [],
+                "plot": {
+                  "settings": {
+                    "profile": "p-1"
+                  }
+                }
+              }
+            ],
+            "plotProfiles": [
+              {
+                "id": "p-1",
+                "name": "Renkli",
+                "kind": "named",
+                "entries": [
+                  {
+                    "key": {
+                      "type": "named",
+                      "name": "Ink"
+                    },
+                    "style": {
+                      "color": {
+                        "type": "object"
+                      },
+                      "opacity": 100
+                    }
+                  }
+                ],
+                "assignments": [],
+                "defaultStyle": "Ink"
+              }
+            ]
+          }
+        }
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "plotStyle",
+            "name": "Renkli",
+            "how": "embedded",
+            "users": [
+              "pafta:A-101 Plan",
+              "pafta:A-102 Kesit"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Paftanın baskı profili kitapta yoksa eksik; kullanılmayan profil de listelenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [],
+        "sheets": {
+          "book": {
+            "schema": "kentos.sheet/1",
+            "sheets": [
+              {
+                "id": "a-101",
+                "name": "A-101 Plan",
+                "page": {
+                  "paper": "a3",
+                  "orientation": "landscape",
+                  "size": {
+                    "width": 420000,
+                    "height": 297000
+                  },
+                  "margins": {
+                    "top": 10000,
+                    "right": 10000,
+                    "bottom": 10000,
+                    "left": 20000
+                  }
+                },
+                "items": [],
+                "plot": {
+                  "settings": {
+                    "profile": "p-9"
+                  }
+                }
+              }
+            ],
+            "plotProfiles": [
+              {
+                "id": "p-1",
+                "name": "Gri",
+                "kind": "named",
+                "entries": [
+                  {
+                    "key": {
+                      "type": "named",
+                      "name": "İnce"
+                    },
+                    "style": {
+                      "color": {
+                        "type": "object"
+                      },
+                      "opacity": 100
+                    }
+                  }
+                ],
+                "assignments": [
+                  {
+                    "target": {
+                      "type": "modelLayer",
+                      "id": "cizim"
+                    },
+                    "key": {
+                      "type": "named",
+                      "name": "İnce"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "plotStyle",
+            "name": "Gri",
+            "how": "embedded"
+          },
+          {
+            "kind": "plotStyle",
+            "name": "p-9",
+            "how": "missing",
+            "users": [
+              "pafta:A-101 Plan"
+            ],
+            "note": "paftanın baskı profili kitapta yok"
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "1 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: p-9 (baskı stili, eksik). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Paftanın kendi profil kopyası gömülüdür",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [],
+        "sheets": {
+          "book": {
+            "schema": "kentos.sheet/1",
+            "sheets": [
+              {
+                "id": "a-101",
+                "name": "A-101 Plan",
+                "page": {
+                  "paper": "a3",
+                  "orientation": "landscape",
+                  "size": {
+                    "width": 420000,
+                    "height": 297000
+                  },
+                  "margins": {
+                    "top": 10000,
+                    "right": 10000,
+                    "bottom": 10000,
+                    "left": 20000
+                  }
+                },
+                "items": [],
+                "plot": {
+                  "settings": {
+                    "profile": "p-7",
+                    "profileSnapshot": {
+                      "id": "p-7",
+                      "name": "Tek renk",
+                      "kind": "named",
+                      "entries": [
+                        {
+                          "key": {
+                            "type": "named",
+                            "name": "Ink"
+                          },
+                          "style": {
+                            "color": {
+                              "type": "object"
+                            },
+                            "opacity": 100
+                          }
+                        }
+                      ],
+                      "assignments": [],
+                      "defaultStyle": "Ink"
+                    }
+                  }
+                }
+              },
+              {
+                "id": "a-102",
+                "name": "A-102 Kesit",
+                "page": {
+                  "paper": "a3",
+                  "orientation": "landscape",
+                  "size": {
+                    "width": 420000,
+                    "height": 297000
+                  },
+                  "margins": {
+                    "top": 10000,
+                    "right": 10000,
+                    "bottom": 10000,
+                    "left": 20000
+                  }
+                },
+                "items": []
+              }
+            ],
+            "plotProfiles": []
+          }
+        }
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "plotStyle",
+            "name": "Tek renk",
+            "how": "embedded",
+            "users": [
+              "pafta:A-101 Plan"
+            ]
+          }
+        ],
+        "warnings": []
+      }
+    },
+    {
+      "name": "Dış başvurunun katmanındaki desen yalnız kaynağında: taşınır ama çizimde yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "xr",
+            "name": "Dış başvuru: Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "xr-s",
+                "name": "Sınır",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25,
+                  "linePattern": "SINIR"
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 90,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5c1-8a02-7000-8000-00000000b001",
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": 1.0,
+            "rotation": 0.0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000090"
+        ],
+        "blocks": [
+          {
+            "id": "0192f5c1-8a02-7000-8000-00000000b001",
+            "name": "Kadastro",
+            "base": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "units": "m",
+            "xref": {
+              "path": "$fixture:package/v1/kaynaklar/kadastro.kcad",
+              "digest": "6c8cf84d74d5c988d7880696e0db3e5ebd8bd5f0552efb19578ef8a778b3be95",
+              "group": "xr",
+              "objects": [
+                "0192f5c1-8a02-7000-8000-000000000800"
+              ]
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "xr-s",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Başlık",
+            "how": "carried",
+            "users": [
+              "xref:Kadastro"
+            ],
+            "note": "dış başvurunun kaynağındaki yazı stili; bu çizimde yok, yazıları Standart ile çizilir"
+          },
+          {
+            "kind": "font",
+            "name": "Not",
+            "how": "carried",
+            "users": [
+              "xref:Kadastro"
+            ],
+            "note": "dış başvurunun kaynağındaki yazı stili; bu çizimde yok, yazıları Standart ile çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "SINIR",
+            "how": "carried",
+            "users": [
+              "katman:Dış başvuru: Kadastro / Sınır"
+            ],
+            "note": "dış başvurunun kaynağında tanımlı; bu çizimde yok, en yakın yerleşik tiple çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "3 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: Başlık (yazı stili, yalnız dış başvurunun kaynağında), Not (yazı stili, yalnız dış başvurunun kaynağında), SINIR (çizgi tipi, yalnız dış başvurunun kaynağında). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dış başvurunun kaynağındaki yazı stilleri bu çizimde yoksa taşınır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad",
+          "textStyles": [
+            {
+              "id": "0192f5c1-8a02-7000-8000-0000000a0201",
+              "name": "not",
+              "font": "barlow"
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "xr",
+            "name": "Dış başvuru: Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 90,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5c1-8a02-7000-8000-00000000b001",
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": 1.0,
+            "rotation": 0.0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000090"
+        ],
+        "blocks": [
+          {
+            "id": "0192f5c1-8a02-7000-8000-00000000b001",
+            "name": "Kadastro",
+            "base": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "units": "m",
+            "xref": {
+              "path": "$fixture:package/v1/kaynaklar/kadastro.kcad",
+              "digest": "6c8cf84d74d5c988d7880696e0db3e5ebd8bd5f0552efb19578ef8a778b3be95",
+              "group": "xr",
+              "objects": [
+                "0192f5c1-8a02-7000-8000-000000000800"
+              ]
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Başlık",
+            "how": "carried",
+            "users": [
+              "xref:Kadastro"
+            ],
+            "note": "dış başvurunun kaynağındaki yazı stili; bu çizimde yok, yazıları Standart ile çizilir"
+          },
+          {
+            "kind": "font",
+            "name": "not",
+            "how": "builtIn",
+            "file": "barlow",
+            "users": [
+              "stil:not"
+            ]
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "1 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: Başlık (yazı stili, yalnız dış başvurunun kaynağında). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Dış başvurunun parçasındaki tanımsız desen kaynağında da yoksa eksik",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "xr",
+            "name": "Dış başvuru: Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 90,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5c1-8a02-7000-8000-00000000b001",
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": 1.0,
+            "rotation": 0.0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000090"
+        ],
+        "blocks": [
+          {
+            "id": "0192f5c1-8a02-7000-8000-00000000b001",
+            "name": "Kadastro",
+            "base": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "units": "m",
+            "xref": {
+              "path": "$fixture:package/v1/kaynaklar/kadastro.kcad",
+              "digest": "6c8cf84d74d5c988d7880696e0db3e5ebd8bd5f0552efb19578ef8a778b3be95",
+              "group": "xr",
+              "objects": [
+                "0192f5c1-8a02-7000-8000-000000000800",
+                "0192f5c1-8a02-7000-8000-000000000801"
+              ]
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "0",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                "lineType": "dashed",
+                "linePattern": "KANAL"
+              },
+              {
+                "kind": "hatch",
+                "id": 2,
+                "layerId": "cizim",
+                "attrs": {},
+                "ring": [
+                  {
+                    "x": 10.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 2.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 3.0
+                  },
+                  {
+                    "x": 10.0,
+                    "y": 3.0
+                  }
+                ],
+                "pattern": {
+                  "type": "pattern",
+                  "angle": 0.0,
+                  "spacing": 1.0,
+                  "name": "TUGLA",
+                  "scale": 1.0,
+                  "lines": [
+                    {
+                      "angle": 45.0,
+                      "origin": [
+                        0.0,
+                        0.0
+                      ],
+                      "offset": [
+                        0.0,
+                        3.175
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "font",
+            "name": "Başlık",
+            "how": "carried",
+            "users": [
+              "xref:Kadastro"
+            ],
+            "note": "dış başvurunun kaynağındaki yazı stili; bu çizimde yok, yazıları Standart ile çizilir"
+          },
+          {
+            "kind": "font",
+            "name": "Not",
+            "how": "carried",
+            "users": [
+              "xref:Kadastro"
+            ],
+            "note": "dış başvurunun kaynağındaki yazı stili; bu çizimde yok, yazıları Standart ile çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "KANAL",
+            "how": "missing",
+            "objects": 1,
+            "note": "hiçbir yerde tanımlı değil; en yakın yerleşik tiple çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          },
+          {
+            "kind": "hatchPattern",
+            "name": "TUGLA",
+            "how": "embedded",
+            "objects": 1,
+            "note": "desenin çizgileri taramanın kendisinde"
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_resources",
+            "message": "3 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: Başlık (yazı stili, yalnız dış başvurunun kaynağında), Not (yazı stili, yalnız dış başvurunun kaynağında), KANAL (çizgi tipi, eksik). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Kaynağı bulunamayan dış başvurunun deseni eksik sayılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Paket kaynakları",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100.0,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "xr",
+            "name": "Dış başvuru: Kadastro",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "xr-s",
+                "name": "Sınır",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25,
+                  "linePattern": "SINIR"
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "insert",
+            "id": 90,
+            "layerId": "cizim",
+            "attrs": {},
+            "block": "0192f5c1-8a02-7000-8000-00000000b001",
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "scale": 1.0,
+            "rotation": 0.0
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "uids": [
+          "0192f5c1-8a02-7000-8000-000000000090"
+        ],
+        "blocks": [
+          {
+            "id": "0192f5c1-8a02-7000-8000-00000000b001",
+            "name": "Kadastro",
+            "base": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "units": "m",
+            "xref": {
+              "path": "/yok/kadastro.kcad",
+              "digest": "6c8cf84d74d5c988d7880696e0db3e5ebd8bd5f0552efb19578ef8a778b3be95",
+              "group": "xr",
+              "objects": [
+                "0192f5c1-8a02-7000-8000-000000000800"
+              ]
+            },
+            "entities": [
+              {
+                "kind": "line",
+                "id": 1,
+                "layerId": "xr-s",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "op": "plan",
+      "expect": {
+        "status": "completed",
+        "resources": [
+          {
+            "kind": "lineType",
+            "name": "SINIR",
+            "how": "missing",
+            "users": [
+              "katman:Dış başvuru: Kadastro / Sınır"
+            ],
+            "note": "hiçbir yerde tanımlı değil; en yakın yerleşik tiple çizilir"
+          },
+          {
+            "kind": "lineType",
+            "name": "continuous",
+            "how": "builtIn",
+            "users": [
+              "katman:0",
+              "katman:Çizim"
+            ]
+          }
+        ],
+        "warnings": [
+          {
+            "code": "package_left"
+          },
+          {
+            "code": "package_resources",
+            "message": "1 kaynak pakette tanımlı değil ya da yalnız dış başvurunun kaynağında: SINIR (çizgi tipi, eksik). Projeye ekleyip yeniden paketleyin."
+          }
+        ]
+      }
+    }
+  ]
+}

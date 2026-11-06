@@ -148,6 +148,22 @@ fn dimension(s: &Session, uid: &str) -> Value {
 }
 
 /// What the model is: the definitions and the drawing's objects (no revision, no history).
+/// A sheet with one fixed map frame named Harita whose own layer overrides are `overrides` (docs/adr/0314 §1).
+fn vp_sheet(id: &str, name: &str, item: &str, overrides: Value) -> Value {
+    json!({ "export": { "dpi": 300, "fileName": "[% @pafta_adi %]", "format": "png" }, "guides": [], "id": id,
+        "items": [{ "bindings": [], "constraints": { "h": "left", "relativeTo": "margins", "v": "top" },
+            "frame": { "height": 120000, "left": 20000, "top": 10000, "width": 180000 }, "hidden": false, "id": item,
+            "kind": { "clipToAtlasFeature": false, "grids": [], "labelBand": 0, "layers": { "type": "all" },
+                "layerOverrides": overrides,
+                "overviewFrame": { "cap": "butt", "color": "#d0021b", "dash": [], "join": "miter", "width": 500 },
+                "type": "map", "view": { "center": { "x": 5.0, "y": 4.0 }, "rotation": 0, "scale": 100, "type": "fixed" } },
+            "locked": false, "name": "Harita", "opacity": 100, "padding": 0, "printable": true, "rotation": 0 }],
+        "name": name,
+        "page": { "margins": { "bottom": 10000, "left": 20000, "right": 10000, "top": 10000 }, "orientation": "landscape",
+            "paper": "a3", "size": { "height": 297000, "width": 420000 } },
+        "snapGrid": { "enabled": false, "spacing": 5000, "visible": false }, "variables": [], "variants": [] })
+}
+
 fn model(s: &Session) -> Value {
     let snapshot = serde_json::to_value(s.document().to_snapshot_v2()).expect("json");
     json!({ "blocks": snapshot["blocks"], "entities": snapshot["entities"], "uids": snapshot["uids"] })
@@ -346,6 +362,43 @@ fn a_reference_network_moves_changes_and_packs_without_losing_its_ties() {
         json!(["Pafta A", "Pafta B"]),
         "{listed:?}"
     );
+    // Two sheets' own viewport overrides of Plan's layer (docs/adr/1110): one frozen, one in another colour and weight.
+    ok(&call(
+        &mut s,
+        "cad.sheets.edit",
+        "execute",
+        json!({ "ops": [
+            { "op": "addSheet", "sheet": vp_sheet("a-101", "A-101 Plan", "plan-a", json!([{ "layer": plan_layer, "frozen": true }])) },
+            { "op": "addSheet", "sheet": vp_sheet("a-102", "A-102 Renkli", "plan-b",
+                json!([{ "layer": plan_layer, "color": "#FF0000", "lineWeight": 700 }])) }
+        ] }),
+    ));
+    let viewports = |listed: &[Value]| by_name(listed, "Plan")["viewportOverrides"].clone();
+    let plan_path = s
+        .document()
+        .layers()
+        .get(&plan_layer)
+        .map(|n| n.name.clone())
+        .expect("named");
+    let want_viewports = json!([
+        { "sheet": "A-101 Plan", "item": "plan-a", "viewport": "Harita", "layer": format!("Dış başvuru: Plan / {plan_path}"), "frozen": true },
+        { "sheet": "A-102 Renkli", "item": "plan-b", "viewport": "Harita", "layer": format!("Dış başvuru: Plan / {plan_path}"),
+          "color": "#FF0000", "lineWeight": 700 }
+    ]);
+    assert_eq!(viewports(&review(&mut s, &project)), want_viewports);
+    // “Bu değer nereden geliyor?” of Plan's insert: the reference's layers and the two viewports' own overrides.
+    let plan_slot = s
+        .document()
+        .entities()
+        .find(|e| matches!(e, kentos_commands::Entity::Insert(i)
+            if s.document().block(i.block).is_some_and(|b| b.name == "Plan")))
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .expect("Plan's insert");
+    let explained = kentos_native_application::appearance_origin::explain(s.document(), plan_slot);
+    let part = explained.iter().find(|p| p.part == "xrefLayers").expect("the reference's layers explained");
+    assert_eq!(part.viewports.len(), 2, "{part:?}");
+    assert!(part.viewports[0].ends_with("— dondurulmuş"), "{part:?}");
+    assert!(part.viewports[1].contains("renk #FF0000, kalınlık 0,7 mm"), "{part:?}");
 
     // Plan's file moved and renamed beside a different drawing of its old name: not found by the name, found by its
     // content as a candidate, bound only when asked.
@@ -584,6 +637,8 @@ fn a_reference_network_moves_changes_and_packs_without_losing_its_ties() {
         Some((false, Some(false))),
         "{states:?}"
     );
+    // The viewports' own overrides went through the repath and the reset (docs/adr/1110 §1).
+    assert_eq!(viewports(&review(&mut s, &project)), want_viewports);
     // The overrides of the sheets back on the drawing for the package.
     ok(&call(
         &mut s,
@@ -648,6 +703,14 @@ fn a_reference_network_moves_changes_and_packs_without_losing_its_ties() {
     assert_eq!(
         by_name(&listed, "Plan")["layerStates"],
         json!(["Pafta A", "Pafta B"])
+    );
+    assert_eq!(viewports(&listed), want_viewports, "the two sheets' overrides came along");
+    // The package says what it carries of the drawing's resources (docs/adr/1111): the built-in line type at least.
+    assert!(
+        ok(&packed)["resources"]
+            .as_array()
+            .is_some_and(|r| r.iter().any(|x| x["kind"] == "lineType" && x["how"] == "builtIn")),
+        "{packed}"
     );
     // A reload inside the package finds the nested sources there: B beside A, C by its name beside them.
     ok(&call(

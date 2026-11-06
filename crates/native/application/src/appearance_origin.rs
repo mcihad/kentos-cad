@@ -92,8 +92,8 @@ fn line_type(style: &LayerStyle) -> String {
 }
 
 /// The sheet viewports (map items) whose layer list or overrides draw `layer` otherwise: each its place's words and
-/// the layer style it draws with there.
-fn viewport_styles(doc: &Document, node: &LayerNode) -> Vec<(String, LayerStyle)> {
+/// the layer style it draws with there; none where the viewport's own override freezes it (docs/adr/1110 §3).
+fn viewport_styles(doc: &Document, node: &LayerNode) -> Vec<(String, Option<LayerStyle>)> {
     let mut out = Vec::new();
     let Some(sheets) = doc.sheets() else {
         return out;
@@ -112,10 +112,17 @@ fn viewport_styles(doc: &Document, node: &LayerNode) -> Vec<(String, LayerStyle)
                 &map.layers,
                 &map.layer_overrides,
             );
-            if let Some(n) = drawn.iter().find(|n| n.id == node.id)
+            let at = format!("{} · {}", sheet.name, item.name);
+            if map
+                .layer_overrides
+                .iter()
+                .any(|o| o.layer == node.id && o.frozen)
+            {
+                out.push((at, None));
+            } else if let Some(n) = drawn.iter().find(|n| n.id == node.id)
                 && n.style != node.style
             {
-                out.push((format!("{} · {}", sheet.name, item.name), n.style.clone()));
+                out.push((at, Some(n.style.clone())));
             }
         }
     }
@@ -157,7 +164,7 @@ fn explain_part(
     p: Part<'_>,
     node: &LayerNode,
     std_note: Option<&str>,
-    vps: &[(String, LayerStyle)],
+    vps: &[(String, Option<LayerStyle>)],
     is_insert_part: bool,
 ) -> Explained {
     let origin = if p.own.is_some() {
@@ -210,9 +217,12 @@ fn explain_part(
     }
     let viewports: Vec<String> = vps
         .iter()
-        .filter_map(|(at, style)| {
-            let there = (p.viewport)(style);
-            (p.own.is_none() && there != p.layer).then(|| format!("{at}: {there}"))
+        .filter_map(|(at, style)| match style {
+            None => Some(format!("{at}: dondurulmuş")),
+            Some(style) => {
+                let there = (p.viewport)(style);
+                (p.own.is_none() && there != p.layer).then(|| format!("{at}: {there}"))
+            }
         })
         .collect();
     let mut resets = Vec::new();
@@ -332,7 +342,67 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
     if let Entity::Text(t) = e {
         out.push(text_style(doc, &t.face, resolved.as_ref()));
     }
+    if let Entity::Insert(i) = e
+        && let Some(x) = doc.block(i.block).and_then(|b| b.xref.as_ref())
+        && let Some(part) = xref_layers(doc, x)
+    {
+        out.push(part);
+    }
     out
+}
+
+/// An external reference's layers (docs/adr/1110 §3): three levels apart — the source's look, the drawing's own
+/// override of it (kept through a reload, set back by Katmanları kaynağa döndür) and each sheet viewport's own
+/// override (no reference operation touches it). None for a reference without its layer group.
+fn xref_layers(doc: &Document, x: &kentos_commands::XrefSource) -> Option<Explained> {
+    let group = x.group.as_deref().filter(|g| doc.layers().get(g).is_some())?;
+    let layers = crate::xrefs_review::group_paths(doc, group)
+        .iter()
+        .filter(|(id, _)| {
+            doc.layers()
+                .get(id)
+                .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer)
+        })
+        .count();
+    let overrides = crate::xrefs_review::viewport_overrides(doc, Some(group));
+    let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
+    let mut resets = vec![Reset {
+        scope: "Katmanları kaynağa döndür: çizimin ezmesi".into(),
+        after: "kaynağın görünüşü".into(),
+        count: count(layers),
+    }];
+    if !overrides.is_empty() {
+        resets.push(Reset {
+            scope: "pencerelerin kendi ezmeleri (dış başvuru işlemleri dokunmaz)".into(),
+            after: "çizimin görünüşü".into(),
+            count: count(overrides.len()),
+        });
+    }
+    Some(Explained {
+        part: "xrefLayers",
+        label: "Dış başvuru katmanları",
+        value: format!("{layers} katman"),
+        origin: Origin::Layer,
+        chain: vec![Link {
+            origin: Origin::Layer,
+            value: "çizimin görünüşü".into(),
+            note: "kaynağınkinden ayrıldıysa yeniden yüklemede kalır".into(),
+            wins: false,
+        }],
+        viewports: overrides
+            .iter()
+            .map(|o| {
+                format!(
+                    "{} · {}: {} — {}",
+                    o.sheet,
+                    o.viewport,
+                    o.layer,
+                    crate::xrefs_review::override_words(o)
+                )
+            })
+            .collect(),
+        resets,
+    })
 }
 
 fn text_style(

@@ -332,6 +332,7 @@
     "table.edit",
     "table.update",
     "table.export",
+    "table.extract",
     "style.assign",
     "style.clearSymbol",
     "style.legend",

@@ -25,6 +25,16 @@ use crate::{
 /// The template when none is given: KentOS's ISO technical sheet.
 pub const DEFAULT_TEMPLATE: &str = "sys:cad-teknik";
 
+/// How many parts the model table `uid` is drawn in (docs/adr/1030 §7): 1 for an unbroken table; none for an object
+/// that is not a table or not there. What the desktop's detail window offers as a detail's table part (docs/adr/1112).
+pub fn table_parts(doc: &Document, uid: &str) -> Option<u32> {
+    let wanted = [uid.to_owned()];
+    let named = checks::named(doc, &wanted).ok()?;
+    let s = shape(named[0].2);
+    let t = table_geom(&s)?;
+    u32::try_from(t.parts().len()).ok()
+}
+
 /// The model box of part `part` of the table `uid` (docs/adr/1090 §3): its outline's corners from the table's top left
 /// along its rows, its frame band and half a text height around it.
 pub(crate) fn table_part_bounds(

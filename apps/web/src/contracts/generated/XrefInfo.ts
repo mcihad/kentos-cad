@@ -6,6 +6,7 @@ import type { XrefCandidate } from "./XrefCandidate";
 import type { XrefContent } from "./XrefContent";
 import type { XrefKind } from "./XrefKind";
 import type { XrefState } from "./XrefState";
+import type { XrefViewportOverride } from "./XrefViewportOverride";
 
 /**
  * A reference as `cad.xrefs.list` lists it.
@@ -74,4 +75,9 @@ layerStates?: Array<string>,
 /**
  * `review`, one missing or changed: the files that may be it, those of the same content first.
  */
-candidates?: Array<XrefCandidate>, };
+candidates?: Array<XrefCandidate>, 
+/**
+ * `review`: the sheet viewports' own overrides of its layers (docs/adr/1110 §2), in the book's order of sheets,
+ * their items and the overrides.
+ */
+viewportOverrides?: Array<XrefViewportOverride>, };

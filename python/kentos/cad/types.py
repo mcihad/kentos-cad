@@ -4325,6 +4325,46 @@ OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
+class PackageResourceHow(_StrEnum):
+    """How the package has a resource (docs/adr/1111 §1).
+
+    - ``builtIn``: It comes with KentOS itself (its own faces, the built-in line types, solid/line/gradient fills): nothing to carry.
+    - ``embedded``: Inside the package's project file: the project's line types and hatch patterns, an SHX shape file kept in the
+    - ``carried``: Only in a file the package carries, an external reference's source copied under `veri/`: the source defines it,
+    - ``substituted``: A typeface KentOS does not have: its texts are drawn in a substitute face (a finding, also in `left`).
+    - ``missing``: Nothing defines it, neither the project nor a reference's source: a finding, never dropped.
+    """
+    BUILT_IN = "builtIn"
+    EMBEDDED = "embedded"
+    CARRIED = "carried"
+    SUBSTITUTED = "substituted"
+    MISSING = "missing"
+
+
+PackageResourceHowName = Literal["builtIn", "embedded", "carried", "substituted", "missing"]
+"""The names of :class:`PackageResourceHow`, for a plain string."""
+
+
+class PackageResourceKind(_StrEnum):
+    """What kind of drawing resource a package's resource row is (docs/adr/1111 §1).
+
+    - ``font``: A text style's typeface.
+    - ``shapeFile``: An SHX shape file a line type's pattern places shapes of.
+    - ``lineType``: A line type: a built-in one or a project's pattern by its name.
+    - ``hatchPattern``: A hatch's pattern.
+    - ``plotStyle``: A plot style table (a sheet's plot profile) or a named style in it.
+    """
+    FONT = "font"
+    SHAPE_FILE = "shapeFile"
+    LINE_TYPE = "lineType"
+    HATCH_PATTERN = "hatchPattern"
+    PLOT_STYLE = "plotStyle"
+
+
+PackageResourceKindName = Literal["font", "shapeFile", "lineType", "hatchPattern", "plotStyle"]
+"""The names of :class:`PackageResourceKind`, for a plain string."""
+
+
 class PackageWay(_StrEnum):
     """How a bound layer's source goes into a package (docs/adr/0596 §1).
 
@@ -56810,6 +56850,53 @@ class PackageProject(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackageResource(_Model):
+    """One resource the drawing and its references draw with, and how the package has it (docs/adr/1111 §1).
+    Attributes:
+        name: Its name: the text style's, the shape file's, the line type's (`continuous`, a pattern's name), the hatch
+            pattern's (`solid`, `ANSI31`), the plot profile's (`profil / stil` for a named style in it).
+        file: The file it names: a typeface's file or family, an SHX file.
+        note: Why, for a finding or a resource carried another way.
+        objects: The objects drawn with it (the drawing's and its blocks' and references' pieces). Unit: count.
+        users: Who needs it, sorted: `stil:Ad`, `katman:Yol / Ad`, `çizgi tipi:Ad`, `pafta:Ad`, `xref:Ad`, `profil:Ad`.
+    """
+    kind: PackageResourceKind | PackageResourceKindName
+    name: str
+    how: PackageResourceHow | PackageResourceHowName
+    file: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+    objects: int | Unset = UNSET
+    users: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["how"] = _enum_out(self.how)
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.objects is not UNSET:
+            out["objects"] = self.objects
+        if self.users is not UNSET:
+            out["users"] = list(self.users)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageResource:
+        return cls(
+            kind=_enum_in(PackageResourceKind, data["kind"]),
+            name=data["name"],
+            how=_enum_in(PackageResourceHow, data["how"]),
+            file=data.get("file", UNSET),
+            note=data.get("note", UNSET),
+            objects=data.get("objects", UNSET),
+            users=list(data["users"]) if "users" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackagedFile(_Model):
     """A file copied into the package.
     Attributes:
@@ -66508,6 +66595,8 @@ class ProjectPackaged(_Model):
         bytes: Every byte written: the project file, the manifest and the copies. Unit: bytes.
         embedded: The links embedded (docs/adr/0596 §1).
         faces: The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
+        resources: Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,
+            and how the package has each (docs/adr/1111): kind, then name.
     """
     path: str
     project: str
@@ -66520,6 +66609,7 @@ class ProjectPackaged(_Model):
     embedded: list[PackageEmbedded] | Unset = UNSET
     faces: list[DrawingFont | DrawingFontName] | Unset = UNSET
     left: list[PackageLeft] | Unset = UNSET
+    resources: list[PackageResource] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -66537,6 +66627,8 @@ class ProjectPackaged(_Model):
             out["faces"] = [_enum_out(e0) for e0 in self.faces]
         if self.left is not UNSET:
             out["left"] = [e0.to_json() for e0 in self.left]
+        if self.resources is not UNSET:
+            out["resources"] = [e0.to_json() for e0 in self.resources]
         return out
 
     @classmethod
@@ -66553,6 +66645,7 @@ class ProjectPackaged(_Model):
             embedded=[PackageEmbedded.from_json(e0) for e0 in data["embedded"]] if "embedded" in data else UNSET,
             faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]] if "faces" in data else UNSET,
             left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
+            resources=[PackageResource.from_json(e0) for e0 in data["resources"]] if "resources" in data else UNSET,
         )
 
 
@@ -95338,6 +95431,8 @@ class XrefInfo(_Model):
         sheets: The sheets whose map frames show its inserts, by name (`affected`).
         tried: The places looked in, in order, when it was not found.
         underlay: A PDF underlay's look when it is not the default.
+        viewport_overrides: `review`: the sheet viewports' own overrides of its layers (docs/adr/1110 §2), in the book's order of sheets,
+            their items and the overrides.
         views: The named views whose window meets its inserts, by name (`affected`).
     """
     name: str
@@ -95362,6 +95457,7 @@ class XrefInfo(_Model):
     sheets: list[str] | Unset = UNSET
     tried: list[str] | Unset = UNSET
     underlay: UnderlayLook | None | Unset = UNSET
+    viewport_overrides: list[XrefViewportOverride] | Unset = UNSET
     views: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -95402,6 +95498,8 @@ class XrefInfo(_Model):
             out["tried"] = list(self.tried)
         if self.underlay is not UNSET:
             out["underlay"] = None if self.underlay is None else self.underlay.to_json()
+        if self.viewport_overrides is not UNSET:
+            out["viewportOverrides"] = [e0.to_json() for e0 in self.viewport_overrides]
         if self.views is not UNSET:
             out["views"] = list(self.views)
         return out
@@ -95431,6 +95529,7 @@ class XrefInfo(_Model):
             sheets=list(data["sheets"]) if "sheets" in data else UNSET,
             tried=list(data["tried"]) if "tried" in data else UNSET,
             underlay=UNSET if "underlay" not in data else None if data["underlay"] is None else UnderlayLook.from_json(data["underlay"]),
+            viewport_overrides=[XrefViewportOverride.from_json(e0) for e0 in data["viewportOverrides"]] if "viewportOverrides" in data else UNSET,
             views=list(data["views"]) if "views" in data else UNSET,
         )
 
@@ -95497,6 +95596,66 @@ class XrefSource(_Model):
             relative=data.get("relative", UNSET),
             underlay=UNSET if "underlay" not in data else None if data["underlay"] is None else UnderlayLook.from_json(data["underlay"]),
             unloaded=data.get("unloaded", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XrefViewportOverride(_Model):
+    """A sheet viewport's own override of one of a reference's layers (docs/adr/1110 §2; AutoCAD's VP Freeze, VP Color …):
+    that map item draws the layer otherwise, whatever the drawing's own look of it. No `cad.xrefs.*` operation changes
+    it: a reload, a repath and an unload keep the layer's id, `resetLayers` sets back only the drawing's own look.
+    Attributes:
+        sheet: The sheet, by its name.
+        item: The map item's id (what `cad.sheets.edit`'s `setViewport` takes).
+        viewport: The map item, by its name.
+        layer: The layer (or group) by its path in the drawing's layer tree: `Dış başvuru: Plan / Mimari / Duvar`.
+        frozen: Not drawn in that viewport.
+        line_weight: On the paper, micrometres. Unit: paper-um.
+    """
+    sheet: str
+    item: str
+    viewport: str
+    layer: str
+    color: str | None | Unset = UNSET
+    frozen: bool | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: str | None | Unset = UNSET
+    line_weight: int | None | Unset = UNSET
+    plot: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["item"] = self.item
+        out["viewport"] = self.viewport
+        out["layer"] = self.layer
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.frozen is not UNSET:
+            out["frozen"] = self.frozen
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = self.line_type
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = self.line_weight
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefViewportOverride:
+        return cls(
+            sheet=data["sheet"],
+            item=data["item"],
+            viewport=data["viewport"],
+            layer=data["layer"],
+            color=data.get("color", UNSET),
+            frozen=data.get("frozen", UNSET),
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=data.get("lineType", UNSET),
+            line_weight=data.get("lineWeight", UNSET),
+            plot=data.get("plot", UNSET),
         )
 
 
@@ -117242,6 +117401,11 @@ __all__ = [
     "PackageEmbedded",
     "PackageLeft",
     "PackageProject",
+    "PackageResource",
+    "PackageResourceHow",
+    "PackageResourceHowName",
+    "PackageResourceKind",
+    "PackageResourceKindName",
     "PackageWay",
     "PackageWayName",
     "PackagedFile",
@@ -118950,6 +119114,7 @@ __all__ = [
     "XrefSource",
     "XrefState",
     "XrefStateName",
+    "XrefViewportOverride",
     "XrefsEdit",
     "XrefsEdited",
     "XrefsList",

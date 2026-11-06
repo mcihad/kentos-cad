@@ -2669,6 +2669,10 @@
         "size": "small"
        },
        {
+        "command": "sheet.details",
+        "size": "small"
+       },
+       {
         "command": "sheet.levels",
         "size": "small",
         "works": [

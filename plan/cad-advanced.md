@@ -2259,7 +2259,7 @@ listesi (31 adet), override'lı ölçü toplanmaz, dış açıklama tablosu anah
 1,01. Sınır: pafta kitabında tablonun başka paftaya devamı CAD-ADV-16'ya; masaüstü tablo düzenleyicide satır sonu
 yazma, görünürlük dışı dinamik eylemle gizlenen parça ve büyük çizimde önizleme ölçümü açık. Madde `[~]`.
 
-### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [~]
+### CAD-ADV-14 — Dış referans ve altlık bağımlılıklarını kaybolmadan yönet [x]
 
 **Öncelik:** P1. **Kod:** [C22], [C23], [C03].
 **Dayanak:** AutoCAD 2027 Connected References; kaynak bütünlüğü
@@ -2317,6 +2317,28 @@ paket iç içe kaynaklarını `veri/` içinde bulur. PDF ölçü uyarısı kâğ
 `headless/tests/headless/xref_network.rs`'te kanıtlı; masaüstü ağ ve önizleme penceresi 1100×650/1440×900'de
 görüntülendi. Açık: pafta nesnesinin kendi katman override'ı (KentOS'ta katman durumu ve görünüş tarifi), paketin
 stil/desen ayrıntı raporu. Madde `[~]`.
+
+**Pafta penceresinin kendi ezmesi ve paketin kaynak raporu (6 Kasım 2026, [ADR 1110](../docs/adr/1110-viewport-own-overrides-of-xref-layers.md),
+[ADR 1111](../docs/adr/1111-package-resource-report.md)):** Pafta penceresinin dış başvuru katmanı için kendi ezmesi
+ADR 0314'ün harita `layerOverrides`'ıdır (dondur, yazdır, renk, çizgi tipi, desen, kalınlık; katman kimliğiyle): ADR
+1060 §12'deki “veri modeli yok” sözü düzeltildi. Yeniden yükleme, Yolu değiştir, Boşalt ve Katmanları kaynağa döndür
+katman kimliğini korur ve pafta kitabına yazmaz; ezme yerinde kalır, çizimin kendi ezmesinden ayrıdır. `cad.xrefs.list`
+`review` her başvurunun `viewportOverrides`'ını (pafta, pencere, katmanın ağaçtaki yolu, ezmenin alanları) verir;
+“Bu değer nereden geliyor?” pencerenin dondurduğu katmanı söyler ve dış başvurunun yerleştirmesinde “Dış başvuru
+katmanları” parçası çizimin ve pencerelerin düzeyini, iki sıfırlamanın erimini gösterir. Pafta tasarımcısının katman
+listesi katmanları yollarıyla verir (dış başvurunun Duvar'ı çizimin Duvar'ından ayrılır). Paketle cevabında ve
+`paket.json`'da `resources`: her yazı stili yüzü, SHX şekil dosyası, çizgi tipi, tarama deseni ve baskı profili,
+`builtIn`/`embedded`/`carried`/`substituted`/`missing` ve kullananlarıyla; dış başvurunun kaynağında tanımlı ama
+çizimde olmayan çizgi tipi ve yazı stili `carried`, hiçbir yerde olmayan `missing` olarak `package_resources`
+uyarısıdır. Kanıt: `xref_command_cases.py --check` (`cad.xrefs.list` 46, yeni 9: dondurma, alanlar, desen, çizimin
+katmanı ve olmayan kimlik, grup ve iki paftanın sırası, `review`'siz, plan, Katmanları kaynağa döndür ve Boşalt'tan
+sonra), `package_resource_cases.py --check` (`file.package.resources.json` 24 bağımsız durum, başsız koşucuda 24/24);
+kabul testi `xref_network.rs`'te iki paftanın iki ezmesi (biri dondurur, biri başka renk ve kalınlık) Yolu değiştir,
+Katmanları kaynağa döndür ve paketin başka klasörde açılmasından sonra yerinde ve incelemede, değerin kaynağı dondurmayı
+söyler, paket `resources`'ı verir. Masaüstünde Dış başvurular ayrıntısı, Denetçi ve Paketle iletisi 1440×900 ve
+1100×650'de, açık ve koyu görüntülendi. Kabulün bütün satırları (iç içe üç referans, aynı adlı iki dosya, PDF altlığı,
+taşı/değiştir/yeniden bağla, paketin başka dizinde açılması, kırpma, iki paftadaki override'lar, tek Undo) kanıtlı.
+Sınır: Bağla › Ekle'de pencere ezmesi kendiliğinden birleşen katmana taşınmaz (ADR 1110 §7). Madde `[x]`.
 
 ### CAD-ADV-15 — Revizyon farkını semantik karşılaştırma ve 2B inceleme notlarına bağla [x]
 
@@ -2452,6 +2474,21 @@ paftaları ayırır; `resumable`/`resume` durdurulan yayını sürdürür. 1:1/1
 viewport, bağımsız PDF okuyucu ve Poppler denetimi, eski pafta ve durdurulan yayın kabul testleriyle kanıtlı; 32
 bağımsız ortak vaka geçti. Açık: masaüstünde detay kurma penceresi, `table` nedeni için bağımsız vakalar, ikili
 CTB/STB, AutoCAD/Acrobat denetimi. Madde `[~]`.
+
+**Detay paftaları penceresi ve tablo nedeninin ortak durumları (6 Kasım 2026, [ADR 1112](../docs/adr/1112-detail-set-window-and-table-reason-cases.md)):**
+Masaüstünde Çıktı › Pafta › **Detay paftaları…** (`sheet.details`) `RoadDialog` iskeletinde: detay listesi (ad, kaynak,
+kesin oran, sil) kitin veri tablosunda; **Seçimden ekle** seçimin kutusunu uzun kenarının %5'i paylı alır, **Tablo
+parçası ekle** bölünmüş tablonun her parçasını ayrı detay yapar; seçili detayda tablo parçası, katman durumu, yalnız o
+pencerede dondurulan katmanlar, açıklama temsili ve kilit; set için ilk numara ve başlık. Sağda `cad.sheets.details`'in
+planı yazmadan izlenir: paftaların kâğıt önizlemesi (görüntüleyicide), Pafta/Detay/Oran kartları, ret notu ve detay ·
+pafta · oran · kâğıt boyu tablosu. **Paftaları kur** seti çizimin bir grubunda çalıştırır: pafta kitabının tek
+değişikliği, tek Undo; Esc/Kapat yazmaz. `cad.sheets.set`'in `table` nedeni için `sheet_set_table_cases.py` ADR 1090
+§6'dan KentOS kodu olmadan 24 durum yazdı (koordinat, alan, adsız/adlı blok çizelgesi, satır üyeli çizelge, hücre alanı;
+pencerenin dondurduğu ve gizli katmandaki tablo; kenara değen ve 1 cm ötesindeki tablo; tablonun kendisi verilince;
+silinen tablo/çizelge; sonradan verilen dondurma; retler; kitapsız proje); native koşucu ilk çalıştırmada 24/24.
+Masaüstü testleri (önizleme yazmaz, 1:5 detayın kâğıt eni model uzunluğundan, dondurma ve kilit pencerede, tek Undo,
+Kapat yazmaz) geçti; pencere 1440×900 ve 1100×650'de açık ve koyu görüntülendi, incelemede oranların sırası ve dar
+pencerede tablonun sütunları düzeltildi. Açık: ikili CTB/STB, AutoCAD/Acrobat ile karşı denetim. Madde `[~]`.
 
 ### CAD-ADV-17 — Dosya alışverişinde görüntü, geometri ve düzenlenebilirliği ayrı güvenceye al [~]
 

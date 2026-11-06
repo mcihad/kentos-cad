@@ -41,6 +41,7 @@ mod publish_status;
 mod sheet_resources;
 mod sheet_preflight;
 mod delivery_integrity;
+mod package_resources;
 mod package_sources;
 mod query;
 pub mod rpc;
