@@ -44,4 +44,11 @@ corridor?: string,
  * its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
  * datum, the frame as high as the lines.
  */
-span?: number, expectedRevision?: string, };
+span?: number, 
+/**
+ * The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
+ * (docs/adr/0995; KGM 2019: "Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur"; the
+ * 2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
+ * waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
+ */
+haul?: string, expectedRevision?: string, };

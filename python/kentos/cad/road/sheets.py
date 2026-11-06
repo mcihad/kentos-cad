@@ -67,6 +67,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
@@ -110,6 +111,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             expected_revision:
             first:
             from_: Unit: m.
+            haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
             layer_id:
             name:
             options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
@@ -140,6 +142,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             expected_revision=expected_revision,
             first=first,
             from_=from_,
+            haul=haul,
             layer_id=layer_id,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
@@ -164,6 +167,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
@@ -186,6 +190,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             expected_revision=expected_revision,
             first=first,
             from_=from_,
+            haul=haul,
             layer_id=layer_id,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
@@ -210,6 +215,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
@@ -232,6 +238,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             expected_revision=expected_revision,
             first=first,
             from_=from_,
+            haul=haul,
             layer_id=layer_id,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),
@@ -256,6 +263,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
         expected_revision: str | None | Unset = UNSET,
         first: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         layer_id: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
@@ -283,6 +291,7 @@ class _RoadSheetsPlan(LocalCommand[RoadSheetsPlan, RoadSheetsLaid, RoadSheetsLai
             expected_revision=expected_revision,
             first=first,
             from_=from_,
+            haul=haul,
             layer_id=layer_id,
             name=name,
             options=dict() if options is UNSET else _opt(options, lambda x: x),

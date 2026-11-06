@@ -55,6 +55,8 @@ pub struct Window {
     pub(crate) dever: Option<String>,
     /// The corridor whose slopes and platform KGM's rows over the views say (docs/adr/0989).
     pub(crate) corridor: Option<String>,
+    /// The mass haul diagram whose earthwork rows go under the views (docs/adr/0995).
+    pub(crate) haul: Option<String>,
     pub(crate) preview: Preview,
 }
 
@@ -72,6 +74,8 @@ pub enum Event {
     Dever(Option<String>),
     /// The corridor KGM's slope and platform rows read (its id); none: no rows (docs/adr/0989).
     Corridor(Option<String>),
+    /// The mass haul diagram KGM's earthwork rows read (its id); none: no rows (docs/adr/0995).
+    Haul(Option<String>),
     Make,
     Close,
 }
@@ -126,6 +130,7 @@ impl Window {
             bands: (self.profile.is_some() && self.kgm).then_some(kentos_commands::ProfileBands::Kgm),
             superelevation: if self.profile.is_some() && self.kgm { self.dever.clone() } else { None },
             corridor: if self.profile.is_some() && self.kgm { self.corridor.clone() } else { None },
+            haul: if self.profile.is_some() && self.kgm { self.haul.clone() } else { None },
             scale,
             overlap: number(&self.fields[3])?,
             source: None,
@@ -163,6 +168,7 @@ impl App {
             kgm: false,
             dever: None,
             corridor: None,
+            haul: None,
             preview: Preview::default(),
         }));
         self.dialog = Some(Dialog::RoadSheets);
@@ -196,6 +202,7 @@ impl App {
                 w.profile = None;
                 w.dever = None;
                 w.corridor = None;
+                w.haul = None;
                 w.alignment = Some(id);
             }
             Event::Profile(p) => w.profile = p,
@@ -203,6 +210,7 @@ impl App {
             Event::Kgm(on) => w.kgm = on,
             Event::Dever(id) => w.dever = id,
             Event::Corridor(id) => w.corridor = id,
+            Event::Haul(id) => w.haul = id,
             Event::Field(k, t) => w.fields[k.min(5)] = t,
             Event::Make => return self.make_road_sheets(),
             Event::Close => {
@@ -376,6 +384,16 @@ impl App {
                     move |i| msg(Event::Corridor(ids[i].clone())),
                 );
                 second = second.push(words::field("Şev ve platform", container(corridor).width(170), None));
+                // Docs/adr/0995: the mass haul diagram KGM's earthwork rows read.
+                let hauls = crate::road_place::hauls_on(self.document.as_ref().map(|d| &d.model), w.alignment.as_deref());
+                let chosen = w.haul.as_ref().and_then(|id| hauls.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None).chain(hauls.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let haul = Select::new(
+                    std::iter::once("Satır yok".to_owned()).chain(hauls.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    Some(chosen),
+                    move |i| msg(Event::Haul(ids[i].clone())),
+                );
+                second = second.push(words::field("Hafriyat", container(haul).width(170), None));
             }
             body = body.push(second.align_y(iced::alignment::Vertical::Bottom));
         }

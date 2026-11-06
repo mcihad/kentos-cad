@@ -65647,6 +65647,10 @@ class ProfilesDraw(_Model):
         every: Unit: m.
         exaggeration: Unit: 1.
         from_: Unit: m.
+        haul: The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
+            (docs/adr/0995; KGM 2019: "Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur"; the
+            2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
+            waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
         height: Unit: paper-mm.
         span: The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
             sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
@@ -65667,6 +65671,7 @@ class ProfilesDraw(_Model):
     exaggeration: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     from_: float | None | Unset = UNSET
+    haul: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
     span: float | None | Unset = UNSET
     superelevation: str | None | Unset = UNSET
@@ -65691,6 +65696,8 @@ class ProfilesDraw(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.from_ is not UNSET:
             out["from"] = None if self.from_ is None else float(self.from_)
+        if self.haul is not UNSET:
+            out["haul"] = self.haul
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.span is not UNSET:
@@ -65714,6 +65721,7 @@ class ProfilesDraw(_Model):
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
             expected_revision=data.get("expectedRevision", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            haul=data.get("haul", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             span=UNSET if "span" not in data else None if data["span"] is None else float(data["span"]),
             superelevation=data.get("superelevation", UNSET),
@@ -74488,6 +74496,7 @@ class RoadSheetsPlan(_Model):
         corridor: With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
         exaggeration: Unit: 1.
         from_: Unit: m.
+        haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
         options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
         overlap: Unit: m.
         scale: Unit: scale.
@@ -74502,6 +74511,7 @@ class RoadSheetsPlan(_Model):
     expected_revision: str | None | Unset = UNSET
     first: str | None | Unset = UNSET
     from_: float | None | Unset = UNSET
+    haul: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
@@ -74529,6 +74539,8 @@ class RoadSheetsPlan(_Model):
             out["first"] = self.first
         if self.from_ is not UNSET:
             out["from"] = None if self.from_ is None else float(self.from_)
+        if self.haul is not UNSET:
+            out["haul"] = self.haul
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
         if self.name is not UNSET:
@@ -74559,6 +74571,7 @@ class RoadSheetsPlan(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             first=data.get("first", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            haul=data.get("haul", UNSET),
             layer_id=data.get("layerId", UNSET),
             name=data.get("name", UNSET),
             options=data["options"] if "options" in data else dict(),

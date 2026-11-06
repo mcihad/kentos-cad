@@ -355,6 +355,8 @@ pub struct Window {
     pub(crate) span: String,
     /// With KGM's bands, the corridor whose slope and platform rows go over the frame (docs/adr/0989, 0994).
     pub(crate) corridor: Option<String>,
+    /// With KGM's bands, the mass haul diagram whose earthwork rows go under the frame (docs/adr/0995).
+    pub(crate) haul: Option<String>,
     /// Düşey kurp boyu over the window (profile_lengths_window.rs, docs/adr/0935 §3).
     pub(crate) lengths: Option<Box<crate::profile_lengths_window::Lengths>>,
     /// The values typed there, kept while the program runs when it is closed.
@@ -480,6 +482,7 @@ pub enum Event {
     Kgm(bool),
     Span(String),
     Corridor(Option<String>),
+    Haul(Option<String>),
     /// The superelevation schedule KGM's Dever band draws (its id); none: no schedule.
     Dever(Option<String>),
     Draw,
@@ -838,6 +841,7 @@ impl App {
             Event::Kgm(on) => w.kgm = on,
             Event::Span(t) => w.span = t,
             Event::Corridor(id) => w.corridor = id,
+            Event::Haul(id) => w.haul = id,
             Event::Dever(id) => w.dever = id,
             Event::Draw => return self.draw_profile(),
             Event::Cancel => {
@@ -946,6 +950,8 @@ impl App {
             superelevation: if w.kgm { w.dever.clone() } else { None },
             // Docs/adr/0989, 0994: KGM's slope and platform rows, with KGM's bands only.
             corridor: if w.kgm { w.corridor.clone() } else { None },
+            // Docs/adr/0995: KGM's earthwork rows, with KGM's bands only.
+            haul: if w.kgm { w.haul.clone() } else { None },
             // Docs/adr/0990: empty or not a number, no split; a number at most zero the command refuses.
             span: number(&w.span).ok().flatten(),
             expected_revision: None,
@@ -1182,6 +1188,14 @@ impl App {
             Some(picked),
             move |i| msg(Event::Corridor(cids[i].clone())),
         );
+        let hauls = crate::road_place::hauls_on(self.document.as_ref().map(|d| &d.model), Some(alignment.as_str()));
+        let hpicked = w.haul.as_ref().and_then(|id| hauls.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+        let hids: Vec<Option<String>> = std::iter::once(None).chain(hauls.iter().map(|(i, _)| Some(i.clone()))).collect();
+        let haul = Select::new(
+            std::iter::once("Satır yok".to_owned()).chain(hauls.iter().map(|(_, n)| n.clone())).map(Choice::new),
+            Some(hpicked),
+            move |i| msg(Event::Haul(hids[i].clone())),
+        );
         let line = row![
             label::strong("Çizime"),
             words::field("Katman", layer, None),
@@ -1202,6 +1216,8 @@ impl App {
         let kgm = row![
             words::field("Dever bandı", container(dever).width(200), None),
             words::field("Şev ve platform", container(corridor).width(200), None),
+            // Docs/adr/0995: KGM's earthwork rows from a mass haul diagram.
+            words::field("Hafriyat", container(haul).width(200), None),
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);

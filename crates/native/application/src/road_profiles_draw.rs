@@ -57,6 +57,8 @@ struct Checked {
     bands: ProfileBands,
     /// The Dever band's schedule (docs/adr/0980): its name, break points and normal slopes.
     dever: Option<(String, kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    /// KGM's earthwork rows under the frame (docs/adr/0995).
+    earthwork: Option<crate::road_earthwork_bands::Earthwork>,
     /// The view's parts (docs/adr/0990): one with the datum without a `span`, split with one.
     parts: Vec<crate::road_profile_splits::Part>,
     split: bool,
@@ -279,6 +281,34 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
             Some(crate::road_corridor_bands::rows(doc, cdef, s0, s1)?)
         }
     };
+    // KGM's earthwork rows under the frame (docs/adr/0995).
+    let earthwork = match (&input.haul, bands) {
+        (None, _) => None,
+        (Some(_), ProfileBands::Kentos) => {
+            return Err(fail(
+                codes::INVALID_LABEL,
+                "Hafriyat satırları yalnız KGM bantlarıyla (bands: kgm) çizilir.".into(),
+                "haul",
+            ));
+        }
+        (Some(name), ProfileBands::Kgm) => {
+            let (_, hdef) = crate::road_hauls::find(doc.road_hauls(), name, "haul")?;
+            let on = doc
+                .road_volumes()
+                .iter()
+                .find(|v| v.id == hdef.volume)
+                .and_then(|v| doc.road_corridors().iter().find(|c| c.id == v.corridor))
+                .map(|c| c.alignment.clone());
+            if on.as_deref() != Some(def.alignment.as_str()) {
+                return Err(fail(
+                    codes::INVALID_LABEL,
+                    format!("“{}” Brüknerinin kübajı boykesitin aksında değil.", hdef.name),
+                    "haul",
+                ));
+            }
+            Some(crate::road_earthwork_bands::earthwork(doc, hdef)?)
+        }
+    };
     Ok(Checked {
         id: def.id.clone(),
         built,
@@ -297,6 +327,7 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         corridor,
         split: span.is_some(),
         parts,
+        earthwork,
     })
 }
 
@@ -595,7 +626,9 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
         }
     }
     if c.bands == ProfileBands::Kgm {
-        kgm_bands(&mut out, c, columns, at, h, names);
+        // KGM's earthwork rows right under the frame, the bands under them (docs/adr/0995).
+        let below = c.earthwork.as_ref().map_or(0.0, |e| earthwork_rows(&mut out, c, e, at, h, names));
+        kgm_bands(&mut out, c, columns, [at[0], at[1] - below], h, names);
         return out;
     }
     // The bands: their lines and names, then a column at every round km and at the ends, then the grades.
@@ -715,6 +748,60 @@ pub(crate) fn view(
 /// millimetres high.
 pub fn corridor_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
     crate::road_corridor_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
+}
+
+/// KGM's earthwork rows under the frame whose lower left is `at` (docs/adr/0995; the June 2024 sample sheets): the
+/// names' column, a line under each row and its name, each balance section in the view its five totals at its middle (the
+/// whole section's, as a section over two sheets is written on both), a line where a section ends and "DN : km" up the
+/// rows at a balance point. How deep they are.
+fn earthwork_rows(
+    out: &mut Vec<NewObject>,
+    c: &Checked,
+    e: &crate::road_earthwork_bands::Earthwork,
+    at: [f64; 2],
+    h: f64,
+    names: f64,
+) -> f64 {
+    use crate::road_earthwork_bands::{ROWS, volume_text};
+    let (s0, s1) = (c.s0, c.s1);
+    let x = |s: f64| at[0] + (s - s0);
+    let (x0, x1, y0) = (x(s0), x(s1), at[1]);
+    let row = 2.4 * h;
+    let depth = ROWS.len() as f64 * row;
+    out.push(line([x0 - names, y0], [x0 - names, y0 - depth], None, Some(0.13)));
+    out.push(line([x0, y0], [x0, y0 - depth], None, Some(0.13)));
+    for (k, name) in ROWS.iter().enumerate() {
+        let bottom = y0 - row * (k + 1) as f64;
+        out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
+        out.push(text([x0 - names + 0.5 * h, bottom + 0.5 * row], (*name).to_owned(), h, TextAlign::MiddleLeft, None));
+    }
+    for sec in e.sections.iter().filter(|q| q.to > s0 + 1e-9 && q.from < s1 - 1e-9) {
+        let mid = x(0.5 * (sec.from.max(s0) + sec.to.min(s1)));
+        for (k, v) in sec.values.iter().enumerate() {
+            let y = y0 - row * (k as f64 + 0.5);
+            out.push(text([mid, y], volume_text(*v), h, TextAlign::MiddleCenter, None));
+        }
+    }
+    // A line at each section's end inside the view; the ends of the volume too.
+    let mut ends: Vec<f64> = e.sections.iter().flat_map(|q| [q.from, q.to]).filter(|s| *s > s0 + 1e-9 && *s < s1 - 1e-9).collect();
+    ends.sort_by(f64::total_cmp);
+    ends.dedup_by(|a, b| (*a - *b).abs() <= 1e-9);
+    for s in ends {
+        out.push(line([x(s), y0], [x(s), y0 - depth], None, Some(0.18)));
+    }
+    for s in e.balance.iter().filter(|s| **s > s0 - 1e-9 && **s < s1 + 1e-9) {
+        let words = format!("DN : {}", km_text(c.built.alignment.km(*s), 2));
+        // Left of the line, as the 2024 sheets write it: turned a quarter, the words grow to the left of their foot
+        // (Y89's first picture had the line through them).
+        // Masked: the rows' lines ran across them.
+        out.push(masked(turned([x(*s) - 0.3 * h, y0 - 0.5 * depth], words, 0.8 * h, TextAlign::BottomCenter, None, 90.0)));
+    }
+    depth
+}
+
+/// How deep KGM's earthwork rows under a view are (docs/adr/0995), in drawing units, with texts `height` paper mm.
+pub fn earthwork_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
+    crate::road_earthwork_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
 }
 
 /// How deep the bands under a view are, in drawing units, with texts `height` paper millimetres high.

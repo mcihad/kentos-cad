@@ -291,6 +291,7 @@ pub mod road_alignments_check;
 pub mod road_profiles_check;
 pub mod road_profiles_lengths;
 pub mod road_corridor_bands;
+pub mod road_earthwork_bands;
 pub mod road_profile_splits;
 pub mod road_corridors;
 pub mod road_corridors_daylights;

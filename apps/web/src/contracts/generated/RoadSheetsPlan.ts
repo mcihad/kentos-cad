@@ -30,7 +30,11 @@ superelevation?: string,
 /**
  * With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
  */
-corridor?: string, scale?: number, overlap?: number, source?: SheetTemplateSource, 
+corridor?: string, 
+/**
+ * With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
+ */
+haul?: string, scale?: number, overlap?: number, source?: SheetTemplateSource, 
 /**
  * The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
  */

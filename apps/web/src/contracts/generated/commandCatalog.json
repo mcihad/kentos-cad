@@ -39874,6 +39874,13 @@
             ],
             "x-unit": "m"
           },
+          "haul": {
+            "description": "The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say\n(docs/adr/0995; KGM 2019: \"Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur\"; the\n2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and\nwaste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "height": {
             "format": "double",
             "type": [
@@ -40089,6 +40096,9 @@
           "unknown_corridor",
           "invalid_road_corridor",
           "no_terrain",
+          "unknown_haul",
+          "invalid_haul",
+          "unknown_volume",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -56076,6 +56086,13 @@
             ],
             "x-unit": "m"
           },
+          "haul": {
+            "description": "With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "type": [
               "string",
@@ -56307,6 +56324,9 @@
           "invalid_label",
           "invalid_road_corridor",
           "no_terrain",
+          "unknown_haul",
+          "invalid_haul",
+          "unknown_volume",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",

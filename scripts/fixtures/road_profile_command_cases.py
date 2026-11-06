@@ -1004,6 +1004,14 @@ def draw_cases():
         c.pop("rows", None)
         c.setdefault("setup", corridor_setup)
     cases.extend(extra)
+    # Docs/adr/0995: KGM's earthwork rows under the frame, on the mass haul cases' drawing (imported here likewise).
+    import road_earthwork_band_cases as earth
+    haul_setup, extra = earth.cases()
+    for c in extra:
+        for k in ("earthwork", "profile", "view"):
+            c.pop(k, None)
+        c.setdefault("setup", haul_setup)
+    cases.extend(extra)
     return file("road.profiles.draw", "Boykesit çiz", base_setup, cases)
 
 

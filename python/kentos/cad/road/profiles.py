@@ -447,6 +447,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
         span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
@@ -492,6 +493,10 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             exaggeration: Unit: 1.
             expected_revision:
             from_: Unit: m.
+            haul: The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
+                (docs/adr/0995; KGM 2019: "Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur"; the
+                2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
+                waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
             height: Unit: paper-mm.
             span: The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
                 sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
@@ -524,6 +529,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
             span=span,
             superelevation=superelevation,
@@ -545,6 +551,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
         span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
@@ -564,6 +571,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
             span=span,
             superelevation=superelevation,
@@ -585,6 +593,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
         span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
@@ -604,6 +613,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
             span=span,
             superelevation=superelevation,
@@ -625,6 +635,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
         span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
@@ -649,6 +660,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
             span=span,
             superelevation=superelevation,
