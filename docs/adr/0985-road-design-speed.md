@@ -80,7 +80,7 @@ kutu V'yi yazamıyordu.
 
 ## Açık
 
-- **Denetimlerin hızı aksından okuması:** `road.alignments.check`, dever ve genişleme önerileri, görüş mesafesi hızı hâlâ
+- ~~**Denetimlerin hızı aksından okuması:**~~ Y80, ADR 0986. `road.alignments.check`, dever ve genişleme önerileri, görüş mesafesi hızı hâlâ
   parametre olarak alır (ROAD-ALIGN-11).
 - **Km aralığıyla hız** (Civil 3D'nin Design Speeds tablosu, LandXML `DesignSpeed`): bugün aks + kurp. LandXML'den hız
   okunmuyor.

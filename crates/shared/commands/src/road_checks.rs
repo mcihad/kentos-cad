@@ -230,8 +230,11 @@ pub const ROAD_PROFILES_LENGTHS_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RoadProfilesLengths {
     pub profile: String,
+    /// The design speed; absent: the profile's alignment's (docs/adr/0986).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
-    pub speed: f64,
+    pub speed: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]

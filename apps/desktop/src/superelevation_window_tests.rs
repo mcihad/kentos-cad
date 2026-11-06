@@ -282,3 +282,61 @@ fn screens_equation() {
         println!("{}", file.display());
     }
 }
+
+/// Denetim with the speed left empty (docs/adr/0986): the main alignment at 70 km/h, each curve's friction at its own
+/// speed; `.run/gui-evidence/yol-y80/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib superelevation_window_tests::screens_own_speed -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_own_speed() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y80");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(true);
+        let al = model(&mut app).road_superelevations()[0].alignment.clone();
+        let edit = kentos_commands::AlignmentsEdit {
+            alignment: al,
+            operation: kentos_commands::AlignmentsEditOperation::Set,
+            name: None,
+            pis: None,
+            stationing: None,
+            offset: None,
+            design_speed: Some(70.0),
+            expected_revision: None,
+        };
+        let done = kentos_native_application::road_alignments_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(model(&mut app)),
+            edit,
+        );
+        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("superelevation.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Check(1, "0,10".into()));
+        send(&mut app, W::List(crate::superelevation_window::Listed::Friction));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y80-surtunme-kendi-hizi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::List(crate::superelevation_window::Listed::Findings));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y80-bulgular-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

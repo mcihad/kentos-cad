@@ -36,9 +36,6 @@ fn judged(input: &SuperelevationsTransitions) -> Result<(), Stop> {
     if !positive(input.comfort) {
         return Err(bad("comfort", "Konfor ölçütü (ivmenin değişme hızı) 0'dan büyük olmalı (m/s³)."));
     }
-    if input.comfort.is_some() && input.speed.is_none() {
-        return Err(bad("speed", "Konforlu klotoid bir hızda okunur: proje hızını (speed) verin."));
-    }
     if !positive(input.shift) || !positive(input.most_shift) {
         return Err(bad("shift", "Klotoidin kaydırması 0'dan büyük olmalı (m)."));
     }
@@ -98,6 +95,14 @@ fn propose(
     let SuperelevationMethod::Curves { curves } = &def.method else {
         return Err(bad("superelevation", "Geçiş önerisi kurplardan kurulan dever çizelgesinde olur; bu çizelge km satırlarıyla yazılmış."));
     };
+    // A curve's comfort at the speed given, else at its own design speed (docs/adr/0986).
+    let own = crate::road_alignments::curve_speeds(doc, &def.alignment);
+    if input.comfort.is_some() && input.speed.is_none() && own.is_empty() {
+        return Err(bad(
+            "speed",
+            "Konforlu klotoid bir hızda okunur: proje hızını (speed) verin ya da aksa proje hızı yazın.",
+        ));
+    }
     let template = doc
         .road_templates()
         .iter()
@@ -121,7 +126,8 @@ fn propose(
             _ => None,
         };
         let e = rule.rate;
-        let spiral_comfort = input.speed.zip(input.comfort).map(|(v, k)| tr::comfort_spiral(v, c.radius, e, k));
+        let speed = input.speed.or_else(|| own.get(&c.pi).copied());
+        let spiral_comfort = speed.zip(input.comfort).map(|(v, k)| tr::comfort_spiral(v, c.radius, e, k));
         let spiral_shift = input.shift.map(|p| tr::shift_spiral(p, c.radius));
         let spiral_most = input.most_shift.map(|p| tr::shift_spiral(p, c.radius));
         let spiral = match (spiral_comfort, spiral_shift) {

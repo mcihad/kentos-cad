@@ -73851,7 +73851,6 @@ class RoadProfilesLengths(_Model):
     stopping sight's time and deceleration), `not_a_road_project`, `unknown_road_profile`. Warnings:
     `vertical_curve_short` (a curve shorter than its least length), `profile_stale`.
     Attributes:
-        speed: Unit: km/h.
         accel: Unit: m/s2.
         beam: Unit: deg.
         decel: Unit: m/s2.
@@ -73860,11 +73859,11 @@ class RoadProfilesLengths(_Model):
         headlight: Unit: m.
         object: Unit: m.
         passing: Unit: m.
+        speed: The design speed; absent: the profile's alignment's (docs/adr/0986). Unit: km/h.
         step: Unit: m.
         time: Unit: s.
     """
     profile: str
-    speed: float
     accel: float | None | Unset = UNSET
     beam: float | None | Unset = UNSET
     decel: float | None | Unset = UNSET
@@ -73874,13 +73873,13 @@ class RoadProfilesLengths(_Model):
     headlight: float | None | Unset = UNSET
     object: float | None | Unset = UNSET
     passing: float | None | Unset = UNSET
+    speed: float | None | Unset = UNSET
     step: float | None | Unset = UNSET
     time: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["profile"] = self.profile
-        out["speed"] = float(self.speed)
         if self.accel is not UNSET:
             out["accel"] = None if self.accel is None else float(self.accel)
         if self.beam is not UNSET:
@@ -73899,6 +73898,8 @@ class RoadProfilesLengths(_Model):
             out["object"] = None if self.object is None else float(self.object)
         if self.passing is not UNSET:
             out["passing"] = None if self.passing is None else float(self.passing)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
         if self.step is not UNSET:
             out["step"] = None if self.step is None else float(self.step)
         if self.time is not UNSET:
@@ -73909,7 +73910,6 @@ class RoadProfilesLengths(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProfilesLengths:
         return cls(
             profile=data["profile"],
-            speed=float(data["speed"]),
             accel=UNSET if "accel" not in data else None if data["accel"] is None else float(data["accel"]),
             beam=UNSET if "beam" not in data else None if data["beam"] is None else float(data["beam"]),
             decel=UNSET if "decel" not in data else None if data["decel"] is None else float(data["decel"]),
@@ -73919,6 +73919,7 @@ class RoadProfilesLengths(_Model):
             headlight=UNSET if "headlight" not in data else None if data["headlight"] is None else float(data["headlight"]),
             object=UNSET if "object" not in data else None if data["object"] is None else float(data["object"]),
             passing=UNSET if "passing" not in data else None if data["passing"] is None else float(data["passing"]),
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
             time=UNSET if "time" not in data else None if data["time"] is None else float(data["time"]),
         )

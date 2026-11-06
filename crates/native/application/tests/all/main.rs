@@ -4,6 +4,7 @@
 
 mod blocks_find;
 mod review_take;
+mod design_speeds;
 mod superelevation_reverse;
 mod ifc_files;
 mod gltf_files;

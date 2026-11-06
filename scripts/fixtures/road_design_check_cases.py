@@ -405,7 +405,8 @@ def l_head(A, S, h, b):
 def l_answer(inp):
     def bad(path, words):
         return Refused("invalid_profile_lengths", words, path)
-    if not inp.get("speed", 0) > 0:
+    # Docs/adr/0986: absent, the alignment's design speed (the cases below give it in the setup).
+    if "speed" in inp and not inp["speed"] > 0:
         raise bad("speed", "Proje hızı 0'dan büyük olmalı (km/sa).")
     for k, words in (("time", "Tepki süresi 0'dan büyük olmalı (s)."), ("decel", "Yavaşlama 0'dan büyük olmalı (m/s²)."),
                      ("eye", "Göz yüksekliği 0'dan büyük olmalı (m)."), ("object", "Engel yüksekliği 0'dan büyük olmalı (m)."),
@@ -534,6 +535,18 @@ def lengths_cases():
     q("Yol projesi değil", {"profile": "b-1", "speed": 80.0, "accel": 0.3},
       failed("not_a_road_project", "Boykesit yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
       setup_=setup("map"))
+    # Docs/adr/0986: without `speed`, the profile's alignment's design speed (docs/adr/0985); with neither, a refusal.
+    fast = setup()
+    al = next(p["alignment"] for p in fast["settings"]["road"]["profiles"] if p["id"] == "b-1")
+    next(a for a in fast["settings"]["road"]["alignments"] if a["id"] == al)["designSpeed"] = 80.0
+    o, w = l_answer({"profile": "b-1", "speed": 80.0, **aashto, "accel": 0.3})
+    out.append({"name": "Hız verilmez: aksın proje hızıyla", "setup": fast, "steps": [{
+        "op": "execute", "input": {"profile": "b-1", **aashto, "accel": 0.3},
+        "result": {"status": "completed", "output": o, "warnings": w},
+        "expect": {**UNCHANGED, "road": fast["settings"]["road"]}, "within": W}]})
+    q("Hız yok, aksın da yok", {"profile": "b-1", **aashto},
+      failed("invalid_profile_lengths",
+             "Görüş ve konfor bir hızda okunur: proje hızını (speed) verin ya da aksa proje hızı yazın.", "speed"))
     return out
 
 

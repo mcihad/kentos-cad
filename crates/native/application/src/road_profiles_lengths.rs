@@ -19,7 +19,7 @@ fn bad(path: &str, words: &str) -> Stop {
 
 /// The input's own values judged.
 fn judged(q: &RoadProfilesLengths) -> Result<(), Stop> {
-    if !(q.speed.is_finite() && q.speed > 0.0) {
+    if !q.speed.is_none_or(|v| v.is_finite() && v > 0.0) {
         return Err(bad("speed", "Proje hızı 0'dan büyük olmalı (km/sa)."));
     }
     let positive = |v: Option<f64>| v.is_none_or(|x| x.is_finite() && x > 0.0);
@@ -77,9 +77,13 @@ fn lengths_def(
     def: &kentos_commands::ProfileDef,
     q: &RoadProfilesLengths,
 ) -> Result<(RoadProfileLengths, Vec<CommandWarning>), Stop> {
+    // The speed given, else the alignment's design speed (docs/adr/0986).
+    let speed = q.speed.or_else(|| crate::road_alignments::design_speed(doc, &def.alignment)).ok_or_else(|| {
+        bad("speed", "Görüş ve konfor bir hızda okunur: proje hızını (speed) verin ya da aksa proje hızı yazın.")
+    })?;
     let built = common::build(doc, def)?;
     let stopping_at = |grade: f64| match (q.time, q.decel) {
-        (Some(t), Some(a)) => len::stopping(q.speed, t, a, grade),
+        (Some(t), Some(a)) => len::stopping(speed, t, a, grade),
         _ => None,
     };
     let level = stopping_at(0.0);
@@ -125,7 +129,7 @@ fn lengths_def(
                 criteria.push(CurveCriterion { kind: "headlight".into(), sight: Some(s), length: len::headlight(a, s, h, b) });
             }
             if let Some(acc) = q.accel {
-                criteria.push(CurveCriterion { kind: "comfort".into(), sight: None, length: len::comfort(a, q.speed, acc) });
+                criteria.push(CurveCriterion { kind: "comfort".into(), sight: None, length: len::comfort(a, speed, acc) });
             }
         }
         if let Some(e) = q.external {

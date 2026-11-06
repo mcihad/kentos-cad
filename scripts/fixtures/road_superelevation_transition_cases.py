@@ -150,6 +150,11 @@ def answer(d, t, q):
 def setup(supers=SUPERS, work="road"):
     return sup.setup(supers=supers, work=work)
 
+def with_design_speed(base, design):
+    """Docs/adr/0986: g-1 at a design speed (docs/adr/0985)."""
+    next(a for a in base["settings"]["road"]["alignments"] if a["id"] == "g-1")["designSpeed"] = design
+    return base
+
 
 def cases():
     out = []
@@ -200,7 +205,13 @@ def cases():
        bad("superelevation", "Geçiş önerisi kurplardan kurulan dever çizelgesinde olur; bu çizelge km satırlarıyla yazılmış."))
     no("Sıfır göreli eğim", {**one, "mostRelative": 0.0},
        bad("mostRelative", "En büyük göreli eğim 0 ile 1 arası olmalı (oran; 0,005 = 1:200)."))
-    no("Hızsız konfor", {**one, "comfort": 0.6}, bad("speed", "Konforlu klotoid bir hızda okunur: proje hızını (speed) verin."))
+    no("Hızsız konfor", {**one, "comfort": 0.6},
+       bad("speed", "Konforlu klotoid bir hızda okunur: proje hızını (speed) verin ya da aksa proje hızı yazın."))
+    # Docs/adr/0986: without `speed` a curve's comfort is read at its alignment's design speed.
+    fast = with_design_speed(setup(), 80.0)
+    result, warns = answer(D1, tk1, {**one, "speed": 80.0, "comfort": 0.6})
+    out.append(case("Hız verilmez: konfor aksın proje hızıyla", [step("execute", {**one, "comfort": 0.6},
+                    completed(result, warns), {**UNCHANGED, "road": fast["settings"]["road"]})], fast))
     no("Sıfır konfor", {**one, "speed": 80.0, "comfort": 0.0},
        bad("comfort", "Konfor ölçütü (ivmenin değişme hızı) 0'dan büyük olmalı (m/s³)."))
     no("En büyük kaydırma en küçükten küçük", {**one, "shift": 0.5, "mostShift": 0.2},

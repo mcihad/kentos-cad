@@ -192,6 +192,10 @@ def cases():
     bad = lambda path, words: failed("invalid_widening", words, path)  # noqa: E731
     base_in = {"superelevation": "d-1", "template": "tk-1", "vehicle": WB19, "clearance": 0.9}
     q("Çekici ve römork, 80 km/sa", {**base_in, "speed": 80.0}, D1, tk1, vehicle=WB19, clearance=0.9, speed=80.0)
+    # Docs/adr/0986: without `speed` a curve's speed term is read at its alignment's design speed (docs/adr/0985).
+    fast = sup.setup()
+    next(a for a in fast["settings"]["road"]["alignments"] if a["id"] == "g-1")["designSpeed"] = 80.0
+    q("Hız verilmez: aksın proje hızıyla", base_in, D1, tk1, base=fast, vehicle=WB19, clearance=0.9, speed=80.0)
     q("Basit yöntem: N(U + C)", {**base_in, "speed": 80.0, "method": "simple"}, D1, tk1, vehicle=WB19, clearance=0.9,
       speed=80.0, method="simple")
     q("Hızsız: sürüş payı yok", base_in, D1, tk1, vehicle=WB19, clearance=0.9)

@@ -466,6 +466,28 @@ pub(crate) fn alignments(doc: &Document) -> &[AlignmentDef] {
     doc.road_alignments()
 }
 
+/// The alignment whose PIs a design speed is read from (docs/adr/0985): the alignment itself, a parallel axis's source.
+fn speed_source<'a>(doc: &'a Document, alignment: &str) -> Option<&'a AlignmentDef> {
+    let list = alignments(doc);
+    let a = list.iter().find(|a| a.id == alignment)?;
+    match &a.offset_of {
+        Some(o) => list.iter().find(|s| s.id == o.alignment),
+        None => Some(a),
+    }
+}
+
+/// An alignment's design speed, km/h (docs/adr/0985; a parallel axis's is its source's); none when it has none.
+pub(crate) fn design_speed(doc: &Document, alignment: &str) -> Option<f64> {
+    speed_source(doc, alignment)?.design_speed
+}
+
+/// Each curve's design speed by its PI's id (docs/adr/0985, docs/adr/0986): the PI's own, else the alignment's; a PI
+/// with neither is left out.
+pub(crate) fn curve_speeds(doc: &Document, alignment: &str) -> std::collections::BTreeMap<String, f64> {
+    let Some(a) = speed_source(doc, alignment) else { return Default::default() };
+    a.pis.iter().filter_map(|p| p.speed.or(a.design_speed).map(|v| (p.id.clone(), v))).collect()
+}
+
 pub(crate) fn listed(list: &[AlignmentDef]) -> Vec<AlignmentListed> {
     list.iter()
         .map(|a| AlignmentListed {
