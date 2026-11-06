@@ -1770,13 +1770,7 @@ impl Spatial {
                 } else if what == LABEL_PIECE_TEXT || what == LABEL_PIECE_LEADER {
                     let piece = self.piece(r[0], r[6])?;
                     // The text piece whole, placed: what an SHX font lays out (docs/adr/1020).
-                    // The piece the block holds is in its own coordinates; the store's expanded one is placed.
-                    let placed = self
-                        .store
-                        .get(r[0])
-                        .and_then(|it| it.expanded.as_deref()?.shapes.get(r[6] as usize).cloned())
-                        .filter(|s| matches!(s, Shape::Text { .. }))
-                        .map(Box::new);
+                    let placed = self.placed_text(r[0], r[6]);
                     let (text, attribute, face) = match piece.shape {
                         Shape::Text { text, face, .. } => (text, piece.attribute, face),
                         // A leader's note among a block's pieces (docs/adr/0146 §5).
@@ -1809,6 +1803,7 @@ impl Spatial {
                         piece: None,
                         face: None,
                         unicode: self.store.get(r[0]).and_then(|it| self.unicode(r[0],None,&it.shape)),
+                        placed: None,
                     }
                 } else if what == LABEL_PIECE_LINE {
                     let shape = self.piece(r[0],r[6])?.shape;
@@ -1834,6 +1829,7 @@ impl Spatial {
                         piece: Some(std::rc::Rc::new((text, runs.unwrap_or_default()))),
                         face: Some(face),
                         unicode,
+                        placed: self.placed_text(r[0], r[6]),
                     }
                 } else if what == LABEL_PARAGRAPH_MASK {
                     // Its text's slant: the object's own, or a block's piece's (its place, d).
@@ -1853,6 +1849,10 @@ impl Spatial {
                         width: r[5],
                         height: r[6],
                         lean,
+                        placed: match self.store.get(r[0]).map(|it| &it.shape) {
+                            Some(Shape::Insert { .. }) => self.placed_text(r[0], r[7]),
+                            _ => None,
+                        },
                     }
                 } else if what == LABEL_CELL {
                     LabelSpot::Cell {
@@ -1896,6 +1896,20 @@ impl Spatial {
     }
 
     /// Piece `place` of the insert `id`'s effective definition, as indexed by the label records.
+    /// A block's text piece as the insert places it (the store's expanded shape; the block's own piece is in the
+    /// block's coordinates): what an SHX font lays out (docs/adr/1020, 1022).
+    fn placed_text(&self, id: f64, place: f64) -> Option<Box<Shape>> {
+        self.store
+            .get(id)?
+            .expanded
+            .as_deref()?
+            .shapes
+            .get(place as usize)
+            .filter(|s| matches!(s, Shape::Text { .. }))
+            .cloned()
+            .map(Box::new)
+    }
+
     fn piece(&self, id: f64, place: f64) -> Option<kentos_geometry_core::block::Piece> {
         let it = self.store.get(id)?;
         if matches!(&it.shape, Shape::Insert { .. }) {
@@ -2155,6 +2169,9 @@ pub enum LabelSpot {
         face: Option<kentos_geometry_core::text::face::Face>,
         /// One shared Unicode plan, retained with this object's label part.
         unicode: Option<std::rc::Rc<UnicodeText>>,
+        /// A block's piece placed by its insert (its whole paragraph): an SHX font draws it whole at its first line
+        /// (docs/adr/1022); none for a text object's own line.
+        placed: Option<Box<Shape>>,
     },
     /// A multi-line text's mask (docs/adr/0182 §3): the box from `at` (its
     /// corner under the first letter's left) `width` along its baseline and
@@ -2168,6 +2185,8 @@ pub enum LabelSpot {
         /// The slant's tangent of the text it is under: the box leans from
         /// its corner (docs/adr/0183 §2); 0 upright.
         lean: f64,
+        /// A block's piece placed by its insert: an SHX font's text draws its own box as its mask (docs/adr/1022).
+        placed: Option<Box<Shape>>,
     },
     /// One cell's words of a table (docs/adr/0184 §2): from where their
     /// baseline starts, turned by `rotation`; the words, height and face its

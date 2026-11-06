@@ -53,14 +53,16 @@ fn drawing(app: &mut App) {
     o.line("dot", [0.0, -14.0], [40.0, -24.0]);
     o.circle("dot", [58.0, -18.0], 6.0);
     // docs/adr/1020: a block's one-line text in the SHX style, through an insert straight and one turned 30°
-    // (an insert turns in radians); its multi-line text stays in the style's face and the inspection says so.
+    // (an insert turns in radians); its two-line text too (docs/adr/1022).
     o.insert("shx", SHX_BLOCK, [0.0, -40.0], 1.0, 0.0, false);
     o.insert("shx", SHX_BLOCK, [30.0, -44.0], 1.5, 30f64.to_radians(), false);
     open_edited(app, o, |d| {
         d["blocks"] = json!([{"id": SHX_BLOCK, "name": "SHX-ETIKET", "base": {"x": 0.0, "y": 0.0}, "entities": [
             {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": -1.0, "y": -1.0}, "b": {"x": 14.0, "y": -1.0}},
             {"kind": "text", "id": 2, "layerId": "", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "text": "SUS-U",
-             "height": 2.5, "rotation": 0.0, "textStyle": SHX}]}]);
+             "height": 2.5, "rotation": 0.0, "textStyle": SHX},
+            {"kind": "text", "id": 3, "layerId": "", "attrs": {}, "p": {"x": 16.0, "y": 3.0}, "text": "SU\nUS-S",
+             "height": 1.5, "rotation": 0.0, "textStyle": SHX, "lineSpacing": 1.2}]}]);
         let mut dots = layer("dot", "NOKTA", "#E5484D", 2.0);
         dots["style"]["lineType"] = json!("dashed");
         dots["style"]["linePattern"] = json!("DD");
@@ -102,7 +104,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         }),
         ("shx-blok-metin", |app| {
             drawing(app);
-            fit(app, [-3.0, -48.0, 55.0, -26.0]);
+            fit(app, [-3.0, -50.0, 64.0, -20.0]);
         }),
         ("nokta-yuvarlak", |app| {
             drawing(app);

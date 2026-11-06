@@ -212,7 +212,7 @@ fn shx_text_pictures() {
     std::fs::write(dir.join("adr1125-shx-metin-1-250-cpu.png"), &image.png).unwrap();
 }
 
-/// docs/adr/1020: a block's one-line text in an embedded SHX style prints the same strokes as the text object would
+/// docs/adr/1020, 1022: a block's text (one line or several) in an embedded SHX style prints the same strokes as the text object would
 /// where the insert puts it (an insert turns in radians, a text in degrees). The reference case's text is put in a block so that the insert (moved, and turned a
 /// quarter) places it at the case's own point and turn: the strokes are the reference's, at the insert's weight;
 /// no substitute face is written and nothing is said substituted.
@@ -220,7 +220,10 @@ fn shx_text_pictures() {
 fn a_blocks_text_prints_in_its_embedded_shx_font_where_the_insert_puts_it() {
     let expected = expected();
     let cases = expected["texts"].as_array().unwrap();
-    for name in ["Sol taban", "Çarpan, eğiklik ve dönüş birlikte", "Big Font karakteri"] {
+    // One line, and (docs/adr/1022) several lines and a wrapped box, drawn whole at their first line.
+    for name in ["Sol taban", "Çarpan, eğiklik ve dönüş birlikte", "Big Font karakteri", "Üç satır, aralık 1,5, üst sağ",
+        "Kutuya kaydırma, ortalı"]
+    {
         let case = cases.iter().find(|c| c["name"] == name).unwrap();
         for (turn, at) in [(0.0f64, [3.0, -2.0]), (90.0, [4.0, 1.0])] {
             let (mut doc, b) = drawn(case, 100, &["kentos-uni.shx", "kentos-big.shx"], None);

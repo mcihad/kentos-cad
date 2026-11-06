@@ -204,6 +204,14 @@ pub fn piece_text(shape: &kentos_geometry_core::entity::Shape, shown: &str) -> O
     Some(t)
 }
 
+/// [`piece_text`] showing the piece's own words (a multi-line piece: its whole paragraph, docs/adr/1022).
+pub fn placed_piece(shape: &kentos_geometry_core::entity::Shape) -> Option<TextEntity> {
+    let kentos_geometry_core::entity::Shape::Text { text, .. } = shape else {
+        return None;
+    };
+    piece_text(shape, text)
+}
+
 /// The most texts [`place_cached`] keeps per thread before it starts again.
 const CACHED: usize = 4096;
 
