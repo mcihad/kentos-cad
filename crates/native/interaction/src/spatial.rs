@@ -1769,6 +1769,14 @@ impl Spatial {
                     }
                 } else if what == LABEL_PIECE_TEXT || what == LABEL_PIECE_LEADER {
                     let piece = self.piece(r[0], r[6])?;
+                    // The text piece whole, placed: what an SHX font lays out (docs/adr/1020).
+                    // The piece the block holds is in its own coordinates; the store's expanded one is placed.
+                    let placed = self
+                        .store
+                        .get(r[0])
+                        .and_then(|it| it.expanded.as_deref()?.shapes.get(r[6] as usize).cloned())
+                        .filter(|s| matches!(s, Shape::Text { .. }))
+                        .map(Box::new);
                     let (text, attribute, face) = match piece.shape {
                         Shape::Text { text, face, .. } => (text, piece.attribute, face),
                         // A leader's note among a block's pieces (docs/adr/0146 §5).
@@ -1787,6 +1795,7 @@ impl Spatial {
                         width_factor: r[7],
                         mask: r[8],
                         face,
+                        placed,
                     }
                 } else if what == LABEL_LINE {
                     LabelSpot::Line {
@@ -2125,6 +2134,9 @@ pub enum LabelSpot {
         mask: f64,
         /// The piece's face (docs/adr/0183 §2); a leader's note has none.
         face: kentos_geometry_core::text::face::Face,
+        /// A text piece's shape as the insert places it (its point, alignment, box, runs): an SHX font lays it out
+        /// (docs/adr/1020); none for a leader's note.
+        placed: Option<Box<Shape>>,
     },
     /// One line of a multi-line text (docs/adr/0182 §3): its letters
     /// `start..end` (Unicode scalar values) from where its baseline starts,

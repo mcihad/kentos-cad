@@ -181,6 +181,29 @@ pub fn place(settings: &ProjectSettings, resources: &ProjectStyles, t: &TextEnti
     Some(Fonts::of(style, resources).and_then(|f| lay_out(&f, t)))
 }
 
+/// A block's text piece as an insert places it (`shape`, the store's `Shape::Text`; `shown`, the words it shows: an
+/// attribute's value or its default) made a text for [`place`]/[`place_cached`] (docs/adr/1020): its point,
+/// alignment, height, turn, width, box, runs and face are the placed piece's. None for any other shape.
+pub fn piece_text(shape: &kentos_geometry_core::entity::Shape, shown: &str) -> Option<TextEntity> {
+    let kentos_geometry_core::entity::Shape::Text { face, .. } = shape else {
+        return None;
+    };
+    // The smallest text the contract reads; its fields then come from the placed piece.
+    let Ok(kentos_commands::Entity::Text(mut base)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+        {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "text": "", "height": 1.0,
+         "rotation": 0.0}))
+    else {
+        return None;
+    };
+    base.face = crate::geometry::contract_face(face.clone());
+    let template = kentos_commands::Entity::Text(base);
+    let kentos_commands::Entity::Text(mut t) = crate::geometry::with_shape(&template, shape.clone())? else {
+        return None;
+    };
+    shown.clone_into(&mut t.text);
+    Some(t)
+}
+
 /// The most texts [`place_cached`] keeps per thread before it starts again.
 const CACHED: usize = 4096;
 

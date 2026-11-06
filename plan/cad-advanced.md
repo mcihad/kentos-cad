@@ -1820,6 +1820,12 @@ parça düzeyinde kesin kırpma açık.
   kutusunun SHX genişliği; AutoCAD `A` hizalaması/PLINEGEN=0; 2M nokta sınırının ötesi; parça düzeyinde kesin kırpma;
   genel performans kabulü. Madde `[~]`.
 
+**Blok yazısı SHX ile (6 Kasım 2026, [ADR 1020](../docs/adr/1020-block-texts-in-their-shx-font.md)):** Bloğun tek
+satırlık yazısı, gömülü SHX stilindeyse yazı nesnesi gibi fontun çizgileriyle ekranda, PDF'de ve CPU baskısında
+çizilir; yerleştirmenin noktası, dönüşü ve ölçeği geçer. Bağımsız başvurunun çizgileriyle kaydırılmış ve dönmüş
+yerleştirmede aynı çıktığı test edildi; `shx-blok-metin` resmi bakıldı. Çok satırlı blok yazısı, boyut, kılavuz ve
+tablo yazısı açık.
+
 ### CAD-ADV-12 — Katman, stil, şablon ve araç paletini sürümlü ofis standardına bağla [~]
 
 **Öncelik:** P1. **Kod:** [C20], [C05], [C25].

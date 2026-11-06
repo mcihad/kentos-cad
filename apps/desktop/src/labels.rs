@@ -1843,6 +1843,7 @@ impl Labels<'_> {
                             width_factor,
                             mask,
                             face,
+                            placed,
                             ..
                         },
                         _,
@@ -1854,6 +1855,16 @@ impl Labels<'_> {
                         );
                         if shown.is_empty() {
                             continue;
+                        }
+                        // A block's text in its style's embedded SHX font (docs/adr/1020), as a text object is.
+                        if let Some(t) = placed
+                            .as_deref()
+                            .and_then(|s| kentos_native_application::shx_text::piece_text(s, &shown))
+                        {
+                            let ink = if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label };
+                            if self.shx_text(frame, slot, &t, ink) {
+                                continue;
+                            }
                         }
                         let (font, lean) = face_font(&contract_face(face), self.font, true, None);
                         self.draw(

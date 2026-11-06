@@ -211,3 +211,52 @@ fn shx_text_pictures() {
     let image = kentos_plot::preview::page(&doc, "ground", "Test", "2026-11-06", None, 300).unwrap();
     std::fs::write(dir.join("adr1125-shx-metin-1-250-cpu.png"), &image.png).unwrap();
 }
+
+/// docs/adr/1020: a block's one-line text in an embedded SHX style prints the same strokes as the text object would
+/// where the insert puts it (an insert turns in radians, a text in degrees). The reference case's text is put in a block so that the insert (moved, and turned a
+/// quarter) places it at the case's own point and turn: the strokes are the reference's, at the insert's weight;
+/// no substitute face is written and nothing is said substituted.
+#[test]
+fn a_blocks_text_prints_in_its_embedded_shx_font_where_the_insert_puts_it() {
+    let expected = expected();
+    let cases = expected["texts"].as_array().unwrap();
+    for name in ["Sol taban", "Çarpan, eğiklik ve dönüş birlikte", "Big Font karakteri"] {
+        let case = cases.iter().find(|c| c["name"] == name).unwrap();
+        for (turn, at) in [(0.0f64, [3.0, -2.0]), (90.0, [4.0, 1.0])] {
+            let (mut doc, b) = drawn(case, 100, &["kentos-uni.shx", "kentos-big.shx"], None);
+            let mut raw = serde_json::to_value(doc.to_snapshot()).unwrap();
+            let mut text = raw["entities"][0].clone();
+            let (p, r) = (&case["text"]["p"], case["text"]["rotation"].as_f64().unwrap_or(0.));
+            let d = [p["x"].as_f64().unwrap() - at[0], p["y"].as_f64().unwrap() - at[1]];
+            // The block's point q with turn(q) + at = p.
+            let (s, c) = (-turn).to_radians().sin_cos();
+            text["p"] = json!({"x": d[0] * c - d[1] * s, "y": d[0] * s + d[1] * c});
+            text["rotation"] = json!(r - turn);
+            text["layerId"] = json!("");
+            text.as_object_mut().unwrap().remove("lineWeight");
+            let block = "0192f5a1-5555-7000-8000-000000000001";
+            raw["blocks"] = json!([{"id": block, "name": "SHX-BLOK", "base": {"x": 0.0, "y": 0.0}, "entities": [text]}]);
+            raw["entities"] = json!([{"kind": "insert", "id": 1, "layerId": raw["entities"][0]["layerId"], "attrs": {},
+                "lineWeight": 0.35, "block": block, "p": {"x": at[0], "y": at[1]}, "scale": 1.0, "rotation": turn.to_radians()}]);
+            let sheets = doc.sheets().cloned();
+            doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+            doc.set_sheets(sheets).unwrap();
+            let (paths, texts) = vectors(&doc, &b, 100.);
+            assert_eq!(texts, 0, "{name} {turn}°: no substitute face written");
+            let strokes: Vec<_> = paths.iter().filter(|p| p.stroke.as_ref().is_some_and(|s| s.cap == kentos_sheet::LineCap::Round)).collect();
+            let want = case["paths"].as_array().unwrap();
+            assert_eq!(strokes.len(), want.len(), "{name} {turn}°");
+            for (got, want) in strokes.iter().zip(want) {
+                assert!((got.stroke.as_ref().unwrap().width - 0.35).abs() < 1e-12, "{name}: the insert's weight");
+                let want = want.as_array().unwrap();
+                assert_eq!(got.points.len(), want.len(), "{name}");
+                for (g, w) in got.points.iter().zip(want) {
+                    assert!((g[0] - w[0].as_f64().unwrap()).abs() < 1e-9 && (g[1] - w[1].as_f64().unwrap()).abs() < 1e-9,
+                        "{name} {turn}°: {g:?} {w}");
+                }
+            }
+            assert!(findings(&doc, &b, "text_font_substituted").is_empty(), "{name}: drawn in its font, not substituted");
+            assert!(findings(&doc, &b, "text_shx_unsupported").is_empty());
+        }
+    }
+}

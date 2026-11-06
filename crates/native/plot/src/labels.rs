@@ -381,6 +381,7 @@ pub fn labels_in_view(
                     width_factor,
                     mask,
                     face: f,
+                    placed,
                     ..
                 },
                 _,
@@ -401,6 +402,16 @@ pub fn labels_in_view(
                     &kentos_native_application::geometry::contract_face(f.clone()),
                     true,
                 );
+                // A block's text in its style's embedded SHX font (docs/adr/1020), as the text object is (ADR 1125):
+                // the insert's line weight, the piece's own box as its mask.
+                if let Some(t) = placed
+                    .as_deref()
+                    .and_then(|s| kentos_native_application::shx_text::piece_text(s, &l.text))
+                    && let Some(Ok(p)) = shx_of(&t).as_deref()
+                {
+                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), t.mask);
+                    ground_mask = 0.;
+                }
             }
             (
                 LabelSpot::PieceDimension {

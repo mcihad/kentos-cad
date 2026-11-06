@@ -5,7 +5,7 @@
 //! `tools_screens` takes them:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=shx-metin-cizim,shx-metin-yakin,nokta-yuvarlak cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=shx-metin-cizim,shx-metin-yakin,shx-blok-metin,nokta-yuvarlak cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -26,6 +26,7 @@ fn resources() -> serde_json::Value {
 }
 
 const SHX: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1125";
+const SHX_BLOCK: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d1020";
 
 fn drawing(app: &mut App) {
     let mut o = Objects::new();
@@ -51,7 +52,15 @@ fn drawing(app: &mut App) {
     o.line("dot", [0.0, -8.0], [70.0, -8.0]);
     o.line("dot", [0.0, -14.0], [40.0, -24.0]);
     o.circle("dot", [58.0, -18.0], 6.0);
+    // docs/adr/1020: a block's one-line text in the SHX style, through an insert straight and one turned 30°
+    // (an insert turns in radians); its multi-line text stays in the style's face and the inspection says so.
+    o.insert("shx", SHX_BLOCK, [0.0, -40.0], 1.0, 0.0, false);
+    o.insert("shx", SHX_BLOCK, [30.0, -44.0], 1.5, 30f64.to_radians(), false);
     open_edited(app, o, |d| {
+        d["blocks"] = json!([{"id": SHX_BLOCK, "name": "SHX-ETIKET", "base": {"x": 0.0, "y": 0.0}, "entities": [
+            {"kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": {"x": -1.0, "y": -1.0}, "b": {"x": 14.0, "y": -1.0}},
+            {"kind": "text", "id": 2, "layerId": "", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "text": "SUS-U",
+             "height": 2.5, "rotation": 0.0, "textStyle": SHX}]}]);
         let mut dots = layer("dot", "NOKTA", "#E5484D", 2.0);
         dots["style"]["lineType"] = json!("dashed");
         dots["style"]["linePattern"] = json!("DD");
@@ -90,6 +99,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("shx-metin-yakin", |app| {
             drawing(app);
             fit(app, [-1.0, 1.0, 32.0, 34.0]);
+        }),
+        ("shx-blok-metin", |app| {
+            drawing(app);
+            fit(app, [-3.0, -48.0, 55.0, -26.0]);
         }),
         ("nokta-yuvarlak", |app| {
             drawing(app);
