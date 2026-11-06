@@ -91,3 +91,33 @@ fn not_a_kcad_is_refused() {
     assert!(salvage(b"{\"format\": \"kentos.document\"}").is_err());
     assert!(salvage(&FILE[..20]).is_err());
 }
+
+/// docs/adr/1013 (blocks): definition 1 of three given definition 0's id loses that definition alone (an id twice)
+/// and the one insert of it (its block gone); the other definitions and objects come back.
+#[test]
+fn a_definition_whose_id_is_taken_twice_goes_with_its_inserts_alone() {
+    let file: &[u8] = include_bytes!("../../../../../fixtures/kcad/v2/block-extras.kcad");
+    let original = kentos_kcad::decode(file).expect("the fixture");
+    assert_eq!(original.blocks.len(), 3);
+    let (first, second) = (original.blocks[0].id, original.blocks[1].id);
+    let mut needle = vec![0x50u8];
+    needle.extend_from_slice(&second.0);
+    // The definitions come before the objects (key order): the first time the id is there is the definition's own.
+    let at = file.windows(17).position(|w| w == needle.as_slice()).expect("the definition's id");
+    let mut data = file.to_vec();
+    data[at + 1..at + 17].copy_from_slice(&first.0);
+    let got = salvage(&data).expect("recovers");
+    let parts: Vec<&str> = got.lost.iter().map(|l| l.part.as_str()).collect();
+    assert!(parts.contains(&"document.blocks[1]"), "{:?}", got.lost);
+    let ids: Vec<_> = got.document.blocks.iter().map(|b| b.id).collect();
+    assert_eq!(ids, vec![original.blocks[0].id, original.blocks[2].id]);
+    // The inserts of the lost definition go, each said; the others stay.
+    let of_second = original
+        .entities
+        .iter()
+        .filter(|e| matches!(e, kentos_contracts::Entity::Insert(i) if i.block == second))
+        .count();
+    assert!(of_second > 0);
+    assert_eq!(got.objects_kept, original.entities.len() - of_second, "{:?}", got.lost);
+    assert_eq!(got.lost.iter().filter(|l| l.part.starts_with("entities[")).count(), of_second);
+}

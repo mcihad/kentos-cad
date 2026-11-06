@@ -57,7 +57,11 @@ yazar ve kaynağı yalnız okur.
 
 ## 4. Sınırlar
 
-- Kurtarma blok tanımlarını ve sayfaları bölüm düzeyinde tutar ya da çıkarır; bir bloğun içindeki tek bozuk nesne
-  bütün `blocks` bölümünü (ve onun yerleştirmelerini) götürür. Tanım düzeyinde bölme ayrı iştir.
+- Ek (6 Kasım 2026): dizi değerli bölümlerde (blok tanımları, katmanlar, paftalar…) öğeler de ikiye bölünerek geri
+  konur; bölüm, ancak onsuz çizim okunuyorsa öğe öğe sınanır (yoksa suç onda değildir), boş liste yazılmadığı için
+  hiçbir öğesi okunmayan bölüm çıkarılır. Okunmayan öğe `document.<anahtar>[i]` olarak söylenir; bozuk tanımın
+  yerleştirmeleri `unknown_block` ile ayrı ayrı söylenir, öbür tanımlar kalır (`salvage::a_definition_whose_id_is_
+  taken_twice_goes_with_its_inserts_alone`). Bir tanımın içindeki tek bozuk nesne o tanımı götürür; tanımın içini
+  bölmek ayrı iştir.
 - Sıkıştırılmış yük (bugün yazılmıyor) ve v1 JSON dosyaları kurtarılmaz.
 - Gerçek disk dolu (ENOSPC) senaryosu hâlâ kanıtlanmadı (ADR 1006 yazma reddini sınar).

@@ -321,6 +321,41 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
     };
     while let Some(why) = reason.clone() {
         let mut dropped = false;
+        // A list (block definitions, layers, sheets…): its items that read are kept, one by one, before the key goes.
+        for i in (0..doc.len()).rev() {
+            let key = text(&doc[i].0).unwrap_or_default();
+            if key == "entities" {
+                continue;
+            }
+            let Item::Array(items) = doc[i].1.clone() else { continue };
+            if items.is_empty() {
+                continue;
+            }
+            // Only when the list is what keeps the drawing from reading: without it (an empty list is not written),
+            // the rest reads.
+            let mut without = doc.clone();
+            without.remove(i);
+            if strict(&root, &without).is_err() {
+                continue;
+            }
+            let (kept, out) = bisect(&root, &doc, i, items, &format!("document.{key}"), |_| None);
+            let mut next = doc.clone();
+            if kept.is_empty() {
+                next.remove(i);
+            } else {
+                next[i].1 = Item::Array(kept);
+            }
+            if strict(&root, &next).is_ok() {
+                lost.extend(out);
+                doc = next;
+                reason = None;
+                dropped = true;
+                break;
+            }
+        }
+        if dropped {
+            continue;
+        }
         for i in (0..doc.len()).rev() {
             let key = text(&doc[i].0).unwrap_or_default();
             if key == "entities" {
@@ -344,31 +379,8 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
     }
     // The objects back, half by half.
     let slot = doc.iter().position(|(k, _)| text(k).as_deref() == Some("entities")).expect("put there");
-    let mut kept_objects: Vec<Item> = Vec::new();
-    let mut pending: Vec<(usize, Vec<Item>)> = vec![(0, objects)];
-    while let Some((first, batch)) = pending.pop() {
-        if batch.is_empty() {
-            continue;
-        }
-        let mut trial = kept_objects.clone();
-        trial.extend(batch.iter().cloned());
-        doc[slot].1 = Item::Array(trial.clone());
-        match strict(&root, &doc) {
-            Ok(_) => kept_objects = trial,
-            Err(e) if batch.len() == 1 => lost.push(Lost {
-                part: format!("entities[{first}]"),
-                uid: uid_of(&batch[0]),
-                reason: said(&e),
-            }),
-            Err(_) => {
-                let half = batch.len() / 2;
-                let (a, b) = batch.split_at(half);
-                // Taken in the file's order: the first half is tried first.
-                pending.push((first + half, b.to_vec()));
-                pending.push((first, a.to_vec()));
-            }
-        }
-    }
+    let (kept_objects, out) = bisect(&root, &doc, slot, objects, "entities", uid_of);
+    lost.extend(out);
     doc[slot].1 = Item::Array(kept_objects.clone());
     let document = strict(&root, &doc)?;
     let kept = doc.iter().filter_map(|(k, _)| text(k)).collect();
@@ -449,6 +461,44 @@ fn fill_required(doc: &mut Vec<(Item, Item)>, lost: &mut Vec<Lost>) -> Result<()
     // Back in the profile's key order.
     doc.sort_by(|a, b| crate::cbor::key_order(&text(&a.0).unwrap_or_default(), &text(&b.0).unwrap_or_default()));
     Ok(())
+}
+
+/// The items of the list at `doc[slot]` that read, put back half by half in the file's order (a bad item among n
+/// costs about log n strict reads); each one that does not read alone is lost as `<part>[i]`, with the reader's words.
+fn bisect(
+    root: &[(Item, Item)],
+    doc: &[(Item, Item)],
+    slot: usize,
+    items: Vec<Item>,
+    part: &str,
+    uid: impl Fn(&Item) -> Option<String>,
+) -> (Vec<Item>, Vec<Lost>) {
+    let mut doc = doc.to_vec();
+    let mut kept: Vec<Item> = Vec::new();
+    let mut lost = Vec::new();
+    let mut pending: Vec<(usize, Vec<Item>)> = vec![(0, items)];
+    while let Some((first, batch)) = pending.pop() {
+        if batch.is_empty() {
+            continue;
+        }
+        let mut trial = kept.clone();
+        trial.extend(batch.iter().cloned());
+        doc[slot].1 = Item::Array(trial.clone());
+        match strict(root, &doc) {
+            Ok(_) => kept = trial,
+            Err(e) if batch.len() == 1 => {
+                lost.push(Lost { part: format!("{part}[{first}]"), uid: uid(&batch[0]), reason: said(&e) })
+            }
+            Err(_) => {
+                let half = batch.len() / 2;
+                let (a, b) = batch.split_at(half);
+                // Taken in the file's order: the first half is tried first.
+                pending.push((first + half, b.to_vec()));
+                pending.push((first, a.to_vec()));
+            }
+        }
+    }
+    (kept, lost)
 }
 
 fn entity_place(part: &str) -> usize {
