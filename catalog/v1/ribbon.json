@@ -867,6 +867,14 @@
        {
         "command": "zoning.check",
         "size": "small"
+       },
+       {
+        "command": "scenario.create",
+        "size": "small"
+       },
+       {
+        "command": "scenario.impact",
+        "size": "small"
        }
       ]
      },
@@ -3806,6 +3814,10 @@
        },
        {
         "command": "scenario.compare",
+        "size": "small"
+       },
+       {
+        "command": "scenario.impact",
         "size": "small"
        },
        {

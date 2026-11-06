@@ -1975,6 +1975,8 @@ codes! {
     CLEAN_BEYOND_ACCEPTANCE = "clean_beyond_acceptance", Failed, false, "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı.";
     /// Parsel alan denetimi (docs/adr/1400): an object given that is not an area.
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
+    /// Alternatif etkisi (docs/adr/1440): a scenario none of whose layers stands for a base layer.
+    NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
     /// GNSS baz ağı (docs/adr/1380): no baseline given.
     NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
     /// GNSS baz ağı: a station named twice.

@@ -42957,6 +42957,57 @@ class ImagesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactChange(_Model):
+    """A decision that differs: its key, what changed (`added`, `removed`, `geometry`, `decision`, `both`), its use, area
+    and capacity on each side that has it.
+    Attributes:
+        alternative_area: Unit: area.
+        alternative_capacity: Unit: area.
+        base_area: Unit: area.
+        base_capacity: Unit: area.
+    """
+    key: str
+    change: str
+    alternative_area: float | None | Unset = UNSET
+    alternative_capacity: float | None | Unset = UNSET
+    alternative_use: str | None | Unset = UNSET
+    base_area: float | None | Unset = UNSET
+    base_capacity: float | None | Unset = UNSET
+    base_use: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["change"] = self.change
+        if self.alternative_area is not UNSET:
+            out["alternativeArea"] = None if self.alternative_area is None else float(self.alternative_area)
+        if self.alternative_capacity is not UNSET:
+            out["alternativeCapacity"] = None if self.alternative_capacity is None else float(self.alternative_capacity)
+        if self.alternative_use is not UNSET:
+            out["alternativeUse"] = self.alternative_use
+        if self.base_area is not UNSET:
+            out["baseArea"] = None if self.base_area is None else float(self.base_area)
+        if self.base_capacity is not UNSET:
+            out["baseCapacity"] = None if self.base_capacity is None else float(self.base_capacity)
+        if self.base_use is not UNSET:
+            out["baseUse"] = self.base_use
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactChange:
+        return cls(
+            key=data["key"],
+            change=data["change"],
+            alternative_area=UNSET if "alternativeArea" not in data else None if data["alternativeArea"] is None else float(data["alternativeArea"]),
+            alternative_capacity=UNSET if "alternativeCapacity" not in data else None if data["alternativeCapacity"] is None else float(data["alternativeCapacity"]),
+            alternative_use=data.get("alternativeUse", UNSET),
+            base_area=UNSET if "baseArea" not in data else None if data["baseArea"] is None else float(data["baseArea"]),
+            base_capacity=UNSET if "baseCapacity" not in data else None if data["baseCapacity"] is None else float(data["baseCapacity"]),
+            base_use=data.get("baseUse", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactCorridor(_Model):
     """A corridor on the profile and its regions that change."""
     corridor: str
@@ -42999,6 +43050,71 @@ class ImpactDerived(_Model):
             id=data["id"],
             name=data["name"],
             approved=data["approved"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactLayer(_Model):
+    """A base layer and the scenario's layer standing for it, by id and name."""
+    base: str
+    layer: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["layer"] = self.layer
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactLayer:
+        return cls(
+            base=data["base"],
+            layer=data["layer"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactMeasure(_Model):
+    """A measure: its id (`objects`, `area`, `length`, `capacity`), what it is called, its unit (`count`, `m2`, `m`), its
+    value on the field state's side and on the alternative's, the difference (alternative − base), and how it is
+    computed.
+    Attributes:
+        base: Unit: measure.
+        alternative: Unit: measure.
+        difference: Unit: measure.
+    """
+    id: str
+    label: str
+    unit: str
+    base: float
+    alternative: float
+    difference: float
+    method: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["unit"] = self.unit
+        out["base"] = float(self.base)
+        out["alternative"] = float(self.alternative)
+        out["difference"] = float(self.difference)
+        out["method"] = self.method
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactMeasure:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            unit=data["unit"],
+            base=float(data["base"]),
+            alternative=float(data["alternative"]),
+            difference=float(data["difference"]),
+            method=data["method"],
         )
 
 
@@ -43087,6 +43203,37 @@ class ImpactSections(_Model):
             name=data["name"],
             stations=data["stations"],
             of=data["of"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImpactUse(_Model):
+    """The areas of one use (the field's value; empty for none) on both sides, square metres.
+    Attributes:
+        base: Unit: area.
+        alternative: Unit: area.
+        difference: Unit: area.
+    """
+    code: str
+    base: float
+    alternative: float
+    difference: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["base"] = float(self.base)
+        out["alternative"] = float(self.alternative)
+        out["difference"] = float(self.difference)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactUse:
+        return cls(
+            code=data["code"],
+            base=float(data["base"]),
+            alternative=float(data["alternative"]),
+            difference=float(data["difference"]),
         )
 
 
@@ -76291,6 +76438,98 @@ class ScenariosEdited(_Model):
             objects=data["objects"],
             removed=data["removed"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosImpact(_Model):
+    """Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:
+    `Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an
+    earlier comparison (`since`) to say whether the base has changed since.
+
+    Refusals: `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare`
+    (`scenario`: none of its layers stands for a base layer).
+    """
+    scenario: str
+    field: str | None | Unset = UNSET
+    key: str | None | Unset = UNSET
+    since: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scenario"] = self.scenario
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.since is not UNSET:
+            out["since"] = self.since
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosImpact:
+        return cls(
+            scenario=data["scenario"],
+            field=data.get("field", UNSET),
+            key=data.get("key", UNSET),
+            since=data.get("since", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScenariosImpacted(_Model):
+    """Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by
+    code, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it
+    changed since the stamp given (none when none was given), and the drawing's revision.
+    """
+    scenario: str
+    name: str
+    layers: list[ImpactLayer]
+    field: str
+    key: str
+    measures: list[ImpactMeasure]
+    uses: list[ImpactUse]
+    changes: list[ImpactChange]
+    gaps: list[str]
+    assumptions: list[str]
+    stamp: str
+    revision: str
+    stale: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scenario"] = self.scenario
+        out["name"] = self.name
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["field"] = self.field
+        out["key"] = self.key
+        out["measures"] = [e0.to_json() for e0 in self.measures]
+        out["uses"] = [e0.to_json() for e0 in self.uses]
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        out["gaps"] = list(self.gaps)
+        out["assumptions"] = list(self.assumptions)
+        out["stamp"] = self.stamp
+        out["revision"] = self.revision
+        if self.stale is not UNSET:
+            out["stale"] = self.stale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScenariosImpacted:
+        return cls(
+            scenario=data["scenario"],
+            name=data["name"],
+            layers=[ImpactLayer.from_json(e0) for e0 in data["layers"]],
+            field=data["field"],
+            key=data["key"],
+            measures=[ImpactMeasure.from_json(e0) for e0 in data["measures"]],
+            uses=[ImpactUse.from_json(e0) for e0 in data["uses"]],
+            changes=[ImpactChange.from_json(e0) for e0 in data["changes"]],
+            gaps=list(data["gaps"]),
+            assumptions=list(data["assumptions"]),
+            stamp=data["stamp"],
+            revision=data["revision"],
+            stale=data.get("stale", UNSET),
         )
 
 
@@ -122390,13 +122629,17 @@ __all__ = [
     "ImagesEdit",
     "ImagesEdited",
     "ImagesOperation",
+    "ImpactChange",
     "ImpactCorridor",
     "ImpactDerived",
+    "ImpactLayer",
+    "ImpactMeasure",
     "ImpactOwn",
     "ImpactRegion",
     "ImpactSections",
     "ImpactTarget",
     "ImpactTargetName",
+    "ImpactUse",
     "ImportBlock",
     "ImportCsv",
     "ImportDomainsOp",
@@ -123919,6 +124162,8 @@ __all__ = [
     "ScenariosEdit",
     "ScenariosEditPlan",
     "ScenariosEdited",
+    "ScenariosImpact",
+    "ScenariosImpacted",
     "SceneMeshKind",
     "SceneMeshKindName",
     "SceneMeshWritten",

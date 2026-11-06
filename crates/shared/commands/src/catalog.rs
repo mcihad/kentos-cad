@@ -9328,6 +9328,28 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
+        CommandDescriptor {
+            id: crate::CAD_SCENARIOS_IMPACT.into(),
+            version: crate::CAD_SCENARIOS_IMPACT_VERSION,
+            title: "Alternatif etkisi".into(),
+            summary: "Bir senaryoyu (tasarım alternatifi) yerine geçtiği mevcut durumla yan yana ölçer: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi alternatif seçilmez. \
+                      stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (alternatif kendiliğinden yeni veriye uymuş sayılmaz). Salt okunur. Retler: scenario_not_found, nothing_to_compare."
+                .into(),
+            aliases: vec!["alternatifetkisi".into(), "senaryoetkisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ScenariosImpact>(),
+            output: schema::<crate::ScenariosImpacted>(),
+            plan: Some(schema::<crate::ScenariosImpacted>()),
+            capabilities: None,
+            examples: vec![CommandExample { title: "Alternatif A'yı mevcut durumla".into(), input: json!({ "scenario": "alternatif-a" }), output: None }],
+        },
         // İmar planı denetimi (plan/map-cad.md MAP-09, docs/adr/1420).
         CommandDescriptor {
             id: crate::CAD_ZONING_CHECK.into(),
@@ -15899,6 +15921,7 @@ mod tests {
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16844,6 +16867,7 @@ mod tests {
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),

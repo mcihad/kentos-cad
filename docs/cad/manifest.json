@@ -8293,9 +8293,25 @@
    "python": "kentos.cad.scenarios.edit",
    "mcp": "cad.scenarios.edit",
    "note": null,
-   "scope": "gis",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "scenario.impact",
+   "kind": "command",
+   "title": "Alternatif etkisi…",
+   "level": "query",
+   "via": [
+    "cad.scenarios.impact"
+   ],
+   "operation": null,
+   "python": "kentos.cad.scenarios.impact",
+   "mcp": "cad.scenarios.impact",
+   "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "scenario.show",

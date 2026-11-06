@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "scenario.impact": {
+      "level": "query",
+      "via": [
+        "cad.scenarios.impact"
+      ],
+      "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440)."
+    },
     "zoning.check": {
       "level": "query",
       "via": [

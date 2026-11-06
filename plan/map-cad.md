@@ -624,6 +624,13 @@ erişim ve arazi işi farklarını yeniden üret. Taban veriyi güncelleyip eski
 sonucun neden geçersiz olduğunu göster. Yanlış birimli veya eksik risk
 verisiyle kesin uygunluk sonucu verilmesin.
 
+**6 Kasım 2026 — Alternatif etkisi ([ADR 1440](../docs/adr/1440-design-alternative-impact.md)).** Kapsam işareti:
+**Harita + CBS**. Araştırma: ArcGIS Urban plan panosu (alan, FAR, türetilmiş ölçüler; senaryoları yan yana, tek puansız).
+Kanıtlanan: alternatifin sınırı (senaryonun yerine geçen tasarım katmanları ve mevcut durum), birimli ve yöntemli ölçüler
+(alan, uzunluk, inşaat alanı = alan × KAKS), kullanıma göre alanlar, anahtarla izlenen değişen kararlar, veri eksikleri
+ve varsayımlar, taban damgasıyla eskime (`cad.scenarios.impact`, 21 ortak durum; kabuldeki yol/yeşil alan değişikliği).
+Açık: damganın çizimde saklanması, erişim/eğim/altyapı/geçirimsizlik/risk ölçüleri, zarf ve harita gösterimi.
+
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 
 **Öncelik:** P2; `GIS-06/GIS-07` gereği en son, sahibiyle ayrı kapsam.

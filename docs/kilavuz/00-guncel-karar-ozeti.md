@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Alternatif etkisi (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).**
+  `cad.scenarios.impact` (Harita + CBS, salt okunur): senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban
+  damgasıyla eskime; tek puan yok.
 - **İmar planı denetimi (6 Kasım 2026; MAP-09, [ADR 1420](../../docs/adr/1420-zoning-plan-typed-check.md)).**
   Yerleşik `imar-plani` profili ve `cad.zoning.check` (Harita + CBS, salt okunur); karar renkten değil tipli değerden;
   MPYY/PlanGML uygunluğu iddia edilmez.

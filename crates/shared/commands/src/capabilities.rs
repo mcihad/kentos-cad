@@ -2381,6 +2381,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
+    Entry {
+        id: "cad.scenarios.impact",
+        refusals: &[&["scenario_not_found", "nothing_to_compare"]],
+        warnings: &[],
+        targets: none,
+    },
     // İmar planı denetimi (plan/map-cad.md MAP-09, docs/adr/1420).
     Entry {
         id: "cad.zoning.check",

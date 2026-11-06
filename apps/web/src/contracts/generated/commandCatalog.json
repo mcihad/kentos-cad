@@ -54635,6 +54635,238 @@
       ]
     },
     {
+      "id": "cad.scenarios.impact",
+      "version": 1,
+      "title": "Alternatif etkisi",
+      "summary": "Bir senaryoyu (tasarım alternatifi) yerine geçtiği mevcut durumla yan yana ölçer: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi alternatif seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (alternatif kendiliğinden yeni veriye uymuş sayılmaz). Salt okunur. Retler: scenario_not_found, nothing_to_compare.",
+      "aliases": [
+        "alternatifetkisi",
+        "senaryoetkisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since.\n\nRefusals: `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare`\n(`scenario`: none of its layers stands for a base layer).",
+        "properties": {
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scenario": {
+            "type": "string"
+          },
+          "since": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "scenario"
+        ],
+        "title": "ScenariosImpact",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by\ncode, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it\nchanged since the stamp given (none when none was given), and the drawing's revision.",
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/ImpactChange"
+            },
+            "type": "array"
+          },
+          "field": {
+            "type": "string"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "key": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ImpactLayer"
+            },
+            "type": "array"
+          },
+          "measures": {
+            "items": {
+              "$ref": "#/$defs/ImpactMeasure"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scenario": {
+            "type": "string"
+          },
+          "stale": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stamp": {
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/ImpactUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenario",
+          "name",
+          "layers",
+          "field",
+          "key",
+          "measures",
+          "uses",
+          "changes",
+          "gaps",
+          "assumptions",
+          "stamp",
+          "revision"
+        ],
+        "title": "ScenariosImpacted",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by\ncode, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it\nchanged since the stamp given (none when none was given), and the drawing's revision.",
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/ImpactChange"
+            },
+            "type": "array"
+          },
+          "field": {
+            "type": "string"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "key": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ImpactLayer"
+            },
+            "type": "array"
+          },
+          "measures": {
+            "items": {
+              "$ref": "#/$defs/ImpactMeasure"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "scenario": {
+            "type": "string"
+          },
+          "stale": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stamp": {
+            "type": "string"
+          },
+          "uses": {
+            "items": {
+              "$ref": "#/$defs/ImpactUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenario",
+          "name",
+          "layers",
+          "field",
+          "key",
+          "measures",
+          "uses",
+          "changes",
+          "gaps",
+          "assumptions",
+          "stamp",
+          "revision"
+        ],
+        "title": "ScenariosImpacted",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "scenario_not_found",
+          "nothing_to_compare"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Alternatif A'yı mevcut durumla",
+          "input": {
+            "scenario": "alternatif-a"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.zoning.check",
       "version": 1,
       "title": "İmar planı denetimi",
@@ -99197,6 +99429,12 @@
       "meaning": "Nesne bir alan değil; parsel alan denetimi alanları denetler."
     },
     {
+      "code": "nothing_to_compare",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok."
+    },
+    {
       "code": "no_baselines",
       "kind": "failed",
       "retryable": false,
@@ -134803,6 +135041,66 @@
         }
       ]
     },
+    "ImpactChange": {
+      "description": "A decision that differs: its key, what changed (`added`, `removed`, `geometry`, `decision`, `both`), its use, area\nand capacity on each side that has it.",
+      "properties": {
+        "alternativeArea": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "alternativeCapacity": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "alternativeUse": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baseArea": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "baseCapacity": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "baseUse": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "change": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "change"
+      ],
+      "type": "object"
+    },
     "ImpactCorridor": {
       "description": "A corridor on the profile and its regions that change.",
       "properties": {
@@ -134843,6 +135141,68 @@
         "id",
         "name",
         "approved"
+      ],
+      "type": "object"
+    },
+    "ImpactLayer": {
+      "description": "A base layer and the scenario's layer standing for it, by id and name.",
+      "properties": {
+        "base": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "base",
+        "layer",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ImpactMeasure": {
+      "description": "A measure: its id (`objects`, `area`, `length`, `capacity`), what it is called, its unit (`count`, `m2`, `m`), its\nvalue on the field state's side and on the alternative's, the difference (alternative − base), and how it is\ncomputed.",
+      "properties": {
+        "alternative": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "measure"
+        },
+        "base": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "measure"
+        },
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "measure"
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "unit",
+        "base",
+        "alternative",
+        "difference",
+        "method"
       ],
       "type": "object"
     },
@@ -134955,6 +135315,36 @@
           "type": "string"
         }
       ]
+    },
+    "ImpactUse": {
+      "description": "The areas of one use (the field's value; empty for none) on both sides, square metres.",
+      "properties": {
+        "alternative": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "base": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "code": {
+          "type": "string"
+        },
+        "difference": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        }
+      },
+      "required": [
+        "code",
+        "base",
+        "alternative",
+        "difference"
+      ],
+      "type": "object"
     },
     "ImportMerge": {
       "description": "How the rows meet the objects of the layer they go onto. A row goes onto a layer of the drawing as the import\nroutes it; on a layer the import makes every row is added.",

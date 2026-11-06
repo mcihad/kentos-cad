@@ -39,7 +39,7 @@ pub const KINDS: [&str; 15] = [
 ];
 
 /// The uses on which nothing is built: they ask for no TAKS, KAKS or height.
-const OPEN_USES: [&str; 4] = ["park", "yesil", "meydan", "yol"];
+pub const OPEN_USES: [&str; 4] = ["park", "yesil", "meydan", "yol"];
 
 const LEAST_TOLERANCE: f64 = 1e-6;
 const FIRST_TOLERANCE: f64 = 0.01;

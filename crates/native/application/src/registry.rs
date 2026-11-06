@@ -59,6 +59,7 @@ use crate::entities_grade;
 use crate::topology_clean;
 use crate::parcels_check;
 use crate::zoning_check;
+use crate::scenarios_impact;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -536,6 +537,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_ZONING_CHECK => {
                 $then!(zoning_check, kentos_commands::ZoningCheck)
+            }
+            kentos_commands::CAD_SCENARIOS_IMPACT => {
+                $then!(scenarios_impact, kentos_commands::ScenariosImpact)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)
