@@ -99,6 +99,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Web'in yazı katmanı gömülü SHX fontlu yazıyı çizmez: `shx_text::place` (WASM'a taşınabilir, DOM'suz) ile Canvas/
   WebGPU çizgileri, `cad.fonts.report`'un `embedded` alanı (TS türü üretilmedi), `text_shx_unsupported` bulgusunun
   inceleme başlığı ve DXF aktarımının yanına yazılan SHX yazı fontları web'de yok.
+- MAP-06 / ADR 1024: web Paralel kaydır aracı yay kenarı artık seçer (WASM `edgeShift*`), ama web izi
+  (`tools/edgeShiftTool.ts`, `edgeShift.wasm.test.ts`) yeni vakalarla yeniden koşulmadı.
 - CAD-ADV-11 / ADR 1023: `.kcad` şema 186 (`DimensionStyleDef.textStyle`) web codec'inde yok; web ölçü değeri SHX
   yazı stilini çizmez (`shx_text::dimension_value` WASM'a taşınabilir), ölçü stili penceresinde Yazı stili seçimi yok.
 - CAD-ADV-12 / ADR 1126: `.kcad` şema 185 (`settings.tableStyles`, tablonun `tableStyle`'ı) web codec'inde ve sütun

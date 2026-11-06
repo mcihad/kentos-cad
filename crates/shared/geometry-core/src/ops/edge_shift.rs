@@ -9,6 +9,9 @@
 //! an open polyline's free end goes square to the edge. So the area is
 //! quadratic in `d`: the edge sweeps a trapezoid, `L·d + ½(λ_b − λ_a)·d²`,
 //! `λ` each vertex's slide along the edge per unit of `d` (§3).
+//!
+//! An arc edge or an arc neighbour (docs/adr/1024, plan/map-cad.md MAP-06) is `edge_shift_arcs`'s: each arc stays
+//! an arc of its own circle.
 
 use crate::api::Op;
 use crate::entity::{Entity, Shape, is_multi_part};
@@ -24,6 +27,9 @@ pub const NOT_PATH: &str =
     "Paralel kaydır alanın ya da çoklu çizginin düz kenarında çalışır; böyle bir kenara tıklayın.";
 pub const CURVED: &str =
     "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır.";
+/// The tool's words for an edge it takes, an arc's too (docs/adr/1024).
+pub const NOT_PATH_ARCS: &str =
+    "Paralel kaydır alanın ya da çoklu çizginin kenarında çalışır (düz ya da yay); böyle bir kenara tıklayın.";
 pub const PARALLEL: &str = "Komşu kenar kaydırılan kenara paralel; köşe bulunamıyor.";
 pub const PASSED: &str = "Kenar bu uzaklıkta komşusunu aşıyor; daha kısa bir uzaklık yazın.";
 pub const NO_EDGE: &str = "Bu nesnede böyle bir kenar yok.";
@@ -231,10 +237,70 @@ fn motion(shape: &Shape, ring: usize, edge: usize) -> Result<(Rings, Motion), &'
     ))
 }
 
+/// The rings when the edge `edge` of ring `ring` or a neighbour of it is an arc (docs/adr/1024); none for the
+/// all-straight case (`motion`'s).
+fn arc_case(shape: &Shape, ring: usize, edge: usize) -> Option<Result<Rings, &'static str>> {
+    let rings = match rings_of(shape) {
+        Ok(r) => r,
+        Err(why) => return Some(Err(why)),
+    };
+    let r = rings.rings.get(ring)?;
+    let n = r.pts.len();
+    let edges = if rings.closed { n } else { n.saturating_sub(1) };
+    if edge >= edges || n < 2 {
+        return None;
+    }
+    super::edge_shift_arcs::involves_arcs(n, r.bulges.as_deref(), rings.closed, edge).then_some(Ok(rings))
+}
+
+/// The edge's unit normal: away from an area's inside, to the right of a polyline's way; an arc's at its middle.
+fn edge_normal(r: &Ring, ring: usize, closed: bool, edge: usize) -> Result<Vec2, &'static str> {
+    let n = r.pts.len();
+    let (a, b) = (r.pts[edge], r.pts[(edge + 1) % n]);
+    let bulge = bulge_at(r.bulges.as_deref(), edge);
+    let along = match crate::geom::bulge::bulge_arc(a, b, bulge) {
+        Some(arc) => {
+            let m = crate::geom::bulge::segment_mid(a, b, bulge);
+            let (vx, vy) = (m.x - arc.c.x, m.y - arc.c.y);
+            let l = js_hypot(vx, vy);
+            if arc.sweep > 0.0 { Vec2::new(-vy / l, vx / l) } else { Vec2::new(vy / l, -vx / l) }
+        }
+        None => {
+            let t = sub(b, a);
+            let l = js_hypot(t.x, t.y);
+            if !(l > 0.0) {
+                return Err(NO_EDGE);
+            }
+            Vec2::new(t.x / l, t.y / l)
+        }
+    };
+    let right = Vec2::new(along.y, -along.x);
+    if !closed {
+        return Ok(right);
+    }
+    let ccw = bulge_ring_area(&r.pts, r.bulges.as_deref()) > 0.0;
+    let inside_left = if ring == 0 { ccw } else { !ccw };
+    Ok(if inside_left { right } else { Vec2::new(-right.x, -right.y) })
+}
+
+/// The ring `ring` with its edge `edge` moved `d` by `edge_shift_arcs`.
+fn arc_shift(rings: &Rings, ring: usize, edge: usize, d: f64) -> Result<Ring, &'static str> {
+    let r = &rings.rings[ring];
+    let normal = edge_normal(r, ring, rings.closed, edge)?;
+    let m = super::edge_shift_arcs::shifted(&r.pts, r.bulges.as_deref(), rings.closed, edge, normal, d)?;
+    Ok(Ring { pts: m.pts, bulges: Some(m.bulges) })
+}
+
 /// An area's size from its rings: the outer ring's less its holes'
 /// (`measure::polygon_area`'s rule, on the shapes' rings).
 fn rings_area(rings: &[Ring]) -> f64 {
-    let size = |r: &Ring| bulge_ring_area(&r.pts, r.bulges.as_deref()).abs();
+    // About the outer ring's first vertex (docs/adr/1024): map coordinates (E ≈ 5·10⁵, N ≈ 4.4·10⁶ m) lose the
+    // shoelace's last digits; differences of nearby coordinates are exact.
+    let o = rings.first().and_then(|r| r.pts.first().copied()).unwrap_or(Vec2::new(0.0, 0.0));
+    let size = |r: &Ring| {
+        let local: Vec<Vec2> = r.pts.iter().map(|p| Vec2::new(p.x - o.x, p.y - o.y)).collect();
+        bulge_ring_area(&local, r.bulges.as_deref()).abs()
+    };
     rings.first().map_or(0.0, size) - rings.iter().skip(1).map(size).sum::<f64>()
 }
 
@@ -267,6 +333,12 @@ pub fn shifted(shape: &Shape, ring: usize, edge: usize, d: f64) -> Result<Shape,
     if !d.is_finite() {
         return Err(NO_EDGE.to_owned());
     }
+    if let Some(rings) = arc_case(shape, ring, edge) {
+        let mut rings = rings.map_err(str::to_owned)?;
+        let moved = arc_shift(&rings, ring, edge, d).map_err(str::to_owned)?;
+        rings.rings[ring] = moved;
+        return Ok(with_rings(shape, rings.rings));
+    }
     let (Rings { mut rings, .. }, m) = motion(shape, ring, edge).map_err(str::to_owned)?;
     let (a, b) = moved(&m, d).map_err(str::to_owned)?;
     let r = &mut rings[ring];
@@ -283,6 +355,26 @@ pub fn for_area(shape: &Shape, ring: usize, edge: usize, target: f64) -> Result<
     // A closed polyline encloses its ring's area as an area does (docs/adr/0258 §1).
     if !crate::entity::is_closed_path(shape) {
         return Err(NOT_AREA.to_owned());
+    }
+    if let Some(rings) = arc_case(shape, ring, edge) {
+        let rings = rings.map_err(str::to_owned)?;
+        if !target.is_finite() {
+            return Err(NO_AREA.to_owned());
+        }
+        let r = &rings.rings[ring];
+        let n = r.pts.len();
+        let length = super::edge_shift_arcs::edge_length(
+            r.pts[edge],
+            r.pts[(edge + 1) % n],
+            bulge_at(r.bulges.as_deref(), edge),
+        );
+        let area = |d: f64| -> Result<f64, &'static str> {
+            let mut all = rings.rings.clone();
+            all[ring] = arc_shift(&rings, ring, edge, d)?;
+            Ok(rings_area(&all))
+        };
+        return super::edge_shift_arcs::for_area(rings_area(&rings.rings), target, length, &area)
+            .map_err(str::to_owned);
     }
     let (rings, m) = motion(shape, ring, edge).map_err(str::to_owned)?;
     if !target.is_finite() {
@@ -311,6 +403,11 @@ pub struct Picked {
     pub a: Vec2,
     pub b: Vec2,
     pub normal: Vec2,
+    /// The edge's middle: the chord's, an arc's on the arc (docs/adr/1024). A cursor's distance is measured from it
+    /// along `normal` (an arc's offset is radial there) and it names the edge to the command.
+    pub mid: Vec2,
+    /// The edge's bulge (0: straight), to draw it as it is.
+    pub bulge: f64,
 }
 
 crate::json_struct!(out Picked {
@@ -318,7 +415,9 @@ crate::json_struct!(out Picked {
     edge,
     a,
     b,
-    normal
+    normal,
+    mid,
+    bulge
 });
 
 /// The edge of `shape` nearest `p`, or why there is none to shift: a
@@ -340,6 +439,16 @@ pub fn pick(shape: &Shape, p: Vec2) -> Result<Picked, String> {
     let Some((_, ring, edge)) = best else {
         return Err(NO_EDGE.to_owned());
     };
+    if let Some(found) = arc_case(shape, ring, edge) {
+        let rings = found.map_err(str::to_owned)?;
+        let r = &rings.rings[ring];
+        let n = r.pts.len();
+        let normal = edge_normal(r, ring, rings.closed, edge).map_err(str::to_owned)?;
+        let (a, b) = (r.pts[edge], r.pts[(edge + 1) % n]);
+        let bulge = bulge_at(r.bulges.as_deref(), edge);
+        let mid = crate::geom::bulge::segment_mid(a, b, bulge);
+        return Ok(Picked { ring, edge, a, b, normal, mid, bulge });
+    }
     let (_, m) = motion(shape, ring, edge).map_err(str::to_owned)?;
     Ok(Picked {
         ring,
@@ -347,6 +456,8 @@ pub fn pick(shape: &Shape, p: Vec2) -> Result<Picked, String> {
         a: m.a,
         b: m.b,
         normal: m.normal,
+        mid: Vec2::new((m.a.x + m.b.x) / 2.0, (m.a.y + m.b.y) / 2.0),
+        bulge: 0.0,
     })
 }
 

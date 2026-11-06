@@ -515,7 +515,7 @@
    }
   },
   {
-   "name": "a curved edge is refused",
+   "name": "a curved edge out by 1: its circle grows, its straight neighbours slide",
    "shape": {
     "id": 1,
     "layerId": "a",
@@ -550,11 +550,98 @@
    "edge": 1,
    "distance": 1,
    "expect": {
-    "problem": "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır."
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      11.5,
+      0.0
+     ],
+     [
+      11.5,
+      10.0
+     ],
+     [
+      0.0,
+      10.0
+     ]
+    ],
+    "bulges": [
+     0.0,
+     0.4,
+     0.0,
+     0.0
+    ],
+    "area": 128.75073289393737
    }
   },
   {
-   "name": "a curved neighbour is refused",
+   "name": "a curved edge in by 1",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": -1,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      7.850781059358212,
+      0.0
+     ],
+     [
+      7.850781059358212,
+      10.0
+     ],
+     [
+      0.0,
+      10.0
+     ]
+    ],
+    "bulges": [
+     0.0,
+     0.7298437881283576,
+     0.0,
+     0.0
+    ],
+    "area": 105.2588861711968
+   }
+  },
+  {
+   "name": "a straight edge whose next neighbour is an arc: the vertex slides on the arc's circle",
    "shape": {
     "id": 1,
     "layerId": "a",
@@ -589,7 +676,415 @@
    "edge": 0,
    "distance": 1,
    "expect": {
-    "problem": "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır."
+    "pts": [
+     [
+      0.0,
+      -1.0
+     ],
+     [
+      8.0,
+      -1.0
+     ],
+     [
+      10.0,
+      10.0
+     ],
+     [
+      0.0,
+      10.0
+     ]
+    ],
+    "bulges": [
+     0.0,
+     0.6180339887498949,
+     0.0,
+     0.0
+    ],
+    "area": 126.62299678883166
+   }
+  },
+  {
+   "name": "a straight edge whose neighbour before it is an arc",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "distance": -1.5,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      10.0,
+      0.0
+     ],
+     [
+      11.428078794301994,
+      8.5
+     ],
+     [
+      0.0,
+      8.5
+     ]
+    ],
+    "bulges": [
+     0.0,
+     0.39990010121160313,
+     0.0,
+     0.0
+    ],
+    "area": 101.28197027289322
+   }
+  },
+  {
+   "name": "a curved edge whose neighbour is an arc: two circles meet",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.3,
+     0.2,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": 0.5,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      10.59225702931191,
+      0.0
+     ],
+     [
+      10.806751958507746,
+      9.63106322278262
+     ],
+     [
+      0.0,
+      10.0
+     ]
+    ],
+    "bulges": [
+     0.0,
+     0.2695693448875794,
+     0.21780813273143554,
+     0.0
+    ],
+    "area": 122.06891710717629
+   }
+  },
+  {
+   "name": "a curved kerb in map coordinates out by 0.25 m",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.5
+     },
+     {
+      "x": 487030.25,
+      "y": 4420000.5
+     },
+     {
+      "x": 487030.25,
+      "y": 4420020.5
+     },
+     {
+      "x": 487000.25,
+      "y": 4420020.5
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     0.125,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "distance": 0.25,
+   "expect": {
+    "pts": [
+     [
+      487000.25,
+      4420000.5
+     ],
+     [
+      487030.25,
+      4420000.5
+     ],
+     [
+      487030.25,
+      4420020.757902529
+     ],
+     [
+      487000.25,
+      4420020.757902529
+     ]
+    ],
+    "bulges": [
+     0.0,
+     0.0,
+     0.12447316470669247,
+     0.0
+    ],
+    "area": 645.1944824970078
+   }
+  },
+  {
+   "name": "an open polyline's curved first edge: its free end moves along the radius",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0.3,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "distance": 1,
+   "expect": {
+    "pts": [
+     [
+      -0.5504587155963303,
+      -0.8348623853211009
+     ],
+     [
+      7.937305906236878,
+      -2.062694093763122
+     ],
+     [
+      20.0,
+      10.0
+     ]
+    ],
+    "bulges": [
+     0.22322630204156638,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "name": "a hole's curved edge",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 0
+     },
+     {
+      "x": 20,
+      "y": 20
+     },
+     {
+      "x": 0,
+      "y": 20
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 5,
+        "y": 5
+       },
+       {
+        "x": 15,
+        "y": 5
+       },
+       {
+        "x": 15,
+        "y": 15
+       },
+       {
+        "x": 5,
+        "y": 15
+       }
+      ],
+      "bulges": [
+       0,
+       -0.2,
+       0,
+       0
+      ]
+     }
+    ]
+   },
+   "ring": 1,
+   "edge": 1,
+   "distance": 0.5,
+   "expect": {
+    "pts": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      20.0,
+      0.0
+     ],
+     [
+      20.0,
+      20.0
+     ],
+     [
+      0.0,
+      20.0
+     ]
+    ],
+    "holes": [
+     [
+      [
+       5.0,
+       5.0
+      ],
+      [
+       14.460063796015547,
+       5.0
+      ],
+      [
+       14.460063796015547,
+       15.0
+      ],
+      [
+       5.0,
+       15.0
+      ]
+     ]
+    ],
+    "holeBulges": [
+     0.0,
+     -0.1920127592031095,
+     0.0,
+     0.0
+    ],
+    "area": 311.84673710195017
+   }
+  },
+  {
+   "name": "a curved edge shrunk past its centre is refused",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "distance": -40,
+   "expect": {
+    "problem": "Kenar bu uzaklıkta komşusunu aşıyor; daha kısa bir uzaklık yazın."
    }
   },
   {
@@ -1010,6 +1505,123 @@
    "target": 125,
    "expect": {
     "distance": 1.6563411215887702
+   }
+  },
+  {
+   "name": "a curved edge to 140 m²",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 1,
+   "target": 140,
+   "expect": {
+    "distance": 2.034787272645374
+   }
+  },
+  {
+   "name": "a straight edge with a curved neighbour to 100 m²",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 0
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 0,
+      "y": 10
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 0,
+   "target": 100,
+   "expect": {
+    "distance": -1.6118131809673513
+   }
+  },
+  {
+   "name": "a curved kerb in map coordinates to 640 m²",
+   "shape": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.5
+     },
+     {
+      "x": 487030.25,
+      "y": 4420000.5
+     },
+     {
+      "x": 487030.25,
+      "y": 4420020.5
+     },
+     {
+      "x": 487000.25,
+      "y": 4420020.5
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     0.125,
+     0
+    ]
+   },
+   "ring": 0,
+   "edge": 2,
+   "target": 640,
+   "expect": {
+    "distance": 0.07862041907544483
    }
   },
   {
