@@ -857,6 +857,13 @@ kotu, eğim/yön, şevler, gün ışığı, dengeleme) ve drenaj (gölet, damla,
 harita projesinin platformlarını yazar; Arazi sekmesinin Tesviye ve Drenaj panelleri Harita'da. Açık: hacim yöntemi ve
 hata sınırı raporu, kabarma/sıkışma ve malzeme, stok sahası, canlı kesit türevi.
 
+**7 Kasım 2026 — Hacim yöntemi ve katsayılar ([ADR 1600](../docs/adr/1600-surface-volume-method-and-factors.md)).**
+Kapsam: **Harita + Yol** (CBS aynı hesabı tüketir). Araştırma: Civil 3D Volumes Dashboard (kazı/dolgu katsayısı,
+düzeltilmiş ve düzeltilmemiş hacim ayrı); KTŞ 2013'te hacim dönüşüm katsayısı yok, değer uydurulmadı. Kanıtlanan:
+`road.terrains.compare` `method` (tin | grid+cell), ızgarada kesin TIN–TIN hacmi yanında (yöntem farkı açık),
+`cutFactor`/`fillFactor` ile ayrı `adjusted`; 15 bağımsız durum. Açık: kesit yöntemi, malzeme bölgesi, stok, sıfır
+hattının çizimi, tematik fark haritası.
+
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 
 **Öncelik:** P1 teknik envanter/tasarım; P2 uzman çözücüler. **Kod:** [K31], [K32], [K40].

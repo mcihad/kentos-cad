@@ -153,6 +153,37 @@ def answer(inp):
     if breaks:
         out["bands"] = [{"from": b[0], "to": b[1], "area": b[2]} for b in bands]
         out["outsideArea"] = outside
+    if inp.get("method") == "grid":
+        # The grid (ADR 1600, the midpoint rule of ADR 0974): cells `cell` square with corners on multiples of it, each
+        # centre in the comparison's plan measured once: d = z_comparison − z_base there, its cell's volume cell²·d;
+        # a centre off the base is uncovered. The exact TIN volumes stay beside it.
+        cell = inp["cell"]
+        exact = {"cut": out["cut"], "fill": out["fill"], "net": out["net"]}
+        g = {"cut": 0.0, "fill": 0.0, "cutArea": 0.0, "fillArea": 0.0, "covered": 0.0, "uncovered": 0.0}
+        a = cell * cell
+        for j in range(math.ceil(cys[0] / cell - 0.5), math.floor(cys[-1] / cell - 0.5) + 1):
+            for i in range(math.ceil(cxs[0] / cell - 0.5), math.floor(cxs[-1] / cell - 0.5) + 1):
+                x, y = (i + 0.5) * cell, (j + 0.5) * cell
+                if not (bxs[0] <= x <= bxs[-1] and bys[0] <= y <= bys[-1]):
+                    g["uncovered"] += a
+                    continue
+                g["covered"] += a
+                dz = fc(x, y) - fb(x, y)
+                if dz > 0:
+                    g["fill"] += dz * a
+                    g["fillArea"] += a
+                elif dz < 0:
+                    g["cut"] -= dz * a
+                    g["cutArea"] += a
+        out.update(g)
+        out["net"] = g["fill"] - g["cut"]
+        out["cell"] = cell
+        out["exact"] = exact
+    if "cutFactor" in inp or "fillFactor" in inp:
+        # Civil 3D's Volumes Dashboard: the cut's swell, the fill's compaction; the geometric volumes stay.
+        cf, ff = inp.get("cutFactor", 1.0), inp.get("fillFactor", 1.0)
+        out["adjusted"] = {"cutFactor": cf, "fillFactor": ff, "cut": out["cut"] * cf, "fill": out["fill"] * ff,
+                           "net": out["fill"] * ff - out["cut"] * cf}
     warns = []
     if out["uncovered"] > 0:
         warns.append({"code": "compare_uncovered", "message": f"Karşılaştırma yüzeyinin {out['uncovered']:.2f} m²'si "
@@ -188,6 +219,35 @@ def cases():
     q("Teras ile set, ince aralıklar", {"base": "Teras", "comparison": "Set",
                                         "ranges": [-0.05, 0.0, 0.05, 0.1, 0.15, 0.2, 0.25]})
     q("Ters yönde ince aralıklar", {"base": "Set", "comparison": "Teras", "ranges": [-0.25, -0.1, 0.0, 0.1]})
+    # The method and the factors (ADR 1600).
+    q("Izgara 0,5 m: kazı düzlemin üstünde", {"base": "Düz", "comparison": "Kazı", "method": "grid", "cell": 0.5})
+    q("Izgara 2 m: kaba hücre, yöntem farkı büyür", {"base": "Düz", "comparison": "Kazı", "method": "grid", "cell": 2.0})
+    q("Izgara 0,25 m: set terasın üstünde", {"base": "Teras", "comparison": "Set", "method": "grid", "cell": 0.25})
+    q("Izgara 0,3 m: hücre kenarı kafese denk gelmez", {"base": "Düz", "comparison": "Kazı", "method": "grid",
+                                                         "cell": 0.3})
+    q("Izgara 0,7 m: kırık çizgi hücrenin içinde", {"base": "Düz", "comparison": "Kazı", "method": "grid", "cell": 0.7})
+    q("TIN yöntemi açıkça", {"base": "Düz", "comparison": "Kazı", "method": "tin"})
+    q("Katsayılar: kazı 1,25, dolgu 1,10", {"base": "Teras", "comparison": "Set", "cutFactor": 1.25, "fillFactor": 1.1})
+    q("Yalnız dolgu katsayısı", {"base": "Düz", "comparison": "Kazı", "fillFactor": 1.15})
+    q("Izgara ve katsayılar birlikte", {"base": "Teras", "comparison": "Set", "method": "grid", "cell": 0.5,
+                                        "cutFactor": 1.3, "fillFactor": 0.9})
+    q("Izgarada hücre yok", {"base": "Düz", "comparison": "Kazı", "method": "grid"},
+      analysis.failed("invalid_analysis", "Izgara yönteminde hücrenin kenarını (cell, m) verin.", "cell"))
+    q("Izgarada sıfır hücre", {"base": "Düz", "comparison": "Kazı", "method": "grid", "cell": 0.0},
+      analysis.failed("invalid_analysis", "Izgaranın hücresi 0'dan büyük bir uzunluk olmalı.", "cell"))
+    q("Izgarada çok küçük hücre", {"base": "Düz", "comparison": "Kazı", "method": "grid", "cell": 0.001},
+      analysis.failed("invalid_analysis", "Izgaranın hücresi bu alan için çok küçük: en çok 4 000 000 hücre ölçülür; "
+                      "hücreyi büyütün.", "cell"))
+    q("Izgarada aralık istenmez", {"base": "Düz", "comparison": "Kazı", "method": "grid", "cell": 1.0,
+                                   "ranges": [-1.0, 0.0, 1.0]},
+      analysis.failed("invalid_analysis", "Fark aralıkları TIN yöntemiyle verilir; ızgara yönteminde aralık istenmez.",
+                      "ranges"))
+    q("Sıfır kazı katsayısı", {"base": "Düz", "comparison": "Kazı", "cutFactor": 0.0},
+      analysis.failed("invalid_analysis", "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).",
+                      "cutFactor"))
+    q("Çok büyük dolgu katsayısı", {"base": "Düz", "comparison": "Kazı", "fillFactor": 11.0},
+      analysis.failed("invalid_analysis", "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).",
+                      "fillFactor"))
     # Refusals.
     bad = "Fark aralıklarının sınırları en az iki, sonlu ve artan sayılar olmalı."
     q("Tek sınır", {"base": "Düz", "comparison": "Kazı", "ranges": [0.0]},

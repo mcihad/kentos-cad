@@ -461,3 +461,64 @@ fn screens_robust() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/1600: Fark by a grid's cells beside the exact TIN, and the cut and fill factors apart from the geometric
+/// volumes; a grid without a cell is said; in a KentOS Harita project as in Yol.
+#[test]
+fn fark_measures_by_a_grid_beside_the_exact_tin_and_adjusts_by_the_factors() {
+    let mut app = app();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Compare));
+    send(&mut app, W::Surface("t-6".into()));
+    send(&mut app, W::Comparison("t-9".into()));
+    send(&mut app, W::Preview);
+    let Read::Compare(tin) = read(&app) else { panic!("a difference") };
+    assert!(tin.exact.is_none() && tin.cell.is_none() && tin.adjusted.is_none());
+    send(&mut app, W::VolumeGrid(true));
+    send(&mut app, W::Preview);
+    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre")));
+    send(&mut app, W::Field(13, "0,25".into()));
+    send(&mut app, W::Field(14, "1,25".into()));
+    send(&mut app, W::Field(15, "1,1".into()));
+    send(&mut app, W::Preview);
+    let Read::Compare(g) = read(&app) else { panic!("a difference") };
+    assert_eq!(g.cell, Some(0.25));
+    let exact = g.exact.clone().expect("the exact TIN beside");
+    assert!((exact.cut - tin.cut).abs() < 1e-9 && (exact.fill - tin.fill).abs() < 1e-9);
+    let a = g.adjusted.clone().expect("adjusted");
+    assert!((a.cut - g.cut * 1.25).abs() < 1e-9 && (a.fill - g.fill * 1.1).abs() < 1e-9);
+}
+
+/// Fark with a grid and the factors; `.run/gui-evidence/hacim-yontemi-1600/`.
+#[test]
+#[ignore = "writes pictures"]
+fn screens_volume_method() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/hacim-yontemi-1600");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Compare));
+        send(&mut app, W::Surface("t-5".into()));
+        send(&mut app, W::Comparison("t-8".into()));
+        send(&mut app, W::VolumeGrid(true));
+        send(&mut app, W::Field(13, "2".into()));
+        send(&mut app, W::Field(14, "1,25".into()));
+        send(&mut app, W::Field(15, "1,1".into()));
+        send(&mut app, W::Preview);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("fark-izgara-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

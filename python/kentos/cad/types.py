@@ -1315,6 +1315,16 @@ ColumnShapeName = Literal["rect", "round", "lShape"]
 """The names of :class:`ColumnShape`, for a plain string."""
 
 
+class CompareMethod(_StrEnum):
+    """How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells."""
+    TIN = "tin"
+    GRID = "grid"
+
+
+CompareMethodName = Literal["tin", "grid"]
+"""The names of :class:`CompareMethod`, for a plain string."""
+
+
 class ConflictKind(_StrEnum):
     """How the two sides of a conflict differ.
 
@@ -92182,6 +92192,43 @@ class TerminalDevice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainAdjusted(_Model):
+    """The volumes adjusted by the factors (docs/adr/1600): the cut times `cutFactor` (its swell), the fill times
+    `fillFactor` (its compaction), net their difference; the geometric volumes stay as they are.
+    Attributes:
+        cut_factor: Unit: 1.
+        fill_factor: Unit: 1.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        net: Unit: volume.
+    """
+    cut_factor: float
+    fill_factor: float
+    cut: float
+    fill: float
+    net: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cutFactor"] = float(self.cut_factor)
+        out["fillFactor"] = float(self.fill_factor)
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["net"] = float(self.net)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainAdjusted:
+        return cls(
+            cut_factor=float(data["cutFactor"]),
+            fill_factor=float(data["fillFactor"]),
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            net=float(data["net"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainBand(_Model):
     """A range: its bounds (in the measure's unit), its plan and 3D area, its triangles (slope and aspect; 0 for
     elevation, whose triangles are cut) and, asked, its parts.
@@ -93062,6 +93109,34 @@ class TerrainSurfaceDef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainVolumes(_Model):
+    """Cut, fill and net (fill − cut) volumes.
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        net: Unit: volume.
+    """
+    cut: float
+    fill: float
+    net: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["net"] = float(self.net)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainVolumes:
+        return cls(
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            net=float(data["net"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsAnalysed(_Model):
     """Output of `road.terrains.analysis` v1: the surface's plan and 3D area and what was asked.
     Attributes:
@@ -93164,22 +93239,41 @@ class TerrainsAnalysis(_Model):
 class TerrainsCompare(_Model):
     """Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;
     Civil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
-    area of the difference between each pair.
+    area of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or
+    `grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result
+    beside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's
+    compaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.
 
     Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
-    increasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
+    increasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over
+    0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
     `compare_uncovered` (part of the comparison is off the base and left out).
     Attributes:
+        cell: Unit: m.
+        cut_factor: Unit: 1.
+        fill_factor: Unit: 1.
         ranges: Unit: m.
     """
     base: str
     comparison: str
+    cell: float | None | Unset = UNSET
+    cut_factor: float | None | Unset = UNSET
+    fill_factor: float | None | Unset = UNSET
+    method: CompareMethod | CompareMethodName | None | Unset = UNSET
     ranges: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["base"] = self.base
         out["comparison"] = self.comparison
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
+        if self.cut_factor is not UNSET:
+            out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
+        if self.fill_factor is not UNSET:
+            out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        if self.method is not UNSET:
+            out["method"] = None if self.method is None else _enum_out(self.method)
         if self.ranges is not UNSET:
             out["ranges"] = None if self.ranges is None else [float(e0) for e0 in self.ranges]
         return out
@@ -93189,6 +93283,10 @@ class TerrainsCompare(_Model):
         return cls(
             base=data["base"],
             comparison=data["comparison"],
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
+            fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+            method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(CompareMethod, data["method"]),
             ranges=UNSET if "ranges" not in data else None if data["ranges"] is None else [float(e0) for e0 in data["ranges"]],
         )
 
@@ -93196,8 +93294,10 @@ class TerrainsCompare(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainsCompared(_Model):
     """Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
-    (fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the
-    largest difference; with ranges, their areas and the area outside them.
+    (fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;
+    the least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.
+    With `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a
+    factor: the adjusted volumes.
     Attributes:
         cut: Unit: volume.
         fill: Unit: volume.
@@ -93206,6 +93306,7 @@ class TerrainsCompared(_Model):
         fill_area: Unit: area.
         covered: Unit: area.
         uncovered: Unit: area.
+        cell: Unit: m.
         outside_area: Unit: area.
     """
     base: str
@@ -93217,7 +93318,10 @@ class TerrainsCompared(_Model):
     fill_area: float
     covered: float
     uncovered: float
+    adjusted: TerrainAdjusted | None | Unset = UNSET
     bands: list[TerrainDifferenceBand] | Unset = UNSET
+    cell: float | None | Unset = UNSET
+    exact: TerrainVolumes | None | Unset = UNSET
     largest: TerrainDifferenceAt | None | Unset = UNSET
     least: TerrainDifferenceAt | None | Unset = UNSET
     outside_area: float | None | Unset = UNSET
@@ -93233,8 +93337,14 @@ class TerrainsCompared(_Model):
         out["fillArea"] = float(self.fill_area)
         out["covered"] = float(self.covered)
         out["uncovered"] = float(self.uncovered)
+        if self.adjusted is not UNSET:
+            out["adjusted"] = None if self.adjusted is None else self.adjusted.to_json()
         if self.bands is not UNSET:
             out["bands"] = [e0.to_json() for e0 in self.bands]
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
+        if self.exact is not UNSET:
+            out["exact"] = None if self.exact is None else self.exact.to_json()
         if self.largest is not UNSET:
             out["largest"] = None if self.largest is None else self.largest.to_json()
         if self.least is not UNSET:
@@ -93255,7 +93365,10 @@ class TerrainsCompared(_Model):
             fill_area=float(data["fillArea"]),
             covered=float(data["covered"]),
             uncovered=float(data["uncovered"]),
+            adjusted=UNSET if "adjusted" not in data else None if data["adjusted"] is None else TerrainAdjusted.from_json(data["adjusted"]),
             bands=[TerrainDifferenceBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            exact=UNSET if "exact" not in data else None if data["exact"] is None else TerrainVolumes.from_json(data["exact"]),
             largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
             least=UNSET if "least" not in data else None if data["least"] is None else TerrainDifferenceAt.from_json(data["least"]),
             outside_area=UNSET if "outsideArea" not in data else None if data["outsideArea"] is None else float(data["outsideArea"]),
@@ -122793,6 +122906,8 @@ __all__ = [
     "CommentFormsOp",
     "CommitResult",
     "CompareAgainst",
+    "CompareMethod",
+    "CompareMethodName",
     "ComponentEdge",
     "ComponentHatch",
     "ComputedExtractValue",
@@ -125775,6 +125890,7 @@ __all__ = [
     "TenantKindName",
     "TerminalConfig",
     "TerminalDevice",
+    "TerrainAdjusted",
     "TerrainBand",
     "TerrainBands",
     "TerrainCheckClass",
@@ -125802,6 +125918,7 @@ __all__ = [
     "TerrainState",
     "TerrainStateName",
     "TerrainSurfaceDef",
+    "TerrainVolumes",
     "TerrainsAnalysed",
     "TerrainsAnalysis",
     "TerrainsCompare",

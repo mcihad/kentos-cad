@@ -13,6 +13,8 @@ from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
     CloudReturns,
     CloudReturnsName,
+    CompareMethod,
+    CompareMethodName,
     SurfaceSources,
     TerrainCheckpointsAsk,
     TerrainSpikesAsk,
@@ -489,6 +491,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        cell: float | None | Unset = UNSET,
+        cut_factor: float | None | Unset = UNSET,
+        fill_factor: float | None | Unset = UNSET,
+        method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -506,6 +512,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             doc: The drawing it works on.
             base:
             comparison:
+            cell: Unit: m.
+            cut_factor: Unit: 1.
+            fill_factor: Unit: 1.
+            method:
             ranges: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -522,6 +532,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.execute_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            cell=cell,
+            cut_factor=cut_factor,
+            fill_factor=fill_factor,
+            method=method,
             ranges=_opt(ranges, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -532,6 +546,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        cell: float | None | Unset = UNSET,
+        cut_factor: float | None | Unset = UNSET,
+        fill_factor: float | None | Unset = UNSET,
+        method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
     ) -> TerrainsCompared:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -540,6 +558,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.plan_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            cell=cell,
+            cut_factor=cut_factor,
+            fill_factor=fill_factor,
+            method=method,
             ranges=_opt(ranges, lambda x: list(x)),
         ))
 
@@ -550,6 +572,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        cell: float | None | Unset = UNSET,
+        cut_factor: float | None | Unset = UNSET,
+        fill_factor: float | None | Unset = UNSET,
+        method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -558,6 +584,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.validate_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            cell=cell,
+            cut_factor=cut_factor,
+            fill_factor=fill_factor,
+            method=method,
             ranges=_opt(ranges, lambda x: list(x)),
         ))
 
@@ -568,6 +598,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        cell: float | None | Unset = UNSET,
+        cut_factor: float | None | Unset = UNSET,
+        fill_factor: float | None | Unset = UNSET,
+        method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -581,6 +615,10 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.answer_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            cell=cell,
+            cut_factor=cut_factor,
+            fill_factor=fill_factor,
+            method=method,
             ranges=_opt(ranges, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

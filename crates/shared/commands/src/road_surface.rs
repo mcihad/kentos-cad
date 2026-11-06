@@ -164,10 +164,14 @@ pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 
 /// Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;
 /// Civil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan
-/// area of the difference between each pair.
+/// area of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or
+/// `grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result
+/// beside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's
+/// compaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
-/// increasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
+/// increasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over
+/// 0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
 /// `compare_uncovered` (part of the comparison is off the base and left out).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -181,6 +185,71 @@ pub struct TerrainsCompare {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub ranges: Option<Vec<f64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub method: Option<CompareMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill_factor: Option<f64>,
+}
+
+/// How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CompareMethod {
+    #[default]
+    Tin,
+    Grid,
+}
+
+/// The most cells a grid comparison measures.
+pub const MOST_COMPARE_CELLS: f64 = 4_000_000.0;
+
+/// Cut, fill and net (fill − cut) volumes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainVolumes {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub net: f64,
+}
+
+/// The volumes adjusted by the factors (docs/adr/1600): the cut times `cutFactor` (its swell), the fill times
+/// `fillFactor` (its compaction), net their difference; the geometric volumes stay as they are.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainAdjusted {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut_factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill_factor: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub net: f64,
 }
 
 /// A difference's extreme: its value (comparison − base) and where.
@@ -212,8 +281,10 @@ pub struct TerrainDifferenceBand {
 }
 
 /// Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
-/// (fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the
-/// largest difference; with ranges, their areas and the area outside them.
+/// (fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;
+/// the least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.
+/// With `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a
+/// factor: the adjusted volumes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -249,6 +320,16 @@ pub struct TerrainsCompared {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub outside_area: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub cell: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub exact: Option<TerrainVolumes>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub adjusted: Option<TerrainAdjusted>,
 }
 
 pub const ROAD_TERRAINS_QUALITY: &str = "road.terrains.quality";

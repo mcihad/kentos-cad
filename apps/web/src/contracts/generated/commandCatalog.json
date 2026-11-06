@@ -49171,13 +49171,47 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out).",
+        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over\n0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out).",
         "properties": {
           "base": {
             "type": "string"
           },
+          "cell": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "comparison": {
             "type": "string"
+          },
+          "cutFactor": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "fillFactor": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CompareMethod"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "ranges": {
             "items": {
@@ -49200,8 +49234,18 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the\nlargest difference; with ranges, their areas and the area outside them.",
+        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;\nthe least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.\nWith `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a\nfactor: the adjusted volumes.",
         "properties": {
+          "adjusted": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainAdjusted"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "bands": {
             "items": {
               "$ref": "#/$defs/TerrainDifferenceBand"
@@ -49210,6 +49254,14 @@
           },
           "base": {
             "type": "string"
+          },
+          "cell": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
           },
           "comparison": {
             "type": "string"
@@ -49228,6 +49280,16 @@
             "format": "double",
             "type": "number",
             "x-unit": "area"
+          },
+          "exact": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainVolumes"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "fill": {
             "format": "double",
@@ -49294,8 +49356,18 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base; the least and the\nlargest difference; with ranges, their areas and the area outside them.",
+        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;\nthe least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.\nWith `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a\nfactor: the adjusted volumes.",
         "properties": {
+          "adjusted": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainAdjusted"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "bands": {
             "items": {
               "$ref": "#/$defs/TerrainDifferenceBand"
@@ -49304,6 +49376,14 @@
           },
           "base": {
             "type": "string"
+          },
+          "cell": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
           },
           "comparison": {
             "type": "string"
@@ -49322,6 +49402,16 @@
             "format": "double",
             "type": "number",
             "x-unit": "area"
+          },
+          "exact": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainVolumes"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "fill": {
             "format": "double",
@@ -114783,6 +114873,14 @@
           "type": "object"
         }
       ]
+    },
+    "CompareMethod": {
+      "description": "How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells.",
+      "enum": [
+        "tin",
+        "grid"
+      ],
+      "type": "string"
     },
     "ComponentEdge": {
       "additionalProperties": false,
@@ -188097,6 +188195,44 @@
       ],
       "type": "object"
     },
+    "TerrainAdjusted": {
+      "description": "The volumes adjusted by the factors (docs/adr/1600): the cut times `cutFactor` (its swell), the fill times\n`fillFactor` (its compaction), net their difference; the geometric volumes stay as they are.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "net": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "cutFactor",
+        "fillFactor",
+        "cut",
+        "fill",
+        "net"
+      ],
+      "type": "object"
+    },
     "TerrainBand": {
       "description": "A range: its bounds (in the measure's unit), its plan and 3D area, its triangles (slope and aspect; 0 for\nelevation, whose triangles are cut) and, asked, its parts.",
       "properties": {
@@ -189136,6 +189272,32 @@
       "required": [
         "id",
         "name"
+      ],
+      "type": "object"
+    },
+    "TerrainVolumes": {
+      "description": "Cut, fill and net (fill − cut) volumes.",
+      "properties": {
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "net": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "cut",
+        "fill",
+        "net"
       ],
       "type": "object"
     },

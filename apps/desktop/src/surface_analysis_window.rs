@@ -51,7 +51,7 @@ const CLOSE: &str = "Kapat";
 const DRAW_LOW: &str = "Düşük güvenli alanları çiz";
 const DRAW_SPARSE: &str = "Seyrek alanları çiz";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 13] = [
+pub(crate) const FIELDS: [&str; 16] = [
     "Sınırlar",
     "Raster hücresi (m)",
     "Fark aralıkları (m)",
@@ -65,6 +65,10 @@ pub(crate) const FIELDS: [&str; 13] = [
     "En az nokta",
     "İstenen pay",
     "Kontrol doğruluğu (m)",
+    // Fark's method and factors (docs/adr/1600).
+    "Izgara hücresi (m)",
+    "Kazı katsayısı",
+    "Dolgu katsayısı",
 ];
 const MODES: [&str; 5] = ["Analiz", "Fark", "Kalite", "Kapsam", "Yoğunluk"];
 const MEASURES: [&str; 3] = ["Kot (m)", "Eğim (%)", "Bakı (°)"];
@@ -95,12 +99,14 @@ pub struct Window {
     pub(crate) comparison: Option<String>,
     pub(crate) measure: usize,
     pub(crate) roughness: bool,
+    /// Fark by a grid's cells (docs/adr/1600), else the exact TIN–TIN prisms.
+    pub(crate) volume_grid: bool,
     pub(crate) checks: Option<String>,
     /// Kapsam's boundary: a closed object's uid; none, the surface itself.
     pub(crate) boundary: Option<String>,
     /// Kapsam's layer for the low confidence areas.
     pub(crate) layer: Option<String>,
-    pub(crate) fields: [String; 13],
+    pub(crate) fields: [String; 16],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     /// A repair asked (Kalite: the spikes left out, or everything taken back) and its difference, before it is written.
@@ -114,6 +120,8 @@ pub enum Event {
     Comparison(String),
     Measure(usize),
     Roughness(bool),
+    /// Fark's method: a grid (true) or the TIN.
+    VolumeGrid(bool),
     Checks(Option<String>),
     Boundary(Option<String>),
     Layer(String),
@@ -177,7 +185,11 @@ impl Window {
         Ok(TerrainsCompare {
             base: self.surface()?,
             comparison: self.comparison.clone().ok_or("Karşılaştırılacak ikinci yüzeyi seçin.")?,
-            ranges: list(&self.fields[2], FIELDS[2])?,
+            ranges: if self.volume_grid { None } else { list(&self.fields[2], FIELDS[2])? },
+            method: self.volume_grid.then_some(kentos_commands::CompareMethod::Grid),
+            cell: if self.volume_grid { number(&self.fields[13], FIELDS[13])? } else { None },
+            cut_factor: number(&self.fields[14], FIELDS[14])?,
+            fill_factor: number(&self.fields[15], FIELDS[15])?,
         })
     }
 
@@ -261,6 +273,7 @@ impl App {
             comparison: surfaces.get(1).cloned(),
             measure: 1,
             roughness: false,
+            volume_grid: false,
             checks: None,
             boundary: None,
             layer: self.relation_layers().into_iter().next().map(|(id, _)| id),
@@ -308,6 +321,7 @@ impl App {
             Event::Comparison(s) => w.comparison = Some(s),
             Event::Measure(m) => w.measure = m.min(2),
             Event::Roughness(on) => w.roughness = on,
+            Event::VolumeGrid(on) => w.volume_grid = on,
             Event::Checks(l) => w.checks = l,
             Event::Boundary(b) => w.boundary = b,
             Event::Layer(l) => {
@@ -454,7 +468,17 @@ impl App {
                     .push(field("yok", 1, 130.0));
             }
             Mode::Compare => {
-                top = top.push(words::field("Karşılaştırma", pick_surface(&w.comparison, Event::Comparison), None)).push(field("ör. -1, 0, 1", 2, 220.0));
+                // The method and the factors (docs/adr/1600): a grid's cell instead of the ranges; the factors are the
+                // user's, none is guessed.
+                let method = container(Select::new(["TIN–TIN", "Izgara"].into_iter().map(Choice::new), Some(usize::from(w.volume_grid)), |i| {
+                    msg(Event::VolumeGrid(i == 1))
+                }))
+                .width(110);
+                top = top
+                    .push(words::field("Karşılaştırma", pick_surface(&w.comparison, Event::Comparison), None))
+                    .push(words::field("Yöntem", method, None));
+                top = if w.volume_grid { top.push(field("ör. 1", 13, 120.0)) } else { top.push(field("ör. -1, 0, 1", 2, 170.0)) };
+                top = top.push(field("1", 14, 100.0)).push(field("1", 15, 100.0));
             }
             Mode::Quality => {
                 let layers = self.relation_layers();
@@ -524,7 +548,12 @@ impl App {
                         }
                     }
                     Read::Compare(c) => {
+                        let method = match c.cell {
+                            Some(cell) => format!("Izgara, {cell} m hücre (orta nokta)"),
+                            None => "TIN–TIN, kesin prizmalar".to_owned(),
+                        };
                         side = side
+                            .push(line("Yöntem".into(), method))
                             .push(line("Kazı".into(), format!("{:.2} m³ · {:.2} m²", c.cut, c.cut_area)))
                             .push(line("Dolgu".into(), format!("{:.2} m³ · {:.2} m²", c.fill, c.fill_area)))
                             .push(line("Net".into(), format!("{:+.2} m³", c.net)))
@@ -534,6 +563,18 @@ impl App {
                         }
                         for b in &c.bands {
                             side = side.push(line(format!("{:+.2} … {:+.2} m", b.from, b.to), format!("{:.2} m²", b.area)));
+                        }
+                        // The grid beside the exact TIN: their difference is the method's.
+                        if let Some(e) = &c.exact {
+                            side = side
+                                .push(line("Kesin (TIN)".into(), format!("kazı {:.2} · dolgu {:.2} · net {:+.2} m³", e.cut, e.fill, e.net)))
+                                .push(line("Yöntem farkı".into(), format!("kazı {:+.2} · dolgu {:+.2} m³", c.cut - e.cut, c.fill - e.fill)));
+                        }
+                        if let Some(a) = &c.adjusted {
+                            side = side.push(line(
+                                format!("Katsayılı (×{} / ×{})", a.cut_factor, a.fill_factor),
+                                format!("kazı {:.2} · dolgu {:.2} · net {:+.2} m³", a.cut, a.fill, a.net),
+                            ));
                         }
                     }
                     Read::Quality(q) => {
@@ -842,7 +883,12 @@ impl canvas::Program<Message> for Plan<'_> {
             }
             Read::Compare(c) => {
                 if c.bands.is_empty() {
-                    text(&mut frame, "Fark aralığı yazılmadı: hacimler sağda.".into(), Point::new(10.0, 10.0));
+                    let words = if c.cell.is_some() {
+                        "Izgara yönteminde fark aralığı yok: hacimler ve kesin TIN'e göre yöntem farkı sağda."
+                    } else {
+                        "Fark aralığı yazılmadı: hacimler sağda."
+                    };
+                    text(&mut frame, words.into(), Point::new(10.0, 10.0));
                     return vec![frame.into_geometry()];
                 }
                 let most = c.bands.iter().map(|b| b.area).fold(0.0_f64, f64::max).max(1e-9);
