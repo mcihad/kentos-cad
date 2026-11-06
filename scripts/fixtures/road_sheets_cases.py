@@ -191,9 +191,20 @@ def lay(input_, sets=()):
                 depth = KGM_DEPTH if bands == "kgm" else DEPTH
                 sized, _, _ = pcmd.drawing(profile, [0.0, 0.0], ex=ex, frm=va, to=vb)
                 h = sized["frame"][1][1] - sized["frame"][0][1]
+                # Docs/adr/0990, KGM's kot taşıma: a view taller than the map is split to the whole metres of
+                # elevation the map holds over the bands; one that cannot be stays whole and outside.
+                span = None
+                if h + depth > pheight + 1e-6:
+                    room = math.floor((pheight - depth) / ex)
+                    if room > 0:
+                        tried, fit, _ = pcmd.drawing(profile, [0.0, 0.0], ex=ex, frm=va, to=vb, span=float(room))
+                        if fit is not None:
+                            span = float(room)
+                            h = tried["frame"][1][1] - tried["frame"][0][1]
                 at = input_["at"]
                 y0 = at[1] if next_y is None else next_y - h
-                drawn, count, _ = pcmd.drawing(profile, [at[0], y0], ex=ex, frm=va, to=vb, bands=bands, dever=dever)
+                drawn, count, _ = pcmd.drawing(profile, [at[0], y0], ex=ex, frm=va, to=vb, bands=bands, dever=dever,
+                                               span=span)
                 objects += count
                 next_y = y0 - depth - (0.4 * depth)
                 row["view"] = drawn["frame"]
@@ -295,6 +306,8 @@ def cases():
         ok("Ana aks 1:1000, boykesitiyle, 5 kat abartma", {**pro, "scale": 1000, "exaggeration": 5.0}),
         ok("Planı: hiçbir şey yazılmaz", {**pro, "scale": 1000, "exaggeration": 5.0}, op="plan"),
         ok("Doğrulama", {**pro, "scale": 1000}, op="validate"),
+        # Docs/adr/0990: 1:1000 with 10 times exaggeration: a view taller than the map is split (kot taşıma).
+        ok("1:1000, 10 kat abartma: boykesit kot taşımayla haritaya sığar", {**pro, "scale": 1000}),
         ok("Boykesitle 1:500: görünümler haritaya sığmaz, uyarıyla", pro),
         ok("Km 100–400, 20 m bindirme", {"alignment": "g-1", "from": 100.0, "to": 400.0, "overlap": 20.0}),
         ok("Kısmi boykesit: yalnız onun aralığı", {"alignment": "g-1", "profile": "Kısmi kot", "layerId": "yol-boykesit",

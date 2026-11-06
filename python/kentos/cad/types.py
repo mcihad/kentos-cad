@@ -65405,6 +65405,38 @@ class ProfileReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileSplit(_Model):
+    """A part of a profile view split to a fixed span of elevation (docs/adr/0990): its stations and its datum and top.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        datum: Unit: elevation.
+        top: Unit: elevation.
+    """
+    from_: float
+    to: float
+    datum: float
+    top: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["datum"] = float(self.datum)
+        out["top"] = float(self.top)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileSplit:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            datum=float(data["datum"]),
+            top=float(data["top"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesApplied(_Model):
     """Output (and plan) of `cad.profiles.apply` v1.
     Attributes:
@@ -65600,7 +65632,7 @@ class ProfilesDraw(_Model):
 
     Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or
     `exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the
-    lowest elevation), the layer's
+    lowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's
     (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
     the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
     Attributes:
@@ -65616,6 +65648,11 @@ class ProfilesDraw(_Model):
         exaggeration: Unit: 1.
         from_: Unit: m.
         height: Unit: paper-mm.
+        span: The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
+            sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
+            split on whole metres of station where the lines would leave it, each part with its own datum (a grid step under
+            its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
+            datum, the frame as high as the lines. Unit: m.
         superelevation: The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
             absent: the band says none was given.
         to: Unit: m.
@@ -65631,6 +65668,7 @@ class ProfilesDraw(_Model):
     expected_revision: str | None | Unset = UNSET
     from_: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    span: float | None | Unset = UNSET
     superelevation: str | None | Unset = UNSET
     to: float | None | Unset = UNSET
 
@@ -65655,6 +65693,8 @@ class ProfilesDraw(_Model):
             out["from"] = None if self.from_ is None else float(self.from_)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.span is not UNSET:
+            out["span"] = None if self.span is None else float(self.span)
         if self.superelevation is not UNSET:
             out["superelevation"] = self.superelevation
         if self.to is not UNSET:
@@ -65675,6 +65715,7 @@ class ProfilesDraw(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            span=UNSET if "span" not in data else None if data["span"] is None else float(data["span"]),
             superelevation=data.get("superelevation", UNSET),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
         )
@@ -65691,6 +65732,7 @@ class ProfilesDrawn(_Model):
         top: Unit: elevation.
         exaggeration: Unit: 1.
         grid: Unit: m.
+        splits: With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.
     """
     profile: str
     frame: list[list[float]]
@@ -65701,6 +65743,7 @@ class ProfilesDrawn(_Model):
     columns: list[ProfileAt]
     uids: list[str]
     revision: str
+    splits: list[ProfileSplit] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -65713,6 +65756,8 @@ class ProfilesDrawn(_Model):
         out["columns"] = [e0.to_json() for e0 in self.columns]
         out["uids"] = list(self.uids)
         out["revision"] = self.revision
+        if self.splits is not UNSET:
+            out["splits"] = [e0.to_json() for e0 in self.splits]
         return out
 
     @classmethod
@@ -65727,6 +65772,7 @@ class ProfilesDrawn(_Model):
             columns=[ProfileAt.from_json(e0) for e0 in data["columns"]],
             uids=list(data["uids"]),
             revision=data["revision"],
+            splits=[ProfileSplit.from_json(e0) for e0 in data["splits"]] if "splits" in data else UNSET,
         )
 
 
@@ -120455,6 +120501,7 @@ __all__ = [
     "ProfileReport",
     "ProfileSource",
     "ProfileSourceName",
+    "ProfileSplit",
     "ProfileStore",
     "ProfileStoreName",
     "ProfilesApplied",

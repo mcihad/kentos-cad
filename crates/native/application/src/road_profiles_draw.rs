@@ -57,6 +57,9 @@ struct Checked {
     bands: ProfileBands,
     /// The Dever band's schedule (docs/adr/0980): its name, break points and normal slopes.
     dever: Option<(String, kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    /// The view's parts (docs/adr/0990): one with the datum without a `span`, split with one.
+    parts: Vec<crate::road_profile_splits::Part>,
+    split: bool,
     /// KGM's slope and platform rows above the frame (docs/adr/0989).
     corridor: Option<[Vec<crate::road_corridor_bands::Cell>; 6]>,
 }
@@ -155,6 +158,20 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         zs.extend(terrain(&built, s, s0, s1).into_iter().filter_map(|(_, z)| z));
     }
     let (lo, hi) = zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)));
+    let span = match (input.span, input.datum) {
+        (None, _) => None,
+        (Some(v), _) if !v.is_finite() || v <= 0.0 => {
+            return Err(fail(codes::INVALID_LABEL, "Kot aralığı (span) 0'dan büyük olmalı.".into(), "span"));
+        }
+        (Some(_), Some(_)) => {
+            return Err(fail(
+                codes::INVALID_LABEL,
+                "Kot aralığıyla (span) kıyas kotu (datum) verilmez: her parçanın kıyas kotunu KentOS seçer.".into(),
+                "datum",
+            ));
+        }
+        (Some(v), None) => Some(v),
+    };
     let datum = match input.datum {
         Some(d) if !d.is_finite() => {
             return Err(fail(codes::INVALID_LABEL, "Kıyas kotu (datum) sonlu bir sayı olmalı.".into(), "datum"));
@@ -169,7 +186,35 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         Some(d) => d,
         None => lo.floor() - 1.0,
     };
-    let top = hi.ceil() + 1.0;
+    let mut top = hi.ceil() + 1.0;
+    let mut datum = datum;
+    // Docs/adr/0990: a fixed span splits the view where the lines would leave it.
+    let parts = match span {
+        None => vec![crate::road_profile_splits::Part { from: s0, to: s1, datum }],
+        Some(span) => {
+            let points = surface.as_ref().map(|sf| terrain(&built, sf, s0, s1)).unwrap_or_default();
+            let lines = crate::road_profile_splits::Lines {
+                vertical: &built.vertical,
+                terrain: points.iter().filter_map(|(s, z)| z.map(|z| (*s, z))).collect(),
+                gaps: points.iter().filter(|(_, z)| z.is_none()).map(|(s, _)| *s).collect(),
+            };
+            let parts = crate::road_profile_splits::split(&lines, s0, s1, span).map_err(|(a, b)| {
+                fail(
+                    codes::INVALID_LABEL,
+                    format!(
+                        "Kot aralığı (span) {} m, {} ile {} arasındaki kot farkına yetmiyor; büyütün.",
+                        num(span),
+                        km_text(built.alignment.km(a), 2),
+                        km_text(built.alignment.km(b), 2)
+                    ),
+                    "span",
+                )
+            })?;
+            datum = parts[0].datum;
+            top = datum + span;
+            parts
+        }
+    };
     let mut layer_warnings = checks::layer(doc, &input.layer_id)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let (stale, now) = common::stale(doc, def);
@@ -250,6 +295,8 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw) -> Result<Checked,
         bands,
         dever,
         corridor,
+        split: span.is_some(),
+        parts,
     })
 }
 
@@ -351,6 +398,14 @@ fn turned(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Opt
     )
 }
 
+/// A text with a mask under it, so the lines it sits on do not run through it.
+fn masked(mut words: NewObject) -> NewObject {
+    if let EntityGeometry::Text { mask, .. } = &mut words.geometry {
+        *mask = true;
+    }
+    words
+}
+
 /// The runs of the terrain drawn: a stretch between two points is drawn where both have a height and its middle lies
 /// on the surface.
 pub fn terrain_runs(points: &[(f64, Option<f64>)], on: impl Fn(f64) -> bool) -> Vec<Vec<[f64; 2]>> {
@@ -381,28 +436,68 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     let names = 14.0 * h;
     let (s0, s1) = (c.s0, c.s1);
     let x = |s: f64| at[0] + (s - s0);
-    let y = |z: f64| at[1] + (z - c.datum) * c.exaggeration;
+    // Docs/adr/0990: each part of a split view has its own datum; `y` the first's, `yi` part `i`'s.
+    let span = c.top - c.datum;
+    let yi = |i: usize, z: f64| at[1] + (z - c.parts[i].datum) * c.exaggeration;
+    let part = |s: f64| c.parts.iter().position(|p| s <= p.to + 1e-9).unwrap_or(c.parts.len() - 1);
+    let y = |z: f64| yi(0, z);
+    let ys = |s: f64, z: f64| yi(part(s), z);
     let mut out = Vec::new();
     // The frame and the grid.
     let (x0, x1, y0, y1) = (x(s0), x(s1), y(c.datum), y(c.top));
     out.push(path(&[[x0, y0], [x1, y0], [x1, y1], [x0, y1]], true, None, Some(0.35)));
     let g = grid_step(c.datum, c.top);
-    let mut k = (c.datum / g).ceil();
-    while k * g <= c.top + 1e-9 {
-        let v = k * g;
-        if v > c.datum + 1e-9 && v < c.top - 1e-9 {
-            out.push(line([x0, y(v)], [x1, y(v)], None, Some(0.13)));
+    let heights = |datum: f64| {
+        let mut k = (datum / g).ceil();
+        let mut out = Vec::new();
+        while k * g <= datum + span + 1e-9 {
+            out.push(k * g);
+            k += 1.0;
         }
-        out.push(text([x0 - h, y(v)], format!("{v:.2}"), h, TextAlign::MiddleRight, None));
-        k += 1.0;
+        out
+    };
+    for (i, p) in c.parts.iter().enumerate() {
+        let (xa, xb) = (x(p.from), x(p.to));
+        if i > 0 {
+            // The split: a line across the frame, the part before's heights left of it and this one's right.
+            out.push(line([xa, y0], [xa, y1], None, Some(0.35)));
+            let before = c.parts[i - 1].datum;
+            for v in heights(before) {
+                out.push(masked(text([xa - 0.5 * h, y0 + (v - before) * c.exaggeration], format!("{v:.2}"), h, TextAlign::MiddleRight, None)));
+            }
+        }
+        for v in heights(p.datum) {
+            let yv = yi(i, v);
+            if v > p.datum + 1e-9 && v < p.datum + span - 1e-9 {
+                out.push(line([xa, yv], [xb, yv], None, Some(0.13)));
+            }
+            if i == 0 {
+                out.push(text([x0 - h, yv], format!("{v:.2}"), h, TextAlign::MiddleRight, None));
+            } else {
+                // Masked: the grid's lines run through the heights at a split (Y84's first picture).
+                out.push(masked(text([xa + 0.5 * h, yv], format!("{v:.2}"), h, TextAlign::MiddleLeft, None)));
+            }
+        }
     }
+    // A line in station and elevation drawn in each part it crosses.
+    let pieces = |pts: &[[f64; 2]]| -> Vec<Vec<[f64; 2]>> {
+        c.parts
+            .iter()
+            .enumerate()
+            .filter_map(|(i, p)| {
+                let run = if c.split { crate::road_profile_splits::cut(pts, p.from, p.to)? } else { pts.to_vec() };
+                Some(run.iter().map(|q| [x(q[0]), yi(i, q[1])]).collect())
+            })
+            .collect()
+    };
     // The terrain.
     if let Some(surface) = &c.surface {
         let core = &c.built.alignment.core;
         let on = |s: f64| core.at(s).is_some_and(|p| surface.height(p.x, p.y).z.is_some());
         for run in terrain_runs(&terrain(&c.built, surface, s0, s1), on) {
-            let pts: Vec<[f64; 2]> = run.iter().map(|p| [x(p[0]), y(p[1])]).collect();
-            out.push(path(&pts, false, None, Some(0.25)));
+            for pts in pieces(&run) {
+                out.push(path(&pts, false, None, Some(0.25)));
+            }
         }
     }
     // The design line, a curve in 16 pieces, and each curve's sizes.
@@ -417,12 +512,14 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
         for i in 0..=n {
             let s = a + (b - a) * i as f64 / n as f64;
             let z = p.at(s).0;
-            if pts.last().is_none_or(|q| (q[0] - x(s)).abs() > 1e-9) {
-                pts.push([x(s), y(z)]);
+            if pts.last().is_none_or(|q| (q[0] - s).abs() > 1e-9) {
+                pts.push([s, z]);
             }
         }
     }
-    out.push(path(&pts, false, Some(RED), Some(0.5)));
+    for pts in pieces(&pts) {
+        out.push(path(&pts, false, Some(RED), Some(0.5)));
+    }
     for cu in c.built.vertical.curves.iter().filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9) {
         let size = match cu.curve {
             VCurve::Asymmetric { length_in, length_out } => format!("L1={length_in:.2} L2={length_out:.2}"),
@@ -430,8 +527,9 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             _ => format!("L={:.2}", cu.end[0] - cu.start[0]),
         };
         let top = cu.start[1].max(cu.end[1]).max(cu.extreme.map_or(f64::NEG_INFINITY, |e| e[1]));
+        let mid = 0.5 * (cu.start[0].max(s0) + cu.end[0].min(s1));
         out.push(text(
-            [x(0.5 * (cu.start[0].max(s0) + cu.end[0].min(s1))), y(top) + 2.0 * h],
+            [x(mid), ys(mid, top) + 2.0 * h],
             format!("{} {size} K={:.1}", cu.pvi, cu.k.unwrap_or(0.0)),
             h,
             TextAlign::BottomCenter,
@@ -447,7 +545,7 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             if s < s0 - 1e-9 || s > s1 + 1e-9 {
                 continue;
             }
-            let p = [x(s), y(z)];
+            let p = [x(s), ys(s, z)];
             let down = p[1] > 0.5 * (y0 + y1);
             // Slanted 6 mm into the frame, off its edge, as the 2024 sheets draw it.
             let inward = if start { 6.0 * mm } else { -6.0 * mm };
@@ -548,6 +646,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked) -> Com
         other => return crate::trim::relay(other),
     };
     let (s0, s1) = (c.s0, c.s1);
+    let parts = splits(&c);
     CommandResult::Completed {
         output: ProfilesDrawn {
             profile: c.id,
@@ -559,12 +658,22 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked) -> Com
             top: c.top,
             exaggeration: c.exaggeration,
             grid: grid_step(c.datum, c.top),
+            splits: parts,
             columns: cols,
             uids: created.created,
             revision: cx.doc.revision().to_string(),
         },
         warnings: c.warnings,
     }
+}
+
+/// A split view's parts (docs/adr/0990); none without a `span`.
+fn splits(c: &Checked) -> Vec<kentos_commands::ProfileSplit> {
+    let span = c.top - c.datum;
+    if !c.split {
+        return Vec::new();
+    }
+    c.parts.iter().map(|p| kentos_commands::ProfileSplit { from: p.from, to: p.to, datum: p.datum, top: p.datum + span }).collect()
 }
 
 /// A profile view as a sheet set draws it (docs/adr/0908 §10): its objects, what `road.profiles.draw` would answer
@@ -586,6 +695,7 @@ pub(crate) fn view(
         top: c.top,
         exaggeration: c.exaggeration,
         grid: grid_step(c.datum, c.top),
+        splits: splits(&c),
         columns: cols,
         uids: Vec::new(),
         revision: doc.revision().to_string(),

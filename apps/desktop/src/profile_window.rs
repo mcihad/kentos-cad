@@ -351,6 +351,8 @@ pub struct Window {
     /// Çizime yaz's bands: KGM's 2019 order when set (docs/adr/0980), and the schedule its Dever band draws.
     pub(crate) kgm: bool,
     pub(crate) dever: Option<String>,
+    /// Çizime yaz's span of elevation as typed (docs/adr/0990): empty, the frame as high as the lines.
+    pub(crate) span: String,
     /// Düşey kurp boyu over the window (profile_lengths_window.rs, docs/adr/0935 §3).
     pub(crate) lengths: Option<Box<crate::profile_lengths_window::Lengths>>,
     /// The values typed there, kept while the program runs when it is closed.
@@ -474,6 +476,7 @@ pub enum Event {
     Place(String),
     /// KentOS's bands (false) or KGM's (true), docs/adr/0980.
     Kgm(bool),
+    Span(String),
     /// The superelevation schedule KGM's Dever band draws (its id); none: no schedule.
     Dever(Option<String>),
     Draw,
@@ -835,6 +838,7 @@ impl App {
             Event::DrawLayer(id) => w.layer = Some(id),
             Event::Place(t) => w.place = t,
             Event::Kgm(on) => w.kgm = on,
+            Event::Span(t) => w.span = t,
             Event::Dever(id) => w.dever = id,
             Event::Draw => return self.draw_profile(),
             Event::Cancel => {
@@ -937,6 +941,8 @@ impl App {
             superelevation: if w.kgm { w.dever.clone() } else { None },
             // Docs/adr/0989: the rows are chosen in Yol paftaları; this window has no corridor choice yet.
             corridor: None,
+            // Docs/adr/0990: empty or not a number, no split; a number at most zero the command refuses.
+            span: number(&w.span).ok().flatten(),
             expected_revision: None,
         };
         let Some(doc) = self.document.as_mut() else {
@@ -1140,6 +1146,8 @@ impl App {
             words::field("Katman", layer, None),
             words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
             words::field("Bantlar", container(bands).width(130), None),
+            // Docs/adr/0990: KGM's kot taşıma, the frame a fixed span of elevation high.
+            words::field("Kot aralığı (m)", kentos_ui::widget::text_field("Sığdır", &w.span).on_input(|t| msg(Event::Span(t))).width(80), None),
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
@@ -1367,6 +1375,7 @@ impl App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Düşey abartma", text) => Some(msg(Event::Exaggeration(text.to_owned()))),
             Control::Fill("Yer (Y; X)", text) => Some(msg(Event::Place(text.to_owned()))),
+            Control::Fill("Kot aralığı (m)", text) => Some(msg(Event::Span(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

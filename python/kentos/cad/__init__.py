@@ -2532,6 +2532,7 @@ __all__ = [
     "ProfileReport",
     "ProfileSource",
     "ProfileSourceName",
+    "ProfileSplit",
     "ProfileStore",
     "ProfileStoreName",
     "ProfilesApplied",

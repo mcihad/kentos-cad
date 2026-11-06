@@ -378,3 +378,72 @@ fn screens_kgm() {
         println!("{}", file.display());
     }
 }
+
+/// Çizime yaz with a Kot aralığı (docs/adr/0990): 12 m splits the profile in four as the command's cases say (datums
+/// 100, 104, 106, 108), so the last part's top height 120.00 is written, which the frame as high as the lines (top 119)
+/// never writes; the frame is 12 m × 10 high.
+#[test]
+fn a_span_splits_the_drawn_profile() {
+    let mut app = kgm_app();
+    let _ = app.update(Message::Run("profile.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::DrawLayer("0".into()));
+    send(&mut app, W::Place("0; -200".into()));
+    send(&mut app, W::Span("12".into()));
+    send(&mut app, W::Draw);
+    let doc = &app.document.as_ref().expect("doc").model;
+    let texts: Vec<String> = doc
+        .entities()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.text.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(texts.iter().filter(|t| *t == "120.00").count(), 1, "the last part's top");
+}
+
+/// Kot aralığı in the window and the split profile drawn, light and dark; `.run/gui-evidence/yol-y84/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib profile_window_tests::screens_span -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_span() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y84");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = kgm_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("profile.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::DrawLayer("0".into()));
+        send(&mut app, W::Place("0; -200".into()));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Span("12".into()));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y84-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Draw);
+        let _ = app.update(Message::Profiles(W::Cancel));
+        // The frame: lower left (0, −200), 669 m long, 12 m × 10 high.
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -45.0, min_y: -215.0, max_x: 690.0, max_y: -70.0 }, 12.0);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y84-cizim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

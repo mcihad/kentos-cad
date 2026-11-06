@@ -448,6 +448,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         request_id: str | None = None,
@@ -492,6 +493,11 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             expected_revision:
             from_: Unit: m.
             height: Unit: paper-mm.
+            span: The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
+                sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
+                split on whole metres of station where the lines would leave it, each part with its own datum (a grid step under
+                its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
+                datum, the frame as high as the lines. Unit: m.
             superelevation: The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
                 absent: the band says none was given.
             to: Unit: m.
@@ -519,6 +525,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ), request_id=request_id, expected=expected)
@@ -539,6 +546,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> ProfilesDrawn:
@@ -557,6 +565,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ))
@@ -577,6 +586,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -595,6 +605,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ))
@@ -615,6 +626,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         op: str = "execute",
@@ -638,6 +650,7 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             expected_revision=expected_revision,
             from_=from_,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ), op=op, request_id=request_id, expected=expected)

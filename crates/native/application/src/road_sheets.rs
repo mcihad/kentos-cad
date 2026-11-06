@@ -235,10 +235,24 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                     bands: input.bands,
                     superelevation: input.superelevation.clone(),
                     corridor: input.corridor.clone(),
+                    span: None,
                     expected_revision: None,
                 };
                 let (_, sized, _) = road_profiles_draw::view(doc, &asked)?;
-                let h = sized.frame[1][1] - sized.frame[0][1];
+                let mut h = sized.frame[1][1] - sized.frame[0][1];
+                // Docs/adr/0990, KGM's kot taşıma: a view taller than the map is split to the whole metres of
+                // elevation the map holds over its rows and bands; one that cannot be stays whole and outside.
+                if let Some(ph) = profile_height.filter(|ph| h + rise + depth > ph + 1e-6) {
+                    let ex = sized.exaggeration;
+                    let room = ((ph - rise - depth) / ex).floor();
+                    if room > 0.0 {
+                        let split = ProfilesDraw { span: Some(room), ..asked.clone() };
+                        if let Ok((_, tried, _)) = road_profiles_draw::view(doc, &split) {
+                            asked = split;
+                            h = tried.frame[1][1] - tried.frame[0][1];
+                        }
+                    }
+                }
                 // The first view's lower left is `at`; each next one's top is a gap under the bands before it.
                 let y = next_y.map_or(at[1], |n| n - h - rise);
                 asked.at = [at[0], y];

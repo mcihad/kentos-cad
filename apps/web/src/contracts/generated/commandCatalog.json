@@ -39805,7 +39805,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
+        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
         "properties": {
           "at": {
             "items": {
@@ -39888,6 +39888,15 @@
           "profile": {
             "type": "string"
           },
+          "span": {
+            "description": "The metres of elevation the frame holds (docs/adr/0990; KGM 2019: \"Profillerin paftalarda ayrılan genişliğe\nsığmaması durumunda kot taşıma çizgisi yapılacaktır\"): the frame is `span` × `exaggeration` high and the view is\nsplit on whole metres of station where the lines would leave it, each part with its own datum (a grid step under\nits lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one\ndatum, the frame as high as the lines.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "superelevation": {
             "description": "The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);\nabsent: the band says none was given.",
             "type": [
@@ -39957,6 +39966,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "splits": {
+            "description": "With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.",
+            "items": {
+              "$ref": "#/$defs/ProfileSplit"
+            },
+            "type": "array"
           },
           "top": {
             "format": "double",
@@ -40029,6 +40045,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "splits": {
+            "description": "With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.",
+            "items": {
+              "$ref": "#/$defs/ProfileSplit"
+            },
+            "type": "array"
           },
           "top": {
             "format": "double",
@@ -160253,6 +160276,38 @@
           "type": "string"
         }
       ]
+    },
+    "ProfileSplit": {
+      "description": "A part of a profile view split to a fixed span of elevation (docs/adr/0990): its stations and its datum and top.",
+      "properties": {
+        "datum": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "datum",
+        "top"
+      ],
+      "type": "object"
     },
     "ProfileStore": {
       "description": "Where `cad.profiles.import` keeps a profile or a mapping (docs/adr/0735).",

@@ -386,3 +386,60 @@ fn screens_corridor_rows() {
         }
     }
 }
+
+/// Y84's pictures (docs/adr/0990): KGM's kot taşıma. The corridor cases' road on KGM's A1 sheet at 1:2000 with 40
+/// times exaggeration: the profile is taller than the sheet's profile map, so each view is split to the metres of
+/// elevation the map holds, a line with both parts' heights at each split.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_profile_splits -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_profile_splits() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y84");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let (mut app, _) = App::boot(None);
+        let bands: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/road/v1/corridor-bands.json")).expect("json");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(bands["setup"].clone()).expect("the drawing reads");
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Alignment("g-1".into()));
+        send(&mut app, W::Field(1, "2000".into()));
+        send(&mut app, W::Field(2, "40".into()));
+        // Below the plan: the default "0; -500" puts a frame as tall as the map over the plan's objects (ADR 0990 §Açık).
+        send(&mut app, W::Field(0, "0; -3000".into()));
+        send(&mut app, W::Profile(Some("b-1".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Corridor(Some("c-1".into())));
+        send(&mut app, W::Make);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y84-pafta-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        if theme == "light" {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
+            let file = out.join("y84-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
