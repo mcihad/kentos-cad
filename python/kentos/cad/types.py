@@ -94191,6 +94191,256 @@ class TopologyChecked(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TopologyClean(_Model):
+    """Input of `cad.topology.clean` v1: what to correct (`uids`; none: every line, polyline, arc and area on a visible,
+    unlocked layer), the tolerance (metres, finite, at least 0.000001), the four works (Uçlar `ends` on, Köşeler
+    `vertices` off, Uzat `extend` on, Buda `trim` on when not given). The other objects on visible layers are supports:
+    never moved. A given object that cannot be corrected (on a locked or hidden layer, or of a kind the clean-up does
+    not correct) is counted in `skipped`, as the tool says it.
+
+    Refusals, in this order: `invalid_input` (`tolerance`), `invalid_revision`, `revision_conflict`, `invalid_uid` and
+    `entity_not_found` (`uids[i]`); the write (and `validate`) last `clean_beyond_acceptance` (`tolerance`: a move past
+    the quality profile's acceptance threshold). One undo step “Topolojik temizlik”; nothing to correct writes nothing.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    tolerance: float
+    ends: bool | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    extend: bool | None | Unset = UNSET
+    trim: bool | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+    vertices: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tolerance"] = float(self.tolerance)
+        if self.ends is not UNSET:
+            out["ends"] = self.ends
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.extend is not UNSET:
+            out["extend"] = self.extend
+        if self.trim is not UNSET:
+            out["trim"] = self.trim
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        if self.vertices is not UNSET:
+            out["vertices"] = self.vertices
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyClean:
+        return cls(
+            tolerance=float(data["tolerance"]),
+            ends=data.get("ends", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            extend=data.get("extend", UNSET),
+            trim=data.get("trim", UNSET),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+            vertices=data.get("vertices", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyCleanChange(_Model):
+    """A changed object: its layer, its area (an area) or length (the others) before and after, its source vertices kept
+    bit for bit, its moves, the farthest and the total of them (metres).
+    Attributes:
+        kept: Unit: count.
+        moves: Unit: count.
+        max_moved: Unit: length.
+        total_moved: Unit: length.
+        area_after: Unit: area.
+        area_before: Unit: area.
+        length_after: Unit: length.
+        length_before: Unit: length.
+    """
+    uid: str
+    layer: str
+    kept: int
+    moves: int
+    max_moved: float
+    total_moved: float
+    area_after: float | None | Unset = UNSET
+    area_before: float | None | Unset = UNSET
+    length_after: float | None | Unset = UNSET
+    length_before: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["kept"] = self.kept
+        out["moves"] = self.moves
+        out["maxMoved"] = float(self.max_moved)
+        out["totalMoved"] = float(self.total_moved)
+        if self.area_after is not UNSET:
+            out["areaAfter"] = None if self.area_after is None else float(self.area_after)
+        if self.area_before is not UNSET:
+            out["areaBefore"] = None if self.area_before is None else float(self.area_before)
+        if self.length_after is not UNSET:
+            out["lengthAfter"] = None if self.length_after is None else float(self.length_after)
+        if self.length_before is not UNSET:
+            out["lengthBefore"] = None if self.length_before is None else float(self.length_before)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyCleanChange:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            kept=data["kept"],
+            moves=data["moves"],
+            max_moved=float(data["maxMoved"]),
+            total_moved=float(data["totalMoved"]),
+            area_after=UNSET if "areaAfter" not in data else None if data["areaAfter"] is None else float(data["areaAfter"]),
+            area_before=UNSET if "areaBefore" not in data else None if data["areaBefore"] is None else float(data["areaBefore"]),
+            length_after=UNSET if "lengthAfter" not in data else None if data["lengthAfter"] is None else float(data["lengthAfter"]),
+            length_before=UNSET if "lengthBefore" not in data else None if data["lengthBefore"] is None else float(data["lengthBefore"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyCleanCounts(_Model):
+    """The counts of docs/adr/0148 §9: ends joined, vertices joined, ends extended, trimmed, moved onto a line.
+    Attributes:
+        ends: Unit: count.
+        vertices: Unit: count.
+        extended: Unit: count.
+        trimmed: Unit: count.
+        edges: Unit: count.
+    """
+    ends: int
+    vertices: int
+    extended: int
+    trimmed: int
+    edges: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ends"] = self.ends
+        out["vertices"] = self.vertices
+        out["extended"] = self.extended
+        out["trimmed"] = self.trimmed
+        out["edges"] = self.edges
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyCleanCounts:
+        return cls(
+            ends=data["ends"],
+            vertices=data["vertices"],
+            extended=data["extended"],
+            trimmed=data["trimmed"],
+            edges=data["edges"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyCleanMove(_Model):
+    """A move: the object, its kind (`end` joined, `vertex` joined, `extended`, `trimmed`, `edge`: an end moved onto a
+    line), where it was, where it goes and how far (metres), in the core's order.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        distance: Unit: length.
+    """
+    uid: str
+    kind: str
+    from_: Vec2
+    to: Vec2
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["kind"] = self.kind
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyCleanMove:
+        return cls(
+            uid=data["uid"],
+            kind=data["kind"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TopologyCleaned(_Model):
+    """Output of `cad.topology.clean` v1, and its plan: the objects it corrects and the supports, the given ones skipped,
+    the counts, every move, the changed objects in the drawing's order, the moves over them all (`moved`, `maxMoved`,
+    `totalMoved`), the change of the areas' sum (square metres), the quality profile's acceptance threshold when one is
+    set and how many moves go past it, and the revision after (a plan: before).
+    Attributes:
+        objects: Unit: count.
+        supports: Unit: count.
+        skipped: Unit: count.
+        moved: Unit: count.
+        max_moved: Unit: length.
+        total_moved: Unit: length.
+        area_change: Unit: area.
+        beyond: Unit: count.
+        acceptance: Unit: length.
+    """
+    objects: int
+    supports: int
+    skipped: int
+    counts: TopologyCleanCounts
+    moves: list[TopologyCleanMove]
+    changes: list[TopologyCleanChange]
+    moved: int
+    max_moved: float
+    total_moved: float
+    area_change: float
+    beyond: int
+    revision: str
+    acceptance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["objects"] = self.objects
+        out["supports"] = self.supports
+        out["skipped"] = self.skipped
+        out["counts"] = self.counts.to_json()
+        out["moves"] = [e0.to_json() for e0 in self.moves]
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        out["moved"] = self.moved
+        out["maxMoved"] = float(self.max_moved)
+        out["totalMoved"] = float(self.total_moved)
+        out["areaChange"] = float(self.area_change)
+        out["beyond"] = self.beyond
+        out["revision"] = self.revision
+        if self.acceptance is not UNSET:
+            out["acceptance"] = None if self.acceptance is None else float(self.acceptance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TopologyCleaned:
+        return cls(
+            objects=data["objects"],
+            supports=data["supports"],
+            skipped=data["skipped"],
+            counts=TopologyCleanCounts.from_json(data["counts"]),
+            moves=[TopologyCleanMove.from_json(e0) for e0 in data["moves"]],
+            changes=[TopologyCleanChange.from_json(e0) for e0 in data["changes"]],
+            moved=data["moved"],
+            max_moved=float(data["maxMoved"]),
+            total_moved=float(data["totalMoved"]),
+            area_change=float(data["areaChange"]),
+            beyond=data["beyond"],
+            revision=data["revision"],
+            acceptance=UNSET if "acceptance" not in data else None if data["acceptance"] is None else float(data["acceptance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TopologyException(_Model):
     """A finding marked as left on purpose: its rule, its objects' persistent
     ids in the finding's order, and its place.
@@ -124105,6 +124355,11 @@ __all__ = [
     "ToolParameter",
     "TopologyCheck",
     "TopologyChecked",
+    "TopologyClean",
+    "TopologyCleanChange",
+    "TopologyCleanCounts",
+    "TopologyCleanMove",
+    "TopologyCleaned",
     "TopologyDecision",
     "TopologyDecisionName",
     "TopologyException",

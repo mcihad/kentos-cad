@@ -2381,6 +2381,16 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
+    Entry {
+        id: "cad.topology.clean",
+        refusals: &[
+            REVISION,
+            &["invalid_input", "invalid_uid", "entity_not_found", "clean_beyond_acceptance"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // GNSS baz ağı dengelemesi (plan/map-cad.md MAP-05, docs/adr/1380).
     Entry {
         id: "cad.survey.baselines",

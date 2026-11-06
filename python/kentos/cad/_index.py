@@ -278,6 +278,7 @@ COMMANDS: dict[str, Any] = {
     "cad.time.query": time.query,
     "cad.time.version": time.version,
     "cad.topology.check": topology.check,
+    "cad.topology.clean": topology.clean,
     "cad.topology.exceptions": topology.exceptions,
     "cad.topology.repair": topology.repair,
     "cad.ucs.set": ucs.set,

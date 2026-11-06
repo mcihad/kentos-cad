@@ -21,16 +21,13 @@
 
 use std::collections::HashSet;
 
-use kentos_commands::{AreaPart, EditOperation, Entity, EntityEdit, EntityGeometry, RingGeometry};
+use kentos_commands::{EditOperation, Entity, EntityEdit, EntityGeometry};
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::geom::arc::ArcGeom;
-use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::ops::edges::entity_edges;
-use kentos_geometry_core::ops::topology::{
-    TopoObject, TopoPath, TopoResult, TopoWorks, arc_path, path_arc, topology_clean,
-};
-use kentos_native_application::elevation::paths as elevated_paths;
+use kentos_geometry_core::ops::topology::{TopoObject, TopoResult, TopoWorks, topology_clean};
 use kentos_native_application::geometry::{entity_of, shape};
+// The objects as the core takes them and the geometries they come back as are the command's (docs/adr/1262).
+pub use kentos_native_application::topology_clean::{geometry_of, object};
+use kentos_native_application::topology_clean::{corrected, takes_part};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
@@ -48,12 +45,7 @@ pub const LABEL: &str = "Topolojik temizlik";
 /// The tolerance before any is typed, metres (docs/adr/0148 §3).
 pub const FIRST_TOLERANCE: f64 = 0.01;
 /// The works before any is turned: Köşeler off, the others on.
-pub const FIRST_WORKS: TopoWorks = TopoWorks {
-    ends: true,
-    vertices: false,
-    extend: true,
-    trim: true,
-};
+pub const FIRST_WORKS: TopoWorks = kentos_native_application::topology_clean::FIRST_WORKS;
 /// The smallest tolerance, metres: the core's “the same place”.
 const LEAST: f64 = 1e-6;
 /// The changes marked at most.
@@ -282,27 +274,6 @@ impl Topology {
     }
 }
 
-/// The kinds the cleanup corrects (docs/adr/0148 §2).
-fn corrected(e: &Entity) -> bool {
-    matches!(
-        e,
-        Entity::Line(_) | Entity::Polyline(_) | Entity::Arc(_) | Entity::Polygon(_)
-    )
-}
-
-/// The kinds that take part: the corrected ones and the supports' own.
-fn takes_part(e: &Entity) -> bool {
-    corrected(e)
-        || matches!(
-            e,
-            Entity::Point(_)
-                | Entity::Circle(_)
-                | Entity::Ellipse(_)
-                | Entity::Spline(_)
-                | Entity::Nurbs(_)
-        )
-}
-
 /// `4 uç birleşir`, `1 uç uzar` …: the counts that are not naught, in the
 /// words of now or, `past`, once written (docs/adr/0148 §9).
 fn counted(r: &TopoResult, past: bool) -> Vec<String> {
@@ -346,206 +317,6 @@ fn tag_lines(plan: &Plan, f: &Format) -> Vec<String> {
     ));
     lines.push("Enter: uygula".to_owned());
     lines
-}
-
-/// A path's bulges as the core takes them: one a vertex, when any bends; none when all are straight.
-fn bulges_of(n: usize, bulges: Option<&[f64]>) -> Option<Vec<f64>> {
-    let b = bulges?;
-    b.iter()
-        .any(|v| *v != 0.0)
-        .then(|| (0..n).map(|i| b.get(i).copied().unwrap_or(0.0)).collect())
-}
-
-/// A circle as a boundary: two half turns (docs/adr/0148 §2).
-fn circle_object(c: Vec2, r: f64) -> TopoObject {
-    TopoObject {
-        kind: "edges".into(),
-        fixed: true,
-        paths: vec![TopoPath {
-            pts: vec![Vec2::new(c.x + r, c.y), Vec2::new(c.x - r, c.y)],
-            bulges: Some(vec![1.0, 1.0]),
-            closed: true,
-            zs: vec![None, None],
-        }],
-    }
-}
-
-/// An edge of an ellipse's or a curve's outline (its 0.1 mm chords, docs/adr/0149 §5.3) as a path of its own.
-fn edge_path(edge: &Edge) -> Option<TopoPath> {
-    match *edge {
-        Edge::Seg { a, b } => Some(TopoPath {
-            pts: vec![a, b],
-            bulges: None,
-            closed: false,
-            zs: vec![None, None],
-        }),
-        Edge::Arc { c, r, a0, sweep } => arc_path(&ArcGeom {
-            c,
-            r,
-            a0,
-            a1: a0 + sweep,
-        }),
-    }
-}
-
-fn v(p: &kentos_commands::Vec2) -> Vec2 {
-    Vec2::new(p.x, p.y)
-}
-
-fn w(p: Vec2) -> kentos_commands::Vec2 {
-    kentos_commands::Vec2 { x: p.x, y: p.y }
-}
-
-/// An object as the cleanup takes it (docs/adr/0148 §2), or none when it
-/// takes no part: a line, a polyline and an area by their paths with their
-/// elevations (`elevation::paths`' order), an arc as its two ends and a
-/// bulge, a point (always fixed), a circle, an ellipse or a curve as edges
-/// (always fixed). The web's is `topoObject` (`topologyTool.ts`).
-pub fn object(e: &Entity, fixed: bool) -> Option<TopoObject> {
-    let paths = || {
-        elevated_paths(e)
-            .into_iter()
-            .map(|p| TopoPath {
-                bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
-                pts: p.pts,
-                closed: p.closed,
-                zs: p.zs,
-            })
-            .collect()
-    };
-    let kind = |k: &str, paths: Vec<TopoPath>| {
-        Some(TopoObject {
-            kind: k.into(),
-            fixed,
-            paths,
-        })
-    };
-    match e {
-        Entity::Line(_) => kind("line", paths()),
-        Entity::Polyline(_) => kind("polyline", paths()),
-        Entity::Polygon(_) => kind("area", paths()),
-        Entity::Arc(a) => match arc_path(&ArcGeom {
-            c: v(&a.c),
-            r: a.r,
-            a0: a.a0,
-            a1: a.a1,
-        }) {
-            Some(path) => kind("arc", vec![path]),
-            None => Some(circle_object(v(&a.c), a.r)),
-        },
-        Entity::Point(p) => Some(TopoObject {
-            kind: "point".into(),
-            fixed: true,
-            paths: vec![TopoPath {
-                pts: vec![v(&p.p)],
-                bulges: None,
-                closed: false,
-                zs: vec![p.z],
-            }],
-        }),
-        Entity::Circle(c) => Some(circle_object(v(&c.c), c.r)),
-        Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_) => Some(TopoObject {
-            kind: "edges".into(),
-            fixed: true,
-            paths: entity_edges(&shape(e))
-                .iter()
-                .filter_map(edge_path)
-                .collect(),
-        }),
-        _ => None,
-    }
-}
-
-/// The geometry a corrected object takes, as `cad.entities.edit` writes it:
-/// its paths back in `elevation::paths`' order (an area's outer ring, its
-/// holes, then each other part's ring and holes), each with its elevations
-/// explicit; an arc rebuilt from its ends and bulge. None for a kind the
-/// cleanup does not correct. The web's is `geometryOf`.
-pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
-    let pts = |p: &TopoPath| p.pts.iter().copied().map(w).collect::<Vec<_>>();
-    let ring = |p: &TopoPath| RingGeometry {
-        pts: pts(p),
-        bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
-        zs: Some(p.zs.clone()),
-    };
-    match e {
-        Entity::Line(_) => {
-            let p = paths.first()?;
-            Some(EntityGeometry::Line {
-                ms: None,
-                a: w(*p.pts.first()?),
-                b: w(*p.pts.get(1)?),
-                zs: Some(p.zs.clone()),
-            })
-        }
-        Entity::Polyline(_) => {
-            let mut next = paths.iter();
-            let p = next.next()?;
-            // Every other part, in `elevation::paths`' order (docs/adr/0174).
-            let parts: Vec<AreaPart> = next
-                .map(|q| {
-                    let own = ring(q);
-                    AreaPart {
-                        ms: None,
-                        pts: own.pts,
-                        bulges: own.bulges,
-                        holes: None,
-                        zs: own.zs,
-                    }
-                })
-                .collect();
-            Some(EntityGeometry::Polyline {
-                ms: None,
-                pts: pts(p),
-                bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
-                zs: Some(p.zs.clone()),
-                parts: (!parts.is_empty()).then_some(parts),
-                // A closed line stays closed; its widths are carried (docs/adr/0258).
-                closed: p.closed,
-                widths: None,
-            })
-        }
-        Entity::Polygon(area) => {
-            let mut next = paths.iter();
-            let outer = next.next()?;
-            let mut holes = Vec::new();
-            for _ in area.holes.iter().flatten() {
-                holes.push(ring(next.next()?));
-            }
-            let mut parts = Vec::new();
-            for part in area.parts.iter().flatten() {
-                let own = ring(next.next()?);
-                let mut part_holes = Vec::new();
-                for _ in part.holes.iter().flatten() {
-                    part_holes.push(ring(next.next()?));
-                }
-                parts.push(AreaPart {
-                    ms: None,
-                    pts: own.pts,
-                    bulges: own.bulges,
-                    holes: (!part_holes.is_empty()).then_some(part_holes),
-                    zs: own.zs,
-                });
-            }
-            Some(EntityGeometry::Polygon {
-                pts: pts(outer),
-                bulges: bulges_of(outer.pts.len(), outer.bulges.as_deref()),
-                holes: (!holes.is_empty()).then_some(holes),
-                zs: Some(outer.zs.clone()),
-                parts: (!parts.is_empty()).then_some(parts),
-            })
-        }
-        Entity::Arc(_) => {
-            let arc = path_arc(paths.first()?)?;
-            Some(EntityGeometry::Arc {
-                c: w(arc.c),
-                r: arc.r,
-                a0: arc.a0,
-                a1: arc.a1,
-            })
-        }
-        _ => None,
-    }
 }
 
 /// Each changed object's old outline dashed in the danger colour under its

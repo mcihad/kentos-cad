@@ -501,6 +501,13 @@ taşır (kilitli komşu ayrılır). KentOS ikisini de sunar: ilk değer bugünk�
 tutamaç, Köşe tablosu, Esnet ve `cad.entities.vertex` kilitli komşuyla paylaşılan sınırı hiç yazmaz
 (`shared_boundary_locked`). Açık: yetkisiz komşu, önizlemede kilitli komşunun vurgusu, yay/delik/üçlü birleşim.
 
+**6 Kasım 2026 — taşınma raporu ([ADR 1262](../docs/adr/1262-topology-clean-move-report.md)).** Kapsam işareti:
+**Harita + CBS**. Araştırma: AutoCAD Map 3D Drawing Cleanup'ın hata listesi ve işaretleri; ArcGIS Integrate'in taşınmayı
+raporlamadığı (önce/sonra karşılaştırma önerir). Kanıtlanan: büyük toplu temizliğin taşınma raporu — `cad.topology.clean`
+ADR 0148'in temizliğini komut yapar; her taşınma, nesne başına yerinde kalan/taşınan köşe, en uzak ve toplam taşınma,
+alan/boy farkı, kabul eşiğini aşan taşınma (yazma reddeder); Taşınma raporu penceresi ve CSV (20 ortak durum, Rust ve
+Python). Açık: ortak sınırın atomik düzenlenmesi, taşınmaların sahnede işaretlenmesi, büyük veri ölçümü.
+
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
 **Öncelik:** P1 teknik veri modeli; resmî işlemler son aşama kapısında.

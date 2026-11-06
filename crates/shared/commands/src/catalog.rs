@@ -9328,6 +9328,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
+        CommandDescriptor {
+            id: crate::CAD_TOPOLOGY_CLEAN.into(),
+            version: crate::CAD_TOPOLOGY_CLEAN_VERSION,
+            title: "Topolojik temizlik (taşınma raporu)".into(),
+            summary: "Çizgi ağını ve alan sınırlarını verilen toleransla düzeltir (ADR 0148'in kuralları: Uçlar, Köşeler, Uzat, Buda; Topolojik temizlik aracıyla aynı çekirdek) ve büyük toplu temizlikte yazmadan önce taşınmayı raporlar: her taşınma (nesne, tür, nereden, nereye, uzaklık), değişen her nesnenin yerinde kalan ve taşınan kaynak köşeleri, en uzak ve toplam taşınması, alanı ya da uzunluğu önce ve sonra, alanların toplamındaki değişim. \
+                      Köşe hiçbir zaman ortalamaya ya da yuvarlanmış koordinata değil var olan bir köşeye gider. Kalite profili (ADR 1260) varsa kabul eşiği ve onu aşan taşınma sayısı (beyond) söylenir; plan yine raporlar, yazma reddeder. \
+                      uids yoksa görünen, kilitsiz katmandaki bütün çizgi, çoklu çizgi, yay ve alan düzeltilir; verilenlerden düzeltilemeyenler skipped sayılır. Tek geri alma adımı “Topolojik temizlik”. \
+                      Retler: invalid_input (tolerance), invalid_revision, revision_conflict, invalid_uid, entity_not_found (uids[i]), clean_beyond_acceptance."
+                .into(),
+            aliases: vec!["topolojiktemizlik".into(), "tasinmaraporu".into(), "mapclean".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::TopologyClean>(),
+            output: schema::<crate::TopologyCleaned>(),
+            plan: Some(schema::<crate::TopologyCleaned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün çizimi 2 cm toleransla, köşeler de".into(),
+                input: json!({ "tolerance": 0.02, "vertices": true }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_SURVEY_BASELINES.into(),
             version: crate::CAD_SURVEY_BASELINES_VERSION,
@@ -15818,6 +15846,7 @@ mod tests {
                     crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCode>(e.input.clone()).map(|_| ()),
                     crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselines>(e.input.clone()).map(|_| ()),
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
+                    crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
@@ -16760,6 +16789,7 @@ mod tests {
                         crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCoded>(output.clone()).map(|_| ()),
                         crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone()).map(|_| ()),
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
+                        crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),

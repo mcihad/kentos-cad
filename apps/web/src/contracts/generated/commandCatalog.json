@@ -54635,6 +54635,290 @@
       ]
     },
     {
+      "id": "cad.topology.clean",
+      "version": 1,
+      "title": "Topolojik temizlik (taşınma raporu)",
+      "summary": "Çizgi ağını ve alan sınırlarını verilen toleransla düzeltir (ADR 0148'in kuralları: Uçlar, Köşeler, Uzat, Buda; Topolojik temizlik aracıyla aynı çekirdek) ve büyük toplu temizlikte yazmadan önce taşınmayı raporlar: her taşınma (nesne, tür, nereden, nereye, uzaklık), değişen her nesnenin yerinde kalan ve taşınan kaynak köşeleri, en uzak ve toplam taşınması, alanı ya da uzunluğu önce ve sonra, alanların toplamındaki değişim. Köşe hiçbir zaman ortalamaya ya da yuvarlanmış koordinata değil var olan bir köşeye gider. Kalite profili (ADR 1260) varsa kabul eşiği ve onu aşan taşınma sayısı (beyond) söylenir; plan yine raporlar, yazma reddeder. uids yoksa görünen, kilitsiz katmandaki bütün çizgi, çoklu çizgi, yay ve alan düzeltilir; verilenlerden düzeltilemeyenler skipped sayılır. Tek geri alma adımı “Topolojik temizlik”. Retler: invalid_input (tolerance), invalid_revision, revision_conflict, invalid_uid, entity_not_found (uids[i]), clean_beyond_acceptance.",
+      "aliases": [
+        "topolojiktemizlik",
+        "tasinmaraporu",
+        "mapclean"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.topology.clean` v1: what to correct (`uids`; none: every line, polyline, arc and area on a visible,\nunlocked layer), the tolerance (metres, finite, at least 0.000001), the four works (Uçlar `ends` on, Köşeler\n`vertices` off, Uzat `extend` on, Buda `trim` on when not given). The other objects on visible layers are supports:\nnever moved. A given object that cannot be corrected (on a locked or hidden layer, or of a kind the clean-up does\nnot correct) is counted in `skipped`, as the tool says it.\n\nRefusals, in this order: `invalid_input` (`tolerance`), `invalid_revision`, `revision_conflict`, `invalid_uid` and\n`entity_not_found` (`uids[i]`); the write (and `validate`) last `clean_beyond_acceptance` (`tolerance`: a move past\nthe quality profile's acceptance threshold). One undo step “Topolojik temizlik”; nothing to correct writes nothing.",
+        "properties": {
+          "ends": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "extend": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "trim": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "vertices": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "tolerance"
+        ],
+        "title": "TopologyClean",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.clean` v1, and its plan: the objects it corrects and the supports, the given ones skipped,\nthe counts, every move, the changed objects in the drawing's order, the moves over them all (`moved`, `maxMoved`,\n`totalMoved`), the change of the areas' sum (square metres), the quality profile's acceptance threshold when one is\nset and how many moves go past it, and the revision after (a plan: before).",
+        "properties": {
+          "acceptance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "areaChange": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "beyond": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/TopologyCleanChange"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/$defs/TopologyCleanCounts"
+          },
+          "maxMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "moves": {
+            "items": {
+              "$ref": "#/$defs/TopologyCleanMove"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "supports": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "totalMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "objects",
+          "supports",
+          "skipped",
+          "counts",
+          "moves",
+          "changes",
+          "moved",
+          "maxMoved",
+          "totalMoved",
+          "areaChange",
+          "beyond",
+          "revision"
+        ],
+        "title": "TopologyCleaned",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.topology.clean` v1, and its plan: the objects it corrects and the supports, the given ones skipped,\nthe counts, every move, the changed objects in the drawing's order, the moves over them all (`moved`, `maxMoved`,\n`totalMoved`), the change of the areas' sum (square metres), the quality profile's acceptance threshold when one is\nset and how many moves go past it, and the revision after (a plan: before).",
+        "properties": {
+          "acceptance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "areaChange": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "beyond": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/TopologyCleanChange"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/$defs/TopologyCleanCounts"
+          },
+          "maxMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "moves": {
+            "items": {
+              "$ref": "#/$defs/TopologyCleanMove"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "supports": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "totalMoved": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "objects",
+          "supports",
+          "skipped",
+          "counts",
+          "moves",
+          "changes",
+          "moved",
+          "maxMoved",
+          "totalMoved",
+          "areaChange",
+          "beyond",
+          "revision"
+        ],
+        "title": "TopologyCleaned",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "invalid_uid",
+          "entity_not_found",
+          "clean_beyond_acceptance"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün çizimi 2 cm toleransla, köşeler de",
+          "input": {
+            "tolerance": 0.02,
+            "vertices": true
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.survey.baselines",
       "version": 1,
       "title": "GNSS baz ağı dengelemesi",
@@ -98541,6 +98825,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Başlangıç köşesinin kotu yok; başlangıç kotunu verin."
+    },
+    {
+      "code": "clean_beyond_acceptance",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı."
     },
     {
       "code": "no_baselines",
@@ -187615,6 +187905,155 @@
         "name",
         "label",
         "kind"
+      ],
+      "type": "object"
+    },
+    "TopologyCleanChange": {
+      "description": "A changed object: its layer, its area (an area) or length (the others) before and after, its source vertices kept\nbit for bit, its moves, the farthest and the total of them (metres).",
+      "properties": {
+        "areaAfter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "areaBefore": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "kept": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "lengthAfter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "lengthBefore": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "maxMoved": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "moves": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "totalMoved": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "layer",
+        "kept",
+        "moves",
+        "maxMoved",
+        "totalMoved"
+      ],
+      "type": "object"
+    },
+    "TopologyCleanCounts": {
+      "description": "The counts of docs/adr/0148 §9: ends joined, vertices joined, ends extended, trimmed, moved onto a line.",
+      "properties": {
+        "edges": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "ends": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "extended": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "trimmed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "vertices": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "ends",
+        "vertices",
+        "extended",
+        "trimmed",
+        "edges"
+      ],
+      "type": "object"
+    },
+    "TopologyCleanMove": {
+      "description": "A move: the object, its kind (`end` joined, `vertex` joined, `extended`, `trimmed`, `edge`: an end moved onto a\nline), where it was, where it goes and how far (metres), in the core's order.",
+      "properties": {
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "from": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "to": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind",
+        "from",
+        "to",
+        "distance"
       ],
       "type": "object"
     },

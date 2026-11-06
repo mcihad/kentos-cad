@@ -142,6 +142,13 @@
     }
   ],
   "commands": {
+    "topology.cleanReport": {
+      "level": "semantic",
+      "via": [
+        "cad.topology.clean"
+      ],
+      "note": "Pencere cad.topology.clean'in planıyla raporlar (her taşınma, nesne başına özet, kabul eşiği); CSV kaydet taşınmaları yazar; Uygula tek adım yazar, kabul eşiğini aşanı komut reddeder (ADR 1262)."
+    },
     "tool.grade": {
       "level": "semantic",
       "via": [

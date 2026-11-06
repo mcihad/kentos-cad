@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Taşınma raporu (6 Kasım 2026; MAP-07, [ADR 1262](../../docs/adr/1262-topology-clean-move-report.md)).**
+  `cad.topology.clean` (Harita + CBS): Topolojik temizlik komut olarak, her taşınma ve kabul eşiğiyle; araç nesnelerini
+  `topology_clean.rs`'ten alır. Formlar her zaman alt alta değil: kısa ve birbirine ait denetimler bir satırda.
 - **Eğimle kot ver (6 Kasım 2026; MAP-06, [ADR 1290](../../docs/adr/1290-grade-between-vertices.md)).** `cad.entities.grade`
   (CAD: Harita, Yol). Pencereler kitin `Form`'uyla: tek etiket sütunu, eşit genişlikte kutular.
 - **KentOS Yol: arazi, aks, boykesit, enkesit, koridor, kübaj ve yol projesi (3 Kasım 2026; [plan/road.md](../../plan/road.md), [ADR 0900](../../docs/adr/0900-road-terrain-surface.md)–[0911](../../docs/adr/0911-road-project-tree-views-and-rebuild.md)).**

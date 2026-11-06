@@ -305,6 +305,7 @@ pub mod crs_factors;
 pub mod map_features;
 pub mod survey_baselines;
 pub mod entities_grade;
+pub mod topology_clean;
 pub mod map_work_edit;
 pub mod map_survey;
 pub mod map_survey_edit;
@@ -1425,6 +1426,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_SURVEY_BASELINES, kentos_commands::CAD_SURVEY_BASELINES_VERSION),
     // Eğimle kot ver (plan/map-cad.md MAP-06, docs/adr/1290).
     (kentos_commands::CAD_ENTITIES_GRADE, kentos_commands::CAD_ENTITIES_GRADE_VERSION),
+    (kentos_commands::CAD_TOPOLOGY_CLEAN, kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (kentos_commands::MAP_SURVEY_QUERY, kentos_commands::MAP_SURVEY_QUERY_VERSION),
     (kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION),

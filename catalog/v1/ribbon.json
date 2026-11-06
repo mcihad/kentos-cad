@@ -849,6 +849,10 @@
        {
         "command": "tool.topology",
         "size": "small"
+       },
+       {
+        "command": "topology.cleanReport",
+        "size": "small"
        }
       ]
      },
@@ -3632,7 +3636,8 @@
       ],
       "overflow": [
        "draft.topologyPoints",
-       "tool.topology"
+       "tool.topology",
+       "topology.cleanReport"
       ]
      },
      {

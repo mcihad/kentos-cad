@@ -1,0 +1,3720 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.topology.clean",
+ "commandVersion": 1,
+ "title": "Topolojik temizlik (taşınma raporu)",
+ "note": "ADR 1262. Bağımsız başvuru scripts/fixtures/topology_clean_cases.py: temizlik ADR 0148'in bağımsız başvurusuyla (topology_cases.py), rapor elle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Topolojik temizlik raporu",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "line",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487010.0,
+     "y": 4420000.0
+    },
+    "za": 100.0,
+    "zb": 101.0
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487010.03,
+     "y": 4420000.01
+    },
+    "b": {
+     "x": 487020.0,
+     "y": 4420005.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 3,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487005.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487005.0,
+     "y": 4420000.03
+    }
+   },
+   {
+    "kind": "line",
+    "id": 4,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487007.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487007.0,
+     "y": 4419999.96
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487010.02,
+      "y": 4420020.01
+     },
+     {
+      "x": 487020.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487010.01,
+      "y": 4420029.98
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487030.02,
+     "y": 4419999.99
+    },
+    "z": 101.25
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487025.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487030.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 487040.0,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487050.02,
+     "y": 4420000.0
+    },
+    "b": {
+     "x": 487060.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 11,
+    "layerId": "gizli",
+    "attrs": {},
+    "a": {
+     "x": 487040.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487050.0,
+     "y": 4420010.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487050.02,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487060.0,
+     "y": 4420010.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420045.0
+     },
+     {
+      "x": 487005.0,
+      "y": 4420042.0
+     },
+     {
+      "x": 487010.02,
+      "y": 4420040.01
+     }
+    ],
+    "bulges": [
+     0.3,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 14,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487010.0,
+     "y": 4420040.0
+    },
+    "b": {
+     "x": 487020.0,
+     "y": 4420040.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 15,
+    "layerId": "cizim",
+    "attrs": {},
+    "text": "Ada 101",
+    "p": {
+     "x": 487000.0,
+     "y": 4420050.0
+    },
+    "height": 2.0,
+    "rotation": 0.0
+   }
+  ],
+  "uids": [
+   "0192f5c0-1262-7000-8000-000000000001",
+   "0192f5c0-1262-7000-8000-000000000002",
+   "0192f5c0-1262-7000-8000-000000000003",
+   "0192f5c0-1262-7000-8000-000000000004",
+   "0192f5c0-1262-7000-8000-000000000005",
+   "0192f5c0-1262-7000-8000-000000000006",
+   "0192f5c0-1262-7000-8000-000000000007",
+   "0192f5c0-1262-7000-8000-000000000008",
+   "0192f5c0-1262-7000-8000-000000000009",
+   "0192f5c0-1262-7000-8000-00000000000a",
+   "0192f5c0-1262-7000-8000-00000000000b",
+   "0192f5c0-1262-7000-8000-00000000000c",
+   "0192f5c0-1262-7000-8000-00000000000d",
+   "0192f5c0-1262-7000-8000-00000000000e",
+   "0192f5c0-1262-7000-8000-00000000000f"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "plan: bütün çizim, ilk değerlerle; her taşınma, nesne başına özet, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 4,
+        "vertices": 0,
+        "extended": 1,
+        "trimmed": 1,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "kind": "end",
+         "from": {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487030.02,
+          "y": 4419999.99
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "kind": "end",
+         "from": {
+          "x": 487050.02,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         "distance": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "kind": "end",
+         "from": {
+          "x": 487010.0,
+          "y": 4420040.0
+         },
+         "to": {
+          "x": 487010.02,
+          "y": 4420040.01
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "kind": "extended",
+         "from": {
+          "x": 487005.0,
+          "y": 4420000.03
+         },
+         "to": {
+          "x": 487005.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "kind": "trimmed",
+         "from": {
+          "x": 487007.0,
+          "y": 4419999.96
+         },
+         "to": {
+          "x": 487007.0,
+          "y": 4420000.0
+         },
+         "distance": 0.0400000000372529
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "layer": "cizim",
+         "lengthBefore": 9.96999999973923,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03000000026077032,
+         "totalMoved": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "layer": "cizim",
+         "lengthBefore": 10.040000000037253,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.0400000000372529,
+         "totalMoved": 0.0400000000372529
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "layer": "cizim",
+         "lengthBefore": 5.0,
+         "lengthAfter": 5.020009960167663,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "layer": "cizim",
+         "lengthBefore": 9.979999999981374,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.02000000001862645,
+         "totalMoved": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "layer": "cizim",
+         "lengthBefore": 10.0,
+         "lengthAfter": 9.980005009999932,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        }
+       ],
+       "moved": 6,
+       "maxMoved": 0.0400000000372529,
+       "totalMoved": 0.1663441362575527,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan: Köşeler açık; parsellerin ortak köşeleri birleşir, alan değişimi söylenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05,
+      "vertices": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 4,
+        "vertices": 2,
+        "extended": 1,
+        "trimmed": 1,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000006",
+         "kind": "vertex",
+         "from": {
+          "x": 487010.02,
+          "y": 4420020.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420020.0
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000006",
+         "kind": "vertex",
+         "from": {
+          "x": 487010.01,
+          "y": 4420029.98
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420030.0
+         },
+         "distance": 0.022360679379322786
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "kind": "end",
+         "from": {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487030.02,
+          "y": 4419999.99
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "kind": "end",
+         "from": {
+          "x": 487050.02,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         "distance": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "kind": "end",
+         "from": {
+          "x": 487010.0,
+          "y": 4420040.0
+         },
+         "to": {
+          "x": 487010.02,
+          "y": 4420040.01
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "kind": "extended",
+         "from": {
+          "x": 487005.0,
+          "y": 4420000.03
+         },
+         "to": {
+          "x": 487005.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "kind": "trimmed",
+         "from": {
+          "x": 487007.0,
+          "y": 4419999.96
+         },
+         "to": {
+          "x": 487007.0,
+          "y": 4420000.0
+         },
+         "distance": 0.0400000000372529
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "layer": "cizim",
+         "lengthBefore": 9.96999999973923,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03000000026077032,
+         "totalMoved": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "layer": "cizim",
+         "lengthBefore": 10.040000000037253,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.0400000000372529,
+         "totalMoved": 0.0400000000372529
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000006",
+         "layer": "cizim",
+         "areaBefore": 99.70025000320771,
+         "areaAfter": 100.0,
+         "kept": 2,
+         "moves": 2,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.044721359071020664
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "layer": "cizim",
+         "lengthBefore": 5.0,
+         "lengthAfter": 5.020009960167663,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "layer": "cizim",
+         "lengthBefore": 9.979999999981374,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.02000000001862645,
+         "totalMoved": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "layer": "cizim",
+         "lengthBefore": 10.0,
+         "lengthAfter": 9.980005009999932,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        }
+       ],
+       "moved": 8,
+       "maxMoved": 0.0400000000372529,
+       "totalMoved": 0.21106549532857338,
+       "areaChange": 0.2997499967922863,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan: yalnız B düzeltilir; öbürleri dayanak",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05,
+      "uids": [
+       "0192f5c0-1262-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 1,
+       "supports": 12,
+       "skipped": 0,
+       "counts": {
+        "ends": 1,
+        "vertices": 0,
+        "extended": 0,
+        "trimmed": 0,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        }
+       ],
+       "moved": 1,
+       "maxMoved": 0.03162277655750729,
+       "totalMoved": 0.03162277655750729,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan: kilitli, gizli ve yazı verilince skipped sayılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05,
+      "uids": [
+       "0192f5c0-1262-7000-8000-000000000009",
+       "0192f5c0-1262-7000-8000-00000000000b",
+       "0192f5c0-1262-7000-8000-00000000000f",
+       "0192f5c0-1262-7000-8000-000000000002"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 1,
+       "supports": 12,
+       "skipped": 3,
+       "counts": {
+        "ends": 1,
+        "vertices": 0,
+        "extended": 0,
+        "trimmed": 0,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        }
+       ],
+       "moved": 1,
+       "maxMoved": 0.03162277655750729,
+       "totalMoved": 0.03162277655750729,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan: küçük toleransla düzeltilecek bir şey yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.001
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 0,
+        "vertices": 0,
+        "extended": 0,
+        "trimmed": 0,
+        "edges": 0
+       },
+       "moves": [],
+       "changes": [],
+       "moved": 0,
+       "maxMoved": 0.0,
+       "totalMoved": 0,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan: dört iş kapalı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05,
+      "ends": false,
+      "vertices": false,
+      "extend": false,
+      "trim": false
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 0,
+        "vertices": 0,
+        "extended": 0,
+        "trimmed": 0,
+        "edges": 0
+       },
+       "moves": [],
+       "changes": [],
+       "moved": 0,
+       "maxMoved": 0.0,
+       "totalMoved": 0,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan: kabul eşiğini aşan taşınmalar sayılır, plan reddetmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 4,
+        "vertices": 0,
+        "extended": 1,
+        "trimmed": 1,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "kind": "end",
+         "from": {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487030.02,
+          "y": 4419999.99
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "kind": "end",
+         "from": {
+          "x": 487050.02,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         "distance": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "kind": "end",
+         "from": {
+          "x": 487010.0,
+          "y": 4420040.0
+         },
+         "to": {
+          "x": 487010.02,
+          "y": 4420040.01
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "kind": "extended",
+         "from": {
+          "x": 487005.0,
+          "y": 4420000.03
+         },
+         "to": {
+          "x": 487005.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "kind": "trimmed",
+         "from": {
+          "x": 487007.0,
+          "y": 4419999.96
+         },
+         "to": {
+          "x": 487007.0,
+          "y": 4420000.0
+         },
+         "distance": 0.0400000000372529
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "layer": "cizim",
+         "lengthBefore": 9.96999999973923,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03000000026077032,
+         "totalMoved": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "layer": "cizim",
+         "lengthBefore": 10.040000000037253,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.0400000000372529,
+         "totalMoved": 0.0400000000372529
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "layer": "cizim",
+         "lengthBefore": 5.0,
+         "lengthAfter": 5.020009960167663,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "layer": "cizim",
+         "lengthBefore": 9.979999999981374,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.02000000001862645,
+         "totalMoved": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "layer": "cizim",
+         "lengthBefore": 10.0,
+         "lengthAfter": 9.980005009999932,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        }
+       ],
+       "moved": 6,
+       "maxMoved": 0.0400000000372529,
+       "totalMoved": 0.1663441362575527,
+       "areaChange": 0.0,
+       "acceptance": 0.03,
+       "beyond": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topolojik temizlik raporu",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [],
+      "profile": {
+       "name": "Kadastro güncelleme",
+       "edition": "2026/1",
+       "precision": 0.0001,
+       "acceptance": 0.03
+      }
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "za": 100.0,
+      "zb": 101.0
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.03,
+       "y": 4420000.01
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487005.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487005.0,
+       "y": 4420000.03
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487007.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487007.0,
+       "y": 4419999.96
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487010.02,
+        "y": 4420020.01
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.01,
+        "y": 4420029.98
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487030.02,
+       "y": 4419999.99
+      },
+      "z": 101.25
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487025.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487030.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 9,
+      "layerId": "kilitli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 11,
+      "layerId": "gizli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420042.0
+       },
+       {
+        "x": 487010.02,
+        "y": 4420040.01
+       }
+      ],
+      "bulges": [
+       0.3,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420040.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 15,
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Ada 101",
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-1262-7000-8000-000000000001",
+     "0192f5c0-1262-7000-8000-000000000002",
+     "0192f5c0-1262-7000-8000-000000000003",
+     "0192f5c0-1262-7000-8000-000000000004",
+     "0192f5c0-1262-7000-8000-000000000005",
+     "0192f5c0-1262-7000-8000-000000000006",
+     "0192f5c0-1262-7000-8000-000000000007",
+     "0192f5c0-1262-7000-8000-000000000008",
+     "0192f5c0-1262-7000-8000-000000000009",
+     "0192f5c0-1262-7000-8000-00000000000a",
+     "0192f5c0-1262-7000-8000-00000000000b",
+     "0192f5c0-1262-7000-8000-00000000000c",
+     "0192f5c0-1262-7000-8000-00000000000d",
+     "0192f5c0-1262-7000-8000-00000000000e",
+     "0192f5c0-1262-7000-8000-00000000000f"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "plan: kabul eşiği 0,05 m, aşan yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 4,
+        "vertices": 0,
+        "extended": 1,
+        "trimmed": 1,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "kind": "end",
+         "from": {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487030.02,
+          "y": 4419999.99
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "kind": "end",
+         "from": {
+          "x": 487050.02,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         "distance": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "kind": "end",
+         "from": {
+          "x": 487010.0,
+          "y": 4420040.0
+         },
+         "to": {
+          "x": 487010.02,
+          "y": 4420040.01
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "kind": "extended",
+         "from": {
+          "x": 487005.0,
+          "y": 4420000.03
+         },
+         "to": {
+          "x": 487005.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "kind": "trimmed",
+         "from": {
+          "x": 487007.0,
+          "y": 4419999.96
+         },
+         "to": {
+          "x": 487007.0,
+          "y": 4420000.0
+         },
+         "distance": 0.0400000000372529
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "layer": "cizim",
+         "lengthBefore": 9.96999999973923,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03000000026077032,
+         "totalMoved": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "layer": "cizim",
+         "lengthBefore": 10.040000000037253,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.0400000000372529,
+         "totalMoved": 0.0400000000372529
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "layer": "cizim",
+         "lengthBefore": 5.0,
+         "lengthAfter": 5.020009960167663,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "layer": "cizim",
+         "lengthBefore": 9.979999999981374,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.02000000001862645,
+         "totalMoved": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "layer": "cizim",
+         "lengthBefore": 10.0,
+         "lengthAfter": 9.980005009999932,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        }
+       ],
+       "moved": 6,
+       "maxMoved": 0.0400000000372529,
+       "totalMoved": 0.1663441362575527,
+       "areaChange": 0.0,
+       "acceptance": 0.05,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topolojik temizlik raporu",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [],
+      "profile": {
+       "name": "Kadastro güncelleme",
+       "edition": "2026/1",
+       "precision": 0.0001,
+       "acceptance": 0.05
+      }
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "za": 100.0,
+      "zb": 101.0
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.03,
+       "y": 4420000.01
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487005.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487005.0,
+       "y": 4420000.03
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487007.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487007.0,
+       "y": 4419999.96
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487010.02,
+        "y": 4420020.01
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.01,
+        "y": 4420029.98
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487030.02,
+       "y": 4419999.99
+      },
+      "z": 101.25
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487025.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487030.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 9,
+      "layerId": "kilitli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 11,
+      "layerId": "gizli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420042.0
+       },
+       {
+        "x": 487010.02,
+        "y": 4420040.01
+       }
+      ],
+      "bulges": [
+       0.3,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420040.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 15,
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Ada 101",
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-1262-7000-8000-000000000001",
+     "0192f5c0-1262-7000-8000-000000000002",
+     "0192f5c0-1262-7000-8000-000000000003",
+     "0192f5c0-1262-7000-8000-000000000004",
+     "0192f5c0-1262-7000-8000-000000000005",
+     "0192f5c0-1262-7000-8000-000000000006",
+     "0192f5c0-1262-7000-8000-000000000007",
+     "0192f5c0-1262-7000-8000-000000000008",
+     "0192f5c0-1262-7000-8000-000000000009",
+     "0192f5c0-1262-7000-8000-00000000000a",
+     "0192f5c0-1262-7000-8000-00000000000b",
+     "0192f5c0-1262-7000-8000-00000000000c",
+     "0192f5c0-1262-7000-8000-00000000000d",
+     "0192f5c0-1262-7000-8000-00000000000e",
+     "0192f5c0-1262-7000-8000-00000000000f"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "doğrulama: ilk değerlerle geçer",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "uygula: tek geri alma adımı; B'nin başı A'nın ucunda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 4,
+        "vertices": 0,
+        "extended": 1,
+        "trimmed": 1,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "kind": "end",
+         "from": {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487030.02,
+          "y": 4419999.99
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "kind": "end",
+         "from": {
+          "x": 487050.02,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         "distance": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "kind": "end",
+         "from": {
+          "x": 487010.0,
+          "y": 4420040.0
+         },
+         "to": {
+          "x": 487010.02,
+          "y": 4420040.01
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "kind": "extended",
+         "from": {
+          "x": 487005.0,
+          "y": 4420000.03
+         },
+         "to": {
+          "x": 487005.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "kind": "trimmed",
+         "from": {
+          "x": 487007.0,
+          "y": 4419999.96
+         },
+         "to": {
+          "x": 487007.0,
+          "y": 4420000.0
+         },
+         "distance": 0.0400000000372529
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "layer": "cizim",
+         "lengthBefore": 9.96999999973923,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03000000026077032,
+         "totalMoved": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "layer": "cizim",
+         "lengthBefore": 10.040000000037253,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.0400000000372529,
+         "totalMoved": 0.0400000000372529
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "layer": "cizim",
+         "lengthBefore": 5.0,
+         "lengthAfter": 5.020009960167663,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "layer": "cizim",
+         "lengthBefore": 9.979999999981374,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.02000000001862645,
+         "totalMoved": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "layer": "cizim",
+         "lengthBefore": 10.0,
+         "lengthAfter": 9.980005009999932,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        }
+       ],
+       "moved": 6,
+       "maxMoved": 0.0400000000372529,
+       "totalMoved": 0.1663441362575527,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "a": {
+         "x": 487010.0,
+         "y": 4420000.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Topolojik temizlik",
+     "expect": {
+      "fields": {
+       "2": {
+        "a": {
+         "x": 487010.03,
+         "y": 4420000.01
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "uygula: düzeltilecek bir şey yoksa hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.001
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 0,
+        "vertices": 0,
+        "extended": 0,
+        "trimmed": 0,
+        "edges": 0
+       },
+       "moves": [],
+       "changes": [],
+       "moved": 0,
+       "maxMoved": 0.0,
+       "totalMoved": 0,
+       "areaChange": 0.0,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "uygula: kabul eşiği 0,05 m, geçer",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topolojik temizlik raporu",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [],
+      "profile": {
+       "name": "Kadastro güncelleme",
+       "edition": "2026/1",
+       "precision": 0.0001,
+       "acceptance": 0.05
+      }
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "za": 100.0,
+      "zb": 101.0
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.03,
+       "y": 4420000.01
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487005.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487005.0,
+       "y": 4420000.03
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487007.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487007.0,
+       "y": 4419999.96
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487010.02,
+        "y": 4420020.01
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.01,
+        "y": 4420029.98
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487030.02,
+       "y": 4419999.99
+      },
+      "z": 101.25
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487025.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487030.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 9,
+      "layerId": "kilitli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 11,
+      "layerId": "gizli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420042.0
+       },
+       {
+        "x": 487010.02,
+        "y": 4420040.01
+       }
+      ],
+      "bulges": [
+       0.3,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420040.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 15,
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Ada 101",
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-1262-7000-8000-000000000001",
+     "0192f5c0-1262-7000-8000-000000000002",
+     "0192f5c0-1262-7000-8000-000000000003",
+     "0192f5c0-1262-7000-8000-000000000004",
+     "0192f5c0-1262-7000-8000-000000000005",
+     "0192f5c0-1262-7000-8000-000000000006",
+     "0192f5c0-1262-7000-8000-000000000007",
+     "0192f5c0-1262-7000-8000-000000000008",
+     "0192f5c0-1262-7000-8000-000000000009",
+     "0192f5c0-1262-7000-8000-00000000000a",
+     "0192f5c0-1262-7000-8000-00000000000b",
+     "0192f5c0-1262-7000-8000-00000000000c",
+     "0192f5c0-1262-7000-8000-00000000000d",
+     "0192f5c0-1262-7000-8000-00000000000e",
+     "0192f5c0-1262-7000-8000-00000000000f"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "objects": 11,
+       "supports": 2,
+       "skipped": 0,
+       "counts": {
+        "ends": 4,
+        "vertices": 0,
+        "extended": 1,
+        "trimmed": 1,
+        "edges": 0
+       },
+       "moves": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "kind": "end",
+         "from": {
+          "x": 487010.03,
+          "y": 4420000.01
+         },
+         "to": {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "kind": "end",
+         "from": {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487030.02,
+          "y": 4419999.99
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "kind": "end",
+         "from": {
+          "x": 487050.02,
+          "y": 4420000.0
+         },
+         "to": {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         "distance": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "kind": "end",
+         "from": {
+          "x": 487010.0,
+          "y": 4420040.0
+         },
+         "to": {
+          "x": 487010.02,
+          "y": 4420040.01
+         },
+         "distance": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "kind": "extended",
+         "from": {
+          "x": 487005.0,
+          "y": 4420000.03
+         },
+         "to": {
+          "x": 487005.0,
+          "y": 4420000.0
+         },
+         "distance": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "kind": "trimmed",
+         "from": {
+          "x": 487007.0,
+          "y": 4419999.96
+         },
+         "to": {
+          "x": 487007.0,
+          "y": 4420000.0
+         },
+         "distance": 0.0400000000372529
+        }
+       ],
+       "changes": [
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000002",
+         "layer": "cizim",
+         "lengthBefore": 11.14903583282759,
+         "lengthAfter": 11.180339887498949,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03162277655750729,
+         "totalMoved": 0.03162277655750729
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000003",
+         "layer": "cizim",
+         "lengthBefore": 9.96999999973923,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.03000000026077032,
+         "totalMoved": 0.03000000026077032
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000004",
+         "layer": "cizim",
+         "lengthBefore": 10.040000000037253,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.0400000000372529,
+         "totalMoved": 0.0400000000372529
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-000000000008",
+         "layer": "cizim",
+         "lengthBefore": 5.0,
+         "lengthAfter": 5.020009960167663,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000a",
+         "layer": "cizim",
+         "lengthBefore": 9.979999999981374,
+         "lengthAfter": 10.0,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.02000000001862645,
+         "totalMoved": 0.02000000001862645
+        },
+        {
+         "uid": "0192f5c0-1262-7000-8000-00000000000e",
+         "layer": "cizim",
+         "lengthBefore": 10.0,
+         "lengthAfter": 9.980005009999932,
+         "kept": 1,
+         "moves": 1,
+         "maxMoved": 0.022360679691697874,
+         "totalMoved": 0.022360679691697874
+        }
+       ],
+       "moved": 6,
+       "maxMoved": 0.0400000000372529,
+       "totalMoved": 0.1663441362575527,
+       "areaChange": 0.0,
+       "acceptance": 0.05,
+       "beyond": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "uygula: kabul eşiği 0,03 m, aşan taşınma bütün temizliği reddeder",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "clean_beyond_acceptance",
+       "message": "Temizlik 3 köşeyi kabul eşiğinden uzağa taşıyor; en uzağı “0192f5c0-1262-7000-8000-000000000004” nesnesinde 0.0400 m, kalite profilinin (“Kadastro güncelleme”) kabul eşiği 0.03 m. Hiçbir şey yazılmadı: toleransı kabul eşiğine indirin ya da o köşeleri ölçüyle düzeltin.",
+       "path": "tolerance"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topolojik temizlik raporu",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [],
+      "profile": {
+       "name": "Kadastro güncelleme",
+       "edition": "2026/1",
+       "precision": 0.0001,
+       "acceptance": 0.03
+      }
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "za": 100.0,
+      "zb": 101.0
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.03,
+       "y": 4420000.01
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487005.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487005.0,
+       "y": 4420000.03
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487007.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487007.0,
+       "y": 4419999.96
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487010.02,
+        "y": 4420020.01
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.01,
+        "y": 4420029.98
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487030.02,
+       "y": 4419999.99
+      },
+      "z": 101.25
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487025.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487030.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 9,
+      "layerId": "kilitli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 11,
+      "layerId": "gizli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420042.0
+       },
+       {
+        "x": 487010.02,
+        "y": 4420040.01
+       }
+      ],
+      "bulges": [
+       0.3,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420040.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 15,
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Ada 101",
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-1262-7000-8000-000000000001",
+     "0192f5c0-1262-7000-8000-000000000002",
+     "0192f5c0-1262-7000-8000-000000000003",
+     "0192f5c0-1262-7000-8000-000000000004",
+     "0192f5c0-1262-7000-8000-000000000005",
+     "0192f5c0-1262-7000-8000-000000000006",
+     "0192f5c0-1262-7000-8000-000000000007",
+     "0192f5c0-1262-7000-8000-000000000008",
+     "0192f5c0-1262-7000-8000-000000000009",
+     "0192f5c0-1262-7000-8000-00000000000a",
+     "0192f5c0-1262-7000-8000-00000000000b",
+     "0192f5c0-1262-7000-8000-00000000000c",
+     "0192f5c0-1262-7000-8000-00000000000d",
+     "0192f5c0-1262-7000-8000-00000000000e",
+     "0192f5c0-1262-7000-8000-00000000000f"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "doğrulama: kabul eşiğini aşan reddedilir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "tolerance": 0.05
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "clean_beyond_acceptance",
+       "message": "Temizlik 3 köşeyi kabul eşiğinden uzağa taşıyor; en uzağı “0192f5c0-1262-7000-8000-000000000004” nesnesinde 0.0400 m, kalite profilinin (“Kadastro güncelleme”) kabul eşiği 0.03 m. Hiçbir şey yazılmadı: toleransı kabul eşiğine indirin ya da o köşeleri ölçüyle düzeltin.",
+       "path": "tolerance"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Topolojik temizlik raporu",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "topology": {
+      "tolerance": 0.001,
+      "rules": [],
+      "profile": {
+       "name": "Kadastro güncelleme",
+       "edition": "2026/1",
+       "precision": 0.0001,
+       "acceptance": 0.03
+      }
+     }
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487010.0,
+       "y": 4420000.0
+      },
+      "za": 100.0,
+      "zb": 101.0
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.03,
+       "y": 4420000.01
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420005.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487005.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487005.0,
+       "y": 4420000.03
+      }
+     },
+     {
+      "kind": "line",
+      "id": 4,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487007.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487007.0,
+       "y": 4419999.96
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487010.02,
+        "y": 4420020.01
+       },
+       {
+        "x": 487020.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487010.01,
+        "y": 4420029.98
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487030.02,
+       "y": 4419999.99
+      },
+      "z": 101.25
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487025.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487030.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 9,
+      "layerId": "kilitli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420000.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 11,
+      "layerId": "gizli",
+      "attrs": {},
+      "a": {
+       "x": 487040.0,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487050.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487050.02,
+       "y": 4420010.0
+      },
+      "b": {
+       "x": 487060.0,
+       "y": 4420010.0
+      }
+     },
+     {
+      "kind": "polyline",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420045.0
+       },
+       {
+        "x": 487005.0,
+        "y": 4420042.0
+       },
+       {
+        "x": 487010.02,
+        "y": 4420040.01
+       }
+      ],
+      "bulges": [
+       0.3,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 14,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487010.0,
+       "y": 4420040.0
+      },
+      "b": {
+       "x": 487020.0,
+       "y": 4420040.0
+      }
+     },
+     {
+      "kind": "text",
+      "id": 15,
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Ada 101",
+      "p": {
+       "x": 487000.0,
+       "y": 4420050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-1262-7000-8000-000000000001",
+     "0192f5c0-1262-7000-8000-000000000002",
+     "0192f5c0-1262-7000-8000-000000000003",
+     "0192f5c0-1262-7000-8000-000000000004",
+     "0192f5c0-1262-7000-8000-000000000005",
+     "0192f5c0-1262-7000-8000-000000000006",
+     "0192f5c0-1262-7000-8000-000000000007",
+     "0192f5c0-1262-7000-8000-000000000008",
+     "0192f5c0-1262-7000-8000-000000000009",
+     "0192f5c0-1262-7000-8000-00000000000a",
+     "0192f5c0-1262-7000-8000-00000000000b",
+     "0192f5c0-1262-7000-8000-00000000000c",
+     "0192f5c0-1262-7000-8000-00000000000d",
+     "0192f5c0-1262-7000-8000-00000000000e",
+     "0192f5c0-1262-7000-8000-00000000000f"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "tolerans sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Tolerans sonlu ve en az 0.000001 m olmalı (yazılan 0).",
+       "path": "tolerance"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "tolerans eksi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": -0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Tolerans sonlu ve en az 0.000001 m olmalı (yazılan -0.01).",
+       "path": "tolerance"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05,
+      "uids": [
+       "x"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05,
+      "uids": [
+       "0192f5c0-1262-7000-8000-000000000002",
+       "0192f5c0-1262-7000-8000-000000000063"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-1262-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sürüm yazısı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05,
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "beklenen sürüm eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tolerance": 0.05,
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

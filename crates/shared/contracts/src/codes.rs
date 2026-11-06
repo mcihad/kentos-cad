@@ -1971,6 +1971,8 @@ codes! {
     UNKNOWN_PROFILE = "unknown_profile", Failed, false, "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin.";
     /// Eğimle kot ver (docs/adr/1290): no start elevation given and the start vertex has none.
     ELEVATION_MISSING = "elevation_missing", Failed, false, "Başlangıç köşesinin kotu yok; başlangıç kotunu verin.";
+    /// A topological clean-up that would move a vertex past the quality profile's acceptance threshold (docs/adr/1262).
+    CLEAN_BEYOND_ACCEPTANCE = "clean_beyond_acceptance", Failed, false, "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı.";
     /// GNSS baz ağı (docs/adr/1380): no baseline given.
     NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
     /// GNSS baz ağı: a station named twice.

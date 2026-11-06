@@ -14868,6 +14868,22 @@
    "tests": 1
   },
   {
+   "id": "topology.cleanReport",
+   "kind": "command",
+   "title": "Taşınma raporu…",
+   "level": "semantic",
+   "via": [
+    "cad.topology.clean"
+   ],
+   "operation": null,
+   "python": "kentos.cad.topology.clean",
+   "mcp": "cad.topology.clean",
+   "note": "Pencere cad.topology.clean'in planıyla raporlar (her taşınma, nesne başına özet, kabul eşiği); CSV kaydet taşınmaları yazar; Uygula tek adım yazar, kabul eşiğini aşanı komut reddeder (ADR 1262).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "topology.rules",
    "kind": "command",
    "title": "Topoloji kuralları",
