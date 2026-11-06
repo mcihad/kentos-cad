@@ -36,7 +36,7 @@ fn left(message: String) -> CommandWarning {
 }
 
 fn check(doc: &kentos_domain::Document, input: &ImportLandxml) -> Result<Read, Stop> {
-    common::road_project(doc)?;
+    common::terrain_project(doc)?;
     let path = Path::new(&input.path);
     if !path.exists() {
         return Err(fail(codes::FILE_NOT_FOUND, format!("{} yok; dosyanın yolunu denetleyin.", input.path), "path"));

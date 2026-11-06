@@ -35,7 +35,7 @@ pub(crate) fn numbers(cell: f64, least: Option<u32>, share: Option<f64>) -> Resu
 
 /// The surface, its name and the boundary read, the cell count checked: the density grid's reading.
 pub(crate) fn grid(doc: &Document, surface: &str, boundary: Option<&str>, cell: f64, least: Option<u32>) -> Result<(String, String, Density), Stop> {
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, surface, "surface")?;
     let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);

@@ -474,6 +474,9 @@
      },
      {
       "label": "Tesviye",
+      "works": [
+       "road"
+      ],
       "icon": "platformEditor",
       "items": [
        {
@@ -484,6 +487,9 @@
      },
      {
       "label": "Drenaj",
+      "works": [
+       "road"
+      ],
       "icon": "drainageEditor",
       "items": [
        {
@@ -512,6 +518,9 @@
      },
      {
       "label": "Arazi",
+      "works": [
+       "road"
+      ],
       "icon": "contours",
       "items": [
        {
@@ -537,6 +546,7 @@
      }
     ],
     "works": [
+     "map",
      "road"
     ]
    },

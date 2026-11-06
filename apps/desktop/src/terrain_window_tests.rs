@@ -98,11 +98,74 @@ fn landxml_comes_in_as_a_surface() {
 }
 
 #[test]
-fn a_map_project_has_no_surfaces() {
-    let mut app = app("map");
+fn an_architecture_project_has_no_surfaces() {
+    let mut app = app("architecture");
     let _ = app.update(Message::Run("terrain.surfaces"));
     assert!(app.terrain_window.is_none());
     assert_ne!(app.dialog, Some(Dialog::Terrains));
+}
+
+/// docs/adr/1520: a Harita project makes, accepts and draws a surface as a Yol project does; the Arazi tab offers the
+/// surfaces and their analysis, not Tesviye or Drenaj.
+#[test]
+fn a_map_project_makes_a_surface_and_its_contours() {
+    let mut app = app("map");
+    app.program = Some(kentos_launch::Module::Map);
+    assert!(app.offers("terrain.surfaces") && app.offers("terrain.analysis"));
+    assert!(!app.offers("platform.editor") && !app.offers("drainage.editor"), "Yol's own works");
+    made(&mut app);
+    let made = kentos_native_application::road_terrains::made_surfaces(&app.document.as_ref().expect("doc").model);
+    assert_eq!((made.len(), made[0].1.state), (1, kentos_commands::TerrainState::Current));
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    let before = app.document.as_ref().expect("doc").model.entities().count();
+    send(&mut app, W::Interval("0,5".into()));
+    send(&mut app, W::ContourLayer("esyukselti".into()));
+    send(&mut app, W::Contours);
+    assert!(app.document.as_ref().expect("doc").model.entities().count() > before, "the contour lines are drawn");
+}
+
+/// A Harita project's surface (docs/adr/1520): the Arazi tab, the surface over the drawing and its window;
+/// `.run/gui-evidence/harita-yuzey-1520/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib terrain_window_tests::screens_map -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_map() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/harita-yuzey-1520");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = app("map");
+        app.program = Some(kentos_launch::Module::Map);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        made(&mut app);
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        send(&mut app, W::Interval("0,5".into()));
+        send(&mut app, W::ContourLayer("esyukselti".into()));
+        send(&mut app, W::Contours);
+        send(&mut app, W::Cancel);
+        app.selection.clear();
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-arazi-sekmesi-yuzey-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-yuzey-penceresi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 /// The window and the surface over the drawing, wide and narrow, light and dark; `.run/gui-evidence/y2-4-*`:
@@ -169,4 +232,14 @@ fn screens() {
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }
+}
+
+/// BÖHHBÜY m. 78(1)(c): the window starts at the regulation's interval for the drawing's scale.
+#[test]
+fn the_contour_interval_starts_by_the_scale() {
+    use crate::terrain_window::contour_interval;
+    assert_eq!(
+        [5000.0, 2000.0, 1000.0, 500.0, 2500.0].map(contour_interval),
+        ["5", "2", "1", "1", "1"]
+    );
 }

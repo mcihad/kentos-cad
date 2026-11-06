@@ -792,6 +792,15 @@ sınırın türü ve işlem sırasının etkisini açıklar. [NetSurf][S02],
 GIS'te de tüketilir. UGRID/NetCDF mesh okuyucusu korunur; düzenlenebilir
 mühendislik yüzeyiyle aynı sözleşmeymiş gibi genişletilmez.
 
+**6 Kasım 2026 — Harita projesinde arazi yüzeyi ([ADR 1520](../docs/adr/1520-map-project-terrain-surfaces.md)).**
+Kapsam işareti: **Harita + Yol** (CBS yüzeyi analiz sekmesinden tüketir). Araştırma: BÖHHBÜY m. 4(1)(l) SAM'ı üçgensel
+biçimde tanımlar, m. 45(1)(c) ≥ 25 nokta/ha, m. 63 ve m. 78(1)(c–g) eş yükseklik eğrisi (aralık ölçeğe bağlı, her
+beşinci kalın); NetSURF yüzeyi harita üretiminin kaynağı yapar; Civil 3D yüzeyi tanım listesidir. Kanıtlanan: yol'un
+yüzey tarifi ve bütün `road.terrains.*` komutları Harita projesinde çalışır, Arazi sekmesinin Yüzey/Analiz/İşlemler
+panelleri Harita'da açılır (Tesviye, Drenaj Yol'da kalır); `.kcad` şema 195 harita projesinin yalnız yüzeylerini
+yazar; eğri aralığı m. 78(1)(c)'ye göre ölçekten başlar. Açık: düzenleme adımları ve geçmişten yeniden üretim, aynı
+XY/farklı Z raporu, bölgesel yeniden kurma ve revizyon bağı, m. 78(1)(e–g) kartografik kurallar, gerçek veri ölçümü.
+
 **Kabul:** bordür kırık hattı, gölet deliği, şev, aynı XY/farklı Z ve
 kaynak nokta revizyonu içeren yüzey kur. Kırık hat korunumu, sınır dışı
 üçgenler, kot sorgusu ve kontur bağımsız başvuruyla doğrulansın. Save–reopen

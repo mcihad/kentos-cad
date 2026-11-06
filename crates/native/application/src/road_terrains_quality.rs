@@ -125,7 +125,7 @@ fn statistics(class: &str, differences: &[f64], outside: usize, sigma: Option<f6
 
 /// The quality now, and its warnings.
 pub(crate) fn answer(doc: &Document, input: &TerrainsQuality) -> Result<(TerrainsQualityRead, Vec<CommandWarning>), Stop> {
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     judged(input)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;

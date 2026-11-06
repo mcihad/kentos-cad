@@ -139,8 +139,8 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
-            self.warn("Buluttan arazi yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+            self.warn("Buluttan arazi Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
         let cloud = doc

@@ -214,7 +214,7 @@ def cases():
           refused("invalid_coverage", f"“{uid}” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan "
                                       "olmalı.", "boundary"))
     q("Yol projesi değil", {"surface": "t-10"},
-      refused("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+      refused("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."),
       setup_="$map")
     return out
 
@@ -369,7 +369,7 @@ def draw_cases():
         "değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision",
         "revision": "$current"}})
     no("Yol projesi değil", {"surface": "t-10", "longest": 3.0, "layerId": "kapsam"},
-       refused("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+       refused("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."),
        setup_="$map")
     return out
 
@@ -386,7 +386,7 @@ def main():
     for name, (command, title, found) in docs.items():
         for c in found:
             if c.get("setup") == "$map":
-                c["setup"] = setup(work="map")
+                c["setup"] = setup(work="architecture")
         doc = {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
                "note": "scripts/fixtures/road_terrain_coverage_cases.py'den; kafes yüzeylerin kareleri, sınırın halkaları "
                        "karelerle Sutherland–Hodgman ile kırpılarak, tahmin edilen karelerin birleşiminin dış çizgileri, "

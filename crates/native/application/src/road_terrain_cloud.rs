@@ -67,7 +67,7 @@ fn area_ring(doc: &Document, uid: &str) -> Result<Vec<P>, Stop> {
 }
 
 fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
-    common::road_project(doc)?;
+    common::terrain_project(doc)?;
     if input.clouds.is_empty() {
         return Err(invalid("En az bir nokta bulutu verin.".into(), "clouds"));
     }

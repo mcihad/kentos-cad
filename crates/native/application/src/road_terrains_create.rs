@@ -19,7 +19,7 @@ struct Checked {
 }
 
 fn check(doc: &kentos_domain::Document, input: &TerrainsCreate) -> Result<Checked, Stop> {
-    common::road_project(doc)?;
+    common::terrain_project(doc)?;
     let own = common::surfaces(doc);
     let id = input.id.clone().unwrap_or_else(|| {
         (1..)

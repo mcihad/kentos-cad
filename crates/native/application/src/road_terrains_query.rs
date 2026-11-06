@@ -13,7 +13,7 @@ use crate::codes;
 use crate::road_terrains::{self as common, fail};
 
 fn answer(doc: &kentos_domain::Document, input: &TerrainsQuery) -> Result<TerrainsQueried, Stop> {
-    common::road_project(doc)?;
+    common::terrain_project(doc)?;
     let own = common::surfaces(doc);
     let places = || input.at.iter().chain(&input.along);
     if places().any(|p| !(p[0].is_finite() && p[1].is_finite())) {

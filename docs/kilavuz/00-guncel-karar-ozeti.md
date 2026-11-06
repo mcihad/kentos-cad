@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Harita projesinde arazi yüzeyi (6 Kasım 2026; MAP-14, [ADR 1520](../../docs/adr/1520-map-project-terrain-surfaces.md)).**
+  `road.terrains.*` Harita'da da çalışır (`holds_surfaces`); `.kcad` şema 195 harita projesinin yalnız `road.surfaces`'ını
+  yazar; eğri aralığı BÖHHBÜY m. 78(1)(c)'ye göre ölçekten başlar.
 - **Tarama uyumu denetimi (6 Kasım 2026; MAP-13, [ADR 1500](../../docs/adr/1500-scan-overlap-check.md)).**
   `cad.pointclouds.overlap` (Harita + CBS, salt okunur): şeritler arası RMSDz ve KOH_Z, kural paketi
   `catalog/v1/rules/lidar-uyum.json` (şerit sınırı örnek, Türk mevzuatında yok).

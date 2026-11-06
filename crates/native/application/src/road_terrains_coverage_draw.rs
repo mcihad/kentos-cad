@@ -132,7 +132,7 @@ fn check(doc: &Document, input: &TerrainsCoverageDraw) -> Result<Checked, Stop> 
     if !(input.longest.is_finite() && input.longest > 0.0) {
         return Err(fail(codes::INVALID_COVERAGE, "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.".into(), "longest"));
     }
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);

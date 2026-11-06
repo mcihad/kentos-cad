@@ -11492,11 +11492,24 @@
      "Sınıf": "sert"
     },
     "p": {
+     "x": 8007.3,
+     "y": 1.2
+    },
+    "z": 31.58200000000002,
+    "id": 954
+   },
+   {
+    "kind": "point",
+    "layerId": "kontrol",
+    "attrs": {
+     "Sınıf": "sert"
+    },
+    "p": {
      "x": 8020.0,
      "y": 5.0
     },
     "z": 32.3,
-    "id": 954
+    "id": 955
    },
    {
     "kind": "point",
@@ -11506,7 +11519,7 @@
      "x": 8001.0,
      "y": 1.0
     },
-    "id": 955
+    "id": 956
    },
    {
     "kind": "line",
@@ -11520,7 +11533,7 @@
      "x": 8001.0,
      "y": 1.0
     },
-    "id": 956
+    "id": 957
    },
    {
     "kind": "polyline",
@@ -11549,7 +11562,7 @@
      0.0
     ],
     "closed": true,
-    "id": 957,
+    "id": 958,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11582,7 +11595,7 @@
      }
     ],
     "closed": true,
-    "id": 958,
+    "id": 959,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11628,7 +11641,7 @@
       ]
      }
     ],
-    "id": 959,
+    "id": 960,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11648,7 +11661,7 @@
       "y": 60.0
      }
     ],
-    "id": 960,
+    "id": 961,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11672,7 +11685,7 @@
       "y": 8.0
      }
     ],
-    "id": 961,
+    "id": 962,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11696,7 +11709,7 @@
       "y": 2.6
      }
     ],
-    "id": 962,
+    "id": 963,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11727,7 +11740,7 @@
      0.0
     ],
     "closed": true,
-    "id": 963,
+    "id": 964,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11743,13 +11756,13 @@
       "y": 0.0
      }
     ],
-    "id": 964,
+    "id": 965,
     "layerId": "sinir",
     "attrs": {}
    },
    {
     "kind": "point",
-    "id": 965,
+    "id": 966,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11760,7 +11773,7 @@
    },
    {
     "kind": "point",
-    "id": 966,
+    "id": 967,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11771,7 +11784,7 @@
    },
    {
     "kind": "point",
-    "id": 967,
+    "id": 968,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11782,7 +11795,7 @@
    },
    {
     "kind": "point",
-    "id": 968,
+    "id": 969,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11793,7 +11806,7 @@
    },
    {
     "kind": "point",
-    "id": 969,
+    "id": 970,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11804,7 +11817,7 @@
    },
    {
     "kind": "point",
-    "id": 970,
+    "id": 971,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11815,7 +11828,7 @@
    },
    {
     "kind": "point",
-    "id": 971,
+    "id": 972,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11826,7 +11839,7 @@
    },
    {
     "kind": "point",
-    "id": 972,
+    "id": 973,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11837,7 +11850,7 @@
    },
    {
     "kind": "point",
-    "id": 973,
+    "id": 974,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11848,7 +11861,7 @@
    },
    {
     "kind": "point",
-    "id": 974,
+    "id": 975,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11859,7 +11872,7 @@
    },
    {
     "kind": "point",
-    "id": 975,
+    "id": 976,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11870,7 +11883,7 @@
    },
    {
     "kind": "point",
-    "id": 976,
+    "id": 977,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11881,7 +11894,7 @@
    },
    {
     "kind": "point",
-    "id": 977,
+    "id": 978,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11892,7 +11905,7 @@
    },
    {
     "kind": "point",
-    "id": 978,
+    "id": 979,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11903,7 +11916,7 @@
    },
    {
     "kind": "point",
-    "id": 979,
+    "id": 980,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11914,7 +11927,7 @@
    },
    {
     "kind": "point",
-    "id": 980,
+    "id": 981,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -12904,7 +12917,8 @@
    "0192f600-7c3e-7d4a-9b1e-000000000977",
    "0192f600-7c3e-7d4a-9b1e-000000000978",
    "0192f600-7c3e-7d4a-9b1e-000000000979",
-   "0192f600-7c3e-7d4a-9b1e-000000000980"
+   "0192f600-7c3e-7d4a-9b1e-000000000980",
+   "0192f600-7c3e-7d4a-9b1e-000000000981"
   ],
   "styles": {
    "items": [],
@@ -12982,7 +12996,7 @@
      "op": "execute",
      "input": {
       "surface": "t-10",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000957",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000958",
       "longest": 3.0
      },
      "result": {
@@ -12990,11 +13004,11 @@
       "output": {
        "surface": "t-10",
        "surfaceArea": 36.0,
-       "boundaryArea": 34.20000000000255,
+       "boundaryArea": 34.200000000004366,
        "covered": 16.900000000001455,
-       "noData": 17.30000000000109,
+       "noData": 17.30000000000291,
        "outside": 19.099999999998545,
-       "share": 0.4941520467836315,
+       "share": 0.4941520467836052,
        "estimated": 11.700000000000728,
        "estimatedShare": 0.6923076923076757,
        "estimatedTriangles": 6,
@@ -13025,7 +13039,7 @@
      "op": "execute",
      "input": {
       "surface": "t-10",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000961",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000962",
       "longest": 3.0
      },
      "result": {
@@ -13068,7 +13082,7 @@
      "op": "execute",
      "input": {
       "surface": "t-10",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000957",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000958",
       "longest": 9.0
      },
      "result": {
@@ -13076,11 +13090,11 @@
       "output": {
        "surface": "t-10",
        "surfaceArea": 36.0,
-       "boundaryArea": 34.20000000000255,
+       "boundaryArea": 34.200000000004366,
        "covered": 16.900000000001455,
-       "noData": 17.30000000000109,
+       "noData": 17.30000000000291,
        "outside": 19.099999999998545,
-       "share": 0.4941520467836315,
+       "share": 0.4941520467836052,
        "estimated": 0.0,
        "estimatedShare": 0.0,
        "estimatedTriangles": 0,
@@ -13111,7 +13125,7 @@
      "op": "execute",
      "input": {
       "surface": "Seyrek",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000957",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000958",
       "longest": 1.5
      },
      "result": {
@@ -13119,11 +13133,11 @@
       "output": {
        "surface": "t-10",
        "surfaceArea": 36.0,
-       "boundaryArea": 34.20000000000255,
+       "boundaryArea": 34.200000000004366,
        "covered": 16.900000000001455,
-       "noData": 17.30000000000109,
+       "noData": 17.30000000000291,
        "outside": 19.099999999998545,
-       "share": 0.4941520467836315,
+       "share": 0.4941520467836052,
        "estimated": 11.700000000000728,
        "estimatedShare": 0.6923076923076757,
        "estimatedTriangles": 6,
@@ -13154,7 +13168,7 @@
      "op": "execute",
      "input": {
       "surface": "t-6",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000958"
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000959"
      },
      "result": {
       "status": "completed",
@@ -13196,7 +13210,7 @@
      "op": "execute",
      "input": {
       "surface": "t-6",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000958",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000959",
       "longest": 1.2
      },
      "result": {
@@ -13239,7 +13253,7 @@
      "op": "execute",
      "input": {
       "surface": "t-5",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000959",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000960",
       "longest": 2.0
      },
      "result": {
@@ -13276,7 +13290,7 @@
      "op": "execute",
      "input": {
       "surface": "t-6",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000960"
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000961"
      },
      "result": {
       "status": "completed",
@@ -13489,33 +13503,6 @@
      "op": "execute",
      "input": {
       "surface": "t-10",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000962"
-     },
-     "result": {
-      "status": "failed",
-      "error": {
-       "code": "invalid_coverage",
-       "message": "“0192f600-7c3e-7d4a-9b1e-000000000962” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan olmalı.",
-       "path": "boundary"
-      }
-     },
-     "expect": {
-      "canUndo": false,
-      "canRedo": false,
-      "dirty": false,
-      "revision": "same"
-     },
-     "within": 1e-06
-    }
-   ]
-  },
-  {
-   "name": "Yaylı sınır",
-   "steps": [
-    {
-     "op": "execute",
-     "input": {
-      "surface": "t-10",
       "boundary": "0192f600-7c3e-7d4a-9b1e-000000000963"
      },
      "result": {
@@ -13537,7 +13524,7 @@
    ]
   },
   {
-   "name": "İki köşeli alan",
+   "name": "Yaylı sınır",
    "steps": [
     {
      "op": "execute",
@@ -13564,19 +13551,19 @@
    ]
   },
   {
-   "name": "Nokta sınır olamaz",
+   "name": "İki köşeli alan",
    "steps": [
     {
      "op": "execute",
      "input": {
       "surface": "t-10",
-      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000955"
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000965"
      },
      "result": {
       "status": "failed",
       "error": {
        "code": "invalid_coverage",
-       "message": "“0192f600-7c3e-7d4a-9b1e-000000000955” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan olmalı.",
+       "message": "“0192f600-7c3e-7d4a-9b1e-000000000965” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan olmalı.",
        "path": "boundary"
       }
      },
@@ -13591,7 +13578,7 @@
    ]
   },
   {
-   "name": "Çizgi sınır olamaz",
+   "name": "Nokta sınır olamaz",
    "steps": [
     {
      "op": "execute",
@@ -13618,6 +13605,33 @@
    ]
   },
   {
+   "name": "Çizgi sınır olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "surface": "t-10",
+      "boundary": "0192f600-7c3e-7d4a-9b1e-000000000957"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_coverage",
+       "message": "“0192f600-7c3e-7d4a-9b1e-000000000957” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan olmalı.",
+       "path": "boundary"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "Yol projesi değil",
    "steps": [
     {
@@ -13629,7 +13643,7 @@
       "status": "failed",
       "error": {
        "code": "not_a_road_project",
-       "message": "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+       "message": "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."
       }
      },
      "expect": {
@@ -13653,7 +13667,7 @@
      "angleUnit": "deg",
      "plotScale": 1000.0,
      "workspace": "cad",
-     "cadWork": "map",
+     "cadWork": "architecture",
      "drawingFont": "barlow"
     },
     "origin": {
@@ -24508,11 +24522,24 @@
        "Sınıf": "sert"
       },
       "p": {
+       "x": 8007.3,
+       "y": 1.2
+      },
+      "z": 31.58200000000002,
+      "id": 954
+     },
+     {
+      "kind": "point",
+      "layerId": "kontrol",
+      "attrs": {
+       "Sınıf": "sert"
+      },
+      "p": {
        "x": 8020.0,
        "y": 5.0
       },
       "z": 32.3,
-      "id": 954
+      "id": 955
      },
      {
       "kind": "point",
@@ -24522,7 +24549,7 @@
        "x": 8001.0,
        "y": 1.0
       },
-      "id": 955
+      "id": 956
      },
      {
       "kind": "line",
@@ -24536,7 +24563,7 @@
        "x": 8001.0,
        "y": 1.0
       },
-      "id": 956
+      "id": 957
      },
      {
       "kind": "polyline",
@@ -24565,7 +24592,7 @@
        0.0
       ],
       "closed": true,
-      "id": 957,
+      "id": 958,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24598,7 +24625,7 @@
        }
       ],
       "closed": true,
-      "id": 958,
+      "id": 959,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24644,7 +24671,7 @@
         ]
        }
       ],
-      "id": 959,
+      "id": 960,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24664,7 +24691,7 @@
         "y": 60.0
        }
       ],
-      "id": 960,
+      "id": 961,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24688,7 +24715,7 @@
         "y": 8.0
        }
       ],
-      "id": 961,
+      "id": 962,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24712,7 +24739,7 @@
         "y": 2.6
        }
       ],
-      "id": 962,
+      "id": 963,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24743,7 +24770,7 @@
        0.0
       ],
       "closed": true,
-      "id": 963,
+      "id": 964,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -24759,13 +24786,13 @@
         "y": 0.0
        }
       ],
-      "id": 964,
+      "id": 965,
       "layerId": "sinir",
       "attrs": {}
      },
      {
       "kind": "point",
-      "id": 965,
+      "id": 966,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24776,7 +24803,7 @@
      },
      {
       "kind": "point",
-      "id": 966,
+      "id": 967,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24787,7 +24814,7 @@
      },
      {
       "kind": "point",
-      "id": 967,
+      "id": 968,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24798,7 +24825,7 @@
      },
      {
       "kind": "point",
-      "id": 968,
+      "id": 969,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24809,7 +24836,7 @@
      },
      {
       "kind": "point",
-      "id": 969,
+      "id": 970,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24820,7 +24847,7 @@
      },
      {
       "kind": "point",
-      "id": 970,
+      "id": 971,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24831,7 +24858,7 @@
      },
      {
       "kind": "point",
-      "id": 971,
+      "id": 972,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24842,7 +24869,7 @@
      },
      {
       "kind": "point",
-      "id": 972,
+      "id": 973,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24853,7 +24880,7 @@
      },
      {
       "kind": "point",
-      "id": 973,
+      "id": 974,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24864,7 +24891,7 @@
      },
      {
       "kind": "point",
-      "id": 974,
+      "id": 975,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24875,7 +24902,7 @@
      },
      {
       "kind": "point",
-      "id": 975,
+      "id": 976,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24886,7 +24913,7 @@
      },
      {
       "kind": "point",
-      "id": 976,
+      "id": 977,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24897,7 +24924,7 @@
      },
      {
       "kind": "point",
-      "id": 977,
+      "id": 978,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24908,7 +24935,7 @@
      },
      {
       "kind": "point",
-      "id": 978,
+      "id": 979,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24919,7 +24946,7 @@
      },
      {
       "kind": "point",
-      "id": 979,
+      "id": 980,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -24930,7 +24957,7 @@
      },
      {
       "kind": "point",
-      "id": 980,
+      "id": 981,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -25920,7 +25947,8 @@
      "0192f600-7c3e-7d4a-9b1e-000000000977",
      "0192f600-7c3e-7d4a-9b1e-000000000978",
      "0192f600-7c3e-7d4a-9b1e-000000000979",
-     "0192f600-7c3e-7d4a-9b1e-000000000980"
+     "0192f600-7c3e-7d4a-9b1e-000000000980",
+     "0192f600-7c3e-7d4a-9b1e-000000000981"
     ],
     "styles": {
      "items": [],

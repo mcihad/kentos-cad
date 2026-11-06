@@ -557,8 +557,17 @@ impl<'d> Encoder<'d> {
                 if v.is_empty() {
                     return Err(e.fail(Code::BadValue, "boş yol ayarı yazılmaz"));
                 }
-                if s.cad_work != Some(kentos_contracts::CadWork::Road) {
-                    return Err(e.fail(Code::BadValue, "yol ayarları yalnız yol projesinin olur (cadWork road)"));
+                // A map project's terrain surfaces are written there too, nothing else of a road (docs/adr/1520).
+                let map = s.cad_work == Some(kentos_contracts::CadWork::Map);
+                if s.cad_work != Some(kentos_contracts::CadWork::Road) && !(map && v.surfaces_only()) {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        if map {
+                            "harita projesinde yol ayarlarından yalnız arazi yüzeyleri yazılır (cadWork map)"
+                        } else {
+                            "yol ayarları yalnız yol projesinin olur (cadWork road); arazi yüzeyleri harita projesinin de olur"
+                        },
+                    ));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
@@ -2261,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 195 (docs/adr/1520): a map project's terrain surfaces.
+    if doc.settings.road.is_some() && doc.settings.cad_work == Some(kentos_contracts::CadWork::Map) {
+        return crate::SCHEMA_WITH_MAP_SURFACES;
+    }
     // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive.
     if doc.settings.map_survey.is_some() {
         return crate::SCHEMA_WITH_MAP_SURVEY;

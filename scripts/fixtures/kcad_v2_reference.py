@@ -2503,6 +2503,9 @@ def document(d):
     if "mapSurvey" in d["settings"]:
         # A map project's GNSS archive (docs/adr/1340 §5).
         schema = max(schema, 194)
+    if "road" in d["settings"] and d["settings"].get("cadWork") == "map":
+        # A map project's terrain surfaces (docs/adr/1520).
+        schema = max(schema, 195)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3461,7 +3464,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-195.kcad"] = container(root(cmap(parts), version=uint(195)))
+    files["schema-version-196.kcad"] = container(root(cmap(parts), version=uint(196)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5790,6 +5793,17 @@ def build():
     # one with its positions, four solutions (one excluded), an accepted point and a use; schema 192 refuses the field
     # (193 is another branch's), and an architecture project's archive, a mark accepted twice, a covariance that is not
     # positive definite and an accepted point whose revisions skip are refused.
+    # Schema 195 (docs/adr/1520): a map project's terrain surfaces, written in `road` with nothing else of a road;
+    # schema 194 refuses them in a map project, and a map project's alignment is refused.
+    mapped = load("map-surfaces.json")
+    mapped_data = document(mapped)
+    assert mapped_data.count(b"\x67version\x18\xc3") == 1, "a map's terrain surfaces are schema 195"
+    out["map-surfaces.kcad"] = container(mapped_data)
+    out["broken/map-surfaces-in-schema-194.kcad"] = container(
+        mapped_data.replace(b"\x67version\x18\xc3", b"\x67version\x18\xc2"))
+    aligned = copy.deepcopy(mapped)
+    aligned["settings"]["road"]["alignments"] = load("road-work.json")["settings"]["road"]["alignments"]
+    out["broken/map-surfaces-alignment.kcad"] = container(document(aligned))
     surveyed = load("map-survey.json")
     surveyed_data = document(surveyed)
     assert surveyed_data.count(b"\x67version\x18\xc2") == 1, "a map's GNSS archive is schema 194"
@@ -6128,12 +6142,13 @@ def build():
     out["broken/table-breaks-in-schema-181.kcad"] = in_181(only("breaks"))
     out["broken/table-lines-in-schema-181.kcad"] = in_181(only("lines"))
     out["broken/table-extraction-in-schema-181.kcad"] = in_181(only("extraction"))
-    # Schema 162 (plan/road.md Y2.2): the terrain surfaces are a road project's only; a map project's are refused.
+    # Schema 162 (plan/road.md Y2.2): the terrain surfaces were a road project's only; a map project's are refused
+    # there (since schema 195 a map project's surfaces are written, nothing else of a road, docs/adr/1520).
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"
     mpd = document(mp)
-    assert mpd.count(b"\x67version\x18\xbf") == 1, "a map project with a road's settings (its grades: 191, docs/adr/0977)"
-    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\xbf", b"\x67version\x18\xa2"))
+    assert mpd.count(b"\x67version\x18\xc3") == 1, "a map project with a road's settings is written as 195 (docs/adr/1520)"
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\xc3", b"\x67version\x18\xa2"))
     # Schema 162 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
     onp = load("road-work.json")
     onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"

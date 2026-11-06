@@ -507,7 +507,7 @@ def step(op, input_, result, expect=None, within=None):
 
 UNCHANGED = {"canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
 WRITTEN = {"canUndo": False, "canRedo": False, "dirty": True, "revision": "changed"}
-NOT_ROAD = failed("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.")
+NOT_ROAD = failed("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil.")
 CONFLICT = {"status": "conflict", "error": {
     "code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
     "path": "expectedRevision", "revision": "$current"}}
@@ -579,9 +579,12 @@ def create_cases():
     written("Aynı yerde aynı kot: tek köşe", {"name": "Zemin", "points": {"layers": ["zemin"], "uids": [DUP]}, "tolerance": 0.5},
             {"id": "t-2", "name": "Zemin", "points": {"layers": ["zemin"], "uids": [DUP]}, "tolerance": 0.5})
     written("Plan yazmaz", {"name": "Zemin", "points": pts}, {"id": "t-2", "name": "Zemin", "points": pts}, op="plan")
+    # ADR 1520: a Harita project holds surfaces too, as a Yol project does.
+    written("Harita projesinde de yüzey kurulur", {"name": "Zemin", "points": pts}, {"id": "t-2", "name": "Zemin", "points": pts})
+    cases[-1]["setup"] = setup([OLD], work="map")
     written("Doğrulama yazmaz", {"name": "Zemin", "points": pts}, {"id": "t-2", "name": "Zemin", "points": pts},
             op="validate")
-    refused("Yol projesi değil", {"name": "Zemin", "points": pts}, NOT_ROAD, setup(work="map"), {**UNCHANGED, "road": None})
+    refused("Yol projesi değil", {"name": "Zemin", "points": pts}, NOT_ROAD, setup(work="architecture"), {**UNCHANGED, "road": None})
     refused("Boş ad", {"name": "", "points": pts},
             failed("invalid_terrain", "Yüzey kurallarına uymuyor: yüzeyin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter.", "name"))
     refused("Aynı ad, büyük küçük harf ayrımsız", {"name": "eski ZEMIN", "points": pts},
@@ -672,7 +675,7 @@ def edit_cases():
     cases.append({"name": "Son yüzey kalkınca yol ayarı da kalkar", "setup": setup([OLD]),
                   "steps": [step("execute", {"operation": "remove", "id": "t-1"},
                                  completed({"surfaces": [], "revision": "$current"}), {**WRITTEN, "road": None})]})
-    refused("Yol projesi değil", {"operation": "remove", "id": "t-1"}, NOT_ROAD, setup(work="map"), None)
+    refused("Yol projesi değil", {"operation": "remove", "id": "t-1"}, NOT_ROAD, setup(work="architecture"), None)
     refused("set'te yüzey yok", {"operation": "set"}, failed("no_terrain", "Yazılacak yüzeyin tanımını (surface) verin.", "surface"))
     refused("accept'te kimlik yok", {"operation": "accept"}, failed("no_id", "Yüzeyin kimliğini (id) verin.", "id"))
     refused("remove'da boş kimlik", {"operation": "remove", "id": ""}, failed("no_id", "Yüzeyin kimliğini (id) verin.", "id"))
@@ -744,7 +747,7 @@ def query_cases():
     q("Kurulamayan yüzeyde kot yok", {"surface": "t-5", "at": [[10.0, 10.0]]}, {"surfaces": [report(weak)]})
     q("Kesit: sınırın ve boşluğun kenarı boyunca", {"surface": "t-2", "along": [[2.0, 2.0], [38.0, 2.0], [38.0, 28.0]]},
       {"surfaces": [report(full)], "section": section(s_full, [[2.0, 2.0], [38.0, 2.0], [38.0, 28.0]])})
-    refused("Yol projesi değil", {}, NOT_ROAD, setup(work="map"))
+    refused("Yol projesi değil", {}, NOT_ROAD, setup(work="architecture"))
     refused("Olmayan yüzey", {"surface": "yok"}, failed("unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", "surface"))
     refused("Yüzeysiz kot", {"at": [[1.0, 1.0]]},
             failed("no_terrain", "Kot ve kesit bir yüzeyde sorulur: yüzeyin kimliğini ya da adını (surface) verin.", "surface"))
@@ -867,7 +870,7 @@ def contour_cases():
     drawn("Gizli katmana uyarıyla", {"surface": "t-3", "interval": 1.0}, s_open, 1.0, layer="gizli",
           warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}])
     bad = failed("invalid_contours", "Eş yükselti aralığı 0'dan büyük bir sayı, taban kotu sonlu bir sayı olmalı.", "interval")
-    refused("Yol projesi değil", {"surface": "t-2", "interval": 0.5}, NOT_ROAD, setup(work="map"))
+    refused("Yol projesi değil", {"surface": "t-2", "interval": 0.5}, NOT_ROAD, setup(work="architecture"))
     refused("Sıfır aralık", {"surface": "t-2", "interval": 0.0}, bad)
     refused("Eksi aralık", {"surface": "t-2", "interval": -1.0}, bad)
     refused("Çok sık düzey", {"surface": "t-3", "interval": 0.0001},
@@ -1093,7 +1096,7 @@ def landxml_cases():
           warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}])
     taken("Plan yazmaz", {"path": f("zemin.xml")}, files["zemin.xml"][0], op="plan")
     taken("Doğrulama yazmaz", {"path": f("kirikli.xml")}, files["kirikli.xml"][0], op="validate")
-    refused("Yol projesi değil", {"path": f("zemin.xml")}, NOT_ROAD, setup(work="map"), None)
+    refused("Yol projesi değil", {"path": f("zemin.xml")}, NOT_ROAD, setup(work="architecture"), None)
     refused("Dosya yok", {"path": f("yok.xml")},
             failed("file_not_found", f("yok.xml") + " yok; dosyanın yolunu denetleyin.", "path"))
     for name, words in [("bozuk.xml", "XML olarak okunamadı"), ("kok.xml", "kökü LandXML değil"),

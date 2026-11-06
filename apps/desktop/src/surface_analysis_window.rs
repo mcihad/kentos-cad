@@ -246,8 +246,8 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
-            self.warn("Yüzey analizi yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+            self.warn("Yüzey analizi Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
         let surfaces: Vec<String> = doc.model.settings().road.as_ref().map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| s.id.clone()).collect());

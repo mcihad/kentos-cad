@@ -1803,9 +1803,21 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             r,
         ));
     }
-    // A road's settings are a road project's (plan/road.md Y2.2).
-    if road.is_some() && cad_work != Some(CadWork::Road) {
-        return Err(relation("road", "yol ayarları yalnız yol projesinin olur (cadWork road)", r));
+    // A road's settings are a road project's (plan/road.md Y2.2); since schema 195 a map project's terrain surfaces
+    // are written there too, and nothing else of a road (docs/adr/1520).
+    if let Some(v) = &road {
+        let map = cad_work == Some(CadWork::Map) && has.map_surfaces;
+        if cad_work != Some(CadWork::Road) && !(map && v.surfaces_only()) {
+            return Err(relation(
+                "road",
+                if map {
+                    "harita projesinde yol ayarlarından yalnız arazi yüzeyleri yazılır (cadWork map)"
+                } else {
+                    "yol ayarları yalnız yol projesinin olur (cadWork road); arazi yüzeyleri harita projesinin de olur (şema 195)"
+                },
+                r,
+            ));
+        }
     }
     // A map's work structure is a map project's (docs/adr/1200 §2).
     if map_survey.is_some() && cad_work != Some(CadWork::Map) {

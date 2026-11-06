@@ -25,7 +25,7 @@ fn triangles(s: &Surface) -> Vec<Triangle> {
 
 /// The comparison now, and its warnings.
 pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(TerrainsCompared, Vec<CommandWarning>), Stop> {
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     if let Some(b) = &input.ranges
         && (b.len() < 2 || b.iter().any(|v| !v.is_finite()) || b.windows(2).any(|w| w[0] >= w[1]))
     {

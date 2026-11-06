@@ -60,7 +60,7 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCoverage) -> Result<(Terrai
     if input.longest.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
         return Err(invalid("Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.".into(), "longest"));
     }
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);

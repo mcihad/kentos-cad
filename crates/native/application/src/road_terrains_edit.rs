@@ -28,7 +28,7 @@ fn unknown(id: &str, path: &str) -> Stop {
 }
 
 fn check(doc: &kentos_domain::Document, input: &TerrainsEdit) -> Result<Checked, Stop> {
-    common::road_project(doc)?;
+    common::terrain_project(doc)?;
     let own = common::surfaces(doc);
     let op = input.operation;
     if op == TerrainsEditOperation::Set && input.surface.is_none() {

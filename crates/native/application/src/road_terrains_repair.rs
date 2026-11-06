@@ -40,7 +40,7 @@ struct Checked {
 }
 
 fn check(doc: &Document, input: &TerrainsRepair) -> Result<Checked, Stop> {
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     if input.exclude.is_empty() && input.restore.is_empty() {
         return Err(invalid("Bir şey sorun: dışarıda bırakılacak (exclude) ya da geri alınacak (restore) yerler.".into(), ""));
     }

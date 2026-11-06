@@ -244,6 +244,11 @@ impl RoadSettings {
     }
 
     /// Whether it says nothing (and is not written).
+    /// Whether it holds terrain surfaces only, as a map project's may (`.kcad` schema 195, docs/adr/1520).
+    pub fn surfaces_only(&self) -> bool {
+        Self { surfaces: Vec::new(), ..self.clone() }.is_empty()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.surfaces.is_empty()
             && self.alignments.is_empty()

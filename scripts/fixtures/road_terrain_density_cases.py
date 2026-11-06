@@ -172,7 +172,7 @@ def density_cases():
     q("Açık çoklu çizgi sınır olamaz", {"surface": "t-10", "cell": 1.0, "boundary": b["open"]})
     q("Çok hücre", {"surface": "t-6", "cell": 0.001})
     q("Yol projesi değil", {"surface": "t-10", "cell": 1.0},
-      refused("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+      refused("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."),
       setup_="$map")
     return out
 
@@ -279,7 +279,7 @@ def sparse_cases():
         "değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision",
         "revision": "$current"}})
     no("Yol projesi değil", {"surface": "t-10", "cell": 1.0, "least": 1, "layerId": k},
-       refused("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+       refused("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."),
        setup_="$map")
     return out
 
@@ -295,7 +295,7 @@ def main():
     for name, (command, title, found) in docs.items():
         for c in found:
             if c.get("setup") == "$map":
-                c["setup"] = cov.setup(work="map")
+                c["setup"] = cov.setup(work="architecture")
         doc = {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
                "note": "scripts/fixtures/road_terrain_density_cases.py'den; kafes yüzeylerin köşeleri dünyanın başlangıcından "
                        "hücrenin katlarıyla sayılarak, sınırın halkalarında hücre merkezi tek-çift kuralıyla, seyrek "

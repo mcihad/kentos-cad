@@ -989,12 +989,14 @@ fn komut_ara_finds_no_other_modules_work() {
     let hits = found(&mut mimari, "eğim");
     assert_eq!(hits, ["tool.dimension"], "the slope dimension, by its EĞİM");
     // KentOS GIS: no wall, space, block or dimension tool, nor Harita's parcels (Parsel oluştur, İfraz, the parcel
-    // sheet's corner numbers and edges).
+    // sheet's corner numbers and edges). Its one parcel command is the read-only parcel check of a cadastre layer
+    // (Veri › Tablo, ADR 1400).
     let mut gis = program(Some(Module::Gis));
-    for query in ["duvar", "mahal", "km yaz", "kısıt", "ifraz", "parsel"] {
+    for query in ["duvar", "mahal", "km yaz", "kısıt", "ifraz"] {
         let hits = found(&mut gis, query);
         assert!(hits.is_empty(), "GIS: {query}: {hits:?}");
     }
+    assert_eq!(found(&mut gis, "parsel"), ["parcels.check"], "GIS: parsel");
     for query in ["blok", "ölçü", "kılavuz", "tarama"] {
         let hits = found(&mut gis, query);
         assert!(
@@ -1360,7 +1362,7 @@ fn the_drawing_standard_is_kentos_mimaris() {
     );
     assert_eq!(
         standart(Module::Gis, "data").expect("Veri › Standart"),
-        ["profile.window", "lineTypes.manage", "layer.impact"]
+        ["profile.window", "zoning.check", "lineTypes.manage", "layer.impact"]
     );
 }
 

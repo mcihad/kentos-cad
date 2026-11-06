@@ -45,7 +45,7 @@ tam çözünürlükte okuma), [ADR 1480](1480-orthophoto-accuracy-check.md) (kur
    - **Kontrolsüz bulut:** kontrol noktası yoksa “bulut ölçüye kesin hazır sayılmaz” notu verilir.
    - **Taşıma yok:** hiçbir bulut taşınmaz, dönüşüm uygulanmaz.
 3. **Pencere Tarama uyumu…** (`pointcloud.overlap`, ikon `cloudOverlap`; seçenekleri sahibine önceden gönderildi):
-   - **Yeri:** Nokta bulutu bağlam sekmesi, Harita'nın Arazi sekmesi, CBS'nin Analiz › Arazi paneli.
+   - **Yeri:** Nokta bulutu bağlam sekmesi (Harita, Yol, CBS), Yol'un Arazi sekmesi, CBS'nin Analiz › Arazi paneli.
    - **Form:** iki tarama bir satırda; hücre ve en az nokta bir satırda; kontrol katmanı, çevre ve ölçek bir satırda.
    - **Özet:** RMSDz sınırla, sistematik kayma, iki taramanın KOH_Z'si.
    - **Tablolar:** En kötü hücreler ve Kontrol noktaları kayan veri tablolarında; CSV kaydet.

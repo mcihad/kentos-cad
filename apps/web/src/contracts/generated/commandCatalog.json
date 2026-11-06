@@ -166740,7 +166740,7 @@
               "type": "null"
             }
           ],
-          "description": "A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD\nproject drawn for a road has them (`.kcad` schema 158)."
+          "description": "A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD\nproject drawn for a road has them (`.kcad` schema 158); a map project's terrain surfaces are kept here too,\nnothing else of a road (`.kcad` schema 195, docs/adr/1520)."
         },
         "secondCustomCrs": {
           "anyOf": [

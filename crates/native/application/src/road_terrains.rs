@@ -17,7 +17,26 @@ pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, (!path.is_empty()).then(|| path.to_owned())))
 }
 
-/// Only a road project has surfaces.
+/// Whether a project of this work holds terrain surfaces: Harita's and Yol's (docs/adr/1520; Netcad's NetSURF is a
+/// map engineer's tool as much as a road engineer's).
+pub fn holds_surfaces(work: Option<CadWork>) -> bool {
+    matches!(work, Some(CadWork::Road | CadWork::Map))
+}
+
+/// The terrain surfaces' commands' check: a Harita or a Yol project (the code stays `not_a_road_project`).
+pub(crate) fn terrain_project(doc: &Document) -> Result<(), Stop> {
+    if holds_surfaces(doc.settings().cad_work) {
+        Ok(())
+    } else {
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil.".into(),
+            "",
+        ))
+    }
+}
+
+/// Only a road project: drainage and the other road works.
 pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(CadWork::Road) {
         Ok(())
@@ -198,7 +217,7 @@ pub(crate) fn with_surfaces(doc: &Document, list: Vec<TerrainSurfaceDef>) -> Pro
 /// The road project's surfaces as their sources make them now, for the desktop's drawing and window (plan/road.md
 /// Y2.4): each definition, its report and its surface (none when none is made). None outside a road project.
 pub fn made_surfaces(doc: &Document) -> Vec<(TerrainSurfaceDef, TerrainReport, Option<Surface>)> {
-    if doc.settings().cad_work != Some(CadWork::Road) {
+    if !holds_surfaces(doc.settings().cad_work) {
         return Vec::new();
     }
     surfaces(doc)

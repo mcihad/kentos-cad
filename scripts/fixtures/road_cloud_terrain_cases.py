@@ -498,8 +498,8 @@ def cases():
     no("Katman grubu", {**BASE, "layerId": "grup"},
        failed("not_a_layer", "“Yol” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
               "layerId"))
-    no("Yol projesi değil", BASE, failed("not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; "
-                                         "bu çizim yol projesi değil."), setup_=None)
+    no("Yol projesi değil", BASE, failed("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); "
+                                         "bu çizim ikisinden biri değil."), setup_=None)
     out[-1]["setup"] = "$map"
     ok("Kaynağı okunamayan bulut uyarıyla", {**BASE, "clouds": [CLOUD, GONE]},
        [{"code": "cloud_source_unreadable", "message": ANY, "path": "clouds[1].sources[0]"}])
@@ -521,7 +521,7 @@ def document():
     out = cases()
     for c in out:
         if c.get("setup") == "$map":
-            c["setup"] = setup(work="map")
+            c["setup"] = setup(work="architecture")
     return {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.cloud", "commandVersion": 1,
             "title": "Buluttan arazi: zemin noktaları, seyreltme, kapsama ve hata",
             "note": "scripts/fixtures/road_cloud_terrain_cases.py'den; bulutun noktaları laspy'nin, seyreltme, kapsama "

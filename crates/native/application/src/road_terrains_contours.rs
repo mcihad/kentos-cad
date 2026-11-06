@@ -25,7 +25,7 @@ struct Checked {
 }
 
 fn check(doc: &kentos_domain::Document, input: &TerrainsContours) -> Result<Checked, Stop> {
-    common::road_project(doc)?;
+    common::terrain_project(doc)?;
     let bad = || {
         fail(
             codes::INVALID_CONTOURS,

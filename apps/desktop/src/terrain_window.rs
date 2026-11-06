@@ -173,8 +173,8 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if doc.model.settings().cad_work != Some(kentos_commands::CadWork::Road) {
-            self.warn("Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur.".to_owned());
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+            self.warn("Arazi yüzeyi Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
         let made = road_terrains::made_surfaces(&doc.model);
@@ -185,7 +185,7 @@ impl App {
             rows: kept.iter().cloned().map(Row::of).collect(),
             reports: made.into_iter().map(|(_, r, _)| r).collect(),
             kept,
-            interval: "1".to_owned(),
+            interval: contour_interval(doc.model.settings().plot_scale).to_owned(),
             major: "5".to_owned(),
             layer,
         });
@@ -739,5 +739,18 @@ impl App {
 fn muted(theme: &iced::Theme) -> iced::widget::text::Style {
     iced::widget::text::Style {
         color: Some(Tokens::of(theme).muted),
+    }
+}
+
+/// The contour interval a window starts with, by the drawing's scale: BÖHHBÜY (RG 26.06.2018/30460) m. 78(1)(c) draws
+/// them every 5 m at 1/5000, 2 m at 1/2000, 1 m at 1/1000 and 1/500 (every fifth thick, (d)); a scale it does not name
+/// starts at 1 m, which the user changes (docs/adr/1520).
+pub(crate) fn contour_interval(scale: f64) -> &'static str {
+    if scale == 5000.0 {
+        "5"
+    } else if scale == 2000.0 {
+        "2"
+    } else {
+        "1"
     }
 }

@@ -69999,7 +69999,8 @@ class ProjectSettings(_Model):
         review_notes: Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
             plotted or measured. Numbered; their stamps say which state of an object each was written for.
         road: A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
-            project drawn for a road has them (`.kcad` schema 158).
+            project drawn for a road has them (`.kcad` schema 158); a map project's terrain surfaces are kept here too,
+            nothing else of a road (`.kcad` schema 195, docs/adr/1520).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never

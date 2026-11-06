@@ -498,7 +498,8 @@ pub struct ProjectSettings {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub coordinate_epoch: Option<f64>,
     /// A road project's own settings (plan/road.md Y2.2): its terrain surfaces' definitions; absent: none. Only a CAD
-    /// project drawn for a road has them (`.kcad` schema 158).
+    /// project drawn for a road has them (`.kcad` schema 158); a map project's terrain surfaces are kept here too,
+    /// nothing else of a road (`.kcad` schema 195, docs/adr/1520).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub road: Option<crate::RoadSettings>,

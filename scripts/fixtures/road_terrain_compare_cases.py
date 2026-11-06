@@ -32,6 +32,10 @@ UNCHANGED = analysis.UNCHANGED
 FX, TX = drainage.FX, analysis.TX
 
 
+
+# ADR 1520: surfaces are a Harita's and a Yol's; another project is refused.
+NOT_SURFACE = drainage.failed("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil.")
+
 def cut_z(x, y):
     # Over x 6002.5–6012.5, y 0–10 every 2.5: the plane cut down towards x′ = 7.5 and tilted the other way in y.
     xr = x - FX
@@ -200,7 +204,7 @@ def cases():
       analysis.failed("unknown_terrain", "“Tasarım” kimlikli ya da adlı yüzey projede yok.", "comparison"))
     q("Kurulamayan yüzey", {"base": "Düz", "comparison": "Kurulamaz"},
       {"status": "failed", "error": {"code": "terrain_unbuildable", "message": ANY}})
-    q("Yol projesi değil", {"base": "Düz", "comparison": "Kazı"}, drainage.NOT_ROAD, setup_="$map")
+    q("Yol projesi değil", {"base": "Düz", "comparison": "Kazı"}, NOT_SURFACE, setup_="$map")
     return out
 
 
@@ -208,7 +212,7 @@ def main():
     found = cases()
     for c in found:
         if c.get("setup") == "$map":
-            c["setup"] = setup(work="map")
+            c["setup"] = setup(work="architecture")
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.compare", "commandVersion": 1,
            "title": "Yüzeyleri karşılaştır: kazı, dolgu, fark aralıkları",
            "note": "scripts/fixtures/road_terrain_compare_cases.py'den; iki kafesin dikdörtgenlerle üst üste konuşu, her "

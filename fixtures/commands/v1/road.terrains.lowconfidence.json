@@ -11492,11 +11492,24 @@
      "Sınıf": "sert"
     },
     "p": {
+     "x": 8007.3,
+     "y": 1.2
+    },
+    "z": 31.58200000000002,
+    "id": 954
+   },
+   {
+    "kind": "point",
+    "layerId": "kontrol",
+    "attrs": {
+     "Sınıf": "sert"
+    },
+    "p": {
      "x": 8020.0,
      "y": 5.0
     },
     "z": 32.3,
-    "id": 954
+    "id": 955
    },
    {
     "kind": "point",
@@ -11506,7 +11519,7 @@
      "x": 8001.0,
      "y": 1.0
     },
-    "id": 955
+    "id": 956
    },
    {
     "kind": "line",
@@ -11520,7 +11533,7 @@
      "x": 8001.0,
      "y": 1.0
     },
-    "id": 956
+    "id": 957
    },
    {
     "kind": "polyline",
@@ -11549,7 +11562,7 @@
      0.0
     ],
     "closed": true,
-    "id": 957,
+    "id": 958,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11582,7 +11595,7 @@
      }
     ],
     "closed": true,
-    "id": 958,
+    "id": 959,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11628,7 +11641,7 @@
       ]
      }
     ],
-    "id": 959,
+    "id": 960,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11648,7 +11661,7 @@
       "y": 60.0
      }
     ],
-    "id": 960,
+    "id": 961,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11672,7 +11685,7 @@
       "y": 8.0
      }
     ],
-    "id": 961,
+    "id": 962,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11696,7 +11709,7 @@
       "y": 2.6
      }
     ],
-    "id": 962,
+    "id": 963,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11727,7 +11740,7 @@
      0.0
     ],
     "closed": true,
-    "id": 963,
+    "id": 964,
     "layerId": "sinir",
     "attrs": {}
    },
@@ -11743,13 +11756,13 @@
       "y": 0.0
      }
     ],
-    "id": 964,
+    "id": 965,
     "layerId": "sinir",
     "attrs": {}
    },
    {
     "kind": "point",
-    "id": 965,
+    "id": 966,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11760,7 +11773,7 @@
    },
    {
     "kind": "point",
-    "id": 966,
+    "id": 967,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11771,7 +11784,7 @@
    },
    {
     "kind": "point",
-    "id": 967,
+    "id": 968,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11782,7 +11795,7 @@
    },
    {
     "kind": "point",
-    "id": 968,
+    "id": 969,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11793,7 +11806,7 @@
    },
    {
     "kind": "point",
-    "id": 969,
+    "id": 970,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11804,7 +11817,7 @@
    },
    {
     "kind": "point",
-    "id": 970,
+    "id": 971,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11815,7 +11828,7 @@
    },
    {
     "kind": "point",
-    "id": 971,
+    "id": 972,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11826,7 +11839,7 @@
    },
    {
     "kind": "point",
-    "id": 972,
+    "id": 973,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11837,7 +11850,7 @@
    },
    {
     "kind": "point",
-    "id": 973,
+    "id": 974,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11848,7 +11861,7 @@
    },
    {
     "kind": "point",
-    "id": 974,
+    "id": 975,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11859,7 +11872,7 @@
    },
    {
     "kind": "point",
-    "id": 975,
+    "id": 976,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11870,7 +11883,7 @@
    },
    {
     "kind": "point",
-    "id": 976,
+    "id": 977,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11881,7 +11894,7 @@
    },
    {
     "kind": "point",
-    "id": 977,
+    "id": 978,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11892,7 +11905,7 @@
    },
    {
     "kind": "point",
-    "id": 978,
+    "id": 979,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11903,7 +11916,7 @@
    },
    {
     "kind": "point",
-    "id": 979,
+    "id": 980,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -11914,7 +11927,7 @@
    },
    {
     "kind": "point",
-    "id": 980,
+    "id": 981,
     "layerId": "delikli",
     "attrs": {},
     "p": {
@@ -12904,7 +12917,8 @@
    "0192f600-7c3e-7d4a-9b1e-000000000977",
    "0192f600-7c3e-7d4a-9b1e-000000000978",
    "0192f600-7c3e-7d4a-9b1e-000000000979",
-   "0192f600-7c3e-7d4a-9b1e-000000000980"
+   "0192f600-7c3e-7d4a-9b1e-000000000980",
+   "0192f600-7c3e-7d4a-9b1e-000000000981"
   ],
   "styles": {
    "items": [],
@@ -12942,7 +12956,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -13954,7 +13968,8 @@
        977,
        978,
        979,
-       980
+       980,
+       981
       ]
      }
     }
@@ -13992,7 +14007,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -14014,7 +14029,7 @@
         ],
         "closed": true
        },
-       "982": {
+       "983": {
         "kind": "text",
         "p": {
          "x": 10006.0,
@@ -14063,7 +14078,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -14085,7 +14100,7 @@
         ],
         "closed": true
        },
-       "982": {
+       "983": {
         "kind": "text",
         "p": {
          "x": 10006.0,
@@ -14094,7 +14109,7 @@
         "text": "Düşük güven · 24,0 m²",
         "height": 2.5
        },
-       "983": {
+       "984": {
         "kind": "polyline",
         "pts": [
          {
@@ -14155,51 +14170,51 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
-        "kind": "polyline",
-        "pts": [
-         {
-          "x": 12000.0,
-          "y": 0.0
-         },
-         {
-          "x": 12009.0,
-          "y": 0.0
-         },
-         {
-          "x": 12009.0,
-          "y": 9.0
-         },
-         {
-          "x": 12000.0,
-          "y": 9.0
-         }
-        ],
-        "closed": true
-       },
        "982": {
         "kind": "polyline",
         "pts": [
          {
-          "x": 12004.0,
-          "y": 4.0
+          "x": 12000.0,
+          "y": 0.0
          },
          {
-          "x": 12004.0,
-          "y": 5.0
+          "x": 12009.0,
+          "y": 0.0
          },
          {
-          "x": 12005.0,
-          "y": 5.0
+          "x": 12009.0,
+          "y": 9.0
          },
          {
-          "x": 12005.0,
-          "y": 4.0
+          "x": 12000.0,
+          "y": 9.0
          }
         ],
         "closed": true
        },
        "983": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 12004.0,
+          "y": 4.0
+         },
+         {
+          "x": 12004.0,
+          "y": 5.0
+         },
+         {
+          "x": 12005.0,
+          "y": 5.0
+         },
+         {
+          "x": 12005.0,
+          "y": 4.0
+         }
+        ],
+        "closed": true
+       },
+       "984": {
         "kind": "text",
         "p": {
          "x": 12004.5,
@@ -14252,46 +14267,24 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
-        "kind": "polyline",
-        "pts": [
-         {
-          "x": 12000.0,
-          "y": 0.0
-         },
-         {
-          "x": 12004.0,
-          "y": 0.0
-         },
-         {
-          "x": 12004.0,
-          "y": 4.0
-         },
-         {
-          "x": 12000.0,
-          "y": 4.0
-         }
-        ],
-        "closed": true
-       },
        "982": {
         "kind": "polyline",
         "pts": [
          {
           "x": 12000.0,
-          "y": 5.0
+          "y": 0.0
          },
          {
           "x": 12004.0,
-          "y": 5.0
+          "y": 0.0
          },
          {
           "x": 12004.0,
-          "y": 9.0
+          "y": 4.0
          },
          {
           "x": 12000.0,
-          "y": 9.0
+          "y": 4.0
          }
         ],
         "closed": true
@@ -14300,20 +14293,20 @@
         "kind": "polyline",
         "pts": [
          {
-          "x": 12005.0,
-          "y": 0.0
+          "x": 12000.0,
+          "y": 5.0
          },
          {
-          "x": 12009.0,
-          "y": 0.0
+          "x": 12004.0,
+          "y": 5.0
          },
          {
-          "x": 12009.0,
-          "y": 4.0
+          "x": 12004.0,
+          "y": 9.0
          },
          {
-          "x": 12005.0,
-          "y": 4.0
+          "x": 12000.0,
+          "y": 9.0
          }
         ],
         "closed": true
@@ -14323,6 +14316,28 @@
         "pts": [
          {
           "x": 12005.0,
+          "y": 0.0
+         },
+         {
+          "x": 12009.0,
+          "y": 0.0
+         },
+         {
+          "x": 12009.0,
+          "y": 4.0
+         },
+         {
+          "x": 12005.0,
+          "y": 4.0
+         }
+        ],
+        "closed": true
+       },
+       "985": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 12005.0,
           "y": 5.0
          },
          {
@@ -14340,7 +14355,7 @@
         ],
         "closed": true
        },
-       "985": {
+       "986": {
         "kind": "text",
         "p": {
          "x": 12002.0,
@@ -14349,7 +14364,7 @@
         "text": "Düşük güven · 16,0 m²",
         "height": 2.5
        },
-       "986": {
+       "987": {
         "kind": "text",
         "p": {
          "x": 12002.0,
@@ -14358,7 +14373,7 @@
         "text": "Düşük güven · 16,0 m²",
         "height": 2.5
        },
-       "987": {
+       "988": {
         "kind": "text",
         "p": {
          "x": 12007.0,
@@ -14367,7 +14382,7 @@
         "text": "Düşük güven · 16,0 m²",
         "height": 2.5
        },
-       "988": {
+       "989": {
         "kind": "text",
         "p": {
          "x": 12007.0,
@@ -14414,7 +14429,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -14436,7 +14451,7 @@
         ],
         "closed": true
        },
-       "982": {
+       "983": {
         "kind": "text",
         "p": {
          "x": 8005.0,
@@ -14482,7 +14497,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -14583,7 +14598,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -14643,7 +14658,7 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
+       "982": {
         "kind": "polyline",
         "pts": [
          {
@@ -14665,7 +14680,7 @@
         ],
         "closed": true
        },
-       "982": {
+       "983": {
         "kind": "text",
         "p": {
          "x": 10006.0,
@@ -14715,51 +14730,51 @@
       "dirty": true,
       "revision": "changed",
       "fields": {
-       "981": {
-        "kind": "polyline",
-        "pts": [
-         {
-          "x": 12000.0,
-          "y": 0.0
-         },
-         {
-          "x": 12009.0,
-          "y": 0.0
-         },
-         {
-          "x": 12009.0,
-          "y": 9.0
-         },
-         {
-          "x": 12000.0,
-          "y": 9.0
-         }
-        ],
-        "closed": true
-       },
        "982": {
         "kind": "polyline",
         "pts": [
          {
-          "x": 12004.0,
-          "y": 4.0
+          "x": 12000.0,
+          "y": 0.0
          },
          {
-          "x": 12004.0,
-          "y": 5.0
+          "x": 12009.0,
+          "y": 0.0
          },
          {
-          "x": 12005.0,
-          "y": 5.0
+          "x": 12009.0,
+          "y": 9.0
          },
          {
-          "x": 12005.0,
-          "y": 4.0
+          "x": 12000.0,
+          "y": 9.0
          }
         ],
         "closed": true
        },
        "983": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 12004.0,
+          "y": 4.0
+         },
+         {
+          "x": 12004.0,
+          "y": 5.0
+         },
+         {
+          "x": 12005.0,
+          "y": 5.0
+         },
+         {
+          "x": 12005.0,
+          "y": 4.0
+         }
+        ],
+        "closed": true
+       },
+       "984": {
         "kind": "text",
         "p": {
          "x": 12004.5,
@@ -14768,7 +14783,7 @@
         "text": "Düşük güven · 80,0 m²",
         "height": 2.5
        },
-       "984": {
+       "985": {
         "kind": "polyline",
         "pts": [
          {
@@ -15041,7 +15056,7 @@
       "status": "failed",
       "error": {
        "code": "not_a_road_project",
-       "message": "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+       "message": "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."
       }
      },
      "expect": {
@@ -15065,7 +15080,7 @@
      "angleUnit": "deg",
      "plotScale": 1000.0,
      "workspace": "cad",
-     "cadWork": "map",
+     "cadWork": "architecture",
      "drawingFont": "barlow"
     },
     "origin": {
@@ -25920,11 +25935,24 @@
        "Sınıf": "sert"
       },
       "p": {
+       "x": 8007.3,
+       "y": 1.2
+      },
+      "z": 31.58200000000002,
+      "id": 954
+     },
+     {
+      "kind": "point",
+      "layerId": "kontrol",
+      "attrs": {
+       "Sınıf": "sert"
+      },
+      "p": {
        "x": 8020.0,
        "y": 5.0
       },
       "z": 32.3,
-      "id": 954
+      "id": 955
      },
      {
       "kind": "point",
@@ -25934,7 +25962,7 @@
        "x": 8001.0,
        "y": 1.0
       },
-      "id": 955
+      "id": 956
      },
      {
       "kind": "line",
@@ -25948,7 +25976,7 @@
        "x": 8001.0,
        "y": 1.0
       },
-      "id": 956
+      "id": 957
      },
      {
       "kind": "polyline",
@@ -25977,7 +26005,7 @@
        0.0
       ],
       "closed": true,
-      "id": 957,
+      "id": 958,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26010,7 +26038,7 @@
        }
       ],
       "closed": true,
-      "id": 958,
+      "id": 959,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26056,7 +26084,7 @@
         ]
        }
       ],
-      "id": 959,
+      "id": 960,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26076,7 +26104,7 @@
         "y": 60.0
        }
       ],
-      "id": 960,
+      "id": 961,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26100,7 +26128,7 @@
         "y": 8.0
        }
       ],
-      "id": 961,
+      "id": 962,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26124,7 +26152,7 @@
         "y": 2.6
        }
       ],
-      "id": 962,
+      "id": 963,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26155,7 +26183,7 @@
        0.0
       ],
       "closed": true,
-      "id": 963,
+      "id": 964,
       "layerId": "sinir",
       "attrs": {}
      },
@@ -26171,13 +26199,13 @@
         "y": 0.0
        }
       ],
-      "id": 964,
+      "id": 965,
       "layerId": "sinir",
       "attrs": {}
      },
      {
       "kind": "point",
-      "id": 965,
+      "id": 966,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26188,7 +26216,7 @@
      },
      {
       "kind": "point",
-      "id": 966,
+      "id": 967,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26199,7 +26227,7 @@
      },
      {
       "kind": "point",
-      "id": 967,
+      "id": 968,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26210,7 +26238,7 @@
      },
      {
       "kind": "point",
-      "id": 968,
+      "id": 969,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26221,7 +26249,7 @@
      },
      {
       "kind": "point",
-      "id": 969,
+      "id": 970,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26232,7 +26260,7 @@
      },
      {
       "kind": "point",
-      "id": 970,
+      "id": 971,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26243,7 +26271,7 @@
      },
      {
       "kind": "point",
-      "id": 971,
+      "id": 972,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26254,7 +26282,7 @@
      },
      {
       "kind": "point",
-      "id": 972,
+      "id": 973,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26265,7 +26293,7 @@
      },
      {
       "kind": "point",
-      "id": 973,
+      "id": 974,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26276,7 +26304,7 @@
      },
      {
       "kind": "point",
-      "id": 974,
+      "id": 975,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26287,7 +26315,7 @@
      },
      {
       "kind": "point",
-      "id": 975,
+      "id": 976,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26298,7 +26326,7 @@
      },
      {
       "kind": "point",
-      "id": 976,
+      "id": 977,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26309,7 +26337,7 @@
      },
      {
       "kind": "point",
-      "id": 977,
+      "id": 978,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26320,7 +26348,7 @@
      },
      {
       "kind": "point",
-      "id": 978,
+      "id": 979,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26331,7 +26359,7 @@
      },
      {
       "kind": "point",
-      "id": 979,
+      "id": 980,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -26342,7 +26370,7 @@
      },
      {
       "kind": "point",
-      "id": 980,
+      "id": 981,
       "layerId": "delikli",
       "attrs": {},
       "p": {
@@ -27332,7 +27360,8 @@
      "0192f600-7c3e-7d4a-9b1e-000000000977",
      "0192f600-7c3e-7d4a-9b1e-000000000978",
      "0192f600-7c3e-7d4a-9b1e-000000000979",
-     "0192f600-7c3e-7d4a-9b1e-000000000980"
+     "0192f600-7c3e-7d4a-9b1e-000000000980",
+     "0192f600-7c3e-7d4a-9b1e-000000000981"
     ],
     "styles": {
      "items": [],

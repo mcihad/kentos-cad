@@ -35,6 +35,10 @@ UID = "0192f5e0-7c3e-7d4a-9b1e-{:012d}"
 UNCHANGED = {"canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
 
 
+
+# ADR 1520: surfaces are a Harita's and a Yol's; another project is refused.
+NOT_SURFACE = drainage.failed("not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil.")
+
 def completed(output):
     return {"status": "completed", "output": output, "warnings": []}
 
@@ -308,7 +312,7 @@ def cases():
       failed("unknown_terrain", "“Tasarım” kimlikli ya da adlı yüzey projede yok.", "surface"))
     q("Kurulamayan yüzey", {"surface": "Kurulamaz", "slopes": [0.0, 1.0]},
       {"status": "failed", "error": {"code": "terrain_unbuildable", "message": ANY}})
-    q("Yol projesi değil", {"surface": "Düz", "slopes": [0.0, 1.0]}, drainage.NOT_ROAD, setup_="$map")
+    q("Yol projesi değil", {"surface": "Düz", "slopes": [0.0, 1.0]}, NOT_SURFACE, setup_="$map")
     return out
 
 
@@ -316,7 +320,7 @@ def main():
     found = cases()
     for c in found:
         if c.get("setup") == "$map":
-            c["setup"] = setup(work="map")
+            c["setup"] = setup(work="architecture")
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.analysis", "commandVersion": 1,
            "title": "Yüzeyi analiz et: kot, eğim, bakı, pürüzlülük, raster",
            "note": "scripts/fixtures/road_terrain_analysis_cases.py'den; z = g(x) + h(y) kafeslerinde (her kare düzlem) "

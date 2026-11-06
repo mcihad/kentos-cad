@@ -65,7 +65,7 @@ fn banded(surface: &Surface, measure: Measure, breaks: &[f64], pieces: bool) -> 
 
 /// The analysis now, and its warnings.
 pub(crate) fn answer(doc: &Document, input: &TerrainsAnalysis) -> Result<(TerrainsAnalysed, Vec<CommandWarning>), Stop> {
-    terrains::road_project(doc)?;
+    terrains::terrain_project(doc)?;
     judged(input)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;

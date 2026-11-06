@@ -226,7 +226,7 @@ def cases():
     c("Eski sürüme göre hazırlanmış", [step("execute", {"surface": "Onarım", "exclude": [s1], "expectedRevision": "41"},
                                             drainage.CONFLICT, UNCHANGED)])
     c("Yol projesi değil", [step("execute", {"surface": "Onarım", "exclude": [s1]}, fail(
-        "not_a_road_project", "Arazi yüzeyi yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."),
+        "not_a_road_project", "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."),
         UNCHANGED)], setup_="$map")
     return out
 
@@ -235,7 +235,7 @@ def main():
     found = cases()
     for c in found:
         if c.get("setup") == "$map":
-            c["setup"] = setup(work="map")
+            c["setup"] = setup(work="architecture")
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.repair", "commandVersion": 1,
            "title": "Yüzeyi onar: nokta kayıtlarını dışarıda bırak ve geri al",
            "note": "scripts/fixtures/road_terrain_repair_cases.py'den; düzlemde kare içindeki sivri noktanın çadırı, "

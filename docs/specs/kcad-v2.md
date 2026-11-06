@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `194`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-195.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `195`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-196.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -875,6 +875,12 @@ ve bugünkü sonuncu, çözümleri işaretinin), `uses` (`kb-N`; bir nesne tek k
 Boş yapı ve boş liste yazılmaz; yalnız `cadWork: map` projesinin olur; kurala uymayan `bad_value`. Yazıcı 194'ü yalnız
 `mapSurvey` varken seçer; 193 ve öncesi alanı `unknown_field` sayar (`broken/map-survey-in-schema-193.kcad`). Örnek
 `map-survey.json/.kcad`; bozuklar `broken/map-survey-{not-map,mark-twice,covariance,revision-gap}.kcad`.
+
+**Şema 195** (ADR 1520; MAP-14): harita projesinin arazi yüzeyleri. Ayarların `road`'u (şema 159) `cadWork: map`
+projesinde de yazılır, ama yalnız `surfaces` taşır; hizalama, profil, kesit, koridor ya da yol'un başka bir parçası
+`bad_value`'dur. Yazıcı 195'i harita projesinde `road` varken seçer; 194 ve öncesi harita projesinin `road`'unu
+`bad_value` sayar (`broken/map-surfaces-in-schema-194.kcad`). Örnek `map-surfaces.json/.kcad`; bozuk
+`broken/map-surfaces-alignment.kcad`.
 
 **Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
 `decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri

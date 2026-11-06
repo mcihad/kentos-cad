@@ -60,10 +60,10 @@ pub(crate) struct State {
     key: Cell<u64>,
 }
 
-/// The layer of a road project with surfaces; none otherwise.
+/// The layer of a Harita or Yol project with surfaces (docs/adr/1520); none otherwise.
 pub(crate) fn layer<'a>(doc: &'a Document, camera: &Camera, ink: Color, danger: Color) -> Option<Element<'a, Message>> {
     let road = doc.settings().road.as_ref()?;
-    if road.surfaces.is_empty() || doc.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+    if road.surfaces.is_empty() || !kentos_native_application::road_terrains::holds_surfaces(doc.settings().cad_work) {
         return None;
     }
     Some(
