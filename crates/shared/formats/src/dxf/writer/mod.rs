@@ -25,6 +25,7 @@ mod input;
 mod layers;
 mod layouts;
 mod styles;
+mod table_style_objects;
 
 /// The line weight (mm) a DXF holds for `mm` once written: the nearest of
 /// AutoCAD's weights, read back as a reader reads group 370 (docs/adr/0139).
@@ -389,7 +390,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     // What an insert's attribute texts show, where (docs/adr/0144 §7): the shared core's.
     let placing = crate::blocks::Placing::with_attributes(&input.blocks);
     // The STYLE and DIMSTYLE records' names: the project's styles, the styleless faces' (docs/adr/0183 §7).
-    let style_names = styles::StyleNames::new(
+    let mut style_names = styles::StyleNames::new(
         &input.text_styles,
         &input.dimension_styles,
         input
@@ -397,6 +398,8 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             .iter()
             .chain(input.blocks.iter().flat_map(|b| b.entities.iter())),
     );
+    // The table styles' TABLESTYLE objects take their handles before the tables that name them (docs/adr/1128 §3).
+    style_names.tables = input.table_styles.iter().map(|s| (s.id.clone(), handles.take())).collect();
     for def in order {
         let Some(name) = names.get(&def.id) else {
             continue;
@@ -661,7 +664,9 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     out.s.push_str(&body.s);
     out.s.push_str(&paper_body.s);
     out.str(0, "ENDSEC");
-    template::objects(&mut out, &papers);
+    let mut table_styles = Out::default();
+    table_style_objects::write(&mut table_styles, &input.table_styles, &style_names, &input.text_styles, paper, &mut report);
+    template::objects(&mut out, &papers, &table_styles.s, &table_style_objects::entries(&input.table_styles, &style_names));
     out.str(0, "EOF");
     (out.s.into_bytes(), report.export())
 }

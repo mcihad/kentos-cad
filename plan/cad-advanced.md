@@ -2206,6 +2206,61 @@ türünü aldı (37 ortak vaka), tablonun stili `cad.entities.edit`'in `tableSty
 özelliklerde Tablo stili satırı; kurulum penceresinin Kullanım sütunu “N tablo” der. Açık: DXF TABLESTYLE, dikey hizalama
 ve satırın yazıya göre büyümesi, kenar başına ayrı bakış.
 
+**DXF tablo stili (6 Kasım 2026, [ADR 1128](../docs/adr/1128-dxf-table-styles.md)):** Projenin tablo stilleri DXF'e
+ACAD_TABLESTYLE sözlüğünde TABLESTYLE nesneleri olarak yazılır (Autodesk DXF başvurusunun grupları; hücre stillerinin
+sırası veri, başlık, sütun başı, LibreDWG `dwg2.spec`'e göre); KENTOS verisi stili tam taşır, tablonun INSERT'i
+nesnenin tutamacını anar. Okurken KentOS'un stilleri birebir gelir; başka programın stili bir ACAD_TABLE'ın 342'si
+onu anıyorsa alınır, taşınamayanlar (yukarı akış, gizli başlık/sütun başı, üst/alt hiza, farklı ya da gizli
+kenarlar) içe aktarma raporunun yeni `style` konusundadır; izlenmeyen stil alınmaz ve söylenir. Bağımsız taraf ezdxf
+(içe aktarma örneği ve dışa aktarmanın etiket etiket okunması): `table_style_dxf` sınamaları (biçim 2, uygulama 3) ve
+`scripts/fixtures/table_style_dxf.py --check` geçer. Yazarın JSON girdisi tablonun `tableStyle`'ını ve `breaks`'ini
+artık düşürmez.
+
+**Kabulün kanıtı (6 Kasım 2026).** Kabul satırları ve kanıtları; kabul sınaması
+`crates/native/application/tests/all/office_profiles.rs`:
+
+- *“iki ofis profili arasında katman/stil eşle”*: `two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides`
+  — iki sürümlü paket sırayla bağlanır, çözülür, uygulanır, kurulur; A-DUVAR'ın görünüşü ikinci ofisin olur, A-NOT
+  yazı stili ve CETVEL tablo stili yerinde değiştirilir (kimlikleri kalır, tablo yeni stilini çizer). ADR 1002, 1100,
+  1126.
+- *“aynı adlı farklı blok ve çizgi tipini dene”*: aynı sınama — KAPI `differs` (`entities`, `publication`), iki
+  yerleştirmeyle yerinde değiştirilir, kimliği kalır; GAZ `differs` (`elements`), ikinci ofisinki GAZ-B olarak gelir,
+  çizimdeki kalır. ADR 1100, 1002, 1019.
+- *“Önizleme ile sonuç aynı olsun”*: her kurulumda `plan` ile `execute`'un satırları ve sayıları eşit (`profile`).
+  ADR 1002.
+- *“nesne override'ı … korunabilsin”*: çizginin kendi rengi (#00ff00) ve tablonun kendi hücre stili ikinci ofisten
+  sonra kalır; “Bu değer nereden geliyor?” kökeni “Nesne”, sıfırlama ikinci ofisin rengini gösterir. ADR 1100, 1015,
+  1018 (`the_value_origin_of_an_insert_counts_where_the_blocks_parts_take_their_look`,
+  `the_value_origin_says_what_the_sheets_plot_profile_prints`).
+- *“iki viewportun farklı stilleri korunabilsin”*: A-101'in macenta ve A-102'nin 0,7 mm geçersiz kılması değişmez
+  (pafta kitabı aynı), köken iki pencereyi ayrı söyler. ADR 1100.
+- *“Yeni/yeniden açılmış projelerde aynı profil tarifi aynı üretim davranışını versin”*:
+  `the_same_profile_recipe_gives_the_same_drawing_on_a_new_and_a_reopened_project` — canlı, kaydedilip açılmış ve
+  yalnız ikinci ofisi alan projeler katmanlarda, çizgi tiplerinde, yazı ve tablo stillerinde, onaylı şablonlarda ve
+  bloklarda aynı sonuca varır.
+
+Maddeler:
+
+- Mevcut araçlar ve sürümlü paket: `cad.standards.check/apply/resolve/conflicts/install/palettes` ve
+  `docs/specs/drawing-standard-package.md` sürüm 2 (ortak vakalar `fixtures/commands/v1/cad.standards.*.json`).
+- Paketin kaynakları: katman, yazı/ölçü/kılavuz/tablo stili, çizgi tipi, tarama, blok ve pafta şablonu (ADR 1002,
+  1100, 1126); köken ve sürüm `resolve`'da; kişisel palet ve favoriler ayar klasöründe, çizime karışmaz (ADR 1016).
+  Bulut kitaplığından doğrudan okuma bu maddenin metninde yok (“blok ve pafta şablonu referanslarını taşısın”);
+  `.kblok` kitaplıkları pencereden ve Python/MCP'den verilir (ADR 1017, 1019).
+- Değerin kökeni ve sıfırlama önizlemesi: ADR 1100, 1015, 1018 sınamaları (yukarıda).
+- Standart denetimi içerik kurallarını tarar (stil yükseklikleri, çizgi tipi/tarama/blok/tablo stili tanımları);
+  *eski projeyi açmak uygulama sayılmaz*: `opening_a_project_bound_to_another_office_does_not_apply_it` (başka ofise
+  bağlı, uygulanmamış proje kaydedilip açılınca değişmez, denetim farkı söyler ve yazmaz). **Kanıtı yok:** *“Geçerli
+  istisna gerekçeyle saklanabilsin”* — KentOS'ta bir bulguyu gerekçesiyle kabul edip projede saklayan bir yapı yok
+  (sözleşme, `.kcad` alanı, denetimin onu süzmesi ve pencere gerekir).
+- Araç paleti: ADR 1014 (`palettes_need_a_readable_bound_standard`, masaüstü
+  `a_ready_tool_runs_its_command_and_a_dimmed_one_cannot_be_pressed`), ADR 1016
+  (`a_favourite_keeps_its_recipe_and_an_own_tool_is_the_journals_last_call`).
+- Paket güncellemesinin etkisi ve kullanıcı eşlemesi: kurulum satırları eksik/aynı/farklı, alanları ve kullanımıyla;
+  Değiştir yerel ad ve kimliği korur, Yeni adla yeni ad ister; kullanılan tanım temizlenmez (ADR 1002, 1100, 1126 §5).
+
+Gerekçeli istisna dışında bütün satırlar kanıtlı; o satır açık olduğu için madde `[~]` kalır.
+
 ### CAD-ADV-13 — Çizim verisinden güvenilir tablo ve metraj üret [x]
 
 **Öncelik:** P1. **Kod:** [C21], [C16], [C11].

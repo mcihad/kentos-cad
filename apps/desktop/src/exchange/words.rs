@@ -179,6 +179,7 @@ pub fn decision_topic(topic: kentos_commands::ImportDecisionTopic) -> &'static s
         T::Block => "Blok",
         T::Layer => "Katman",
         T::Paper => "Pafta",
+        T::Style => "Stil",
     }
 }
 

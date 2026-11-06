@@ -1575,6 +1575,8 @@ impl Writer<'_> {
         }
         let mut meta = Self::base_meta(&t.base);
         meta.table = Some(table_json(t));
+        // The TABLESTYLE object its style is (docs/adr/1128 §3): a handle other programs keep with the INSERT.
+        meta.table_style_ref = t.table_style.as_ref().and_then(|id| self.styles.table_handle(id));
         // What `end` would keep at most: the table and the data that is not the label, attributes or symbol.
         let bare = Meta {
             label: None,
