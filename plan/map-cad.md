@@ -1198,6 +1198,18 @@ noktaları) karşı denetler; ölçülmeyen tasarım noktaları, σ'sı yüksek 
 Açık: saha paketi, iş türleri (as-built/aplikasyon/deformasyon) ve zaman serisi, yetkili inceleme kaydı, kapsam
 boşlukları, canlı cihaz.
 
+**7 Kasım 2026, ikinci tur — Saha paketi ([ADR 1920](../docs/adr/1920-field-package.md)).** Kapsam: **Harita + Yol +
+CBS**. Araştırma: Trimble Access'in işi (sistem, birimler, bağlı dosyalar, notlar) ve aplikasyon farkları, LandXML 1.2
+MVD başlığı (EPSG, düşey sistem; epok alanı yok), 12d Field'in denetim izi, Leica Captivate'in tasarım alımı; hiçbiri
+dönen kaydın denetleyeceği bir tasarım özeti taşımıyor; TKGM 2023/5'in aplikasyon maddesine erişilemedi. Kanıtlanan:
+`cad.field.package` tasarımı (noktalar, çizgiler, yüzey) tek `.zip`'e yazar: `saha-paketi.json` (revizyon, Uygulama
+kontrolünün tasarım özeti, EPSG ve ad, epok, kot sistemi, yalnız verilen kabul sınırları, kalite notları, yüzeyin
+kaynak özeti), `noktalar.csv` (Ad;Y;X;Z;Kimlik, yuvarlanmadan) ve `cizgiler.csv`; sahadan dönen kayıt bu özetle
+`expectedDesign` olarak denetlenir; 29 bağımsız durum, Python'un `zipfile`/`csv` okuyucusuyla geri okuma; Uygulama
+kontrolü penceresinde Saha paketi bölümü (kalite notları, Saha paketi yaz…). Açık: iş türleri ve zaman serisi, dönen
+kaydın paketle otomatik eşlenmesi, yetkili inceleme kaydı, altyapı ve yol varlıklarının kimlikleri, cihaz biçimleri,
+canlı cihaz.
+
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 
 **Öncelik:** P0, diğer 19 maddeye yayılır. **Kod:** [K40]–[K45], [K42].

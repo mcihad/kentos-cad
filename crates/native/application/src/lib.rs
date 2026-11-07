@@ -314,6 +314,7 @@ pub mod parcels_check;
 pub mod pipes_check;
 pub mod pipes_profile;
 pub mod asbuilt_check;
+pub mod field_package;
 pub mod zoning_check;
 pub mod scenarios_impact;
 pub mod readjustment;
@@ -1466,6 +1467,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_PIPES_CHECK, kentos_commands::CAD_PIPES_CHECK_VERSION),
     (kentos_commands::CAD_PIPES_PROFILE, kentos_commands::CAD_PIPES_PROFILE_VERSION),
     (kentos_commands::CAD_ASBUILT_CHECK, kentos_commands::CAD_ASBUILT_CHECK_VERSION),
+    (kentos_commands::CAD_FIELD_PACKAGE, kentos_commands::CAD_FIELD_PACKAGE_VERSION),
     (kentos_commands::CAD_ZONING_CHECK, kentos_commands::CAD_ZONING_CHECK_VERSION),
     (kentos_commands::CAD_SCENARIOS_IMPACT, kentos_commands::CAD_SCENARIOS_IMPACT_VERSION),
     (kentos_commands::CAD_READJUSTMENT_DISTRIBUTE, kentos_commands::CAD_READJUSTMENT_DISTRIBUTE_VERSION),

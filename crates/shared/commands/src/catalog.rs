@@ -9591,6 +9591,33 @@ pub fn catalog() -> CommandCatalog {
             capabilities: None,
             examples: vec![CommandExample { title: "Çizimin imar planı".into(), input: json!({}), output: None }],
         },
+        // Saha paketi (plan/map-cad.md MAP-19, docs/adr/1920).
+        CommandDescriptor {
+            id: crate::CAD_FIELD_PACKAGE.into(),
+            version: crate::CAD_FIELD_PACKAGE_VERSION,
+            title: "Saha paketi".into(),
+            summary: "Tasarımdan sahaya gidecek paketi tek .zip olarak yazar (path; overwrite): saha-paketi.json (kentos.field-package v1: proje, stamp, çizimin sürümü, tasarım özeti, koordinat sistemi EPSG ve adıyla, epok, kot sistemi, verilen kabul sınırları, kalite notları, yüzey kimliği, adı ve kaynak özetiyle, dosyalar), noktalar.csv (Ad;Y;X;Z;Kimlik: Y doğu, X kuzey; sayılar yuvarlanmadan) ve cizgiler.csv (Kimlik;Sıra;Y;X;Bulge). \
+                      Tasarım cad.asbuilt.check'in okuduğu gibidir (design: noktaların katmanı, adları field'da, yoksa Ad; lines: çizgilerin katmanı; en az biri; surface: yüzey) ve özeti onunkidir (designDigest): pakette ölçülen kayıt expectedDesign ile denetlenir, eski tasarımla ölçülen kayıt yeni tasarıma sessiz bağlanmaz. Kabul sınırları (horizontal, vertical, quality; m) kullanıcınındır; verilmeyen yazılmaz. Dosya ya bütün yazılır ya hiç; çizim değişmez. \
+                      Retler: invalid_field_package, layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_file_path, file_exists, file_unwritable."
+                .into(),
+            aliases: vec!["sahapaketi".into(), "aplikasyonpaketi".into(), "fieldpackage".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::FieldPackage>(),
+            output: schema::<crate::FieldPackaged>(),
+            plan: Some(schema::<crate::FieldPackaged>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Tasarım noktaları ve bordür, 2 cm yatay, 3 cm düşey kabul".into(),
+                input: json!({ "design": "tasarim", "lines": "bordur", "horizontal": 0.02, "vertical": 0.03, "path": "/tmp/saha.zip" }),
+                output: None,
+            }],
+        },
         // Uygulama kontrolü (plan/map-cad.md MAP-19, docs/adr/1700).
         CommandDescriptor {
             id: crate::CAD_ASBUILT_CHECK.into(),
@@ -16369,6 +16396,7 @@ mod tests {
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfile>(e.input.clone()).map(|_| ()),
                     crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackage>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
@@ -17337,6 +17365,7 @@ mod tests {
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),
                         crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackaged>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),

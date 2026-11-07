@@ -5,15 +5,19 @@
 //! and whether the design changed since the expected digest; the table lists every measured point with its
 //! differences and flags (Dışındakiler: only those outside, unmatched or ambiguous). Dışındakileri seç selects them,
 //! CSV kaydet writes the table.
+//!
+//! Saha paketi (docs/adr/1920; `cad.field.package`): the same design (points, lines, surface, the names' attribute) and
+//! the same limits, with the quality notes typed below them (a line each), written as one `.zip` for the field; the
+//! file's name is asked, the drawing is not changed.
 
 use std::path::PathBuf;
 
-use iced::widget::{container, row};
+use iced::widget::{container, row, text_editor};
 use iced::{Center, Element, Task};
-use kentos_commands::{AsbuiltCheck, AsbuiltChecked, AsbuiltPoint, CommandResult, Entity};
+use kentos_commands::{AsbuiltCheck, AsbuiltChecked, AsbuiltPoint, CommandResult, Entity, FieldPackage};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, asbuilt_check};
+use kentos_native_application::{ExecutionContext, asbuilt_check, field_package};
 use kentos_ui::label;
 use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
@@ -28,6 +32,7 @@ pub const TITLE: &str = "Uygulama kontrolü";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
 const SELECT: &str = "Dışındakileri seç";
+const PACKAGE: &str = "Saha paketi yaz…";
 /// The choice that leaves a layer or the surface out.
 const NONE: &str = "";
 
@@ -48,7 +53,7 @@ impl std::fmt::Display for Show {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct State {
     /// The drawing's layers with points: id and name; the design's lines' layers.
     pub layers: Vec<(String, String)>,
@@ -66,6 +71,8 @@ pub struct State {
     pub quality: String,
     pub show: Show,
     pub answer: Option<Result<AsbuiltChecked, String>>,
+    /// The package's quality notes, a line each.
+    pub notes: text_editor::Content,
 }
 
 #[derive(Clone, Debug)]
@@ -84,6 +91,9 @@ pub enum Event {
     Select,
     Save,
     Saved(Option<PathBuf>),
+    Notes(text_editor::Action),
+    Package,
+    Packaged(Option<PathBuf>),
     Close,
 }
 
@@ -180,6 +190,51 @@ impl App {
             quality: limit(&s.quality, "Kalite sınırı")?,
             expected_design: None,
         })
+    }
+
+    /// The package's input from the form: its design and limits, the notes a line each (empty lines left out).
+    fn asbuilt_package_input(&self, path: &std::path::Path) -> Result<FieldPackage, String> {
+        let s = &self.asbuilt;
+        Ok(FieldPackage {
+            design: opt(&s.design),
+            lines: opt(&s.lines),
+            surface: opt(&s.surface),
+            field: opt(&s.field),
+            horizontal: limit(&s.horizontal, "Yatay tolerans")?,
+            vertical: limit(&s.vertical, "Düşey tolerans")?,
+            quality: limit(&s.quality, "Kalite sınırı")?,
+            notes: s.notes.text().lines().map(str::trim).filter(|l| !l.is_empty()).map(str::to_owned).collect(),
+            path: path.display().to_string(),
+            // The save dialog asked before a file was replaced.
+            overwrite: true,
+            stamp: None,
+        })
+    }
+
+    /// Saha paketi yaz…'s file chosen: the package written by `cad.field.package`.
+    pub(crate) fn asbuilt_package(&mut self, mut path: PathBuf) {
+        if path.extension().is_none() {
+            path.set_extension("zip");
+        }
+        let input = match self.asbuilt_package_input(&path) {
+            Ok(input) => input,
+            Err(why) => return self.warn(format!("Saha paketi: {why}")),
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        let result = field_package::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let surface = out.surface.as_ref().map_or_else(String::new, |s| format!(", yüzey {}", s.name));
+            self.say(
+                Level::Success,
+                format!(
+                    "Saha paketi yazıldı: {} nokta, {} çizgi{surface}, {} not ({}).",
+                    out.points.len(),
+                    out.lines,
+                    out.notes.len(),
+                    path.display()
+                ),
+            );
+        }
     }
 
     fn asbuilt_run(&mut self) {
@@ -314,6 +369,29 @@ impl App {
                 return Task::none();
             }
             Event::Saved(None) => return Task::none(),
+            Event::Notes(action) => {
+                s.notes.perform(action);
+                return Task::none();
+            }
+            Event::Package => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .set_title("Saha paketi")
+                            .set_file_name("saha-paketi.zip")
+                            .add_filter("Saha paketi (.zip)", &["zip"])
+                            .save_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    |p| msg(Event::Packaged(p)),
+                );
+            }
+            Event::Packaged(Some(path)) => {
+                self.asbuilt_package(path);
+                return Task::none();
+            }
+            Event::Packaged(None) => return Task::none(),
             Event::Close => {
                 self.asbuilt = State::default();
                 self.dialog = None;
@@ -335,8 +413,9 @@ impl App {
             v.extend(list.iter().cloned());
             v
         };
+        let package = !(s.design.is_empty() && s.lines.is_empty());
         let form = Form::new()
-            .label_width(120.0)
+            .label_width(170.0)
             .field(
                 "Ölçülen",
                 row![
@@ -368,15 +447,10 @@ impl App {
                 .align_y(Center),
             )
             .field(
-                "Tolerans (m)",
-                row![
-                    label::caption("yatay"),
-                    text(&s.horizontal, "—", Event::Horizontal, 80.0),
-                    label::caption("düşey"),
-                    text(&s.vertical, "—", Event::Vertical, 80.0)
-                ]
-                .spacing(8)
-                .align_y(Center),
+                "Tolerans yatay / düşey (m)",
+                row![text(&s.horizontal, "—", Event::Horizontal, 80.0), text(&s.vertical, "—", Event::Vertical, 80.0)]
+                    .spacing(8)
+                    .align_y(Center),
             )
             .field(
                 "Kalite",
@@ -387,7 +461,19 @@ impl App {
                 ]
                 .spacing(8)
                 .align_y(Center),
-            );
+            )
+            .section("Saha paketi")
+            .field(
+                "Kalite notları",
+                text_editor(&s.notes)
+                    .placeholder("Her satır bir not: başlanacak kontrol noktaları, kot sistemi, alet…")
+                    .on_action(|a| msg(Event::Notes(a)))
+                    .height(56)
+                    .padding(6)
+                    .size(kentos_ui::theme::typography::body()),
+            )
+            .help("Tasarım noktaları, çizgileri, yüzey, toleranslar ve kalite sınırı notlarla tek .zip olur; çizim değişmez.")
+            .row(words::secondary(PACKAGE, package.then(|| msg(Event::Package))));
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let mut faults = 0;
@@ -481,6 +567,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(PACKAGE) => Some(msg(Event::Package)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

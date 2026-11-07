@@ -36843,6 +36843,166 @@ class FieldMigration(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldPackage(_Model):
+    """Input of `cad.field.package` v1: the design's points (`design`, a layer's id; their names in `field`, none: `Ad`),
+    its lines (`lines`, a layer's id), at least one of them; a terrain surface (`surface`, its id or name; Harita and
+    Yol); the acceptance limits in metres (`horizontal`, `vertical`, `quality` for a measured point's σ; none given: none
+    is written, KentOS gives none); the quality notes; the `.zip` written (`path`, absolute; `overwrite` an existing
+    one); `stamp` the date and time written (`YYYY-MM-DDThh:mm:ss`; none: now).
+
+    Refusals, in this order: `invalid_field_package` (no design, a limit not above zero, an empty attribute's name, more
+    than 20 notes or a note over 500 characters, a stamp that is no date and time), `layer_not_found` (`design`,
+    `lines`), `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_file_path`
+    (empty, relative, not `.zip`, its folder missing), `file_exists`, `file_unwritable`.
+    Attributes:
+        horizontal: Unit: m.
+        quality: Unit: m.
+        vertical: Unit: m.
+    """
+    path: str
+    design: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    lines: str | None | Unset = UNSET
+    notes: list[str] | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+    quality: float | None | Unset = UNSET
+    stamp: str | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.design is not UNSET:
+            out["design"] = self.design
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.lines is not UNSET:
+            out["lines"] = self.lines
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.quality is not UNSET:
+            out["quality"] = None if self.quality is None else float(self.quality)
+        if self.stamp is not UNSET:
+            out["stamp"] = self.stamp
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldPackage:
+        return cls(
+            path=data["path"],
+            design=data.get("design", UNSET),
+            field=data.get("field", UNSET),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            lines=data.get("lines", UNSET),
+            notes=list(data["notes"]) if "notes" in data else UNSET,
+            overwrite=data.get("overwrite", UNSET),
+            quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
+            stamp=data.get("stamp", UNSET),
+            surface=data.get("surface", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldPackaged(_Model):
+    """Output of `cad.field.package` v1: the file written and its size and SHA-256; the design's digest
+    (`cad.asbuilt.check`'s `designDigest`) and the drawing's revision; the points as written, the lines' count (and their
+    vertices'); the surface; the system (`EPSG:5256`, its name; none: a local project), the epoch and the heights'
+    system in words; the limits and the notes as written; the stamp.
+    Attributes:
+        bytes: Unit: count.
+        lines: Unit: count.
+        vertices: Unit: count.
+        epoch: Unit: year.
+        horizontal: Unit: m.
+        quality: Unit: m.
+        vertical: Unit: m.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    digest: str
+    revision: str
+    points: list[PackagePoint]
+    lines: int
+    vertices: int
+    stamp: str
+    epoch: float | None | Unset = UNSET
+    epsg: str | None | Unset = UNSET
+    heights: str | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    notes: list[str] | Unset = UNSET
+    quality: float | None | Unset = UNSET
+    surface: PackageSurface | None | Unset = UNSET
+    system: str | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["digest"] = self.digest
+        out["revision"] = self.revision
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["lines"] = self.lines
+        out["vertices"] = self.vertices
+        out["stamp"] = self.stamp
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.heights is not UNSET:
+            out["heights"] = self.heights
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
+        if self.quality is not UNSET:
+            out["quality"] = None if self.quality is None else float(self.quality)
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        if self.system is not UNSET:
+            out["system"] = self.system
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldPackaged:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            digest=data["digest"],
+            revision=data["revision"],
+            points=[PackagePoint.from_json(e0) for e0 in data["points"]],
+            lines=data["lines"],
+            vertices=data["vertices"],
+            stamp=data["stamp"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epsg=data.get("epsg", UNSET),
+            heights=data.get("heights", UNSET),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            notes=list(data["notes"]) if "notes" in data else UNSET,
+            quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else PackageSurface.from_json(data["surface"]),
+            system=data.get("system", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldRename(_Model):
     """A field renamed on a layer's objects (`cad.layers.edit`'s `fields`): the
     key `from` becomes `to`, its values kept.
@@ -60888,6 +61048,37 @@ class PackageLeft(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackagePoint(_Model):
+    """A design point as the package writes it: its name, place (east, north) and height, and its persistent id.
+    Attributes:
+        at: Unit: length.
+        z: Unit: elevation.
+    """
+    name: str
+    at: list[float]
+    uid: str
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["at"] = [float(e0) for e0 in self.at]
+        out["uid"] = self.uid
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackagePoint:
+        return cls(
+            name=data["name"],
+            at=[float(e0) for e0 in data["at"]],
+            uid=data["uid"],
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageProject(_Model):
     """Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,
     `name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),
@@ -60986,6 +61177,29 @@ class PackageResource(_Model):
             note=data.get("note", UNSET),
             objects=data.get("objects", UNSET),
             users=list(data["users"]) if "users" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PackageSurface(_Model):
+    """The surface a package names: its id, name and the digest of what it is made of."""
+    id: str
+    name: str
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageSurface:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            digest=data["digest"],
         )
 
 
@@ -127630,6 +127844,8 @@ __all__ = [
     "FieldGroup",
     "FieldMigration",
     "FieldNetworkDirection",
+    "FieldPackage",
+    "FieldPackaged",
     "FieldRename",
     "FieldRow",
     "FieldSource",
@@ -128646,12 +128862,14 @@ __all__ = [
     "OverriddenExtractValue",
     "PackageEmbedded",
     "PackageLeft",
+    "PackagePoint",
     "PackageProject",
     "PackageResource",
     "PackageResourceHow",
     "PackageResourceHowName",
     "PackageResourceKind",
     "PackageResourceKindName",
+    "PackageSurface",
     "PackageWay",
     "PackageWayName",
     "PackagedFile",

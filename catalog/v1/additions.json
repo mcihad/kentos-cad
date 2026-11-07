@@ -7,7 +7,7 @@
       "title": "Uygulama kontrolü…",
       "short": "Uygulama kontrolü",
       "icon": "asbuiltCheck",
-      "description": "Sahada ölçülen noktaları tasarımla karşılaştırır (cad.asbuilt.check; ADR 1700): tasarım noktaları (adla, yarıçap verilirse yerle öneri olarak; iki aday belirsiz), tasarım yüzeyi (kot farkı) ve tasarım çizgileri (işaretli dik uzaklık); Δdoğu, Δkuzey, Δkot, KOH, ölçülmeyen tasarım noktaları, σ'sı yüksek noktalar ayrı. Toleranslar kullanıcınındır, KentOS değer vermez. Salt okunur; Dışındakileri seç ve CSV kaydet. Harita, Yol ve CBS'de.",
+      "description": "Sahada ölçülen noktaları tasarımla karşılaştırır (cad.asbuilt.check; ADR 1700): tasarım noktaları (adla, yarıçap verilirse yerle öneri olarak; iki aday belirsiz), tasarım yüzeyi (kot farkı) ve tasarım çizgileri (işaretli dik uzaklık); Δdoğu, Δkuzey, Δkot, KOH, ölçülmeyen tasarım noktaları, σ'sı yüksek noktalar ayrı. Toleranslar kullanıcınındır, KentOS değer vermez. Salt okunur; Dışındakileri seç ve CSV kaydet. Saha paketi yaz… aynı tasarımı, sınırları ve kalite notlarını tek .zip olarak yazar (cad.field.package; ADR 1920). Harita, Yol ve CBS'de.",
       "aliases": [
         "UYGULAMAKONTROLU",
         "ASBUILT",

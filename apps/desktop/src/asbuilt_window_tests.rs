@@ -90,6 +90,39 @@ fn csv_kaydet_writes_the_table() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// Saha paketi yaz… (docs/adr/1920): the form's design and limits and the notes typed, a line each (empty lines left
+/// out), written as the package by `cad.field.package`; its design digest is the check's; the drawing is not changed.
+#[test]
+fn the_field_package_is_written_from_the_form() {
+    use kentos_formats::zip;
+    let mut app = opened(Some(Module::Map));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("asbuilt.check"));
+    limits(&mut app);
+    app.asbuilt.notes =
+        iced::widget::text_editor::Content::with_text("KN1 ve KN2'den başlanır.\n\n  Kotlar TUDKA-99'a göredir.  ");
+    let dir = std::env::temp_dir().join(format!("kentos-saha-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    app.asbuilt_package(dir.join("saha"));
+    let bytes = std::fs::read(dir.join("saha.zip")).expect("written, .zip added");
+    let limits = zip::Limits::default();
+    let listed = zip::list(&bytes, &limits).expect("a zip");
+    assert_eq!(listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), kentos_commands::FIELD_PACKAGE_FILES);
+    let files = zip::unpack(&bytes, &listed, &limits, |_| true).expect("unpacks");
+    let manifest: Value = serde_json::from_slice(&files[0].data).expect("the manifest");
+    assert_eq!(manifest["notes"], serde_json::json!(["KN1 ve KN2'den başlanır.", "Kotlar TUDKA-99'a göredir."]));
+    assert_eq!(manifest["acceptance"], serde_json::json!({"horizontal": 0.02, "vertical": 0.03, "quality": 0.05}));
+    assert_eq!(manifest["surface"]["name"], "Tasarım");
+    assert_eq!(manifest["designDigest"], cases()["cases"][0]["steps"][0]["result"]["output"]["designDigest"]);
+    let points = String::from_utf8(files[1].data.clone()).expect("text");
+    assert_eq!(points.lines().count(), 9, "a head and eight design points");
+    assert!(points.starts_with("Ad;Y;X;Z;Kimlik\nP1;487010;4420010;100.3;"), "{points}");
+    let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
+    assert!(said.contains("Saha paketi yazıldı: 8 nokta, 2 çizgi, yüzey Tasarım, 2 not"), "{said}");
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written to the drawing");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 #[test]
 fn harita_yol_and_gis_offer_it_mimari_does_not() {
     for (module, yes) in [(Module::Map, true), (Module::Road, true), (Module::Gis, true), (Module::Architecture, false)] {
@@ -117,6 +150,9 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("asbuilt.check"));
         limits(&mut app);
+        app.asbuilt.notes = iced::widget::text_editor::Content::with_text(
+            "Aplikasyona KN1 ve KN2'den başlanır.\nKotlar TUDKA-99'a göredir; ölçü GNSS RTK ile.",
+        );
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);

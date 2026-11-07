@@ -1999,6 +1999,8 @@ codes! {
     /// An as-built check's question that cannot be asked: no design, a limit or radius not above zero, an empty
     /// attribute's name, a quality limit without its attribute, too many points (docs/adr/1700).
     INVALID_ASBUILT_CHECK = "invalid_asbuilt_check", Failed, false, "Uygulama kontrolünün sorusu geçerli değil; ileti nedenini söyler.";
+    /// A field package that cannot be made: no design, a limit not above zero, too many or too long notes, no date (docs/adr/1920).
+    INVALID_FIELD_PACKAGE = "invalid_field_package", Failed, false, "Saha paketinin sorusu geçerli değil; ileti nedenini söyler.";
     INVALID_PIPE_CHECK = "invalid_pipe_check", Failed, false, "Boru hattı denetiminin sorusu geçerli değil; ileti nedenini söyler.";
     /// A pipe check asked of a road network (docs/adr/1640).
     NOT_A_PIPE_NETWORK = "not_a_pipe_network", Failed, false, "Ağ bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.";

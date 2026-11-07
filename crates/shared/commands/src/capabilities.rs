@@ -2483,6 +2483,22 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Saha paketi (plan/map-cad.md MAP-19, docs/adr/1920).
+    Entry {
+        id: "cad.field.package",
+        refusals: &[&[
+            "invalid_field_package",
+            "layer_not_found",
+            "not_a_road_project",
+            "unknown_terrain",
+            "terrain_unbuildable",
+            "invalid_file_path",
+            "file_exists",
+            "file_unwritable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     // Uygulama kontrolü (plan/map-cad.md MAP-19, docs/adr/1700).
     Entry {
         id: "cad.asbuilt.check",

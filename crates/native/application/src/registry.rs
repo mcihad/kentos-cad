@@ -61,6 +61,7 @@ use crate::parcels_check;
 use crate::pipes_check;
 use crate::pipes_profile;
 use crate::asbuilt_check;
+use crate::field_package;
 use crate::zoning_check;
 use crate::scenarios_impact;
 use crate::readjustment;
@@ -560,6 +561,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_ASBUILT_CHECK => {
                 $then!(asbuilt_check, kentos_commands::AsbuiltCheck)
+            }
+            kentos_commands::CAD_FIELD_PACKAGE => {
+                $then!(field_package, kentos_commands::FieldPackage)
             }
             kentos_commands::CAD_ZONING_CHECK => {
                 $then!(zoning_check, kentos_commands::ZoningCheck)

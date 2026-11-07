@@ -38,16 +38,16 @@ fn plain(text: &str) -> Option<f64> {
     ok.then(|| t.replace(',', ".").parse::<f64>().ok()).flatten().filter(|v| v.is_finite())
 }
 
-struct Point {
-    slot: Slot,
-    name: String,
-    p: Vec2,
-    z: Option<f64>,
-    sigma: Option<f64>,
+pub(crate) struct Point {
+    pub(crate) slot: Slot,
+    pub(crate) name: String,
+    pub(crate) p: Vec2,
+    pub(crate) z: Option<f64>,
+    pub(crate) sigma: Option<f64>,
 }
 
 /// The points of a layer (a group: its layers), in the drawing's order.
-fn points(doc: &Document, layer: &str, field: &str, quality: Option<&str>) -> Vec<Point> {
+pub(crate) fn points(doc: &Document, layer: &str, field: &str, quality: Option<&str>) -> Vec<Point> {
     let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
     doc.entities()
         .filter(|e| ids.contains(&e.base().layer_id))
@@ -65,13 +65,13 @@ fn points(doc: &Document, layer: &str, field: &str, quality: Option<&str>) -> Ve
 }
 
 /// A design line's vertices and edges' bulges.
-struct Line {
-    slot: Slot,
-    pts: Vec<Vec2>,
-    bulges: Vec<f64>,
+pub(crate) struct Line {
+    pub(crate) slot: Slot,
+    pub(crate) pts: Vec<Vec2>,
+    pub(crate) bulges: Vec<f64>,
 }
 
-fn lines(doc: &Document, layer: &str) -> Vec<Line> {
+pub(crate) fn lines(doc: &Document, layer: &str) -> Vec<Line> {
     let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
     doc.entities()
         .filter(|e| ids.contains(&e.base().layer_id))
@@ -120,7 +120,7 @@ fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     side(d, dx * (p.y - a.y) - dy * (p.x - a.x))
 }
 
-fn digest(design: &[Point], lines: &[Line]) -> String {
+pub(crate) fn digest(design: &[Point], lines: &[Line]) -> String {
     let mut text = String::new();
     for p in design {
         let z = p.z.map_or_else(|| "-".to_owned(), |z| format!("{z:.6}"));

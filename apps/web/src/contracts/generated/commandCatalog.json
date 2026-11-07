@@ -57958,6 +57958,378 @@
       ]
     },
     {
+      "id": "cad.field.package",
+      "version": 1,
+      "title": "Saha paketi",
+      "summary": "Tasarımdan sahaya gidecek paketi tek .zip olarak yazar (path; overwrite): saha-paketi.json (kentos.field-package v1: proje, stamp, çizimin sürümü, tasarım özeti, koordinat sistemi EPSG ve adıyla, epok, kot sistemi, verilen kabul sınırları, kalite notları, yüzey kimliği, adı ve kaynak özetiyle, dosyalar), noktalar.csv (Ad;Y;X;Z;Kimlik: Y doğu, X kuzey; sayılar yuvarlanmadan) ve cizgiler.csv (Kimlik;Sıra;Y;X;Bulge). Tasarım cad.asbuilt.check'in okuduğu gibidir (design: noktaların katmanı, adları field'da, yoksa Ad; lines: çizgilerin katmanı; en az biri; surface: yüzey) ve özeti onunkidir (designDigest): pakette ölçülen kayıt expectedDesign ile denetlenir, eski tasarımla ölçülen kayıt yeni tasarıma sessiz bağlanmaz. Kabul sınırları (horizontal, vertical, quality; m) kullanıcınındır; verilmeyen yazılmaz. Dosya ya bütün yazılır ya hiç; çizim değişmez. Retler: invalid_field_package, layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_file_path, file_exists, file_unwritable.",
+      "aliases": [
+        "sahapaketi",
+        "aplikasyonpaketi",
+        "fieldpackage"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.field.package` v1: the design's points (`design`, a layer's id; their names in `field`, none: `Ad`),\nits lines (`lines`, a layer's id), at least one of them; a terrain surface (`surface`, its id or name; Harita and\nYol); the acceptance limits in metres (`horizontal`, `vertical`, `quality` for a measured point's σ; none given: none\nis written, KentOS gives none); the quality notes; the `.zip` written (`path`, absolute; `overwrite` an existing\none); `stamp` the date and time written (`YYYY-MM-DDThh:mm:ss`; none: now).\n\nRefusals, in this order: `invalid_field_package` (no design, a limit not above zero, an empty attribute's name, more\nthan 20 notes or a note over 500 characters, a stamp that is no date and time), `layer_not_found` (`design`,\n`lines`), `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_file_path`\n(empty, relative, not `.zip`, its folder missing), `file_exists`, `file_unwritable`.",
+        "properties": {
+          "design": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "horizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "lines": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "quality": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "stamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "FieldPackage",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.field.package` v1: the file written and its size and SHA-256; the design's digest\n(`cad.asbuilt.check`'s `designDigest`) and the drawing's revision; the points as written, the lines' count (and their\nvertices'); the surface; the system (`EPSG:5256`, its name; none: a local project), the epoch and the heights'\nsystem in words; the limits and the notes as written; the stamp.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "epoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
+          "epsg": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "heights": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "horizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "lines": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/PackagePoint"
+            },
+            "type": "array"
+          },
+          "quality": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": "string"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PackageSurface"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "system": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "vertices": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "digest",
+          "revision",
+          "points",
+          "lines",
+          "vertices",
+          "stamp"
+        ],
+        "title": "FieldPackaged",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.field.package` v1: the file written and its size and SHA-256; the design's digest\n(`cad.asbuilt.check`'s `designDigest`) and the drawing's revision; the points as written, the lines' count (and their\nvertices'); the surface; the system (`EPSG:5256`, its name; none: a local project), the epoch and the heights'\nsystem in words; the limits and the notes as written; the stamp.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "epoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
+          "epsg": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "heights": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "horizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "lines": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/PackagePoint"
+            },
+            "type": "array"
+          },
+          "quality": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "stamp": {
+            "type": "string"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PackageSurface"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "system": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
+          "vertices": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "digest",
+          "revision",
+          "points",
+          "lines",
+          "vertices",
+          "stamp"
+        ],
+        "title": "FieldPackaged",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_field_package",
+          "layer_not_found",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "invalid_file_path",
+          "file_exists",
+          "file_unwritable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Tasarım noktaları ve bordür, 2 cm yatay, 3 cm düşey kabul",
+          "input": {
+            "design": "tasarim",
+            "horizontal": 0.02,
+            "lines": "bordur",
+            "path": "/tmp/saha.zip",
+            "vertical": 0.03
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.asbuilt.check",
       "version": 1,
       "title": "Uygulama kontrolü",
@@ -104188,6 +104560,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Uygulama kontrolünün sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "invalid_field_package",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Saha paketinin sorusu geçerli değil; ileti nedenini söyler."
     },
     {
       "code": "invalid_pipe_check",
@@ -158463,6 +158841,41 @@
       ],
       "type": "object"
     },
+    "PackagePoint": {
+      "description": "A design point as the package writes it: its name, place (east, north) and height, and its persistent id.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "name": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "name",
+        "at",
+        "uid"
+      ],
+      "type": "object"
+    },
     "PackageResource": {
       "description": "One resource the drawing and its references draw with, and how the package has it (docs/adr/1111 §1).",
       "properties": {
@@ -158571,6 +158984,26 @@
           "type": "string"
         }
       ]
+    },
+    "PackageSurface": {
+      "description": "The surface a package names: its id, name and the digest of what it is made of.",
+      "properties": {
+        "digest": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "digest"
+      ],
+      "type": "object"
     },
     "PackageWay": {
       "description": "How a bound layer's source goes into a package (docs/adr/0596 §1).",
