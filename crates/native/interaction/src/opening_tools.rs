@@ -394,6 +394,17 @@ impl OpeningTool {
         }
     }
 
+    /// Yerleştirme as the panel reads it (docs/adr/3003): O centres the opening, Uçtan uzaklık sets its distance.
+    fn placement_word(&self) -> &'static str {
+        if self.middle {
+            "Ortala"
+        } else if self.distance.is_some() {
+            "Uçtan uzaklık"
+        } else {
+            "Serbest"
+        }
+    }
+
     fn side_label(&self) -> &'static str {
         match self.side {
             None => "Otomatik",
@@ -572,16 +583,16 @@ impl Tool for OpeningTool {
                 .option_with("Derinlik", "D", self.depth_shown())
                 .option_with("Yüz", "Y", self.side_label());
             if self.form == OpeningForm::Flue {
-                p = p.option_with("Yüzden", "Z", self.inset_shown());
+                p = p.option_with("Yüzden uzaklık", "Z", self.inset_shown());
             }
         }
         if self.by_height() {
             p = p
-                .option_with("Alt", "L", self.height_shown(true))
-                .option_with("Üst", "Ü", self.height_shown(false));
+                .option_with("Alt kot", "L", self.height_shown(true))
+                .option_with("Üst kot", "Ü", self.height_shown(false));
         }
         if self.form == OpeningForm::Door {
-            p = p.option_with("Yan", "Y", self.side_label()).option_with(
+            p = p.option_with("Açılma yanı", "Y", self.side_label()).option_with(
                 "Menteşe",
                 "M",
                 if self.hand == OpeningHand::End {
@@ -596,14 +607,14 @@ impl Tool for OpeningTool {
             return p.option("Bitir", "Enter");
         }
         p.option_with(
-            "Uzaklık",
+            "Uçtan uzaklık",
             "U",
             self.distance
                 .map_or_else(|| "Yok".to_owned(), |d| self.placement.format.length(d)),
         )
         .option_with("Duvar ucu", "F", self.placement.end_label())
-        .option_with("Mesafe referansı", "R", self.placement.reference_label())
-        .toggle("Orta", "O", self.middle)
+        .option_with("Ölçü noktası", "R", self.placement.reference_label())
+        .option_with("Yerleştirme", "O", self.placement_word())
         .option("Bitir", "Enter")
     }
 

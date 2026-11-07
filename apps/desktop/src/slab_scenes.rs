@@ -68,7 +68,7 @@ fn balcony_preview(app: &mut App) {
     tool(app);
     click(app, [2.0, 6.0]);
     setting(app, "T", "balcony");
-    setting(app, "E", "railing");
+    setting(app, "N", "railing");
     setting(app, "S", "draw");
     corner(app, [4.5, 9.25]);
     corner(app, [10.5, 9.25]);
@@ -82,7 +82,7 @@ fn hole(app: &mut App) {
     corner(app, [4.5, 10.75]);
     typed(app, "");
     setting(app, "T", "floor");
-    setting(app, "E", "none");
+    setting(app, "N", "none");
     setting(app, "S", "room");
     setting(app, "D", "yes");
     hover(app, [8.0, 7.0]);

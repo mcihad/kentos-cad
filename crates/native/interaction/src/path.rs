@@ -2472,7 +2472,7 @@ impl Tool for Path {
                     ],
                     (None, None) => vec![
                         format.length(dist(last, end)),
-                        format!("Semt {}", format.bearing(bearing_grad(last, end))),
+                        format!("{} {}", format.direction_name(), format.direction(bearing_grad(last, end))),
                     ],
                 };
                 if self.shape == Shape::MeasureLength {

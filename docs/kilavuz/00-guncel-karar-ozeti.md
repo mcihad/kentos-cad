@@ -25,6 +25,12 @@
   - **Numaralar:** mimari ileri ADR'leri 3000'den başlar.
   - **Katman ve mahal numarası:** 2026 Dijital Yönetmeliği'nin EK-4 ve EK-3'üne bağlanır (RG 05.08.2026/33331, yürürlük
     01.09.2027).
+  - **Tek ad, tek harf (M4, [ADR 3003](../adr/3003-option-letters-and-terms.md)):**
+    - İstem, araç paneli ve Öznitelikler aynı adı kullanır. Duvarın Kalınlık'ı ile çizginin Çizgi kalınlığı ayrıdır.
+    - Sözleşme harfleri: E Kalınlık/Genişlik/En, G Geri, K Kapat, Y Yükseklik, S Stil, T Tür, L Kat, Ö Öteleme, D Açı.
+    - Shift'li harf seçenektir; seçenek olmayan harf çalışan komutu bitirmez.
+    - CAD'de imleç Açı, CBS'de Semt yazar.
+    - Arayüzde kelimesi kelimesine çeviri bırakılmaz (Benimse → Var olanı kullan).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

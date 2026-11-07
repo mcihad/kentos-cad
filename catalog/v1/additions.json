@@ -2167,7 +2167,7 @@
       "id": "tool.wall",
       "title": "Duvar",
       "icon": "wall",
-      "description": "Yol gibi çizilen tabanı boyunca bir duvar çizer: Genişlik (E), Hiza (H: sol, orta, sağ), Öteleme (Ö) ve Stil (S) seçilir; yay (Y), uzunluk (U) ve yazılan noktalar çoklu çizgideki gibidir, Kapat (K) duvarı kapatır. Önizleme komutun planından çizilir; Enter duvarı tek adımda yazar.",
+      "description": "Yol gibi çizilen tabanı boyunca bir duvar çizer: Kalınlık (E), Hiza (H: sol, orta, sağ), Öteleme (Ö) ve Stil (S) seçilir; yay (Y), uzunluk (U) ve yazılan noktalar çoklu çizgideki gibidir, Kapat (K) duvarı kapatır. Önizleme komutun planından çizilir; Enter duvarı tek adımda yazar.",
       "aliases": [
         "DUVAR",
         "WALL"
@@ -2194,7 +2194,7 @@
       "id": "tool.wallRectangle",
       "title": "Dikdörtgen duvar",
       "icon": "wall",
-      "description": "İki karşı köşeyle ya da Boyutlar (B) ile kapalı dikdörtgen duvar çizer. Boy referansı (R): İç net, Dış ölçü veya Eksen; Kalınlık (E), Stil (S) ve Döndür (D) çizmeden önce seçilir. İç net 4×3 m, duvarlar arasında 4×3 m boşluk bırakır. Sonuca kapı ve pencere ekleyebilirsiniz.",
+      "description": "İki karşı köşeyle ya da Boyutlar (B) ile kapalı dikdörtgen duvar çizer. Boy referansı (R): İç net, Dış ölçü veya Eksen; Kalınlık (E), Stil (S) ve Açı (D) çizmeden önce seçilir. İç net 4×3 m, duvarlar arasında 4×3 m boşluk bırakır. Sonuca kapı ve pencere ekleyebilirsiniz.",
       "aliases": [
         "DIKDORTGENDUVAR",
         "DUVARDIKDORTGEN",
@@ -2263,7 +2263,7 @@
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",
-      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
+      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynak çizgiler (K) Sil iken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
       "aliases": [
         "CIZGIDENDUVAR",
         "DUVARCEVIR"
@@ -2314,7 +2314,7 @@
     },
     {
       "id": "tool.wallJoin",
-      "title": "Duvarları birleştir",
+      "title": "Tek duvara çevir",
       "icon": "wallJoin",
       "description": "Uç uca duvarları tek duvar yapar: seçili duvarlar hemen, yoksa tıklananlar Enter ile. Alanları aynı olmalı; ters yöndeki duvar gövdesi yerinde çevrilir.",
       "aliases": [
@@ -2430,7 +2430,7 @@
       "id": "tool.door",
       "title": "Kapı",
       "icon": "door",
-      "description": "Duvara kapı koyar: imleç duvarın yanındayken kapı komutun planından çizilir, tıklama yazar ve araç açık kalır. Tür (T) Kapı 90, Kapı 80, İki kanatlı kapı 140 ya da Sürme kapı 160; Genişlik (E) türünkinin yerine; Yan (Y) kanadın açıldığı yan (Otomatik: imlecin yanı); Menteşe (M) Baş ya da Son; Uzaklık (U) yakın pervazın duvarın yakın ucuna uzaklığı; Orta (O) kenarın ortası.",
+      "description": "Duvara kapı koyar: imleç duvarın yanındayken kapı komutun planından çizilir, tıklama yazar ve araç açık kalır. Tür (T) Kapı 90, Kapı 80, İki kanatlı kapı 140 ya da Sürme kapı 160; Genişlik (E) türünkinin yerine; Açılma yanı (Y) kanadın açıldığı yan (Otomatik: imlecin yanı); Menteşe (M) Baş ya da Son; Uçtan uzaklık (U) yakın pervazın duvarın yakın ucuna uzaklığı; Yerleştirme (O) Ortala ile kenarın ortası.",
       "aliases": [
         "KAPI",
         "DOOR"
@@ -2443,7 +2443,7 @@
       "id": "tool.window",
       "title": "Pencere",
       "icon": "window",
-      "description": "Duvara pencere koyar: imleç duvarın yanındayken pencere komutun planından çizilir, tıklama yazar. Tür (T) Pencere 120 ya da Sabit pencere 100 (kasa, denizlik ve lento türden); Genişlik (E), Uzaklık (U: yakın pervazın duvarın ucuna uzaklığı) ve Orta (O).",
+      "description": "Duvara pencere koyar: imleç duvarın yanındayken pencere komutun planından çizilir, tıklama yazar. Tür (T) Pencere 120 ya da Sabit pencere 100 (kasa, denizlik ve lento türden); Genişlik (E), Uçtan uzaklık (U: yakın pervazın duvarın ucuna uzaklığı) ve Yerleştirme (O: Ortala ile kenarın ortası).",
       "aliases": [
         "PENCEREKOY",
         "WINDOW"
@@ -2456,7 +2456,7 @@
       "id": "tool.opening",
       "title": "Boşluk",
       "icon": "wallOpening",
-      "description": "Duvarda kapısız, penceresiz bir boşluk açar: duvarın çizgileri pervazlarda kesilir. Genişlik (E), Uzaklık (U) ve Orta (O).",
+      "description": "Duvarda kapısız, penceresiz bir boşluk açar: duvarın çizgileri pervazlarda kesilir. Genişlik (E), Uçtan uzaklık (U) ve Yerleştirme (O).",
       "aliases": [
         "BOSLUK",
         "WALLOPENING"
@@ -2469,7 +2469,7 @@
       "id": "tool.niche",
       "title": "Niş",
       "icon": "wallNiche",
-      "description": "Duvarın bir yüzünden içeri oyulan niş koyar: imleç duvarın hangi yanındaysa o yüzden. Tür (T), Genişlik (E), Derinlik (D), Yüz (Y), Alt (L) ve Üst (Ü) kot. Planın kesme yüksekliğini (1,10 m) kesen niş duvarı oyar, kesmeyen kesik çizgiyle görünür; duvarı geçecek kadar derin niş yazılmaz.",
+      "description": "Duvarın bir yüzünden içeri oyulan niş koyar: imleç duvarın hangi yanındaysa o yüzden. Tür (T), Genişlik (E), Derinlik (D), Yüz (Y), Alt kot (L) ve Üst kot (Ü). Planın kesme yüksekliğini (1,10 m) kesen niş duvarı oyar, kesmeyen kesik çizgiyle görünür; duvarı geçecek kadar derin niş yazılmaz.",
       "aliases": [
         "NIS",
         "NICHE"
@@ -2482,7 +2482,7 @@
       "id": "tool.flue",
       "title": "Baca",
       "icon": "wallFlue",
-      "description": "Duvarın içinde, iki yüzüne de varmayan baca koyar: Genişlik (E) duvar boyunca, Derinlik (D) duvarın enine; Yüzden uzaklık (Z; Ortada) ve Yüz (Y). Planda boşluğu çapraz çizgiyle; Alt (L) ve Üst (Ü) kotla kesme yüksekliği dışında kalan kesik çizgiyle.",
+      "description": "Duvarın içinde, iki yüzüne de varmayan baca koyar: Genişlik (E) duvar boyunca, Derinlik (D) duvarın enine; Yüzden uzaklık (Z; Ortada) ve Yüz (Y). Planda boşluğu çapraz çizgiyle; Alt kot (L) ve Üst kot (Ü) ile kesme yüksekliği dışında kalan kesik çizgiyle.",
       "aliases": [
         "BACA",
         "FLUE"
@@ -2547,7 +2547,7 @@
       "id": "tool.space",
       "title": "Mahal",
       "icon": "space",
-      "description": "Duvarlarla çevrili bir yere tıklayınca mahali komutun planından bulur ve alanını gösterir; tıklama yazar, araç açık kalır, numara bir artar. Yöntem (Y) Net (iç yüzler), Duvar ekseni ya da Brüt (dış yüzler); Numara (N), Ad (A), Kullanım (K); Çiz (Ç) sınırı köşelerle çizdirir, Enter kapatır.",
+      "description": "Duvarlarla çevrili bir yere tıklayınca mahali komutun planından bulur ve alanını gösterir; tıklama yazar, araç açık kalır, numara bir artar. Alan yöntemi (Y) Net (iç yüzler), Duvar ekseni ya da Brüt (dış yüzler); Numara (N), Ad (A), Kullanım (K); Sınır (S) Duvarlardan bul ya da Köşeleri çiz, çizilen sınırı Enter kapatır; Döşeme boşluğu (V) şaft, asansör ya da galeri boşluğu yazar.",
       "aliases": [
         "MAHAL",
         "SPACE",
@@ -2561,7 +2561,7 @@
       "id": "tool.slab",
       "title": "Döşeme",
       "icon": "slab",
-      "description": "Döşeme, balkon ya da teras çizer: Sınır (S) Dış yüzler (tıklanan yerin duvarlarının dış konturu), Oda (odanın iç yüzleri) ya da Köşeleri çiz; Tür (T), Kalınlık (K), Kot farkı (F), Kenar ötelemesi (Ö), Kenar (E: Yok, Korkuluk, Parapet; serbest kenarlar boyunca), Malzeme (M), Metraj (X) ve Kat (L). Delik (D) açıkken tıklanan oda ya da çizilen alan altındaki döşemeden kesilir. Önizleme komutun planından; tıklama ya da Enter tek adımda yazar.",
+      "description": "Döşeme, balkon ya da teras çizer: Sınır (S) Dış yüzler (tıklanan yerin duvarlarının dış konturu), Oda (odanın iç yüzleri) ya da Köşeleri çiz; Tür (T), Kalınlık (E), Kot farkı (F), Kenar ötelemesi (Ö), Kenar (N: Yok, Korkuluk, Parapet; serbest kenarlar boyunca), Malzeme (M), Metraj (X) ve Kat (L). Delik (D) açıkken tıklanan oda ya da çizilen alan altındaki döşemeden kesilir. Önizleme komutun planından; tıklama ya da Enter tek adımda yazar.",
       "aliases": [
         "DOSEME",
         "DÖŞEME",
@@ -2654,7 +2654,7 @@
       "id": "tool.grid",
       "title": "Aks",
       "icon": "archGrid",
-      "description": "İki tıklama bir aks çizer; etiketi sıradakidir (A, B … H, J … ya da 1, 2 …; I ve O atlanır), Etiket (E) yazdırır. Seri (S) aralıkları yazdırır (6 6 4.5 gibi): ilk aksın iki noktası, sonra diğerlerinin gideceği yana tıklama bütün akslarını tek adımda çizer. Uçlarda balon ve etiket.",
+      "description": "İki tıklama bir aks çizer; etiketi sıradakidir (A, B … H, J … ya da 1, 2 …; I ve O atlanır), Etiket (E) yazdırır. Seri aralıkları (S) yazdırır (6 6 4.5 gibi): ilk aksın iki noktası, sonra diğerlerinin gideceği yana tıklama bütün akslarını tek adımda çizer. Uçlarda balon ve etiket.",
       "aliases": [
         "AKS",
         "AKSCIZ",
@@ -2682,7 +2682,7 @@
       "id": "tool.column",
       "title": "Kolon",
       "icon": "column",
-      "description": "Tıklanan yere kolon koyar; iki aksın kesişimine yakın tıklama onu kesişime koyar ve akslara bağlar: aks taşınınca kolon izler, konum yazısı “B-3” olur. Biçim (B) dikdörtgen ya da daire, En (E), Boy (Y), Döndür (D), Etiket (K: S1'den artar); Aks kesişimleri (A) görünen bütün aksların kesişimlerine birer kolon koyar.",
+      "description": "Tıklanan yere kolon koyar; iki aksın kesişimine yakın tıklama onu kesişime koyar ve akslara bağlar: aks taşınınca kolon izler, konum yazısı “B-3” olur. Biçim (B) dikdörtgen ya da daire, En (E), Boy (Y), Açı (D), İlk etiket (K: S1'den artar); Aks kesişimleri (A) görünen bütün aksların kesişimlerine birer kolon koyar.",
       "aliases": [
         "KOLON",
         "COLUMN"
@@ -2695,7 +2695,7 @@
       "id": "tool.stair",
       "title": "Merdiven",
       "icon": "stair",
-      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Yükseklik (Y) ve En fazla rıht (R) rıht sayısını verir (S ile elle de); Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar (N), Korkuluk (O); Son kol (U) son rıhtta ya da tıklanan yerde biter. Kesmenin üstü kesikli çizilir; 2 × rıht + basamak 0,60–0,65 m dışındaysa söylenir, yönetmelik denetimi değildir.",
+      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Yükseklik (Y) ve En fazla rıht (R) rıht sayısını verir (S ile elle de); Basamak (D), Genişlik (E), Sahanlık (H), Kesme yüksekliği (K), Basamak numaraları (N), Korkuluk (O); Son kol (U) son rıhtta ya da tıklanan yerde biter. Kesmenin üstü kesikli çizilir; 2 × rıht + basamak 0,60–0,65 m dışındaysa söylenir, yönetmelik denetimi değildir.",
       "aliases": [
         "MERDIVEN",
         "STAIR"
@@ -2708,7 +2708,7 @@
       "id": "tool.stairCurved",
       "title": "Döner merdiven",
       "icon": "stairCurved",
-      "description": "Döner (spiral) merdiven: merkeze, sonra yürüme çizgisinin başına tıklanır (merkeze uzaklığı yarıçap); imleç merkezin çevresinde merdivenin döneceği yana götürülüp tıklanır. Yay son rıhtta biter (Yay: tıklanan yerde de olur, dönüş derece yazılır). Rıhtlar yürüme çizgisi boyunca basamak aralığıyla, radyal; iç kenardaki basamak etikette söylenir. Yükseklik, en fazla rıht, genişlik, kesme, numaralar ve korkuluk Merdiven'inkilerdir; yönetmelik denetimi değildir.",
+      "description": "Döner (spiral) merdiven: merkeze, sonra yürüme çizgisinin başına tıklanır (merkeze uzaklığı yarıçap); imleç merkezin çevresinde merdivenin döneceği yana götürülüp tıklanır. Yay boyu (U) son rıhtta biter ya da tıklanan yerde (dönüş derece yazılır). Rıhtlar yürüme çizgisi boyunca basamak aralığıyla, radyal; iç kenardaki basamak etikette söylenir. Yükseklik, en fazla rıht, genişlik, kesme, numaralar ve korkuluk Merdiven'inkilerdir; yönetmelik denetimi değildir.",
       "aliases": [
         "DONERMERDIVEN",
         "DÖNERMERDİVEN",
@@ -2722,7 +2722,7 @@
       "id": "tool.ramp",
       "title": "Rampa",
       "icon": "ramp",
-      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik (Y), Eğim (E, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (G), Sahanlık (H), En uzun kol (L: aşan kola ara sahanlık), Başlangıç kotu (Z: boş ya da kat etkin katın kotunu izler, kat+0.15 kattan fark, sayı kendi kotu), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; erişilebilirliği Mimari denetim'in TS 9111 özeti sınar.",
+      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik farkı (Y), Eğim (M, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (E), Sahanlık (H), En uzun kol (L: aşan kola ara sahanlık), Başlangıç kotu (Z: boş ya da kat etkin katın kotunu izler, kat+0.15 kattan fark, sayı kendi kotu), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; erişilebilirliği Mimari denetim'in TS 9111 özeti sınar.",
       "aliases": [
         "RAMP",
         "RAMPACIZ",
@@ -2809,7 +2809,7 @@
       "id": "tool.tag",
       "title": "Etiket",
       "icon": "tag",
-      "description": "Bir açıklığa, mahale, kolona, aksa, duvara, merdivene, rampaya ya da bloğa tıklayın, sonra etiketin yerine (Enter: nesnenin yanına). Etiketin yazısı nesnenin değerlerinden yazılır ve nesne değişince değişir; nesne taşınınca etiket de taşınır. Şablon (Ş: {number}, {type}, {name}, {area} …), Biçim (B: daire, altıgen, dikdörtgen, yuvarlak köşeli, çerçevesiz), Kol (K).",
+      "description": "Bir açıklığa, mahale, kolona, aksa, duvara, merdivene, rampaya ya da bloğa tıklayın, sonra etiketin yerine (Enter: nesnenin yanına). Etiketin yazısı nesnenin değerlerinden yazılır ve nesne değişince değişir; nesne taşınınca etiket de taşınır. Şablon (Ş: {number}, {type}, {name}, {area} …), Çerçeve (B: daire, altıgen, dikdörtgen, yuvarlak köşeli, çerçevesiz), Kol (K).",
       "aliases": [
         "ETIKET",
         "ETİKET",
@@ -3088,7 +3088,6 @@
     {
       "id": "tool.spaceFloor",
       "title": "Döşeme deseni",
-      "short": "Döşeme",
       "icon": "spaceFloor",
       "description": "Mahallerin içine tıklayın: her birine mahale bağlı döşeme taraması yazılır, mahal duvarlarıyla değişince tarama da değişir. Desen (D) kitaplığın ya da projenin desen adı; verilmezse mahalin döşeme kaplamasının adıyla aynı adlı desen, o da yoksa ANSI31. Aynı mahalin eski döşeme deseni yerine geçer. Katman A-ZEMN-DSN.",
       "aliases": [
@@ -4752,7 +4751,7 @@
       "id": "tool.roomElevation",
       "title": "Oda iç görünüşü",
       "icon": "roomElevation",
-      "description": "Türetilmiş çizim: mahalin içine, sonra ilk yanın sol alt köşesine tıklayın (Enter: mahalin yanına). Her düz yan odanın içinden bakılarak modelin bildikleriyle çizilir: duvar yüzleri ve yükseklikleri, kapı ve pencereler denizlik ve lento kotlarıyla, başlık ve ölçüler; ayrı katmanda, tek geri alma adımında. Modelin bilmediği (yaylı yan, kolon, merdiven, donatı) çizilmez, söylenir. Model değişince Öznitelikler eski der; Yeniden üret aynı nesneleri günceller. Kesit/görünüş işareti yalnız başvurudur, çizim üretmez. Yanlar (Y), Aralık (R).",
+      "description": "Türetilmiş çizim: mahalin içine, sonra ilk yanın sol alt köşesine tıklayın (Enter: mahalin yanına). Her düz yan odanın içinden bakılarak modelin bildikleriyle çizilir: duvar yüzleri ve yükseklikleri, kapı ve pencereler denizlik ve lento kotlarıyla, başlık ve ölçüler; ayrı katmanda, tek geri alma adımında. Modelin bilmediği (yaylı yan, kolon, merdiven, donatı) çizilmez, söylenir. Model değişince Öznitelikler eski der; Yeniden üret aynı nesneleri günceller. Kesit/görünüş işareti yalnız başvurudur, çizim üretmez. Yanlar (Y), Aralık (A).",
       "aliases": [
         "ICGORUNUS",
         "İÇGÖRÜNÜŞ",

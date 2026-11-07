@@ -432,7 +432,7 @@ impl Tool for InteriorDimensions {
                     &[
                         ("ends", "Kenarlar"),
                         ("centers", "Merkezler"),
-                        ("none", "Ölçme"),
+                        ("none", "Ölçülmez"),
                     ],
                     match self.columns {
                         InteriorColumns::Ends => "ends",
@@ -442,7 +442,7 @@ impl Tool for InteriorDimensions {
                 ),
             ),
             Setting::toggle("T", "Toplam ölçü", self.total),
-            Setting::choice("V", "Kat", self.level_choices.clone()),
+            Setting::choice("V", "Ölçülen kat", self.level_choices.clone()),
             Setting::hint(
                 "H",
                 LABEL,

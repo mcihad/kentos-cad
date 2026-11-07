@@ -546,7 +546,7 @@ fn the_value_origin_of_an_insert_counts_where_the_blocks_parts_take_their_look()
         ("Blok", "#ff0000", "Renk: 1/4 parça bloktan (ByBlock)"),
         ("Katman", "#E5484D, #2f9e44", "Renk: 2/4 parça katmandan (ByLayer)"),
         ("Blok", continuous, "Çizgi tipi: 4/4 parça bloktan (ByBlock)"),
-        ("Blok", "0.5 mm", "Kalınlık: 4/4 parça bloktan (ByBlock)"),
+        ("Blok", "0.5 mm", "Çizgi kalınlığı: 4/4 parça bloktan (ByBlock)"),
     ]);
     // The insert's own colour is still explained as the insert's.
     let color = explained.iter().find(|p| p.part == "color").unwrap();

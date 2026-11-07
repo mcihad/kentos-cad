@@ -129,6 +129,8 @@ içi izin görmediği farklar:
 | G9 | Yeni proje Giriş sekmesinde açılıyor (S12 doğrulandı) | ADV-09, ADV-13 |
 | G10 | Geçici ölçü yazısı mahal etiketinin, kapı ve pencere etiketleri duvar çizgisinin üstüne biniyor (S19 doğrulandı) | ADV-16 |
 | G11 | F1 (Fare ve klavye kısayolları) penceresi Esc'yle kapanmıyor; Kapat düğmesi kapatıyor | ADV-09 (M7) |
+| G12 | Durum çubuğu uyarıyı kesiyor: "Duvar sürüyor: “L”…" 1440 px'te okunmuyor, tam metin yalnız Komut geçmişi'nde | ADV-09 |
+| G13 | Şerit etiket uzunluğuna duyarlı. Bir etiket 3 harf kısalınca Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyor; 4 harf uzayınca kentos-cad'in Mimari sekmesinde bir panel ikona iniyor (M4'te görüldü) | ADV-09 (M8) |
 
 ## 2. Piyasa araştırması
 
@@ -538,8 +540,24 @@ _Durum (7 Kasım 2026):_
   - Mimari'ye özgü adlar: PENCERE → Pencere; DU, DD, OB, KP, PN, MH, DS, KL, AK, MR, RM, MD, ET; ODA, LAVABO …
   - Komut listesinde, Komut ara'da ve F1'de görünüyorlar.
   - AutoCAD profiline Architecture adları (WALLADD …) eklendi.
-- **Kalanlar:** en sık araçlara tek tuş (sahibin kararı); terimler, harfler (Shift'li harf dahil) ve "Açı" (M4); komut
-  geçmişi (M5).
+- **Terimler, harfler ve Açı yapıldı** (M4, [ADR 3003](../docs/adr/3003-option-letters-and-terms.md)):
+  - İstem, araç paneli ve Öznitelikler aynı adı kullanıyor. Duvarın Kalınlık'ı ile çizginin Çizgi kalınlığı ayrıldı,
+    "Duvarları birleştir" artık "Tek duvara çevir".
+  - Sözleşmenin harfleri (E Kalınlık/Genişlik/En, G Geri, K Kapat, Y Yükseklik, S Stil, T Tür, L Kat, Ö Öteleme,
+    D Açı) katalogdan üretilen testle tutuluyor.
+  - Shift'li harf seçenektir; seçenek olmayan harf çalışan komutu bitirmez, uyarır.
+  - İmleç CAD projesinde Açı yazıyor.
+  - Sahibin isteğiyle kelimesi kelimesine çeviriler düz Türkçeye çevrildi (Benimse → Var olanı kullan …).
+  - Plandan ayrılan iki nokta:
+    - mahalin boşluğu "Şaft" değil "Döşeme boşluğu" oldu, çünkü galeri ve asansör boşluğunu da kapsıyor;
+    - mahal sekmesindeki döşeme deseni "Döşeme kaplaması" değil "Döşeme deseni" oldu, çünkü kaplama mahalin
+      özniteliği, araç onun desenini çiziyor.
+- **Kalanlar:**
+  - en sık araçlara tek tuş (sahibin kararı);
+  - komut geçmişi (M5);
+  - eş anlamlılar ("Bütün katlar"/"Tüm katlar");
+  - "Temizlik", "düğüm" gibi sözcüklerin gözden geçirilmesi;
+  - Harita ve kentos-cad araçlarının harfleri.
 
 **Kullanıcı sonucu:** Çizilen iş Esc'de kaybolmaz. "pencere" yazınca pencere aracı açılır. Aynı şeyin her yerde tek adı ve
 tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S10, S14.
@@ -968,7 +986,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M1 | Ölçüm altyapısı | ADV-26 | **(M1, ADR 3000: gerçek pencere düzeneği ve 2+1 tabanı 147 etkileşim / 177,6 s yapıldı; `kullan --modul`, `snapshot --sekme` kaldı)** |
 | M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim **(M2, ADR 3001: yapıldı)** |
 | M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari **(M3, ADR 3002: yapıldı; tek tuş kısayolu sahibin kararına kaldı)** |
-| M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz |
+| M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz **(M4, ADR 3003: yapıldı)** |
 | M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet |
 | M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür |
 | M7 | Modalsız mimari düzenleyiciler | ADV-09 | Kaydedilmemiş değişiklik sorusu; Çizimden seç |
@@ -1084,6 +1102,8 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 |---|---|---|---|
 | Esc'de kaybolan duvar parçası | bütün zincir → **0 (M2)** | 0 | 0 |
 | Kısayolu ya da kısa adı olan mimari komut | 0 → **13 iki harfli ad (M3)** | en sık araçlara tek tuş (sahibin kararı) | 0 |
+| Aynı harfe istemde ve panelde farklı ad | 49 → **0 (M4)** | 0 | 0 |
+| İstemlerde birden çok harfte duran ad | 12 → **0 (M4)** | 0 | 0 |
 | İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
 | 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |
 | Aynı ikonu paylaşan komut | 10 | 0 | 1 |

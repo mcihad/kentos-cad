@@ -287,12 +287,12 @@ fn cad_inspector_explains_inherited_and_own_model_appearance_without_writing() {
     let source = value(&app, "Temel model görünüşü", "Renk");
     assert!(source.contains("Katman:"), "{source}");
     assert!(value(&app, "Temel model görünüşü", "Çizgi tipi").contains("Katman:"));
-    assert!(value(&app, "Temel model görünüşü", "Kalınlık").contains("Katman:"));
+    assert!(value(&app, "Temel model görünüşü", "Çizgi kalınlığı").contains("Katman:"));
     assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
 
     event(&mut app, Event::Color(vec![Slot(slot)], Some("#E5484D".into())));
     assert_eq!(value(&app, "Temel model görünüşü", "Renk"), "#E5484D · Nesne");
-    assert!(value(&app, "Temel model görünüşü", "Kalınlık").contains("Katman:"));
+    assert!(value(&app, "Temel model görünüşü", "Çizgi kalınlığı").contains("Katman:"));
     event(&mut app, Event::Color(vec![Slot(slot)], None));
     assert!(value(&app, "Temel model görünüşü", "Renk").contains("Katman:"));
 }
@@ -311,7 +311,7 @@ fn the_value_origin_section_names_the_level_and_the_reset_scope() {
     }));
     select(&mut app, &[slot]);
     assert!(value(&app, "Bu değer nereden geliyor?", "Renk").ends_with("· Katman"));
-    assert!(value(&app, "Bu değer nereden geliyor?", "Kalınlık").ends_with("· Katman"));
+    assert!(value(&app, "Bu değer nereden geliyor?", "Çizgi kalınlığı").ends_with("· Katman"));
     event(&mut app, Event::Color(vec![Slot(slot)], Some("#E5484D".into())));
     assert_eq!(value(&app, "Bu değer nereden geliyor?", "Renk"), "#E5484D · Nesne");
     let notes: Vec<String> = rows(&app)
@@ -498,15 +498,15 @@ fn a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_laye
         }),
     );
     select(&mut app, &[line]);
-    assert_eq!(value(&app, "Genel", "Kalınlık"), "1.20 mm");
+    assert_eq!(value(&app, "Genel", "Çizgi kalınlığı"), "1.20 mm");
     let genel = rows(&app).remove(0).1;
     let Some(Editor::Select { items, .. }) = &genel
         .iter()
-        .find(|r| r.label == "Kalınlık")
-        .expect("Kalınlık ▾")
+        .find(|r| r.label == "Çizgi kalınlığı")
+        .expect("Çizgi kalınlığı ▾")
         .editor
     else {
-        panic!("Kalınlık ▾");
+        panic!("Çizgi kalınlığı ▾");
     };
     let picks: Vec<(String, bool)> = items
         .iter()
@@ -517,18 +517,18 @@ fn a_line_shows_its_own_weight_and_kalinlik_sets_it_or_gives_it_back_to_the_laye
         .collect();
     assert_eq!(picks[0], ("Katmana göre".to_owned(), false));
     assert!(picks.contains(&("1.20 mm".to_owned(), true)), "{picks:?}");
-    // Kalınlık ▾ → 0.35 mm, then Katmana göre: each its own step.
+    // Çizgi kalınlığı ▾ → 0.35 mm, then Katmana göre: each its own step (its undo name is the shared contract's).
     event(&mut app, Event::Weight(vec![Slot(line)], Some(0.35)));
     assert_eq!(entity(&app, line).base().line_weight, Some(0.35));
-    assert_eq!(value(&app, "Genel", "Kalınlık"), "0.35 mm");
+    assert_eq!(value(&app, "Genel", "Çizgi kalınlığı"), "0.35 mm");
     event(&mut app, Event::Weight(vec![Slot(line)], None));
     assert_eq!(entity(&app, line).base().line_weight, None);
-    assert_eq!(value(&app, "Genel", "Kalınlık"), "Katmana göre");
+    assert_eq!(value(&app, "Genel", "Çizgi kalınlığı"), "Katmana göre");
     assert_eq!(undo_label(&mut app).as_deref(), Some("Kalınlık değiştir"));
     assert_eq!(entity(&app, line).base().line_weight, Some(0.35));
     // A point is not drawn with a line: it shows no weight.
     select(&mut app, &[5]);
-    assert!(rows(&app)[0].1.iter().all(|r| r.label != "Kalınlık"));
+    assert!(rows(&app)[0].1.iter().all(|r| r.label != "Çizgi kalınlığı"));
 }
 
 #[test]

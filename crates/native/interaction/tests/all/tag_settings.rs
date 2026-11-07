@@ -595,7 +595,7 @@ fn content_keyboard_cycle_and_visible_choice_end_template_prompt() {
             if tool == "tag" {
                 "Türe göre"
             } else {
-                "Tür / Koru"
+                "Mevcut ya da türün"
             },
         ] {
             assert!(b.type_text("İ"));

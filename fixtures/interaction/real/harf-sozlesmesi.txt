@@ -1,0 +1,77 @@
+# M4: harf sözleşmesi ve terimler (docs/adr/3003). Duvar çizerken imleç Açı; Shift+E duvarın Kalınlık'ı; seçeneği
+# olmayan harf (l: Çizgi) duvarı bırakmaz; merdivende e Genişlik; mahal ve kapının istem ve panel adları; duvarın
+# Öznitelikleri.
+# Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/harf-sozlesmesi.txt .run/gui-evidence/mimari-m4/sonra --modul mimari
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 31 75     # araç: Duvar
+wait 400
+click 300 400
+wait 200
+click 600 400
+wait 200
+move 600 250
+wait 500
+shot m4-1-aci
+key shift+e     # Kalınlık (Uzat değil)
+wait 500
+shot m4-2-shift-e
+key Escape      # soru kalkar, zincir sürer
+wait 300
+move 600 250
+wait 200
+key l           # Çizgi'nin harfi: duvar sürer, uyarır
+wait 500
+shot m4-3-l-harfi
+key Return      # duvar yazılır
+wait 400
+key Escape
+key Escape
+wait 300
+click 678 57    # araç: Merdiven
+wait 400
+click 300 620
+wait 200
+move 650 620
+wait 200
+key e           # Genişlik (Esnet değil)
+wait 500
+shot m4-4-merdiven-e
+key Escape
+key Escape
+key Escape
+wait 300
+click 214 111   # araç: Mahal
+wait 600
+shot m4-5-mahal
+key Escape
+key Escape
+wait 300
+click 452 75    # araç: Kapı
+wait 400
+move 450 395
+wait 600
+shot m4-6-kapi
+key Escape
+key Escape
+wait 400
+click 450 400   # duvarı seç
+wait 800
+shot m4-7-oznitelikler
+wheel 1240 760 -2   # Öznitelikler aşağı: duvarın Kalınlık'ı
+wait 600
+shot m4-8-duvar-kalinligi
+key Escape
+wait 300
+click 1005 852  # Geçmiş
+wait 600
+click 67 499    # Komut geçmişi: uyarının tam metni
+wait 600
+shot m4-9-gecmis
+click 114 80    # araç: Dikdörtgen duvar
+wait 700
+shot m4-10-ortak-duvar

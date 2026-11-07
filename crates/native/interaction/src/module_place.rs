@@ -352,7 +352,7 @@ impl Tool for ModulePlace {
         Prompt::new(LABEL, "modülün taban noktasını yerleştirmek için tıklayın")
             .option("Modül", "M")
             .option("Açı", "D")
-            .option_with("Ayna", "A", if self.mirror { "Açık" } else { "Kapalı" })
+            .option_with("Aynalı", "A", if self.mirror { "Açık" } else { "Kapalı" })
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {

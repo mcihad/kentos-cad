@@ -2,7 +2,7 @@
 //! `cad.walls.edit` in one undo step “Duvarı düzenle”; the command computes, the tool only says what was clicked.
 //!
 //! - Duvarı böl: each click on a wall splits it there.
-//! - Duvarları birleştir: the walls selected first, or clicked one by one, made one on Enter.
+//! - Tek duvara çevir (was Duvarları birleştir, docs/adr/3003): the walls selected first, or clicked one by one, made one on Enter.
 //! - Duvarı uzat: the wall to reach first, then each click on a wall runs its nearer end on to it.
 //! - Duvarı buda: the cutting wall first, then each click on a wall keeps the part clicked.
 //! - Duvarı çevir: the walls selected first, or each one clicked, the other way round.
@@ -60,7 +60,8 @@ impl Action {
     fn label(self) -> &'static str {
         match self {
             Action::Split => "Duvarı böl",
-            Action::Join => "Duvarları birleştir",
+            // Tek duvara çevir (docs/adr/3003): “Duvarları birleştir” beside Duvar birleşimi read as one tool.
+            Action::Join => "Tek duvara çevir",
             Action::Extend => "Duvarı uzat",
             Action::Trim => "Duvarı buda",
             Action::Flip => "Duvarı çevir",

@@ -561,7 +561,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "library" => "Kitaplık",
         "lineType" => "Çizgi tipi",
         "lineTypeScale" => "Çizgi tipi ölçeği",
-        "lineWeight" => "Kalınlık",
+        "lineWeight" => "Çizgi kalınlığı",
         "locked" => "Kilitli",
         "name" => "Ad",
         "note" => "Not",

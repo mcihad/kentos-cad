@@ -48,7 +48,7 @@ const SWITCHES: [(&str, &str, &str, &[MatchProperty]); 10] = [
         "çizgi tipi",
         &[MatchProperty::LineType, MatchProperty::LineTypeScale],
     ),
-    ("Kalınlık", "L", "kalınlık", &[MatchProperty::LineWeight]),
+    ("Çizgi kalınlığı", "L", "çizgi kalınlığı", &[MatchProperty::LineWeight]),
     (
         "Saydamlık",
         "S",

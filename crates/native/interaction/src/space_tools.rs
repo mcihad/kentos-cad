@@ -43,7 +43,7 @@ pub fn method_icon(m: Option<SpaceMethod>) -> &'static str {
 /// One set of persistent column policies shared by both room tools.
 pub fn column_choices(value: Option<SpaceColumns>) -> Vec<OptionChoice> {
     let value = value.unwrap_or(SpaceColumns::Net);
-    SpaceColumns::ALL.iter().map(|&m| OptionChoice { typed:m.name().into(),label:m.label().into(),
+    SpaceColumns::ALL.iter().map(|&m| OptionChoice { typed:m.name().into(),label:m.choice().into(),
         icon:None,preview:None,checked:m==value,command:None }).collect()
 }
 
@@ -107,7 +107,7 @@ pub struct SpaceTool {
     number: Option<String>,
     name: Option<String>,
     usage: Option<String>,
-    /// Boşluk (docs/adr/0708): the space written is a void — a shaft, a lift shaft, an opening in the floor.
+    /// Döşeme boşluğu (docs/adr/0708, 3003): the space written is a void — a shaft, a lift shaft, an opening in the floor.
     void: bool,
     level: crate::space_level::Choice,
     sources: crate::space_sources::Choice,
@@ -241,7 +241,7 @@ impl SpaceTool {
         if points::written(result, cx).is_none() {
             return false;
         }
-        let kind = if self.void { "Boşluk" } else { "Mahal" };
+        let kind = if self.void { "Döşeme boşluğu" } else { "Mahal" };
         let what = match (&self.number, &self.name) {
             (Some(n), Some(a)) => format!("{kind} {n} {a} oluşturuldu."),
             (Some(n), None) => format!("{kind} {n} oluşturuldu."),
@@ -323,7 +323,7 @@ impl Tool for SpaceTool {
             "köşelere tıklayın, Enter ile kapatın"
         };
         let mut p = Prompt::new("Mahal", step)
-            .option_with("Yöntem", "Y", self.method_label())
+            .option_with("Alan yöntemi", "Y", self.method_label())
             .option_with("Kat", "L", self.level_label())
             .option_with(
                 "Numara",
@@ -336,8 +336,8 @@ impl Tool for SpaceTool {
                 "K",
                 self.usage.clone().unwrap_or_else(|| "Yok".into()),
             )
-            .toggle("Boşluk", "V", self.void)
-            .toggle("Çiz", "Ç", self.draw);
+            .toggle("Döşeme boşluğu", "V", self.void)
+            .option_with("Sınır", "S", if self.draw { "Köşeleri çiz" } else { "Duvarlardan bul" });
         if self.draw && !self.pts.is_empty() {
             p = p.option("Geri al", "G");
         }
@@ -410,7 +410,8 @@ impl Tool for SpaceTool {
                     SpaceColumns::Ignore => SpaceColumns::Net, SpaceColumns::Net => SpaceColumns::All, SpaceColumns::All => SpaceColumns::Ignore,
                 });
             }
-            "Ç" => {
+            // Sınır is S, as Döşeme's (docs/adr/3003); Ç, its old letter, still reads.
+            "S" | "Ç" => {
                 self.draw = !self.draw;
                 self.pts.clear();
             }
@@ -462,16 +463,16 @@ impl Tool for SpaceTool {
                 self.sources.setting()
             },
             if self.draw {
-                Setting::text("D", "Kolon alanı", "Düşme").read_only()
+                Setting::text("D", "Kolon alanı", "Düşülmez").read_only()
             } else {
                 Setting::choice("D", "Kolon alanı", column_choices(self.columns))
             },
             Setting::text("N", "Numara", self.number.clone().unwrap_or_default()),
             Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
             Setting::text("K", "Kullanım", self.usage.clone().unwrap_or_default()),
-            Setting::toggle("V", "Boşluk (şaft)", self.void),
+            Setting::toggle("V", "Döşeme boşluğu", self.void),
             Setting::choice(
-                "Ç",
+                "S",
                 "Sınır",
                 choices(
                     &[("find", "Duvarlardan bul"), ("draw", "Köşeleri çiz")],
@@ -531,7 +532,7 @@ impl Tool for SpaceTool {
             "A" => self.name = text,
             "K" => self.usage = text,
             "V" if matches!(value, "yes" | "no") => self.void = value == "yes",
-            "Ç" if matches!(value, "find" | "draw") => {
+            "S" | "Ç" if matches!(value, "find" | "draw") => {
                 if !self.pts.is_empty() && self.draw != (value == "draw") {
                     cx.say(
                         Level::Warn,
@@ -608,7 +609,7 @@ impl Tool for SpaceTool {
                 (Some(why), _) if !self.draw || self.pts.len() >= 2 => {
                     vec!["Mahal".to_owned(), why.clone()]
                 }
-                (_, Some(a)) if self.void => vec![format!("Boşluk · {}", format.area(a)), "Alanı mahal toplamına katılmaz".to_owned()],
+                (_, Some(a)) if self.void => vec![format!("Döşeme boşluğu · {}", format.area(a)), "Alanı mahal toplamına katılmaz".to_owned()],
                 (_, Some(a)) => vec![format!("Mahal · {}", format.area(a))],
                 _ => vec!["Mahal".to_owned()],
             },

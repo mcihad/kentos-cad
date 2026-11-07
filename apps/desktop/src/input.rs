@@ -940,11 +940,15 @@ impl App {
         if let Some(chord) = keys::chord(&press)
             && let Some(id) = self.shortcut(&chord)
         {
-            return if press.repeat {
-                Task::none()
-            } else {
-                self.run(id)
-            };
+            if press.repeat {
+                return Task::none();
+            }
+            // A letter that is not the running command's option does not end it (docs/adr/3003).
+            if let Some(why) = self.letter_keeps_command(&press, &chord, id) {
+                self.warn(why);
+                return Task::none();
+            }
+            return self.run(id);
         }
         // 5. A character that starts a value.
         if let Some(first) = keys::value_start(&press) {
@@ -963,6 +967,27 @@ impl App {
             }
             None => Task::none(),
         }
+    }
+
+    /// Why a letter's shortcut does not start its tool now (docs/adr/3003): a command runs, the letter is not one
+    /// of its options (those come first, step 3) and the tool would end it, losing its points, the wall chain or the
+    /// stair taken so far. AutoCAD reads letters typed during a command as the command's input and never starts
+    /// another one by them; a KentOS letter did, so E pressed for a stair's width (G then) started Esnet. The
+    /// command stays and is told how to leave; tools that run over a command (Kaydır, Pencere yakınlaştır, the
+    /// measures) and commands that start no tool still run.
+    fn letter_keeps_command(&self, press: &KeyPress, chord: &str, id: &'static str) -> Option<String> {
+        if !self.session.is_running() || keys::option_letter(press).is_none() {
+            return None;
+        }
+        let tool = id.strip_prefix("tool.")?;
+        if !Session::tools().contains(&tool) || self.session.can_start_over(tool) {
+            return None;
+        }
+        let running = self.session.prompt().tool.unwrap_or("Komut");
+        let target = catalog().get(id).map_or(tool, |c| c.title);
+        Some(format!(
+            "{running} sürüyor: “{chord}” bu adımın seçeneği değil. {target} için önce Esc'ye basın."
+        ))
     }
 
     /// Where the value field opens: beside the pointer, when it is on the

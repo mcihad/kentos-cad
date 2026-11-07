@@ -39,6 +39,8 @@ mod aids;
 mod alias_profile;
 mod module_names;
 #[cfg(test)]
+mod option_contract_tests;
+#[cfg(test)]
 mod alias_profile_scenes;
 mod annotation_scale;
 mod annotative;

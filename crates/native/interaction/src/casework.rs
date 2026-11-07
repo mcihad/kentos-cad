@@ -589,8 +589,8 @@ impl Tool for Casework {
                     _ => "U",
                 },
             )
-            .option("Modül", "M")
-            .option("Derinlik", "D");
+            .option("Modül eni", "M")
+            .option("Tezgâh derinliği", "D");
         if self.corners > 0 {
             prompt = prompt.option_with(
                 "Köşe",

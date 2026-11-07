@@ -637,12 +637,12 @@ impl Tool for GridSystemTool {
             (false, false, _) => "ağı yerleştirmek için tıklayın (ilk iki aksın kesişimi)",
         };
         Prompt::new(LABEL, step)
-            .option_with("Biçim", "F", if self.radial { "Eğrisel" } else { "Dik" })
+            .option_with("Düzen", "F", if self.radial { "Eğrisel" } else { "Dik" })
             .option(if self.radial { "Açılar" } else { "X aralıkları" }, "X")
             .option(if self.radial { "Yay aralıkları" } else { "Y aralıkları" }, "Y")
             .option("Açı", "D")
             .option("Uzatma", "U")
-            .option("Kolonlar", "K")
+            .option("Kesişimlere kolon", "K")
             .option(if self.origin.is_some() { "Yerleştir" } else { "Bitir" }, "Enter")
     }
 
@@ -735,7 +735,7 @@ impl Tool for GridSystemTool {
     fn settings(&self, f: &Format) -> Vec<Setting> {
         let mut rows = vec![Setting::choice(
             "F",
-            "Biçim",
+            "Düzen",
             choices(
                 &[("orthogonal", "Dik"), ("radial", "Eğrisel")],
                 if self.radial { "radial" } else { "orthogonal" },

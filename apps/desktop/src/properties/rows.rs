@@ -983,7 +983,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     if e.draws_lines() {
         let weight = Some(base.line_weight);
         general.push(
-            Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
+            Row::text("Çizgi kalınlığı", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
         );
         // Its own line type, its scale and transparency (docs/adr/0260).
         general.push(
@@ -1261,14 +1261,15 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 })
             };
             let fixed = kentos_commands::fixed_width(&x.components).is_some();
-            geo.push(metres("Genişlik", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
+            // A wall's width is its Kalınlık, as the tool and its panel say (docs/adr/3003); a line's weight is Çizgi kalınlığı.
+            geo.push(metres("Kalınlık", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
             // Kalınlıkta sabit (docs/adr/0771 §2): the line a width or style change keeps, this session's.
             let keep_now = super::wall_parts::keep();
             let keeps = kentos_commands::WallReference::ALL
                 .iter()
                 .map(|&r| pick(r.label().to_owned(), r == keep_now, Message::Properties(Event::WallKeep(r)), None))
                 .collect();
-            geo.push(Row::text("Kalınlıkta sabit", keep_now.label()).editor(select(keep_now.label().to_owned(), keeps)));
+            geo.push(Row::text("Sabit kalan çizgi", keep_now.label()).editor(select(keep_now.label().to_owned(), keeps)));
             let justify = kentos_commands::WallJustify::ALL
                 .iter()
                 .map(|&j| {
@@ -1585,7 +1586,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .into_iter()
                 .map(|(v, label)| pick(label.into(), v == x.void, set(SpaceChange { void: Some(v), ..Default::default() }), None))
                 .collect();
-            geo.push(Row::text("Boşluk", void_words).editor(select(void_words.into(), voids)));
+            geo.push(Row::text("Döşeme boşluğu", void_words).editor(select(void_words.into(), voids)));
             let methods = SpaceMethod::ALL
                 .iter()
                 .map(|&m| {
@@ -1597,11 +1598,12 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     )
                 })
                 .collect();
-            geo.push(Row::text("Yöntem", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
+            // Alan yöntemi, as the Mahal tool names it (docs/adr/3003).
+            geo.push(Row::text("Alan yöntemi", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
             if x.seed.is_some() {
-                let items=SpaceColumns::ALL.iter().map(|&m|pick(m.label().into(),m==x.columns,
+                let items=SpaceColumns::ALL.iter().map(|&m|pick(m.choice().into(),m==x.columns,
                     set(SpaceChange {columns:Some(m),..Default::default()}),None)).collect();
-                geo.push(Row::text("Kolon alanı",x.columns.label()).editor(select(x.columns.label().into(),items)));
+                geo.push(Row::text("Kolon alanı",x.columns.choice()).editor(select(x.columns.choice().into(),items)));
             } else {
                 geo.push(Row::text("Kolon alanı","Çizilen sınır korunur"));
             }
@@ -2654,7 +2656,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             if e.draws_lines() {
                 appearance.insert(1, Row::text("Çizgi tipi", format!("{type_name} · {}",
                     source(look.from[1]))));
-                appearance.insert(2, Row::text("Kalınlık", format!("{} · {}",
+                appearance.insert(2, Row::text("Çizgi kalınlığı", format!("{} · {}",
                     weight_label(look.line_weight), source(look.from[3]))));
                 appearance.push(Row::text("Çizgi tipi ölçeği", format!("{} · {}",
                     plain_number(look.line_type_scale),
@@ -3884,7 +3886,7 @@ fn many_sections(
     if !lined.is_empty() {
         let lined_ids: Vec<Slot> = lined.iter().map(|e| Slot(e.base().id)).collect();
         rows.push(
-            Row::text("Kalınlık", weight_text(weight))
+            Row::text("Çizgi kalınlığı", weight_text(weight))
                 .editor(edit(weight_editor(&lined_ids, weight))),
         );
         // The look's parts (docs/adr/0260): the shared value, else Çeşitli. Compared as their written forms were: the

@@ -100,7 +100,7 @@ pub fn chips(
     style: Option<&WallStyleDef>,
 ) -> Prompt {
     prompt
-        .option_with("Genişlik", "E", format.length(width(memory, style)))
+        .option_with("Kalınlık", "E", format.length(width(memory, style)))
         .option_with("Hiza", "H", memory.wall_justify.label())
         .option_with("Öteleme", "Ö", format.length(memory.wall_offset))
         .option_with(
@@ -113,7 +113,7 @@ pub fn chips(
 /// The prompt while a value is waited for.
 pub fn asked(ask: Ask) -> Prompt {
     match ask {
-        Ask::Width => Prompt::new(LABEL, "duvarın genişliğini yazın"),
+        Ask::Width => Prompt::new(LABEL, "duvarın kalınlığını yazın"),
         Ask::Offset => Prompt::new(
             LABEL,
             "taban çizgisinin ötelemesini yazın (artı: yolun solu, eksi: sağı)",

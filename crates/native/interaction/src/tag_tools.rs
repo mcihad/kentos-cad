@@ -206,7 +206,7 @@ impl Tool for TagTool {
         };
         Prompt::new("Etiket", step)
             .option_with(
-                "İçerik",
+                "Hazır içerik",
                 "İ",
                 settings::content_label(self.content.as_deref(), false).to_owned(),
             )
@@ -215,7 +215,7 @@ impl Tool for TagTool {
                 "Ş",
                 if self.content.is_some() { "Özel" } else { "Türün" }.to_owned(),
             )
-            .option_with("Biçim", "B", shape.to_owned())
+            .option_with("Çerçeve", "B", shape.to_owned())
             .option_with(
                 "Kol",
                 "K",
@@ -483,7 +483,7 @@ impl TagAllTool {
                 if self.refresh { "refresh" } else { "keep" },
             ),
             "B" => {
-                let mut items = vec![("default", "Mevcut / Tür")];
+                let mut items = vec![("default", "Mevcut ya da türün")];
                 items.extend(TagShape::ALL.iter().map(|s| (s.name(), s.label())));
                 choices(&items, self.shape.map_or("default", TagShape::name))
             }
@@ -609,13 +609,13 @@ impl Tool for TagAllTool {
             "ayarları ve önizlemeyi kontrol edin; Enter bir kez uygular",
         );
         p = p.option_with(
-            "Mevcut",
+            "Mevcut etiket",
             "E",
             if self.refresh { "Yenile" } else { "Koru" }.to_owned(),
         );
         p = p.option_with("Kaynak katı", "F", self.source.label());
         p = p.option_with(
-            "İçerik",
+            "Hazır içerik",
             "İ",
             settings::content_label(self.content.as_deref(), true).to_owned(),
         );
@@ -689,7 +689,7 @@ impl Tool for TagAllTool {
                 .map(|(key, k)| Setting::choice(key, k.label(), self.choices(key))),
         );
         out.push(Setting::notice("H", "Kapsam", "Kaynak katı görünür kaynakları süzer; kapı/pencere duvarının katını kullanır. Duvarı kayıp açıklığın katı bilinmez. Yenile yalnız etkin etiket katmanını değiştirir; başka katlar/etiket katmanları ve elle konumlar korunur."));
-        out.push(Setting::notice("V", "Boş ayarlar", "Hazır içerik şablon alanını doldurur; alanı ayrıca düzenleyebilirsiniz. Tür / Koru şablonu boşaltır: Yenile'de mevcut içerik korunur, yeni etikette tür varsayılanı kullanılır. Boş boy mevcut değeri korur; \\n yeni satırdır. Kaynak numaraları değişmez."));
+        out.push(Setting::notice("V", "Boş ayarlar", "Hazır içerik şablon alanını doldurur; alanı ayrıca düzenleyebilirsiniz. Mevcut ya da türün şablonu boşaltır: Yenile'de mevcut içerik korunur, yeni etikette tür varsayılanı kullanılır. Boş boy mevcut değeri korur; \\n yeni satırdır. Kaynak numaraları değişmez."));
         out
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {

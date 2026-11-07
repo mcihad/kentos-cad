@@ -321,7 +321,7 @@ impl Tool for GridTool {
                 self.label.clone().unwrap_or_else(|| "Sıradaki".into()),
             )
             .option_with(
-                "Seri",
+                "Seri aralıkları",
                 "S",
                 self.spacings.as_ref().map_or_else(
                     || "Yok".into(),
@@ -333,7 +333,7 @@ impl Tool for GridTool {
                     },
                 ),
             )
-            .option_with("Kesik", "C", ends_words(self.ends))
+            .option_with("Kesik uçlar", "C", ends_words(self.ends))
             .option("Bitir", "Enter")
     }
 
@@ -698,14 +698,14 @@ impl Tool for ColumnTool {
         if !self.round() {
             p = p
                 .option_with("Boy", "Y", self.depth.map_or_else(|| fmt(self.width), fmt))
-                .option_with("Döndür", "D", fmt(self.turn.to_degrees()));
+                .option_with("Açı", "D", fmt(self.turn.to_degrees()));
         }
         if let Some([a, b]) = self.legs_now() {
             p = p.option_with("L kolları", "L", format!("{} {}", fmt(a), fmt(b)));
         }
         p.option_with("Hiza", "H", self.anchor.label())
         .option_with(
-            "Etiket",
+            "İlk etiket",
             "K",
             self.tag.clone().unwrap_or_else(|| "Yok".into()),
         )
@@ -857,7 +857,7 @@ impl Tool for ColumnTool {
             ));
         }
         if !self.round() {
-            rows.push(Setting::text("D", "Dönüş", format!("{}°", crate::fixed(self.turn.to_degrees(), 2))));
+            rows.push(Setting::text("D", "Açı", format!("{}°", crate::fixed(self.turn.to_degrees(), 2))));
         }
         rows.push(Setting::choice(
             "H",
@@ -1523,7 +1523,8 @@ impl FlightTool {
         let words = upper_tr(js_trim(value));
         let length = |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
         match key {
-            "G" => length(cx).map(|v| self.width = v).is_some(),
+            // Genişlik is E in every Mimari tool (docs/adr/3003); G is Geri.
+            "E" => length(cx).map(|v| self.width = v).is_some(),
             "H" if words.is_empty() || words.starts_with("GEN") => {
                 self.landing = None;
                 true
@@ -1548,11 +1549,11 @@ impl FlightTool {
             }
             "Z" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.ramp_base = Some(v)).is_some(),
             "Y" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.rise = v).is_some(),
-            "E" if self.ramp && (words.is_empty() || words.starts_with("HES")) => {
+            "M" if self.ramp && (words.is_empty() || words.starts_with("HES")) => {
                 self.slope = None;
                 true
             }
-            "E" if self.ramp => parse_number(value)
+            "M" if self.ramp => parse_number(value)
                 .filter(|v| *v > 0.0)
                 .map(|v| self.slope = Some(v))
                 .is_some(),
@@ -1728,12 +1729,12 @@ impl Tool for FlightTool {
                     if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
                 )
                 .option_with("Basamak", "D", n(self.tread))
-                .option_with("Genişlik", "G", n(self.width))
-                .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
+                .option_with("Genişlik", "E", n(self.width))
+                .option_with("Kesme yüksekliği", "K", self.cut.map_or_else(|| "Yok".into(), n))
                 .option_with("Merkez direği", "M", self.post.map_or_else(|| "Yok".into(), n))
-                .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
+                .option_with("Basamak numaraları", "N", if self.numbering { "Açık" } else { "Kapalı" })
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
-                .option_with("Yay", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
+                .option_with("Yay boyu", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
         }
         let n = |v: f64| v.to_string();
         if self.ramp {
@@ -1744,16 +1745,16 @@ impl Tool for FlightTool {
                 _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
             };
             return Prompt::new(self.name(), step)
-                .option_with("Yükseklik", "Y", n(self.rise))
+                .option_with("Yükseklik farkı", "Y", n(self.rise))
                 .option_with(
                     "Eğim",
-                    "E",
+                    "M",
                     self.slope.map_or_else(|| "Hesaplanır".into(), |s| format!("%{s}")),
                 )
-                .option_with("Genişlik", "G", n(self.width))
+                .option_with("Genişlik", "E", n(self.width))
                 .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
                 .option_with("En uzun kol", "L", self.max_run.map_or_else(|| "Yok".into(), n))
-                .option_with("Başlangıç", "Z", self.base_option())
+                .option_with("Başlangıç kotu", "Z", self.base_option())
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
                 .option_with("Son kol", "U", if self.fit { "Eğime göre" } else { "Tıklanan yerde" })
                 .option("Bitir", "Enter");
@@ -1778,10 +1779,10 @@ impl Tool for FlightTool {
                 if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
             )
             .option_with("Basamak", "D", n(self.tread))
-            .option_with("Genişlik", "G", n(self.width))
+            .option_with("Genişlik", "E", n(self.width))
             .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
-            .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
-            .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
+            .option_with("Kesme yüksekliği", "K", self.cut.map_or_else(|| "Yok".into(), n))
+            .option_with("Basamak numaraları", "N", if self.numbering { "Açık" } else { "Kapalı" })
             .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
             .option_with("Son kol", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" })
             .option("Bitir", "Enter")
@@ -1837,12 +1838,12 @@ impl Tool for FlightTool {
                 return true;
             }
             let field = match ask {
-                Ask::Width => "G",
+                Ask::Width => "E",
                 Ask::Landing => "H",
                 Ask::RampRun => "L",
                 Ask::RampBase => "Z",
                 Ask::Rise | Ask::Height => "Y",
-                Ask::Slope => "E",
+                Ask::Slope => "M",
                 Ask::MaxRiser => "R",
                 Ask::Risers => "S",
                 Ask::Tread => "D",
@@ -1862,12 +1863,12 @@ impl Tool for FlightTool {
             return true;
         }
         self.ask = match key.as_str() {
-            "G" => Some(Ask::Width),
+            "E" => Some(Ask::Width),
             "H" => Some(Ask::Landing),
             "L" if self.ramp => Some(Ask::RampRun),
             "Z" if self.ramp => Some(Ask::RampBase),
             "Y" if self.ramp => Some(Ask::Rise),
-            "E" if self.ramp => Some(Ask::Slope),
+            "M" if self.ramp => Some(Ask::Slope),
             "Y" => Some(Ask::Height),
             "R" if !self.ramp => Some(Ask::MaxRiser),
             "S" if !self.ramp => Some(Ask::Risers),
@@ -1927,11 +1928,11 @@ impl Tool for FlightTool {
             let mut rows = vec![
                 Setting::text("Y", "Yükseklik farkı", f.length(self.rise)),
                 Setting::text(
-                    "E",
+                    "M",
                     "Eğim (%)",
                     self.slope.map_or_else(|| "Hesaplanır".into(), |s| s.to_string()),
                 ),
-                Setting::text("G", "Genişlik", f.length(self.width)),
+                Setting::text("E", "Genişlik", f.length(self.width)),
                 Setting::text("H", "Sahanlık", landing),
                 Setting::text("L", "En uzun kol", self.max_run.map_or_else(|| "Yok".into(), |v| f.length(v))),
                 Setting::text("Z", "Başlangıç kotu", self.base_words(f)),
@@ -1973,7 +1974,7 @@ impl Tool for FlightTool {
                 if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
             ),
             Setting::text("D", "Basamak", f.length(self.tread)),
-            Setting::text("G", "Genişlik", f.length(self.width)),
+            Setting::text("E", "Genişlik", f.length(self.width)),
             Setting::text("H", "Sahanlık", landing),
             Setting::text("M", "Merkez direği", self.post.map_or_else(|| "Yok".into(), |v| f.length(v))),
             Setting::text("K", "Kesme yüksekliği", self.cut.map_or_else(|| "Yok".into(), |v| f.length(v))),
@@ -1981,7 +1982,7 @@ impl Tool for FlightTool {
             railings_setting(self.railings),
             Setting::choice(
                 "U",
-                if self.curved { "Yay" } else { "Son kol" },
+                if self.curved { "Yay boyu" } else { "Son kol" },
                 crate::tool_settings::choices(
                     &[("fit", "Rıhtlara göre biter"), ("clicked", "Tıklanan yerde biter")],
                     if self.fit { "fit" } else { "clicked" },

@@ -17,7 +17,7 @@ fn contour_settings_are_visible_read_only_preview_then_one_commit_and_undo() {
     let mut b = setup();
     let source = b.newest().clone();
     let before = b.doc.to_snapshot_v2();
-    assert!(set(&mut b, "M", "Kapalı kontur"));
+    assert!(set(&mut b, "B", "Kapalı kontur"));
     assert!(set(&mut b, "H", "İç net"));
     assert!(set(&mut b, "E", "250mm"));
     assert!(set(&mut b, "K", "Koru"));
@@ -47,14 +47,14 @@ fn contour_settings_are_visible_read_only_preview_then_one_commit_and_undo() {
 #[test]
 fn switching_modes_keeps_legacy_pairs_shortcut_and_visible_source_deletion() {
     let mut b = setup();
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     assert!(b.type_text("Ç"));
     assert!(b.memory.wall_pairs);
     assert!(!b.memory.wall_contours);
-    assert!(set(&mut b, "M", "each"));
+    assert!(set(&mut b, "B", "each"));
     assert!(!b.memory.wall_pairs);
     assert!(!b.memory.wall_contours);
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     assert!(set(&mut b, "K", "Sil"));
     let source = b.newest().clone();
     b.confirm();
@@ -66,7 +66,7 @@ fn switching_modes_keeps_legacy_pairs_shortcut_and_visible_source_deletion() {
 #[test]
 fn stale_contour_preview_refuses_before_refreshing_and_requires_a_new_explicit_confirm() {
     let mut b = setup();
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     assert!(set(&mut b, "K", "keep"));
     let mut settings = b.doc.settings().clone();
     settings.length_decimals = 4;
@@ -87,7 +87,7 @@ fn shared_axes_preview_reports_ownership_tolerance_and_requires_one_confirm() {
     b.selection.set(slots);
     b.start("wallFromLines");
     let before = b.doc.to_snapshot_v2();
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     assert!(
         b.session
             .prompt()
@@ -126,7 +126,7 @@ fn with_levels() -> Bench {
 #[test]
 fn visible_level_choice_is_read_only_and_replans_before_a_single_confirm() {
     let mut b = with_levels();
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     assert!(set(&mut b, "K", "keep"));
     let before = b.doc.to_snapshot_v2();
     let rows = b.session.settings(&Default::default());
@@ -173,7 +173,7 @@ fn visible_level_choice_is_read_only_and_replans_before_a_single_confirm() {
 #[test]
 fn a_removed_target_level_is_never_silently_replaced_by_unassigned() {
     let mut b = with_levels();
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     assert!(set(&mut b, "L", "id:zemin"));
     let mut settings = b.doc.settings().clone();
     settings
@@ -237,7 +237,7 @@ fn level_shortcut_cycles_and_duplicate_labels_do_not_guess_the_target() {
     b.start("wallFromLines");
     assert!(!set(&mut b, "L", "Ortak ad"));
     assert!(set(&mut b, "L", "id:floor"));
-    assert!(set(&mut b, "M", "contours"));
+    assert!(set(&mut b, "B", "contours"));
     b.confirm();
     let Entity::Wall(w) = b.newest() else {
         panic!()
@@ -259,7 +259,7 @@ fn contour_preview_covers_every_room_beyond_the_generic_four_hundred_ghost_limit
         b.selection.set(slots);
         b.start("wallFromLines");
         let before = b.doc.to_snapshot_v2();
-        assert!(set(&mut b, "M", "contours"));
+        assert!(set(&mut b, "B", "contours"));
         assert!(set(&mut b, "H", "center"));
         let preview = b.session.preview(&Default::default()).unwrap();
         let points = preview

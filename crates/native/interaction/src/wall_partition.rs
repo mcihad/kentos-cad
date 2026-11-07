@@ -305,8 +305,8 @@ impl Tool for Partition {
             .option("Uzaklık", "U")
             .option("Kalınlık", "E")
             .option("Stil", "S")
-            .option("Ölçme", "M")
-            .option("Yan", "Y")
+            .option("Uzaklık türü", "M")
+            .option("Kaynağın yanı", "Y")
             .option("Uçlar", "B");
         let prompt = if self.candidates.len() > 1 {
             prompt.option("Kaynak", "C")

@@ -273,7 +273,7 @@ impl Tool for RoomElevationTool {
         };
         Prompt::new("Oda iç görünüşü", step)
             .option_with("Yanlar", "Y", self.sides_text())
-            .option_with("Aralık", "R", format!("{} m", self.gap))
+            .option_with("Aralık", "A", format!("{} m", self.gap))
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -334,7 +334,8 @@ impl Tool for RoomElevationTool {
         }
         match key.as_str() {
             "Y" => self.ask = Some(Ask::Sides),
-            "R" => self.ask = Some(Ask::Gap),
+            // Aralık is A, as in every KentOS tool (docs/adr/3003).
+            "A" => self.ask = Some(Ask::Gap),
             _ => {
                 if self.space.is_some()
                     && let Some(p) = cx.typed_point(text, None, self.hover)

@@ -176,7 +176,7 @@ impl Tool for Array {
             },
         )
         .option_with("Kopya adedi", "A", self.count.to_string())
-        .option("Yöntem", "M")
+        .option("Dağıtım", "M")
         .option("Başka kaynak", "K")
         .option("Uygula", "Enter")
     }
@@ -310,7 +310,7 @@ impl Tool for Array {
                         },
                     ),
                 ),
-                Setting::text("U", "Aralık", f.length(self.distance)),
+                Setting::text("U", "Kopya aralığı", f.length(self.distance)),
                 Setting::choice(
                     "Y",
                     "Yön",

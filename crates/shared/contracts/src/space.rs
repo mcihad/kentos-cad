@@ -90,8 +90,14 @@ impl SpaceColumns {
     pub fn name(self) -> &'static str {
         match self { Self::Ignore => "ignore", Self::Net => "net", Self::All => "all" }
     }
+    /// The word a quantity rule says after “kolon alanı:”, frozen in the command answers. “Düşme” read as a fall,
+    /// not as “not deducted”; no answer held it (docs/adr/3003).
     pub fn label(self) -> &'static str {
-        match self { Self::Ignore => "Düşme", Self::Net => "Yalnız net", Self::All => "Her yöntemde" }
+        match self { Self::Ignore => "Düşülmez", Self::Net => "Yalnız net", Self::All => "Her yöntemde" }
+    }
+    /// The choice as a panel reads it alone, saying what happens to the column's area (docs/adr/3003).
+    pub fn choice(self) -> &'static str {
+        match self { Self::Ignore => "Düşülmez", Self::Net => "Yalnız netten düşülür", Self::All => "Her yöntemde düşülür" }
     }
 }
 

@@ -530,10 +530,10 @@ impl Tool for SlabTool {
         let mut p = Prompt::new("Döşeme", step)
             .option_with("Sınır", "S", if self.hole && self.bound == Bound::Outline { "Oda" } else { self.bound.label() })
             .option_with("Tür", "T", self.role.label())
-            .option_with("Kalınlık", "K", f.length(self.thickness))
+            .option_with("Kalınlık", "E", f.length(self.thickness))
             .option_with("Kot farkı", "F", f.length(self.offset))
             .option_with("Kenar ötelemesi", "Ö", f.length(self.edge_offset))
-            .option_with("Kenar", "E", self.edge.map_or("Yok", SlabEdgeKind::label))
+            .option_with("Kenar", "N", self.edge.map_or("Yok", SlabEdgeKind::label))
             .option_with("Kat", "L", self.level.label())
             .toggle("Metraj dışı", "X", self.excluded)
             .toggle("Delik", "D", self.hole)
@@ -603,7 +603,7 @@ impl Tool for SlabTool {
                     SlabRole::Terrace => SlabRole::Floor,
                 }
             }
-            "E" => {
+            "N" => {
                 self.edge = match self.edge {
                     None => Some(SlabEdgeKind::Railing),
                     Some(SlabEdgeKind::Railing) => Some(SlabEdgeKind::Parapet),
@@ -611,7 +611,8 @@ impl Tool for SlabTool {
                 };
                 self.edge_width = None;
             }
-            "K" => self.ask = Some(Ask::Thickness),
+            // Kalınlık is E in every Mimari tool (docs/adr/3003); Kenar moved to N.
+            "E" => self.ask = Some(Ask::Thickness),
             "F" => self.ask = Some(Ask::Offset),
             "Ö" => self.ask = Some(Ask::EdgeOffset),
             "W" if self.edge.is_some() => self.ask = Some(Ask::EdgeWidth),
@@ -638,7 +639,7 @@ impl Tool for SlabTool {
         match key {
             "S" => self.bound_choices(),
             "T" => self.role_choices(),
-            "E" => self.edge_choices(),
+            "N" => self.edge_choices(),
             "L" => self.level.setting().choices,
             _ => Vec::new(),
         }
@@ -649,10 +650,10 @@ impl Tool for SlabTool {
         let mut rows = vec![
             Setting::choice("S", "Sınır", self.bound_choices()),
             Setting::choice("T", "Tür", self.role_choices()),
-            Setting::text("K", "Kalınlık", f.length(self.thickness)),
+            Setting::text("E", "Kalınlık", f.length(self.thickness)),
             Setting::text("F", "Kot farkı", f.length(self.offset)),
             Setting::text("Ö", "Kenar ötelemesi", f.length(self.edge_offset)),
-            Setting::choice("E", "Kenar", self.edge_choices()),
+            Setting::choice("N", "Kenar", self.edge_choices()),
         ];
         if self.edge.is_some() {
             rows.push(Setting::text("W", "Kenar eni", f.length(self.edge_width())));
@@ -675,13 +676,13 @@ impl Tool for SlabTool {
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        if matches!(key, "S" | "T" | "E" | "L") {
+        if matches!(key, "S" | "T" | "N" | "L") {
             return self.choose_option(key, value, cx);
         }
         match key {
-            "K" | "F" | "Ö" | "W" => {
+            "E" | "F" | "Ö" | "W" => {
                 let ask = match key {
-                    "K" => Ask::Thickness,
+                    "E" => Ask::Thickness,
                     "F" => Ask::Offset,
                     "Ö" => Ask::EdgeOffset,
                     _ => Ask::EdgeWidth,
@@ -721,7 +722,7 @@ impl Tool for SlabTool {
                 };
                 self.role = r;
             }
-            "E" => {
+            "N" => {
                 self.edge = match typed {
                     "none" | "Yok" => None,
                     _ => match SlabEdgeKind::ALL.into_iter().find(|k| k.name() == typed || k.label() == typed) {

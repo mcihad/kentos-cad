@@ -447,7 +447,7 @@ impl Tool for MaterialLegend {
             return Prompt::new(LEGEND_LABEL, "yazının kâğıttaki yüksekliğini milimetre olarak yazın");
         }
         let prompt = Prompt::new(LEGEND_LABEL, "lejandın sol üst köşesini belirtin")
-            .option_with("Yükseklik", "H", format!("{} mm", js_number(self.height)));
+            .option_with("Yazı yüksekliği", "H", format!("{} mm", js_number(self.height)));
         if self.has { prompt.option("Yenile", "Y") } else { prompt }
     }
 
@@ -472,7 +472,8 @@ impl Tool for MaterialLegend {
     }
 
     fn settings(&self, _f: &Format) -> Vec<Setting> {
-        vec![Setting::text("H", "Yükseklik", format!("{} mm", js_number(self.height)))]
+        // Its text's height: Yükseklik alone is a building's, Y in the contract (docs/adr/3003).
+        vec![Setting::text("H", "Yazı yüksekliği", format!("{} mm", js_number(self.height)))]
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {

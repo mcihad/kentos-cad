@@ -33,9 +33,10 @@ enum Ask {
     Reference,
 }
 
-/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on.
-const ADOPT: &str = "Benimse";
-const DRAW: &str = "Çiz";
+/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on. Said plainly (docs/adr/3003):
+/// Benimse, “adopt” word for word, told the owner nothing.
+const ADOPT: &str = "Var olanı kullan";
+const DRAW: &str = "Ayrıca çiz";
 
 #[derive(Clone, Debug, Default)]
 pub struct WallRectangle {
@@ -370,7 +371,7 @@ impl Tool for WallRectangle {
                 .option("Köşeler", "K"),
             None => prompt.option("Boyutlar", "B"),
         };
-        prompt.option_with("Döndür", "D", short_degrees(self.rotation))
+        prompt.option_with("Açı", "D", short_degrees(self.rotation))
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.d.hover = Some(p.world);
@@ -387,7 +388,7 @@ impl Tool for WallRectangle {
     }
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
         if key == "O" {
-            return [(ADOPT, "benimse", false), (DRAW, "ciz", true)]
+            return [(ADOPT, "kullan", false), (DRAW, "çiz", true)]
                 .into_iter()
                 .map(|(label, typed, own)| OptionChoice {
                     label: label.to_owned(),
@@ -431,7 +432,7 @@ impl Tool for WallRectangle {
         ));
         rows.push(Setting::text(
             "B",
-            "Boylar",
+            "Boyutlar",
             self.size
                 .map(|(l, w)| format!("{},{}", format.length(l), format.length(w)))
                 .unwrap_or_default(),
@@ -483,14 +484,15 @@ impl Tool for WallRectangle {
             }
             "O" => {
                 let k = fold_tr(js_trim(typed));
-                if k == fold_tr(ADOPT) || k == "BENIMSE" {
+                // The old words still read: Benimse, Çiz.
+                if k == fold_tr(ADOPT) || k == "KULLAN" || k == "BENIMSE" {
                     self.own = false;
                     true
-                } else if k == fold_tr(DRAW) || k == "CIZ" {
+                } else if k == fold_tr(DRAW) || k == "CIZ" || k == "AYRICA CIZ" {
                     self.own = true;
                     true
                 } else {
-                    cx.say(Level::Warn, "Ortak duvar için Benimse ya da Çiz seçin.");
+                    cx.say(Level::Warn, "Ortak duvar için Var olanı kullan ya da Ayrıca çiz seçin.");
                     false
                 }
             }
@@ -546,7 +548,7 @@ impl Tool for WallRectangle {
         }
         let mut lines = vec![format!("Boy referansı: {}", self.reference.label())];
         if !self.adopted.is_empty() {
-            lines.push("Ortak duvar benimsenir".to_owned());
+            lines.push("Ortak duvar: var olan kullanılır".to_owned());
         }
         if self.ring.len() == 4 {
             let (length, width) = self.size.unwrap_or_else(|| {

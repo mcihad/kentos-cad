@@ -323,10 +323,12 @@ impl WallReference {
 
     pub fn label(self) -> &'static str {
         match self {
-            WallReference::Path => "Yol",
+            // Said as an architect says them (docs/adr/3003): the drawn line is the wall's taban çizgisi (as Duvar's
+            // description), a finish face its kaplama yüzü; “Yol” and “bitmiş yüz” were Path and Finish Face word for word.
+            WallReference::Path => "Taban çizgisi",
             WallReference::Center => "Eksen",
-            WallReference::LeftFace => "Sol bitmiş yüz",
-            WallReference::RightFace => "Sağ bitmiş yüz",
+            WallReference::LeftFace => "Sol kaplama yüzü",
+            WallReference::RightFace => "Sağ kaplama yüzü",
             WallReference::CoreLeft => "Sol çekirdek yüzü",
             WallReference::CoreRight => "Sağ çekirdek yüzü",
         }
