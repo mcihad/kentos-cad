@@ -110,7 +110,7 @@ impl App {
             Message::Dock,
             move |panel| {
                 let pane =
-                    Pane::new(panel.title(), move || self.panel_body(panel)).icon(panel.icon());
+                    Pane::new(self.panel_title(panel), move || self.panel_body(panel)).icon(panel.icon());
                 match (panel, &self.document) {
                     (Panel::Layers, Some(doc)) => {
                         pane.actions(self.layers_actions(doc.layer_count()))

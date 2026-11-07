@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `197`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-198.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `198`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-199.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -893,6 +893,15 @@ yüzeyin düzenlemesi varken seçer; 195 ve öncesi alanı `unknown_field` sayar
 yanında `platforms` da taşır (şema 159'un platform kuralları); başka bir yol parçası yine `bad_value`'dur. Yazıcı
 197'yi harita projesinde platform varken seçer; 196 ve öncesi bunu `bad_value` sayar
 (`broken/map-platforms-in-schema-196.kcad`). Örnek `map-platforms.json/.kcad`.
+
+**Şema 198** (ADR 1720; MAP-20): harita projesinin çizimleri. `cadWork: map` projesinin `road`'u yüzeyleri ve
+platformlarının yanında komutlarının onlardan yaptığı çizimleri de (`drawings`: eş yükselti eğrileri, planda platform,
+sıfır hattı; kaynaklarının damgalarıyla) ve eskiyenleri kendiliğinden yeniden üretme seçimini (`autoRebuild`) taşır;
+başka bir yol parçası yine `bad_value`'dur. Yazıcı 198'i harita
+projesinde çizim varken seçer; 197 ve öncesi bunu `bad_value` sayar (`broken/map-drawings-in-schema-197.kcad`). Sıfır
+hattı çizimi (`road.terrains.zeroline`, ADR 1620) de her projede 198'indir; 197 komutu tanımaz
+(`broken/zeroline-drawing-in-schema-197.kcad`). Örnek
+`map-drawings.json/.kcad`.
 
 **Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
 `decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri

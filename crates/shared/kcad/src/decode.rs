@@ -1811,13 +1811,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     // are written there too, and nothing else of a road (docs/adr/1520).
     if let Some(v) = &road {
         let map = cad_work == Some(CadWork::Map) && has.map_surfaces;
-        // Since schema 197 a map project's graded pads too (docs/adr/1580).
-        let fits = if has.map_platforms { v.map_part_only() } else { v.surfaces_only() };
+        // Since schema 197 a map project's graded pads too (docs/adr/1580); since 198 its drawings (docs/adr/1720).
+        let fits = if has.map_drawings {
+            v.map_drawn_only()
+        } else if has.map_platforms {
+            v.map_part_only()
+        } else {
+            v.surfaces_only()
+        };
+        // A zero line's drawing (docs/adr/1720) is schema 198's, in any project.
+        if !has.map_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.zeroline") {
+            return Err(relation("road", "sıfır hattı çizimi şema 198'den önce yazılmaz (road.terrains.zeroline)", r));
+        }
         if cad_work != Some(CadWork::Road) && !(map && fits) {
             return Err(relation(
                 "road",
                 if map {
-                    "harita projesinde yol ayarlarından yalnız arazi yüzeyleri ve platformlar yazılır (cadWork map)"
+                    "harita projesinde yol ayarlarından yalnız arazi yüzeyleri, platformlar ve onlardan yapılan çizimler yazılır (cadWork map)"
                 } else {
                     "yol ayarları yalnız yol projesinin olur (cadWork road); arazi yüzeyleri harita projesinin de olur (şema 195)"
                 },

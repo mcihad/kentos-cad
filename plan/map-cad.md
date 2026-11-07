@@ -1102,6 +1102,14 @@ veri/izin değişirken sonucu yazmayı dene, yeniden açıp aynı tariften üret
 Bir yüzey noktası değiştiğinde hangi profil/hacim/paftanın yeniden
 hesaplanması gerektiği görülsün; güncel olmayan çıktı başarıyla teslim edilmesin.
 
+**7 Kasım 2026 — Harita projesinde proje ağacı ve yeniden üretim ([ADR 1720](../docs/adr/1720-map-project-tree-and-rebuild.md)).**
+Kapsam: **Harita + Yol**. Kanıtlanan: `.kcad` şema 198 (Harita'nın çizim kayıtları ve kendiliğinden yeniden üretme;
+sıfır hattı çizimi her projede) Harita'da planda platform çizildikten sonra kaydedilemeyen projeyi düzeltir; sıfır hattı
+iki yüzeyinin damgasıyla tutulur; `road.project.query/rebuild/edit` Harita'yı kabul eder: bir yüzey kotu değişince
+sıfır hattı “güncel değil” görünür, yeniden üretilir ya da açıksa aynı adımda kendiliğinden üretilir; masaüstünde
+“Proje ağacı” paneli. Açık: eskimiş çizimi gösteren paftanın teslimi durdurması, profil/hacim/pafta zincirinin tek
+görünüşü, iş grafiği, iptal ve GUI/Python/MCP eşdeğerliği.
+
 ## Uygulama sırası ve sahiplik
 
 Ana madde sayısı 20'dir; aşağıdaki sıra yeni madde veya yeni tamamlanma

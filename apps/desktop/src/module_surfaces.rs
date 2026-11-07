@@ -244,6 +244,8 @@ const MAP: Surfaces = Surfaces {
         Panel::Sources,
         Panel::MapWork,
         Panel::MapSurvey,
+        // A map project's tree (docs/adr/1720): its surfaces, pads and what was drawn from them, stale or current.
+        Panel::RoadProject,
         Panel::Properties,
     ],
     cells: &[Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap],

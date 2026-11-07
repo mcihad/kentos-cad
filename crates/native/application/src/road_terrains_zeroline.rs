@@ -132,7 +132,14 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsZeroLine) -> CommandResul
     }
 }
 
-/// Writes the lines, one undo step “Sıfır hattı”.
+/// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
+/// docs/adr/0911 §3, 1720).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &TerrainsZeroLine) -> CommandResult<TerrainsZeroLined> {
+    write(cx, input.clone())
+}
+
+/// Writes the lines, one undo step “Sıfır hattı”, and keeps the drawing with both surfaces' stamps (docs/adr/1720): the
+/// project's tree says when a surface changed since, and `road.project.rebuild` draws it again.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsZeroLine) -> CommandResult<TerrainsZeroLined> {
     crate::call::recorded(
         cx,
@@ -140,23 +147,35 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsZeroLine) -> Comman
         kentos_commands::ROAD_TERRAINS_ZEROLINE_VERSION,
         input,
         |cx, input| {
-            let c = match check(cx.doc, &input) {
-                Ok(c) => c,
-                Err(stop) => return stop.into(),
-            };
-            let create = EntitiesCreate {
-                layer_id: input.layer_id.clone(),
-                objects: objects(&c.out.lines),
-                operation: Some(CreateOperation::TerrainZeroLine),
-                expected_revision: None,
-            };
-            match crate::create::write_in(cx, create) {
-                CommandResult::Completed { output, warnings } => CommandResult::Completed {
-                    output: TerrainsZeroLined { uids: output.created, revision: output.revision, ..c.out },
-                    warnings,
-                },
-                other => crate::trim::relay(other),
-            }
+            let r = write(cx, input.clone());
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_TERRAINS_ZEROLINE,
+                &input,
+                (kentos_commands::RoadSourceKind::Surface, "base"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
+}
+
+fn write(cx: &mut ExecutionContext<'_>, input: TerrainsZeroLine) -> CommandResult<TerrainsZeroLined> {
+    let c = match check(cx.doc, &input) {
+        Ok(c) => c,
+        Err(stop) => return stop.into(),
+    };
+    let create = EntitiesCreate {
+        layer_id: input.layer_id.clone(),
+        objects: objects(&c.out.lines),
+        operation: Some(CreateOperation::TerrainZeroLine),
+        expected_revision: None,
+    };
+    match crate::create::write_in(cx, create) {
+        CommandResult::Completed { output, warnings } => CommandResult::Completed {
+            output: TerrainsZeroLined { uids: output.created, revision: output.revision, ..c.out },
+            warnings,
+        },
+        other => crate::trim::relay(other),
+    }
 }

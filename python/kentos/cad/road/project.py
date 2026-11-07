@@ -144,7 +144,10 @@ class _RoadProjectQuery(LocalCommand[RoadProjectQuery, RoadProjectTree, RoadProj
     missing, edited, gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri
     değişince stale, nesnelerinden biri silinince missing, elle değişince edited, ana
     kaynağı silinince gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları
-    ve Brükner'leri hesaplar. Retler: not_a_road_project.
+    ve Brükner'leri hesaplar. Harita projesinde de (ADR 1720): yüzeyleri, platformları
+    ve onlardan çizilenler (eş yükselti, planda platform, sıfır hattı; sıfır hattı iki
+    yüzeyinin değişimini izler). Retler: not_a_road_project (yol ve harita projesi
+    değil).
     """
     __slots__ = ()
     id = "road.project.query"
@@ -173,7 +176,9 @@ class _RoadProjectQuery(LocalCommand[RoadProjectQuery, RoadProjectTree, RoadProj
         gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri değişince stale,
         nesnelerinden biri silinince missing, elle değişince edited, ana kaynağı silinince
         gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları ve Brükner'leri
-        hesaplar. Retler: not_a_road_project.
+        hesaplar. Harita projesinde de (ADR 1720): yüzeyleri, platformları ve onlardan
+        çizilenler (eş yükselti, planda platform, sıfır hattı; sıfır hattı iki yüzeyinin
+        değişimini izler). Retler: not_a_road_project (yol ve harita projesi değil).
 
         Args:
             doc: The drawing it works on.
@@ -247,16 +252,16 @@ query = _RoadProjectQuery()
 
 
 class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, RoadProjectRebuilt]):
-    """``road.project.rebuild`` v1. Yol çizimlerini yeniden üret: Yol komutlarının
-    çizimlerini çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı
-    katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri
-    alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün
-    çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla
-    verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri
-    silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak
-    çizilmiyor) bütün yazmayı geri alır. Retler: invalid_revision, revision_conflict,
-    not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim
-    komutlarının retleri.
+    """``road.project.rebuild`` v1. Yol çizimlerini yeniden üret: Yol ve harita projesinde
+    (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle
+    yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak
+    damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings
+    verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı
+    silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited
+    ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman
+    yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
+    drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.rebuild"
@@ -278,15 +283,16 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadProjectRebuilt:
-        """Yol çizimlerini yeniden üret: Yol komutlarının çizimlerini çizildikleri girdiyle
-        yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak
-        damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings
-        verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı
-        silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited
-        ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman
-        yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. Retler:
-        invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
-        drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
+        """Yol çizimlerini yeniden üret: Yol ve harita projesinde (ADR 1720) yol komutlarının
+        çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri
+        silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri
+        yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve
+        nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te
+        nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden
+        üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da
+        kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. Retler: invalid_revision,
+        revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone,
+        drawing_edited ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.

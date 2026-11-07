@@ -833,11 +833,13 @@ pub const SCHEMA_WITH_MAP_SURFACES: u32 = 195;
 pub const SCHEMA_WITH_SURFACE_EDITS: u32 = 196;
 /// Schema 197 (docs/adr/1580): a map project's graded pads (`settings.road.platforms`).
 pub const SCHEMA_WITH_MAP_PLATFORMS: u32 = 197;
+/// Schema 198 (docs/adr/1720): what a map project's commands drew from its surfaces and pads (`settings.road.drawings`).
+pub const SCHEMA_WITH_MAP_DRAWINGS: u32 = 198;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 195] = [
+pub const SCHEMAS: [u32; 196] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1033,6 +1035,7 @@ pub const SCHEMAS: [u32; 195] = [
     SCHEMA_WITH_MAP_SURFACES,
     SCHEMA_WITH_SURFACE_EDITS,
     SCHEMA_WITH_MAP_PLATFORMS,
+    SCHEMA_WITH_MAP_DRAWINGS,
 ];
 
 /// The file a drawing is saved as.

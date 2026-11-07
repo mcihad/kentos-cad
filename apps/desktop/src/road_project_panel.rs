@@ -140,6 +140,16 @@ fn key_of(n: &RoadNode) -> String {
 }
 
 impl App {
+    /// A dock pane's title: the road project's tree is “Proje ağacı” in KentOS Harita (its surfaces and what was drawn
+    /// from them, docs/adr/1720), “Yol projesi” elsewhere.
+    pub(crate) fn panel_title(&self, panel: crate::app::Panel) -> &'static str {
+        if panel == crate::app::Panel::RoadProject && self.program == Some(kentos_launch::Module::Map) {
+            "Proje ağacı"
+        } else {
+            panel.title()
+        }
+    }
+
     /// The tree as the drawing is now, read again when its revision or the depth changed.
     pub(crate) fn road_project_read(&self) -> Option<Result<RoadProjectTree, String>> {
         let doc = self.document.as_ref()?;
@@ -267,7 +277,11 @@ impl App {
             .filter(self.road_project.filter, |f| msg(Event::Filter(f)))
             .bulk(icon(Icon::Redo).size(13.0), "Hepsini yeniden üret", tree.rebuildable as usize, rebuild)
             .counted("Güncel değil", "Sorun")
-            .empty("Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun.");
+            .empty(if self.program == Some(kentos_launch::Module::Map) {
+                "Projede yüzey yok: Arazi sekmesinden yüzey oluşturun; ondan çizilen eş yükselti, platform ve sıfır hattı burada görünür."
+            } else {
+                "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun."
+            });
         column![options, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()
     }
 }

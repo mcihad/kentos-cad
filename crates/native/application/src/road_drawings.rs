@@ -161,6 +161,7 @@ pub(crate) fn main_of(command: &str) -> Option<(RoadSourceKind, &'static str)> {
         "road.junctions.draw" => (K::Junction, "junction"),
         "road.platforms.draw" => (K::Platform, "platform"),
         "road.terrains.contours" => (K::Surface, "surface"),
+        "road.terrains.zeroline" => (K::Surface, "base"),
         _ => return None,
     })
 }
@@ -244,6 +245,14 @@ pub(crate) fn keep<I: Serialize>(
                 && let Some(id) = dever.and_then(|t| resolve(doc, RoadSourceKind::Superelevation, &t))
             {
                 add(doc, RoadSourceKind::Superelevation, &id, &mut all);
+            }
+            // Docs/adr/1720: a zero line follows the comparison surface as well as its base.
+            let comparison =
+                serde_json::to_value(input).ok().and_then(|v| v.get("comparison").and_then(Value::as_str).map(str::to_owned));
+            if command == "road.terrains.zeroline"
+                && let Some(id) = comparison.and_then(|t| resolve(doc, RoadSourceKind::Surface, &t))
+            {
+                add(doc, RoadSourceKind::Surface, &id, &mut all);
             }
             all
         },

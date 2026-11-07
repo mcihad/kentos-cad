@@ -2174,10 +2174,12 @@ class _RoadTerrainsZeroline(LocalCommand[TerrainsZeroLine, TerrainsZeroLined, Te
     sayılır); parçalar uçlarından birleştirilir (10⁻⁹ m), üç ya da daha çok parçanın
     buluştuğu köşe çizgileri ayırır; komşularıyla doğrudaş köşe (10⁻¹² oranında) atılır.
     Her çizgi en küçük yerinden (x, sonra y) başlar ve buna göre sıralıdır. İki yüzeyin
-    çakıştığı alan (coincident) çizilmez, söylenir. Harita ve Yol projelerinde. Tek geri
-    alma adımı “Sıfır hattı”. Retler: not_a_road_project, layer_not_found, not_a_layer,
-    layer_locked, invalid_revision, revision_conflict, unknown_terrain,
-    invalid_analysis, terrain_unbuildable, no_zero_line.
+    çakıştığı alan (coincident) çizilmez, söylenir. Çizim projenin ağacında iki yüzeyin
+    damgasıyla tutulur (ADR 1720): yüzeylerden biri değişince eskir,
+    road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Harita ve Yol
+    projelerinde. Tek geri alma adımı “Sıfır hattı”. Retler: not_a_road_project,
+    layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
+    unknown_terrain, invalid_analysis, terrain_unbuildable, no_zero_line.
     """
     __slots__ = ()
     id = "road.terrains.zeroline"
@@ -2208,10 +2210,12 @@ class _RoadTerrainsZeroline(LocalCommand[TerrainsZeroLine, TerrainsZeroLined, Te
         birleştirilir (10⁻⁹ m), üç ya da daha çok parçanın buluştuğu köşe çizgileri ayırır;
         komşularıyla doğrudaş köşe (10⁻¹² oranında) atılır. Her çizgi en küçük yerinden (x,
         sonra y) başlar ve buna göre sıralıdır. İki yüzeyin çakıştığı alan (coincident)
-        çizilmez, söylenir. Harita ve Yol projelerinde. Tek geri alma adımı “Sıfır hattı”.
-        Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
-        invalid_revision, revision_conflict, unknown_terrain, invalid_analysis,
-        terrain_unbuildable, no_zero_line.
+        çizilmez, söylenir. Çizim projenin ağacında iki yüzeyin damgasıyla tutulur (ADR
+        1720): yüzeylerden biri değişince eskir, road.project.rebuild (ya da açıksa
+        kendiliğinden) yeniden üretir. Harita ve Yol projelerinde. Tek geri alma adımı
+        “Sıfır hattı”. Retler: not_a_road_project, layer_not_found, not_a_layer,
+        layer_locked, invalid_revision, revision_conflict, unknown_terrain,
+        invalid_analysis, terrain_unbuildable, no_zero_line.
 
         Args:
             doc: The drawing it works on.

@@ -100,3 +100,76 @@ fn screens() {
         }
     }
 }
+
+/// A KentOS Harita project (docs/adr/1720): road_terrain_zeroline_cases.py's map project, the zero line of Tümsek over
+/// Düz drawn, then one of Tümsek's heights set (an edit of its surface): Proje ağacı shows the zero line stale under
+/// its base, Hepsini yeniden üret draws it again, and the drawing saves (`.kcad` schema 198).
+fn map_app() -> App {
+    let (mut app, _) = App::boot(None);
+    app.program = Some(kentos_launch::Module::Map);
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.zeroline.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["setup"]["settings"]["cadWork"] == "map").expect("a map case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::program_scenes::command(&mut app, "road.terrains.zeroline", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}));
+    let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
+                         "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
+    crate::program_scenes::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
+    app
+}
+
+#[test]
+fn a_map_project_s_tree_shows_its_zero_line_stale_and_draws_it_again() {
+    let mut app = map_app();
+    assert_eq!(app.panel_title(Panel::RoadProject), "Proje ağacı");
+    assert!(app.shows_panel(Panel::RoadProject), "Harita has the tree");
+    let t = tree(&app);
+    let zero = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zero line");
+    assert_eq!(zero.state, S::Stale, "{zero:?}");
+    assert_eq!(zero.why, ["“Tümsek” yüzeyi çizildiğinden beri değişti."]);
+    send(&mut app, P::Rebuild(None, false));
+    let t = tree(&app);
+    assert!(t.nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
+    let doc = app.document.as_ref().expect("a drawing");
+    let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2());
+    assert!(bytes.is_ok(), "a map project with its drawings saves: {:?}", bytes.err());
+}
+
+/// `.run/gui-evidence/harita-proje-agaci-1720/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_project_panel_tests::map_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn map_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/harita-proje-agaci-1720");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = map_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks.close(Panel::Properties);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let _ = app.update(Message::RibbonTab("terrain"));
+        shot(&mut app, "1-sifir-hatti-eskidi");
+        send(&mut app, P::Rebuild(None, false));
+        shot(&mut app, "2-yeniden-uretildi");
+    }
+}

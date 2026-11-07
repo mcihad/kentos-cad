@@ -24,6 +24,7 @@ pub(crate) fn drawing_words(command: &str) -> &'static str {
         "road.walls.draw" => "Duvar çizimi",
         "road.junctions.draw" => "Kavşak çizimi",
         "road.terrains.contours" => "Eş yükselti eğrileri",
+        "road.terrains.zeroline" => "Sıfır hattı",
         _ => "Yol çizimi",
     }
 }
@@ -371,12 +372,13 @@ impl Tree<'_> {
     }
 }
 
-/// Refuses a drawing that is not a road project's.
+/// Refuses a drawing that is neither a road project's nor a map project's: a map project's tree holds its surfaces,
+/// pads and what was drawn from them (docs/adr/1720).
 pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
-    if doc.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+    if !matches!(doc.settings().cad_work, Some(kentos_commands::CadWork::Road | kentos_commands::CadWork::Map)) {
         return Err(crate::road_terrains::fail(
             crate::codes::NOT_A_ROAD_PROJECT,
-            "Proje ağacı yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "Proje ağacı yol ve harita projesinde (KentOS Yol, KentOS Harita) olur; bu çizim ikisinden biri değil.".into(),
             "",
         ));
     }

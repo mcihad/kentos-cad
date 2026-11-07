@@ -295,6 +295,8 @@ pub(super) struct Features {
     pub(super) surface_edits: bool,
     /// Schema 197 (docs/adr/1580): a map project's graded pads.
     pub(super) map_platforms: bool,
+    /// Schema 198 (docs/adr/1720): a map project's drawings kept with their sources' stamps.
+    pub(super) map_drawings: bool,
     /// Schema 190 (docs/adr/1129): the accepted standards findings.
     pub(super) standard_exceptions: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
@@ -612,6 +614,7 @@ impl Features {
             map_surfaces: schema >= crate::SCHEMA_WITH_MAP_SURFACES,
             surface_edits: schema >= crate::SCHEMA_WITH_SURFACE_EDITS,
             map_platforms: schema >= crate::SCHEMA_WITH_MAP_PLATFORMS,
+            map_drawings: schema >= crate::SCHEMA_WITH_MAP_DRAWINGS,
             standard_exceptions: schema >= crate::SCHEMA_WITH_STANDARD_EXCEPTIONS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,

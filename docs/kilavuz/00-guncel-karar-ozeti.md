@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Harita'da proje ağacı (7 Kasım 2026; MAP-20, [ADR 1720](../../docs/adr/1720-map-project-tree-and-rebuild.md)).**
+  `.kcad` şema 198 (Harita'nın `road.drawings`/`autoRebuild`, sıfır hattı çizimi); `road.project.*` Harita'yı kabul
+  eder; sıfır hattı iki yüzeyin damgasıyla tutulur.
 - **Uygulama kontrolü (7 Kasım 2026; MAP-19, [ADR 1700](../../docs/adr/1700-asbuilt-check.md)).** `cad.asbuilt.check`
   salt okunur: ölçülen ↔ tasarım noktası/yüzeyi/çizgisi; sınırlar kullanıcının; `designDigest`/`designChanged`; ret
   `invalid_asbuilt_check`.

@@ -131,7 +131,7 @@ pub struct RoadSettings {
 }
 
 /// The road commands that draw (docs/adr/0911 §1): what a drawing's `command` is.
-pub const ROAD_DRAWING_COMMANDS: [&str; 10] = [
+pub const ROAD_DRAWING_COMMANDS: [&str; 11] = [
     "road.alignments.label",
     "road.profiles.draw",
     "road.sections.draw",
@@ -142,6 +142,8 @@ pub const ROAD_DRAWING_COMMANDS: [&str; 10] = [
     "road.junctions.draw",
     "road.platforms.draw",
     "road.terrains.contours",
+    // A zero line between two surfaces (docs/adr/1620), kept since `.kcad` schema 198 (docs/adr/1720).
+    "road.terrains.zeroline",
 ];
 /// The most drawings a project keeps, sources a drawing names and objects it holds.
 pub const MAX_ROAD_DRAWINGS: usize = 1000;
@@ -253,6 +255,15 @@ impl RoadSettings {
     /// docs/adr/1580).
     pub fn map_part_only(&self) -> bool {
         Self { surfaces: Vec::new(), platforms: Vec::new(), ..self.clone() }.is_empty()
+    }
+
+    /// Whether it holds only what a map project may since `.kcad` schema 198 (docs/adr/1720): terrain surfaces,
+    /// graded pads, what the commands drew from them (`drawings`: contours, a pad in plan, a zero line) and whether the
+    /// stale ones are drawn again by themselves (`autoRebuild`), so that a map project's drawing knows when its sources
+    /// changed.
+    pub fn map_drawn_only(&self) -> bool {
+        Self { surfaces: Vec::new(), platforms: Vec::new(), drawings: Vec::new(), auto_rebuild: false, ..self.clone() }
+            .is_empty()
     }
 
     pub fn is_empty(&self) -> bool {

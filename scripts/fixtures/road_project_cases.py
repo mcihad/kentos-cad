@@ -35,18 +35,20 @@ import road_section_command_cases as scmd  # noqa: E402
 import road_terrain_command_cases as tc  # noqa: E402
 import road_volume_command_cases as vc  # noqa: E402
 import road_wall_cases as wv  # noqa: E402
+import road_terrain_zeroline_cases as zc  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
 completed, failed, step, case = ccmd.completed, ccmd.failed, ccmd.step, ccmd.case
 UNCHANGED = ccmd.UNCHANGED
-NOT_ROAD = failed("not_a_road_project", "Proje ağacı yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.")
+NOT_ROAD = failed("not_a_road_project", "Proje ağacı yol ve harita projesinde (KentOS Yol, KentOS Harita) olur; bu çizim "
+                                       "ikisinden biri değil.")
 ANY = {"status": "completed", "output": "$any", "warnings": "$any"}
 
 WORDS = {"road.alignments.label": "Km yazıları", "road.profiles.draw": "Boykesit çizimi",
          "road.sections.draw": "Enkesit çizimi", "road.corridors.draw": "Şevli plan",
          "road.guardrails.draw": "Korkuluk çizimi", "road.culverts.draw": "Menfez çizimi",
          "road.walls.draw": "Duvar çizimi", "road.junctions.draw": "Kavşak çizimi",
-         "road.terrains.contours": "Eş yükselti eğrileri"}
+         "road.terrains.contours": "Eş yükselti eğrileri", "road.terrains.zeroline": "Sıfır hattı"}
 KIND_WORDS = {"surface": "yüzey", "alignment": "aks", "profile": "boykesit", "template": "tip kesit",
               "sections": "kesit takımı", "superelevation": "dever", "corridor": "koridor", "guardrail": "otokorkuluk",
               "culvert": "menfez", "wall": "istinat duvarı", "junction": "kavşak"}
@@ -61,7 +63,7 @@ MAIN = {"road.alignments.label": ("alignment", "alignment"), "road.profiles.draw
         "road.sections.draw": ("sections", "set"), "road.corridors.draw": ("corridor", "corridor"),
         "road.guardrails.draw": ("guardrail", "guardrail"), "road.culverts.draw": ("culvert", "culvert"),
         "road.walls.draw": ("wall", "wall"), "road.junctions.draw": ("junction", "junction"),
-        "road.terrains.contours": ("surface", "surface")}
+        "road.terrains.contours": ("surface", "surface"), "road.terrains.zeroline": ("surface", "base")}
 
 
 def base(work="road", road=None):
@@ -164,13 +166,21 @@ class State:
         x = next((x for x in xs if x["id"] == text), None) or next((x for x in xs if x["name"].lower() == text.lower()), None)
         return x["id"]
 
+    def drawing_sources(self, command, input_):
+        """A drawing's sources: its main source's closure; a zero line's comparison surface too (ADR 1720)."""
+        kind, field = MAIN[command]
+        out = self.sources(kind, self.resolve(kind, input_[field]))
+        if command == "road.terrains.zeroline":
+            self.sources("surface", self.resolve("surface", input_["comparison"]), out)
+        return out
+
     def draw(self, command, input_, n):
         kind, field = MAIN[command]
         main = self.resolve(kind, input_[field])
         ids = [d["id"] for d in self.drawings]
         did = next(f"cz-{k}" for k in range(1, 10000) if f"cz-{k}" not in ids)
         self.drawings.append({"id": did, "command": command, "main": (kind, main), "layer": input_["layerId"],
-                              "sources": self.sources(kind, main), "n": n, "present": n, "edited": False})
+                              "sources": self.drawing_sources(command, input_), "n": n, "present": n, "edited": False})
         for k in range(n):
             self.setup["entities"].append({"kind": "point", "id": len(self.setup["entities"]) + 1, "layerId": input_["layerId"],
                                            "attrs": {}, "p": {"x": 0.0, "y": 0.0}})
@@ -372,6 +382,10 @@ def count(st, command, input_):
         return pcmd.drawing(find("profiles", input_["profile"]), tuple(input_["at"]))[1]
     if command == "road.sections.draw":
         return scmd.drawing(find("sections", input_["set"]), tuple(input_["at"]))[1]
+    if command == "road.terrains.zeroline":
+        # The zero lines of the two lattices (road_terrain_zeroline_cases.py's reference).
+        b, c = (st.resolve("surface", input_[f]) for f in ("base", "comparison"))
+        return len(zc.zero_lines(b, c)[0])
     raise ValueError(command)
 
 
@@ -411,8 +425,7 @@ def rebuild(st, d):
     command, input_ = INPUTS[(id(st), d["id"])]
     removed = d["present"]
     n = count(st, command, input_)
-    kind, main = d["main"]
-    d.update(sources=st.sources(kind, main), n=n, present=n, edited=False)
+    d.update(sources=st.drawing_sources(command, input_), n=n, present=n, edited=False)
     return {"drawing": d["id"], "command": command, "removed": removed, "uids": "$any"}, warns(st, command, input_)
 
 
@@ -434,6 +447,28 @@ def asked(st, deep=False):
     """The tree asked; it writes nothing (after steps that did, only the revision is said to stay)."""
     input_ = {"deep": True} if deep else {}
     return {**step("execute", input_, completed(tree(st, deep)), UNCHANGED), "command": "road.project.query"}
+
+
+# ── A map project (docs/adr/1720) ──────────────────────────────────────────────────────────────────────────────────
+ZEROLINE = ("road.terrains.zeroline", {"layerId": "sifir", "base": "Düz", "comparison": "Tümsek"})
+
+
+def map_setup(auto=False):
+    """road_terrain_zeroline_cases.py's map project (its lattices); `auto`: drawing again by itself on."""
+    s = zc.setup("map")
+    if auto:
+        s["settings"]["road"]["autoRebuild"] = True
+    return s
+
+
+def changed_height(st, warnings=()):
+    """The mound's corner (FX, 0) set lower (119.4 → 119.0, still under the plane: the zero line stays) by an edit of
+    its surface: the mound's stamp changes."""
+    t = st.find("surface", "t-10")
+    t["edits"] = [{"op": "setHeight", "x": zc.FX, "y": 0.0, "z": 119.0}]
+    return {**step("execute", {"operation": "set", "surface": copy.deepcopy(t)},
+                   {"status": "completed", "output": "$any", "warnings": list(warnings)}),
+            "command": "road.terrains.edit"}
 
 
 def cases():
@@ -525,7 +560,16 @@ def cases():
     approved["approved"]["cut"] += 100.0
     vols[0] = approved
     add("Derin: onaylı kübajın kaynakları değişti", [asked(State(s5), deep=True)], s5)
-    add("Yol projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], base(work="map"))
+    add("Yol ve harita projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], base(work="architecture"))
+    # A map project's tree (docs/adr/1720): its surfaces and the zero line drawn from two of them.
+    sm = map_setup()
+    st = State(sm)
+    a = drawn(st, ZEROLINE)
+    add("Harita projesi: yüzeyler ve sıfır hattı çizimi", [a, asked(st)], sm)
+    st = State(sm)
+    a = drawn(st, ZEROLINE)
+    b = changed_height(st)
+    add("Harita projesi: tümseğin bir kotu değişince sıfır hattı eskir", [a, b, asked(st)], sm)
     return out
 
 
@@ -673,7 +717,13 @@ def rebuild_cases():
     add("Beklenen revizyon tutmuyor", [step("execute", {"expectedRevision": "99"}, ccmd.CONFLICT,
                                             UNCHANGED)])
     add("Revizyon sayı değil", [step("execute", {"expectedRevision": "on"}, ccmd.BAD_REVISION, UNCHANGED)])
-    add("Yol projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], base(work="map"))
+    add("Yol ve harita projesi değil", [step("execute", {}, NOT_ROAD, UNCHANGED)], base(work="architecture"))
+    # A map project's stale zero line drawn again (docs/adr/1720).
+    sm = map_setup()
+    st = State(sm)
+    a = drawn(st, ZEROLINE)
+    b = changed_height(st)
+    add("Harita projesi: eskiyen sıfır hattı yeniden üretilir", [a, b, rebuilt(st, {}), {**asked(st), "expect": {"revision": "same"}}], sm)
     return out
 
 
@@ -703,7 +753,7 @@ def edit_cases():
                          "expect": {"canUndo": False, "canRedo": True, "road": s0["settings"]["road"]}}])
     add("Beklenen revizyon tutmuyor", [step("execute", {"autoRebuild": True, "expectedRevision": "99"}, ccmd.CONFLICT, UNCHANGED)])
     add("Revizyon sayı değil", [step("execute", {"autoRebuild": True, "expectedRevision": "on"}, ccmd.BAD_REVISION, UNCHANGED)])
-    add("Yol projesi değil", [step("execute", {"autoRebuild": True}, NOT_ROAD, UNCHANGED)], base(work="map"))
+    add("Yol ve harita projesi değil", [step("execute", {"autoRebuild": True}, NOT_ROAD, UNCHANGED)], base(work="architecture"))
 
     def rebuilt_by_itself(st, names):
         return [{"code": "drawings_rebuilt", "message": f"Eskiyen yol çizimleri kendiliğinden yeniden üretildi: {', '.join(names)}."}]
@@ -778,6 +828,18 @@ def edit_cases():
     b = {**step("execute", {"junction": "j-1", "operation": "remove"}, {"status": "completed", "output": "$any", "warnings": []}),
          "command": "road.junctions.edit"}
     add("Açıkken kaynağı silinen çizim kalır, yeniden üretilmez", [a, b, {**asked(st), "expect": {"revision": "same"}}], on)
+    # A map project draws its stale zero line again by itself (docs/adr/1720).
+    sm = map_setup(auto=True)
+    st = State(sm)
+    a = drawn(st, ZEROLINE)
+    t = st.find("surface", "t-10")
+    t["edits"] = [{"op": "setHeight", "x": zc.FX, "y": 0.0, "z": 119.0}]
+    rebuild(st, st.drawings[0])
+    b = {**step("execute", {"operation": "set", "surface": copy.deepcopy(t)},
+                {"status": "completed", "output": "$any", "warnings": rebuilt_by_itself(st, ["cz-1"])}),
+         "command": "road.terrains.edit"}
+    add("Harita projesinde açıkken yüzey değişince sıfır hattı aynı adımda yeniden üretilir",
+        [a, b, {**asked(st), "expect": {"revision": "same"}}], sm)
     return out
 
 

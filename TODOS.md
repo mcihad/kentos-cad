@@ -72,6 +72,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-13 / ADR 1500: `cad.pointclouds.overlap`'in web işleyicisi ve Tarama uyumu penceresi.
 - Şerit (7 Kasım 2026, DESIGN.md §7.3.1): web'in `Ribbon.fit`'inde yalnız ikon basamağının kaldırılması; panel
   sığmazsa adıyla katlanır, şeritte başlıksız düğme kalmaz.
+- MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının
+  Harita'yı kabul etmesi.
 - MAP-19 / ADR 1700: `cad.asbuilt.check`'in web işleyicisi ve Uygulama kontrolü penceresi.
 - MAP-18 / ADR 1680: web'in pafta girdilerinde (`ProjectInfo`) koordinat bilgisi ve baskı denetiminde `crs_text_mismatch`.
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.

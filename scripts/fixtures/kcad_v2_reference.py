@@ -2512,6 +2512,11 @@ def document(d):
     if d["settings"].get("cadWork") == "map" and d["settings"].get("road", {}).get("platforms"):
         # A map project's graded pads (docs/adr/1580).
         schema = max(schema, 197)
+    if any(x.get("command") == "road.terrains.zeroline" for x in d["settings"].get("road", {}).get("drawings", [])) or (
+            d["settings"].get("cadWork") == "map" and (d["settings"].get("road", {}).get("drawings")
+                                                       or d["settings"].get("road", {}).get("autoRebuild"))):
+        # A map project's drawings kept with their sources' stamps, and its drawing them again (docs/adr/1720).
+        schema = max(schema, 198)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3470,7 +3475,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-198.kcad"] = container(root(cmap(parts), version=uint(198)))
+    files["schema-version-199.kcad"] = container(root(cmap(parts), version=uint(199)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5816,6 +5821,20 @@ def build():
     out["map-platforms.kcad"] = container(padded)
     out["broken/map-platforms-in-schema-196.kcad"] = container(
         padded.replace(b"\x67version\x18\xc5", b"\x67version\x18\xc4"))
+    # Schema 198 (docs/adr/1720): what a map project's commands drew from its surfaces and pads, kept with their
+    # sources' stamps; schema 197 refuses them there.
+    drawn = document(load("map-drawings.json"))
+    assert drawn.count(b"\x67version\x18\xc6") == 1, "a map's drawings are schema 198"
+    out["map-drawings.kcad"] = container(drawn)
+    out["broken/map-drawings-in-schema-197.kcad"] = container(
+        drawn.replace(b"\x67version\x18\xc6", b"\x67version\x18\xc5"))
+    # A zero line's drawing in a road project is schema 198's too; 197 does not know its command.
+    zeroed = load("road-work.json")
+    zeroed["settings"]["road"]["drawings"].append(copy.deepcopy(load("map-drawings.json")["settings"]["road"]["drawings"][1]))
+    zeroed_data = document(zeroed)
+    assert zeroed_data.count(b"\x67version\x18\xc6") == 1, "a zero line's drawing is schema 198"
+    out["broken/zeroline-drawing-in-schema-197.kcad"] = container(
+        zeroed_data.replace(b"\x67version\x18\xc6", b"\x67version\x18\xc5"))
     # Schema 196 (docs/adr/1560): a surface's edits (a point added, a height set, an edge put in, a triangle taken
     # out); schema 195 refuses them, and an edge with both ends at one place is refused.
     edited = load("surface-edits.json")
@@ -6170,8 +6189,8 @@ def build():
     mp = load("road-work.json")
     mp["settings"]["cadWork"] = "map"
     mpd = document(mp)
-    assert mpd.count(b"\x67version\x18\xc5") == 1, "a map project with a road's pads is written as 197 (docs/adr/1580)"
-    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\xc5", b"\x67version\x18\xa2"))
+    assert mpd.count(b"\x67version\x18\xc6") == 1, "a map project with a road's drawings is written as 198 (docs/adr/1720)"
+    out["broken/road-settings-of-a-map-project.kcad"] = container(mpd.replace(b"\x67version\x18\xc6", b"\x67version\x18\xa2"))
     # Schema 162 (plan/road.md Y4, docs/adr/0902): a profile lies on an alignment of its own PIs, not a parallel axis.
     onp = load("road-work.json")
     onp["settings"]["road"]["profiles"][0]["alignment"] = "g-2"

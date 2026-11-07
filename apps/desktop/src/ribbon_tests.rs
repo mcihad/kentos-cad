@@ -331,7 +331,7 @@ fn label_screens() {
                 continue;
             }
             app.tab = tab;
-            for width in [1100.0, 1280.0] {
+            for width in [1100.0, 1280.0, 1440.0] {
                 let mut snapshot = Snapshot::new(Size::new(width, 260.0)).expect("a renderer");
                 let mut update = |app: &mut App, message| {
                     let _ = app.update(message);
