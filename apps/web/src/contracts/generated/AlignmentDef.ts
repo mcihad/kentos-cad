@@ -39,7 +39,7 @@ stationing?: AlignmentStationing,
  */
 designSpeed?: number, 
 /**
- * Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name
+ * Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
  * on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
  */
 startPlace?: string, 

@@ -508,7 +508,9 @@ pub const ROAD_VOLUMES_PROGRESS_VERSION: u32 = 1;
 ///
 /// Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
 /// `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
-/// survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+/// survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),
+/// `unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).
+/// `assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -520,6 +522,9 @@ pub struct VolumesProgress {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub previous: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub assume_heights: bool,
 }
 
 /// The cut's and the fill's work against the design (bank, m³): done, left, and over (dug below the design in cut,

@@ -116,6 +116,18 @@ def setup(volumes=vcmd.START, corridors=vcmd.CORRIDORS, work="road"):
     return base
 
 
+def only(s, keep):
+    """`s` with only the surfaces `keep` and the points of their layers, the objects numbered in their order again:
+    docs/adr/1029's cases compare those alone, and the others' points would only make the file larger."""
+    road = s["settings"]["road"]
+    layers = lambda ts: {l for t in ts for l in t.get("points", {}).get("layers", [])}  # noqa: E731
+    drop = layers(t for t in road["surfaces"] if t["id"] not in keep) - layers(t for t in road["surfaces"] if t["id"] in keep)
+    pairs = [(e, u) for e, u in zip(s["entities"], s["uids"]) if e["layerId"] not in drop]
+    s["entities"], s["uids"] = [dict(e, id=k + 1) for k, (e, _) in enumerate(pairs)], [u for _, u in pairs]
+    road["surfaces"] = [t for t in road["surfaces"] if t["id"] in keep]
+    return s
+
+
 def road_of(volumes=vcmd.START, corridors=vcmd.CORRIDORS):
     return setup(volumes, corridors)["settings"]["road"]
 
@@ -264,6 +276,46 @@ def cases():
     q("Yan koridorun kübajı: ölçü ona dokunmuyor", {"volume": "v-2", "survey": "t-4"})
     q("Plan cevabı verir", {"volume": "v-1", "survey": "t-3", "previous": "t-4"}, op="plan")
     q("Doğrulama uyarıları verir", {"volume": "v-1", "survey": "t-3", "previous": "t-4"}, op="validate")
+    # Docs/adr/1029: the September survey made of a cloud's ground on its own layer, its record's vertical system as
+    # given; the design and the original ground the drawing's, the project's heights as given.
+    def heights_doc(vertical=None, heights=None):
+        d = copy.deepcopy(doc0)
+        record = {"layer": SURVEYS["t-3"][1], "clouds": [pcmd.U(1)], "classes": [2], "returns": "all", "cell": 1.0, "read": 9,
+                  "kept": 9, "coverage": 1.0, "density": 1.0}
+        if vertical is not None:
+            record["vertical"] = vertical
+        next(t for t in d["settings"]["road"]["surfaces"] if t["id"] == "t-3")["clouds"] = [record]
+        if heights is not None:
+            d["settings"]["heights"] = heights
+        return only(d, {"t-1", "t-3"})
+
+    drawing = "çizimin kendi kotları (“Ana koridor”, “Mevcut zemin”; projenin kotlarının düşey sistemi söylenmemiş)"
+    cloud = (f"“Eylül ölçüsü” yüzeyinin “{SURVEYS['t-3'][1]}” katmanındaki bulut noktaları (dosya düşey sistemini "
+             "söylemiyor ya da alındığında kaydedilmedi)")
+    unshown = ("Karşılaştırılan kotların aynı düşey sistemde olduğu gösterilemiyor: {}. Sıfır ayrım ya da geoit tahmini "
+               "yapılmaz. Projenin kotlarını Proje ayarlarında söyleyin, ya da kotları aynı saymak için assumeHeights "
+               "verin (sonuç taslak olur).")
+    sept = {"volume": "v-1", "survey": "t-3"}
+    unknown_doc = heights_doc()
+    no("Ölçünün düşey sistemi bilinmiyor: ret", sept,
+       failed("unproven_heights", unshown.format(f"{drawing}; {cloud}"), "assumeHeights"), unknown_doc)
+    v1 = next(x for x in start if x["id"] == "v-1")
+    result, warns = answer(unknown_doc, v1, sept)
+    assumed = {"code": "heights_assumed", "message": f"Kotlar aynı düşey sistemde sayıldı (assumeHeights): {drawing}; "
+               f"{cloud}. Sonuç bu varsayıma dayanan bir taslaktır.", "path": "assumeHeights"}
+    out.append(case("Varsayımla taslak dönem metrajı", [step("execute", {**sept, "assumeHeights": True},
+                    completed(result, [assumed] + warns), {**UNCHANGED, "road": unknown_doc["settings"]["road"]})],
+                    unknown_doc))
+    same = heights_doc("EPSG:5775", {"kind": "orthometric", "verticalSrid": 5775})
+    result, warns = answer(same, v1, sept)
+    out.append(case("Ölçü ile proje aynı düşey sistemde", [step("execute", sept, completed(result, warns),
+                    {**UNCHANGED, "road": same["settings"]["road"]})], same))
+    other = heights_doc("EGM2008 height", {"kind": "orthometric", "verticalSrid": 5775})
+    no("Ölçü başka düşey sistemde: varsayımla da ret", {**sept, "assumeHeights": True},
+       failed("unproven_heights", "Karşılaştırılan kotlar iki ayrı düşey sistemde: çizimin kendi kotları (“Ana "
+              "koridor”, “Mevcut zemin”) Antalya height (EPSG:5775), “Eylül ölçüsü” yüzeyinin "
+              f"“{SURVEYS['t-3'][1]}” katmanındaki bulut noktaları EGM2008 height (EPSG:3855). Aradaki ayrım sıfır "
+              "sayılmaz; kotları önce aynı sisteme çevirin (Koordinat dönüştür, geoit modeliyle).", "survey"), other)
     broken = [dict(c, surface="t-2") if c["id"] == "c-1" else c for c in vcmd.CORRIDORS]
     refused("Koridorun yüzeyi kurulamıyor", {"volume": "v-1", "survey": "t-3"}, setup(start, broken), broken)
     no("Yol projesi değil", {"volume": "v-1", "survey": "t-3"}, NOT_ROAD, setup(work="map"))

@@ -221,7 +221,7 @@ fn the_box_writes_the_curves_design_speed() {
 
 #[test]
 fn the_places_beyond_the_ends_are_named_on_the_map() {
-    // Docs/adr/1000; KGM's 2024 sheets: "← KAMAN" at the plan's end toward it. A map that shows the road names both
+    // Docs/adr/1028; KGM's 2024 sheets: "← KAMAN" at the plan's end toward it. A map that shows the road names both
     // places once, red, beside the road; a map elsewhere and an alignment without places name none.
     use kentos_native_application::road_plan_axes::{Room, with_axes_on};
     let (_, mut setup) = sample();

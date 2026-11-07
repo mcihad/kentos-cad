@@ -84,6 +84,9 @@ const GROUPINGS: [&str; 3] = ["Km dilimleri", "Bölgeler", "Katsayı satırları
 const DECIMALS: [&str; 4] = ["Tam sayı", "1 basamak", "2 basamak", "3 basamak"];
 /// The previous survey's “none”.
 const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
+/// The surveys' heights taken as one vertical system (docs/adr/1029) and its choices.
+pub(crate) const HEIGHTS: &str = "Kotlar";
+const HEIGHTS_CHOICES: [&str; 2] = ["Aynı sistemde gösterilmeli", "Aynı say (taslak)"];
 
 /// The curve correction's switch (docs/adr/0934 §3).
 pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
@@ -344,6 +347,8 @@ pub struct Window {
     /// The survey now and the one before it (docs/adr/0942): terrain surfaces' ids; the window's, not the volume's.
     pub(crate) survey: Option<String>,
     pub(crate) previous: Option<String>,
+    /// The heights taken as one vertical system when not shown to be (docs/adr/1029): the progress is a draft.
+    pub(crate) assume_heights: bool,
     /// The progress read on the volume as typed, when a survey is chosen.
     pub(crate) progress: Option<Result<(kentos_commands::VolumeProgressReport, Vec<CommandWarning>), String>>,
     /// The saved volumes compared with the chosen one (docs/adr/0943), and the comparison with each one's alignment
@@ -388,6 +393,7 @@ pub enum Event {
     Survey(Option<String>),
     /// The survey before it; none: since the original ground.
     Previous(Option<String>),
+    AssumeHeights(bool),
     /// A saved volume compared with the chosen one, or not (docs/adr/0943).
     Alternative(String, bool),
     /// The ledger's step, grouping and decimals (docs/adr/0949).
@@ -454,6 +460,7 @@ impl App {
             budget: None,
             survey: None,
             previous: None,
+            assume_heights: false,
             progress: None,
             alternatives: Vec::new(),
             comparison: None,
@@ -518,8 +525,16 @@ impl App {
                     volume: def.id.clone(),
                     survey: survey.clone(),
                     previous: w.previous.clone(),
+                    assume_heights: w.assume_heights,
                 };
-                Some(kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input))
+                let words = |t: &str| crate::road_dialog::heights_words(t, "“Kotlar › Aynı say”");
+                Some(match kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input) {
+                    Ok((p, warnings)) => Ok((
+                        p,
+                        warnings.into_iter().map(|w| CommandWarning { message: words(&w.message), ..w }).collect(),
+                    )),
+                    Err(why) => Err(words(&why)),
+                })
             }
             _ => None,
         };
@@ -736,6 +751,7 @@ impl App {
                 w.survey = id;
             }
             Event::Previous(id) => w.previous = id,
+            Event::AssumeHeights(b) => w.assume_heights = b,
             Event::LedgerStep(t) => {
                 w.ledger_step = t;
                 w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
@@ -1262,6 +1278,13 @@ impl App {
                 .help("Şantiyenin bugünkü yüzeyi. İlk arazi koridorun yüzeyidir; ölçü onunla ve tasarımla karşılaştırılır.")
                 .field(PREVIOUS, on_previous)
                 .help("Bir önceki hakedişin ölçüsü: dönemin işi iki ölçünün birikmiş işlerinin farkıdır.")
+                .field(
+                    HEIGHTS,
+                    Select::new(HEIGHTS_CHOICES.map(Choice::new), Some(usize::from(w.assume_heights)), |i| {
+                        msg(Event::AssumeHeights(i == 1))
+                    }),
+                )
+                .help("Buluttan alınan ölçünün kotları projeninkiyle aynı düşey sistemde gösterilemiyorsa metraj verilmez. Aynı say: sonuç bu varsayıma dayanan bir taslaktır.")
         };
         // The note of the next approval or revocation (docs/adr/0950).
         form = form
@@ -1352,6 +1375,10 @@ impl App {
             }
             Control::Pick(SURVEY, name) => Some(msg(Event::Survey(self.volume_surface_named(name)?))),
             Control::Pick(PREVIOUS, name) => Some(msg(Event::Previous(self.volume_surface_named(name)?))),
+            Control::Pick(HEIGHTS, words) => {
+                let at = HEIGHTS_CHOICES.iter().position(|c| *c == words).ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
+                Some(msg(Event::AssumeHeights(at == 1)))
+            }
             Control::Fill(name, text) if UNCERTAINTY.contains(&name) => {
                 Some(msg(Event::Uncertainty(UNCERTAINTY.iter().position(|f| *f == name).unwrap_or(0), text.to_owned())))
             }

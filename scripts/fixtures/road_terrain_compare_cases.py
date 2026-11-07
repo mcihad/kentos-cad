@@ -68,6 +68,45 @@ def setup(work="road"):
     return s
 
 
+# Docs/adr/1029: what the comparison's heights rest on. “Kazı” made of the ground of a cloud on its own layer (its
+# record's vertical system as given, none: not known); “Düz” of the drawing's points, the project's heights as given.
+NOT_SHOWN = ("Karşılaştırılan kotların aynı düşey sistemde olduğu gösterilemiyor: {}. Sıfır ayrım ya da geoit tahmini "
+             "yapılmaz. Projenin kotlarını Proje ayarlarında söyleyin, ya da kotları aynı saymak için assumeHeights verin "
+             "(sonuç taslak olur).")
+DRAWING_UNSAID = "çizimin kendi kotları (“Düz”; projenin kotlarının düşey sistemi söylenmemiş)"
+CLOUD_UNSAID = ("“Kazı” yüzeyinin “kazi” katmanındaki bulut noktaları (dosya düşey sistemini söylemiyor ya da alındığında "
+                "kaydedilmedi)")
+
+
+def only(s, keep):
+    """`s` with only the surfaces `keep` and the points of their layers, the objects numbered in their order again:
+    docs/adr/1029's cases compare those alone, and the others' points would only make the file larger."""
+    road = s["settings"]["road"]
+    layers = lambda ts: {l for t in ts for l in t.get("points", {}).get("layers", [])}  # noqa: E731
+    drop = layers(t for t in road["surfaces"] if t["id"] not in keep) - layers(t for t in road["surfaces"] if t["id"] in keep)
+    pairs = [(e, u) for e, u in zip(s["entities"], s["uids"]) if e["layerId"] not in drop]
+    s["entities"], s["uids"] = [dict(e, id=k + 1) for k, (e, _) in enumerate(pairs)], [u for _, u in pairs]
+    road["surfaces"] = [t for t in road["surfaces"] if t["id"] in keep]
+    return s
+
+
+def heights_setup(vertical=None, heights=None):
+    s = setup()
+    record = {"layer": "kazi", "clouds": [UID.format(1)], "classes": [2], "returns": "all", "cell": 1.0, "read": 25, "kept": 25,
+              "coverage": 1.0, "density": 1.0}
+    if vertical is not None:
+        record["vertical"] = vertical
+    next(t for t in s["settings"]["road"]["surfaces"] if t["id"] == "t-8")["clouds"] = [record]
+    if heights is not None:
+        s["settings"]["heights"] = heights
+    return only(s, {"t-5", "t-8"})
+
+
+def assumed(what):
+    return {"code": "heights_assumed", "message": f"Kotlar aynı düşey sistemde sayıldı (assumeHeights): {what}. Sonuç "
+            "bu varsayıma dayanan bir taslaktır.", "path": "assumeHeights"}
+
+
 def area2(a, b, c):
     return (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])
 
@@ -184,6 +223,26 @@ def cases():
     q("Teras ile set, ince aralıklar", {"base": "Teras", "comparison": "Set",
                                         "ranges": [-0.05, 0.0, 0.05, 0.1, 0.15, 0.2, 0.25]})
     q("Ters yönde ince aralıklar", {"base": "Set", "comparison": "Teras", "ranges": [-0.25, -0.1, 0.0, 0.1]})
+    # Docs/adr/1029: the heights' vertical system.
+    pair = {"base": "Düz", "comparison": "Kazı"}
+    ortho = lambda srid: {"kind": "orthometric", "verticalSrid": srid}  # noqa: E731
+    q("Bulutun düşey sistemi bilinmiyor: ret", pair,
+      analysis.failed("unproven_heights", NOT_SHOWN.format(f"{DRAWING_UNSAID}; {CLOUD_UNSAID}"), "assumeHeights"),
+      setup_=heights_setup())
+    o, w = answer(pair)
+    q("Varsayımla taslak", {**pair, "assumeHeights": True},
+      {"status": "completed", "output": o, "warnings": [assumed(f"{DRAWING_UNSAID}; {CLOUD_UNSAID}")] + w},
+      setup_=heights_setup())
+    q("Bulutunki biliniyor, projeninki söylenmemiş: ret", pair,
+      analysis.failed("unproven_heights", NOT_SHOWN.format(DRAWING_UNSAID), "assumeHeights"),
+      setup_=heights_setup("EPSG:5775"))
+    q("Projeyle bulut aynı sistemde", pair, setup_=heights_setup("Antalya height", ortho(5775)))
+    q("İki ayrı sistem varsayımla da ret", {**pair, "assumeHeights": True},
+      analysis.failed("unproven_heights", "Karşılaştırılan kotlar iki ayrı düşey sistemde: çizimin kendi kotları "
+                      "(“Düz”) Antalya height (EPSG:5775), “Kazı” yüzeyinin “kazi” katmanındaki bulut noktaları EGM2008 "
+                      "height (EPSG:3855). Aradaki ayrım sıfır sayılmaz; kotları önce aynı sisteme çevirin (Koordinat "
+                      "dönüştür, geoit modeliyle).", "comparison"),
+      setup_=heights_setup("EGM2008 height", ortho(5775)))
     # Refusals.
     bad = "Fark aralıklarının sınırları en az iki, sonlu ve artan sayılar olmalı."
     q("Tek sınır", {"base": "Düz", "comparison": "Kazı", "ranges": [0.0]},

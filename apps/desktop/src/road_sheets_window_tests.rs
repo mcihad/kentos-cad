@@ -652,7 +652,7 @@ fn screens_match_lines() {
     println!("{}", file.display());
 }
 
-/// Y94's pictures (docs/adr/1000): the places beyond the road's ends typed in Güzergâh, then the plan sheets with KGM's
+/// Y94's pictures (docs/adr/1028): the places beyond the road's ends typed in Güzergâh, then the plan sheets with KGM's
 /// arrows at their ends; the window wide and narrow, and the book's PDF.
 ///
 /// ```sh

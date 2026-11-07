@@ -7,4 +7,10 @@ import type { CloudReturns } from "./CloudReturns";
  * their coverage (0–1) and density (per m²) of the area, and the vertical error of the points left out against the
  * surface made then (absent when none was measured), and how many were outside it.
  */
-export type SurfaceCloudDef = { layer: string, clouds: Array<string>, classes: Array<number>, returns: CloudReturns, area?: string, cell: number, zTolerance?: number, near?: number, read: number, kept: number, coverage: number, density: number, errorMax?: number, errorRms?: number, outside?: number, };
+export type SurfaceCloudDef = { layer: string, clouds: Array<string>, classes: Array<number>, returns: CloudReturns, area?: string, cell: number, zTolerance?: number, near?: number, read: number, kept: number, coverage: number, density: number, errorMax?: number, errorRms?: number, outside?: number, 
+/**
+ * The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
+ * name or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a
+ * record made before the rule).
+ */
+vertical?: string, };

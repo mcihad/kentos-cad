@@ -246,6 +246,17 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         Err(stop) => return stop.into(),
     };
     let mut warnings = a.warnings.clone();
+    // Docs/adr/1029: the files' vertical system, refused where it differs from the project's or the surface's others'.
+    let others: Vec<(&str, Option<&str>)> = a.list[a.at]
+        .clouds
+        .iter()
+        .filter(|c| c.layer != input.layer_id)
+        .map(|c| (c.layer.as_str(), c.vertical.as_deref()))
+        .collect();
+    let vertical = match crate::road_heights::of_clouds(cx.doc, input.drawing.as_deref(), &a.chosen, &others, "clouds") {
+        Ok(v) => v,
+        Err(stop) => return stop.into(),
+    };
     let lines = if a.rule.near.is_some() { breaklines_of(cx.doc, &a.list[a.at]) } else { Vec::new() };
     let mut thinner = match Thinner::new(a.rule.clone(), &lines) {
         Ok(t) => t,
@@ -300,6 +311,7 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         error_max: None,
         error_rms: None,
         outside: 0,
+        vertical,
     };
     def.clouds.retain(|c| c.layer != input.layer_id);
     def.clouds.push(record.clone());

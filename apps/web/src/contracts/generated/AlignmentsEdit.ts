@@ -26,7 +26,7 @@ offset?: number,
  */
 designSpeed?: number, 
 /**
- * Where the road leads beyond its start, beyond its end (docs/adr/1000); "" clears one. Not the geometry: the
+ * Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
  * revision stays.
  */
 startPlace?: string, endPlace?: string, expectedRevision?: string, };

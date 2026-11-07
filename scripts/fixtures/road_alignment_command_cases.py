@@ -546,7 +546,7 @@ def create_cases():
     no("Paralel aksın kendi hızı: ret",
        {"name": "Hızlı kenar", "offsetOf": {"alignment": "g-1", "offset": 7.5}, "designSpeed": 80.0},
        rule("paralel aksın proje hızı kaynağınındır", "designSpeed"))
-    # Docs/adr/1000: where the road leads beyond its ends, named on the plan's arrows (KGM 2024: "← KAMAN"); trimmed.
+    # Docs/adr/1028: where the road leads beyond its ends, named on the plan's arrows (KGM 2024: "← KAMAN"); trimmed.
     ok("Başında ve sonunda gidilen yerler", {"name": "Bağlantı yolu", "pis": sym, "startPlace": "  Kaman ",
                                             "endPlace": "Ankara–Niğde Otoyolu"},
        {"id": "g-2", "name": "Bağlantı yolu", "revision": 1, "pis": sym, "startPlace": "Kaman",
@@ -688,7 +688,7 @@ def edit_cases():
        put(0, curve), "g-1", mapping(main_b, build(put(0, curve), curve)))
     ok("Proje hızı 0 ile kalkar", {"alignment": "g-1", "operation": "set", "designSpeed": 0.0}, start, "g-1",
        mapping(main_b, main_b), setup_=setup(put(0, fast)), before=put(0, fast))
-    # Docs/adr/1000: the places beyond the ends are not the geometry either; "" takes one off.
+    # Docs/adr/1028: the places beyond the ends are not the geometry either; "" takes one off.
     placed = {**MAIN, "startPlace": "Kaman", "endPlace": "Kırşehir"}
     ok("Gidilen yerler yazılır: revizyon artmaz", {"alignment": "g-1", "operation": "set", "startPlace": "Kaman",
                                                    "endPlace": "Kırşehir"}, put(0, placed), "g-1",

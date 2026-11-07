@@ -461,3 +461,73 @@ fn screens_robust() {
         println!("{}", file.display());
     }
 }
+
+/// `road.terrains.compare`'s drawing as a case of it sets it (docs/adr/1029: “Kazı” a cloud's ground).
+fn compared_as(case: &str) -> (App, serde_json::Value) {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.compare.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == case).expect("the case").clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    (app, case)
+}
+
+/// ROAD-NUM-04 (docs/adr/1029): two surfaces whose heights are not shown to rest on one vertical system are not
+/// compared, the window says why; Kotları aynı say › Var reads the shared case's draft, its warning shown.
+#[test]
+fn the_window_compares_no_heights_not_shown_one() {
+    let (mut app, _) = compared_as("Bulutun düşey sistemi bilinmiyor: ret");
+    let (_, draft) = compared_as("Varsayımla taslak");
+    let want = &draft["steps"][0]["result"]["output"];
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Compare));
+    send(&mut app, W::Surface("t-5".into()));
+    send(&mut app, W::Comparison("t-8".into()));
+    send(&mut app, W::Preview);
+    assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("gösterilemiyor")));
+    let m = app
+        .surface_analysis_control(crate::traces::Control::Pick(crate::surface_analysis_window::SAME_HEIGHTS, "Var"))
+        .expect("a control")
+        .expect("a message");
+    let _ = app.update(m);
+    send(&mut app, W::Preview);
+    let Read::Compare(c) = read(&app) else { panic!("a difference") };
+    assert!((c.cut - want["cut"].as_f64().unwrap()).abs() < 1e-6, "{c:?}");
+    let w = app.surface_analysis_window.as_ref().expect("open");
+    assert!(w.warnings.first().is_some_and(|m| m.contains("varsayıma dayanan bir taslak")), "{:?}", w.warnings);
+}
+
+/// The comparison refused and as a draft, light; `.run/gui-evidence/yol-num04/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib surface_analysis_window_tests::screens_heights -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_heights() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-num04");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (assume, step) in [(false, "ret"), (true, "taslak")] {
+        let (mut app, _) = compared_as("Bulutun düşey sistemi bilinmiyor: ret");
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Compare));
+        send(&mut app, W::Surface("t-5".into()));
+        send(&mut app, W::Comparison("t-8".into()));
+        send(&mut app, W::AssumeHeights(assume));
+        send(&mut app, W::Preview);
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("num04-fark-{step}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

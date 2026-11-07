@@ -91,7 +91,7 @@ pub struct Row {
     parallel: Option<(String, String)>,
     /// The design speed's text, km/h (docs/adr/0985); empty: none.
     speed: String,
-    /// Where the road leads beyond its start and its end, as typed (docs/adr/1000); empty: none.
+    /// Where the road leads beyond its start and its end, as typed (docs/adr/1028); empty: none.
     places: [String; 2],
 }
 
@@ -223,7 +223,7 @@ impl Row {
             offset_of,
             stationing,
             design_speed,
-            // Docs/adr/1000: a parallel axis has its source's.
+            // Docs/adr/1028: a parallel axis has its source's.
             start_place: Some(self.places[0].trim().to_owned()).filter(|n| !n.is_empty() && self.parallel.is_none()),
             end_place: Some(self.places[1].trim().to_owned()).filter(|n| !n.is_empty() && self.parallel.is_none()),
         })
@@ -258,7 +258,7 @@ pub enum Event {
     Start(String),
     /// The design speed typed (docs/adr/0985).
     Speed(String),
-    /// Where the road leads beyond its start (0) or its end (1), as typed (docs/adr/1000).
+    /// Where the road leads beyond its start (0) or its end (1), as typed (docs/adr/1028).
     Place(usize, String),
     PiChoose(usize),
     Pi(usize, usize, String),
@@ -905,7 +905,7 @@ impl App {
                         offset: d.offset_of.as_ref().filter(|_| k.offset_of != d.offset_of).map(|o| o.offset),
                         // 0 clears it (docs/adr/0985).
                         design_speed: (k.design_speed != d.design_speed).then(|| d.design_speed.unwrap_or(0.0)),
-                        // "" clears one (docs/adr/1000).
+                        // "" clears one (docs/adr/1028).
                         start_place: (k.start_place != d.start_place).then(|| d.start_place.clone().unwrap_or_default()),
                         end_place: (k.end_place != d.end_place).then(|| d.end_place.clone().unwrap_or_default()),
                         expected_revision: None,
@@ -1068,7 +1068,7 @@ impl App {
                     ]
                     .spacing(12),
                 );
-                // Docs/adr/1000: the places named on the plan's arrows (KGM 2024: "← KAMAN").
+                // Docs/adr/1028: the places named on the plan's arrows (KGM 2024: "← KAMAN").
                 let before = kentos_ui::widget::text_field("Kaman", &r.places[0]).on_input(|t| msg(Event::Place(0, t)));
                 let after = kentos_ui::widget::text_field("Ankara–Niğde Otoyolu", &r.places[1]).on_input(|t| msg(Event::Place(1, t)));
                 col = col.push(

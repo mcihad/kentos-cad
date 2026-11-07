@@ -668,7 +668,12 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
-/// Whether road settings carry schema 194's fields: an alignment's places beyond its ends (docs/adr/1000).
+/// Whether road settings carry schema 195's fields: a cloud record's vertical system (docs/adr/1029).
+pub(crate) fn road_has_cloud_heights(road: &kentos_contracts::RoadSettings) -> bool {
+    road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.vertical.is_some()))
+}
+
+/// Whether road settings carry schema 194's fields: an alignment's places beyond its ends (docs/adr/1028).
 pub(crate) fn road_has_places(road: &kentos_contracts::RoadSettings) -> bool {
     road.alignments.iter().any(|a| a.start_place.is_some() || a.end_place.is_some())
 }
@@ -1512,6 +1517,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_speed && road_has_speed(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "aksın proje hızı şema 193 ister"));
+                }
+                if !has.road_cloud_heights && road_has_cloud_heights(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının düşey sistemi şema 195 ister"));
                 }
                 if !has.road_places && road_has_places(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "aksın uçlarında gidilen yerler şema 194 ister"));

@@ -1014,3 +1014,71 @@ fn screens_grid() {
         println!("{}", file.display());
     }
 }
+
+/// `road.volumes.progress`'s drawing as a case of it sets it (docs/adr/1029: the September survey a cloud's ground).
+fn surveyed_as(case: &str) -> (App, serde_json::Value) {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.progress.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == case).expect("the case").clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    (app, case)
+}
+
+/// ROAD-NUM-04 (docs/adr/1029): a survey whose heights are not shown to rest on the project's vertical system gives no
+/// progress in Kübaj, it says why; Kotlar › Aynı say reads it as the shared case's draft does, with its warning.
+#[test]
+fn the_window_reads_no_progress_on_heights_not_shown_one() {
+    let (mut app, _) = surveyed_as("Ölçünün düşey sistemi bilinmiyor: ret");
+    let (_, draft) = surveyed_as("Varsayımla taslak dönem metrajı");
+    let want = &draft["steps"][0]["result"]["output"];
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let pick = |app: &App, field, name| app.volume_control(crate::traces::Control::Pick(field, name)).expect("a control").expect("a message");
+    let m = pick(&app, crate::volume_window::SURVEY, "Eylül ölçüsü");
+    let _ = app.update(m);
+    let why = app.volume_window.as_ref().unwrap().progress.clone().expect("asked").expect_err("not shown one system");
+    assert!(why.contains("gösterilemiyor") && why.contains("bulut noktaları"), "{why}");
+    let m = pick(&app, crate::volume_window::HEIGHTS, "Aynı say (taslak)");
+    let _ = app.update(m);
+    let (p, warnings) = app.volume_window.as_ref().unwrap().progress.clone().expect("asked").expect("a draft");
+    assert!((p.now.cut_done - want["now"]["cutDone"].as_f64().unwrap()).abs() < 1e-6, "{p:?}");
+    assert_eq!(warnings.first().map(|w| w.code.as_str()), Some("heights_assumed"));
+}
+
+/// The progress refused and as a draft, light and dark; `.run/gui-evidence/yol-num04/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_heights -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_heights() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-num04");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 800.0), "koyu")] {
+        for (assume, step) in [(false, "ret"), (true, "taslak")] {
+            let (mut app, _) = surveyed_as("Ölçünün düşey sistemi bilinmiyor: ret");
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("volume.editor"));
+            send(&mut app, W::Choose(0));
+            send(&mut app, W::Survey(Some("t-3".into())));
+            send(&mut app, W::AssumeHeights(assume));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("num04-donem-{step}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}

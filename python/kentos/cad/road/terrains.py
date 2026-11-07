@@ -231,10 +231,13 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
     okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan
     noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama).
     Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi
-    (17) ve üst yapı (19) zemine katılmaz. Uyarılar: layer_hidden,
-    cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project,
-    not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain,
-    katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain,
+    (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem
+    (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar
+    ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret
+    (cloud_heights_differ; ADR 1029). Uyarılar: layer_hidden, cloud_class_above_ground,
+    cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud,
+    invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri,
+    cloud_heights_differ, too_many_cloud_points, cloud_ground_empty, invalid_terrain,
     terrain_unbuildable, invalid_revision, revision_conflict.
     """
     __slots__ = ()
@@ -281,10 +284,13 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre
         kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey
         farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya
-        da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Uyarılar:
-        layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler:
-        not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground,
-        unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty,
+        da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut
+        dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda
+        vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka
+        bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). Uyarılar: layer_hidden,
+        cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project,
+        not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain,
+        katmanın retleri, cloud_heights_differ, too_many_cloud_points, cloud_ground_empty,
         invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.
 
         Args:
@@ -469,9 +475,13 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
     yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı
     (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki
     yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve
-    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Uyarılar:
-    compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain,
-    terrain_unbuildable.
+    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Kotlar (ADR
+    1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey
+    sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
+    gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç
+    taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
+    heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
+    unknown_terrain, unproven_heights, terrain_unbuildable.
     """
     __slots__ = ()
     id = "road.terrains.compare"
@@ -489,6 +499,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -499,13 +510,19 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında)
         ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın
         dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın
-        aralıklarının plan alanı ve aralık dışı. Uyarılar: compare_uncovered. Retler:
-        not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable.
+        aralıklarının plan alanı ve aralık dışı. Kotlar (ADR 1029): iki yüzeyin kaynakları
+        (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin
+        dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret,
+        assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen
+        iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered.
+        Retler: not_a_road_project, invalid_analysis, unknown_terrain, unproven_heights,
+        terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
             base:
             comparison:
+            assume_heights:
             ranges: Unit: m.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -522,6 +539,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.execute_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             ranges=_opt(ranges, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -532,6 +550,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
     ) -> TerrainsCompared:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -540,6 +559,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.plan_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             ranges=_opt(ranges, lambda x: list(x)),
         ))
 
@@ -550,6 +570,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -558,6 +579,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.validate_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             ranges=_opt(ranges, lambda x: list(x)),
         ))
 
@@ -568,6 +590,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -581,6 +604,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.answer_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             ranges=_opt(ranges, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

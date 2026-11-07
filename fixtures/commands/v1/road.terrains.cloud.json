@@ -2711,6 +2711,4285 @@
    ]
   },
   {
+   "name": "Dosyanın düşey sistemi kaydedilir (GeoTIFF anahtarı)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000011"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000011"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205,
+        "vertical": "EPSG:5775"
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Dosyanın düşey sistemi kaydedilir (WKT)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205,
+        "vertical": "EGM2008 height"
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Projeninkiyle aynı düşey sistem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 2232,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 1.86,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.009014546060853402,
+        "outside": 205,
+        "vertical": "EGM2008 height"
+       },
+       "scanned": 2822,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     },
+     "heights": {
+      "kind": "orthometric",
+      "verticalSrid": 3855
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Biri söylemiyorsa düşey sistem bilinmiyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+       "0192f5b0-7c3e-7d4a-9b1e-000000000011"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "cloud": {
+        "layer": "zemin",
+        "clouds": [
+         "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+         "0192f5b0-7c3e-7d4a-9b1e-000000000011"
+        ],
+        "classes": [
+         2
+        ],
+        "returns": "all",
+        "cell": 2.0,
+        "read": 4464,
+        "kept": 291,
+        "coverage": 0.97,
+        "density": 3.72,
+        "errorMax": 0.19743967146317232,
+        "errorRms": 0.008658977501827533,
+        "outside": 410
+       },
+       "scanned": 5644,
+       "byCell": 291,
+       "bySlope": 0,
+       "byLine": 0,
+       "cells": 300,
+       "occupied": 291,
+       "area": 1200.0,
+       "uids": [
+        "$any"
+       ],
+       "surface": {
+        "id": "t-2",
+        "name": "Lidar zemini",
+        "state": "current",
+        "digest": "$any",
+        "built": "$any",
+        "figures": "$any"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Projeninkinden başka düşey sistem: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_heights_differ",
+       "message": "Bulutun kotları EGM2008 height (EPSG:3855), projenin kotları Antalya height (EPSG:5775): aradaki ayrım sıfır sayılmaz, bulut noktaları çevrilmeden zemine alınmaz. Bulutu projenin sistemine çevirin ya da projenin kotlarını Proje ayarlarında düzeltin.",
+       "path": "clouds"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     },
+     "heights": {
+      "kind": "orthometric",
+      "verticalSrid": 5775
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Elipsoit yüksekliğindeki projeye ortometrik bulut: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000011"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_heights_differ",
+       "message": "Bulutun kotları Antalya height (EPSG:5775), projenin kotları elipsoit yüksekliği: aradaki ayrım sıfır sayılmaz, bulut noktaları çevrilmeden zemine alınmaz. Bulutu projenin sistemine çevirin ya da projenin kotlarını Proje ayarlarında düzeltin.",
+       "path": "clouds"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     },
+     "heights": {
+      "kind": "ellipsoidal"
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "İki kaynak iki düşey sistem: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+       "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "name": "Lidar zemini"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_heights_differ",
+       "message": "Bulutların kaynakları ayrı düşey sistemlerde: 1. bulutun 1. kaynağı Antalya height (EPSG:5775), 2. bulutun 1. kaynağı EGM2008 height (EPSG:3855). Bir yüzeyin noktaları tek sistemde olmalı; kaynakları önce aynı sisteme çevirin.",
+       "path": "clouds"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Yüzeyin öbür bulutundan başka sistem: ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clouds": [
+       "0192f5b0-7c3e-7d4a-9b1e-000000000011"
+      ],
+      "classes": [
+       2
+      ],
+      "cell": 2.0,
+      "layerId": "zemin",
+      "surface": "Mevcut zemin"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "cloud_heights_differ",
+       "message": "Bulutun kotları Antalya height (EPSG:5775), yüzeyin “eski” katmanındaki bulut noktalarınınki EGM2008 height (EPSG:3855): bir yüzeyin noktaları tek sistemde olmalı.",
+       "path": "clouds"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Buluttan arazi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "road",
+     "drawingFont": "barlow",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Mevcut zemin",
+        "points": {
+         "layers": [
+          "arazi"
+         ]
+        },
+        "clouds": [
+         {
+          "layer": "eski",
+          "clouds": [
+           "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+          ],
+          "classes": [
+           2
+          ],
+          "returns": "all",
+          "cell": 2.0,
+          "read": 10,
+          "kept": 5,
+          "coverage": 0.5,
+          "density": 1.0,
+          "vertical": "EGM2008 height"
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "arazi",
+      "name": "Arazi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kirik",
+      "name": "Kırık hatlar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "alan",
+      "name": "Alan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bulut",
+      "name": "Bulut",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Yol",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "yol-zemin",
+        "name": "Yol zemini",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "ink",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "0",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 1990.0
+      },
+      "z": 99.47267564329358,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 1990.0
+      },
+      "z": 100.76399472227766,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 1050.0,
+       "y": 2040.0
+      },
+      "z": 101.26399472227766,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "arazi",
+      "attrs": {},
+      "p": {
+       "x": 990.0,
+       "y": 2040.0
+      },
+      "z": 99.97267564329358,
+      "id": 4
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kirik",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1040.0,
+        "y": 2015.0
+       }
+      ],
+      "zs": [
+       100.15,
+       100.36079937617303,
+       101.19733956165585
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2027.0
+       },
+       {
+        "x": 1003.0,
+        "y": 2019.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polyline",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "alan",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2003.0
+       },
+       {
+        "x": 1030.0,
+        "y": 2004.0
+       },
+       {
+        "x": 1034.0,
+        "y": 2018.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.3,
+       0.0
+      ],
+      "id": 8
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 9
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/yok.las",
+        "format": "las",
+        "count": 10,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 10,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      },
+      "id": 10
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 11,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-antalya.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     },
+     {
+      "kind": "pointcloud",
+      "layerId": "bulut",
+      "attrs": {},
+      "id": 12,
+      "sources": [
+       {
+        "file": "$fixture:pointcloud/v1/files/road-ground-egm2008.las",
+        "format": "las",
+        "count": 2822,
+        "bounds": [
+         1000.0,
+         2000.154,
+         80.0,
+         1039.742,
+         2029.947,
+         106.05
+        ]
+       }
+      ],
+      "bounds": [
+       1000.0,
+       2000.154,
+       80.0,
+       1039.742,
+       2029.947,
+       106.05
+      ],
+      "count": 2822,
+      "srid": 5254,
+      "style": {
+       "render": "classification",
+       "size": 2
+      }
+     }
+    ],
+    "uids": [
+     "0192f5b0-7c3e-7d4a-9b1e-000000000001",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000002",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000003",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000004",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000005",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000006",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000007",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000008",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000009",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000010",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000011",
+     "0192f5b0-7c3e-7d4a-9b1e-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
    "name": "Geçersiz beklenen sürüm",
    "steps": [
     {

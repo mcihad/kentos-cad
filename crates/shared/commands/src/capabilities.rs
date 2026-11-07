@@ -2169,8 +2169,8 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.terrains.compare",
-        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "terrain_unbuildable"]],
-        warnings: &["compare_uncovered"],
+        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "unproven_heights", "terrain_unbuildable"]],
+        warnings: &["heights_assumed", "compare_uncovered"],
         targets: none,
     },
     Entry {
@@ -2249,7 +2249,7 @@ const ENTRIES: &[Entry] = &[
                 "unknown_terrain",
             ],
             LAYER,
-            &["too_many_cloud_points", "cloud_ground_empty", "invalid_terrain", "terrain_unbuildable"],
+            &["cloud_heights_differ", "too_many_cloud_points", "cloud_ground_empty", "invalid_terrain", "terrain_unbuildable"],
             REVISION,
         ],
         warnings: &["layer_hidden", "cloud_class_above_ground", "cloud_source_unreadable"],
@@ -2563,9 +2563,10 @@ const ENTRIES: &[Entry] = &[
             "not_a_road_project",
             "unknown_volume",
             "unknown_terrain",
+            "unproven_heights",
             "invalid_volume",
         ]],
-        warnings: &["volume_progress_uncovered", "volume_progress_backward"],
+        warnings: &["heights_assumed", "volume_progress_uncovered", "volume_progress_backward"],
         targets: none,
     },
     Entry {

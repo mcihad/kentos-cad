@@ -376,8 +376,10 @@ pub(super) struct Features {
     pub(super) road_ove: bool,
     /// Schema 193: an alignment's design speed and a PI's own (docs/adr/0985).
     pub(super) road_speed: bool,
-    /// Schema 194: an alignment's places beyond its ends (docs/adr/1000).
+    /// Schema 194: an alignment's places beyond its ends (docs/adr/1028).
     pub(super) road_places: bool,
+    /// Schema 195: a cloud record's vertical system (docs/adr/1029).
+    pub(super) road_cloud_heights: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
     /// Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
@@ -653,6 +655,7 @@ impl Features {
             road_ove: schema >= crate::SCHEMA_WITH_ROAD_OVE,
             road_speed: schema >= crate::SCHEMA_WITH_ROAD_SPEED,
             road_places: schema >= crate::SCHEMA_WITH_ROAD_PLACES,
+            road_cloud_heights: schema >= crate::SCHEMA_WITH_ROAD_CLOUD_HEIGHTS,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,

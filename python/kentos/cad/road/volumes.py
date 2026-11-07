@@ -821,10 +821,16 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
     işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak
     özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın
     kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma
-    katsayısı uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin
-    örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi).
-    Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da
-    kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.
+    katsayısı uygulanmaz). Kotlar (ADR 1029): karşılaştırılan yüzeylerin kaynakları
+    (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin
+    dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret,
+    assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen
+    iki ayrı sistem her durumda ret, sıfır ayrım ya da geoit tahmini yapılmaz. Uyarılar:
+    heights_assumed (kotlar varsayımla aynı sayıldı), volume_progress_uncovered (ölçü
+    ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan
+    iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı,
+    ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain,
+    unproven_heights (kotların düşey sistemi gösterilemiyor), invalid_volume.
     """
     __slots__ = ()
     id = "road.volumes.progress"
@@ -842,6 +848,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -858,15 +865,22 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest),
         yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile
         örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı
-        uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri
-        örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler:
-        invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da
-        kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.
+        uygulanmaz). Kotlar (ADR 1029): karşılaştırılan yüzeylerin kaynakları (çizimin kendi
+        kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının
+        söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights:
+        true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem
+        her durumda ret, sıfır ayrım ya da geoit tahmini yapılmaz. Uyarılar: heights_assumed
+        (kotlar varsayımla aynı sayıldı), volume_progress_uncovered (ölçü ilk arazinin
+        örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi).
+        Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da
+        kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, unproven_heights
+        (kotların düşey sistemi gösterilemiyor), invalid_volume.
 
         Args:
             doc: The drawing it works on.
             volume:
             survey:
+            assume_heights:
             previous:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -883,6 +897,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.execute_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ), request_id=request_id, expected=expected)
 
@@ -893,6 +908,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
     ) -> VolumeProgressReport:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -901,6 +917,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.plan_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ))
 
@@ -911,6 +928,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -919,6 +937,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.validate_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ))
 
@@ -929,6 +948,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -942,6 +962,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.answer_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ), op=op, request_id=request_id, expected=expected)
 

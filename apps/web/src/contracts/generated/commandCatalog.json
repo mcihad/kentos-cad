@@ -37805,7 +37805,7 @@
             "type": "array"
           },
           "startPlace": {
-            "description": "Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.",
+            "description": "Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.",
             "type": [
               "string",
               "null"
@@ -38080,7 +38080,7 @@
             ]
           },
           "startPlace": {
-            "description": "Where the road leads beyond its start, beyond its end (docs/adr/1000); \"\" clears one. Not the geometry: the\nrevision stays.",
+            "description": "Where the road leads beyond its start, beyond its end (docs/adr/1028); \"\" clears one. Not the geometry: the\nrevision stays.",
             "type": [
               "string",
               "null"
@@ -44024,7 +44024,7 @@
       "id": "road.volumes.progress",
       "version": 1,
       "title": "Dönem metrajı",
-      "summary": "Bir kübaj hesabının (volume) işinin bir ara ölçüye (survey: arazi yüzeyinin kimliği ya da adı) göre ne kadarının yapıldığını okur; hiçbir şey yazmaz (docs/adr/0942). Tasarım koridorun üst yüzeyi, ilk arazi koridorun yüzeyidir; üçü kesin bindirilir. Yarmada (z_o > z_d) yapılan max(0, z_o − max(z_n, z_d)), kalan max(0, min(z_n, z_o) − z_d), fazla kazı max(0, z_d − z_n); dolguda yapılan max(0, min(z_n, z_d) − z_o), kalan max(0, z_d − max(z_n, z_o)), fazla dolgu max(0, z_n − z_d). Ölçünün örttüğü her yerde yapılan + kalan tasarımın kendi kazısı ve dolgusudur; yarmanın üstüne yığılan ya da dolgu yerinden kazılan malzeme tasarımın işi değildir. previous (önceki ölçü) verilirse onun işi ve dönemin işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.",
+      "summary": "Bir kübaj hesabının (volume) işinin bir ara ölçüye (survey: arazi yüzeyinin kimliği ya da adı) göre ne kadarının yapıldığını okur; hiçbir şey yazmaz (docs/adr/0942). Tasarım koridorun üst yüzeyi, ilk arazi koridorun yüzeyidir; üçü kesin bindirilir. Yarmada (z_o > z_d) yapılan max(0, z_o − max(z_n, z_d)), kalan max(0, min(z_n, z_o) − z_d), fazla kazı max(0, z_d − z_n); dolguda yapılan max(0, min(z_n, z_d) − z_o), kalan max(0, z_d − max(z_n, z_o)), fazla dolgu max(0, z_n − z_d). Ölçünün örttüğü her yerde yapılan + kalan tasarımın kendi kazısı ve dolgusudur; yarmanın üstüne yığılan ya da dolgu yerinden kazılan malzeme tasarımın işi değildir. previous (önceki ölçü) verilirse onun işi ve dönemin işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı uygulanmaz). Kotlar (ADR 1029): karşılaştırılan yüzeylerin kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret, sıfır ayrım ya da geoit tahmini yapılmaz. Uyarılar: heights_assumed (kotlar varsayımla aynı sayıldı), volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, unproven_heights (kotların düşey sistemi gösterilemiyor), invalid_volume.",
       "aliases": [
         "donemmetraji",
         "arametraj",
@@ -44044,8 +44044,11 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a\nsurvey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it\n(`previous`). The original ground is the volume's corridor's surface; the design its top surface.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),\n`invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a\nsurvey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).",
+        "description": "Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a\nsurvey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it\n(`previous`). The original ground is the volume's corridor's surface; the design its top surface.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),\n`invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a\nsurvey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),\n`unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).\n`assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).",
         "properties": {
+          "assumeHeights": {
+            "type": "boolean"
+          },
           "previous": {
             "type": [
               "string",
@@ -44274,9 +44277,11 @@
           "not_a_road_project",
           "unknown_volume",
           "unknown_terrain",
+          "unproven_heights",
           "invalid_volume"
         ],
         "warnings": [
+          "heights_assumed",
           "volume_progress_uncovered",
           "volume_progress_backward"
         ]
@@ -49241,7 +49246,7 @@
       "id": "road.terrains.compare",
       "version": 1,
       "title": "Yüzeyleri karşılaştır",
-      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Uyarılar: compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable.",
+      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, unproven_heights, terrain_unbuildable.",
       "aliases": [
         "yuzeyfarki",
         "yuzeykarsilastir",
@@ -49260,8 +49265,11 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out).",
+        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:\nthe two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the\ndifference is a draft (`heights_assumed`).",
         "properties": {
+          "assumeHeights": {
+            "type": "boolean"
+          },
           "base": {
             "type": "string"
           },
@@ -49480,9 +49488,11 @@
           "not_a_road_project",
           "invalid_analysis",
           "unknown_terrain",
+          "unproven_heights",
           "terrain_unbuildable"
         ],
         "warnings": [
+          "heights_assumed",
           "compare_uncovered"
         ]
       },
@@ -50959,7 +50969,7 @@
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
-      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
+      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, cloud_heights_differ, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
       "aliases": [
         "buluttanarazi",
         "bulutyuzey"
@@ -51251,6 +51261,7 @@
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
+          "cloud_heights_differ",
           "too_many_cloud_points",
           "cloud_ground_empty",
           "invalid_terrain",
@@ -94091,6 +94102,24 @@
       "meaning": "Dönem metrajı sorusu geçerli değil; ileti nedenini söyler."
     },
     {
+      "code": "unproven_heights",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Karşılaştırılan yüzeylerin kotlarının aynı düşey sistemde olduğu gösterilemiyor; ileti hangi kaynağın sistemini bilmediğini söyler."
+    },
+    {
+      "code": "heights_assumed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kotların aynı düşey sistemde olduğu varsayıldı; sonuç taslaktır."
+    },
+    {
+      "code": "cloud_heights_differ",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bulutun kotları projeninkinden ya da öbür kaynaklarınkinden başka bir düşey sistemde."
+    },
+    {
       "code": "volume_progress_uncovered",
       "kind": "warning",
       "retryable": false,
@@ -101744,7 +101773,7 @@
           "x-unit": "version"
         },
         "startPlace": {
-          "description": "Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name\non a red arrow at the plan's end toward it (\"← KAMAN\"). At most 80 characters. A parallel axis has its source's.",
+          "description": "Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name\non a red arrow at the plan's end toward it (\"← KAMAN\"). At most 80 characters. A parallel axis has its source's.",
           "type": [
             "string",
             "null"
@@ -178045,6 +178074,13 @@
         "returns": {
           "$ref": "#/$defs/CloudReturns",
           "default": "all"
+        },
+        "vertical": {
+          "description": "The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`\nname or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a\nrecord made before the rule).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "zTolerance": {
           "format": "double",

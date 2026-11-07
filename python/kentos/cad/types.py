@@ -12878,7 +12878,7 @@ class AlignmentDef(_Model):
         offset_of: A parallel axis's source; absent for an alignment of its own.
         pis: Its start, PIs and end; empty for a parallel axis.
         revision: Grows by one with every change of its geometry or km; absent: 0. Unit: version.
-        start_place: Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name
+        start_place: Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
             on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
         stationing: Its km; absent: from 0 with no equation. A parallel axis has its source's.
     """
@@ -13752,7 +13752,7 @@ class AlignmentsCreate(_Model):
     a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
     Attributes:
         design_speed: The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve. Unit: km/h.
-        start_place: Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.
+        start_place: Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
     """
     name: str
     design_speed: float | None | Unset = UNSET
@@ -13812,7 +13812,7 @@ class AlignmentsEdit(_Model):
     Attributes:
         design_speed: The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays. Unit: km/h.
         offset: A parallel axis's offset, m, right positive. Unit: m.
-        start_place: Where the road leads beyond its start, beyond its end (docs/adr/1000); "" clears one. Not the geometry: the
+        start_place: Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
             revision stays.
         stationing: The km; an empty one (no start, no equation) clears it.
     """
@@ -86459,6 +86459,9 @@ class SurfaceCloudDef(_Model):
         error_rms: Unit: m.
         near: Unit: m.
         outside: Unit: count.
+        vertical: The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
+            name or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a
+            record made before the rule).
         z_tolerance: Unit: m.
     """
     layer: str
@@ -86475,6 +86478,7 @@ class SurfaceCloudDef(_Model):
     near: float | None | Unset = UNSET
     outside: int | Unset = UNSET
     returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
+    vertical: str | None | Unset = UNSET
     z_tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -86498,6 +86502,8 @@ class SurfaceCloudDef(_Model):
         if self.outside is not UNSET:
             out["outside"] = self.outside
         out["returns"] = _enum_out(self.returns)
+        if self.vertical is not UNSET:
+            out["vertical"] = self.vertical
         if self.z_tolerance is not UNSET:
             out["zTolerance"] = None if self.z_tolerance is None else float(self.z_tolerance)
         return out
@@ -86519,6 +86525,7 @@ class SurfaceCloudDef(_Model):
             near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
             outside=data.get("outside", UNSET),
             returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
+            vertical=data.get("vertical", UNSET),
             z_tolerance=UNSET if "zTolerance" not in data else None if data["zTolerance"] is None else float(data["zTolerance"]),
         )
 
@@ -90043,18 +90050,23 @@ class TerrainsCompare(_Model):
 
     Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
     increasing), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
-    `compare_uncovered` (part of the comparison is off the base and left out).
+    `compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:
+    the two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the
+    difference is a draft (`heights_assumed`).
     Attributes:
         ranges: Unit: m.
     """
     base: str
     comparison: str
+    assume_heights: bool | Unset = UNSET
     ranges: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["base"] = self.base
         out["comparison"] = self.comparison
+        if self.assume_heights is not UNSET:
+            out["assumeHeights"] = self.assume_heights
         if self.ranges is not UNSET:
             out["ranges"] = None if self.ranges is None else [float(e0) for e0 in self.ranges]
         return out
@@ -90064,6 +90076,7 @@ class TerrainsCompare(_Model):
         return cls(
             base=data["base"],
             comparison=data["comparison"],
+            assume_heights=data.get("assumeHeights", UNSET),
             ranges=UNSET if "ranges" not in data else None if data["ranges"] is None else [float(e0) for e0 in data["ranges"]],
         )
 
@@ -95864,16 +95877,21 @@ class VolumesProgress(_Model):
 
     Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
     `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
-    survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+    survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),
+    `unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).
+    `assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).
     """
     volume: str
     survey: str
+    assume_heights: bool | Unset = UNSET
     previous: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["volume"] = self.volume
         out["survey"] = self.survey
+        if self.assume_heights is not UNSET:
+            out["assumeHeights"] = self.assume_heights
         if self.previous is not UNSET:
             out["previous"] = self.previous
         return out
@@ -95883,6 +95901,7 @@ class VolumesProgress(_Model):
         return cls(
             volume=data["volume"],
             survey=data["survey"],
+            assume_heights=data.get("assumeHeights", UNSET),
             previous=data.get("previous", UNSET),
         )
 

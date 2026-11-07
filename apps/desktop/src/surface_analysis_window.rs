@@ -88,11 +88,17 @@ pub(crate) enum Read {
     Density(TerrainsDensityRead, road_terrains_density::DensityPicture),
 }
 
+/// The two surfaces' heights taken as one vertical system (docs/adr/1029): the comparison is then a draft.
+pub(crate) const SAME_HEIGHTS: &str = "Kotları aynı say";
+const HEIGHTS_CHOICE: &str = "“Kotları aynı say › Var”";
+
 #[derive(Debug, Clone)]
 pub struct Window {
     pub(crate) mode: Mode,
     pub(crate) surface: Option<String>,
     pub(crate) comparison: Option<String>,
+    /// The two surfaces' heights taken as one vertical system when not shown to be (docs/adr/1029).
+    pub(crate) assume_heights: bool,
     pub(crate) measure: usize,
     pub(crate) roughness: bool,
     pub(crate) checks: Option<String>,
@@ -112,6 +118,7 @@ pub enum Event {
     Mode(Mode),
     Surface(String),
     Comparison(String),
+    AssumeHeights(bool),
     Measure(usize),
     Roughness(bool),
     Checks(Option<String>),
@@ -178,6 +185,7 @@ impl Window {
             base: self.surface()?,
             comparison: self.comparison.clone().ok_or("Karşılaştırılacak ikinci yüzeyi seçin.")?,
             ranges: list(&self.fields[2], FIELDS[2])?,
+            assume_heights: self.assume_heights,
         })
     }
 
@@ -259,6 +267,7 @@ impl App {
             mode: Mode::Analysis,
             surface: Some(first),
             comparison: surfaces.get(1).cloned(),
+            assume_heights: false,
             measure: 1,
             roughness: false,
             checks: None,
@@ -291,10 +300,10 @@ impl App {
         match read {
             Ok((r, warnings)) => {
                 w.preview = Some(Ok(r));
-                w.warnings = warnings.into_iter().map(|x| x.message).collect();
+                w.warnings = warnings.into_iter().map(|x| crate::road_dialog::heights_words(&x.message, HEIGHTS_CHOICE)).collect();
             }
             Err(why) => {
-                w.preview = Some(Err(why));
+                w.preview = Some(Err(crate::road_dialog::heights_words(&why, HEIGHTS_CHOICE)));
                 w.warnings.clear();
             }
         }
@@ -306,6 +315,7 @@ impl App {
             Event::Mode(m) => w.mode = m,
             Event::Surface(s) => w.surface = Some(s),
             Event::Comparison(s) => w.comparison = Some(s),
+            Event::AssumeHeights(b) => w.assume_heights = b,
             Event::Measure(m) => w.measure = m.min(2),
             Event::Roughness(on) => w.roughness = on,
             Event::Checks(l) => w.checks = l,
@@ -454,7 +464,14 @@ impl App {
                     .push(field("yok", 1, 130.0));
             }
             Mode::Compare => {
-                top = top.push(words::field("Karşılaştırma", pick_surface(&w.comparison, Event::Comparison), None)).push(field("ör. -1, 0, 1", 2, 220.0));
+                let same = container(Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(w.assume_heights)), |i| {
+                    msg(Event::AssumeHeights(i == 1))
+                }))
+                .width(80);
+                top = top
+                    .push(words::field("Karşılaştırma", pick_surface(&w.comparison, Event::Comparison), None))
+                    .push(field("ör. -1, 0, 1", 2, 220.0))
+                    .push(words::field(SAME_HEIGHTS, same, None));
             }
             Mode::Quality => {
                 let layers = self.relation_layers();
@@ -730,6 +747,8 @@ impl App {
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(DRAW_LOW) => Some(msg(Event::DrawLow)),
             Control::Press(DRAW_SPARSE) => Some(msg(Event::DrawSparse)),
+            Control::Pick(SAME_HEIGHTS, "Var") => Some(msg(Event::AssumeHeights(true))),
+            Control::Pick(SAME_HEIGHTS, "Yok") => Some(msg(Event::AssumeHeights(false))),
             Control::Fill(name, t) if !name.is_empty() && FIELDS.contains(&name) => {
                 let k = FIELDS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Field(k, t.to_owned())))

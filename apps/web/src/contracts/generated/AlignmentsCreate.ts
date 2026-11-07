@@ -20,6 +20,6 @@ export type AlignmentsCreate = { name: string, id?: string, pis?: Array<Alignmen
  */
 designSpeed?: number, 
 /**
- * Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.
+ * Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
  */
 startPlace?: string, endPlace?: string, expectedRevision?: string, };

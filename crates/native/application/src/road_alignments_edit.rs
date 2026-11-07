@@ -84,7 +84,7 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
             if let Some(v) = input.design_speed {
                 def.design_speed = (v != 0.0).then_some(v);
             }
-            // Docs/adr/1000: trimmed; "" clears it.
+            // Docs/adr/1028: trimmed; "" clears it.
             if let Some(n) = &input.start_place {
                 def.start_place = Some(n.trim().to_owned()).filter(|n| !n.is_empty());
             }

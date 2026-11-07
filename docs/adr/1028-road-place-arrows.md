@@ -1,4 +1,4 @@
-# 1000 — Plan paftasının uçlarında gidilen yerin oku
+# 1028 — Plan paftasının uçlarında gidilen yerin oku
 
 Tarih: 2026-11-07. Durum: kabul (Y94). Kapsam ROAD-SEC-11, ADR 0998 §Açık ("KGM'nin yön okları") ve KCAD şeması.
 

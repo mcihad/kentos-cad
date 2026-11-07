@@ -111,6 +111,18 @@ fn report(
     if before_def.is_some_and(|b| b.id == now_def.id) {
         return Err(bad("previous", format!("Önceki ölçü ara ölçünün kendisi (“{}”); daha önceki bir yüzey seçin.", now_def.name)));
     }
+    // Docs/adr/1029: the design, the original ground and the surveys on one vertical system, or taken as one.
+    let mut warnings = Vec::new();
+    let ground = terrains::surfaces(doc).iter().find(|s| s.id == cdef.surface);
+    let mut sides: Vec<crate::road_heights::Side<'_>> = vec![(&cdef.name, None)];
+    if let Some(g) = ground {
+        sides.push((&g.name, Some(g)));
+    }
+    sides.push((&now_def.name, Some(now_def)));
+    if let Some(b) = before_def {
+        sides.push((&b.name, Some(b)));
+    }
+    crate::road_heights::proven(doc, &sides, input.assume_heights, "survey", &mut warnings)?;
     let made = corridors::make(doc, cdef, false).map_err(|stop| {
         fail(codes::INVALID_VOLUME, format!("“{}” koridoru kurulamıyor: {}", cdef.name, corridors::words(stop)), "corridor")
     })?;
@@ -132,7 +144,6 @@ fn report(
     let base = between_surfaces(design, &original_tris).uncovered;
     let now = progress(design, &original_tris, &now_tris);
     let before = before_tris.as_ref().map(|b| progress(design, &original_tris, b));
-    let mut warnings = Vec::new();
     let tolerance = 1e-6 * (now.covered + now.uncovered).max(1.0);
     for (sd, p, path) in [(Some(now_def), Some(&now), "survey"), (before_def, before.as_ref(), "previous")] {
         if let (Some(sd), Some(p)) = (sd, p)

@@ -427,6 +427,12 @@ pub struct SurfaceCloudDef {
     #[cfg_attr(feature = "ts", ts(type = "number", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub outside: u64,
+    /// The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
+    /// name or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a
+    /// record made before the rule).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub vertical: Option<String>,
 }
 
 fn is_zero_u64(v: &u64) -> bool {
@@ -435,6 +441,8 @@ fn is_zero_u64(v: &u64) -> bool {
 
 /// The most cloud records a surface keeps, and the most clouds and classes one names.
 pub const MAX_SURFACE_CLOUDS: usize = 64;
+/// The most characters of a cloud record's vertical system as its file names it (docs/adr/1029).
+pub const MAX_CLOUD_VERTICAL_CHARS: usize = 200;
 
 /// What is wrong with a surface's cloud records (docs/adr/0928 §2): a record names its layer once and at least one
 /// cloud and class; the thinning's values are positive; the counts agree and the shares are shares.
@@ -467,6 +475,11 @@ fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
             || [c.error_max, c.error_rms].iter().flatten().any(|v| !(v.is_finite() && *v >= 0.0))
         {
             return Some(at("sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)"));
+        }
+        if c.vertical.as_deref().is_some_and(|v| {
+            v.is_empty() || v.trim() != v || v.chars().count() > MAX_CLOUD_VERTICAL_CHARS || v.chars().any(char::is_control)
+        }) {
+            return Some(at("düşey sistemi boş olmayan, kenarında boşluk olmayan, en çok 200 harf olmalı"));
         }
     }
     None
@@ -619,7 +632,7 @@ pub struct AlignmentDef {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub design_speed: Option<f64>,
-    /// Where the road leads beyond its start (docs/adr/1000, KCAD schema 194): the place KGM's 2024 sample sheets name
+    /// Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
     /// on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -630,7 +643,7 @@ pub struct AlignmentDef {
     pub end_place: Option<String>,
 }
 
-/// The longest place name an alignment's end takes (docs/adr/1000): a sheet's arrow label, not a description.
+/// The longest place name an alignment's end takes (docs/adr/1028): a sheet's arrow label, not a description.
 pub const MAX_PLACE_CHARS: usize = 80;
 
 /// Whether `name` is a place name an alignment's end takes: trimmed, not empty, at most [`MAX_PLACE_CHARS`] characters,

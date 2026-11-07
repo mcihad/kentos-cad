@@ -315,7 +315,7 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
             id:
             offset_of:
             pis:
-            start_place: Where the road leads beyond its start and beyond its end (docs/adr/1000): the places named on the plan's arrows.
+            start_place: Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
             stationing:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -512,7 +512,7 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             name:
             offset: A parallel axis's offset, m, right positive. Unit: m.
             pis:
-            start_place: Where the road leads beyond its start, beyond its end (docs/adr/1000); "" clears one. Not the geometry: the
+            start_place: Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
                 revision stays.
             stationing: The km; an empty one (no start, no equation) clears it.
             request_id: Names this write: sent again with the same call it is answered as

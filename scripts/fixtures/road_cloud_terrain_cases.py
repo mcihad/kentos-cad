@@ -15,6 +15,7 @@ breaklines or another surface's points the triangulation is constrained or share
 code; the classes, cells and tolerances are the cases' own.
 
     uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py --las
+    uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py --heights-las
     uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py [--check]
 """
 
@@ -79,6 +80,35 @@ def write_las():
     las.return_number = np.array([p[4] for p in pts], dtype=np.uint8)
     las.number_of_returns = np.array([p[5] for p in pts], dtype=np.uint8)
     las.write(str(LAS))
+
+
+# Docs/adr/1029: the same points in two files that name their heights' vertical system, one by a GeoTIFF key
+# (VerticalCSTypeGeoKey 4096 = EPSG 5775, Antalya height) and one by a compound WKT (VERT_CS "EGM2008 height", EPSG 3855).
+LAS_ANTALYA = ROOT / "fixtures/pointcloud/v1/files/road-ground-antalya.las"
+LAS_EGM = ROOT / "fixtures/pointcloud/v1/files/road-ground-egm2008.las"
+TM36 = (
+    'PROJCS["TUREF / TM36",GEOGCS["TUREF",DATUM["Turkish_National_Reference_Frame",SPHEROID["GRS 1980",6378137,'
+    '298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","1057"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],'
+    'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","5252"]],'
+    'PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",36],'
+    'PARAMETER["scale_factor",1],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],'
+    'UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","5256"]]'
+)
+EGM_WKT = (
+    f'COMPD_CS["TUREF / TM36 + EGM2008 height",{TM36},VERT_CS["EGM2008 height",VERT_DATUM["EGM2008 geoid",2005,'
+    'AUTHORITY["EPSG","1027"]],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Gravity-related height",UP],'
+    'AUTHORITY["EPSG","3855"]]]'
+)
+
+
+def write_heights_las():
+    las = laspy.read(str(LAS))
+    keys = np.array([1, 1, 0, 3, 1024, 0, 1, 1, 3072, 0, 1, 5256, 4096, 0, 1, 5775], dtype="<u2").tobytes()
+    las.header.vlrs.append(laspy.VLR("LASF_Projection", 34735, "GeoKeyDirectoryTag", keys))
+    las.write(str(LAS_ANTALYA))
+    las = laspy.read(str(LAS))
+    las.header.vlrs.append(laspy.VLR("LASF_Projection", 2112, "OGC Coordinate System WKT", EGM_WKT.encode() + b"\0"))
+    las.write(str(LAS_EGM))
 
 
 def read_las():
@@ -147,6 +177,27 @@ def setup(work="road"):
 
 CLOUD = UID.format(9)
 GONE = UID.format(10)
+ANTALYA, EGM = UID.format(11), UID.format(12)
+
+
+def heights_setup(heights=None, others=None):
+    """Docs/adr/1029: the drawing with the two clouds whose files name a vertical system (uids …11 and …12), the
+    project's heights and the existing surface's other cloud records as given."""
+    d = setup()
+    _, bounds = read_las()
+    n = len(read_las()[0])
+    for f in ("road-ground-antalya.las", "road-ground-egm2008.las"):
+        d["entities"].append({"kind": "pointcloud", "layerId": "bulut", "attrs": {}, "id": len(d["entities"]) + 1,
+                              "sources": [{"file": f"$fixture:pointcloud/v1/files/{f}", "format": "las", "count": n,
+                                           "bounds": bounds}],
+                              "bounds": bounds, "count": n, "srid": 5254,
+                              "style": {"render": "classification", "size": 2}})
+        d["uids"].append(UID.format(len(d["entities"])))
+    if heights is not None:
+        d["settings"]["heights"] = heights
+    if others is not None:
+        d["settings"]["road"]["surfaces"][0]["clouds"] = others
+    return d
 CORNERS = [(x, y, ground_z(x, y)) for x, y in ((990.0, 1990.0), (1050.0, 1990.0), (1050.0, 2040.0), (990.0, 2040.0))]
 POINT = UID.format(1)
 AREA_UID, OPEN_UID, ARC_UID = UID.format(6), UID.format(7), UID.format(8)
@@ -425,12 +476,19 @@ def cases():
     points, _ = read_las()
     out = []
 
-    def ok(name, inp, warns=(), plan=False):
-        output, _ = answer(inp, points)
+    def ok(name, inp, warns=(), plan=False, setup_=None, vertical=None, seen=None):
+        output, _ = answer(inp, seen or points)
+        if seen:
+            output["scanned"] = len(seen)
+        if vertical is not None:
+            output["cloud"]["vertical"] = vertical
         steps = [step("plan", inp, completed(output, warns), UNCHANGED)] if plan else []
         if not plan:
             steps.append(step("execute", inp, completed(output, warns), STEPPED))
-        out.append({"name": name, "steps": steps})
+        c = {"name": name, "steps": steps}
+        if setup_ is not None:
+            c["setup"] = setup_
+        out.append(c)
 
     def no(name, inp, result, setup_=None):
         c = {"name": name, "steps": [step("execute", inp, result, UNCHANGED)]}
@@ -511,6 +569,36 @@ def cases():
     no("Tek hücrenin tek noktası yüzey kurmaz", {**BASE, "cell": 100.0},
        failed("terrain_unbuildable", "Kaynaklardan yüzey kurulamıyor: kotlu yer üçten az ya da hepsi bir doğru "
               "üstünde."))
+    # Docs/adr/1029: the files' vertical system recorded; refused where it differs from the project's, from another
+    # source's or from the surface's other clouds'.
+    ant, egm = {**BASE, "clouds": [ANTALYA]}, {**BASE, "clouds": [EGM]}
+    ortho = lambda srid: {"kind": "orthometric", "verticalSrid": srid}  # noqa: E731
+    ok("Dosyanın düşey sistemi kaydedilir (GeoTIFF anahtarı)", ant, setup_=heights_setup(), vertical="EPSG:5775")
+    ok("Dosyanın düşey sistemi kaydedilir (WKT)", egm, setup_=heights_setup(), vertical="EGM2008 height")
+    ok("Projeninkiyle aynı düşey sistem", egm, setup_=heights_setup(ortho(3855)), vertical="EGM2008 height")
+    ok("Biri söylemiyorsa düşey sistem bilinmiyor", {**BASE, "clouds": [CLOUD, ANTALYA]}, setup_=heights_setup(),
+       seen=points + points)
+    differ = "cloud_heights_differ"
+    no("Projeninkinden başka düşey sistem: ret", egm,
+       failed(differ, "Bulutun kotları EGM2008 height (EPSG:3855), projenin kotları Antalya height (EPSG:5775): aradaki "
+              "ayrım sıfır sayılmaz, bulut noktaları çevrilmeden zemine alınmaz. Bulutu projenin sistemine çevirin ya "
+              "da projenin kotlarını Proje ayarlarında düzeltin.", "clouds"), setup_=heights_setup(ortho(5775)))
+    no("Elipsoit yüksekliğindeki projeye ortometrik bulut: ret", ant,
+       failed(differ, "Bulutun kotları Antalya height (EPSG:5775), projenin kotları elipsoit yüksekliği: aradaki ayrım "
+              "sıfır sayılmaz, bulut noktaları çevrilmeden zemine alınmaz. Bulutu projenin sistemine çevirin ya da "
+              "projenin kotlarını Proje ayarlarında düzeltin.", "clouds"),
+       setup_=heights_setup({"kind": "ellipsoidal"}))
+    no("İki kaynak iki düşey sistem: ret", {**BASE, "clouds": [ANTALYA, EGM]},
+       failed(differ, "Bulutların kaynakları ayrı düşey sistemlerde: 1. bulutun 1. kaynağı Antalya height (EPSG:5775), "
+              "2. bulutun 1. kaynağı EGM2008 height (EPSG:3855). Bir yüzeyin noktaları tek sistemde olmalı; kaynakları "
+              "önce aynı sisteme çevirin.", "clouds"), setup_=heights_setup())
+    other = [{"layer": "eski", "clouds": [EGM], "classes": [2], "returns": "all", "cell": 2.0, "read": 10, "kept": 5, "coverage": 0.5,
+              "density": 1.0, "vertical": "EGM2008 height"}]
+    no("Yüzeyin öbür bulutundan başka sistem: ret", {k: v for k, v in ant.items() if k != "name"} | {
+        "surface": "Mevcut zemin"},
+       failed(differ, "Bulutun kotları Antalya height (EPSG:5775), yüzeyin “eski” katmanındaki bulut noktalarınınki "
+              "EGM2008 height (EPSG:3855): bir yüzeyin noktaları tek sistemde olmalı.", "clouds"),
+       setup_=heights_setup(others=other))
     no("Geçersiz beklenen sürüm", {**BASE, "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {**BASE, "expectedRevision": "41"}, CONFLICT)
     return out
@@ -533,6 +621,10 @@ def main():
     if "--las" in sys.argv:
         write_las()
         print(LAS)
+        return
+    if "--heights-las" in sys.argv:
+        write_heights_las()
+        print(LAS_ANTALYA, LAS_EGM)
         return
     doc = document()
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

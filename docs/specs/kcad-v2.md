@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `194`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-195.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `195`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-196.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -841,11 +841,17 @@ paralel aksın kendisininki olmaz, kaynağınınkini kullanır). Noktanın hız�
 geçerlidir; plandaki some bilgisinin `V`'si budur. Yazıcı 193'ü bir aks ya da nokta hız taşıyınca seçer; 192 ve öncesi
 alanları `unknown_field` sayar (`broken/road-speed-in-schema-192.kcad`). Örnek `road-speed.json/.kcad`.
 
-**Şema 194** (ADR 1000; ROAD-SEC-11): aksın `startPlace` ve `endPlace`'i, yolun başının ve sonunun ötesinde gittiği
+**Şema 194** (ADR 1028; ROAD-SEC-11): aksın `startPlace` ve `endPlace`'i, yolun başının ve sonunun ötesinde gittiği
 yerler (metin; kenarında boşluk olmayan, boş olmayan, en çok 80 harf, denetim karakteri yok; paralel aksın kendisininki
 olmaz). Plan paftasının uçlarındaki yön oklarının adıdır (KGM 2024: "← KAMAN"). Yazıcı 194'ü bir aks yer taşıyınca
 seçer; 193 ve öncesi alanları `unknown_field` sayar (`broken/road-places-in-schema-193.kcad`). Örnek
 `road-places.json/.kcad`.
+
+**Şema 195** (ADR 1029; ROAD-NUM-04): yüzeyin bulut kaydının `vertical`'ı, bulut dosyalarının söylediği düşey sistem
+(WKT'nin `VERT_CS`/`VERTCRS` adı ya da GeoTIFF anahtarından `EPSG:n`; boş olmayan, kenarında boşluk olmayan, en çok 200
+harf, denetim karakteri yok). Yoksa sistem bilinmiyor demektir. Yazıcı 195'i bir bulut kaydı düşey sistem taşıyınca
+seçer; 194 ve öncesi alanı `unknown_field` sayar (`broken/road-cloud-heights-in-schema-194.kcad`). Örnek
+`road-cloud-heights.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

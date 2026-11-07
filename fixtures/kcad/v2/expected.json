@@ -35,6 +35,8 @@
     {"file": "broken/road-speed-in-schema-192.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "road-places.kcad", "sniff": "kcad", "content": "road-places.json"},
     {"file": "broken/road-places-in-schema-193.kcad", "sniff": "kcad", "error": "unknown_field"},
+    {"file": "road-cloud-heights.kcad", "sniff": "kcad", "content": "road-cloud-heights.json"},
+    {"file": "broken/road-cloud-heights-in-schema-194.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "road-work-percent.kcad", "sniff": "kcad", "content": "road-work.json", "rewrite": false},
     {"file": "road-pavement-percent.kcad", "sniff": "kcad", "content": "road-pavement.json", "rewrite": false},
     {"file": "road-pivot-percent.kcad", "sniff": "kcad", "content": "road-pivot.json", "rewrite": false},
@@ -478,7 +480,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-195.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-196.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

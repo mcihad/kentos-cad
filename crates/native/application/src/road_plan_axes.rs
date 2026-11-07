@@ -702,7 +702,7 @@ fn curves(
     }
 }
 
-/// The places the road leads to beyond its ends (docs/adr/1000; KGM's June 2024 sample sheets: "← KAMAN" and
+/// The places the road leads to beyond its ends (docs/adr/1028; KGM's June 2024 sample sheets: "← KAMAN" and
 /// "ANKARA-NİĞDE OTOYOLU →" in red at the plan's ends, on every sheet): at the first and the last of the alignment the map
 /// shows, 4 mm in from its edge, a red arrow 15 mm along the road pointing out, 4 mm beside it, and the name over it.
 fn places(out: &mut Vec<NewObject>, def: &kentos_commands::AlignmentDef, b: &Built, m: f64, h: f64, turn: f64, room: Room) {

@@ -279,6 +279,13 @@ pub struct Col<'a> {
     pub number: bool,
 }
 
+/// A command's words on heights not shown to rest on one vertical system (docs/adr/1029) as a window says them: its
+/// own choice (`choice`, “Kotlar › Aynı say”) where the command names its field `assumeHeights`.
+pub(crate) fn heights_words(text: &str, choice: &str) -> String {
+    text.replace("aynı saymak için assumeHeights verin", &format!("aynı saymak için {choice} seçin"))
+        .replace(" (assumeHeights)", &format!(" ({choice})"))
+}
+
 pub fn col(title: &str, width: f32) -> Col<'_> {
     Col { title, width: Some(width), number: false }
 }
