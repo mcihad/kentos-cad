@@ -100,6 +100,8 @@ pub struct Window {
     pub typed: Vec<(OpeningTypeField, String)>,
     /// What the change typed would do; its refusal's words when refused.
     pub preview: Option<Result<OpeningTypesEdited, String>>,
+    /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/3006).
+    pub closing: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -118,6 +120,7 @@ pub enum Event {
     Export,
     Exported(Option<PathBuf>),
     Close,
+    Answer(crate::unsaved_close::Answer),
 }
 
 fn msg(e: Event) -> Message {
@@ -707,12 +710,48 @@ impl App {
             Event::Imported(Some(path)) => self.import_opening_types(&path),
             Event::Exported(Some(path)) => self.export_opening_types(&path),
             Event::Imported(None) | Event::Exported(None) => {}
+            // Kapat, a click beside the window or Esc: asks when the chosen type has a change not applied.
             Event::Close => {
+                if self.opening_types_unapplied() {
+                    if let Some(w) = self.opening_types.as_mut() {
+                        w.closing = true;
+                    }
+                } else {
+                    self.opening_types = None;
+                    self.dialog = None;
+                }
+            }
+            Event::Answer(crate::unsaved_close::Answer::Save) => {
+                let task = self.opening_types_event(Event::Apply);
+                if self.opening_types_unapplied() {
+                    if let Some(w) = self.opening_types.as_mut() {
+                        w.closing = false;
+                    }
+                } else {
+                    self.opening_types = None;
+                    self.dialog = None;
+                }
+                return task;
+            }
+            Event::Answer(crate::unsaved_close::Answer::Discard) => {
                 self.opening_types = None;
                 self.dialog = None;
             }
+            Event::Answer(crate::unsaved_close::Answer::Stay) => {
+                if let Some(w) = self.opening_types.as_mut() {
+                    w.closing = false;
+                }
+            }
         }
         Task::none()
+    }
+
+    /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/3006).
+    fn opening_types_unapplied(&self) -> bool {
+        self.opening_types.as_ref().is_some_and(|w| {
+            self.opening_type_change().is_some()
+                || w.uses.get(w.chosen).is_some_and(|u| !w.name.trim().is_empty() && w.name.trim() != u.kind.name)
+        })
     }
 
     /// Kitaplıktan al…: an office library's types, a name the project has taken under a new one.
@@ -835,7 +874,7 @@ impl App {
             || w.uses
                 .get(w.chosen)
                 .is_some_and(|u| !w.name.trim().is_empty() && w.name.trim() != u.kind.name);
-        Frame::new(TITLE)
+        let window = Frame::new(TITLE)
             .push(body)
             .action(words::secondary(NEW, Some(msg(Event::New))))
             .action(words::secondary(REMOVE, chosen.then(|| msg(Event::Remove))))
@@ -847,7 +886,18 @@ impl App {
                 (chosen && changed).then(|| msg(Event::Apply)),
             ))
             .width(900.0)
-            .modal(msg(Event::Close))
+            .modal(msg(Event::Close));
+        if !w.closing {
+            return window;
+        }
+        use crate::unsaved_close::Answer;
+        let question = kentos_ui::widget::unsaved(
+            TITLE,
+            msg(Event::Answer(Answer::Discard)),
+            msg(Event::Answer(Answer::Stay)),
+            Some(msg(Event::Answer(Answer::Save))),
+        );
+        iced::widget::stack![window, question].into()
     }
 
     fn opening_type_form<'a>(

@@ -128,7 +128,7 @@ içi izin görmediği farklar:
 | G8 | Gerçek Mimari şeridi kod içi `kentos-cad` resimlerinden farklı (büyük düğmeler, katlanmış Proje ▾) | ADV-26 |
 | G9 | Yeni proje Giriş sekmesinde açılıyor (S12 doğrulandı) | ADV-09, ADV-13 |
 | G10 | Geçici ölçü yazısı mahal etiketinin, kapı ve pencere etiketleri duvar çizgisinin üstüne biniyor (S19 doğrulandı) | ADV-16 |
-| G11 | F1 (Fare ve klavye kısayolları) penceresi Esc'yle kapanmıyor; Kapat düğmesi kapatıyor | ADV-09 (M7) |
+| G11 | F1 (Fare ve klavye kısayolları) penceresi Esc'yle kapanmıyor; Kapat düğmesi kapatıyor **(M7'de düzeldi: yazı alanının yuttuğu Esc pencereyi kapatıyor)** | ADV-09 (M7) |
 | G12 | Durum çubuğu uyarıyı kesiyor: "Duvar sürüyor: “L”…" 1440 px'te okunmuyor, tam metin yalnız Komut geçmişi'nde | ADV-09 |
 | G13 | Şerit etiket uzunluğuna duyarlı. Bir etiket 3 harf kısalınca Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyor; 4 harf uzayınca kentos-cad'in Mimari sekmesinde bir panel ikona iniyor (M4'te görüldü) | ADV-09 (M8) |
 
@@ -595,8 +595,12 @@ tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S
 _Durum (7 Kasım 2026):_ Sekme satırı ve Öznitelikler yapıldı (M6, [ADR 3005](../docs/adr/3005-narrow-tabs-and-building-first.md)).
 - Dar pencerede sığmayan sekmeler ⋯ menüsüne giriyor. Açık sekme, bağlam sekmesi ve programın kendi sekmesi görünür kalıyor.
 - Yapı elemanının kendi bölümü Öznitelikler'de en üstte, ana satırları başında.
+- Düzenleyiciler (M7, [ADR 3006](../docs/adr/3006-editors-ask-and-pick-from-drawing.md)):
+  - Bina programı, Duvar stilleri, tipler ve Malzemeler değişiklik varken sorarak kapanıyor.
+  - Oda modülleri ve Tasarım seçenekleri'nde Çizimden seç var.
+  - Esc F1'i kapatıyor (G11).
 - Kalanlar:
-  - modalsız düzenleyiciler (M7);
+  - pencerelerin yüzer ya da dok paneli olması;
   - şeridin yeniden düzeni (M8);
   - sağ tık menüsü ve üzerine gelme kartı;
   - alt panel.
@@ -1001,7 +1005,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz **(M4, ADR 3003: yapıldı)** |
 | M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet **(M5, ADR 3004: yapıldı)** |
 | M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür **(M6, ADR 3005: yapıldı)** |
-| M7 | Modalsız mimari düzenleyiciler | ADV-09 | Kaydedilmemiş değişiklik sorusu; Çizimden seç |
+| M7 | Modalsız mimari düzenleyiciler | ADV-09 | Kaydedilmemiş değişiklik sorusu; Çizimden seç **(M7, ADR 3006: soru, Çizimden seç ve Esc yapıldı; yüzer/dok pencere kaldı)** |
 
 ### Faz 1 — Çizim mimari görünsün
 

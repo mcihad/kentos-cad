@@ -38,6 +38,10 @@ mod address_scenes;
 mod aids;
 mod alias_profile;
 mod module_names;
+mod unsaved_close;
+#[cfg(test)]
+mod unsaved_close_tests;
+mod window_pick;
 #[cfg(test)]
 mod option_contract_tests;
 #[cfg(test)]

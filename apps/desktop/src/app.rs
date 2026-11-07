@@ -1558,6 +1558,8 @@ pub struct App {
     pub(crate) table_insert: crate::tables::insert::Insert,
     /// Tabloyu düzenle's window (tables/editor.rs).
     pub(crate) table_editor: Option<crate::tables::editor::Editor>,
+    /// Çizimden seç: the window stepped aside and the selection before the pick (window_pick.rs, docs/adr/3006).
+    pub(crate) window_pick: Option<(Dialog, Vec<kentos_domain::Slot>)>,
     /// Veri çıkarımı's recipe, kept while the program runs (docs/adr/1030 §8).
     pub(crate) extract: Option<crate::tables::extract::Extract>,
     /// Detay paftaları' window (docs/adr/1112).
@@ -2009,6 +2011,7 @@ impl App {
             cogo: None,
             table_insert: Default::default(),
             table_editor: None,
+            window_pick: None,
             extract: None,
             sheet_details: None,
             plot_styles: None,
@@ -2437,7 +2440,20 @@ impl App {
                 self.refresh_value_preview();
                 return crate::input::release_keyboard();
             }
-            if matches!(self.dialog, Some(Dialog::AttributeValues | Dialog::BlockDefine)) {
+            // Esc in a window's text box closes the window, as Esc beside it does (DESIGN.md §7.9): F1 stayed open over
+            // its search box (plan G11), and the editors with their own save ask first (docs/adr/3006).
+            if matches!(
+                self.dialog,
+                Some(
+                    Dialog::AttributeValues
+                        | Dialog::BlockDefine
+                        | Dialog::Shortcuts
+                        | Dialog::WallStyles
+                        | Dialog::Program
+                        | Dialog::OpeningTypes
+                        | Dialog::Materials
+                )
+            ) {
                 self.close_dialog();
             }
             return Task::none();

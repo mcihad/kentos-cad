@@ -37,6 +37,9 @@
   - **Dar şerit ve Öznitelikler (M6, [ADR 3005](../adr/3005-narrow-tabs-and-building-first.md)):**
     - 1200 px altında sığmayan sekmeler ⋯ menüsüne girer; açık, bağlam ve programın kendi sekmesi görünür kalır.
     - Yapı elemanında Öznitelikler kendi bölümüyle başlar.
+  - **Düzenleyiciler (M7, [ADR 3006](../adr/3006-editors-ask-and-pick-from-drawing.md)):**
+    - Kendi kaydı olan düzenleyici değişiklik varken yan tık, × ve Esc'te `kentos_ui::widget::unsaved` ile sorar.
+    - Seçimle çalışan pencerede "Çizimden seç" pencereyi çeker, Enter geri getirir.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

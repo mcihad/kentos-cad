@@ -333,7 +333,8 @@ impl App {
                 }
                 // Sahneden seç's objects: the processing window opens again (processing/).
                 ViewChange::PickedObjects(keep) => {
-                    if !self.processing_picked_objects(keep)
+                    if !self.window_picked(keep)
+                        && !self.processing_picked_objects(keep)
                         && !self.edgematch_picked_objects(keep)
                         && !self.table_insert_picked(keep)
                         && !self.text_tools_picked(keep)

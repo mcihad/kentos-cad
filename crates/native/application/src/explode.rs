@@ -214,7 +214,7 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesExplode) -> Resu
                 skipped += 1;
                 not.get_or_insert((
                     at,
-                    "Duvar çizilemiyor: bir yayı duvarın genişliğinden dar.".into(),
+                    "Duvar çizilemiyor: bir yayı duvarın kalınlığından dar.".into(),
                 ));
                 continue;
             };

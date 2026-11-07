@@ -117,7 +117,7 @@ pub use compare::Compare;
 pub use compass::Compass;
 pub use context_menu::{ContextMenu, Menu, MenuButton};
 pub use date_picker::{DatePicker, TimePicker};
-pub use dialog::{Confirm, Dialog, ShortcutList};
+pub use dialog::{Confirm, Dialog, ShortcutList, unsaved};
 pub use dock::{Dock, Panel};
 pub use docking::{DockSpace, Docks, Pane};
 pub use edit_cell::EditCell;

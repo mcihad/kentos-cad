@@ -135,6 +135,11 @@ pub struct Window {
     running: Option<Running>,
     next: u64,
     said: Option<(Kind, String)>,
+    /// The program as this window would write it untouched: what closing compares with (docs/adr/3006). The rows
+    /// keep numbers as text, so the project's own program may not come back byte for byte.
+    opened: Option<Result<BuildingProgram, String>>,
+    /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks.
+    closing: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -171,6 +176,9 @@ pub enum Event {
     Checked(u64, Arc<CommandResult<ProgramChecked>>),
     Cancel,
     Save,
+    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/3006).
+    Close,
+    Answer(crate::unsaved_close::Answer),
 }
 
 fn msg(event: Event) -> Message {
@@ -191,7 +199,7 @@ fn usages(t: &str) -> Vec<String> {
 
 impl Window {
     fn of(program: &BuildingProgram) -> Self {
-        Self {
+        let mut w = Self {
             units: program
                 .units
                 .iter()
@@ -208,7 +216,19 @@ impl Window {
             version: program.version.clone().unwrap_or_default(),
             kept: program.clone(),
             ..Self::default()
-        }
+        };
+        w.opened = Some(w.program());
+        w
+    }
+
+    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/3006).
+    pub(crate) fn closing(&self) -> bool {
+        self.closing
+    }
+
+    /// Whether the window holds a change Kaydet has not written (docs/adr/3006).
+    fn unsaved(&self) -> bool {
+        self.opened.as_ref().is_some_and(|opened| *opened != self.program())
     }
 
     /// The program as typed; the words of what does not read.
@@ -488,12 +508,35 @@ impl App {
                     CommandResult::Queued { .. } => {}
                 }
             }
-            Event::Cancel => {
+            Event::Cancel | Event::Answer(crate::unsaved_close::Answer::Discard) => {
                 if let Some(r) = w.running.take() {
                     r.stop.store(true, Ordering::Relaxed);
                 }
                 self.program_window = None;
                 self.dialog = None;
+            }
+            Event::Close => {
+                if w.unsaved() {
+                    w.closing = true;
+                } else {
+                    if let Some(r) = w.running.take() {
+                        r.stop.store(true, Ordering::Relaxed);
+                    }
+                    self.program_window = None;
+                    self.dialog = None;
+                }
+            }
+            Event::Answer(crate::unsaved_close::Answer::Stay) => w.closing = false,
+            Event::Answer(crate::unsaved_close::Answer::Save) => {
+                let task = self.save_program();
+                // Written: the window is the saved program again and closes; refused, it stays and says why.
+                if self.program_window.as_ref().is_some_and(|w| !w.unsaved()) {
+                    self.program_window = None;
+                    self.dialog = None;
+                } else if let Some(w) = self.program_window.as_mut() {
+                    w.closing = false;
+                }
+                return task;
             }
             Event::Save => return self.save_program(),
         }
@@ -664,12 +707,23 @@ impl App {
             .push(words::secondary(CANCEL, Some(msg(Event::Cancel))))
             .push(words::primary(SAVE, Some(msg(Event::Save))));
         // The body scrolls with the window and grows resized or full screen; the buttons are the footer (ADR 0746 eki).
-        Frame::new(TITLE)
+        let window = Frame::new(TITLE)
             .push(head)
             .scroll(container(body).padding(iced::Padding::ZERO.right(14)))
             .footer(foot)
             .width(1000.0)
-            .modal(msg(Event::Cancel))
+            .modal(msg(Event::Close));
+        if !w.closing {
+            return window;
+        }
+        use crate::unsaved_close::Answer;
+        let question = kentos_ui::widget::unsaved(
+            TITLE,
+            msg(Event::Answer(Answer::Discard)),
+            msg(Event::Answer(Answer::Stay)),
+            Some(msg(Event::Answer(Answer::Save))),
+        );
+        iced::widget::stack![window, question].into()
     }
 
     fn program_units_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {

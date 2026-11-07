@@ -37,6 +37,7 @@ use crate::traces::Control;
 pub const TITLE: &str = "Oda modülleri";
 const CLOSE: &str = "Kapat";
 const DEFINE: &str = "Seçimden tanımla";
+const PICK: &str = "Çizimden seç";
 const UPDATE: &str = "Kaynağı güncelle";
 const DETACH: &str = "Bağımsızlaştır";
 const REMOVE: &str = "Kaynağı sil";
@@ -90,6 +91,8 @@ pub enum Event {
     RepeatAgain(bool),
     Repeat,
     Close,
+    /// Çizimden seç: the window steps aside for a pick (docs/adr/3006).
+    PickFromDrawing,
 }
 
 fn msg(e: Event) -> Message {
@@ -697,6 +700,7 @@ impl App {
                 self.room_modules = None;
                 self.dialog = None;
             }
+            Event::PickFromDrawing => self.pick_for_window(crate::app::Dialog::RoomModules, "Oda modülünün nesneleri"),
         }
         Task::none()
     }
@@ -856,6 +860,7 @@ impl App {
         let has_instance = chosen.is_some_and(|m| !m.instances.is_empty());
         Frame::new(TITLE)
             .scroll_fill(body)
+            .aside(words::ghost(PICK, Some(msg(Event::PickFromDrawing))))
             .action(words::secondary(DEFINE, Some(msg(Event::Define))))
             .action(words::secondary(
                 DETACH,

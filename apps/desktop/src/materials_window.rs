@@ -66,6 +66,8 @@ pub struct Window {
     pub conflict: Conflict,
     /// What Seçilenleri al would do; its refusal's words when refused.
     pub take_preview: Option<Result<MaterialsEdited, String>>,
+    /// Closed with a change not applied: “Kaydedilmemiş değişiklikler” asks (docs/adr/3006).
+    pub closing: bool,
 }
 
 /// The window's two views.
@@ -121,6 +123,7 @@ pub enum Event {
     Adopt,
     Apply,
     Close,
+    Answer(crate::unsaved_close::Answer),
     Tab(Tab),
     Entry(usize),
     Pick(usize),
@@ -396,6 +399,11 @@ impl App {
         }
     }
 
+    /// Whether the chosen material has a change Uygula has not written (docs/adr/3006).
+    fn materials_unapplied(&self) -> bool {
+        self.materials.as_ref().is_some_and(|w| w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some()))
+    }
+
     pub(crate) fn materials_event(&mut self, event: Event) -> Task<Message> {
         let edit = |app: &mut App, f: &dyn Fn(&mut Window)| {
             if let Some(w) = app.materials.as_mut() {
@@ -503,9 +511,38 @@ impl App {
                 }
                 self.materials_read(keep);
             }
+            // Kapat, a click beside the window or Esc: asks when the chosen material has a change not applied.
             Event::Close => {
+                if self.materials_unapplied() {
+                    if let Some(w) = self.materials.as_mut() {
+                        w.closing = true;
+                    }
+                } else {
+                    self.materials = None;
+                    self.dialog = None;
+                }
+            }
+            Event::Answer(crate::unsaved_close::Answer::Save) => {
+                let task = self.materials_event(Event::Apply);
+                if self.materials_unapplied() {
+                    // Uygula said why it could not write; the window stays to show it.
+                    if let Some(w) = self.materials.as_mut() {
+                        w.closing = false;
+                    }
+                } else {
+                    self.materials = None;
+                    self.dialog = None;
+                }
+                return task;
+            }
+            Event::Answer(crate::unsaved_close::Answer::Discard) => {
                 self.materials = None;
                 self.dialog = None;
+            }
+            Event::Answer(crate::unsaved_close::Answer::Stay) => {
+                if let Some(w) = self.materials.as_mut() {
+                    w.closing = false;
+                }
             }
             Event::Tab(_)
             | Event::Entry(_)
@@ -564,7 +601,7 @@ impl App {
         let body = row![left, container(right).width(Fill)].spacing(16).height(440.0);
         let chosen = !w.list.is_empty();
         let changed = w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some());
-        Frame::new(TITLE)
+        let window = Frame::new(TITLE)
             .push(tabs)
             .push(body)
             .action(words::secondary(NEW, Some(msg(Event::New))))
@@ -573,7 +610,18 @@ impl App {
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(APPLY, (chosen && changed).then(|| msg(Event::Apply))))
             .width(920.0)
-            .modal(msg(Event::Close))
+            .modal(msg(Event::Close));
+        if !w.closing {
+            return window;
+        }
+        use crate::unsaved_close::Answer;
+        let question = kentos_ui::widget::unsaved(
+            TITLE,
+            msg(Event::Answer(Answer::Discard)),
+            msg(Event::Answer(Answer::Stay)),
+            Some(msg(Event::Answer(Answer::Save))),
+        );
+        iced::widget::stack![window, question].into()
     }
 
     fn material_form<'a>(&'a self, w: &'a Window, m: &'a ArchMaterial, u: &'a Use) -> Element<'a, Message> {
