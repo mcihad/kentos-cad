@@ -89783,12 +89783,15 @@ class TerrainReport(_Model):
     """A surface as its sources give it now.
     Attributes:
         digest: The sources' digest now.
+        algorithm: The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's
+            constrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).
         built: The digest it was last accepted from.
     """
     id: str
     name: str
     state: TerrainState | TerrainStateName
     digest: str
+    algorithm: str | None | Unset = UNSET
     built: str | None | Unset = UNSET
     figures: TerrainFigures | None | Unset = UNSET
     left: list[TerrainLeft] | Unset = UNSET
@@ -89800,6 +89803,8 @@ class TerrainReport(_Model):
         out["name"] = self.name
         out["state"] = _enum_out(self.state)
         out["digest"] = self.digest
+        if self.algorithm is not UNSET:
+            out["algorithm"] = self.algorithm
         if self.built is not UNSET:
             out["built"] = self.built
         if self.figures is not UNSET:
@@ -89817,6 +89822,7 @@ class TerrainReport(_Model):
             name=data["name"],
             state=_enum_in(TerrainState, data["state"]),
             digest=data["digest"],
+            algorithm=data.get("algorithm", UNSET),
             built=data.get("built", UNSET),
             figures=UNSET if "figures" not in data else None if data["figures"] is None else TerrainFigures.from_json(data["figures"]),
             left=[TerrainLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,

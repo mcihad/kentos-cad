@@ -466,7 +466,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -536,7 +537,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -606,7 +608,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -676,7 +679,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -748,7 +752,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -827,7 +832,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -904,7 +910,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -975,7 +982,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1051,7 +1059,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1122,7 +1131,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1189,7 +1199,8 @@
         "name": "Mevcut zemin",
         "state": "new",
         "digest": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1258,7 +1269,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1327,7 +1339,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1396,7 +1409,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -1465,7 +1479,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -2587,7 +2602,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -2764,7 +2780,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -3313,7 +3330,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -3862,7 +3880,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -4416,7 +4435,8 @@
         "state": "current",
         "digest": "$any",
         "built": "$any",
-        "figures": "$any"
+        "figures": "$any",
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -7068,7 +7088,8 @@
          "triangles": 562,
          "trimmed": 0,
          "vertices": 291
-        }
+        },
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },
@@ -7402,7 +7423,8 @@
          "triangles": 562,
          "trimmed": 0,
          "vertices": 291
-        }
+        },
+        "algorithm": "kentos.cdt/1"
        },
        "revision": "$current"
       },

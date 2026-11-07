@@ -182540,6 +182540,13 @@
     "TerrainReport": {
       "description": "A surface as its sources give it now.",
       "properties": {
+        "algorithm": {
+          "description": "The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's\nconstrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "built": {
           "description": "The digest it was last accepted from.",
           "type": [

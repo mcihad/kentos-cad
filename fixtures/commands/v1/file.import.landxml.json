@@ -525,7 +525,8 @@
                   "trimmed": 0,
                   "minZ": 100.4,
                   "maxZ": 103.3
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 1.4210854715202004e-14,
@@ -640,7 +641,8 @@
                   "trimmed": 0,
                   "minZ": 100.48726969960045,
                   "maxZ": 103.14044630404463
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 0.544981906496659,
@@ -761,7 +763,8 @@
                   "trimmed": 0,
                   "minZ": 30.601920000000003,
                   "maxZ": 31.48584
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "uids": "$any"
@@ -874,7 +877,8 @@
                   "trimmed": 0,
                   "minZ": 100.4,
                   "maxZ": 103.3
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 1.4210854715202004e-14,
@@ -981,7 +985,8 @@
                   "trimmed": 0,
                   "minZ": 100.4,
                   "maxZ": 103.3
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 1.4210854715202004e-14,
@@ -1094,7 +1099,8 @@
                   "trimmed": 0,
                   "minZ": 100.4,
                   "maxZ": 103.3
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 1.4210854715202004e-14,
@@ -1207,7 +1213,8 @@
                   "trimmed": 0,
                   "minZ": 100.48726969960045,
                   "maxZ": 103.09389285935532
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 0.01725026583108047,
@@ -1338,7 +1345,8 @@
                   "trimmed": 0,
                   "minZ": 100.4,
                   "maxZ": 103.3
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 1.4210854715202004e-14,
@@ -1457,7 +1465,8 @@
                   "trimmed": 0,
                   "minZ": 100.4,
                   "maxZ": 103.3
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               },
               "revision": "$current",
               "differs": 1.4210854715202004e-14

@@ -402,6 +402,11 @@ pub struct TerrainReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<TerrainProblem>,
+    /// The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's
+    /// constrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub algorithm: Option<String>,
 }
 
 /// Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,

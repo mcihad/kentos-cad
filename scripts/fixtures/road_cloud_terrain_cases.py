@@ -517,6 +517,7 @@ def answer(inp, points, measured=True, turn=None):
     pieces = (len(t["points"]) + 9999) // 10000
     surface = ({"id": "t-2", "name": inp["name"], "state": "current", "digest": ANY, "built": ANY, "figures": ANY}
                if new else {"id": "t-1", "name": "Mevcut zemin", "state": "new", "digest": ANY, "figures": ANY})
+    surface["algorithm"] = "kentos.cdt/1"  # docs/adr/1036
     if turn is not None and new and not inp.get("breaklines"):
         surface["figures"] = figures(kept_pts)
     scanned = len(points)

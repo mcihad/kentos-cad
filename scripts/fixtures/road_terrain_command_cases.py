@@ -471,6 +471,8 @@ def report(d):
         out["problem"] = {"code": s.code, "message": PROBLEM[s.code], **({"at": s.at} if s.at else {})}
     else:
         out["figures"] = figures(s)
+        # Docs/adr/1036: the algorithm that made the triangles.
+        out["algorithm"] = "kentos.cdt/1"
     return out
 
 
@@ -1053,7 +1055,7 @@ def landxml_cases():
               note=None):
         r = lx_import(sf, metres)
         terrain = {"id": "t-2", "name": kentos_name or sf["name"], "state": "current", "digest": "$any", "built": "$any",
-                   "figures": r["figures"]}
+                   "figures": r["figures"], "algorithm": "kentos.cdt/1"}
         out = {"surface": sf["name"], "unit": unit, "points": r["points"], "breaklines": r["breaklines"],
                "boundary": r["boundary"], "voids": r["voids"], "faces": r["faces"], "ignored": r["ignored"],
                "terrain": terrain, "revision": "$current"}

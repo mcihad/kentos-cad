@@ -107,6 +107,7 @@ impl Made {
                     why: l.why.to_owned(),
                 })
                 .collect(),
+            algorithm: self.surface.is_ok().then(|| kentos_road::surface::ALGORITHM.to_owned()),
             figures: self.surface.as_ref().ok().map(|s| {
                 let f = s.figures();
                 let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
