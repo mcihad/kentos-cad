@@ -13,6 +13,7 @@
 //! made again from what the tools did; a row's state (undone, done again) is
 //! read when it is drawn.
 
+mod summary;
 pub(crate) mod text;
 mod view;
 

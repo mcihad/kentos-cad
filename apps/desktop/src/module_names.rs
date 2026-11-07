@@ -110,10 +110,12 @@ impl Names {
 
 /// A module's names; none for a module without a file of its own.
 pub fn of(module: Module) -> Option<&'static Names> {
-    match module {
-        Module::Architecture => Some(mimari()),
-        _ => None,
-    }
+    let names = match module {
+        Module::Architecture => mimari(),
+        _ => return None,
+    };
+    // A file names its own module: one read for another program is no program's.
+    (names.module == module).then_some(names)
 }
 
 fn mimari() -> &'static Names {

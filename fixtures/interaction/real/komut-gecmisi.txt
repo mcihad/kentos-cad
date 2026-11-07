@@ -1,0 +1,45 @@
+# M5: Türkçe komut geçmişi (docs/adr/3004). Dikdörtgen duvar, kapı ve mahal çizilir; Komut geçmişi kimliksiz özetleri
+# yazar, Ayrıntı komutu, alanları ve Python'u açar.
+# Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/komut-gecmisi.txt .run/gui-evidence/mimari-m5/sonra --modul mimari
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 114 80    # araç: Dikdörtgen duvar
+wait 400
+click 300 300
+wait 300
+click 650 560
+wait 600
+key Escape
+key Escape
+wait 300
+click 452 75    # araç: Kapı
+wait 400
+move 470 560
+wait 500
+click 470 560
+wait 600
+key Escape
+key Escape
+wait 300
+click 214 111   # araç: Mahal
+wait 400
+click 450 420
+wait 800
+key Escape
+key Escape
+wait 300
+click 1005 852  # Geçmiş
+wait 600
+click 67 499    # Komut geçmişi
+wait 600
+shot m5-1-gecmis
+click 924 564   # Dikdörtgen duvar satırının Ayrıntı'sı
+wait 700
+shot m5-2-ayrinti
+wheel 500 650 6 # listeyi yukarı: açılan satırın başı
+wait 600
+shot m5-3-ayrinti-basi

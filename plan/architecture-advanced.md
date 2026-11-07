@@ -552,9 +552,12 @@ _Durum (7 Kasım 2026):_
     - mahalin boşluğu "Şaft" değil "Döşeme boşluğu" oldu, çünkü galeri ve asansör boşluğunu da kapsıyor;
     - mahal sekmesindeki döşeme deseni "Döşeme kaplaması" değil "Döşeme deseni" oldu, çünkü kaplama mahalin
       özniteliği, araç onun desenini çiziyor.
+- **Komut geçmişi yapıldı** (M5, [ADR 3004](../docs/adr/3004-readable-command-history.md)):
+  - 18 Mimari komutu satırda okunur Türkçe özetle yazılıyor ("Dikdörtgen duvar · 3.000 × 3.000 m · iç net · ortak
+    duvar: var olan kullanılır").
+  - Komut kimliği, alanlar ve Python "Ayrıntı"da; alanlar da Türkçe ve kimliksiz.
 - **Kalanlar:**
   - en sık araçlara tek tuş (sahibin kararı);
-  - komut geçmişi (M5);
   - eş anlamlılar ("Bütün katlar"/"Tüm katlar");
   - "Temizlik", "düğüm" gibi sözcüklerin gözden geçirilmesi;
   - Harita ve kentos-cad araçlarının harfleri.
@@ -987,7 +990,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim **(M2, ADR 3001: yapıldı)** |
 | M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari **(M3, ADR 3002: yapıldı; tek tuş kısayolu sahibin kararına kaldı)** |
 | M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz **(M4, ADR 3003: yapıldı)** |
-| M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet |
+| M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet **(M5, ADR 3004: yapıldı)** |
 | M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür |
 | M7 | Modalsız mimari düzenleyiciler | ADV-09 | Kaydedilmemiş değişiklik sorusu; Çizimden seç |
 
@@ -1104,6 +1107,7 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 | Kısayolu ya da kısa adı olan mimari komut | 0 → **13 iki harfli ad (M3)** | en sık araçlara tek tuş (sahibin kararı) | 0 |
 | Aynı harfe istemde ve panelde farklı ad | 49 → **0 (M4)** | 0 | 0 |
 | İstemlerde birden çok harfte duran ad | 12 → **0 (M4)** | 0 | 0 |
+| Komut geçmişinde kimlik ya da İngilizce alan adı (Mimari komutları) | her satırda → **0 (M5)** | 0 | 0 |
 | İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
 | 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |
 | Aynı ikonu paylaşan komut | 10 | 0 | 1 |

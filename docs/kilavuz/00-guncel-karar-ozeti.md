@@ -31,6 +31,9 @@
     - Shift'li harf seçenektir; seçenek olmayan harf çalışan komutu bitirmez.
     - CAD'de imleç Açı, CBS'de Semt yazar.
     - Arayüzde kelimesi kelimesine çeviri bırakılmaz (Benimse → Var olanı kullan).
+  - **Komut geçmişi (M5, [ADR 3004](../adr/3004-readable-command-history.md)):**
+    - Mimari komutları satırda kimliksiz Türkçe özetle yazılır.
+    - Komut, alanlar ve Python "Ayrıntı" düğmesinde.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

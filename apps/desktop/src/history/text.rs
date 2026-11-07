@@ -604,12 +604,55 @@ fn field_name(key: &str) -> Option<&'static str> {
         "window" => "Pencere",
         "wipeout" => "Maske",
         "z" => "Kot",
+        // The fields Mimari's commands send, which the row said in English (docs/adr/3004).
+        "adopt" => "Ortak duvar",
+        "arch" => "Mimari",
+        "bubbleSize" => "Balon boyu",
+        "bubbles" => "Balonlar",
+        "caps" => "Uçlar",
+        "cooktop" => "Ocak",
+        "depth" => "Derinlik",
+        "dishwasher" => "Bulaşık makinesi",
+        "distanceReference" => "Ölçü noktası",
+        "edge" => "Kenar",
+        "extent" => "Kapsam",
+        "face" => "Yüz",
+        "first" => "İlk numara",
+        "fit" => "Uyum",
+        "frame" => "Çerçeve",
+        "justify" => "Hiza",
+        "keepSources" => "Kaynak çizgiler korunur",
+        "length" => "Boy",
+        "level" => "Kat",
+        "material" => "Malzeme",
+        "method" => "Alan yöntemi",
+        "middle" => "Ortada",
+        "nodes" => "Düğümler",
+        "number" => "Numara",
+        "order" => "Sıra",
+        "oven" => "Fırın",
+        "pairs" => "Çiftler",
+        "radial" => "Eğrisel aks sistemi",
+        "rings" => "Halkalar",
+        "role" => "Döşeme türü",
+        "rotation" => "Açı",
+        "sink" => "Evye",
+        "slabs" => "Döşemeler",
+        "source" => "Kaynak",
+        "span" => "Aralık",
+        "system" => "Aks sistemi",
+        "thickness" => "Kalınlık",
+        "type" => "Tür",
+        "void" => "Döşeme boşluğu",
+        "wall" => "Duvar",
+        "walls" => "Duvarlar",
+        "width" => "Genişlik",
         _ => return None,
     })
 }
 
 /// A number as people read it: at most four decimals, no trailing zeros.
-fn number(n: f64) -> String {
+pub(crate) fn number(n: f64) -> String {
     let text = format!("{n:.4}");
     let text = text.trim_end_matches('0').trim_end_matches('.');
     if text == "-0" {
@@ -651,8 +694,17 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
             {
                 return format!("«{name}»");
             }
-            if key == "uid" {
+            if key == "uid" || is_id(s) {
                 return "1 nesne".to_owned();
+            }
+            if let Some(word) = enum_word(key, s) {
+                return word.to_owned();
+            }
+            // A list of fields names them in Turkish (`fields: ["frame"]`).
+            if key == "fields"
+                && let Some(name) = field_name(s)
+            {
+                return name.to_lowercase();
             }
             // A temporary distance's reference and a length's fixed end (docs/adr/0728).
             match (key, s.as_str()) {
@@ -690,7 +742,8 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
             if let Some(p) = point(v) {
                 return p;
             }
-            let head = tag(map);
+            // An object's tag in Turkish too (`distance` is uzaklık, docs/adr/3004).
+            let head = tag(map).map(|(k, t)| (k, enum_word(k, t).unwrap_or(t)));
             if !deep {
                 return head.map_or_else(|| format!("{} alan", map.len()), |(_, t)| t.to_owned());
             }
@@ -698,7 +751,7 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
                 .iter()
                 .filter(|(k, _)| head.is_none_or(|(t, _)| t != k.as_str()))
                 .take(4)
-                .map(|(k, v)| format!("{} {}", label(k).to_lowercase(), value(k, v, layer, false)))
+                .map(|(k, v)| format!("{} {}", label_of(k, v).to_lowercase(), value(k, v, layer, false)))
                 .collect();
             match head {
                 Some((_, t)) if fields.is_empty() => t.to_owned(),
@@ -711,6 +764,78 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
 
 fn label(key: &str) -> String {
     field_name(key).map_or_else(|| key.to_owned(), str::to_owned)
+}
+
+/// A field's name for its value: a wall's `by` is how far it moves, elsewhere `by` is a way (docs/adr/3004).
+fn label_of(key: &str, v: &Value) -> String {
+    if key == "by" && v.is_number() {
+        return "Miktar".to_owned();
+    }
+    label(key)
+}
+
+/// An object's id, as the journal keeps it (`0192f5a1-6000-…`, `$uid:source`): never shown (docs/adr/3004).
+fn is_id(s: &str) -> bool {
+    if s.starts_with("$uid") {
+        return true;
+    }
+    let parts: Vec<&str> = s.split('-').collect();
+    s.len() == 36
+        && parts.iter().map(|p| p.len()).eq([8, 4, 4, 4, 12])
+        && parts.iter().all(|p| p.chars().all(|c| c.is_ascii_hexdigit()))
+}
+
+/// A tag or a choice said in Turkish: `left` is sol, `clear` net (docs/adr/3004).
+fn enum_word(key: &str, s: &str) -> Option<&'static str> {
+    let keyed = matches!(
+        key,
+        "kind" | "op" | "operation" | "side" | "measure" | "reference" | "justify" | "method" | "role" | "face"
+            | "from" | "distanceReference" | "of"
+    );
+    if !keyed {
+        return None;
+    }
+    Some(match s {
+        "left" => "sol",
+        "right" => "sağ",
+        "center" | "middle" => "orta",
+        "start" => "baş",
+        "end" => "son",
+        "corners" => "köşeler",
+        "size" => "boyut",
+        "area" => "alan",
+        "edge" => "kenar",
+        "clear" => "net",
+        "axis" => "eksen",
+        "inner" => "iç net",
+        "outer" => "dış ölçü",
+        "net" => "net",
+        "gross" => "brüt",
+        "centerline" => "duvar ekseni",
+        "shift" => "kaydır",
+        "set" => "değiştir",
+        "distance" => "uzaklık",
+        "length" => "boy",
+        "flip" => "çevir",
+        "move" => "taşı",
+        "source" => "kaynak boyunca",
+        "balcony" => "balkon",
+        "terrace" => "teras",
+        "floor" => "döşeme",
+        "fixtures" => "donatı",
+        "openings" => "açıklıklar",
+        "spaces" => "mahaller",
+        "units" => "bölümler",
+        "finishes" => "kaplamalar",
+        "direction" => "doğrultu",
+        "rehost" => "başka duvara",
+        "replaceType" => "türü değiştir",
+        "detach" => "tipten ayır",
+        "push" => "tipe uygula",
+        "refresh" => "tipi yeniden uygula",
+        "reset" => "tipe döndür",
+        _ => return None,
+    })
 }
 
 /// The input in words: “Katman: «Yapı» · Merkez: 487020, 4420015 · Yarıçap: 7.5”;
@@ -752,7 +877,12 @@ pub(crate) fn inputs_for(
             on(i.mirrors.unwrap_or(false)), on(i.scales.unwrap_or(false))
         );
     }
-    inputs(input, layer)
+    let words = inputs(input, layer);
+    // A wall's width is its Kalınlık (docs/adr/3003, 3004).
+    if command.is_some_and(|c| c.starts_with("cad.walls.")) {
+        return words.replace("Genişlik:", "Kalınlık:").replace("genişlik ", "kalınlık ");
+    }
+    words
 }
 
 pub(crate) fn inputs(input: &Value, layer: &dyn Fn(&str) -> Option<String>) -> String {
@@ -770,7 +900,7 @@ pub(crate) fn inputs(input: &Value, layer: &dyn Fn(&str) -> Option<String>) -> S
             let empty = v.is_null()
                 || v.as_array().is_some_and(Vec::is_empty)
                 || v.as_object().is_some_and(serde_json::Map::is_empty);
-            (!empty).then(|| format!("{}: {}", label(k), value(k, v, layer, true)))
+            (!empty).then(|| format!("{}: {}", label_of(k, v), value(k, v, layer, true)))
         })
         .collect();
     let text = parts.join(" · ");
@@ -919,7 +1049,7 @@ mod tests {
                 &json!({"uids": ["a", "b"], "by": {"kind": "distance", "distance": 0.5, "side": {"x": 1.0, "y": 2.0}}, "bothSides": false}),
                 &layer
             ),
-            "Nesneler: 2 nesne · İki yana: hayır · Yöntem: distance (uzaklık 0.5, yan 1, 2)"
+            "Nesneler: 2 nesne · İki yana: hayır · Yöntem: uzaklık (uzaklık 0.5, yan 1, 2)"
         );
         assert_eq!(
             inputs(
