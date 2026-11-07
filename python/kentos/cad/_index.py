@@ -220,6 +220,7 @@ COMMANDS: dict[str, Any] = {
     "cad.rasters.mosaic": rasters.mosaic,
     "cad.rasters.reproject": rasters.reproject,
     "cad.readjustment.distribute": readjustment.distribute,
+    "cad.readjustment.scope": readjustment.scope,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,
     "cad.records.page": records.page,

@@ -4,14 +4,22 @@
 //! (`parsel;hak sahibi;tapu alanı;pay`, holders by id, not by name). The answer shows the holders' totals or the
 //! parcels (deduction, net, the remainder and where it went); Sonucu kaydet writes it as CSV. Nothing is written to
 //! the drawing; no official decision is made.
+//!
+//! The scope (docs/adr/2060; `cad.readjustment.scope`): the area selected when the window opens is the boundary
+//! (düzenleme sınırı). Kapsam shows the separation sheet's numbers of the parcels it takes in and the basis of each
+//! (Yönetmelik m. 31), with the rule package's places and rounding; Esas alanları kayıtlara yaz puts each basis into the
+//! records of its parcel and says what changed, what kept its file area and what did not match.
 
 use std::path::PathBuf;
 
-use iced::widget::{Column, container, row, text_input};
+use iced::widget::{container, row, text_input};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, ReadjustmentDistribute, ReadjustmentDistributed, ReadjustmentEntry, ReadjustmentRules};
+use kentos_commands::{
+    CommandResult, Entity, ReadjustmentDistribute, ReadjustmentDistributed, ReadjustmentEntry, ReadjustmentRules,
+    ReadjustmentScope, ReadjustmentScopeParcel, ReadjustmentScoped,
+};
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, readjustment};
+use kentos_native_application::{ExecutionContext, readjustment, readjustment_scope};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
@@ -25,6 +33,7 @@ pub const TITLE: &str = "Düzenleme dağıtım taslağı";
 const CLOSE: &str = "Kapat";
 const OPEN: &str = "Kayıtları seç…";
 const SAVE: &str = "Sonucu kaydet…";
+const APPLY: &str = "Esas alanları kayıtlara yaz";
 const MODES: [(&str, &str); 4] = [
     ("half_even", "Yarımda çifte"),
     ("half_away_from_zero", "Yarımda sıfırdan uzağa"),
@@ -39,6 +48,7 @@ pub enum View {
     #[default]
     Holders,
     Parcels,
+    Scope,
 }
 
 impl std::fmt::Display for View {
@@ -46,6 +56,7 @@ impl std::fmt::Display for View {
         f.write_str(match self {
             View::Holders => "Hak sahipleri",
             View::Parcels => "Parseller",
+            View::Scope => "Kapsam",
         })
     }
 }
@@ -57,6 +68,13 @@ pub struct State {
     pub file: Option<String>,
     pub view: View,
     pub answer: Option<Result<ReadjustmentDistributed, String>>,
+    /// The boundary's uid: the area selected when the window opened (docs/adr/2060).
+    pub boundary: Option<String>,
+    /// The narrowest piece counted (metres).
+    pub tolerance: f64,
+    pub scope: Option<Result<ReadjustmentScoped, String>>,
+    /// What Esas alanları kayıtlara yaz did, a line each (true: to look at).
+    pub applied: Vec<(bool, String)>,
 }
 
 impl Default for State {
@@ -78,6 +96,10 @@ impl Default for State {
             file: None,
             view: View::default(),
             answer: None,
+            boundary: None,
+            tolerance: readjustment_scope::FIRST_TOLERANCE,
+            scope: None,
+            applied: Vec::new(),
         }
     }
 }
@@ -96,6 +118,8 @@ pub enum Event {
     Pick,
     Picked(Option<PathBuf>),
     View(View),
+    Tolerance(f64),
+    Apply,
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -156,7 +180,124 @@ pub fn csv(r: &ReadjustmentDistributed) -> String {
     out
 }
 
+/// A scope parcel's status in words (with what the part outside keeps when it is said).
+pub fn status_word(p: &ReadjustmentScopeParcel) -> String {
+    let rest = p.outside_recorded.as_deref().unwrap_or("");
+    let mut out = match p.status.as_str() {
+        "registered" => "Tescilli esas".to_owned(),
+        "computed" if p.pieces > 1 => format!("Giren kısım esas; {} parçada {rest} kalır", p.pieces),
+        "computed" => format!("Giren kısım esas; dışarıda {rest} kalır"),
+        "needsCorrection" => "Yanılma sınırı dışında: düzeltme gerekir".to_owned(),
+        "noRecord" => "Tescilli yüzölçümü yok".to_owned(),
+        "invalidRecord" => "Kayıt okunmuyor".to_owned(),
+        "finerThanPolicy" => "Tescilli, basamaktan ince".to_owned(),
+        "outsideTooSmall" => format!("Girmeyen hatayı taşımıyor ({rest})"),
+        "sliver" => "Sınır kenara çok yakın: şerit".to_owned(),
+        "outside" => "Sınırın dışında".to_owned(),
+        other => other.to_owned(),
+    };
+    if p.duplicate {
+        out.push_str(" · aynı Ada/Parsel");
+    }
+    out
+}
+
+/// Each record whose parcel has a basis in the scope (and is the only one of its name) takes the basis as its area;
+/// the lines: what changed, the parcels whose records kept the file's area (no basis), the scope's parcels without a
+/// record, the records' parcels outside the scope.
+pub fn apply(entries: &mut [ReadjustmentEntry], scope: &ReadjustmentScoped) -> Vec<(bool, String)> {
+    let mut changed = Vec::new();
+    let mut kept = Vec::new();
+    let mut unrecorded = Vec::new();
+    for p in &scope.parcels {
+        let mine: Vec<usize> = (0..entries.len()).filter(|&i| entries[i].parcel.trim() == p.parcel).collect();
+        if mine.is_empty() {
+            if p.kind != "outside" {
+                unrecorded.push(p.parcel.clone());
+            }
+            continue;
+        }
+        match (&p.basis, p.duplicate) {
+            (Some(b), false) => {
+                let before = entries[mine[0]].area.clone();
+                for &i in &mine {
+                    entries[i].area = b.clone();
+                }
+                if before.trim() != b {
+                    changed.push(format!("{} {before} → {b}", p.parcel));
+                }
+            }
+            _ => kept.push(format!("{} ({})", p.parcel, if p.duplicate { "aynı Ada/Parsel" } else { status_short(&p.status) })),
+        }
+    }
+    let mut outside: Vec<String> = Vec::new();
+    for e in entries.iter() {
+        let name = e.parcel.trim();
+        if !scope.parcels.iter().any(|p| p.parcel == name) && !outside.iter().any(|o| o == name) {
+            outside.push(name.to_owned());
+        }
+    }
+    let mut lines = vec![(
+        false,
+        if changed.is_empty() {
+            "Esas alanlar kayıtlara yazıldı; hiçbir kaydın alanı değişmedi.".to_owned()
+        } else {
+            format!("{} parselin kayıtlarında alan esas alanla değişti: {}.", changed.len(), changed.join("; "))
+        },
+    )];
+    if !kept.is_empty() {
+        lines.push((true, format!("Esası olmayan parsellerin kayıtları dosyadaki alanla kaldı, inceleyin: {}.", kept.join(", "))));
+    }
+    if !unrecorded.is_empty() {
+        lines.push((true, format!("Kapsamda olup kaydı olmayan parsel: {}.", unrecorded.join(", "))));
+    }
+    if !outside.is_empty() {
+        lines.push((true, format!("Kapsamda olmayan kayıt parseli: {}.", outside.join(", "))));
+    }
+    lines
+}
+
+/// A status in a few words, for a list.
+fn status_short(status: &str) -> &'static str {
+    match status {
+        "needsCorrection" => "yanılma sınırı dışında",
+        "noRecord" => "tescilli yüzölçümü yok",
+        "invalidRecord" => "kayıt okunmuyor",
+        "finerThanPolicy" => "politikadan ince",
+        "outsideTooSmall" => "girmeyen kısım hatayı taşımıyor",
+        "sliver" => "şerit",
+        "outside" => "dışarıda",
+        _ => "esas yok",
+    }
+}
+
+/// The one selected object's uid when it is an area: the boundary.
+fn chosen_boundary(app: &App) -> Option<String> {
+    let doc = app.document.as_ref()?;
+    let [slot] = app.selection.ids() else { return None };
+    matches!(doc.model.get(*slot)?, Entity::Polygon(_)).then(|| doc.model.uid(*slot).map(|u| u.to_string())).flatten()
+}
+
 impl App {
+    /// The scope of the boundary with the rule package's places and rounding.
+    pub(crate) fn readjustment_scope_run(&mut self) {
+        let s = &self.readjustment;
+        let Some(boundary) = s.boundary.clone() else {
+            self.readjustment.scope = None;
+            return;
+        };
+        let input = ReadjustmentScope {
+            boundary,
+            uids: None,
+            field: None,
+            scale: s.rules.scale,
+            rounding: s.rules.rounding.clone(),
+            tolerance: Some(s.tolerance),
+        };
+        let Some(doc) = self.document.as_ref() else { return };
+        self.readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
+    }
+
     pub(crate) fn readjustment_run(&mut self) {
         let s = &self.readjustment;
         if s.entries.is_empty() {
@@ -183,7 +324,8 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.readjustment = State::default();
+        self.readjustment = State { boundary: chosen_boundary(self), ..State::default() };
+        self.readjustment_scope_run();
         self.dialog = Some(Dialog::Readjustment);
         Task::none()
     }
@@ -209,8 +351,25 @@ impl App {
             Event::Source(v) => r.source = v,
             Event::Effective(v) => r.effective = v,
             Event::Deduction(v) => r.deduction = v,
-            Event::Scale(v) => r.scale = v.max(0.0) as u32,
-            Event::Rounding(v) => r.rounding = v,
+            Event::Scale(v) => {
+                r.scale = v.max(0.0) as u32;
+                self.readjustment_scope_run();
+            }
+            Event::Rounding(v) => {
+                r.rounding = v;
+                self.readjustment_scope_run();
+            }
+            Event::Tolerance(v) => {
+                self.readjustment.tolerance = v;
+                self.readjustment_scope_run();
+                return Task::none();
+            }
+            Event::Apply => {
+                if let Some(Ok(scope)) = &self.readjustment.scope {
+                    let scope = scope.clone();
+                    self.readjustment.applied = apply(&mut self.readjustment.entries, &scope);
+                }
+            }
             Event::Remainder(v) => r.remainder = v,
             Event::View(v) => {
                 self.readjustment.view = v;
@@ -322,11 +481,47 @@ impl App {
                 ]
                 .spacing(10)
                 .align_y(Center),
+            )
+            .field(
+                "Kapsam",
+                row![
+                    words::secondary(APPLY, (matches!(s.scope, Some(Ok(_))) && !s.entries.is_empty()).then(|| msg(Event::Apply))),
+                    label::caption("Şerit toleransı"),
+                    NumberInput::new(s.tolerance, |v| msg(Event::Tolerance(v))).step(0.001).decimals(3).width(90),
+                    label::caption("m")
+                ]
+                .spacing(10)
+                .align_y(Center),
             );
         let mut lines = vec![words::text_line(
             Kind::Info,
             "Taslak: sonuç tekrarlanabilir bir öneridir; incelenip yetkili onayı olmadan kaydın yerine geçmez, resmî uygunluk kararı verilmez.",
         )];
+        let f = self.format();
+        match &s.scope {
+            Some(Ok(k)) => lines.push(words::text_line(
+                if k.review > 0 { Kind::Warn } else { Kind::Ok },
+                format!(
+                    "Düzenleme sınırı {} m²: {} parsel ({} tamamı, {} kısmen giriyor); {} parselin esas alanı var, toplamı {} m²; {} parsel incelenmeli; parsellerin kaplamadığı alan {} m².",
+                    f.area_bare(k.boundary_area),
+                    k.parcels.len(),
+                    k.whole,
+                    k.partial,
+                    k.ready,
+                    k.basis,
+                    k.review,
+                    f.area_bare(k.uncovered)
+                ),
+            )),
+            Some(Err(why)) => lines.push(words::text_line(Kind::Error, format!("Kapsam: {why}"))),
+            None => lines.push(words::text_line(
+                Kind::Info,
+                "Düzenleme sınırı seçili değil: çizimde sınırı (kapalı bir alan) seçip pencereyi açın; kapsam ve ayırma çapının sayıları onunla hesaplanır.",
+            )),
+        }
+        for (look, line) in &s.applied {
+            lines.push(words::text_line(if *look { Kind::Warn } else { Kind::Ok }, line.clone()));
+        }
         let mut table: Element<'_, Message> = words::empty("Kayıt yok: kayıtları seçin.");
         match &s.answer {
             Some(Ok(a)) => {
@@ -353,6 +548,8 @@ impl App {
                     ),
                 ));
                 table = match s.view {
+                    // Kapsam's table is the scope's, set below.
+                    View::Scope => words::empty("Düzenleme sınırı seçili değil."),
                     View::Holders => sheet(
                         vec![col("Hak sahibi", 160.0), num("Toplam hak (m²)", 160.0)],
                         a.holders.iter().map(|h| vec![h.holder.clone(), h.value.clone()]).collect(),
@@ -390,18 +587,66 @@ impl App {
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
         }
-        let body = Column::new()
-            .spacing(12)
+        if s.view == View::Scope {
+            table = match &s.scope {
+                Some(Ok(k)) => sheet(
+                    vec![
+                        col("Parsel", 55.0),
+                        col("Giriş", 60.0),
+                        num("Tescilli", 80.0),
+                        num("Hesaplanan", 75.0),
+                        num("Fark / sınır", 105.0),
+                        num("Giren", 70.0),
+                        num("Girmeyen", 70.0),
+                        num("Esas alan", 70.0),
+                        col("Durum", 270.0),
+                    ],
+                    k.parcels
+                        .iter()
+                        .map(|p| {
+                            let kind = match p.kind.as_str() {
+                                "whole" => "Tamamı",
+                                "partial" => "Kısmen",
+                                _ => "Dışarıda",
+                            };
+                            let diff = match p.difference {
+                                Some(d) => format!("{}{} / ±{}", if d > 0.0 { "+" } else { "" }, f.area_bare(d), f.area_bare(p.limit)),
+                                None => format!("— / ±{}", f.area_bare(p.limit)),
+                            };
+                            vec![
+                                p.parcel.clone(),
+                                kind.to_owned(),
+                                p.recorded_text.clone().unwrap_or_else(|| "—".into()),
+                                f.area_bare(p.calculated),
+                                diff,
+                                f.area_bare(p.inside),
+                                f.area_bare(p.outside),
+                                p.basis.clone().unwrap_or_else(|| "—".into()),
+                                status_word(p),
+                            ]
+                        })
+                        .collect(),
+                    "Sınırın içinde parsel yok.",
+                    240.0,
+                ),
+                Some(Err(_)) => words::empty("Kapsam hesaplanamadı."),
+                None => words::empty("Düzenleme sınırı seçili değil."),
+            };
+        }
+        // The body scrolls and the table takes what is left, so the footer stays on a short window.
+        let body = kentos_ui::widget::grow::Grows::new()
+            .spacing(12.0)
+            .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Holders, View::Parcels], s.view, |v| msg(Event::View(v))))
-            .push(table);
+            .push(Segmented::new([View::Holders, View::Parcels, View::Scope], s.view, |v| msg(Event::View(v))))
+            .push_fit(table, kentos_ui::theme::typography::scaled(200.0));
         let ready = matches!(s.answer, Some(Ok(_)));
         Frame::new(TITLE)
-            .push(body)
+            .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
-            .width(860.0)
+            .width(1000.0)
             .modal(msg(Event::Close))
     }
 
@@ -410,6 +655,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(OPEN) => Some(msg(Event::Pick)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(APPLY) => Some(msg(Event::Apply)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

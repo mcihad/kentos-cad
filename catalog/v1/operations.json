@@ -173,9 +173,10 @@
     "readjustment.distribute": {
       "level": "query",
       "via": [
-        "cad.readjustment.distribute"
+        "cad.readjustment.distribute",
+        "cad.readjustment.scope"
       ],
-      "note": "Pencere kural paketini ve CSV kayıtlarını cad.readjustment.distribute'e verir, sonucu gösterir (salt okunur, her zaman taslak); Sonucu kaydet CSV yazar (ADR 1460)."
+      "note": "Pencere kural paketini ve CSV kayıtlarını cad.readjustment.distribute'e verir, sonucu gösterir (salt okunur, her zaman taslak); Sonucu kaydet CSV yazar (ADR 1460). Açılırken seçili alan düzenleme sınırıdır: Kapsam cad.readjustment.scope'un ayırma çapı sayılarını ve esas alanları gösterir, Esas alanları kayıtlara yaz esasları kayıtlara koyar (ADR 2060)."
     },
     "scenario.impact": {
       "level": "query",

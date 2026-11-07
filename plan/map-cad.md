@@ -773,6 +773,16 @@ yedi basamak; ikincil kaynaklar), Netcad Netmap/Netkamu/Nettop. Kanıtlanan (kab
 kime gittiği, toplamın kesin korunumu; sonuç hep taslak (`cad.readjustment.distribute`, 30 ortak durum, Python fractions).
 Açık: değer esaslı dağıtım, kamulaştırma/toplulaştırma, kapsam geometrisi, itiraz/sürüm, yetkiler ve ikinci kabul.
 
+**7 Kasım 2026 — Düzenleme kapsamı ve ayırma çapının sayıları ([ADR 2060](../docs/adr/2060-readjustment-scope-and-separation-sheet.md)).**
+Kapsam işareti: **Harita + CBS**. Araştırma: Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik'in Resmî Gazete metni
+(m. 4/c-f, 13, 31) ve m. 31(3)'ün güncel atfı (2022 Yanılma Sınırı Yönetmeliği, ADR 1400'ün çizelgesi). Kanıtlanan:
+düzenleme sınırına giren parseller (`cad.readjustment.scope`, 31 ortak durum, kesirle kırpan bağımsız başvuru); tescilli
+ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım, dış parça sayısı; esas alan (tamamı girende
+tescilli, kısmen girende giren kısmın hesaplananı, hata girmeyende); belirsiz durumda esas yok (yanılma sınırı dışı,
+kayıt yok, politikadan ince, girmeyen hatayı taşımıyor, şerit); masaüstünde seçili sınırdan Kapsam ve Esas alanları
+kayıtlara yaz; Python ve MCP. Açık: m. 8(5) yanılma sınırı, ayırma çapının çizimi, değer esaslı dağıtım,
+kamulaştırma/toplulaştırma, itiraz/sürüm, yetkiler ve ikinci kabul.
+
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K22]–[K24], [K04], [K40].

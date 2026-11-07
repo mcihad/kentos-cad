@@ -73,7 +73,8 @@ politika), docs/specs/numeric-policy.md §6, [ADR 1400](1400-parcel-area-check-a
 ## Sonra (MAP-11'in kalanı; sahibiyle ayrı kapsam)
 
 - Değer esaslı dağıtım, kamulaştırma ve irtifak, arazi toplulaştırması.
-- Kapsam geometrisi ve öneri parselasyonu.
+- Kapsam geometrisi ve öneri parselasyonu. Kapsam ve ayırma çapının sayıları:
+  [ADR 2060](2060-readjustment-scope-and-separation-sheet.md). Öneri parselasyonu açık.
 - İtiraz ve düzeltme, sürüm karşılaştırması, belge ve kişisel veri yetkileri.
 - İkinci kabul: anonim gerçek örneğin yetkili uzman ya da kurumla karşılaştırılması. Bu yapılmadan “resmî işlem hazır”
   denmez.

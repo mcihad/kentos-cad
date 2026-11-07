@@ -68,6 +68,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-09 / ADR 1420: `cad.zoning.check`'in web işleyicisi, İmar planı denetimi penceresi; web'in profil listesi üç yerleşik profili (imar-plani) söylesin.
 - MAP-10 / ADR 1440: `cad.scenarios.impact`'in web işleyicisi ve Senaryo ölçüleri penceresi (eski adı Alternatif etkisi).
 - MAP-11 / ADR 1460: `cad.readjustment.distribute`'in web işleyicisi ve Düzenleme dağıtım taslağı penceresi.
+- MAP-11 / ADR 2060: `cad.readjustment.scope`'un web işleyicisi; web'in dağıtım penceresinde Kapsam görünümü ve Esas
+  alanları kayıtlara yaz.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

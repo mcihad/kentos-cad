@@ -320,6 +320,7 @@ pub mod field_package;
 pub mod zoning_check;
 pub mod scenarios_impact;
 pub mod readjustment;
+pub mod readjustment_scope;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
 pub mod pointcloud_overlap;
@@ -1475,6 +1476,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_ZONING_CHECK, kentos_commands::CAD_ZONING_CHECK_VERSION),
     (kentos_commands::CAD_SCENARIOS_IMPACT, kentos_commands::CAD_SCENARIOS_IMPACT_VERSION),
     (kentos_commands::CAD_READJUSTMENT_DISTRIBUTE, kentos_commands::CAD_READJUSTMENT_DISTRIBUTE_VERSION),
+    (kentos_commands::CAD_READJUSTMENT_SCOPE, kentos_commands::CAD_READJUSTMENT_SCOPE_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_CHECK, kentos_commands::CAD_ORTHOPHOTO_CHECK_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_COMPARE, kentos_commands::CAD_ORTHOPHOTO_COMPARE_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),

@@ -131,6 +131,9 @@
   paketin `mosaic`'i × iri YÖA (m. 67(6), paket sürüm 2); arazi noktalarıyla her görüntünün kendi denetimi.
 - **Düzenleme dağıtım taslağı (6 Kasım 2026; MAP-11, [ADR 1460](../../docs/adr/1460-readjustment-distribution-draft.md)).**
   `cad.readjustment.distribute` (Harita + CBS, salt okunur, hep taslak): oranlar kural paketinin verisi, sayılar kesin.
+- **Düzenleme kapsamı (7 Kasım 2026; MAP-11, [ADR 2060](../../docs/adr/2060-readjustment-scope-and-separation-sheet.md)).**
+  `cad.readjustment.scope` (Harita + CBS, salt okunur): seçili düzenleme sınırına giren parseller, ayırma çapının
+  sayıları ve Yönetmelik m. 31'e göre esas alan; belirsizde esas yok. Pencere esasları kayıtlara yazar.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

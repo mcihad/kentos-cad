@@ -9569,6 +9569,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Düzenleme kapsamı (plan/map-cad.md MAP-11, docs/adr/2060).
+        CommandDescriptor {
+            id: crate::CAD_READJUSTMENT_SCOPE.into(),
+            version: crate::CAD_READJUSTMENT_SCOPE_VERSION,
+            title: "Düzenleme kapsamı".into(),
+            summary: "Bir arazi düzenlemesinin sınırına (boundary: kapalı bir alan) giren parselleri ayırma çapının sayılarıyla ve dağıtıma esas alanla verir (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, 31): her parselin tescilli yüzölçümü (field, ilk değer Tapu alanı (m²); yazıldığı gibi), koordinatlardan hesaplanan yüzölçümü, farkı ve yanılma sınırı (cad.parcels.check'in 2022 Yönetmeliği m. 8(2) çizelgesi), sınırın içinde ve dışında kalan kısımlar (kesin; yaylar yay kalır), dışarıdaki parçalar (her biri ayrı parsel numarası alır). \
+                      Esas alan: tamamı giren ve yanılma sınırı içindeki parselde tescilli yüzölçümü (31/1); kısmen girende giren kısmın hesaplanan yüzölçümü, scale ve rounding ile bir kez yuvarlanmış (31/2), hata girmeyen kısımda kalır (outsideRecorded = tescilli − esas). Esas yok: yanılma sınırı dışında (needsCorrection: düzeltilmiş yüzölçümü kadastronun işidir), kayıt yok ya da okunmuyor, tescilli politikanın basamağından ince (finerThanPolicy), girmeyen kısım hatayı taşıyamıyor (outsideTooSmall), toleranstan (tolerance, ilk değer 0,01 m, ortalama genişlik 2A/P) dar parça var (sliver: sınır parselin kenarının yakınından geçiyor). \
+                      Toplamlar: sınırın alanı, parsellerin içerideki kısımları, hiçbir parselin kaplamadığı alan, esasların kesin toplamı, sayılar. uids yoksa parsel katmanının (parsel) sınırın içinde kısmı olan alanları. Salt okunur; hesaplanan alan tescilli alanın üstüne yazılmaz, resmî karar verilmez. \
+                      Retler: invalid_input (scale > 6, rounding, tolerance), invalid_uid, entity_not_found, not_an_area (boundary), not_a_parcel (uids[i])."
+                .into(),
+            aliases: vec!["duzenlemekapsami".into(), "ayirmacapi".into(), "duzenlemesiniri".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ReadjustmentScope>(),
+            output: schema::<crate::ReadjustmentScoped>(),
+            plan: Some(schema::<crate::ReadjustmentScoped>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Düzenleme sınırına giren parseller, iki basamak, yarımda çifte".into(),
+                input: json!({ "boundary": "0192f800-2060-7000-8000-000000000001", "scale": 2, "rounding": "half_even" }),
+                output: None,
+            }],
+        },
         // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
         CommandDescriptor {
             id: crate::CAD_SCENARIOS_IMPACT.into(),
@@ -16455,6 +16483,7 @@ mod tests {
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
+                    crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScope>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegister>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
@@ -17426,6 +17455,7 @@ mod tests {
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
+                        crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScoped>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),

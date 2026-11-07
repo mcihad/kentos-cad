@@ -2478,6 +2478,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Düzenleme kapsamı (plan/map-cad.md MAP-11, docs/adr/2060).
+    Entry {
+        id: "cad.readjustment.scope",
+        refusals: &[&["invalid_input", "invalid_uid", "entity_not_found", "not_an_area", "not_a_parcel"]],
+        warnings: &[],
+        targets: none,
+    },
     // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
     Entry {
         id: "cad.scenarios.impact",

@@ -103,9 +103,11 @@
       "title": "Düzenleme dağıtım taslağı…",
       "short": "Dağıtım taslağı",
       "icon": "readjustment",
-      "description": "Arazi düzenlemesinin ilk sayılarını taslak olarak hesaplar (cad.readjustment.distribute; ADR 1460): kural paketi (kurum, kaynak belge, yürürlük, sürüm, kesinti oranı, sayı politikası) ve parsel/hak sahibi/tapu alanı/pay kayıtlarından kesinti, net alan ve kesin paylı haklar; artığın gittiği yer ve toplamın kesin korunumu. Salt okunur; resmî karar vermez. Harita ve CBS'de.",
+      "description": "Arazi düzenlemesinin ilk sayılarını taslak olarak hesaplar (cad.readjustment.distribute; ADR 1460): kural paketi (kurum, kaynak belge, yürürlük, sürüm, kesinti oranı, sayı politikası) ve parsel/hak sahibi/tapu alanı/pay kayıtlarından kesinti, net alan ve kesin paylı haklar; artığın gittiği yer ve toplamın kesin korunumu. Açılırken seçili alan düzenleme sınırıdır (cad.readjustment.scope; ADR 2060): Kapsam giren parsellerin ayırma çapı sayılarını (tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım) ve esas alanı gösterir, Esas alanları kayıtlara yaz esasları kayıtlara koyar. Salt okunur; resmî karar vermez. Harita ve CBS'de.",
       "aliases": [
         "DUZENLEMEDAGITIM",
+        "DUZENLEMEKAPSAMI",
+        "AYIRMACAPI",
         "18MADDE"
       ],
       "shortcuts": [],

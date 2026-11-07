@@ -76090,6 +76090,227 @@ class ReadjustmentRules(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReadjustmentScope(_Model):
+    """Input of `cad.readjustment.scope` v1: the boundary (a closed area's uid), the parcels (none: every area on the
+    parcel layer `parsel` that has a part inside it), the attribute that holds the registered area (none:
+    `Tapu alanı (m²)`), the places and rounding of a computed basis (the rule package's numeric policy: `half_even`,
+    `half_away_from_zero`, `half_toward_zero`, `away_from_zero`, `toward_zero`, `toward_positive`, `toward_negative`),
+    and the narrowest piece counted (metres, mean width 2A/P; none: 0.01).
+
+    Refusals, in this order: `invalid_input` (`scale` over 6, `rounding` unknown, `tolerance` not finite or under
+    1e-6), `invalid_uid`, `entity_not_found` and `not_an_area` (`boundary`), then `invalid_uid`, `entity_not_found` and
+    `not_a_parcel` (`uids[i]`).
+    Attributes:
+        scale: Unit: count.
+        tolerance: Unit: length.
+    """
+    boundary: str
+    scale: int
+    rounding: str
+    field: str | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["boundary"] = self.boundary
+        out["scale"] = self.scale
+        out["rounding"] = self.rounding
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentScope:
+        return cls(
+            boundary=data["boundary"],
+            scale=data["scale"],
+            rounding=data["rounding"],
+            field=data.get("field", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentScopeParcel(_Model):
+    """A parcel in the scope: its uid and its records' name (`Ada/Parsel`), its identity's parts as written, how the
+    boundary takes it (`whole`, `partial`, `outside`), its registered area's text as written, its computed area, the
+    difference (computed − registered) and the tolerance (from the computed area) and whether it is within; the parts
+    inside and outside (square metres), the outside pieces counted (each gets its own parcel number, Article 13(3)) and
+    the pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square
+    metres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,
+    `outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,
+    `noIdentity` when Ada or Parsel is missing.
+    Attributes:
+        calculated: Unit: area.
+        limit: Unit: area.
+        inside: Unit: area.
+        outside: Unit: area.
+        pieces: Unit: count.
+        slivers: Unit: count.
+        difference: Unit: area.
+    """
+    uid: str
+    parcel: str
+    il: str
+    ilce: str
+    mahalle: str
+    ada: str
+    parsel: str
+    kind: str
+    calculated: float
+    limit: float
+    inside: float
+    outside: float
+    pieces: int
+    slivers: int
+    status: str
+    basis: str | None | Unset = UNSET
+    difference: float | None | Unset = UNSET
+    duplicate: bool | Unset = UNSET
+    no_identity: bool | Unset = UNSET
+    outside_recorded: str | None | Unset = UNSET
+    recorded_text: str | None | Unset = UNSET
+    within: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["parcel"] = self.parcel
+        out["il"] = self.il
+        out["ilce"] = self.ilce
+        out["mahalle"] = self.mahalle
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["kind"] = self.kind
+        out["calculated"] = float(self.calculated)
+        out["limit"] = float(self.limit)
+        out["inside"] = float(self.inside)
+        out["outside"] = float(self.outside)
+        out["pieces"] = self.pieces
+        out["slivers"] = self.slivers
+        out["status"] = self.status
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.duplicate is not UNSET:
+            out["duplicate"] = self.duplicate
+        if self.no_identity is not UNSET:
+            out["noIdentity"] = self.no_identity
+        if self.outside_recorded is not UNSET:
+            out["outsideRecorded"] = self.outside_recorded
+        if self.recorded_text is not UNSET:
+            out["recordedText"] = self.recorded_text
+        if self.within is not UNSET:
+            out["within"] = self.within
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentScopeParcel:
+        return cls(
+            uid=data["uid"],
+            parcel=data["parcel"],
+            il=data["il"],
+            ilce=data["ilce"],
+            mahalle=data["mahalle"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            kind=data["kind"],
+            calculated=float(data["calculated"]),
+            limit=float(data["limit"]),
+            inside=float(data["inside"]),
+            outside=float(data["outside"]),
+            pieces=data["pieces"],
+            slivers=data["slivers"],
+            status=data["status"],
+            basis=data.get("basis", UNSET),
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            duplicate=data.get("duplicate", UNSET),
+            no_identity=data.get("noIdentity", UNSET),
+            outside_recorded=data.get("outsideRecorded", UNSET),
+            recorded_text=data.get("recordedText", UNSET),
+            within=data.get("within", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentScoped(_Model):
+    """Output of `cad.readjustment.scope` v1: the tolerance's rule (`cad.parcels.check`'s), the registered area's
+    attribute, the places, rounding and piece tolerance used; the boundary's area, the parcels' parts inside it and
+    what of the boundary no parcel in the answer covers (roads, water … when the parcels do not overlap; square
+    metres); the bases' exact sum (decimal text); the counts (whole, partial, with a basis, needing review); the parcels
+    in the drawing's order (or the uids').
+    Attributes:
+        scale: Unit: count.
+        tolerance: Unit: length.
+        boundary_area: Unit: area.
+        inside: Unit: area.
+        uncovered: Unit: area.
+        whole: Unit: count.
+        partial: Unit: count.
+        ready: Unit: count.
+        review: Unit: count.
+    """
+    rule: str
+    field: str
+    scale: int
+    rounding: str
+    tolerance: float
+    boundary_area: float
+    inside: float
+    uncovered: float
+    basis: str
+    whole: int
+    partial: int
+    ready: int
+    review: int
+    parcels: list[ReadjustmentScopeParcel]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["field"] = self.field
+        out["scale"] = self.scale
+        out["rounding"] = self.rounding
+        out["tolerance"] = float(self.tolerance)
+        out["boundaryArea"] = float(self.boundary_area)
+        out["inside"] = float(self.inside)
+        out["uncovered"] = float(self.uncovered)
+        out["basis"] = self.basis
+        out["whole"] = self.whole
+        out["partial"] = self.partial
+        out["ready"] = self.ready
+        out["review"] = self.review
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentScoped:
+        return cls(
+            rule=data["rule"],
+            field=data["field"],
+            scale=data["scale"],
+            rounding=data["rounding"],
+            tolerance=float(data["tolerance"]),
+            boundary_area=float(data["boundaryArea"]),
+            inside=float(data["inside"]),
+            uncovered=float(data["uncovered"]),
+            basis=data["basis"],
+            whole=data["whole"],
+            partial=data["partial"],
+            ready=data["ready"],
+            review=data["review"],
+            parcels=[ReadjustmentScopeParcel.from_json(e0) for e0 in data["parcels"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecipeLevel(_Model):
     """The level a recipe draws (docs/adr/0716's map level): its id, the level under it faint with `below`."""
     id: str
@@ -129990,6 +130211,9 @@ __all__ = [
     "ReadjustmentParcel",
     "ReadjustmentPart",
     "ReadjustmentRules",
+    "ReadjustmentScope",
+    "ReadjustmentScopeParcel",
+    "ReadjustmentScoped",
     "RebindReviewNoteOp",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",

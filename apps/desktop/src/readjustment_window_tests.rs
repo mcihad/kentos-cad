@@ -1,6 +1,9 @@
 //! Düzenleme dağıtım taslağı (readjustment_window.rs, docs/adr/1460): the rule package typed, a CSV of synthetic
 //! records read, the shared cases' first answer reproduced (totals kept, the remainder's receiver said), a refusal
-//! shown with its place, nothing written; Harita and GIS offer it, Yol and Mimari do not. And its pictures.
+//! shown with its place, nothing written; Harita and GIS offer it, Yol and Mimari do not. The scope (docs/adr/2060)
+//! on the shared cases' drawing of `cad.readjustment.scope`: the selected boundary gives the case's statuses and bases,
+//! Esas alanları kayıtlara yaz writes the bases into the records and says what did not match, the rule package's
+//! places and the piece tolerance run it again; without a selected area there is no scope. And its pictures.
 
 use kentos_launch::Module;
 
@@ -21,6 +24,10 @@ fn opened(program: Option<Module>) -> App {
 const CSV: &str = "parsel;hak sahibi;tapu alanı;pay\n101/1;H1;1000;1/3\n101/1;H2;1000;2/3\n101/2;H2;500.50;1/2\n101/2;H3;500.50;1/2\nP;K1;100.01;1/3\nP;K2;100.01;1/3\nP;K3;100.01;1/3\n";
 
 fn filled(app: &mut App) {
+    filled_with(app, CSV);
+}
+
+fn filled_with(app: &mut App, csv: &str) {
     for e in [
         R::Id("ornek-paket".into()),
         R::Jurisdiction("Örnek kurum (sentetik)".into()),
@@ -33,7 +40,7 @@ fn filled(app: &mut App) {
     let dir = std::env::temp_dir().join(format!("kentos-duzenleme-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let file = dir.join("kayitlar.csv");
-    std::fs::write(&file, CSV).expect("written");
+    std::fs::write(&file, csv).expect("written");
     app.readjustment_file(file);
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -57,6 +64,90 @@ fn the_records_are_read_and_the_totals_kept() {
     let why = app.readjustment.answer.clone().expect("an answer").expect_err("refused");
     assert!(why.contains("reject") && why.contains("entries[4].share"), "{why}");
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+const BOUNDARY: &str = "0192f800-2060-7000-8000-000000000001";
+
+fn scope_cases() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.readjustment.scope.json")).expect("cases")
+}
+
+/// The scope cases' drawing in Harita, its boundary selected or nothing.
+fn bounded(select: bool) -> App {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(scope_cases()["setup"].clone()).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    if select {
+        let uid = kentos_domain::Uuid::parse_str(BOUNDARY).expect("a uid");
+        let slot = app.document.as_ref().and_then(|d| d.model.slot_of(uid)).expect("the boundary");
+        app.selection.set([slot]);
+    }
+    app
+}
+
+const SCOPE_CSV: &str = "parsel;hak sahibi;tapu alanı;pay\n101/1;H1;600.00;1/2\n101/1;H2;600.00;1/2\n101/3;H3;598.40;1/1\n101/4;H4;590;1/1\nK9;H5;100;1/1\n";
+
+#[test]
+fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_records() {
+    let mut app = bounded(true);
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    assert_eq!(app.dialog, Some(Dialog::Readjustment));
+    let k = app.readjustment.scope.clone().expect("a scope").expect("read");
+    let want = &scope_cases()["cases"][0]["steps"][0]["result"]["output"];
+    assert_eq!(serde_json::Value::from(k.basis.as_str()), want["basis"]);
+    assert_eq!(
+        [k.whole, k.partial, k.ready, k.review].map(serde_json::Value::from),
+        [&want["whole"], &want["partial"], &want["ready"], &want["review"]].map(Clone::clone)
+    );
+    let statuses: Vec<&str> = k.parcels.iter().map(|p| p.status.as_str()).collect();
+    let wanted: Vec<&str> = want["parcels"].as_array().expect("parcels").iter().filter_map(|p| p["status"].as_str()).collect();
+    assert_eq!(statuses, wanted);
+    let _ = app.update(Message::Readjustment(R::View(View::Scope)));
+    filled_with(&mut app, SCOPE_CSV);
+    let _ = app.update(Message::Readjustment(R::Apply));
+    let areas: Vec<&str> = app.readjustment.entries.iter().map(|e| e.area.as_str()).collect();
+    assert_eq!(areas, ["600.00", "600.00", "333.33", "590", "100"], "101/3 takes the part inside; 101/4 has no basis");
+    let lines: Vec<&str> = app.readjustment.applied.iter().map(|(_, l)| l.as_str()).collect();
+    assert!(lines[0].contains("101/3 598.40 → 333.33"), "{lines:?}");
+    assert!(lines.iter().any(|l| l.contains("101/4 (yanılma sınırı dışında)")), "{lines:?}");
+    assert!(lines.iter().any(|l| l.contains("Kapsamda olmayan kayıt parseli: K9")), "{lines:?}");
+    assert!(lines.iter().any(|l| l.contains("kaydı olmayan parsel: 101/2")), "{lines:?}");
+    let a = app.readjustment.answer.clone().expect("an answer").expect("distributed");
+    assert_eq!(a.parcels.iter().find(|p| p.parcel == "101/3").map(|p| p.area.as_str()), Some("333.33"));
+    assert!(a.draft && a.conserved);
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+#[test]
+fn the_policy_and_the_tolerance_run_the_scope_again() {
+    let mut app = bounded(true);
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let status = |app: &App, name: &str| {
+        let k = app.readjustment.scope.clone().expect("a scope").expect("read");
+        k.parcels.iter().find(|p| p.parcel == name).map(|p| (p.status.clone(), p.basis.clone())).expect("the parcel")
+    };
+    assert_eq!(status(&app, "101/9"), ("sliver".to_owned(), None));
+    let _ = app.update(Message::Readjustment(R::Scale(0.0)));
+    assert_eq!(status(&app, "101/1"), ("finerThanPolicy".to_owned(), None));
+    assert_eq!(status(&app, "101/3"), ("computed".to_owned(), Some("333".to_owned())));
+    let _ = app.update(Message::Readjustment(R::Scale(2.0)));
+    let _ = app.update(Message::Readjustment(R::Tolerance(0.003)));
+    assert_eq!(status(&app, "101/9"), ("computed".to_owned(), Some("30.00".to_owned())), "the 4 mm piece counts");
+}
+
+#[test]
+fn without_a_selected_area_there_is_no_scope() {
+    let mut app = bounded(false);
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    assert!(app.readjustment.scope.is_none());
+    filled(&mut app);
+    let before = app.readjustment.entries.clone();
+    let _ = app.update(Message::Readjustment(R::Apply));
+    assert_eq!(app.readjustment.entries, before);
+    assert!(app.readjustment.applied.is_empty());
 }
 
 #[test]
@@ -88,6 +179,30 @@ fn screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("readjustment.distribute"));
             filled(&mut app);
+            let _ = app.update(Message::Readjustment(R::View(view)));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
+    // The scope (docs/adr/2060): Kapsam, then the parcels after the bases went into the records.
+    for (view, stem) in [(View::Scope, "3-kapsam"), (View::Parcels, "4-esas-alanla-parseller")] {
+        for (theme, size, name) in
+            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
+        {
+            let mut app = bounded(true);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("readjustment.distribute"));
+            filled_with(&mut app, SCOPE_CSV);
+            let _ = app.update(Message::Readjustment(R::Apply));
             let _ = app.update(Message::Readjustment(R::View(view)));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
