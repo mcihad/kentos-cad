@@ -9803,6 +9803,31 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::MAP_FEATURES_RECONCILE.into(),
+            version: crate::MAP_FEATURES_RECONCILE_VERSION,
+            title: "Adayları uzlaştır".into(),
+            summary: "Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını bir veri profilinin sınıflarıyla uzlaştırır. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Uzlaştırma özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz: insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı; plan yazmadan söyler. \
+                      Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing, layer_locked."
+                .into(),
+            aliases: vec!["uzlastir".into(), "adayuzlastir".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FeaturesReconcile>(),
+            output: schema::<crate::FeaturesReconciled>(),
+            plan: Some(schema::<crate::FeaturesReconciled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "LiDAR ve ortofoto adayları, 0,5 m".into(),
+                input: json!({ "name": "harita-varliklari", "sources": [{ "layer": "aday-lidar", "name": "LiDAR" }, { "layer": "aday-orto", "name": "Ortofoto" }], "confidence": "Güven", "radius": 0.5 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::MAP_SURVEY_NETWORK.into(),
             version: crate::MAP_SURVEY_NETWORK_VERSION,
             title: "GNSS ağını dengele".into(),
@@ -16170,6 +16195,7 @@ mod tests {
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetwork>(e.input.clone()).map(|_| ()),
+                    crate::MAP_FEATURES_RECONCILE => serde_json::from_value::<crate::FeaturesReconcile>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
@@ -17126,6 +17152,7 @@ mod tests {
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetworked>(output.clone()).map(|_| ()),
+                        crate::MAP_FEATURES_RECONCILE => serde_json::from_value::<crate::FeaturesReconciled>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {

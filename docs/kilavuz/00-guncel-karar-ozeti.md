@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Aday uzlaştırma (7 Kasım 2026; MAP-04, [ADR 1760](../../docs/adr/1760-asset-candidate-reconciliation.md)).**
+  `map.features.reconcile`: iki kaynağın adayları yarıçapla gruplanır (uyuşan, tek, çelişen, var olan); tek kabul,
+  çelişki düzeltme ister; adaylar `Uzlaştırma` ile işaretlenir ve tekrar okunmaz; köken öznitelikte; `.kcad` değişmedi.
 - **Arşivden GNSS ağı (7 Kasım 2026; MAP-03/05, [ADR 1740](../../docs/adr/1740-gnss-network-from-archive.md)).**
   `.kcad` şema 199 (`mapSurvey`'de `bz-N` baz, `bn-N` bilinen nokta, `da-N` dengeleme; `method: network`); GVX 1.0
   okuyucu; `map.survey.network` iki aşama (serbest, bilinen noktalara dayalı), BÖHHBÜY C1/C2/C3 kural paketi

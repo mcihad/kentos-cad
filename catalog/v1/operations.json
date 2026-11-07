@@ -1237,6 +1237,13 @@
       ],
       "note": "Seçilen dosya map.survey.edit session ile okunur ve oturum olur (ADR 1340 §4)."
     },
+    "map.featuresReconcile": {
+      "level": "semantic",
+      "via": [
+        "map.features.reconcile"
+      ],
+      "note": "Pencerenin önizlemesi map.features.reconcile'ın planı; kararlar ve Uzlaştır aynı komutun execute'u (ADR 1760)."
+    },
     "map.survey.adjustment": {
       "level": "semantic",
       "via": [

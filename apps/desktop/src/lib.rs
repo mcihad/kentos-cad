@@ -72,6 +72,7 @@ mod pipes_check_window;
 mod exchange_check_window;
 mod asbuilt_window;
 mod survey_network_window;
+mod features_reconcile_window;
 mod zoning_window;
 mod impact_window;
 mod readjustment_window;
@@ -348,6 +349,8 @@ mod exchange_check_window_tests;
 mod asbuilt_window_tests;
 #[cfg(test)]
 mod survey_network_window_tests;
+#[cfg(test)]
+mod features_reconcile_window_tests;
 #[cfg(test)]
 mod zoning_window_tests;
 #[cfg(test)]

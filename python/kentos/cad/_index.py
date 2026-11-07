@@ -347,6 +347,7 @@ COMMANDS: dict[str, Any] = {
     "file.publish.status": file.publish.status,
     "file.recover": file.recover,
     "map.features.code": map.features.code,
+    "map.features.reconcile": map.features.reconcile,
     "map.survey.edit": map.survey.edit,
     "map.survey.network": map.survey.network,
     "map.survey.query": map.survey.query,

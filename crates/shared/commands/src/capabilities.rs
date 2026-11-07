@@ -2582,6 +2582,25 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    // Candidates of map assets reconciled (plan/map-cad.md MAP-04, docs/adr/1760).
+    Entry {
+        id: "map.features.reconcile",
+        refusals: &[
+            REVISION,
+            &[
+                "unknown_profile",
+                "invalid_profile",
+                "invalid_input",
+                "layer_not_found",
+                "invalid_uid",
+                "entity_not_found",
+                "class_layer_missing",
+                "layer_locked",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // The GNSS network adjusted from the archive (plan/map-cad.md MAP-03, MAP-05; docs/adr/1740).
     Entry {
         id: "map.survey.network",

@@ -380,6 +380,26 @@ kapanan alan dizilerini alan yapar (B/K/S denetim kodları). 26 ortak durum (ba�
 penceresi ve Profili uygula. Açık: sembol/blok, eğri denetim kodları, iki kaynaktan aday eşleme ve inceleme, AI çıkarım,
 katalog değişikliğinin geçiş raporu.
 
+**7 Kasım 2026 — MAP-04.2: iki kaynaktan aday uzlaştırma ([ADR 1760](../docs/adr/1760-asset-candidate-reconciliation.md)).**
+Kapsam: **Harita** (pencere ve yazma); komut Python ve MCP'de. Araştırma:
+- Esri Detect Feature Changes: arama mesafesiyle eşleme; N, D ve NC işaretleri; sonucun gözden geçirilmesi;
+- Esri Detect Objects'in güven puanı ve NMS'i: yineleneni siler; KentOS silmez, işaretler.
+
+Kanıtlanan alt maddeler:
+- `map.features.reconcile` nokta ve çizgi adaylarını Harita varlıkları profilinin sınıflarıyla gruplar. Gruplar uyuşan
+  (iki kaynak bir sınıfta), tek, çelişen ve zaten var olandır. Yinelenen aday işaretlenir; eksik zorunlu alan bulunur.
+- Belirsiz aday sessizce kesin varlığa dönüşmez: tek kaynak kabul ister, çelişki düzeltme ister.
+- Kabul edilmiş insan düzeltmeleri korunur: aday `Uzlaştırma` ile işaretlenir ve bir daha okunmaz. Kabul edilmiş
+  varlığın yanındaki yeni aday yeni varlık yapmaz.
+- Köken (Kaynaklar, Adaylar, Yayılım, İnceleme) özniteliktedir.
+- İşlemin tamamı tek geri alma adımıdır.
+- Kabulden kanıtlanan: aynı sokağın LiDAR ve ortofoto adaylarıyla yinelenen önlendi, KapiNo eksiği bulundu, ağaç adayı
+  direğe düzeltildi.
+- 25 bağımsız durum (`map_features_reconcile_cases.py`); masaüstü Adayları uzlaştır (Ölçme › Noktalar).
+
+**Açık:** alan sınıfları, inceleme kaydının özniteliğe değil ayrı kayda yazılması ve katalog geçiş raporu, AI çıkarımı,
+pencerede eksik alan girişi, büyük veri. Madde `[ ]` kalır.
+
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K13]–[K15], [K04]–[K06].

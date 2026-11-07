@@ -1,0 +1,632 @@
+//! `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several sources
+//! reconciled through a data profile's classes. A candidate is a point or an open polyline on a source's layer whose
+//! class field names a class (its id, or one of its codes as the field's first word's capitals); one that keeps
+//! `Uzlaştırma` was reconciled before and is not read again. Candidates within the radius (points: the plane's
+//! distance; polylines: the larger of the two discrete Hausdorff ways, vertices to the other's segments) are one group,
+//! joined transitively. A group's representative of a source is its candidate with the highest confidence (none below
+//! any number; a tie to the first); the others of that source are duplicates. A group is `existing` when an asset of its
+//! one class lies within the radius of a representative, `conflict` when its classes differ, `agreed` with two sources
+//! or more, else `single`. Execute writes the agreed groups and the singles a reviewer accepted, whose required fields
+//! are all given, on their class's layer, and marks the candidates; one undo step “Adayları uzlaştır”. The shared cases
+//! are `fixtures/commands/v1/map.features.reconcile.json`.
+
+use std::collections::BTreeMap;
+
+use kentos_commands::{
+    CandidateDecision, CommandResult, DEFAULT_CODE_FIELD, DataProfile, Entity, FeaturesReconcile, FeaturesReconciled,
+    MAX_CANDIDATE_SOURCES, ProfileGeometry, RECONCILED_FIELD, ReconciledCandidate, ReconciledGroup, Vec2,
+};
+use kentos_domain::{Document, Slot, Uuid};
+
+use crate::ExecutionContext;
+use crate::checks::{self, Stop, error};
+use crate::codes;
+use crate::profile_files::Shelf;
+use crate::profiles::{Place, find, path_words, profile_only};
+
+/// The attributes an asset's provenance is written in; a candidate's are not copied into them.
+const PROVENANCE: [&str; 5] = ["Kaynaklar", "Adaylar", "Yayılım", "İnceleme", "Gözden geçiren"];
+
+fn fail(code: &str, message: String, path: &str) -> Stop {
+    Stop::failed(error(code, message, Some(path.to_owned())))
+}
+
+/// A candidate read: its object, source, class (profile index), what it said, its confidence, its kind and status.
+struct Candidate {
+    slot: Slot,
+    uid: String,
+    source: usize,
+    class: Option<usize>,
+    read: Option<String>,
+    confidence: Option<f64>,
+    line: bool,
+    status: &'static str,
+    attrs: BTreeMap<String, String>,
+    p: Vec2,
+    z: Option<f64>,
+    pts: Vec<Vec2>,
+}
+
+/// A group worked out: its members (indices into the candidates), its representatives, the rest of the answer, and
+/// what execute writes for it.
+struct Group {
+    members: Vec<usize>,
+    reps: Vec<usize>,
+    row: ReconciledGroup,
+    class: Option<usize>,
+    attrs: BTreeMap<String, String>,
+    review: Vec<String>,
+}
+
+struct Plan {
+    candidates: Vec<Candidate>,
+    groups: Vec<Group>,
+    field: String,
+    /// A class's layer by profile index (the classes to write).
+    layers: BTreeMap<usize, String>,
+    names: Vec<String>,
+    reviewer: Option<String>,
+    profile: DataProfile,
+}
+
+/// The class a field's text names: a class id as written, else the class whose codes hold its first word's capitals.
+fn class_named(profile: &DataProfile, text: &str) -> Option<usize> {
+    if let Some(i) = profile.classes.iter().position(|c| c.id == text) {
+        return Some(i);
+    }
+    let first = text.split_whitespace().next()?.to_uppercase();
+    let letters: String = first.chars().take_while(char::is_ascii_uppercase).collect();
+    if letters.is_empty() {
+        return None;
+    }
+    profile.classes.iter().position(|c| c.codes.contains(&letters))
+}
+
+fn distance(a: Vec2, b: Vec2) -> f64 {
+    (a.x - b.x).hypot(a.y - b.y)
+}
+
+/// A point's distance to a segment.
+fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let len2 = dx * dx + dy * dy;
+    if len2 == 0.0 {
+        return distance(p, a);
+    }
+    let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0);
+    distance(p, Vec2 { x: a.x + t * dx, y: a.y + t * dy })
+}
+
+/// How far `a`'s vertices go from the polyline `b` (its segments; one vertex: the point).
+fn one_way(a: &[Vec2], b: &[Vec2]) -> f64 {
+    let mut most = 0.0f64;
+    for &p in a {
+        let near = if b.len() == 1 {
+            distance(p, b[0])
+        } else {
+            b.windows(2).map(|w| to_segment(p, w[0], w[1])).fold(f64::INFINITY, f64::min)
+        };
+        most = most.max(near);
+    }
+    most
+}
+
+/// The discrete Hausdorff distance of two polylines: the larger of the two ways.
+fn hausdorff(a: &[Vec2], b: &[Vec2]) -> f64 {
+    one_way(a, b).max(one_way(b, a))
+}
+
+fn apart(a: &Candidate, b: &Candidate) -> f64 {
+    if a.line { hausdorff(&a.pts, &b.pts) } else { distance(a.p, b.p) }
+}
+
+/// The higher confidence first (none last), then the earlier.
+fn better(a: &Candidate, b: &Candidate) -> bool {
+    match (a.confidence, b.confidence) {
+        (Some(x), Some(y)) => x > y,
+        (Some(_), None) => true,
+        _ => false,
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
+    checks::revision(doc, input.expected_revision.as_deref())?;
+    let profile = profile_only(Some(&input.name), None, Shelf::of(doc, input.drawing.as_deref()))?;
+    if input.sources.is_empty() || input.sources.len() > MAX_CANDIDATE_SOURCES {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Aday kaynağı 1 ile {MAX_CANDIDATE_SOURCES} arasında olmalı; adayların katmanlarını verin."),
+            "sources",
+        ));
+    }
+    for (i, s) in input.sources.iter().enumerate() {
+        let at = format!("sources[{i}]");
+        if s.name.trim().is_empty() {
+            return Err(fail(codes::INVALID_INPUT, "Kaynağın adı boş olamaz (LiDAR, Ortofoto …).".into(), &format!("{at}.name")));
+        }
+        if input.sources[..i].iter().any(|o| o.layer == s.layer) {
+            return Err(fail(codes::INVALID_INPUT, format!("“{}” katmanı iki kaynakta verilmiş.", s.layer), &format!("{at}.layer")));
+        }
+        if doc.layers().get(&s.layer).is_none() {
+            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” kimlikli katman çizimde yok.", s.layer), &format!("{at}.layer")));
+        }
+    }
+    let field = input.field.clone().unwrap_or_else(|| DEFAULT_CODE_FIELD.to_owned());
+    if field.trim().is_empty() {
+        return Err(fail(codes::INVALID_INPUT, "Sınıf alanının adı boş olamaz.".into(), "field"));
+    }
+    if input.confidence.as_deref().is_some_and(|c| c.trim().is_empty()) {
+        return Err(fail(codes::INVALID_INPUT, "Güven alanının adı boş olamaz.".into(), "confidence"));
+    }
+    if !(input.radius.is_finite() && input.radius > 0.0) {
+        return Err(fail(codes::INVALID_INPUT, "Eşleme yarıçapı 0'dan büyük olmalı (m).".into(), "radius"));
+    }
+    let source_of = |layer: &str| input.sources.iter().position(|s| s.layer == layer);
+    // The decisions, each on a candidate of a source.
+    let mut decided: BTreeMap<String, &CandidateDecision> = BTreeMap::new();
+    for (i, d) in input.decisions.iter().enumerate() {
+        let at = format!("decisions[{i}]");
+        if !checks::is_uid_text(&d.candidate) {
+            return Err(fail(codes::INVALID_UID, format!("“{}” geçerli bir nesne kimliği değil.", d.candidate), &format!("{at}.candidate")));
+        }
+        let Some(e) = Uuid::parse_str(&d.candidate).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
+            return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{}” kimlikli nesne çizimde yok.", d.candidate), &format!("{at}.candidate")));
+        };
+        if source_of(&e.base().layer_id).is_none() {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("“{}” bir aday değil: kaynakların katmanlarında değil.", d.candidate),
+                &format!("{at}.candidate"),
+            ));
+        }
+        if let Some(c) = &d.class
+            && !profile.classes.iter().any(|k| k.id == *c)
+        {
+            return Err(fail(codes::INVALID_INPUT, format!("“{c}” “{}” profilinin bir sınıfı değil.", profile.name), &format!("{at}.class")));
+        }
+        if d.accept && d.reject.is_some() {
+            return Err(fail(codes::INVALID_INPUT, "Bir aday hem kabul hem ret edilemez.".into(), &format!("{at}.reject")));
+        }
+        if d.reject.as_deref().is_some_and(|r| r.trim().is_empty()) {
+            return Err(fail(codes::INVALID_INPUT, "Ret nedeni boş olamaz.".into(), &format!("{at}.reject")));
+        }
+        decided.insert(d.candidate.clone(), d);
+    }
+    // The candidates, in the drawing's order.
+    let mut candidates: Vec<Candidate> = Vec::new();
+    for (uid, e) in doc.entities_with_uids() {
+        let Some(source) = source_of(&e.base().layer_id) else { continue };
+        let (line, p, z, pts) = match e {
+            Entity::Point(pt) => (false, pt.p, pt.z, vec![pt.p]),
+            Entity::Polyline(pl) if !pl.closed && pl.pts.len() >= 2 => (true, pl.pts[0], None, pl.pts.clone()),
+            _ => continue,
+        };
+        let Some(slot) = doc.slot_of(uid) else { continue };
+        let attrs = e.base().attrs.clone();
+        let uid = uid.to_string();
+        let read = attrs.get(&field).map(|t| t.trim().to_owned()).filter(|t| !t.is_empty());
+        let decision = decided.get(&uid).copied();
+        let class = decision
+            .and_then(|d| d.class.as_ref())
+            .and_then(|c| profile.classes.iter().position(|k| k.id == *c))
+            .or_else(|| read.as_deref().and_then(|t| class_named(&profile, t)));
+        let confidence = input
+            .confidence
+            .as_ref()
+            .and_then(|f| attrs.get(f))
+            .and_then(|t| t.trim().parse::<f64>().ok())
+            .filter(|v| v.is_finite());
+        let status = if attrs.get(RECONCILED_FIELD).is_some_and(|t| !t.trim().is_empty()) {
+            "reviewed"
+        } else if decision.is_some_and(|d| d.reject.is_some()) {
+            "rejected"
+        } else {
+            match class.map(|c| profile.classes[c].geometry) {
+                None => "unknown",
+                Some(ProfileGeometry::Point) if !line => "member",
+                Some(ProfileGeometry::Line) if line => "member",
+                Some(_) => "wrongKind",
+            }
+        };
+        candidates.push(Candidate { slot, uid, source, class, read, confidence, line, status, attrs, p, z, pts });
+    }
+    // Groups: joined within the radius, the same kind.
+    let eligible: Vec<usize> = (0..candidates.len()).filter(|&i| candidates[i].status == "member").collect();
+    let mut parent: Vec<usize> = (0..candidates.len()).collect();
+    fn root(parent: &mut [usize], i: usize) -> usize {
+        let mut r = i;
+        while parent[r] != r {
+            r = parent[r];
+        }
+        let mut k = i;
+        while parent[k] != r {
+            let next = parent[k];
+            parent[k] = r;
+            k = next;
+        }
+        r
+    }
+    for (a, &i) in eligible.iter().enumerate() {
+        for &j in &eligible[a + 1..] {
+            if candidates[i].line == candidates[j].line && apart(&candidates[i], &candidates[j]) <= input.radius {
+                let (ri, rj) = (root(&mut parent, i), root(&mut parent, j));
+                if ri != rj {
+                    let (lo, hi) = if ri < rj { (ri, rj) } else { (rj, ri) };
+                    parent[hi] = lo;
+                }
+            }
+        }
+    }
+    let mut order: Vec<usize> = Vec::new();
+    let mut members_of: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+    for &i in &eligible {
+        let r = root(&mut parent, i);
+        if !members_of.contains_key(&r) {
+            order.push(r);
+        }
+        members_of.entry(r).or_default().push(i);
+    }
+    // The assets there already: a class's layer's objects of its kind.
+    let mut layers: BTreeMap<usize, String> = BTreeMap::new();
+    let layer_of = |ci: usize| -> Option<String> {
+        match find(doc.layers().nodes(), &profile.classes[ci].layer) {
+            Place::Layer(id) => Some(id),
+            _ => None,
+        }
+    };
+    let names: Vec<String> = input.sources.iter().map(|s| s.name.clone()).collect();
+    let candidate_uids: std::collections::HashSet<String> = candidates.iter().map(|c| c.uid.clone()).collect();
+    let mut groups: Vec<Group> = Vec::new();
+    for r in order {
+        let members = members_of.remove(&r).unwrap_or_default();
+        let mut reps: Vec<usize> = Vec::new();
+        for &m in &members {
+            match reps.iter().position(|&x| candidates[x].source == candidates[m].source) {
+                Some(k) => {
+                    if better(&candidates[m], &candidates[reps[k]]) {
+                        reps[k] = m;
+                    }
+                }
+                None => reps.push(m),
+            }
+        }
+        let mut classes: Vec<usize> = members.iter().filter_map(|&m| candidates[m].class).collect();
+        classes.sort_unstable();
+        classes.dedup();
+        let line = candidates[members[0]].line;
+        let mut sources: Vec<usize> = reps.iter().map(|&x| candidates[x].source).collect();
+        sources.sort_unstable();
+        // The place and the spread.
+        let (x, y, z, spread) = if line {
+            let mut chosen = reps[0];
+            for &k in &reps[1..] {
+                let (a, b) = (&candidates[k], &candidates[chosen]);
+                if better(a, b) || (a.confidence == b.confidence && a.source < b.source) {
+                    chosen = k;
+                }
+            }
+            let mut most = 0.0f64;
+            for (a, &i) in reps.iter().enumerate() {
+                for &j in &reps[a + 1..] {
+                    most = most.max(hausdorff(&candidates[i].pts, &candidates[j].pts));
+                }
+            }
+            let c = &candidates[chosen];
+            reps.retain(|&k| k != chosen);
+            reps.insert(0, chosen);
+            (c.pts[0].x, c.pts[0].y, None, most)
+        } else {
+            let n = reps.len() as f64;
+            let (mut sx, mut sy) = (0.0, 0.0);
+            for &k in &reps {
+                sx += candidates[k].p.x;
+                sy += candidates[k].p.y;
+            }
+            let mean = Vec2 { x: sx / n, y: sy / n };
+            let z = if reps.iter().all(|&k| candidates[k].z.is_some()) {
+                let mut sz = 0.0;
+                for &k in &reps {
+                    sz += candidates[k].z.unwrap_or(0.0);
+                }
+                Some(sz / n)
+            } else {
+                None
+            };
+            let spread = reps.iter().map(|&k| distance(candidates[k].p, mean)).fold(0.0, f64::max);
+            (mean.x, mean.y, z, spread)
+        };
+        // An asset of its one class there already.
+        let mut existing: Option<String> = None;
+        if classes.len() == 1
+            && let Some(layer) = layer_of(classes[0])
+        {
+            for (uid, e) in doc.entities_with_uids() {
+                if e.base().layer_id != layer || candidate_uids.contains(&uid.to_string()) {
+                    continue;
+                }
+                let near = match (e, line) {
+                    (Entity::Point(pt), false) => reps.iter().any(|&k| distance(candidates[k].p, pt.p) <= input.radius),
+                    (Entity::Polyline(pl), true) if pl.pts.len() >= 2 => {
+                        reps.iter().any(|&k| hausdorff(&candidates[k].pts, &pl.pts) <= input.radius)
+                    }
+                    _ => false,
+                };
+                if near {
+                    existing = Some(uid.to_string());
+                    break;
+                }
+            }
+        }
+        let status = if existing.is_some() {
+            "existing"
+        } else if classes.len() > 1 {
+            "conflict"
+        } else if sources.len() >= 2 {
+            "agreed"
+        } else {
+            "single"
+        };
+        // The asset's fields: the representatives' in order of confidence (then of source), the decisions' over them.
+        let mut by_trust = reps.clone();
+        by_trust.sort_by(|&a, &b| {
+            let (ca, cb) = (&candidates[a], &candidates[b]);
+            if better(ca, cb) {
+                std::cmp::Ordering::Less
+            } else if better(cb, ca) {
+                std::cmp::Ordering::Greater
+            } else {
+                ca.source.cmp(&cb.source)
+            }
+        });
+        let mut attrs: BTreeMap<String, String> = BTreeMap::new();
+        for &k in &by_trust {
+            for (key, value) in &candidates[k].attrs {
+                let skip = *key == field
+                    || input.confidence.as_ref() == Some(key)
+                    || key == RECONCILED_FIELD
+                    || PROVENANCE.contains(&key.as_str())
+                    || value.trim().is_empty();
+                if !skip && !attrs.contains_key(key) {
+                    attrs.insert(key.clone(), value.clone());
+                }
+            }
+        }
+        let mut accepted = false;
+        let mut review: Vec<String> = Vec::new();
+        for &m in &members {
+            if let Some(d) = decided.get(&candidates[m].uid) {
+                for (k, v) in &d.fields {
+                    if !v.trim().is_empty() {
+                        attrs.insert(k.clone(), v.clone());
+                    }
+                }
+                if d.accept {
+                    accepted = true;
+                    review.push("kabul".into());
+                }
+                if let Some(c) = &d.class {
+                    review.push(format!("sınıf {c}"));
+                }
+                if !d.fields.is_empty() {
+                    review.push(format!("alan {}", d.fields.keys().cloned().collect::<Vec<_>>().join(", ")));
+                }
+            }
+        }
+        let class = (classes.len() == 1).then(|| classes[0]);
+        let missing: Vec<String> = class
+            .map(|c| {
+                profile.classes[c]
+                    .fields
+                    .iter()
+                    .filter(|f| f.required)
+                    .filter(|f| attrs.get(&f.name).is_none_or(|v| v.trim().is_empty()))
+                    .map(|f| f.name.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        let writes = (status == "agreed" || (status == "single" && accepted)) && missing.is_empty();
+        if writes && let Some(c) = class {
+            match layer_of(c) {
+                Some(layer) => {
+                    layers.insert(c, layer);
+                }
+                None => {
+                    let k = &profile.classes[c];
+                    return Err(fail(
+                        codes::CLASS_LAYER_MISSING,
+                        format!("“{}” sınıfının katmanı ({}) çizimde yok; önce “{}” profilini uygulayın.", k.title, path_words(&k.layer), profile.name),
+                        "name",
+                    ));
+                }
+            }
+        }
+        let row = ReconciledGroup {
+            class: class.map(|c| profile.classes[c].id.clone()),
+            classes: classes.iter().map(|&c| profile.classes[c].id.clone()).collect(),
+            status: status.into(),
+            sources: sources.iter().map(|&s| names[s].clone()).collect(),
+            candidates: members.iter().map(|&m| candidates[m].uid.clone()).collect(),
+            x,
+            y,
+            z,
+            spread,
+            asset: existing,
+            missing,
+            writes,
+        };
+        groups.push(Group { members, reps, row, class, attrs, review });
+    }
+    for (g, group) in groups.iter().enumerate() {
+        for &m in &group.members {
+            if !group.reps.contains(&m) {
+                candidates[m].status = "duplicate";
+            }
+        }
+        let _ = g;
+    }
+    Ok(Plan { candidates, groups, field, layers, names, reviewer: input.reviewer.clone(), profile })
+}
+
+fn answer(plan: &Plan, written: Vec<String>, marked: u32, revision: String) -> FeaturesReconciled {
+    let mut group_of: BTreeMap<usize, u32> = BTreeMap::new();
+    for (g, group) in plan.groups.iter().enumerate() {
+        for &m in &group.members {
+            group_of.insert(m, u32::try_from(g).unwrap_or(u32::MAX));
+        }
+    }
+    FeaturesReconciled {
+        groups: plan.groups.iter().map(|g| g.row.clone()).collect(),
+        candidates: plan
+            .candidates
+            .iter()
+            .enumerate()
+            .map(|(i, c)| ReconciledCandidate {
+                uid: c.uid.clone(),
+                source: plan.names[c.source].clone(),
+                class: c.class.map(|k| plan.profile.classes[k].id.clone()),
+                read: c.read.clone(),
+                confidence: c.confidence,
+                group: group_of.get(&i).copied(),
+                status: c.status.into(),
+            })
+            .collect(),
+        written,
+        marked,
+        revision,
+    }
+}
+
+fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResult<FeaturesReconciled> {
+    let mut plan = match check(cx.doc, &input) {
+        Ok(p) => p,
+        Err(stop) => return stop.into(),
+    };
+    // The layers written on: a class's, and the sources' whose candidates are marked.
+    let locked = |doc: &Document, layer: &str, words: &str, path: &str| -> Option<Stop> {
+        doc.layers().is_locked(layer).then(|| {
+            fail(codes::LAYER_LOCKED, format!("“{}” katmanı kilitli: {words} Kilidi açın.", doc.layers().path(layer)), path)
+        })
+    };
+    for layer in plan.layers.values() {
+        if let Some(stop) = locked(cx.doc, layer, "uzlaştırılan varlık oraya yazılamaz.", "name") {
+            return stop.into();
+        }
+    }
+    let marks_any = plan
+        .groups
+        .iter()
+        .any(|g| g.row.writes || g.row.status == "existing")
+        || plan.candidates.iter().any(|c| c.status == "rejected");
+    if marks_any {
+        for s in &input.sources {
+            let used = plan.candidates.iter().any(|c| plan.names[c.source] == s.name && matches!(c.status, "member" | "duplicate" | "rejected"));
+            if used && let Some(stop) = locked(cx.doc, &s.layer, "adaylar işaretlenemez.", "sources") {
+                return stop.into();
+            }
+        }
+    }
+    let label = "Adayları uzlaştır";
+    let mut written: Vec<String> = Vec::new();
+    let mut marked = 0u32;
+    if !marks_any {
+        let output = answer(&plan, written, marked, cx.doc.revision().to_string());
+        return CommandResult::Completed { output, warnings: Vec::new() };
+    }
+    let field = plan.field.clone();
+    let reviewer = plan.reviewer.clone();
+    let _ = cx.doc.transact(label, |doc| -> Result<(), ()> {
+        let mut marks: Vec<(Slot, String)> = Vec::new();
+        for g in &mut plan.groups {
+            if g.row.writes {
+                let (Some(c), Some(first)) = (g.class, g.reps.first().copied()) else { continue };
+                let Some(layer) = plan.layers.get(&c).cloned() else { continue };
+                let class = &plan.profile.classes[c];
+                let mut attrs = g.attrs.clone();
+                if let Some(code) = class.codes.first() {
+                    attrs.insert(field.clone(), code.clone());
+                }
+                attrs.insert("Kaynaklar".into(), g.row.sources.join(", "));
+                attrs.insert("Adaylar".into(), g.row.candidates.join(", "));
+                attrs.insert("Yayılım".into(), format!("{:.3}", g.row.spread));
+                if !g.review.is_empty() {
+                    attrs.insert("İnceleme".into(), g.review.join("; "));
+                    if let Some(r) = &reviewer {
+                        attrs.insert("Gözden geçiren".into(), r.clone());
+                    }
+                }
+                let Some(mut asset) = doc.get(plan.candidates[first].slot).cloned() else { continue };
+                if let Entity::Point(pt) = &mut asset {
+                    pt.p = Vec2 { x: g.row.x, y: g.row.y };
+                    pt.z = g.row.z;
+                }
+                {
+                    let base = asset.base_mut();
+                    base.layer_id = layer;
+                    base.attrs = attrs;
+                }
+                let Ok(slots) = doc.add_many(vec![asset], label) else { return Err(()) };
+                let Some(uid) = slots.first().and_then(|s| doc.uid(*s)).map(|u| u.to_string()) else { return Err(()) };
+                for &m in &g.members {
+                    marks.push((plan.candidates[m].slot, uid.clone()));
+                }
+                g.row.asset = Some(uid.clone());
+                written.push(uid);
+            } else if g.row.status == "existing"
+                && let Some(asset) = g.row.asset.clone()
+            {
+                for &m in &g.members {
+                    marks.push((plan.candidates[m].slot, asset.clone()));
+                }
+            }
+        }
+        for d in &input.decisions {
+            if let Some(reason) = &d.reject
+                && let Some(c) = plan.candidates.iter().find(|c| c.uid == d.candidate && c.status == "rejected")
+            {
+                marks.push((c.slot, format!("Reddedildi: {}", reason.trim())));
+            }
+        }
+        let updates: Vec<(Slot, Entity)> = marks
+            .iter()
+            .filter_map(|(slot, text)| {
+                let mut e = doc.get(*slot)?.clone();
+                e.base_mut().attrs.insert(RECONCILED_FIELD.into(), text.clone());
+                Some((*slot, e))
+            })
+            .collect();
+        marked = u32::try_from(updates.len()).unwrap_or(u32::MAX);
+        if !updates.is_empty() {
+            doc.update_many(updates, label);
+        }
+        Ok(())
+    });
+    let output = answer(&plan, written, marked, cx.doc.revision().to_string());
+    CommandResult::Completed { output, warnings: Vec::new() }
+}
+
+/// Checks `input` against the document, writing nothing.
+pub fn validate(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> CommandResult<()> {
+    match check(cx.doc, input) {
+        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Err(stop) => stop.into(),
+    }
+}
+
+/// What execute would write; writes nothing.
+pub fn plan(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> CommandResult<FeaturesReconciled> {
+    match check(cx.doc, input) {
+        Ok(p) => CommandResult::Completed { output: answer(&p, Vec::new(), 0, cx.doc.revision().to_string()), warnings: Vec::new() },
+        Err(stop) => stop.into(),
+    }
+}
+
+pub fn execute(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResult<FeaturesReconciled> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::MAP_FEATURES_RECONCILE,
+        kentos_commands::MAP_FEATURES_RECONCILE_VERSION,
+        input,
+        write,
+    )
+}

@@ -58817,6 +58817,208 @@
       ]
     },
     {
+      "id": "map.features.reconcile",
+      "version": 1,
+      "title": "Adayları uzlaştır",
+      "summary": "Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını bir veri profilinin sınıflarıyla uzlaştırır. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Uzlaştırma özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz: insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı; plan yazmadan söyler. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing, layer_locked.",
+      "aliases": [
+        "uzlastir",
+        "adayuzlastir"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point or a polyline on a source's layer whose `field` (`Kod` when not given) names a class\nby its id or one of its codes; `confidence` names a number field (higher is better). Candidates within `radius` (m;\na polyline's distance is the larger of the two Hausdorff ways) are one group. The decisions are a reviewer's\n(`reviewer` is written with them). Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, a decision on\nno candidate or naming no class of the profile, accept with reject), `layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
+        "properties": {
+          "confidence": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/$defs/CandidateDecision"
+            },
+            "type": "array"
+          },
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "radius": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "reviewer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/$defs/CandidateSource"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "sources",
+          "radius"
+        ],
+        "title": "FeaturesReconcile",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every\ncandidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the\ndrawing's revision.",
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/$defs/ReconciledCandidate"
+            },
+            "type": "array"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/$defs/ReconciledGroup"
+            },
+            "type": "array"
+          },
+          "marked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "written": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "groups",
+          "candidates",
+          "marked",
+          "revision"
+        ],
+        "title": "FeaturesReconciled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every\ncandidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the\ndrawing's revision.",
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/$defs/ReconciledCandidate"
+            },
+            "type": "array"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/$defs/ReconciledGroup"
+            },
+            "type": "array"
+          },
+          "marked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "written": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "groups",
+          "candidates",
+          "marked",
+          "revision"
+        ],
+        "title": "FeaturesReconciled",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_profile",
+          "invalid_profile",
+          "invalid_input",
+          "layer_not_found",
+          "invalid_uid",
+          "entity_not_found",
+          "class_layer_missing",
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "LiDAR ve ortofoto adayları, 0,5 m",
+          "input": {
+            "confidence": "Güven",
+            "name": "harita-varliklari",
+            "radius": 0.5,
+            "sources": [
+              {
+                "layer": "aday-lidar",
+                "name": "LiDAR"
+              },
+              {
+                "layer": "aday-orto",
+                "name": "Ortofoto"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "map.survey.network",
       "version": 1,
       "title": "GNSS ağını dengele",
@@ -113097,6 +113299,57 @@
           "type": "string"
         }
       ]
+    },
+    "CandidateDecision": {
+      "additionalProperties": false,
+      "description": "A reviewer's decision on a candidate: its class corrected (`class`, a class of the profile), a single source's\ncandidate accepted (`accept`), rejected with a reason (`reject`), or the asset's missing fields given (`fields`).",
+      "properties": {
+        "accept": {
+          "type": "boolean"
+        },
+        "candidate": {
+          "type": "string"
+        },
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "reject": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "candidate"
+      ],
+      "type": "object"
+    },
+    "CandidateSource": {
+      "additionalProperties": false,
+      "description": "A source of candidates (docs/adr/1760): a layer of the drawing and the name the answer and the assets give it\n(LiDAR, Ortofoto, Saha …).",
+      "properties": {
+        "layer": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer",
+        "name"
+      ],
+      "type": "object"
     },
     "CaseworkBreak": {
       "description": "Why a run did not follow its walls: one is gone, or the path they give lays no run.",
@@ -172214,6 +172467,136 @@
       "required": [
         "object",
         "side"
+      ],
+      "type": "object"
+    },
+    "ReconciledCandidate": {
+      "description": "A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its\nconfidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of\nits source in the group; `unknown`: its field names no class; `wrongKind`: a point class on a polyline or the other\nway; `rejected`; `reviewed`: reconciled before, not read again).",
+      "properties": {
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "group": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        },
+        "read": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "source",
+        "status"
+      ],
+      "type": "object"
+    },
+    "ReconciledGroup": {
+      "description": "A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two\nsources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset\nof its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a\nline group's chosen polyline's first vertex), how far its representatives lie apart (m), the asset (the one there,\nor the one written), the required fields still missing, and whether execute writes it.",
+      "properties": {
+        "asset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "candidates": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "classes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "spread": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "status": {
+          "type": "string"
+        },
+        "writes": {
+          "type": "boolean"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "classes",
+        "status",
+        "sources",
+        "candidates",
+        "x",
+        "y",
+        "spread",
+        "writes"
       ],
       "type": "object"
     },

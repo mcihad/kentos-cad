@@ -1146,6 +1146,13 @@
         ]
        },
        {
+        "command": "map.featuresReconcile",
+        "size": "small",
+        "works": [
+         "map"
+        ]
+       },
+       {
         "command": "crs.points",
         "size": "small"
        },
@@ -7127,6 +7134,9 @@
     "cbs"
    ],
    "map.survey.adjustment": [
+    "harita"
+   ],
+   "map.featuresReconcile": [
     "harita"
    ]
   }

@@ -92,6 +92,7 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("map.survey.edit", "network_too_large", "1500 bilinmeyenin (500 işaret) üstü bir ortak durumda taşınmaz; ağın kabulü map.survey.network'ün çözümlemesinden geçer (ADR 1740)."),
     ("map.survey.network", "invalid_covariance", "Arşivin kuralı (map_survey_problem) pozitif tanımlı olmayan baz kovaryansını yazdırmaz; varyans çarpanı 0'dan büyük olduğundan ölçeklenmiş kovaryans, σ'ları 0'dan büyük olduğundan bilinen noktanınki de pozitif tanımlı kalır (ADR 1740)."),
     ("map.survey.edit", "invalid_covariance", "Ağın çekirdeğe giden kovaryansları arşivin kuralıyla hep pozitif tanımlıdır (map.survey.network'ün gerekçesi); bazın kendi kovaryans reddi invalid_survey_value'dur (ADR 1740)."),
+    ("map.features.reconcile", "invalid_profile", "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır (ADR 1760)."),
     ("map.features.code", "invalid_profile", "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır."),
     ("cad.standards.install", "no_standard", "Bağlı standart olmayan çizim review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
     ("cad.standards.install", "invalid_standard", "Okunamayan bağlı standart review_take::installing_needs_a_readable_bound_standard testinde sınanır."),

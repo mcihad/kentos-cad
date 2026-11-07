@@ -19629,6 +19629,63 @@ class CadParameter(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CandidateDecision(_Model):
+    """A reviewer's decision on a candidate: its class corrected (`class`, a class of the profile), a single source's
+    candidate accepted (`accept`), rejected with a reason (`reject`), or the asset's missing fields given (`fields`).
+    """
+    candidate: str
+    accept: bool | Unset = UNSET
+    class_: str | None | Unset = UNSET
+    fields: dict[str, str] | Unset = UNSET
+    reject: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["candidate"] = self.candidate
+        if self.accept is not UNSET:
+            out["accept"] = self.accept
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.fields is not UNSET:
+            out["fields"] = dict(self.fields)
+        if self.reject is not UNSET:
+            out["reject"] = self.reject
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CandidateDecision:
+        return cls(
+            candidate=data["candidate"],
+            accept=data.get("accept", UNSET),
+            class_=data.get("class", UNSET),
+            fields=dict(data["fields"]) if "fields" in data else UNSET,
+            reject=data.get("reject", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CandidateSource(_Model):
+    """A source of candidates (docs/adr/1760): a layer of the drawing and the name the answer and the assets give it
+    (LiDAR, Ortofoto, Saha …).
+    """
+    layer: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CandidateSource:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CaseworkBuilt(_Model):
     """Output of `cad.casework.run` and of `cad.casework.edit`: the run's id, its objects in the plan's order, the library
     blocks brought, its modules, legs, fridge and fillers; a released run's objects and `released`.
@@ -35887,6 +35944,102 @@ class FeaturesCoded(_Model):
             revision=data["revision"],
             created=list(data["created"]) if "created" in data else UNSET,
             unknown=[UnknownCode.from_json(e0) for e0 in data["unknown"]] if "unknown" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FeaturesReconcile(_Model):
+    """Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several
+    sources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's
+    classes. A candidate is a point or a polyline on a source's layer whose `field` (`Kod` when not given) names a class
+    by its id or one of its codes; `confidence` names a number field (higher is better). Candidates within `radius` (m;
+    a polyline's distance is the larger of the two Hausdorff ways) are one group. The decisions are a reviewer's
+    (`reviewer` is written with them). Plan says what would be written; execute writes, in one undo step.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
+    `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, a decision on
+    no candidate or naming no class of the profile, accept with reject), `layer_not_found` (a source's layer),
+    `invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),
+    `layer_locked` (a class's layer to write on, or a source's whose candidates are marked).
+    Attributes:
+        radius: Unit: m.
+    """
+    name: str
+    sources: list[CandidateSource]
+    radius: float
+    confidence: str | None | Unset = UNSET
+    decisions: list[CandidateDecision] | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    reviewer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        out["radius"] = float(self.radius)
+        if self.confidence is not UNSET:
+            out["confidence"] = self.confidence
+        if self.decisions is not UNSET:
+            out["decisions"] = [e0.to_json() for e0 in self.decisions]
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.reviewer is not UNSET:
+            out["reviewer"] = self.reviewer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FeaturesReconcile:
+        return cls(
+            name=data["name"],
+            sources=[CandidateSource.from_json(e0) for e0 in data["sources"]],
+            radius=float(data["radius"]),
+            confidence=data.get("confidence", UNSET),
+            decisions=[CandidateDecision.from_json(e0) for e0 in data["decisions"]] if "decisions" in data else UNSET,
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            field=data.get("field", UNSET),
+            reviewer=data.get("reviewer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FeaturesReconciled(_Model):
+    """Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every
+    candidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the
+    drawing's revision.
+    Attributes:
+        marked: Unit: count.
+    """
+    groups: list[ReconciledGroup]
+    candidates: list[ReconciledCandidate]
+    marked: int
+    revision: str
+    written: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["groups"] = [e0.to_json() for e0 in self.groups]
+        out["candidates"] = [e0.to_json() for e0 in self.candidates]
+        out["marked"] = self.marked
+        out["revision"] = self.revision
+        if self.written is not UNSET:
+            out["written"] = list(self.written)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FeaturesReconciled:
+        return cls(
+            groups=[ReconciledGroup.from_json(e0) for e0 in data["groups"]],
+            candidates=[ReconciledCandidate.from_json(e0) for e0 in data["candidates"]],
+            marked=data["marked"],
+            revision=data["revision"],
+            written=list(data["written"]) if "written" in data else UNSET,
         )
 
 
@@ -74586,6 +74739,116 @@ class ReconcileTake(_Model):
         return cls(
             object=data["object"],
             side=_enum_in(ReconcileSide, data["side"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconciledCandidate(_Model):
+    """A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its
+    confidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of
+    its source in the group; `unknown`: its field names no class; `wrongKind`: a point class on a polyline or the other
+    way; `rejected`; `reviewed`: reconciled before, not read again).
+    Attributes:
+        confidence: Unit: 1.
+        group: Unit: index.
+    """
+    uid: str
+    source: str
+    status: str
+    class_: str | None | Unset = UNSET
+    confidence: float | None | Unset = UNSET
+    group: int | None | Unset = UNSET
+    read: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["source"] = self.source
+        out["status"] = self.status
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.confidence is not UNSET:
+            out["confidence"] = None if self.confidence is None else float(self.confidence)
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.read is not UNSET:
+            out["read"] = self.read
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconciledCandidate:
+        return cls(
+            uid=data["uid"],
+            source=data["source"],
+            status=data["status"],
+            class_=data.get("class", UNSET),
+            confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+            group=data.get("group", UNSET),
+            read=data.get("read", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconciledGroup(_Model):
+    """A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two
+    sources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset
+    of its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a
+    line group's chosen polyline's first vertex), how far its representatives lie apart (m), the asset (the one there,
+    or the one written), the required fields still missing, and whether execute writes it.
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        spread: Unit: m.
+        z: Unit: elevation.
+    """
+    classes: list[str]
+    status: str
+    sources: list[str]
+    candidates: list[str]
+    x: float
+    y: float
+    spread: float
+    writes: bool
+    asset: str | None | Unset = UNSET
+    class_: str | None | Unset = UNSET
+    missing: list[str] | Unset = UNSET
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["classes"] = list(self.classes)
+        out["status"] = self.status
+        out["sources"] = list(self.sources)
+        out["candidates"] = list(self.candidates)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["spread"] = float(self.spread)
+        out["writes"] = self.writes
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.missing is not UNSET:
+            out["missing"] = list(self.missing)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconciledGroup:
+        return cls(
+            classes=list(data["classes"]),
+            status=data["status"],
+            sources=list(data["sources"]),
+            candidates=list(data["candidates"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            spread=float(data["spread"]),
+            writes=data["writes"],
+            asset=data.get("asset", UNSET),
+            class_=data.get("class", UNSET),
+            missing=list(data["missing"]) if "missing" in data else UNSET,
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
 
@@ -124684,6 +124947,8 @@ __all__ = [
     "CalloutKind",
     "CalloutKindName",
     "CampaignMapSurveyOperation",
+    "CandidateDecision",
+    "CandidateSource",
     "CaseworkBreak",
     "CaseworkBreakName",
     "CaseworkBuilt",
@@ -125367,6 +125632,8 @@ __all__ = [
     "FeatureRecord",
     "FeaturesCode",
     "FeaturesCoded",
+    "FeaturesReconcile",
+    "FeaturesReconciled",
     "FeedKind",
     "FeedKindName",
     "FenceSelectRegion",
@@ -127008,6 +127275,8 @@ __all__ = [
     "ReconcileSide",
     "ReconcileSideName",
     "ReconcileTake",
+    "ReconciledCandidate",
+    "ReconciledGroup",
     "RecordChange",
     "RecordCopy",
     "RecordEntity",
