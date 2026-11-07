@@ -77,16 +77,20 @@ pub fn outdated_drawings(doc: &Document) -> Vec<(RoadDrawingDef, &'static str, V
         .iter()
         .filter_map(|d| {
             let (state, why, _) = drawing_state(doc, d);
-            let word = match state {
-                S::Stale => "güncel değil",
-                S::Missing => "nesnesi eksik",
-                S::Edited => "elle değişti",
-                S::Gone => "kaynağı yok",
-                _ => return None,
-            };
-            Some((d.clone(), word, why))
+            outdated_word(state).map(|word| (d.clone(), word, why))
         })
         .collect()
+}
+
+/// A drawing's state in the words of a sentence when it is not up to date (stale, missing, edited, gone); none else.
+pub(crate) fn outdated_word(state: S) -> Option<&'static str> {
+    match state {
+        S::Stale => Some("güncel değil"),
+        S::Missing => Some("nesnesi eksik"),
+        S::Edited => Some("elle değişti"),
+        S::Gone => Some("kaynağı yok"),
+        _ => None,
+    }
 }
 
 /// How a drawing stands now: its state, why, and how many of its objects the drawing holds.

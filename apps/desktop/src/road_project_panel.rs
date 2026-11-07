@@ -3,8 +3,9 @@
 //! status tree: a row a source or a drawing under its parent, its state a pill (up to date is quiet), its reasons the
 //! row's tip. A source's row opens its editor; a drawing's row selects its objects and shows them, its ↻ draws it again
 //! (`road.project.rebuild`). Above: Kurarak denetle (the deep reading: surfaces and corridors made, approved volumes
-//! computed) and Kendiliğinden yeniden üret (`road.project.edit`); the tree's head: the counts that filter, Hepsini
-//! yeniden üret. The tree is read again only when the drawing's revision or the depth changes.
+//! computed) and Kendiliğinden yeniden üret (`road.project.edit`), İş grafiği… (the chain to the sheets,
+//! `road.project.graph`, docs/adr/1940); the tree's head: the counts that filter, Hepsini yeniden üret. The tree is
+//! read again only when the drawing's revision or the depth changes.
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -63,7 +64,7 @@ impl std::fmt::Debug for PanelState {
 }
 
 /// A state in words.
-fn state_name(s: S) -> &'static str {
+pub(crate) fn state_name(s: S) -> &'static str {
     match s {
         S::Current => "Güncel",
         S::New => "Kabul edilmedi",
@@ -267,6 +268,11 @@ impl App {
                 on(tree.auto_rebuild),
                 "Kendiliğinden yeniden üret".to_owned(),
                 Some(msg(Event::Auto(!tree.auto_rebuild))),
+            ),
+            // İş grafiği (docs/adr/1940): the chain from the sources to the sheets, the drawings' recipes.
+            crate::exchange::words::secondary(
+                crate::project_graph_window::OPEN,
+                Some(Message::ProjectGraph(crate::project_graph_window::Event::Open)),
             ),
         ]
         .spacing(4)

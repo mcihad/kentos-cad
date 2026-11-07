@@ -1263,6 +1263,17 @@ sıfır hattı “güncel değil” görünür, yeniden üretilir ya da açıksa
 yayın ve kitabın PDF'i yeniden üretilene dek durur. Açık: atlas sayfaları, profil/hacim/pafta zincirinin tek görünüşü,
 iş grafiği, iptal ve GUI/Python/MCP eşdeğerliği.
 
+**7 Kasım 2026, ikinci tur — İş grafiği ([ADR 1940](../docs/adr/1940-project-graph.md)).** Kapsam: **Harita + Yol**.
+Araştırma: ArcGIS Pro'nun geoprocessing geçmişi (parametreler, ortam, zaman, durum; projede ve metaveride; yeniden
+açılır), Civil 3D'nin Prospector'daki “out of date” bayrağı ve otomatik yeniden kurma, QGIS Processing geçmişi, STAC
+processing alanları; hiçbiri katmandan paftaya bütün zinciri göstermiyor. Kanıtlanan: `road.project.graph` yüzeylerin
+katmanlarını, proje ağacının satırlarını ve bir çizimi gösteren paftaları kenarlarıyla (kurar, dayanak, kaynak: damga
+o zaman/şimdi, gösterir: harita) okur; her çizimin tarifi (komut, sürüm, saklanan girdi, nesneler, damga) ve projenin
+sistemi, epoku, kot sistemi; güncel olmayan çizimi gösteren pafta “teslim edilemez”; paftanın zemini ve sınaması baskı
+denetimiyle ortak; 21 bağımsız durum (Rust, Python), aynı işin MCP üzerinden aynı grafikleri verdiği test; Proje ağacı
+panelinde İş grafiği… penceresi, Tarifi kaydet. Açık: çizim kaydında işlem sürümü ve çıktı revizyonu (şema), ölçüm
+arşivinin zincire bağlanması, tariften başka projede üretim, atlas sayfaları, iptal.
+
 ## Uygulama sırası ve sahiplik
 
 Ana madde sayısı 20'dir; aşağıdaki sıra yeni madde veya yeni tamamlanma

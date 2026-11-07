@@ -6162,6 +6162,20 @@ ReviewStatusName = Literal["open", "answered", "resolved"]
 """The names of :class:`ReviewStatus`, for a plain string."""
 
 
+class RoadEdgeKind(_StrEnum):
+    """What an edge says: a layer builds a surface; a row is made on another (a profile on its alignment, a pad on its
+    surface, a volume on its corridor); a drawing was made from a source; a sheet's map shows a drawing.
+    """
+    BUILDS = "builds"
+    BASIS = "basis"
+    SOURCE = "source"
+    SHOWS = "shows"
+
+
+RoadEdgeKindName = Literal["builds", "basis", "source", "shows"]
+"""The names of :class:`RoadEdgeKind`, for a plain string."""
+
+
 class RoadEditOperation(_StrEnum):
     """What an edit of a template or a set does.
 
@@ -6176,6 +6190,33 @@ class RoadEditOperation(_StrEnum):
 
 RoadEditOperationName = Literal["set", "rebind", "remove"]
 """The names of :class:`RoadEditOperation`, for a plain string."""
+
+
+class RoadGraphKind(_StrEnum):
+    """What a node of the graph is: a layer a surface is made of, a row of the project tree, or a sheet."""
+    LAYER = "layer"
+    SURFACE = "surface"
+    ALIGNMENT = "alignment"
+    PROFILE = "profile"
+    SECTIONS = "sections"
+    SUPERELEVATION = "superelevation"
+    JUNCTION = "junction"
+    TEMPLATE = "template"
+    CORRIDOR = "corridor"
+    VOLUME = "volume"
+    HAUL = "haul"
+    GUARDRAIL = "guardrail"
+    CULVERT = "culvert"
+    WALL = "wall"
+    PLATFORM = "platform"
+    SHEET_SET = "sheetSet"
+    PAY = "pay"
+    DRAWING = "drawing"
+    SHEET = "sheet"
+
+
+RoadGraphKindName = Literal["layer", "surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "platform", "sheetSet", "pay", "drawing", "sheet"]
+"""The names of :class:`RoadGraphKind`, for a plain string."""
 
 
 class RoadKind(_StrEnum):
@@ -36920,7 +36961,7 @@ class FieldPackaged(_Model):
     vertices'); the surface; the system (`EPSG:5256`, its name; none: a local project), the epoch and the heights'
     system in words; the limits and the notes as written; the stamp.
     Attributes:
-        bytes: Unit: count.
+        bytes: Unit: bytes.
         lines: Unit: count.
         vertices: Unit: count.
         epoch: Unit: year.
@@ -78707,6 +78748,45 @@ class RoadDrawingRebuilt(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadDrawingRecipe(_Model):
+    """How a drawing is made again: its command and the version that draws it again (a record keeps no version; every
+    drawing command is v1), its input as kept (its main source by id), how many objects it wrote and how many of them
+    are there now, and the stamp of its objects as written (16 hex digits).
+    Attributes:
+        version: Unit: version.
+        written: Unit: count.
+        objects: Unit: count.
+    """
+    command: str
+    version: int
+    input: dict[str, Any]
+    written: int
+    objects: int
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["command"] = self.command
+        out["version"] = self.version
+        out["input"] = dict(self.input)
+        out["written"] = self.written
+        out["objects"] = self.objects
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadDrawingRecipe:
+        return cls(
+            command=data["command"],
+            version=data["version"],
+            input=dict(data["input"]),
+            written=data["written"],
+            objects=data["objects"],
+            digest=data["digest"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadDrawingSource(_Model):
     """A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).
     Attributes:
@@ -78729,6 +78809,86 @@ class RoadDrawingSource(_Model):
             kind=_enum_in(RoadSourceKind, data["kind"]),
             id=data["id"],
             digest=data["digest"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadGraphEdge(_Model):
+    """An edge from a node to another by their places: what it says; a source's whether it is the main one (what a
+    rebuild needs), its stamp then and now (none: gone); a map's name.
+    Attributes:
+        from_: Unit: index.
+        to: Unit: index.
+    """
+    from_: int
+    to: int
+    kind: RoadEdgeKind | RoadEdgeKindName
+    kept: str | None | Unset = UNSET
+    main: bool | Unset = UNSET
+    map: str | None | Unset = UNSET
+    now: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["kind"] = _enum_out(self.kind)
+        if self.kept is not UNSET:
+            out["kept"] = self.kept
+        if self.main is not UNSET:
+            out["main"] = self.main
+        if self.map is not UNSET:
+            out["map"] = self.map
+        if self.now is not UNSET:
+            out["now"] = self.now
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadGraphEdge:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            kind=_enum_in(RoadEdgeKind, data["kind"]),
+            kept=data.get("kept", UNSET),
+            main=data.get("main", UNSET),
+            map=data.get("map", UNSET),
+            now=data.get("now", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadGraphNode(_Model):
+    """A node: what it is, its id and name, how it stands and why (a layer: current, or gone; a sheet: stale when it shows
+    a drawing not up to date); a drawing's recipe.
+    """
+    kind: RoadGraphKind | RoadGraphKindName
+    id: str
+    name: str
+    state: RoadNodeState | RoadNodeStateName
+    recipe: RoadDrawingRecipe | None | Unset = UNSET
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["name"] = self.name
+        out["state"] = _enum_out(self.state)
+        if self.recipe is not UNSET:
+            out["recipe"] = None if self.recipe is None else self.recipe.to_json()
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadGraphNode:
+        return cls(
+            kind=_enum_in(RoadGraphKind, data["kind"]),
+            id=data["id"],
+            name=data["name"],
+            state=_enum_in(RoadNodeState, data["state"]),
+            recipe=UNSET if "recipe" not in data else None if data["recipe"] is None else RoadDrawingRecipe.from_json(data["recipe"]),
+            why=list(data["why"]) if "why" in data else UNSET,
         )
 
 
@@ -79058,6 +79218,92 @@ class RoadProjectEdited(_Model):
         return cls(
             auto_rebuild=data["autoRebuild"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectGraph(_Model):
+    """Output of `road.project.graph` v1: the nodes (the surfaces' layers, the tree's rows in its order, the sheets that
+    show a drawing in the book's order) and the edges; how many drawings, how many of them are not up to date (stale,
+    missing, edited, gone), how many sheets and how many of them are stale; the project's system (`EPSG:5256` and its
+    name; none: a local project), epoch and heights in words; whether it was deep; the revision read.
+    Attributes:
+        drawings: Unit: count.
+        outdated: Unit: count.
+        sheets: Unit: count.
+        blocked: Unit: count.
+        epoch: Unit: year.
+    """
+    nodes: list[RoadGraphNode]
+    edges: list[RoadGraphEdge]
+    drawings: int
+    outdated: int
+    sheets: int
+    blocked: int
+    deep: bool
+    revision: str
+    epoch: float | None | Unset = UNSET
+    epsg: str | None | Unset = UNSET
+    heights: str | None | Unset = UNSET
+    system: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["nodes"] = [e0.to_json() for e0 in self.nodes]
+        out["edges"] = [e0.to_json() for e0 in self.edges]
+        out["drawings"] = self.drawings
+        out["outdated"] = self.outdated
+        out["sheets"] = self.sheets
+        out["blocked"] = self.blocked
+        out["deep"] = self.deep
+        out["revision"] = self.revision
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.heights is not UNSET:
+            out["heights"] = self.heights
+        if self.system is not UNSET:
+            out["system"] = self.system
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectGraph:
+        return cls(
+            nodes=[RoadGraphNode.from_json(e0) for e0 in data["nodes"]],
+            edges=[RoadGraphEdge.from_json(e0) for e0 in data["edges"]],
+            drawings=data["drawings"],
+            outdated=data["outdated"],
+            sheets=data["sheets"],
+            blocked=data["blocked"],
+            deep=data["deep"],
+            revision=data["revision"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epsg=data.get("epsg", UNSET),
+            heights=data.get("heights", UNSET),
+            system=data.get("system", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectGraphQuery(_Model):
+    """Input of `road.project.graph` v1: `deep` reads the rows as `road.project.query` does deep (surfaces and corridors
+    made, approved volumes computed).
+
+    Refusals: `not_a_road_project`.
+    """
+    deep: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.deep is not UNSET:
+            out["deep"] = self.deep
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectGraphQuery:
+        return cls(
+            deep=data.get("deep", UNSET),
         )
 
 
@@ -129680,9 +129926,16 @@ __all__ = [
     "RoadDrawingDef",
     "RoadDrawingLeft",
     "RoadDrawingRebuilt",
+    "RoadDrawingRecipe",
     "RoadDrawingSource",
+    "RoadEdgeKind",
+    "RoadEdgeKindName",
     "RoadEditOperation",
     "RoadEditOperationName",
+    "RoadGraphEdge",
+    "RoadGraphKind",
+    "RoadGraphKindName",
+    "RoadGraphNode",
     "RoadKind",
     "RoadKindName",
     "RoadNode",
@@ -129697,6 +129950,8 @@ __all__ = [
     "RoadProfilesLengths",
     "RoadProjectEdit",
     "RoadProjectEdited",
+    "RoadProjectGraph",
+    "RoadProjectGraphQuery",
     "RoadProjectQuery",
     "RoadProjectRebuild",
     "RoadProjectRebuilt",

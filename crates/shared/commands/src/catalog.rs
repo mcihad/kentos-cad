@@ -9336,6 +9336,29 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // İş grafiği (plan/map-cad.md MAP-20, docs/adr/1940).
+        CommandDescriptor {
+            id: crate::ROAD_PROJECT_GRAPH.into(),
+            version: crate::ROAD_PROJECT_GRAPH_VERSION,
+            title: "İş grafiği".into(),
+            summary: "Yol ve harita projesinin kaynaktan paftaya zincirini tek grafik olarak okur; hiçbir şey yazmaz. Düğümler: yüzeylerin nokta ve kırık çizgi katmanları (layer), proje ağacının satırları sırasıyla (road.project.query'nin; deep onunki gibi kurar) ve bir çizimi gösteren paftalar (sheet, kitabın sırasıyla). Kenarlar: katman yüzeyi kurar (builds), satır ağaçtaki ebeveyninin üstüne yapılır (basis), çizim kaynaklarından yapılır (source: her kaynağı, main ana kaynağı, kept çizildiğindeki damga, now bugünkü; kaynak yoksa now yok), paftanın sabit görünüşlü haritası çizimin bir nesnesini zemininde gösterir (shows, map haritanın adı; atlas haritası her sayfada başka zemin gösterdiği için dışarıda). \
+                      Her çizimin tarifi (recipe): komut, yeniden çizen sürüm, saklanan girdi, yazılan ve bugün duran nesne sayısı, nesnelerin damgası. Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta. \
+                      Retler: not_a_road_project (yol ve harita projesi değil)."
+                .into(),
+            aliases: vec!["isgrafigi".into(), "projegrafigi".into(), "lineage".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectGraphQuery>(),
+            output: schema::<crate::RoadProjectGraph>(),
+            plan: Some(schema::<crate::RoadProjectGraph>()),
+            capabilities: None,
+            examples: vec![CommandExample { title: "Kaynaktan paftaya zincir".into(), input: json!({}), output: None }],
+        },
         CommandDescriptor {
             id: crate::ROAD_PROJECT_REBUILD.into(),
             version: crate::ROAD_PROJECT_REBUILD_VERSION,
@@ -16383,6 +16406,7 @@ mod tests {
                     crate::ROAD_JUNCTIONS_TIE => serde_json::from_value::<crate::JunctionsTie>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_OVERLAP => serde_json::from_value::<crate::JunctionsOverlap>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_GRAPH => serde_json::from_value::<crate::RoadProjectGraphQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
@@ -17352,6 +17376,7 @@ mod tests {
                         crate::ROAD_JUNCTIONS_TIE => serde_json::from_value::<crate::JunctionsTied>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_OVERLAP => serde_json::from_value::<crate::JunctionsOverlapped>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_GRAPH => serde_json::from_value::<crate::RoadProjectGraph>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),

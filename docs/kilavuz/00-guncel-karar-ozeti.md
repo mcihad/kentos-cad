@@ -49,6 +49,10 @@
 - **Harita'da proje ağacı (7 Kasım 2026; MAP-20, [ADR 1720](../../docs/adr/1720-map-project-tree-and-rebuild.md)).**
   `.kcad` şema 198 (Harita'nın `road.drawings`/`autoRebuild`, sıfır hattı çizimi); `road.project.*` Harita'yı kabul
   eder; sıfır hattı iki yüzeyin damgasıyla tutulur.
+- **İş grafiği (7 Kasım 2026; MAP-20, [ADR 1940](../../docs/adr/1940-project-graph.md)).** `road.project.graph` salt
+  okunur: katman → yüzey → çizim → pafta kenarları, çizimin tarifi (komut, sürüm, girdi, kaynak damgaları o zaman/şimdi);
+  güncel olmayan çizimi gösteren pafta teslim edilemez; pafta zemini baskı denetimiyle ortak (`map_ground`,
+  `drawing_within`); Proje ağacı › İş grafiği…; işlem sürümü ve çıktı revizyonu henüz kayıtta yok.
 - **Saha paketi (7 Kasım 2026; MAP-19, [ADR 1920](../../docs/adr/1920-field-package.md)).** `cad.field.package`: tasarım
   (noktalar, çizgiler, yüzey) tek `.zip`'te; revizyon, Uygulama kontrolünün tasarım özeti, kalıcı kimlikler, EPSG,
   epok, kot sistemi, yalnız verilen sınırlar ve notlar; sayılar yuvarlanmaz; ret `invalid_field_package`; çizim değişmez.

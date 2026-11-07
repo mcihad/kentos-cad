@@ -167,6 +167,26 @@ pub(crate) fn main_of(command: &str) -> Option<(RoadSourceKind, &'static str)> {
     })
 }
 
+/// The version of a drawing command that draws it again (docs/adr/1940): a record keeps none; every drawing command is
+/// its v1.
+pub(crate) fn version_of(command: &str) -> u32 {
+    match command {
+        "road.alignments.label" => kentos_commands::ROAD_ALIGNMENTS_LABEL_VERSION,
+        "road.profiles.draw" => kentos_commands::ROAD_PROFILES_DRAW_VERSION,
+        "road.sections.draw" => kentos_commands::ROAD_SECTIONS_DRAW_VERSION,
+        "road.corridors.draw" => kentos_commands::ROAD_CORRIDORS_DRAW_VERSION,
+        "road.guardrails.draw" => kentos_commands::ROAD_GUARDRAILS_DRAW_VERSION,
+        "road.culverts.draw" => kentos_commands::ROAD_CULVERTS_DRAW_VERSION,
+        "road.walls.draw" => kentos_commands::ROAD_WALLS_DRAW_VERSION,
+        "road.junctions.draw" => kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION,
+        "road.platforms.draw" => kentos_commands::ROAD_PLATFORMS_DRAW_VERSION,
+        "road.terrains.contours" => kentos_commands::ROAD_TERRAINS_CONTOURS_VERSION,
+        "road.terrains.zeroline" => kentos_commands::ROAD_TERRAINS_ZEROLINE_VERSION,
+        "road.terrains.cutfill" => kentos_commands::ROAD_TERRAINS_CUTFILL_VERSION,
+        _ => 1,
+    }
+}
+
 /// The (id, name) of the project's sources of `kind`.
 fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
     use RoadSourceKind as K;

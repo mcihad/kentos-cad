@@ -55242,6 +55242,223 @@
       ]
     },
     {
+      "id": "road.project.graph",
+      "version": 1,
+      "title": "İş grafiği",
+      "summary": "Yol ve harita projesinin kaynaktan paftaya zincirini tek grafik olarak okur; hiçbir şey yazmaz. Düğümler: yüzeylerin nokta ve kırık çizgi katmanları (layer), proje ağacının satırları sırasıyla (road.project.query'nin; deep onunki gibi kurar) ve bir çizimi gösteren paftalar (sheet, kitabın sırasıyla). Kenarlar: katman yüzeyi kurar (builds), satır ağaçtaki ebeveyninin üstüne yapılır (basis), çizim kaynaklarından yapılır (source: her kaynağı, main ana kaynağı, kept çizildiğindeki damga, now bugünkü; kaynak yoksa now yok), paftanın sabit görünüşlü haritası çizimin bir nesnesini zemininde gösterir (shows, map haritanın adı; atlas haritası her sayfada başka zemin gösterdiği için dışarıda). Her çizimin tarifi (recipe): komut, yeniden çizen sürüm, saklanan girdi, yazılan ve bugün duran nesne sayısı, nesnelerin damgası. Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta. Retler: not_a_road_project (yol ve harita projesi değil).",
+      "aliases": [
+        "isgrafigi",
+        "projegrafigi",
+        "lineage"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.project.graph` v1: `deep` reads the rows as `road.project.query` does deep (surfaces and corridors\nmade, approved volumes computed).\n\nRefusals: `not_a_road_project`.",
+        "properties": {
+          "deep": {
+            "type": "boolean"
+          }
+        },
+        "title": "RoadProjectGraphQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.graph` v1: the nodes (the surfaces' layers, the tree's rows in its order, the sheets that\nshow a drawing in the book's order) and the edges; how many drawings, how many of them are not up to date (stale,\nmissing, edited, gone), how many sheets and how many of them are stale; the project's system (`EPSG:5256` and its\nname; none: a local project), epoch and heights in words; whether it was deep; the revision read.",
+        "properties": {
+          "blocked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "deep": {
+            "type": "boolean"
+          },
+          "drawings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/$defs/RoadGraphEdge"
+            },
+            "type": "array"
+          },
+          "epoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
+          "epsg": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "heights": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/$defs/RoadGraphNode"
+            },
+            "type": "array"
+          },
+          "outdated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sheets": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "system": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "nodes",
+          "edges",
+          "drawings",
+          "outdated",
+          "sheets",
+          "blocked",
+          "deep",
+          "revision"
+        ],
+        "title": "RoadProjectGraph",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.graph` v1: the nodes (the surfaces' layers, the tree's rows in its order, the sheets that\nshow a drawing in the book's order) and the edges; how many drawings, how many of them are not up to date (stale,\nmissing, edited, gone), how many sheets and how many of them are stale; the project's system (`EPSG:5256` and its\nname; none: a local project), epoch and heights in words; whether it was deep; the revision read.",
+        "properties": {
+          "blocked": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "deep": {
+            "type": "boolean"
+          },
+          "drawings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/$defs/RoadGraphEdge"
+            },
+            "type": "array"
+          },
+          "epoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
+          "epsg": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "heights": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/$defs/RoadGraphNode"
+            },
+            "type": "array"
+          },
+          "outdated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sheets": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "system": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "nodes",
+          "edges",
+          "drawings",
+          "outdated",
+          "sheets",
+          "blocked",
+          "deep",
+          "revision"
+        ],
+        "title": "RoadProjectGraph",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kaynaktan paftaya zincir",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "road.project.rebuild",
       "version": 1,
       "title": "Yol çizimlerini yeniden üret",
@@ -58064,7 +58281,7 @@
             "format": "uint64",
             "minimum": 0,
             "type": "integer",
-            "x-unit": "count"
+            "x-unit": "bytes"
           },
           "digest": {
             "type": "string"
@@ -58188,7 +58405,7 @@
             "format": "uint64",
             "minimum": 0,
             "type": "integer",
-            "x-unit": "count"
+            "x-unit": "bytes"
           },
           "digest": {
             "type": "string"
@@ -178423,6 +178640,48 @@
       ],
       "type": "object"
     },
+    "RoadDrawingRecipe": {
+      "description": "How a drawing is made again: its command and the version that draws it again (a record keeps no version; every\ndrawing command is v1), its input as kept (its main source by id), how many objects it wrote and how many of them\nare there now, and the stamp of its objects as written (16 hex digits).",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "written": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "command",
+        "version",
+        "input",
+        "written",
+        "objects",
+        "digest"
+      ],
+      "type": "object"
+    },
     "RoadDrawingSource": {
       "additionalProperties": false,
       "description": "A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).",
@@ -178445,6 +178704,16 @@
       ],
       "type": "object"
     },
+    "RoadEdgeKind": {
+      "description": "What an edge says: a layer builds a surface; a row is made on another (a profile on its alignment, a pad on its\nsurface, a volume on its corridor); a drawing was made from a source; a sheet's map shows a drawing.",
+      "enum": [
+        "builds",
+        "basis",
+        "source",
+        "shows"
+      ],
+      "type": "string"
+    },
     "RoadEditOperation": {
       "description": "What an edit of a template or a set does.",
       "oneOf": [
@@ -178464,6 +178733,118 @@
           "type": "string"
         }
       ]
+    },
+    "RoadGraphEdge": {
+      "description": "An edge from a node to another by their places: what it says; a source's whether it is the main one (what a\nrebuild needs), its stamp then and now (none: gone); a map's name.",
+      "properties": {
+        "from": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "kept": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/RoadEdgeKind"
+        },
+        "main": {
+          "type": "boolean"
+        },
+        "map": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "now": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "RoadGraphKind": {
+      "description": "What a node of the graph is: a layer a surface is made of, a row of the project tree, or a sheet.",
+      "enum": [
+        "layer",
+        "surface",
+        "alignment",
+        "profile",
+        "sections",
+        "superelevation",
+        "junction",
+        "template",
+        "corridor",
+        "volume",
+        "haul",
+        "guardrail",
+        "culvert",
+        "wall",
+        "platform",
+        "sheetSet",
+        "pay",
+        "drawing",
+        "sheet"
+      ],
+      "type": "string"
+    },
+    "RoadGraphNode": {
+      "description": "A node: what it is, its id and name, how it stands and why (a layer: current, or gone; a sheet: stale when it shows\na drawing not up to date); a drawing's recipe.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RoadGraphKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "recipe": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadDrawingRecipe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/RoadNodeState"
+        },
+        "why": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name",
+        "state"
+      ],
+      "type": "object"
     },
     "RoadKind": {
       "description": "The kind of road Plan yolu draws: its `Tür`.",

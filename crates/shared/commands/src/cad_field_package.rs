@@ -115,7 +115,7 @@ pub struct PackageSurface {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct FieldPackaged {
     pub path: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,
     pub digest: String,

@@ -34,22 +34,10 @@ pub(crate) fn outdated_on_maps(doc: &Document, scene: &kentos_sheet::scene::Scen
     }
     let mut out = Vec::new();
     for (item, _) in scene.all() {
-        let Some(corners) = kentos_sheet::display::fixed_corners(item) else { continue };
-        let (lo, hi) = corners.iter().fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), c| {
-            ([lo[0].min(c[0]), lo[1].min(c[1])], [hi[0].max(c[0]), hi[1].max(c[1])])
-        });
+        // The same ground and the same test as the project's graph (road.project.graph, docs/adr/1940).
+        let Some(ground) = kentos_native_application::road_project_graph::map_ground(item) else { continue };
         for (d, word, why) in &outdated {
-            let inside = d.uids.iter().any(|u| {
-                kentos_domain::Uuid::parse_str(u)
-                    .ok()
-                    .and_then(|u| doc.slot_of(u))
-                    .and_then(|s| doc.get(s))
-                    .is_some_and(|e| {
-                        let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
-                        b.max_x >= lo[0] && b.min_x <= hi[0] && b.max_y >= lo[1] && b.min_y <= hi[1]
-                    })
-            });
-            if !inside {
+            if !kentos_native_application::road_project_graph::drawing_within(doc, d, ground) {
                 continue;
             }
             out.push(finding(

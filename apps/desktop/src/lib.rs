@@ -71,6 +71,7 @@ mod parcels_check_window;
 mod pipes_check_window;
 mod exchange_check_window;
 mod asbuilt_window;
+mod project_graph_window;
 mod survey_network_window;
 mod features_reconcile_window;
 mod zoning_window;
@@ -350,6 +351,8 @@ mod pipes_check_window_tests;
 mod exchange_check_window_tests;
 #[cfg(test)]
 mod asbuilt_window_tests;
+#[cfg(test)]
+mod project_graph_window_tests;
 #[cfg(test)]
 mod survey_network_window_tests;
 #[cfg(test)]

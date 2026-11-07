@@ -301,6 +301,7 @@ pub mod road_corridors_water;
 pub(crate) mod road_drawings;
 pub(crate) mod road_project;
 pub use road_project::outdated_drawings;
+pub mod road_project_graph;
 pub mod road_project_query;
 pub mod road_project_rebuild;
 pub mod road_project_edit;
@@ -1449,6 +1450,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_JUNCTIONS_TIE, kentos_commands::ROAD_JUNCTIONS_TIE_VERSION),
     (kentos_commands::ROAD_JUNCTIONS_OVERLAP, kentos_commands::ROAD_JUNCTIONS_OVERLAP_VERSION),
     (kentos_commands::ROAD_PROJECT_QUERY, kentos_commands::ROAD_PROJECT_QUERY_VERSION),
+    (kentos_commands::ROAD_PROJECT_GRAPH, kentos_commands::ROAD_PROJECT_GRAPH_VERSION),
     (kentos_commands::ROAD_PROJECT_REBUILD, kentos_commands::ROAD_PROJECT_REBUILD_VERSION),
     (kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION),
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).

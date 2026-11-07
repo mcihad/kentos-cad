@@ -83,6 +83,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Harita'yı kabul etmesi.
 - MAP-19 / ADR 1700: `cad.asbuilt.check`'in web işleyicisi ve Uygulama kontrolü penceresi.
 - MAP-19 / ADR 1920: `cad.field.package`'ın web işleyicisi ve Uygulama kontrolü penceresinin Saha paketi bölümü.
+- MAP-20 / ADR 1940: `road.project.graph`'ın web işleyicisi ve Proje ağacının İş grafiği penceresi.
 - MAP-18 / ADR 1680: web'in pafta girdilerinde (`ProjectInfo`) koordinat bilgisi ve baskı denetiminde `crs_text_mismatch`.
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.
 - MAP-16 / ADR 1640: `cad.pipes.check`'in web işleyicisi ve Boru hattı denetimi penceresi.

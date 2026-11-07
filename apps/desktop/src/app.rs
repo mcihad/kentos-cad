@@ -420,6 +420,8 @@ pub enum Dialog {
     ExchangeCheck,
     /// Uygulama kontrolü (asbuilt_window.rs, docs/adr/1700); its state is `App::asbuilt`.
     Asbuilt,
+    /// İş grafiği (project_graph_window.rs, docs/adr/1940); its state is `App::project_graph`.
+    ProjectGraph,
     /// Arşivden ağ dengelemesi (survey_network_window.rs, docs/adr/1740); its state is `App::survey_network`.
     SurveyNetwork,
     /// Adayları uzlaştır (features_reconcile_window.rs, docs/adr/1760); its state is `App::features_reconcile`.
@@ -864,6 +866,7 @@ pub enum Message {
     PipesCheck(crate::pipes_check_window::Event),
     ExchangeCheck(crate::exchange_check_window::Event),
     Asbuilt(crate::asbuilt_window::Event),
+    ProjectGraph(crate::project_graph_window::Event),
     SurveyNetwork(crate::survey_network_window::Event),
     FeaturesReconcile(crate::features_reconcile_window::Event),
     Zoning(crate::zoning_window::Event),
@@ -1534,6 +1537,7 @@ pub struct App {
     pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) asbuilt: crate::asbuilt_window::State,
+    pub(crate) project_graph: crate::project_graph_window::State,
     pub(crate) survey_network: crate::survey_network_window::State,
     pub(crate) features_reconcile: crate::features_reconcile_window::State,
     pub(crate) zoning: crate::zoning_window::State,
@@ -1997,6 +2001,7 @@ impl App {
             pipes_check: Default::default(),
             exchange_check: Default::default(),
             asbuilt: Default::default(),
+            project_graph: Default::default(),
             survey_network: Default::default(),
             features_reconcile: Default::default(),
             zoning: Default::default(),
@@ -2787,6 +2792,7 @@ impl App {
             Message::PipesCheck(event) => return self.pipes_check_event(event),
             Message::ExchangeCheck(event) => return self.exchange_check_event(event),
             Message::Asbuilt(event) => return self.asbuilt_event(event),
+            Message::ProjectGraph(event) => return self.project_graph_event(event),
             Message::SurveyNetwork(event) => return self.survey_network_event(event),
             Message::FeaturesReconcile(event) => return self.features_reconcile_event(event),
             Message::Zoning(event) => return self.zoning_event(event),

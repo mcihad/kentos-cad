@@ -2098,6 +2098,7 @@ impl App {
             Asking::PipesCheck => self.pipes_check_view(),
             Asking::ExchangeCheck => self.exchange_check_view(),
             Asking::Asbuilt => self.asbuilt_view(),
+            Asking::ProjectGraph => self.project_graph_view(),
             Asking::SurveyNetwork => self.survey_network_view(),
             Asking::FeaturesReconcile => self.features_reconcile_view(),
             Asking::Zoning => self.zoning_view(),

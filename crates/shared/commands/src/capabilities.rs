@@ -2401,6 +2401,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // İş grafiği (plan/map-cad.md MAP-20, docs/adr/1940).
+    Entry {
+        id: "road.project.graph",
+        refusals: &[&["not_a_road_project"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "road.project.rebuild",
         refusals: &[
