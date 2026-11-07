@@ -433,6 +433,24 @@ pub struct SurfaceCloudDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub vertical: Option<String>,
+    /// The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);
+    /// absent: the call said none, the points' heights are the files'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub heights: Option<CloudHeights>,
+}
+
+/// What the ground taken from clouds rests on when the call says the clouds' heights (docs/adr/1032): `from`, the
+/// clouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to
+/// the other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CloudHeights {
+    pub from: crate::HeightReference,
+    pub to: crate::HeightReference,
 }
 
 fn is_zero_u64(v: &u64) -> bool {
@@ -475,6 +493,16 @@ fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
             || [c.error_max, c.error_rms].iter().flatten().any(|v| !(v.is_finite() && *v >= 0.0))
         {
             return Some(at("sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)"));
+        }
+        if let Some((side, why)) = c.heights.as_ref().and_then(|h| {
+            [("from", &h.from), ("to", &h.to)].into_iter().find_map(|(side, r)| {
+                if r.kind == crate::HeightKind::Unknown {
+                    return Some((side, "bilinen bir yükseklik olmalı".to_owned()));
+                }
+                r.problem().map(|(_, why)| (side, why))
+            })
+        }) {
+            return Some(at(&format!("kotlarının {side} tarafı: {why}")));
         }
         if c.vertical.as_deref().is_some_and(|v| {
             v.is_empty() || v.trim() != v || v.chars().count() > MAX_CLOUD_VERTICAL_CHARS || v.chars().any(char::is_control)

@@ -20740,6 +20740,29 @@ class CloudExtra(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CloudHeights(_Model):
+    """What the ground taken from clouds rests on when the call says the clouds' heights (docs/adr/1032): `from`, the
+    clouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to
+    the other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.
+    """
+    from_: HeightReference
+    to: HeightReference
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_.to_json()
+        out["to"] = self.to.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudHeights:
+        return cls(
+            from_=HeightReference.from_json(data["from"]),
+            to=HeightReference.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CloudMismatch(_Model):
     """A place the sources of one cloud disagree: what differs, which sources, in words.
     Attributes:
@@ -86467,6 +86490,8 @@ class SurfaceCloudDef(_Model):
         density: Unit: 1.
         error_max: Unit: m.
         error_rms: Unit: m.
+        heights: The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);
+            absent: the call said none, the points' heights are the files'.
         near: Unit: m.
         outside: Unit: count.
         vertical: The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
@@ -86485,6 +86510,7 @@ class SurfaceCloudDef(_Model):
     area: str | None | Unset = UNSET
     error_max: float | None | Unset = UNSET
     error_rms: float | None | Unset = UNSET
+    heights: CloudHeights | None | Unset = UNSET
     near: float | None | Unset = UNSET
     outside: int | Unset = UNSET
     returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
@@ -86507,6 +86533,8 @@ class SurfaceCloudDef(_Model):
             out["errorMax"] = None if self.error_max is None else float(self.error_max)
         if self.error_rms is not UNSET:
             out["errorRms"] = None if self.error_rms is None else float(self.error_rms)
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.near is not UNSET:
             out["near"] = None if self.near is None else float(self.near)
         if self.outside is not UNSET:
@@ -86532,6 +86560,7 @@ class SurfaceCloudDef(_Model):
             area=data.get("area", UNSET),
             error_max=UNSET if "errorMax" not in data else None if data["errorMax"] is None else float(data["errorMax"]),
             error_rms=UNSET if "errorRms" not in data else None if data["errorRms"] is None else float(data["errorRms"]),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else CloudHeights.from_json(data["heights"]),
             near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
             outside=data.get("outside", UNSET),
             returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
@@ -90654,6 +90683,9 @@ class TerrainsFromCloud(_Model):
     points than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,
     19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,
     `cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,
+    with `heights` (docs/adr/1032, before the clouds are read) `invalid_heights`, `heights_unknown` (the project's are
+    not said), `geoid_required`, `geoid_missing`, `vertical_unsupported` (as `cad.crs.transform`), `invalid_cloud_terrain`
+    (a kept point the geoid's grid does not reach), and `cloud_heights_differ` (a file naming another system),
     `invalid_revision`,
     `revision_conflict`.
     Attributes:
@@ -90662,6 +90694,8 @@ class TerrainsFromCloud(_Model):
         boundary: A new surface's boundary: a closed polyline's or an area's id.
         breaklines: A new surface's breaklines.
         drawing: The open drawing's file, a relative source's folder (the host gives it).
+        heights: The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them
+            turned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them.
         name: A new surface's name.
         near: Unit: length.
         surface: A project's surface by its id or name.
@@ -90676,6 +90710,7 @@ class TerrainsFromCloud(_Model):
     breaklines: SurfaceSources | Unset = UNSET
     drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    heights: HeightReference | None | Unset = UNSET
     name: str | None | Unset = UNSET
     near: float | None | Unset = UNSET
     returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
@@ -90698,6 +90733,8 @@ class TerrainsFromCloud(_Model):
             out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.name is not UNSET:
             out["name"] = self.name
         if self.near is not UNSET:
@@ -90721,6 +90758,7 @@ class TerrainsFromCloud(_Model):
             breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
             drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             name=data.get("name", UNSET),
             near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
             returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
@@ -118611,6 +118649,7 @@ __all__ = [
     "CloudExtra",
     "CloudFormat",
     "CloudFormatName",
+    "CloudHeights",
     "CloudMismatch",
     "CloudPoint",
     "CloudRange",

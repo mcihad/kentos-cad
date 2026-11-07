@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `195`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-196.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `196`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-197.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -852,6 +852,12 @@ seçer; 193 ve öncesi alanları `unknown_field` sayar (`broken/road-places-in-s
 harf, denetim karakteri yok). Yoksa sistem bilinmiyor demektir. Yazıcı 195'i bir bulut kaydı düşey sistem taşıyınca
 seçer; 194 ve öncesi alanı `unknown_field` sayar (`broken/road-cloud-heights-in-schema-194.kcad`). Örnek
 `road-cloud-heights.json/.kcad`.
+
+**Şema 196** (ADR 1032; ROAD-NUM-03): yüzeyin bulut kaydının `heights`'ı, çağrının söylediği bulut kotları (`from`)
+ve noktaların yazıldığı projenin kotları (`to`); ikisi de projenin `heights`'ı gibi bir yükseklik tanımıdır (§ şema 85),
+türü bilinen. İkisi ayrıysa kotlar geoit modelleriyle birinden öbürüne çevrilmiştir. Yazıcı 196'yı bir bulut kaydı
+`heights` taşıyınca seçer; 195 ve öncesi alanı `unknown_field` sayar
+(`broken/road-cloud-turned-in-schema-195.kcad`). Örnek `road-cloud-turned.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

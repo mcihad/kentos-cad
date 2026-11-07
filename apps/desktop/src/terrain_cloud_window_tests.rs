@@ -150,3 +150,98 @@ fn screens() {
         shot(&mut app, "yuzey");
     }
 }
+
+/// `road.terrains.cloud`'s case drawing (docs/adr/1032: a road project in TUREF / TM36 whose cloud's heights are
+/// ellipsoidal), the synthetic TG geoid read into the core as a device's grid library gives it.
+fn tm36_app() -> (App, serde_json::Value) {
+    let (mut app, _) = App::boot(None);
+    let text = std::fs::read_to_string(fixtures().join("commands/v1/road.terrains.cloud.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(&text).expect("JSON");
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "Elipsoit yükseklikli bulut geoitle projenin kotlarına")
+        .expect("the case")
+        .clone();
+    let whole = case["setup"].to_string().replace("$fixture:", &format!("{}/", fixtures().display()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(&whole).expect("the drawing reads");
+    let bytes = std::fs::read(fixtures().join("geoid/v1/tg.gtx")).expect("the geoid");
+    let model = kentos_native_application::crs_models::read(&bytes).expect("reads");
+    kentos_geometry_core::crs::geoid::register(&kentos_native_application::crs_models::sha256(&bytes), model.grid);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    (app, case)
+}
+
+/// ROAD-NUM-03 (docs/adr/1032): Bulutun kotları › Elipsoit yüksekliği turns the kept points' heights into the
+/// project's by its geoid, as the shared case does; the preview says so. The file's own heights are taken unturned.
+#[test]
+fn the_window_turns_ellipsoidal_heights_by_the_geoid() {
+    let (mut app, case) = tm36_app();
+    let want = &case["steps"][0]["result"]["output"]["surface"]["figures"];
+    let _ = app.update(Message::Run("terrain.cloud"));
+    send(&mut app, W::Field(0, "2".into()));
+    send(&mut app, W::Layer("zemin".into()));
+    send(&mut app, W::Class(2));
+    send(&mut app, W::Field(3, "Lidar zemini".into()));
+    let m = app
+        .terrain_cloud_control(crate::traces::Control::Pick(crate::terrain_cloud_window::HEIGHTS, "Elipsoit yüksekliği (geoitle çevir)"))
+        .expect("a control")
+        .expect("a message");
+    let _ = app.update(m);
+    send(&mut app, W::Preview);
+    let o = match &app.terrain_cloud_window.as_ref().expect("open").preview {
+        Some(Ok(o)) => o.clone(),
+        other => panic!("previewed: {other:?}"),
+    };
+    let f = o.surface.figures.clone().expect("figures");
+    assert!((f.min_z.expect("a lowest height") - want["minZ"].as_f64().unwrap()).abs() < 1e-6, "{f:?}");
+    assert!(o.cloud.heights.as_ref().is_some_and(|h| h.from.kind == kentos_commands::HeightKind::Ellipsoidal));
+    send(&mut app, W::Heights(0));
+    send(&mut app, W::Preview);
+    let o = match &app.terrain_cloud_window.as_ref().expect("open").preview {
+        Some(Ok(o)) => o.clone(),
+        other => panic!("previewed: {other:?}"),
+    };
+    assert!(
+        o.cloud.heights.is_none() && o.surface.figures.and_then(|f| f.min_z).is_some_and(|z| z > 100.0),
+        "the file's own heights"
+    );
+}
+
+/// The window turning the heights, light; `.run/gui-evidence/yol-y97/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib terrain_cloud_window_tests::screens_heights -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_heights() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y97");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 760.0), "koyu")] {
+        let (mut app, _) = tm36_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.cloud"));
+        send(&mut app, W::Field(0, "2".into()));
+        send(&mut app, W::Layer("zemin".into()));
+        send(&mut app, W::Class(2));
+        send(&mut app, W::Field(3, "Lidar zemini".into()));
+        send(&mut app, W::Heights(1));
+        send(&mut app, W::Preview);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y97-bulut-kotlari-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

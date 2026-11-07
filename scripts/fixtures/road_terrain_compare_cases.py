@@ -90,12 +90,15 @@ def only(s, keep):
     return s
 
 
-def heights_setup(vertical=None, heights=None):
+def heights_setup(vertical=None, heights=None, turned=None):
     s = setup()
     record = {"layer": "kazi", "clouds": [UID.format(1)], "classes": [2], "returns": "all", "cell": 1.0, "read": 25, "kept": 25,
               "coverage": 1.0, "density": 1.0}
     if vertical is not None:
         record["vertical"] = vertical
+    if turned is not None:
+        # Docs/adr/1032: the cloud's heights as the call said them, written in the project's.
+        record["heights"] = {"from": turned, "to": heights}
     next(t for t in s["settings"]["road"]["surfaces"] if t["id"] == "t-8")["clouds"] = [record]
     if heights is not None:
         s["settings"]["heights"] = heights
@@ -237,6 +240,8 @@ def cases():
       analysis.failed("unproven_heights", NOT_SHOWN.format(DRAWING_UNSAID), "assumeHeights"),
       setup_=heights_setup("EPSG:5775"))
     q("Projeyle bulut aynı sistemde", pair, setup_=heights_setup("Antalya height", ortho(5775)))
+    q("Projenin kotlarına çevrilmiş bulut zemini", pair,
+      setup_=heights_setup(None, ortho(5775), {"kind": "ellipsoidal"}))
     q("İki ayrı sistem varsayımla da ret", {**pair, "assumeHeights": True},
       analysis.failed("unproven_heights", "Karşılaştırılan kotlar iki ayrı düşey sistemde: çizimin kendi kotları "
                       "(“Düz”) Antalya height (EPSG:5775), “Kazı” yüzeyinin “kazi” katmanındaki bulut noktaları EGM2008 "

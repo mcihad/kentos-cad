@@ -668,6 +668,11 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
+/// Whether road settings carry schema 196's fields: a cloud record's heights as the call said them (docs/adr/1032).
+pub(crate) fn road_has_cloud_conversions(road: &kentos_contracts::RoadSettings) -> bool {
+    road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.heights.is_some()))
+}
+
 /// Whether road settings carry schema 195's fields: a cloud record's vertical system (docs/adr/1029).
 pub(crate) fn road_has_cloud_heights(road: &kentos_contracts::RoadSettings) -> bool {
     road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.vertical.is_some()))
@@ -1517,6 +1522,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_speed && road_has_speed(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "aksın proje hızı şema 193 ister"));
+                }
+                if !has.road_cloud_conversions && road_has_cloud_conversions(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının çevrilen kotları şema 196 ister"));
                 }
                 if !has.road_cloud_heights && road_has_cloud_heights(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının düşey sistemi şema 195 ister"));

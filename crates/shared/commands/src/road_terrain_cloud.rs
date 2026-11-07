@@ -34,6 +34,9 @@ pub const CLOUD_TERRAIN_PIECE: usize = 10_000;
 /// points than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,
 /// 19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,
 /// `cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,
+/// with `heights` (docs/adr/1032, before the clouds are read) `invalid_heights`, `heights_unknown` (the project's are
+/// not said), `geoid_required`, `geoid_missing`, `vertical_unsupported` (as `cad.crs.transform`), `invalid_cloud_terrain`
+/// (a kept point the geoid's grid does not reach), and `cloud_heights_differ` (a file naming another system),
 /// `invalid_revision`,
 /// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -85,6 +88,11 @@ pub struct TerrainsFromCloud {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+    /// The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them
+    /// turned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub heights: Option<crate::HeightReference>,
 }
 
 /// Output of `road.terrains.cloud` v1: the points read by class (what the clouds held of each class asked), the

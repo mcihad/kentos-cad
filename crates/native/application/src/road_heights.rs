@@ -12,7 +12,10 @@
 
 use std::collections::HashSet;
 
-use kentos_commands::{CloudFormat, CommandWarning, HeightKind, PointCloudEntity, TerrainSurfaceDef, VERTICAL_SYSTEMS, vertical_system};
+use kentos_commands::{
+    CloudFormat, CommandWarning, HeightKind, HeightReference, PointCloudEntity, SurfaceCloudDef, TerrainSurfaceDef, VERTICAL_SYSTEMS,
+    vertical_system,
+};
 use kentos_domain::Document;
 
 use crate::checks::Stop;
@@ -42,11 +45,24 @@ impl System {
 
     /// The project's, when its settings say it.
     pub(crate) fn of_project(doc: &Document) -> Option<System> {
-        let h = doc.settings().heights.as_ref()?;
+        System::of_ref(doc.settings().heights.as_ref()?)
+    }
+
+    /// What a height reference says, when it says a system.
+    pub(crate) fn of_ref(h: &HeightReference) -> Option<System> {
         match h.kind {
             HeightKind::Ellipsoidal => Some(System::Ellipsoidal),
             HeightKind::Orthometric => h.vertical_srid.map(System::Srid),
             HeightKind::Unknown => None,
+        }
+    }
+
+    /// The system a cloud record's points are in (docs/adr/1032): the project's they were written in when the call
+    /// said the clouds' heights, else the files' when they named one.
+    pub(crate) fn of_record(c: &SurfaceCloudDef) -> Option<System> {
+        match &c.heights {
+            Some(h) => System::of_ref(&h.to),
+            None => c.vertical.as_deref().map(System::of_file),
         }
     }
 
@@ -59,10 +75,11 @@ impl System {
     }
 }
 
-/// Where a surface's heights come from: the drawing's points and lines, or the ground of the clouds on a layer.
+/// Where a surface's heights come from: the drawing's points and lines, or the ground of the clouds on a layer and the
+/// system its points are in, when known.
 enum Source<'a> {
     Drawing,
-    Cloud { layer: &'a str, vertical: Option<&'a str> },
+    Cloud { layer: &'a str, system: Option<System> },
 }
 
 fn sources(def: &TerrainSurfaceDef) -> Vec<Source<'_>> {
@@ -71,7 +88,7 @@ fn sources(def: &TerrainSurfaceDef) -> Vec<Source<'_>> {
     if def.points.layers.iter().any(|l| !clouds.contains(l.as_str())) || !def.points.uids.is_empty() || !def.breaklines.is_empty() {
         out.push(Source::Drawing);
     }
-    out.extend(def.clouds.iter().map(|c| Source::Cloud { layer: &c.layer, vertical: c.vertical.as_deref() }));
+    out.extend(def.clouds.iter().map(|c| Source::Cloud { layer: &c.layer, system: System::of_record(c) }));
     out
 }
 
@@ -103,8 +120,8 @@ pub(crate) fn proven(doc: &Document, sides: &[Side<'_>], assume: bool, path: &st
                     drawing.push(name);
                 }
             }
-            Source::Cloud { layer, vertical } => match vertical {
-                Some(v) => known.push((format!("“{name}” yüzeyinin “{layer}” katmanındaki bulut noktaları"), System::of_file(v))),
+            Source::Cloud { layer, system } => match system {
+                Some(v) => known.push((format!("“{name}” yüzeyinin “{layer}” katmanındaki bulut noktaları"), v.clone())),
                 None => unknown.push(format!(
                     "“{name}” yüzeyinin “{layer}” katmanındaki bulut noktaları (dosya düşey sistemini söylemiyor ya da alındığında kaydedilmedi)"
                 )),
@@ -162,7 +179,8 @@ pub(crate) fn of_clouds(
     doc: &Document,
     drawing: Option<&str>,
     clouds: &[(String, PointCloudEntity)],
-    others: &[(&str, Option<&str>)],
+    others: &[(&str, Option<System>)],
+    stated: Option<&HeightReference>,
     path: &str,
 ) -> Result<Option<String>, Stop> {
     // Each source read: what it names (its words and the system), or none.
@@ -184,6 +202,27 @@ pub(crate) fn of_clouds(
         }
     }
     let differ = |words: String| Err(fail(codes::CLOUD_HEIGHTS_DIFFER, words, path));
+    // Docs/adr/1032: heights the call says are the clouds'; a file naming another is refused, and the points go into
+    // the project's system (the surface's other clouds are held to it).
+    if let Some(said) = stated.and_then(System::of_ref) {
+        if let Some((first, _, sys)) = named.iter().find(|(_, _, s)| *s != said) {
+            return differ(format!(
+                "{first} kotların {} olduğunu söylüyor; çağrı {} diyor (heights). Dosyanın söylediğini verin ya da heights'ı bırakın.",
+                sys.words(),
+                said.words()
+            ));
+        }
+        if let Some(p) = System::of_project(doc)
+            && let Some((layer, v)) = others.iter().find_map(|(l, v)| v.clone().filter(|v| *v != p).map(|v| (l, v)))
+        {
+            return differ(format!(
+                "Bulutun noktaları projenin kotlarına ({}) çevrilir; yüzeyin “{layer}” katmanındaki bulut noktaları {}: bir yüzeyin noktaları tek sistemde olmalı.",
+                p.words(),
+                v.words()
+            ));
+        }
+        return Ok(named.first().filter(|_| !silent).map(|(_, text, _)| text.clone()));
+    }
     let Some((first, text, sys)) = named.first() else { return Ok(None) };
     if let Some((other, _, theirs)) = named.iter().find(|(_, _, s)| s != sys) {
         return differ(format!(
@@ -201,7 +240,7 @@ pub(crate) fn of_clouds(
             p.words()
         ));
     }
-    if let Some((layer, v)) = others.iter().find_map(|(l, v)| v.map(|v| (l, System::of_file(v))).filter(|(_, v)| v != sys)) {
+    if let Some((layer, v)) = others.iter().find_map(|(l, v)| v.clone().filter(|v| v != sys).map(|v| (l, v))) {
         return differ(format!(
             "Bulutun kotları {}, yüzeyin “{layer}” katmanındaki bulut noktalarınınki {}: bir yüzeyin noktaları tek sistemde olmalı.",
             sys.words(),

@@ -257,12 +257,15 @@ def machine_cases(tmp):
     mc = {"stamp": STAMP, "machineControl": True}
     what = "Makine kontrolü dosyasının"
 
-    def clouded(vertical):
+    def clouded(vertical, turned=None):
         s = setup()
         record = {"layer": "zemin", "clouds": ["0192f5a0-7c3e-7d4a-9b1e-000000000001"], "classes": [2],
                   "returns": "all", "cell": 1.0, "read": 120, "kept": 120, "coverage": 1.0, "density": 1.0}
         if vertical is not None:
             record["vertical"] = vertical
+        if turned is not None:
+            # Docs/adr/1032: the cloud's heights as the call said them, written in the project's.
+            record["heights"] = {"from": turned, "to": HEIGHTS}
         next(t for t in s["settings"]["road"]["surfaces"] if t["id"] == "t-1")["clouds"] = [record]
         return s
 
@@ -275,6 +278,9 @@ def machine_cases(tmp):
     on_project = {**mc, "path": tmp(), **ground}
     cloud_ok = case("Makine kontrolü: bulut zemini projenin sisteminde",
                     [step("execute", on_project, done(on_project), UNCHANGED)], clouded("EPSG:5775"))
+    turned_in = {**mc, "path": tmp(), **ground}
+    turned_ok = case("Makine kontrolü: projenin kotlarına çevrilmiş bulut zemini",
+                     [step("execute", turned_in, done(turned_in), UNCHANGED)], clouded(None, {"kind": "ellipsoidal"}))
     plain = {"path": tmp(), "stamp": STAMP}
     return [
         ok("Makine kontrolü için: projenin kotları söylenmiş", {**mc, "path": tmp()}),
@@ -286,6 +292,7 @@ def machine_cases(tmp):
            failed("field_heights_unknown", unsaid(what, "projenin kotları ortometrik ama düşey sistemi belirtilmemiş")),
            setup(heights={"kind": "orthometric"})),
         cloud_ok,
+        turned_ok,
         no("Makine kontrolü: bulut zemininin sistemi bilinmiyor", {**mc, "path": tmp(), **ground},
            failed("unproven_heights", "“Mevcut zemin” yüzeyinin “zemin” katmanındaki bulut noktaları: dosyası düşey "
                   "sistemini söylemiyor ya da alındığında kaydedilmedi. Kotları projenin sisteminde gösterilmeyen yüzey "

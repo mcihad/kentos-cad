@@ -50969,7 +50969,7 @@
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
-      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, cloud_heights_differ, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
+      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). heights bulutun kotlarını söyler (dosya söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların kotları cad.crs.transform gibi geoit modelleriyle projenin kotlarına çevrilir (H = h − N; ADR 1032) ve kayda heights (from, to) yazılır; projenin kotları bilinmiyorsa heights_unknown, geoit özeti ya da ızgarası yoksa geoid_required ya da geoid_missing, iki ayrı datumda geoit yoksa vertical_unsupported, nokta ızgaranın dışındaysa invalid_cloud_terrain; dosya başka sistem söylüyorsa cloud_heights_differ. Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, invalid_heights, heights_unknown, geoid_required, geoid_missing, vertical_unsupported, cloud_heights_differ, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
       "aliases": [
         "buluttanarazi",
         "bulutyuzey"
@@ -50987,7 +50987,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.cloud` v1: the clouds (their objects' ids), the LAS classes taken (2 is the ASPRS\nground), the returns, an optional area (a closed polyline's or an area's id), the thinning (`cell` m; `zTolerance`\nm: a steeper cell keeps its lowest and highest; `near` m: every point within it of the surface's breaklines is\nkept), the layer the points go on, and either `surface` (a project's surface by its id or name: the layer joins its\npoints) or `name` (a new surface of the layer, with `breaklines` and `boundary` if given). Nothing is filled in: the\nclasses, the cell and the tolerances are the user's.\n\nRefusals, in this order: `not_a_road_project`, `not_a_pointcloud`, `invalid_cloud_terrain` (no cloud or class, both\nor neither of surface and name, a thinning value not positive, an area not a closed polyline or area, more kept\npoints than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,\n19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,\n`cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,\n`invalid_revision`,\n`revision_conflict`.",
+        "description": "Input of `road.terrains.cloud` v1: the clouds (their objects' ids), the LAS classes taken (2 is the ASPRS\nground), the returns, an optional area (a closed polyline's or an area's id), the thinning (`cell` m; `zTolerance`\nm: a steeper cell keeps its lowest and highest; `near` m: every point within it of the surface's breaklines is\nkept), the layer the points go on, and either `surface` (a project's surface by its id or name: the layer joins its\npoints) or `name` (a new surface of the layer, with `breaklines` and `boundary` if given). Nothing is filled in: the\nclasses, the cell and the tolerances are the user's.\n\nRefusals, in this order: `not_a_road_project`, `not_a_pointcloud`, `invalid_cloud_terrain` (no cloud or class, both\nor neither of surface and name, a thinning value not positive, an area not a closed polyline or area, more kept\npoints than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,\n19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,\n`cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,\nwith `heights` (docs/adr/1032, before the clouds are read) `invalid_heights`, `heights_unknown` (the project's are\nnot said), `geoid_required`, `geoid_missing`, `vertical_unsupported` (as `cad.crs.transform`), `invalid_cloud_terrain`\n(a kept point the geoid's grid does not reach), and `cloud_heights_differ` (a file naming another system),\n`invalid_revision`,\n`revision_conflict`.",
         "properties": {
           "area": {
             "type": [
@@ -51040,6 +51040,17 @@
               "string",
               "null"
             ]
+          },
+          "heights": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HeightReference"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them\nturned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them."
           },
           "layerId": {
             "type": "string"
@@ -51261,6 +51272,11 @@
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
+          "invalid_heights",
+          "heights_unknown",
+          "geoid_required",
+          "geoid_missing",
+          "vertical_unsupported",
           "cloud_heights_differ",
           "too_many_cloud_points",
           "cloud_ground_empty",
@@ -109949,6 +109965,23 @@
         "xyz"
       ],
       "type": "string"
+    },
+    "CloudHeights": {
+      "additionalProperties": false,
+      "description": "What the ground taken from clouds rests on when the call says the clouds' heights (docs/adr/1032): `from`, the\nclouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to\nthe other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/HeightReference"
+        },
+        "to": {
+          "$ref": "#/$defs/HeightReference"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "type": "object"
     },
     "CloudMismatch": {
       "description": "A place the sources of one cloud disagree: what differs, which sources, in words.",
@@ -178054,6 +178087,17 @@
             "null"
           ],
           "x-unit": "m"
+        },
+        "heights": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CloudHeights"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);\nabsent: the call said none, the points' heights are the files'."
         },
         "kept": {
           "format": "uint64",

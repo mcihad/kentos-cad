@@ -528,6 +528,7 @@ __all__ = [
     "CloudExtra",
     "CloudFormat",
     "CloudFormatName",
+    "CloudHeights",
     "CloudMismatch",
     "CloudPoint",
     "CloudRange",

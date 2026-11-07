@@ -2243,6 +2243,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 196 (docs/adr/1032): a cloud record's heights as the call said them.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_conversions) {
+        return crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS;
+    }
     // Schema 195 (docs/adr/1029): a cloud record's vertical system.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_heights) {
         return crate::SCHEMA_WITH_ROAD_CLOUD_HEIGHTS;

@@ -18,7 +18,9 @@
 
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Task, Theme};
-use kentos_commands::{CloudReturns, CommandResult, Entity, SurfaceSources, TerrainsFromCloud, TerrainsFromCloudWritten};
+use kentos_commands::{
+    CloudReturns, CommandResult, Entity, HeightKind, HeightReference, SurfaceSources, TerrainsFromCloud, TerrainsFromCloudWritten,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_terrain_cloud};
 use kentos_ui::theme::Tokens;
@@ -43,6 +45,10 @@ pub(crate) const FIELDS: [&str; 4] = ["Hücre (m)", "Kot toleransı (m)", "Kır�
 /// The classes offered (ASPRS's, LAS 1.4 R15 Table 17): the bridge deck and the overhead structure are never the
 /// ground and are not offered.
 pub(crate) const CLASSES: [u8; 12] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+/// The clouds' heights as the user says them (docs/adr/1032): the files' own, ellipsoidal (turned into the project's
+/// by its geoid model), or the project's.
+pub(crate) const HEIGHTS: &str = "Bulutun kotları";
+pub(crate) const HEIGHTS_CHOICES: [&str; 3] = ["Dosyanın söylediği", "Elipsoit yüksekliği (geoitle çevir)", "Projeninki"];
 const RETURNS: [(CloudReturns, &str); 4] = [
     (CloudReturns::All, "Bütün dönüşler"),
     (CloudReturns::Last, "Son dönüş"),
@@ -55,6 +61,9 @@ pub struct Window {
     pub(crate) cloud: Option<String>,
     pub(crate) classes: Vec<u8>,
     pub(crate) returns: CloudReturns,
+    /// One of [`HEIGHTS_CHOICES`]; and the project's heights when the window opened.
+    pub(crate) heights: usize,
+    pub(crate) project_heights: Option<HeightReference>,
     /// The area's id and its corners' count.
     pub(crate) area: Option<(String, usize)>,
     /// A project's surface by its id; none: a new one named by the last field.
@@ -70,6 +79,7 @@ pub enum Event {
     Cloud(String),
     Class(u8),
     Returns(CloudReturns),
+    Heights(usize),
     FromSelection,
     ClearArea,
     Surface(Option<String>),
@@ -116,6 +126,11 @@ impl Window {
             boundary: None,
             drawing,
             expected_revision: None,
+            heights: match self.heights {
+                1 => Some(HeightReference { kind: HeightKind::Ellipsoidal, vertical_srid: None, geoid: None }),
+                2 => Some(self.project_heights.clone().ok_or("Projenin kotları söylenmemiş: Proje ayarları › Kotlar'da seçin.")?),
+                _ => None,
+            },
         })
     }
 }
@@ -158,6 +173,8 @@ impl App {
             cloud: Some(cloud),
             classes: Vec::new(),
             returns: CloudReturns::All,
+            heights: 0,
+            project_heights: doc.model.settings().heights.clone(),
             area,
             surface: None,
             layer,
@@ -203,6 +220,7 @@ impl App {
                 w.classes.sort_unstable();
             }
             Event::Returns(r) => w.returns = r,
+            Event::Heights(k) => w.heights = k.min(HEIGHTS_CHOICES.len() - 1),
             Event::FromSelection => match picked {
                 Some(a) => w.area = Some(a),
                 None => {
@@ -292,6 +310,7 @@ impl App {
             RETURNS.iter().position(|r| r.0 == w.returns),
             |i| msg(Event::Returns(RETURNS[i].0)),
         );
+        let on_heights = Select::new(HEIGHTS_CHOICES.map(Choice::new), Some(w.heights), |i| msg(Event::Heights(i)));
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
@@ -305,6 +324,7 @@ impl App {
             field("m", 0, 100.0),
             field("yok", 1, 130.0),
             field("yok", 2, 130.0),
+            words::field(HEIGHTS, container(on_heights).width(230), None),
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
@@ -384,6 +404,18 @@ impl App {
                     ("Yoğunluk", format!("{:.2} nokta/m²", c.density)),
                     ("Seyreltme hatası", error),
                     ("Yüzeyin dışında kalan", c.outside.to_string()),
+                    // Docs/adr/1032: what the heights written are.
+                    (
+                        "Kotlar",
+                        match (&c.heights, &c.vertical) {
+                            (Some(h), _) if h.from != h.to => {
+                                format!("{} → {}; geoitle çevrildi", h.from.title(), h.to.title())
+                            }
+                            (Some(h), _) => format!("{} (çevrilmedi)", h.to.title()),
+                            (None, Some(v)) => format!("dosyanın söylediği: {v}"),
+                            (None, None) => "dosya söylemiyor".to_owned(),
+                        },
+                    ),
                     ("Yüzey", format!("{} · {} köşe", o.surface.name, o.surface.figures.as_ref().map_or(0, |f| f.vertices))),
                 ];
                 let mut table = Column::new().spacing(4);
@@ -418,6 +450,10 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
+            Control::Pick(HEIGHTS, words) => {
+                let at = HEIGHTS_CHOICES.iter().position(|c| *c == words).ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
+                Some(msg(Event::Heights(at)))
+            }
             Control::Press(FROM_SELECTION) => Some(msg(Event::FromSelection)),
             Control::Press(CLEAR_AREA) => Some(msg(Event::ClearArea)),
             Control::Fill(name, t) if FIELDS.contains(&name) => {

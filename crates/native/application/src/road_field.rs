@@ -78,11 +78,9 @@ pub(crate) fn heights_said(doc: &Document, what: &str) -> Result<(), Stop> {
 pub(crate) fn surface_on_project(doc: &Document, def: &TerrainSurfaceDef, path: &str) -> Result<(), Stop> {
     let project = System::of_project(doc);
     for c in &def.clouds {
-        let why = match (c.vertical.as_deref(), &project) {
+        let why = match (System::of_record(c), &project) {
             (None, _) => "dosyası düşey sistemini söylemiyor ya da alındığında kaydedilmedi".to_owned(),
-            (Some(v), Some(p)) if System::of_file(v) != *p => {
-                format!("{}, projenin kotları {}", System::of_file(v).words(), p.words())
-            }
+            (Some(v), Some(p)) if v != *p => format!("{}, projenin kotları {}", v.words(), p.words()),
             _ => continue,
         };
         return Err(fail(

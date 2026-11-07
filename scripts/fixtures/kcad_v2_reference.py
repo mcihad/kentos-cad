@@ -2587,6 +2587,9 @@ def document(d):
     if any("vertical" in c for s in road.get("surfaces", []) for c in s.get("clouds", [])):
         # A cloud record's vertical system (docs/adr/1029).
         schema = max(schema, 195)
+    if any("heights" in c for s in road.get("surfaces", []) for c in s.get("clouds", [])):
+        # A cloud record's heights as the call said them (docs/adr/1032).
+        schema = max(schema, 196)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3462,7 +3465,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-196.kcad"] = container(root(cmap(parts), version=uint(196)))
+    files["schema-version-197.kcad"] = container(root(cmap(parts), version=uint(197)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6072,6 +6075,12 @@ def build():
     assert hd.count(b"\x67version\x18\xc3") == 1, "a cloud's vertical system is schema 195"
     out["road-cloud-heights.kcad"] = container(hd)
     out["broken/road-cloud-heights-in-schema-194.kcad"] = container(hd.replace(b"\x67version\x18\xc3", b"\x67version\x18\xc2"))
+    # Schema 196 (docs/adr/1032): a cloud record's heights as the call said them; schema 195 refuses them as unknown.
+    turned = load("road-cloud-turned.json")
+    td = document(turned)
+    assert td.count(b"\x67version\x18\xc4") == 1, "a cloud's turned heights are schema 196"
+    out["road-cloud-turned.kcad"] = container(td)
+    out["broken/road-cloud-turned-in-schema-195.kcad"] = container(td.replace(b"\x67version\x18\xc4", b"\x67version\x18\xc3"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

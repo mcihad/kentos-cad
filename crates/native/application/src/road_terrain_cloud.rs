@@ -10,9 +10,10 @@
 use std::collections::HashSet;
 
 use kentos_commands::{
-    CLOUD_TERRAIN_PIECE, CloudReturns, CommandResult, CommandWarning, CreateOperation, EntitiesCreate, Entity,
-    EntityGeometry, MOST_CLOUD_TERRAIN_POINTS, NewObject, PointCloudEntity, PointPart, SurfaceCloudDef, SurfaceSources,
-    TerrainSurfaceDef, TerrainsFromCloud, TerrainsFromCloudWritten, Vec2,
+    CLOUD_TERRAIN_PIECE, CloudHeights, CloudReturns, CommandResult, CommandWarning, CreateOperation, CrsPoint, CrsSide,
+    CrsTransform, EntitiesCreate, Entity, EntityGeometry, HeightKind, HeightReference, MOST_CLOUD_TERRAIN_POINTS, NewObject,
+    PointCloudEntity, PointPart, SurfaceCloudDef, SurfaceSources, TerrainSurfaceDef, TerrainsFromCloud,
+    TerrainsFromCloudWritten, Vec2,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::vec2::Vec2 as P;
@@ -240,6 +241,78 @@ fn breaklines_of(doc: &Document, def: &TerrainSurfaceDef) -> Vec<Vec<[f64; 2]>> 
     made.gathered.input.breaklines.iter().map(|b| b.points.iter().map(|p| [p[0], p[1]]).collect()).collect()
 }
 
+/// The heights of `points` turned from the clouds' (`from`, as the call said them) into the project's
+/// (docs/adr/1032), as `cad.crs.transform` turns them: the project's horizontal system on both sides, the geoid models
+/// between. With `dry`, points the grids do not reach are not refused (a trial before the scan).
+fn turned(doc: &Document, from: &HeightReference, points: &mut [[f64; 3]], dry: bool) -> Result<(), Stop> {
+    if points.is_empty() {
+        return Ok(());
+    }
+    let input = CrsTransform {
+        points: points.iter().map(|p| CrsPoint { x: p[0], y: p[1], z: Some(p[2]) }).collect(),
+        from: Some(CrsSide { srid: None, heights: Some(from.clone()), epoch: None }),
+        to: None,
+        uncertainty: None,
+        velocity: None,
+    };
+    let words = |t: &str| {
+        t.replace("from tarafının", "bulutun")
+            .replace("to tarafının", "projenin")
+            .replace("from yüksekliği", "Bulutun kotları")
+            .replace("to yüksekliği", "Projenin kotları")
+    };
+    match crate::crs_transform::answer(doc, &input) {
+        CommandResult::Completed { output, .. } => {
+            if !output.unreached.is_empty() && !dry {
+                return Err(invalid(
+                    format!(
+                        "{} noktanın kotu çevrilemiyor: geoit ızgarasının dışında ya da boşluğunda. Alanı ızgaranın içine alın ya da kapsayan ızgarayı Proje ayarları › Izgaralar'a ekleyin.",
+                        output.unreached.len()
+                    ),
+                    "heights",
+                ));
+            }
+            for (p, q) in points.iter_mut().zip(&output.points) {
+                if let Some(z) = q.as_ref().and_then(|q| q.z) {
+                    p[2] = z;
+                }
+            }
+            Ok(())
+        }
+        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            Err(fail(&error.code, words(&error.message), "heights"))
+        }
+        CommandResult::Queued { .. } | CommandResult::Cancelled => Err(Stop::Cancelled),
+    }
+}
+
+/// The heights the call says are the clouds' (docs/adr/1032), checked before the clouds are read: a known kind, the
+/// project's heights known, the grids the turn needs at hand (tried on the clouds' centre).
+fn stated(doc: &Document, a: &Asked, heights: Option<&HeightReference>) -> Result<Option<CloudHeights>, Stop> {
+    let Some(h) = heights else { return Ok(None) };
+    if h.kind == HeightKind::Unknown {
+        return Err(invalid("Bulutun kotlarının ne olduğunu söyleyin (elipsoit ya da ortometrik); bilinmiyorsa heights'ı bırakın.".into(), "heights"));
+    }
+    if let Some((at, why)) = h.problem() {
+        return Err(fail(codes::INVALID_HEIGHTS, format!("Bulutun kotları: {why}."), &format!("heights.{at}")));
+    }
+    let Some(project) = doc.settings().heights.clone().filter(|p| crate::road_heights::System::of_ref(p).is_some()) else {
+        return Err(fail(
+            codes::HEIGHTS_UNKNOWN,
+            "Bulutun kotları projenin kotlarına çevrilir; projenin kotlarının düşey sistemi söylenmemiş. Proje ayarları › Kotlar'da seçin.".into(),
+            "heights",
+        ));
+    };
+    let centre: Vec<[f64; 3]> = a
+        .chosen
+        .iter()
+        .take(1)
+        .map(|(_, c)| [(c.cloud.bounds[0] + c.cloud.bounds[3]) / 2.0, (c.cloud.bounds[1] + c.cloud.bounds[4]) / 2.0, 0.0])
+        .collect();
+    turned(doc, h, &mut centre.clone(), true)?;
+    Ok(Some(CloudHeights { from: h.clone(), to: project }))
+}
+
 fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResult<TerrainsFromCloudWritten> {
     let a = match ask(cx.doc, input) {
         Ok(a) => a,
@@ -247,13 +320,25 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
     };
     let mut warnings = a.warnings.clone();
     // Docs/adr/1029: the files' vertical system, refused where it differs from the project's or the surface's others'.
-    let others: Vec<(&str, Option<&str>)> = a.list[a.at]
+    let others: Vec<(&str, Option<crate::road_heights::System>)> = a.list[a.at]
         .clouds
         .iter()
         .filter(|c| c.layer != input.layer_id)
-        .map(|c| (c.layer.as_str(), c.vertical.as_deref()))
+        .map(|c| (c.layer.as_str(), crate::road_heights::System::of_record(c)))
         .collect();
-    let vertical = match crate::road_heights::of_clouds(cx.doc, input.drawing.as_deref(), &a.chosen, &others, "clouds") {
+    // Docs/adr/1032: the heights the call says, checked (and the turn tried) before the clouds are read.
+    let heights = match stated(cx.doc, &a, input.heights.as_ref()) {
+        Ok(h) => h,
+        Err(stop) => return stop.into(),
+    };
+    let vertical = match crate::road_heights::of_clouds(
+        cx.doc,
+        input.drawing.as_deref(),
+        &a.chosen,
+        &others,
+        input.heights.as_ref(),
+        "clouds",
+    ) {
         Ok(v) => v,
         Err(stop) => return stop.into(),
     };
@@ -266,7 +351,7 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         Ok(n) => n,
         Err(stop) => return stop.into(),
     };
-    let thinned = thinner.finish();
+    let mut thinned = thinner.finish();
     if thinned.read == 0 {
         return fail(
             codes::CLOUD_GROUND_EMPTY,
@@ -289,6 +374,17 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
     let Some(cover) = cloud_ground::coverage(&thinned, a.rule.cell, ring.as_deref()) else {
         return Stop::Cancelled.into();
     };
+    // Docs/adr/1032: the kept points' heights into the project's. A turn by a geoid moves heights by a separation that
+    // changes by centimetres a kilometre: the cells and their steepness were judged on the clouds' own heights alike.
+    if let Some(h) = &heights {
+        let mut kept: Vec<[f64; 3]> = thinned.points.iter().map(|(_, p)| *p).collect();
+        if let Err(stop) = turned(cx.doc, &h.from, &mut kept, false) {
+            return stop.into();
+        }
+        for ((_, p), q) in thinned.points.iter_mut().zip(kept) {
+            *p = q;
+        }
+    }
     // The surface with the layer among its points and the record in place, judged before anything is written.
     let mut list = a.list.clone();
     let mut def = list[a.at].clone();
@@ -312,6 +408,7 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         error_rms: None,
         outside: 0,
         vertical,
+        heights: heights.clone(),
     };
     def.clouds.retain(|c| c.layer != input.layer_id);
     def.clouds.push(record.clone());
@@ -352,6 +449,11 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         }
         order += 1;
     }) {
+        return stop.into();
+    }
+    if let Some(h) = &heights
+        && let Err(stop) = turned(cx.doc, &h.from, &mut left, false)
+    {
         return stop.into();
     }
     let r = cloud_ground::residuals(surface, left);

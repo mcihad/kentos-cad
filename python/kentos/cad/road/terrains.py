@@ -13,6 +13,7 @@ from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
     CloudReturns,
     CloudReturnsName,
+    HeightReference,
     SurfaceSources,
     TerrainCheckpointsAsk,
     TerrainSpikesAsk,
@@ -234,11 +235,19 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
     (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem
     (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar
     ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret
-    (cloud_heights_differ; ADR 1029). Uyarılar: layer_hidden, cloud_class_above_ground,
-    cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud,
-    invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri,
-    cloud_heights_differ, too_many_cloud_points, cloud_ground_empty, invalid_terrain,
-    terrain_unbuildable, invalid_revision, revision_conflict.
+    (cloud_heights_differ; ADR 1029). heights bulutun kotlarını söyler (dosya
+    söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların kotları cad.crs.transform
+    gibi geoit modelleriyle projenin kotlarına çevrilir (H = h − N; ADR 1032) ve kayda
+    heights (from, to) yazılır; projenin kotları bilinmiyorsa heights_unknown, geoit
+    özeti ya da ızgarası yoksa geoid_required ya da geoid_missing, iki ayrı datumda
+    geoit yoksa vertical_unsupported, nokta ızgaranın dışındaysa invalid_cloud_terrain;
+    dosya başka sistem söylüyorsa cloud_heights_differ. Uyarılar: layer_hidden,
+    cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project,
+    not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain,
+    katmanın retleri, invalid_heights, heights_unknown, geoid_required, geoid_missing,
+    vertical_unsupported, cloud_heights_differ, too_many_cloud_points,
+    cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision,
+    revision_conflict.
     """
     __slots__ = ()
     id = "road.terrains.cloud"
@@ -263,6 +272,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -287,11 +297,20 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut
         dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda
         vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka
-        bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). Uyarılar: layer_hidden,
-        cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project,
-        not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain,
-        katmanın retleri, cloud_heights_differ, too_many_cloud_points, cloud_ground_empty,
-        invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.
+        bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). heights bulutun
+        kotlarını söyler (dosya söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların
+        kotları cad.crs.transform gibi geoit modelleriyle projenin kotlarına çevrilir (H = h
+        − N; ADR 1032) ve kayda heights (from, to) yazılır; projenin kotları bilinmiyorsa
+        heights_unknown, geoit özeti ya da ızgarası yoksa geoid_required ya da
+        geoid_missing, iki ayrı datumda geoit yoksa vertical_unsupported, nokta ızgaranın
+        dışındaysa invalid_cloud_terrain; dosya başka sistem söylüyorsa
+        cloud_heights_differ. Uyarılar: layer_hidden, cloud_class_above_ground,
+        cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud,
+        invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri,
+        invalid_heights, heights_unknown, geoid_required, geoid_missing,
+        vertical_unsupported, cloud_heights_differ, too_many_cloud_points,
+        cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -304,6 +323,8 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines: A new surface's breaklines.
             drawing: The open drawing's file, a relative source's folder (the host gives it).
             expected_revision:
+            heights: The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them
+                turned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them.
             name: A new surface's name.
             near: Unit: length.
             returns:
@@ -331,6 +352,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -352,6 +374,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -371,6 +394,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -392,6 +416,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -411,6 +436,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -432,6 +458,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -456,6 +483,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,

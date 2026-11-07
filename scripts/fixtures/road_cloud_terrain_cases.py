@@ -16,7 +16,9 @@ code; the classes, cells and tolerances are the cases' own.
 
     uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py --las
     uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py --heights-las
-    uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py [--check]
+    uv run --no-project --with 'laspy==2.7.0' --with numpy python3 scripts/fixtures/road_cloud_terrain_cases.py --tm36-las
+    uv run --no-project --with 'laspy==2.7.0' --with numpy --with pyproj python3 \\
+        scripts/fixtures/road_cloud_terrain_cases.py [--check]
 """
 
 import copy
@@ -111,8 +113,32 @@ def write_heights_las():
     las.write(str(LAS_EGM))
 
 
-def read_las():
-    las = laspy.read(str(LAS))
+# Docs/adr/1032: the same points 453.6 km east and 4286.7 km north, TUREF / TM36 near 38.75° N 35.47° E, inside
+# geoid_cases.py's synthetic TG geoid (fixtures/geoid/v1/tg.gtx): the file names no vertical system; the cases say its
+# heights are ellipsoidal and turn them by the geoid, H = h − N.
+LAS_TM36 = ROOT / "fixtures/pointcloud/v1/files/road-ground-tm36.las"
+DX, DY = 453600.0, 4286700.0
+TG = "25956004773d9d08ff496a2ee7f27ba02aad4bd00d7d7203afdbe619e95c35f8"
+PROJECT_TG = {"kind": "orthometric", "verticalSrid": 5775, "geoid": {"name": "TG-20 (sentetik)", "sha256": TG}}
+ELL = {"kind": "ellipsoidal"}
+
+
+def write_tm36_las():
+    src = laspy.read(str(LAS))
+    header = laspy.LasHeader(point_format=1, version="1.2")
+    header.scales = np.array(src.header.scales)
+    header.offsets = np.array([OFFSET[0] + DX, OFFSET[1] + DY, OFFSET[2]])
+    header.creation_date = datetime.date(2026, 11, 7)
+    las = laspy.LasData(header)
+    las.X, las.Y, las.Z = np.asarray(src.X), np.asarray(src.Y), np.asarray(src.Z)
+    las.classification = np.asarray(src.classification)
+    las.return_number = np.asarray(src.return_number)
+    las.number_of_returns = np.asarray(src.number_of_returns)
+    las.write(str(LAS_TM36))
+
+
+def read_las(path=None):
+    las = laspy.read(str(path or LAS))
     h = las.header
     X, Y, Z = np.asarray(las.X), np.asarray(las.Y), np.asarray(las.Z)
     out = []
@@ -431,8 +457,34 @@ def above(classes):
 BASE = {"clouds": [CLOUD], "classes": [2], "cell": 2.0, "layerId": "zemin", "name": "Lidar zemini"}
 
 
-def answer(inp, points, measured=True):
-    """The output `inp` gives, and whether the error is the reference's own (no breakline, no other point)."""
+def figures(kept):
+    """A new surface's figures (no breakline, no boundary, no repair): its points, its Delaunay triangles, their plan
+    area and its lowest and highest height."""
+    tris = delaunay(kept)
+    area = sum(abs((kept[j][0] - kept[i][0]) * (kept[k][1] - kept[i][1])
+                   - (kept[k][0] - kept[i][0]) * (kept[j][1] - kept[i][1])) / 2 for i, j, k in tris)
+    zs = [p[2] for p in kept]
+    return {"area": area, "constrained": 0, "maxZ": max(zs), "merged": 0, "minZ": min(zs), "split": 0,
+            "triangles": len(tris), "trimmed": 0, "vertices": len(kept)}
+
+
+def geoid_turn(pts):
+    """Docs/adr/1032: TUREF / TM36's points' ellipsoidal heights as orthometric, H = h − N, N geoid_cases.py's own
+    bilinear reading of the synthetic TG geoid at the point's latitude and longitude (PROJ's inverse TM36)."""
+    import geoid_cases as gc
+    from pyproj import CRS, Transformer
+    t = Transformer.from_crs("EPSG:5256", CRS.from_epsg(5256).geodetic_crs, always_xy=True)
+    out = []
+    for x, y, z in pts:
+        lon, lat = t.transform(x, y)
+        out.append((x, y, z - gc.own_n("tg.gtx", lon, lat)))
+    return out
+
+
+def answer(inp, points, measured=True, turn=None):
+    """The output `inp` gives, and whether the error is the reference's own (no breakline, no other point). With `turn`
+    (docs/adr/1032) the kept and left points' heights are turned after the thinning, and a new surface's figures are
+    the reference's own."""
     classes = sorted(set(inp["classes"]))
     ring = AREA if inp.get("area") == AREA_UID else None
     pts = chosen(points, classes, inp.get("returns", "all"), ring)
@@ -453,7 +505,10 @@ def answer(inp, points, measured=True):
     extra = CORNERS if not new else ([tuple(p) + (ground_z(*p),) for p in BREAK] if inp.get("breaklines") else [])
     kept_set = {o for o, _ in t["points"]}
     left = [p for o, p in enumerate(pts) if o not in kept_set]
-    count, outside, worst, rms = residuals([p for _, p in t["points"]] + extra, left)
+    kept_pts = [p for _, p in t["points"]]
+    if turn is not None:
+        kept_pts, left = turn(kept_pts), turn(left)
+    count, outside, worst, rms = residuals(kept_pts + extra, left)
     if count:
         own = not (new and inp.get("breaklines"))
         record["errorMax"], record["errorRms"] = (worst, rms) if own else (ANY, ANY)
@@ -462,10 +517,81 @@ def answer(inp, points, measured=True):
     pieces = (len(t["points"]) + 9999) // 10000
     surface = ({"id": "t-2", "name": inp["name"], "state": "current", "digest": ANY, "built": ANY, "figures": ANY}
                if new else {"id": "t-1", "name": "Mevcut zemin", "state": "new", "digest": ANY, "figures": ANY})
+    if turn is not None and new and not inp.get("breaklines"):
+        surface["figures"] = figures(kept_pts)
     scanned = len(points)
     return {"cloud": record, "scanned": scanned, "byCell": t["why"].count(0), "bySlope": t["why"].count(1),
             "byLine": t["why"].count(2), "cells": cov["cells"], "occupied": cov["occupied"], "area": cov["area"],
             "uids": [ANY] * pieces, "surface": surface, "revision": "$current"}, True
+
+
+TM36 = UID.format(21)
+
+
+def tm36_setup(heights=PROJECT_TG):
+    """Docs/adr/1032: a road project in TUREF / TM36 whose only object is the TM36 cloud; its heights as given."""
+    points, bounds = read_las(LAS_TM36)
+    d = setup()
+    d["entities"] = [{"kind": "pointcloud", "layerId": "bulut", "attrs": {}, "id": 1,
+                      "sources": [{"file": "$fixture:pointcloud/v1/files/road-ground-tm36.las", "format": "las",
+                                   "count": len(points), "bounds": bounds}],
+                      "bounds": bounds, "count": len(points), "srid": 5256,
+                      "style": {"render": "classification", "size": 2}}]
+    d["uids"] = [TM36]
+    d["settings"]["srid"] = 5256
+    if heights is not None:
+        d["settings"]["heights"] = copy.deepcopy(heights)
+    return d
+
+
+def turned_cases(points):
+    """Docs/adr/1032: heights the call says are the clouds', turned into the project's by its geoid model."""
+    tm_points, _ = read_las(LAS_TM36)
+    tm = {**BASE, "clouds": [TM36]}
+    out = []
+
+    def done(name, inp, frm, turn):
+        output, _ = answer(inp, tm_points, turn=turn)
+        output["cloud"]["heights"] = {"from": frm, "to": PROJECT_TG}
+        out.append({"name": name, "steps": [step("execute", inp, completed(output), STEPPED)], "setup": tm36_setup()})
+
+    def no(name, inp, result, setup_):
+        out.append({"name": name, "steps": [step("execute", inp, result, UNCHANGED)], "setup": setup_})
+
+    done("Elipsoit yükseklikli bulut geoitle projenin kotlarına", {**tm, "heights": ELL}, ELL, geoid_turn)
+    done("Bulutun kotları projeninki: çevrilmez", {**tm, "heights": PROJECT_TG}, PROJECT_TG, list)
+    no("Projenin kotları söylenmemiş: bulut çevrilmez", {**tm, "heights": ELL},
+       failed("heights_unknown", "Bulutun kotları projenin kotlarına çevrilir; projenin kotlarının düşey sistemi "
+              "söylenmemiş. Proje ayarları › Kotlar'da seçin.", "heights"), tm36_setup(heights=None))
+    unsummed = {**PROJECT_TG, "geoid": {"name": "TG-20 (sentetik)"}}
+    no("Projenin geoidinin özeti yok: bulut çevrilmez", {**tm, "heights": ELL},
+       failed("geoid_required", "Kotlar ortometrik, Antalya height (EPSG:5775), geoit TG-20 (sentetik) ile elipsoit "
+              "yüksekliği arasında çevrilmeli: bunun için projenin geoit modeli SHA-256'sıyla gerekir "
+              "(heights.geoid.sha256). Kotlar sıfır geoit ayrımıyla çevrilmez: geoit ızgarasını (GTX ya da GeoTIFF) "
+              "Proje ayarları › Izgaralar'a ekleyip adını ve özetini verin.", "heights"), tm36_setup(heights=unsummed))
+    absent = {**PROJECT_TG, "geoid": {"name": "TG-20 (sentetik)", "sha256": "0" * 64}}
+    no("Geoidin ızgarası bu cihazda yok: bulut çevrilmez", {**tm, "heights": ELL},
+       failed("geoid_missing", "“TG-20 (sentetik)” geoit modelinin ızgarası (000000000000…) bu cihazın ızgara "
+              "kitaplığında yok. Izgarayı Proje ayarları › Izgaralar'a ekleyin; daha düşük doğruluklu bir yola "
+              "geçilmez.", "heights"), tm36_setup(heights=absent))
+    no("Bulutun kotları kurala uymuyor", {**tm, "heights": {"kind": "ellipsoidal", "verticalSrid": 5775}},
+       failed("invalid_heights", "Bulutun kotları: düşey sistem ve geoit modeli yalnız ortometrik yüksekliğin olur; "
+              "elipsoit yüksekliğinin elipsoidi yatay sistemindir.", "heights.kind"), tm36_setup())
+    no("Geoitsiz başka düşey datum: çevrilmez", {**tm, "heights": {"kind": "orthometric", "verticalSrid": 3855}},
+       failed("vertical_unsupported", "Kotlar “ortometrik, EGM2008 height (EPSG:3855)” ile “ortometrik, Antalya height "
+              "(EPSG:5775), geoit TG-20 (sentetik)” arasında çevrilmeli: iki ayrı düşey datum. Bunun için iki yanın da "
+              "geoit modeli SHA-256'sıyla gerekir (heights.geoid); PROJ'un yaptığı gibi kotları olduğu gibi bırakan "
+              "“kaba” bir yol kullanılmaz.", "heights"), tm36_setup())
+    no("Dosya başka sistem söylüyor: çağrının kotları alınmaz", {**BASE, "clouds": [EGM], "heights": ELL},
+       failed("cloud_heights_differ", "1. bulutun 1. kaynağı kotların EGM2008 height (EPSG:3855) olduğunu söylüyor; "
+              "çağrı elipsoit yüksekliği diyor (heights). Dosyanın söylediğini verin ya da heights'ı bırakın.",
+              "clouds"), heights_setup(PROJECT_TG))
+    kept = answer(BASE, points)[0]["cloud"]["kept"]
+    no("Geoit ızgarasının dışındaki bulut: çevrilmez", {**BASE, "heights": ELL},
+       failed("invalid_cloud_terrain", f"{kept} noktanın kotu çevrilemiyor: geoit ızgarasının dışında ya da "
+              "boşluğunda. Alanı ızgaranın içine alın ya da kapsayan ızgarayı Proje ayarları › Izgaralar'a ekleyin.",
+              "heights"), heights_setup(PROJECT_TG))
+    return out
 
 
 def step(op, inp, result, expect):
@@ -599,6 +725,7 @@ def cases():
        failed(differ, "Bulutun kotları Antalya height (EPSG:5775), yüzeyin “eski” katmanındaki bulut noktalarınınki "
               "EGM2008 height (EPSG:3855): bir yüzeyin noktaları tek sistemde olmalı.", "clouds"),
        setup_=heights_setup(others=other))
+    out.extend(turned_cases(points))
     no("Geçersiz beklenen sürüm", {**BASE, "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {**BASE, "expectedRevision": "41"}, CONFLICT)
     return out
@@ -625,6 +752,10 @@ def main():
     if "--heights-las" in sys.argv:
         write_heights_las()
         print(LAS_ANTALYA, LAS_EGM)
+        return
+    if "--tm36-las" in sys.argv:
+        write_tm36_las()
+        print(LAS_TM36)
         return
     doc = document()
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
