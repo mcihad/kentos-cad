@@ -1,0 +1,219 @@
+# 2+1 daire gerçek pencerede (docs/adr/3000; üretici scripts/usage/real/scenario_2p1.py).
+# Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/daire-2p1.txt .run/gui-evidence/gercek-2p1 --modul mimari
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 115 84    # araç: Dikdörtgen duvar
+wait 400
+click 1300 655   # panel: Kalınlık
+key ctrl+a
+type 0.25
+key Return
+wait 200
+move 500 450
+type 0,0
+key Return
+type 11,8
+key Return
+wait 500
+key Escape
+key Home
+wait 800
+shot r01-kontur
+click 234 56    # araç: Ölçülü bölme
+wait 400
+click 1300 655   # panel: Kalınlık
+key ctrl+a
+type 0.15
+key Return
+wait 200
+click 1300 684   # panel: Uzaklık
+key ctrl+a
+type 4.5
+key Return
+wait 200
+click 154 608   # referans: sol duvar
+move 293 608
+click 293 608   # yan: sağı
+wait 400
+shot r02-bolme-1
+# 2. bölme: alt duvardan 4.5, bölme 1 ile sağ duvar arasında (Uçlar)
+click 1300 771   # panel: Uçlar
+wait 400
+click 1305 835   # İki duvar arasında
+wait 300
+click 327 748   # referans: alt duvar
+click 465 542   # uç: bölme 1
+click 898 542   # uç: sağ duvar
+click 559 608   # yan
+wait 300
+# 3. bölme: bölme 1'den 3.5
+click 1300 684   # panel: Uzaklık
+key ctrl+a
+type 3.5
+key Return
+wait 200
+click 468 608   # referans: bölme 1
+click 592 748   # uç: alt duvar
+click 592 437   # uç: bölme 2
+click 559 608   # yan
+wait 300
+# 4. bölme: sağ duvardan 3.0
+click 1300 684   # panel: Uzaklık
+key ctrl+a
+type 3
+key Return
+wait 200
+click 898 343   # referans: sağ duvar
+click 792 437   # uç: bölme 2
+click 792 203   # uç: üst duvar
+click 792 343   # yan
+wait 300
+key Escape
+key Escape
+wait 300
+shot r04-bolmeler
+click 452 75    # araç: Kapı
+wait 400
+click 465 323   # kapı: salon-koridor
+wait 200
+click 586 437   # kapı: yatak 1
+wait 200
+click 805 437   # kapı: yatak 2
+wait 200
+click 687 323   # kapı: banyo
+wait 200
+click 1300 713   # panel: Genişlik
+key ctrl+a
+type 1.0
+key Return
+wait 200
+click 573 203   # giriş kapısı
+wait 300
+key Escape
+key Escape
+click 509 75    # araç: Pencere
+wait 400
+click 310 748   # pencere
+wait 200
+click 586 748   # pencere
+wait 200
+click 805 748   # pencere
+wait 200
+click 898 323   # pencere
+wait 200
+click 154 476   # pencere
+wait 200
+key Escape
+key Escape
+wait 300
+shot r05-aciklik
+click 214 111   # araç: Mahal
+wait 400
+click 1300 771   # panel: Ad
+key ctrl+a
+type Salon
+key Return
+wait 200
+click 293 608   # mahal: Salon
+wait 300
+click 1300 771   # panel: Ad
+key ctrl+a
+type Yatak odası 1
+key Return
+wait 200
+click 559 608   # mahal: Yatak odası 1
+wait 300
+click 1300 771   # panel: Ad
+key ctrl+a
+type Yatak odası 2
+key Return
+wait 200
+click 792 608   # mahal: Yatak odası 2
+wait 300
+click 1300 771   # panel: Ad
+key ctrl+a
+type Koridor
+key Return
+wait 200
+click 559 343   # mahal: Koridor
+wait 300
+click 1300 771   # panel: Ad
+key ctrl+a
+type Banyo
+key Return
+wait 200
+click 792 343   # mahal: Banyo
+wait 300
+key Escape
+key Escape
+wait 300
+shot r06-mahaller
+click 671 111   # araç: Mutfak
+wait 400
+click 164 213
+click 360 213
+click 260 276
+wait 300
+key Escape
+key Escape
+wait 300
+shot r07-mutfak
+click 1204 56   # Ölçü ▾
+wait 300
+click 1275 90   # araç: Duvar ölçüleri
+wait 400
+click 526 748
+click 526 801
+wait 300
+key Escape
+key Escape
+click 340 56    # araç: Döşeme
+wait 400
+click 293 608
+wait 300
+key Escape
+key Escape
+click 1225 132  # Belgele ▾
+wait 300
+click 1278 162   # araç: Hepsini etiketle
+wait 500
+key Return
+wait 400
+key Escape
+click 707 608   # bölme 3
+move 687 608
+wait 500
+shot r08-gecici-olcu
+click 586 587   # geçici ölçü: batı 3.500
+wait 300
+type 3.6
+key Return
+wait 400
+key Escape
+wait 300
+shot r09-degisiklik
+wheel 526 475 -3
+wait 500
+shot r10-uzak
+click 1294 56   # Çizelge ▾
+wait 300
+click 1180 90   # araç: Kapı ve pencere çizelgesi
+wait 400
+click 720 330
+wait 400
+click 589 20    # Mimari sekmesine dön: tablo yerleşince şerit Tablo sekmesine geçti
+wait 400
+click 1294 56   # Çizelge ▾
+wait 300
+click 1180 118  # araç: Mahal çizelgesi
+wait 400
+click 720 540
+wait 600
+key Escape
+key Home
+wait 800
+shot r11-cizelgeler

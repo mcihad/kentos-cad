@@ -46,6 +46,7 @@ satıra (749 KB) büyüdüğü için bölündü.
   `cargo test -p kentos-desktop --lib <modül>_tests::screens -- --ignored --nocapture`.
 - **GUI kanıtı:** resimler `.run/gui-evidence/` altına yazılır, Git'e eklenmez; görüntü yokluğu doğrulama başarısı
   sayılmaz. Resim bakılarak gözden geçirilir, kusur düzeltilir, yeniden çekilir.
+  Kullanıcıya dönük kabul gerçek pencerede, gerçek fare ve klavyeyle yapılır: `scripts/usage/real/` (ADR 3000).
 - **Araştırma önce:** her yeni mimari adımda üreticilerin resmî belgeleri (Civil 3D, OpenRoads, NETPRO…) araştırılır;
   kaynak ve KentOS kararı ADR'ye ve plana yazılır. Değer uydurulmaz, kaynak beklenir.
 - **Araç = komut** (§9.2): çizimi değiştiren her iş anlamsal komutla yapılır; katalog, ≥20 bağımsız başvurulu ortak durum,

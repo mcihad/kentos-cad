@@ -27,6 +27,7 @@ pnpm e2e:layout          # her pencere, menü ve çubuk 1100×650 ve 1440×900'd
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018); tarayıcılar yan yana, --browsers=N
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan, çekirdeklere paylaşılarak (ADR 0021)
 ./target/debug/kentos-cad kullan usage-parcel   # kullanım senaryosunu masaüstünde oynatıp adım adım resimle (.run/shots/kullanim; fixtures/interaction/README.md)
+scripts/usage/real/session.sh fixtures/interaction/real/daire-2p1.txt .run/gui-evidence/gercek-2p1 --modul mimari   # gerçek pencere: görünmez X ekranında (Xvfb) gerçek fare ve klavye olaylarıyla (XTEST), sahibin ayarlarının kopyasıyla; resimler ve KLM sayacı (scripts/usage/real/README.md, ADR 3000)
 pnpm -C apps/web e2e:use usage-parcel   # aynı senaryo web'de, aynı adlarla web-…png
 python3 scripts/usage/compare.py usage-parcel   # iki platformun resimleri yan yana
 apps/desktop/scripts/cloud-live.sh   # masaüstünün bulut arayüzü gerçek kentosd ile (geliştirme veritabanı; görüntüler .run/shots/bulut-*; ADR 0041)

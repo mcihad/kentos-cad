@@ -60,7 +60,7 @@ talimatla yapılır.
 | S3 | 12 mimari pencere modal; karartılmış zemine tık kaydedilmemiş düzenlemeyi sormadan atıyor; seçimle çalışan pencereler açıkken seçim değişmiyor | A1 S3 | K/Y | ADV-09 |
 | S4 | Plan mimari pafta gibi görünmüyor: aracın duvar stili varsayılanı "Yok", poşe yok, kesilen/görünen kalem ayrımı yok; ölçeğe göre ayrıntı yalnız duvarda; plan kesme yüksekliği sabit 1,10 m | M0 resimleri ✓, `contracts/src/arch.rs:94-125` ✓, `contracts/src/opening.rs:21` ✓ | Y | ADV-13, 14, 15 |
 | S5 | Bütün mimari nesneler etkin katmana yazılıyor: 2+1 örneğinde 54 nesnenin hepsi "Çizim" katmanında. DXF'te mahalin adı ve alanı yazılmıyor | M0 ✓, `formats/src/dxf/writer/mod.rs:752-774` ✓ | Y | ADV-14, 25 |
-| S6 | Mimari şerit 46 komutla kabul edildi, bugün 78 komut taşıyor; 42'si ▾ arkasında. Büyük ana araç yok, sık işler (Duvarı kaydır, Uzat, Buda, Hepsini etiketle) menüde | A1 §1.1, M0 resmi ✓ | Y | ADV-09 |
+| S6 | Mimari şerit 46 komutla kabul edildi, bugün 78 komut taşıyor; 42'si ▾ arkasında. Sık işler (Duvarı kaydır, Uzat, Buda, Hepsini etiketle) menüde. Gerçek `kentos-mimari`'de yalnız Duvar, Dikdörtgen duvar, Kapı, Pencere ve Proje ▾ büyük; Mahal ve donatı küçük (M0'ın `kentos-cad` resminde hiç büyük düğme yoktu) | A1 §1.1, gerçek pencere ✓ | Y | ADV-09 |
 | S7 | 78 mimari komutun hiçbirinde kısayol yok, en kısa takma ad 3 harf, F1 listesinde mimari yok | A1 S4 | Y | ADV-08 |
 | S8 | Seçenek harfleri araçtan araca değişiyor; aracın seçeneği olmayan harf genel kısayolu başlatıyor | A1 S5 | Y | ADV-08 |
 | S9 | Terim çakışmaları: duvar kalınlığı istemde "Genişlik", panelde "Kalınlık"; "Döşeme" hem döşeme hem kaplama deseni; "Boşluk" hem açıklık hem şaft; "Duvar birleşimi" ile "Duvarları birleştir" ayrı araçlar | A1 S6 | Y | ADV-08 |
@@ -86,9 +86,10 @@ Bu sayılar her fazın sonunda yeniden ölçülür (§7).
 
 | Ölçü | Bugün | Kaynak |
 |---|---|---|
-| 2+1 daire kabul izi | 157 etkileşim: 11 araç, 15 odak, 28 yazma, 48 tuş, 38 tık, 17 hareket | `acceptance-flat.json` ✓ |
+| 2+1 daire, gerçek pencerede (sahibin ayarları, kenetleme açık) | **147 etkileşim** (70 tık, 57 tuş, 14 değer / 71 harf, 3 hareket, 3 tekerlek; 11 araç); KLM **177,6 s** | `fixtures/interaction/real/daire-2p1.txt`, ADR 3000 ✓ |
+| 2+1 daire kabul izi (kod içi) | 158 etkileşim: 11 araç, 15 odak, 28 yazma, 48 tuş, 38 tık, 17 hareket, 1 sayı tıkı; içinde fareyle yapılamayan adımlar var | `acceptance-flat.json` ✓ |
 | İki katlı konut izi | 8 araç, 19 odak, 36 yazma, 52 tuş, 15 tık | `acceptance-house.json` ✓ |
-| Mimari şerit | 78 komut; 42'si ▾ arkasında; 0 büyük düğme | A1 §1.1 |
+| Mimari şerit | 78 komut; 42'si ▾ arkasında; `kentos-mimari`'de 4 büyük düğme + Proje ▾ | A1 §1.1, gerçek pencere ✓ |
 | Kısayolu olan mimari komut | 0 / 78 | A1 S4 |
 | Aynı ikonu paylaşan komut | duvar 3, mahal 5, etiket 2 | ikon tablosu ✓ |
 | 2+1 örneğinde kullanılan katman | 1 (54 nesne) | M0 ✓ |
@@ -108,6 +109,25 @@ Bu sayılar her fazın sonunda yeniden ölçülür (§7).
   - DIM-01: ADR 0695'in durum satırı eski.
 - **Bu turda düzeltilen belge tutarsızlıkları:** ADV-04'ün "Açık: bölüm çizelgesi" notu ADR 0795 ile kapanmıştı.
   `architecture.md`'deki eski KCAD numaraları (104–107 yerine 109–112) aynı commit'te düzeltildi.
+
+### 1.5 Gerçek pencerede görülenler (M1, [ADR 3000](../docs/adr/3000-real-window-acceptance.md))
+
+Sahibin uyarısıyla (7 Kasım: "mouse ile kullanmak ile kod testleri arasında fark oluşuyor") 2+1 daire gerçek
+pencerede, gerçek fare ve klavye olaylarıyla, sahibin ayarlarının kopyasıyla çizildi (`scripts/usage/real/`). Kod
+içi izin görmediği farklar:
+
+| # | Gerçek kullanımda | Paket |
+|---|---|---|
+| G1 | Araç çalışırken komut satırını istem ve seçenek çipleri dolduruyor. "Komut satırına tıkla" çipe düşüp menüsünü açıyor; seçenek harfi fareyle komut satırına yazılamıyor | ADV-08, ADV-11 |
+| G2 | Dikdörtgen duvarda yazılan "E" (Kalınlık'ın harfi) aracı bırakıp Uzat'ı başlatıyor (S8 doğrulandı) | ADV-08 |
+| G3 | Tablo yerleşince şerit kendiliğinden Tablo sekmesine geçiyor; sonraki Çizelge ▾ tıkı başka düğmeye gidiyor, ikinci çizelge sessizce oluşmuyor | ADV-09 |
+| G4 | Duvar ölçüleri "Ölçü katmanı: Çizim", Hepsini etiketle "Etiket katmanı: Çizim (sabit)"; yeni projenin Ölçü ve Yazı katmanları kullanılmıyor | ADV-14 |
+| G5 | Dikdörtgen duvarın varsayılanı 0,20 m, Stil: Yok | ADV-13 |
+| G6 | Kenetleme ve ızgara açıkken fareyle konan pencereler 1–2 cm kayıyor (dış zincir 1.900 · 2.952 · 2.095 · 0.953; kod içi izde 1.910 · 2.940 · 2.100 · 0.950); kullanıcı bunu yerleştirirken görmüyor | ADV-11 (ölçüyle yerleştirme) |
+| G7 | Görünen alanda çizelgeye yer yok; ikinci çizelgenin noktası birincinin üstüne düşünce tık tabloyu seçti, ileti yok | ADV-24 |
+| G8 | Gerçek Mimari şeridi kod içi `kentos-cad` resimlerinden farklı (büyük düğmeler, katlanmış Proje ▾) | ADV-26 |
+| G9 | Yeni proje Giriş sekmesinde açılıyor (S12 doğrulandı) | ADV-09, ADV-13 |
+| G10 | Geçici ölçü yazısı mahal etiketinin, kapı ve pencere etiketleri duvar çizgisinin üstüne biniyor (S19 doğrulandı) | ADV-16 |
 
 ## 2. Piyasa araştırması
 
@@ -900,7 +920,16 @@ girer.
 - IFC'de duvar, kapı ve mahal sayısı çizimle eşit; bağımsız okuyucu sınar.
 - Gerçek bir ofis DWG'siyle tadilat örneği yapılır.
 
-#### ADV-26 — Kabul ve ölçüm altyapısı [ ]
+#### ADV-26 — Kabul ve ölçüm altyapısı [~]
+
+_Durum (7 Kasım 2026, [ADR 3000](../docs/adr/3000-real-window-acceptance.md), M1):_
+- **Gerçek pencere düzeneği yapıldı** (`scripts/usage/real/`):
+  - Xvfb'de gerçek X penceresi; XTEST ile gerçek fare ve klavye olayları; lavapipe;
+  - her koşu temiz ev dizini ve sahibin ayarlarının kopyası;
+  - KLM sayacı.
+- **2+1 dairenin gerçek senaryosu** (`fixtures/interaction/real/daire-2p1.txt`): 147 etkileşim, 177,6 s; on fark (§1.5).
+- **Açık:** `kullan --modul`, `snapshot --sekme`'nin CAD sekmeleri, sayaç kurallarının kod içi izlere uygulanması ve
+  izlerde fareyle yapılamayan adımların ayıklanması.
 
 **Kullanıcı sonucu:** Her dilimin kullanıcıya etkisi sayıyla ve sahibin göreceği resimle kanıtlanır. Dayanak S23.
 
@@ -912,7 +941,8 @@ girer.
 - **Elle kabul:** her faz sonunda sahibin gerçek pencerede deneyeceği kısa liste.
 - **Resim matrisi:** 1440 ve 1100 px × 13 ve 18 px × açık ve koyu.
 
-**İlk kabul:** 2+1 izi Mimari modülünde, şeritten ve kenetle oynar; sayaç raporu taban değeri (157) yazar.
+**İlk kabul:** 2+1 daire gerçek pencerede, şeritten ve kenetle çizilir; sayaç taban değeri yazar (147 etkileşim, 177,6 s;
+yapıldı).
 
 ## 5. Uygulama sırası (M1…M51)
 
@@ -924,7 +954,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M1 | Ölçüm altyapısı | ADV-26 | `kullan --modul mimari`, CAD sekmelerinin resmi, sayaç raporu; taban 157 |
+| M1 | Ölçüm altyapısı | ADV-26 | **(M1, ADR 3000: gerçek pencere düzeneği ve 2+1 tabanı 147 etkileşim / 177,6 s yapıldı; `kullan --modul`, `snapshot --sekme` kaldı)** |
 | M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim |
 | M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari |
 | M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz |
@@ -1025,12 +1055,15 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 9. **İkon:** yeni ya da değişen her ikon çizilir, 16 ve 20 px'te iki temada resimlenir, sahibe gönderilir.
 10. **Sına:** ilgili ortak durumlar ve masaüstü testleri; şema değiştiyse `kentos-kcad`; clippy. Ağır işler
     `scripts/dev/svc.sh heavy` altında koşar.
-11. **Resim:**
-    - `kentos-cad kullan` ile Mimari modülünde ve `snapshot` ile çekilir; 1440/1100 × açık/koyu.
+11. **Resim ve gerçek pencere kabulü (ADR 3000):**
+    - Değişen iş, **gerçek pencerede** kullanıcı gibi sınanır: `scripts/usage/real/session.sh` ile, sahibin ayarlarının
+      kopyasıyla, şeritten, kenetleme açık. Resimler buradan alınır, sayaç eski değerle karşılaştırılır.
+    - Kod içi resimler (`kentos-cad kullan`, `snapshot`) ek güvencedir; yalnız onlarla kabul yapılmaz.
     - Resme bakılır, kusur düzeltilir, yeniden çekilir.
     - Referans resimlerle yan yana sahibe gönderilir.
 12. **Planı işaretle:** satıra `(MNN, ADR NNNN: …)` yazılır. `[x]` yalnız bütün kabul sağlanınca konur. Ölçü §7'ye yazılır.
-13. **Commit ve gönder:** commit iletisi ortak yazar ve oturum satırlarıyla biter. Dal `arch-adv-ileri` GitHub'a gönderilir.
+13. **Commit ve gönder:** commit iletisi ortak yazar ve oturum satırlarıyla biter. Çalışılan dal (şu an `arch-adv-01`)
+    GitHub'a gönderilir.
     `main` yalnız sahip isteyince birleştirilir.
 14. **Disk:** `df -h /` denetlenir. Doluysa `target/debug/deps`'teki eski test ikilileri silinir; her adın en yenisi kalır.
 
@@ -1043,10 +1076,10 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 | İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
 | 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |
 | Aynı ikonu paylaşan komut | 10 | 0 | 1 |
-| Görünen şerit düğmesi | 78 komut, 0 büyük | ≤ 30, ana araçlar büyük | 1 |
+| Görünen şerit düğmesi | 78 komut; 4 büyük + Proje ▾ | ≤ 30, ana araçlar (Mahal, Oda, Donatı dahil) büyük | 1 |
 | Ölçeğe göre ayrıntısı olan nesne türü | 1 | ≥ 6 | 1 |
-| 2+1 izinde etkileşim | 157 | ≤ 80 | 2 |
-| 2+1 izinde odak değişimi | 15 | ≤ 3 | 2 |
+| 2+1 gerçek pencerede etkileşim | 147 | ≤ 80 | 2 |
+| 2+1 gerçek pencerede KLM süresi | 177,6 s | ≤ 100 s | 2 |
 | Ruhsat takımı | yok | tek komut, PDF/A | 3 |
 | 100 daire + 200 çizelgede kare | 163 ms | < 100 ms | 5 |
 
