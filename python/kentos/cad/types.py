@@ -2280,6 +2280,20 @@ EventSideName = Literal["right", "left"]
 """The names of :class:`EventSide`, for a plain string."""
 
 
+class ExchangeFormat(_StrEnum):
+    """The format of the trip."""
+    GPKG = "gpkg"
+    PARQUET = "parquet"
+    FGB = "fgb"
+    GML = "gml"
+    SHP = "shp"
+    DXF = "dxf"
+
+
+ExchangeFormatName = Literal["gpkg", "parquet", "fgb", "gml", "shp", "dxf"]
+"""The names of :class:`ExchangeFormat`, for a plain string."""
+
+
 class ExtractAreaUnit(_StrEnum):
     """An area's unit (CLAUDE.md §5: a dönüm 1000 m², a hectare 10000 m²)."""
     M2 = "m2"
@@ -33796,6 +33810,190 @@ class EventLink(_Model):
             side=_enum_in(EventSide, data["side"]) if "side" in data else UNSET,
             to=data.get("to", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeCheck(_Model):
+    """Input of `file.exchange.check` v1: the format, the layers (by id; none: every layer the format's writer takes by
+    default) and the tolerance (metres, above 0, at most 10; none: [`EXCHANGE_TOLERANCE`]).
+
+    Refusals: `invalid_tolerance`, `layer_not_found` (`layers[i]`), the writer's own refusal (its code, the path
+    `export.<its path>`), `exchange_unreadable` (KentOS's reader refused the file KentOS wrote: its words).
+    Attributes:
+        tolerance: Unit: length.
+    """
+    format: ExchangeFormat | ExchangeFormatName
+    layers: list[str] | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeCheck:
+        return cls(
+            format=_enum_in(ExchangeFormat, data["format"]),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeChecked(_Model):
+    """Output of `file.exchange.check` v1: the format and tolerance, the objects of the layers checked, how many were
+    matched with one read back, those not written by kind, the numeric differences, the semantic losses (in
+    [`EXCHANGE_LOSSES`]' order, then by detail) and the writer's and the reader's warnings as they said them.
+    Attributes:
+        tolerance: Unit: length.
+        objects: Unit: count.
+        matched: Unit: count.
+    """
+    format: ExchangeFormat | ExchangeFormatName
+    tolerance: float
+    objects: int
+    matched: int
+    not_written: list[ExchangeKindCount]
+    numeric: ExchangeNumeric
+    losses: list[ExchangeLoss]
+    writer: list[str]
+    reader: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        out["tolerance"] = float(self.tolerance)
+        out["objects"] = self.objects
+        out["matched"] = self.matched
+        out["notWritten"] = [e0.to_json() for e0 in self.not_written]
+        out["numeric"] = self.numeric.to_json()
+        out["losses"] = [e0.to_json() for e0 in self.losses]
+        out["writer"] = list(self.writer)
+        out["reader"] = list(self.reader)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeChecked:
+        return cls(
+            format=_enum_in(ExchangeFormat, data["format"]),
+            tolerance=float(data["tolerance"]),
+            objects=data["objects"],
+            matched=data["matched"],
+            not_written=[ExchangeKindCount.from_json(e0) for e0 in data["notWritten"]],
+            numeric=ExchangeNumeric.from_json(data["numeric"]),
+            losses=[ExchangeLoss.from_json(e0) for e0 in data["losses"]],
+            writer=list(data["writer"]),
+            reader=list(data["reader"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeKindCount(_Model):
+    """A kind's count (objects not written by kind: `text`, `dimension` …).
+    Attributes:
+        count: Unit: count.
+    """
+    kind: str
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeKindCount:
+        return cls(
+            kind=data["kind"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeLoss(_Model):
+    """A semantic loss: its kind (one of [`EXCHANGE_LOSSES`]), how many, what changed into what where it is one change
+    (`circle → polygon`, an attribute's name), and the original objects' persistent ids (at most 100).
+    Attributes:
+        count: Unit: count.
+    """
+    kind: str
+    count: int
+    uids: list[str]
+    detail: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["count"] = self.count
+        out["uids"] = list(self.uids)
+        if self.detail is not UNSET:
+            out["detail"] = self.detail
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeLoss:
+        return cls(
+            kind=data["kind"],
+            count=data["count"],
+            uids=list(data["uids"]),
+            detail=data.get("detail", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeNumeric(_Model):
+    """The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),
+    the object of the greatest offset, and how many lie farther than the tolerance.
+    Attributes:
+        above: Unit: count.
+        area: Unit: area.
+        height: Unit: length.
+        length: Unit: length.
+        measure: Unit: measure.
+        offset: Unit: length.
+    """
+    above: int
+    area: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    length: float | None | Unset = UNSET
+    measure: float | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    offset_uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["above"] = self.above
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.measure is not UNSET:
+            out["measure"] = None if self.measure is None else float(self.measure)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.offset_uid is not UNSET:
+            out["offsetUid"] = self.offset_uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeNumeric:
+        return cls(
+            above=data["above"],
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            offset_uid=data.get("offsetUid", UNSET),
         )
 
 
@@ -123866,6 +124064,13 @@ __all__ = [
     "EventSide",
     "EventSideName",
     "ExceptModulesOperation",
+    "ExchangeCheck",
+    "ExchangeChecked",
+    "ExchangeFormat",
+    "ExchangeFormatName",
+    "ExchangeKindCount",
+    "ExchangeLoss",
+    "ExchangeNumeric",
     "ExcludeMapSurveyOperation",
     "ExplodeDensity",
     "ExportAtlas",

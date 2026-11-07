@@ -1810,6 +1810,8 @@ codes! {
     /// A flatten whose objects hold no elevation or measure to remove (docs/adr/1061 §4).
     NOTHING_TO_FLATTEN = "nothing_to_flatten", Failed, false, "Seçilen nesnelerde kaldırılacak kot (Z) ya da ölçü (M) yok.";
     /// The file could not be written or read back.
+    /// KentOS's reader of a format refused the file KentOS's writer made for a round trip (docs/adr/1660).
+    EXCHANGE_UNREADABLE = "exchange_unreadable", Failed, false, "KentOS'un okuyucusu KentOS'un yazdığı dosyayı okuyamadı; ileti nedenini söyler.";
     FILE_UNWRITABLE = "file_unwritable", Failed, false, "Dosya yazılamadı ya da geri okunduğunda aynı çıkmadı; eski dosya olduğu gibi kaldı.";
     /// A drawing with nothing to write.
     NOTHING_TO_EXPORT = "nothing_to_export", Failed, false, "Çizimde yazılacak nesne yok.";

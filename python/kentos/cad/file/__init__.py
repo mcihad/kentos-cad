@@ -22,6 +22,7 @@ from ..types import (  # noqa: F401
 if TYPE_CHECKING:
     from ..document import Document
 
+from . import exchange
 from . import export
 from . import import_
 from . import preflight
@@ -371,4 +372,4 @@ recover = _FileRecover()
 """Bozuk çizimi kurtar (``file.recover``)."""
 
 
-__all__ = ["export", "import_", "package", "preflight", "publish", "recover"]
+__all__ = ["exchange", "export", "import_", "package", "preflight", "publish", "recover"]

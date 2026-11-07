@@ -14979,6 +14979,36 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Devir denetimi (plan/map-cad.md MAP-17, docs/adr/1660).
+        CommandDescriptor {
+            id: crate::FILE_EXCHANGE_CHECK.into(),
+            version: crate::FILE_EXCHANGE_CHECK_VERSION,
+            title: "Devir denetimi".into(),
+            summary: "Çizimi (layers boşsa biçimin yazıcısının varsayılan katmanlarını) seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp, dxf) KentOS'un yazıcısıyla geçici bir dosyaya yazar, KentOS'un aynı biçim okuyucusuyla çizimin boş bir kopyasına (ayarlar ve katmanlar, nesnesiz) geri okur ve nesne nesne karşılaştırır; dosya silinir, açık çizim değişmez. \
+                      Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en yakın nesne. \
+                      Sayısal (numeric): geri okunan her köşenin özgün geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın nesnesi ve toleransı (metre, varsayılan 0,001) aşanların sayısı. \
+                      Anlamsal (losses): notWritten (türüne göre), kindChanged (circle → polygon gibi), chorded (eğri kirişe döndü), zLost, zAdded, mLost, attrLost, attrChanged, attrAdded (öznitelik adıyla), styleLost (color, lineWeight, symbol), identityLost (kalıcı kimlik korunmadı), extra (eşleşmeyen geri okunan); her biri sayısı ve özgün nesnelerin kimlikleriyle (en çok 100). Yazıcının ve okuyucunun uyarıları writer ve reader'da. \
+                      Sonuç KentOS'un yazıcısıyla okuyucusunun birlikte yaptığıdır; başka bir programın okuduğu kendisinindir. \
+                      Retler: invalid_tolerance, layer_not_found (layers[i]), yazıcının kendi reddi (export.<alan>), exchange_unreadable, file_unwritable."
+                .into(),
+            aliases: vec!["devirdenetimi".into(), "kayipraporu".into(), "roundtrip".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExchangeCheck>(),
+            output: schema::<crate::ExchangeChecked>(),
+            plan: Some(schema::<crate::ExchangeChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin GeoPackage gidiş-dönüşü".into(),
+                input: json!({ "format": "gpkg" }),
+                output: None,
+            }],
+        },
         // Kurtar (docs/adr/1013), held by fixtures/commands/v1/file.recover.json.
         CommandDescriptor {
             id: crate::FILE_RECOVER.into(),
@@ -15840,6 +15870,9 @@ mod tests {
                     }
                     crate::FILE_RECOVER => {
                         serde_json::from_value::<crate::RecoverKcad>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXCHANGE_CHECK => {
+                        serde_json::from_value::<crate::ExchangeCheck>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())

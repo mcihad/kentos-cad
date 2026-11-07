@@ -178,6 +178,13 @@
       ],
       "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420)."
     },
+    "file.exchangeCheck": {
+      "level": "query",
+      "via": [
+        "file.exchange.check"
+      ],
+      "note": "Pencere file.exchange.check'in cevabını gösterir (salt okunur): biçim ve tolerans, Denetle geçici dosyayla gidiş-dönüşü yapar; sayısal sapma ve anlamsal kayıplar ayrı; Kayıplıları seç seçimi değiştirir (ADR 1660)."
+    },
     "pipes.check": {
       "level": "query",
       "via": [

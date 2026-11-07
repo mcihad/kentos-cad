@@ -1150,6 +1150,11 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
         let typed:kentos_commands::PublishSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
         return Ok(crate::publish::run(doc,&typed,op,progress));
     }
+    if command == kentos_commands::FILE_EXCHANGE_CHECK {
+        // Devir denetimi (docs/adr/1660): a round trip through a temporary file; the open drawing is not changed.
+        let typed: kentos_commands::ExchangeCheck = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok((crate::exchange_check::run(doc, &typed, op), None));
+    }
     if command == kentos_commands::FILE_RECOVER {
         // Kurtar (docs/adr/1013): from file to file; the open drawing is not read or written.
         let typed: kentos_commands::RecoverKcad = serde_json::from_value(input).map_err(|e| e.to_string())?;
@@ -1793,6 +1798,7 @@ fn version_of(command: &str) -> u32 {
         kentos_commands::FILE_EXPORT_GIS => kentos_commands::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         kentos_commands::FILE_RECOVER => kentos_commands::FILE_RECOVER_VERSION,
+        kentos_commands::FILE_EXCHANGE_CHECK => kentos_commands::FILE_EXCHANGE_CHECK_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
 }
@@ -1869,6 +1875,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         kentos_commands::FILE_PUBLISH_STATUS=>serde_json::from_value::<kentos_commands::PublishStatus>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXCHANGE_CHECK => serde_json::from_value::<kentos_commands::ExchangeCheck>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         kentos_commands::FILE_RECOVER => serde_json::from_value::<kentos_commands::RecoverKcad>(input.clone())

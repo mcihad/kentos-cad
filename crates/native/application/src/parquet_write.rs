@@ -34,20 +34,19 @@ pub struct Made {
 /// The farthest a chord of an arc comes from it (m).
 const CHORD: f64 = 1e-4;
 
-/// The circle through three points: its centre and radius; none when they are on one line.
+/// The circle through three points: its centre and radius; none when they are on one line. Worked from `a` (a map's
+/// coordinates squared, 10¹³, leave a small circle's centre millimetres off; docs/adr/1660 found 0.41 mm on a 0.6 m
+/// manhole at TM36 coordinates).
 fn circle(a: &Coord, m: &Coord, b: &Coord) -> Option<(f64, f64, f64)> {
-    let d = 2.0 * (a.x * (m.y - b.y) + m.x * (b.y - a.y) + b.x * (a.y - m.y));
+    let (mx, my, bx, by) = (m.x - a.x, m.y - a.y, b.x - a.x, b.y - a.y);
+    let d = 2.0 * (mx * by - my * bx);
     if d == 0.0 || !d.is_finite() {
         return None;
     }
-    let (a2, m2, b2) = (
-        a.x * a.x + a.y * a.y,
-        m.x * m.x + m.y * m.y,
-        b.x * b.x + b.y * b.y,
-    );
-    let cx = (a2 * (m.y - b.y) + m2 * (b.y - a.y) + b2 * (a.y - m.y)) / d;
-    let cy = (a2 * (b.x - m.x) + m2 * (a.x - b.x) + b2 * (m.x - a.x)) / d;
-    Some((cx, cy, (a.x - cx).hypot(a.y - cy)))
+    let (m2, b2) = (mx * mx + my * my, bx * bx + by * by);
+    let ux = (by * m2 - my * b2) / d;
+    let uy = (mx * b2 - bx * m2) / d;
+    Some((a.x + ux, a.y + uy, ux.hypot(uy)))
 }
 
 /// An arc from `a` through `m` to `b` as chords, `a` and `b` as they are; Z taken along by the turn.
@@ -729,4 +728,24 @@ fn export_all(doc: &Document, input: &ExportParquet) -> Result<Made, (String, St
         lost: lost.into_iter().collect(),
     };
     Ok(Made { bytes, output, time_left_out: 0 })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A 0.6 m manhole's arc at TUREF/TM36 coordinates: its chords' corners on the circle, not 0.41 mm off as the
+    /// centre worked from the coordinates themselves left them (docs/adr/1660, found by `file.exchange.check`).
+    #[test]
+    fn a_small_arc_at_map_coordinates_keeps_its_corners_on_the_circle() {
+        let (cx, cy, r) = (487_080.0, 4_420_080.0, 0.6);
+        let at = |t: f64| Coord { x: cx + r * t.cos(), y: cy + r * t.sin(), z: None, m: None };
+        let (a, m, b) = (at(0.0), at(std::f64::consts::FRAC_PI_2), at(std::f64::consts::PI));
+        let (x, y, rr) = circle(&a, &m, &b).expect("a circle");
+        assert!((x - cx).abs() < 1e-9 && (y - cy).abs() < 1e-9 && (rr - r).abs() < 1e-9, "{x} {y} {rr}");
+        let mut out = vec![a];
+        arc(&a, &m, &b, &mut out);
+        let worst = out.iter().map(|p| ((p.x - cx).hypot(p.y - cy) - r).abs()).fold(0.0, f64::max);
+        assert!(worst < 1e-9, "{worst}");
+    }
 }

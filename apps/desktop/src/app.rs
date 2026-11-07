@@ -416,6 +416,8 @@ pub enum Dialog {
     ParcelsCheck,
     /// Boru hattı denetimi (pipes_check_window.rs, docs/adr/1640); its state is `App::pipes_check`.
     PipesCheck,
+    /// Devir denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
+    ExchangeCheck,
     /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
     Zoning,
     /// Alternatif etkisi (impact_window.rs, docs/adr/1440); its state is `App::impact`.
@@ -844,6 +846,7 @@ pub enum Message {
     CleanReport(crate::clean_report_window::Event),
     ParcelsCheck(crate::parcels_check_window::Event),
     PipesCheck(crate::pipes_check_window::Event),
+    ExchangeCheck(crate::exchange_check_window::Event),
     Zoning(crate::zoning_window::Event),
     Impact(crate::impact_window::Event),
     Readjustment(crate::readjustment_window::Event),
@@ -1507,6 +1510,7 @@ pub struct App {
     pub(crate) clean_report: crate::clean_report_window::State,
     pub(crate) parcels_check: crate::parcels_check_window::State,
     pub(crate) pipes_check: crate::pipes_check_window::State,
+    pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) zoning: crate::zoning_window::State,
     pub(crate) impact: crate::impact_window::State,
     pub(crate) readjustment: crate::readjustment_window::State,
@@ -1963,6 +1967,7 @@ impl App {
             clean_report: Default::default(),
             parcels_check: Default::default(),
             pipes_check: Default::default(),
+            exchange_check: Default::default(),
             zoning: Default::default(),
             impact: Default::default(),
             readjustment: Default::default(),
@@ -2743,6 +2748,7 @@ impl App {
             Message::CleanReport(event) => return self.clean_report_event(event),
             Message::ParcelsCheck(event) => return self.parcels_check_event(event),
             Message::PipesCheck(event) => return self.pipes_check_event(event),
+            Message::ExchangeCheck(event) => return self.exchange_check_event(event),
             Message::Zoning(event) => return self.zoning_event(event),
             Message::Impact(event) => return self.impact_event(event),
             Message::Readjustment(event) => return self.readjustment_event(event),
@@ -3608,6 +3614,7 @@ impl App {
             "topology.cleanReport" => return self.open_clean_report(),
             "parcels.check" => return self.open_parcels_check(),
             "pipes.check" => return self.open_pipes_check(),
+            "file.exchangeCheck" => return self.open_exchange_check(),
             "zoning.check" => return self.open_zoning(),
             "scenario.impact" => return self.open_impact(),
             "readjustment.distribute" => return self.open_readjustment(),

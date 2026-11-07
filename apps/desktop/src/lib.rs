@@ -69,6 +69,7 @@ mod grade_window;
 mod clean_report_window;
 mod parcels_check_window;
 mod pipes_check_window;
+mod exchange_check_window;
 mod zoning_window;
 mod impact_window;
 mod readjustment_window;
@@ -339,6 +340,8 @@ mod clean_report_window_tests;
 mod parcels_check_window_tests;
 #[cfg(test)]
 mod pipes_check_window_tests;
+#[cfg(test)]
+mod exchange_check_window_tests;
 #[cfg(test)]
 mod zoning_window_tests;
 #[cfg(test)]

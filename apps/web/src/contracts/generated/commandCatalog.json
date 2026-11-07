@@ -94238,6 +94238,205 @@
       ]
     },
     {
+      "id": "file.exchange.check",
+      "version": 1,
+      "title": "Devir denetimi",
+      "summary": "Çizimi (layers boşsa biçimin yazıcısının varsayılan katmanlarını) seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp, dxf) KentOS'un yazıcısıyla geçici bir dosyaya yazar, KentOS'un aynı biçim okuyucusuyla çizimin boş bir kopyasına (ayarlar ve katmanlar, nesnesiz) geri okur ve nesne nesne karşılaştırır; dosya silinir, açık çizim değişmez. Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en yakın nesne. Sayısal (numeric): geri okunan her köşenin özgün geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın nesnesi ve toleransı (metre, varsayılan 0,001) aşanların sayısı. Anlamsal (losses): notWritten (türüne göre), kindChanged (circle → polygon gibi), chorded (eğri kirişe döndü), zLost, zAdded, mLost, attrLost, attrChanged, attrAdded (öznitelik adıyla), styleLost (color, lineWeight, symbol), identityLost (kalıcı kimlik korunmadı), extra (eşleşmeyen geri okunan); her biri sayısı ve özgün nesnelerin kimlikleriyle (en çok 100). Yazıcının ve okuyucunun uyarıları writer ve reader'da. Sonuç KentOS'un yazıcısıyla okuyucusunun birlikte yaptığıdır; başka bir programın okuduğu kendisinindir. Retler: invalid_tolerance, layer_not_found (layers[i]), yazıcının kendi reddi (export.<alan>), exchange_unreadable, file_unwritable.",
+      "aliases": [
+        "devirdenetimi",
+        "kayipraporu",
+        "roundtrip"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `file.exchange.check` v1: the format, the layers (by id; none: every layer the format's writer takes by\ndefault) and the tolerance (metres, above 0, at most 10; none: [`EXCHANGE_TOLERANCE`]).\n\nRefusals: `invalid_tolerance`, `layer_not_found` (`layers[i]`), the writer's own refusal (its code, the path\n`export.<its path>`), `exchange_unreadable` (KentOS's reader refused the file KentOS wrote: its words).",
+        "properties": {
+          "format": {
+            "$ref": "#/$defs/ExchangeFormat"
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "title": "ExchangeCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.exchange.check` v1: the format and tolerance, the objects of the layers checked, how many were\nmatched with one read back, those not written by kind, the numeric differences, the semantic losses (in\n[`EXCHANGE_LOSSES`]' order, then by detail) and the writer's and the reader's warnings as they said them.",
+        "properties": {
+          "format": {
+            "$ref": "#/$defs/ExchangeFormat"
+          },
+          "losses": {
+            "items": {
+              "$ref": "#/$defs/ExchangeLoss"
+            },
+            "type": "array"
+          },
+          "matched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notWritten": {
+            "items": {
+              "$ref": "#/$defs/ExchangeKindCount"
+            },
+            "type": "array"
+          },
+          "numeric": {
+            "$ref": "#/$defs/ExchangeNumeric"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "reader": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "writer": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "format",
+          "tolerance",
+          "objects",
+          "matched",
+          "notWritten",
+          "numeric",
+          "losses",
+          "writer",
+          "reader"
+        ],
+        "title": "ExchangeChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.exchange.check` v1: the format and tolerance, the objects of the layers checked, how many were\nmatched with one read back, those not written by kind, the numeric differences, the semantic losses (in\n[`EXCHANGE_LOSSES`]' order, then by detail) and the writer's and the reader's warnings as they said them.",
+        "properties": {
+          "format": {
+            "$ref": "#/$defs/ExchangeFormat"
+          },
+          "losses": {
+            "items": {
+              "$ref": "#/$defs/ExchangeLoss"
+            },
+            "type": "array"
+          },
+          "matched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notWritten": {
+            "items": {
+              "$ref": "#/$defs/ExchangeKindCount"
+            },
+            "type": "array"
+          },
+          "numeric": {
+            "$ref": "#/$defs/ExchangeNumeric"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "reader": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "writer": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "format",
+          "tolerance",
+          "objects",
+          "matched",
+          "notWritten",
+          "numeric",
+          "losses",
+          "writer",
+          "reader"
+        ],
+        "title": "ExchangeChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_tolerance",
+          "layer_not_found",
+          "exchange_unreadable",
+          "file_unwritable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimin GeoPackage gidiş-dönüşü",
+          "input": {
+            "format": "gpkg"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.recover",
       "version": 1,
       "title": "Bozuk çizimi kurtar",
@@ -100445,6 +100644,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Seçilen nesnelerde kaldırılacak kot (Z) ya da ölçü (M) yok."
+    },
+    {
+      "code": "exchange_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "KentOS'un okuyucusu KentOS'un yazdığı dosyayı okuyamadı; ileti nedenini söyler."
     },
     {
       "code": "file_unwritable",
@@ -128204,6 +128409,130 @@
           "type": "string"
         }
       ]
+    },
+    "ExchangeFormat": {
+      "description": "The format of the trip.",
+      "enum": [
+        "gpkg",
+        "parquet",
+        "fgb",
+        "gml",
+        "shp",
+        "dxf"
+      ],
+      "type": "string"
+    },
+    "ExchangeKindCount": {
+      "description": "A kind's count (objects not written by kind: `text`, `dimension` …).",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "count"
+      ],
+      "type": "object"
+    },
+    "ExchangeLoss": {
+      "description": "A semantic loss: its kind (one of [`EXCHANGE_LOSSES`]), how many, what changed into what where it is one change\n(`circle → polygon`, an attribute's name), and the original objects' persistent ids (at most 100).",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "detail": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "count",
+        "uids"
+      ],
+      "type": "object"
+    },
+    "ExchangeNumeric": {
+      "description": "The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),\nthe object of the greatest offset, and how many lie farther than the tolerance.",
+      "properties": {
+        "above": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "area": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "height": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "length": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "measure": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "measure"
+        },
+        "offset": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "offsetUid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "above"
+      ],
+      "type": "object"
     },
     "ExplodeDensity": {
       "description": "How dense an exploded curve's vertices are (docs/adr/0308): its pieces equal in length along it, as many as\nasked, none longer than a length, or as few as keep every chord within a distance of the curve.",

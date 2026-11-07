@@ -3545,6 +3545,22 @@
    "tests": 0
   },
   {
+   "id": "file.exchangeCheck",
+   "kind": "command",
+   "title": "Devir denetimi…",
+   "level": "query",
+   "via": [
+    "file.exchange.check"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.exchange.check",
+   "mcp": "file.exchange.check",
+   "note": "Pencere file.exchange.check'in cevabını gösterir (salt okunur): biçim ve tolerans, Denetle geçici dosyayla gidiş-dönüşü yapar; sayısal sapma ve anlamsal kayıplar ayrı; Kayıplıları seç seçimi değiştirir (ADR 1660).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.atlas",
    "kind": "command",
    "title": "Atlası PDF yap…",

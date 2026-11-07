@@ -303,6 +303,7 @@ COMMANDS: dict[str, Any] = {
     "cad.xrefs.edit": xrefs.edit,
     "cad.xrefs.list": xrefs.list,
     "cad.zoning.check": zoning.check,
+    "file.exchange.check": file.exchange.check,
     "file.export.atlas": file.export.atlas,
     "file.export.block": file.export.block,
     "file.export.csv": file.export.csv,

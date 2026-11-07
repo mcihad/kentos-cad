@@ -179,6 +179,12 @@
           "works": [
            "map"
           ]
+         },
+         {
+          "label": "Denetim",
+          "items": [
+           "file.exchangeCheck"
+          ]
          }
         ]
        },
@@ -2960,6 +2966,12 @@
           ],
           "works": [
            "map"
+          ]
+         },
+         {
+          "label": "Denetim",
+          "items": [
+           "file.exchangeCheck"
           ]
          }
         ]
