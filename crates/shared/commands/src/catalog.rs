@@ -9383,6 +9383,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_REGISTER.into(),
+            version: crate::CAD_POINTCLOUDS_REGISTER_VERSION,
+            title: "Tarama kaydı denetimi".into(),
+            summary: "İkinci nokta bulutunu (hareketli) birinciye (sabit) örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler, salt okunur: iki bulut tam çözünürlükte okunup voksel başına bir noktaya (noktalarının ortalaması, spacing, ilk değer 0,5 m) indirilir; sabit bulutun normali en yakın komşularından (neighbours, ilk değer 8), her hareketli nokta erişim içindeki (reach, ilk değer 1 m) en yakın sabit noktayla eşlenir; adım Low'un (2004) doğrusal en küçük kareleriyle, adım toleransın (ilk değer 0,1 mm) altına inince ya da yineleme sınırında (ilk değer 30) durur. \
+                      Cevap: dönüşüm tarifi (merkez, dönüklük ω φ κ, öteleme ve projenin koordinatlarında 4×4 matris), önce ve sonra nokta-düzlem RMS'i, eşleşen pay (örtüşme), geometrinin altı parametreyi tutma gücü ve yatay öteleme gücü (düz zeminde yatay bilinmez), kapsam hücrelerinin güvenilir alanı (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz. \
+                      Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points."
+                .into(),
+            aliases: vec!["taramakaydi".into(), "icp".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PointCloudsRegister>(),
+            output: schema::<crate::PointCloudsRegistered>(),
+            plan: Some(schema::<crate::PointCloudsRegistered>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki şerit, 0,5 m voksel, GNSS kontrolüyle".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"], "control": "gnss" }),
+                output: None,
+            }],
+        },
         // Ortofoto doğruluk denetimi (plan/map-cad.md MAP-12, docs/adr/1480).
         CommandDescriptor {
             id: crate::CAD_ORTHOPHOTO_CHECK.into(),
@@ -16219,6 +16246,7 @@ mod tests {
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegister>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
@@ -17177,6 +17205,7 @@ mod tests {
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),

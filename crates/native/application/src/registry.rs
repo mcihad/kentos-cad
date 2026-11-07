@@ -66,6 +66,7 @@ use crate::readjustment;
 use crate::orthophoto_check;
 use crate::orthophoto_compare;
 use crate::pointcloud_overlap;
+use crate::pointcloud_register;
 use crate::addresses_compare;
 use crate::addresses_normalize;
 use crate::blocks_insert;
@@ -567,6 +568,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_POINTCLOUDS_OVERLAP => {
                 $then!(pointcloud_overlap, kentos_commands::PointCloudsOverlap)
+            }
+            kentos_commands::CAD_POINTCLOUDS_REGISTER => {
+                $then!(pointcloud_register, kentos_commands::PointCloudsRegister)
             }
             kentos_commands::MAP_SURVEY_QUERY => {
                 $then!(map_survey, kentos_commands::MapSurveyQuery)

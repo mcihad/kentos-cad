@@ -837,6 +837,25 @@ hücreler; GNSS kontrol noktalarında her taramanın KOH_Z'si; kontrolsüz bulut
 (`cad.pointclouds.overlap`, 26 ortak durum: eğimli zemin, kaymış şerit, yoldaki araç). Açık: ICP/kayıt, kalıcı kayıt
 kimliği, sınıf düzeltme katmanı, kesit düzenleme, çıkarım, gerçek veri ölçümü.
 
+**7 Kasım 2026 — MAP-13.2: tarama kaydı denetimi ([ADR 1800](../docs/adr/1800-scan-registration-check.md)).** Kapsam:
+**Harita + CBS** (nokta bulutu bağlam sekmesi); komut Python ve MCP'de. Araştırma:
+- CloudCompare ICP: durma ölçütleri, son RMS yalnız kullanılan noktalardan, 4×4 matris;
+- Cyclone REGISTER 360: bulutlar arası hata, örtüşme, strength; yalnız onlara güvenilmemesi;
+- Low 2004: nokta-düzlem ICP'nin doğrusal en küçük karesi.
+
+Kanıtlanan alt maddeler:
+- `cad.pointclouds.register` ikinci taramayı birinciye nokta-düzlem ICP ile oturtur ve raporlar: dönüşüm tarifi
+  (merkez, ω φ κ, öteleme, 4×4 matris), önce/sonra RMS, örtüşme payı, geometrinin gücü, güvenilir kapsam hücreleri,
+  kontrol noktalarında önce/sonra KOH_Z.
+- Düz zeminde yatay kaymanın belirsizliği söylenir; kontrolsüz kayıt ölçüye kesin hazır sayılmaz.
+- Bulut taşınmaz (salt okunur).
+- Kabulden kanıtlanan: kayıt bağımsız kontrolle değerlendirildi (KOH_Z 5,0 → 0,5 cm); eğimli zemin ve çoklu tarama
+  durumları.
+- 31 bağımsız durum (`pointcloud_register_cases.py`); masaüstü Nokta bulutu sekmesi › Tarama kaydı.
+
+**Açık:** dönüşümün buluta uygulanması, çoklu tarama demeti, kaba hatalı eşleşmeyi atan ağırlıklar, kalıcı kayıt
+kimliği ve sınıf düzeltme katmanı, kesit düzenleme, çıkarım, gerçek veri ölçümü. Madde `[ ]` kalır.
+
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 
 **Öncelik:** P1, MAP-02/03/07 üzerine. **Kod:** [K28]–[K30], [K03].

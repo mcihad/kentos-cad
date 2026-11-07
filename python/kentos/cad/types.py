@@ -66533,6 +66533,236 @@ class PointCloudsRegioned(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointCloudsRegister(_Model):
+    """Input of `cad.pointclouds.register` v1: the two clouds (persistent ids: the fixed first, the moving second); the
+    voxel's side (`spacing`, none: 0.5 m), the farthest pair (`reach`, none: 1 m), the most iterations (none: 30) and
+    the step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell
+    of the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control
+    points' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the
+    scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`) and the open
+    drawing's file (the host gives it).
+
+    Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`),
+    `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more
+    voxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.
+    Attributes:
+        cell: Unit: length.
+        classes: Unit: index.
+        iterations: Unit: count.
+        least: Unit: count.
+        neighbours: Unit: count.
+        radius: Unit: length.
+        reach: Unit: length.
+        scale: Unit: scale.
+        spacing: Unit: length.
+        tolerance: Unit: length.
+    """
+    uids: list[str]
+    cell: float | None | Unset = UNSET
+    classes: list[int] | None | Unset = UNSET
+    control: str | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    iterations: int | None | Unset = UNSET
+    least: int | None | Unset = UNSET
+    neighbours: int | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    reach: float | None | Unset = UNSET
+    rules: CloudRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+    spacing: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.cell is not UNSET:
+            out["cell"] = None if self.cell is None else float(self.cell)
+        if self.classes is not UNSET:
+            out["classes"] = None if self.classes is None else list(self.classes)
+        if self.control is not UNSET:
+            out["control"] = self.control
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.iterations is not UNSET:
+            out["iterations"] = self.iterations
+        if self.least is not UNSET:
+            out["least"] = self.least
+        if self.neighbours is not UNSET:
+            out["neighbours"] = self.neighbours
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.reach is not UNSET:
+            out["reach"] = None if self.reach is None else float(self.reach)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsRegister:
+        return cls(
+            uids=list(data["uids"]),
+            cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            classes=UNSET if "classes" not in data else None if data["classes"] is None else list(data["classes"]),
+            control=data.get("control", UNSET),
+            drawing=data.get("drawing", UNSET),
+            field=data.get("field", UNSET),
+            iterations=data.get("iterations", UNSET),
+            least=data.get("least", UNSET),
+            neighbours=data.get("neighbours", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else CloudRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsRegistered(_Model):
+    """Output of `cad.pointclouds.register` v1:
+    - the package; the points read and the voxel points used per cloud;
+    - the iterations done and whether the last step was under the tolerance;
+    - the transform from the moving cloud to the fixed one: p ↦ R(p − centre) + centre + translation, R = Rz(κ)·Ry(φ)·
+      Rx(ω) with `rotation` = [ω, φ, κ] (radians), and the same as a row-major 4×4 matrix in the project's coordinates;
+    - the pairs at the end and the share of the moving voxel points they are (`overlap`); the point-to-plane RMS
+      before the first step and after the last, the mean after;
+    - `strength`: √(λmin/λmax) of the six parameters' normal matrix (the angles times the moving points' RMS radius,
+      so all are metres): near 0 a direction the geometry does not fix; `horizontal`: √ of the plan translations'
+      smaller eigenvalue over the height translation's (near 0: a flat ground, the plan shift unknown);
+    - the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the
+      package's swath-to-swath value), the worst cells (at most 20, RMS down);
+    - the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;
+    - notes.
+    Attributes:
+        read: Unit: count.
+        used: Unit: count.
+        iterations: Unit: count.
+        centre: Unit: system.
+        rotation: Unit: rad.
+        translation: Unit: length.
+        matrix: Unit: value.
+        pairs: Unit: count.
+        overlap: Unit: measure.
+        rms_before: Unit: length.
+        rms_after: Unit: length.
+        mean_after: Unit: length.
+        strength: Unit: measure.
+        horizontal: Unit: measure.
+        cell: Unit: length.
+        covered: Unit: area.
+        reliable: Unit: area.
+        limit: Unit: length.
+        limit_z: Unit: length.
+    """
+    rules: str
+    source: str
+    read: list[int]
+    used: list[int]
+    iterations: int
+    converged: bool
+    centre: list[float]
+    rotation: list[float]
+    translation: list[float]
+    matrix: list[float]
+    pairs: int
+    overlap: float
+    rms_before: float
+    rms_after: float
+    mean_after: float
+    strength: float
+    horizontal: float
+    cell: float
+    covered: float
+    reliable: float
+    limit: float
+    worst: list[RegisterCell]
+    control: list[RegisterControl]
+    limit_z: float
+    notes: list[str]
+    control_after: OverlapControlStats | None | Unset = UNSET
+    control_before: OverlapControlStats | None | Unset = UNSET
+    control_fixed: OverlapControlStats | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules
+        out["source"] = self.source
+        out["read"] = list(self.read)
+        out["used"] = list(self.used)
+        out["iterations"] = self.iterations
+        out["converged"] = self.converged
+        out["centre"] = [float(e0) for e0 in self.centre]
+        out["rotation"] = [float(e0) for e0 in self.rotation]
+        out["translation"] = [float(e0) for e0 in self.translation]
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        out["pairs"] = self.pairs
+        out["overlap"] = float(self.overlap)
+        out["rmsBefore"] = float(self.rms_before)
+        out["rmsAfter"] = float(self.rms_after)
+        out["meanAfter"] = float(self.mean_after)
+        out["strength"] = float(self.strength)
+        out["horizontal"] = float(self.horizontal)
+        out["cell"] = float(self.cell)
+        out["covered"] = float(self.covered)
+        out["reliable"] = float(self.reliable)
+        out["limit"] = float(self.limit)
+        out["worst"] = [e0.to_json() for e0 in self.worst]
+        out["control"] = [e0.to_json() for e0 in self.control]
+        out["limitZ"] = float(self.limit_z)
+        out["notes"] = list(self.notes)
+        if self.control_after is not UNSET:
+            out["controlAfter"] = None if self.control_after is None else self.control_after.to_json()
+        if self.control_before is not UNSET:
+            out["controlBefore"] = None if self.control_before is None else self.control_before.to_json()
+        if self.control_fixed is not UNSET:
+            out["controlFixed"] = None if self.control_fixed is None else self.control_fixed.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsRegistered:
+        return cls(
+            rules=data["rules"],
+            source=data["source"],
+            read=list(data["read"]),
+            used=list(data["used"]),
+            iterations=data["iterations"],
+            converged=data["converged"],
+            centre=[float(e0) for e0 in data["centre"]],
+            rotation=[float(e0) for e0 in data["rotation"]],
+            translation=[float(e0) for e0 in data["translation"]],
+            matrix=[float(e0) for e0 in data["matrix"]],
+            pairs=data["pairs"],
+            overlap=float(data["overlap"]),
+            rms_before=float(data["rmsBefore"]),
+            rms_after=float(data["rmsAfter"]),
+            mean_after=float(data["meanAfter"]),
+            strength=float(data["strength"]),
+            horizontal=float(data["horizontal"]),
+            cell=float(data["cell"]),
+            covered=float(data["covered"]),
+            reliable=float(data["reliable"]),
+            limit=float(data["limit"]),
+            worst=[RegisterCell.from_json(e0) for e0 in data["worst"]],
+            control=[RegisterControl.from_json(e0) for e0 in data["control"]],
+            limit_z=float(data["limitZ"]),
+            notes=list(data["notes"]),
+            control_after=UNSET if "controlAfter" not in data else None if data["controlAfter"] is None else OverlapControlStats.from_json(data["controlAfter"]),
+            control_before=UNSET if "controlBefore" not in data else None if data["controlBefore"] is None else OverlapControlStats.from_json(data["controlBefore"]),
+            control_fixed=UNSET if "controlFixed" not in data else None if data["controlFixed"] is None else OverlapControlStats.from_json(data["controlFixed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCreate(_Model):
     """Input of `cad.point.create` v1: one point object on a named layer, written
     as one undo step. The point tool calls it once per point it places.
@@ -76052,6 +76282,77 @@ class RectangleCreate(_Model):
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisterCell(_Model):
+    """A coverage cell: its centre, the moving cloud's paired points in it and their RMS residual after the fit (metres).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        n: Unit: count.
+        rms: Unit: length.
+    """
+    x: float
+    y: float
+    n: int
+    rms: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["n"] = self.n
+        out["rms"] = float(self.rms)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisterCell:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            n=data["n"],
+            rms=float(data["rms"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisterControl(_Model):
+    """A control point: its name and height, and the fixed cloud's, the moving cloud's before and after the fit planes
+    minus it there (none where a cloud has too few points around it, or they lie on a line).
+    Attributes:
+        z: Unit: elevation.
+        dz_after: Unit: length.
+        dz_before: Unit: length.
+        dz_fixed: Unit: length.
+    """
+    name: str
+    z: float
+    dz_after: float | None | Unset = UNSET
+    dz_before: float | None | Unset = UNSET
+    dz_fixed: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["z"] = float(self.z)
+        if self.dz_after is not UNSET:
+            out["dzAfter"] = None if self.dz_after is None else float(self.dz_after)
+        if self.dz_before is not UNSET:
+            out["dzBefore"] = None if self.dz_before is None else float(self.dz_before)
+        if self.dz_fixed is not UNSET:
+            out["dzFixed"] = None if self.dz_fixed is None else float(self.dz_fixed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisterControl:
+        return cls(
+            name=data["name"],
+            z=float(data["z"]),
+            dz_after=UNSET if "dzAfter" not in data else None if data["dzAfter"] is None else float(data["dzAfter"]),
+            dz_before=UNSET if "dzBefore" not in data else None if data["dzBefore"] is None else float(data["dzBefore"]),
+            dz_fixed=UNSET if "dzFixed" not in data else None if data["dzFixed"] is None else float(data["dzFixed"]),
         )
 
 
@@ -127776,6 +128077,8 @@ __all__ = [
     "PointCloudsQuery",
     "PointCloudsRegion",
     "PointCloudsRegioned",
+    "PointCloudsRegister",
+    "PointCloudsRegistered",
     "PointConstruction",
     "PointCreate",
     "PointCreated",
@@ -128098,6 +128401,8 @@ __all__ = [
     "RefreshTablesOperation",
     "RegenerateMapSurveyOperation",
     "RegionsLedgerBy",
+    "RegisterCell",
+    "RegisterControl",
     "RegisteredArea",
     "RegistryDatum",
     "RegistryDatumName",

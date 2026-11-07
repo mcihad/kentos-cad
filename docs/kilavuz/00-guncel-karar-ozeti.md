@@ -81,6 +81,9 @@
 - **Tarama uyumu denetimi (6 Kasım 2026; MAP-13, [ADR 1500](../../docs/adr/1500-scan-overlap-check.md)).**
   `cad.pointclouds.overlap` (Harita + CBS, salt okunur): şeritler arası RMSDz ve KOH_Z, kural paketi
   `catalog/v1/rules/lidar-uyum.json` (şerit sınırı örnek, Türk mevzuatında yok).
+- **Tarama kaydı denetimi (7 Kasım 2026; MAP-13, [ADR 1800](../../docs/adr/1800-scan-registration-check.md)).**
+  `cad.pointclouds.register` (Harita + CBS, salt okunur): vokselli nokta-düzlem ICP (Low 2004); dönüşüm tarifi ve 4×4
+  matris, önce/sonra RMS, güç ve yatay güç (düz zemin), güvenilir kapsam (`lidar-uyum` örnek sınırı), kontrol KOH_Z'si.
 - **Ortofoto doğruluk denetimi (6 Kasım 2026; MAP-12, [ADR 1480](../../docs/adr/1480-orthophoto-accuracy-check.md)).**
   `cad.orthophoto.check` (raster sekmesi, salt okunur): bağımsız denetim noktaları, BÖHHBÜY m. 91(2)/54 kural paketi
   `catalog/v1/rules/ortofoto-bohhbuy-2018.json`.

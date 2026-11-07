@@ -149,6 +149,13 @@
       ],
       "note": "Pencere iki bulutu cad.pointclouds.overlap ile karşılaştırır (salt okunur); CSV kaydet en kötü hücreleri ve kontrol noktalarını yazar (ADR 1500)."
     },
+    "pointcloud.register": {
+      "level": "query",
+      "via": [
+        "cad.pointclouds.register"
+      ],
+      "note": "Pencere ikinci bulutu birinciye cad.pointclouds.register ile oturtur ve kaydı denetler (salt okunur); CSV kaydet dönüşüm matrisini, en kötü hücreleri ve kontrol noktalarını yazar (ADR 1800)."
+    },
     "raster.accuracy": {
       "level": "query",
       "via": [

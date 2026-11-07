@@ -26,9 +26,9 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
-/// A plane's least-squares sums about a centre.
+/// A plane's least-squares sums about a centre (`cad.pointclouds.register`'s control planes too).
 #[derive(Clone, Copy, Default)]
-struct Sums {
+pub(crate) struct Sums {
     n: f64,
     u: f64,
     v: f64,
@@ -41,7 +41,7 @@ struct Sums {
 }
 
 impl Sums {
-    fn add(&mut self, u: f64, v: f64, z: f64) {
+    pub(crate) fn add(&mut self, u: f64, v: f64, z: f64) {
         self.n += 1.0;
         self.u += u;
         self.v += v;
@@ -54,7 +54,7 @@ impl Sums {
     }
 
     /// The plane's height at the centre; none with fewer than `least` points or points on a line.
-    fn height(&self, least: u32, h: f64) -> Option<f64> {
+    pub(crate) fn height(&self, least: u32, h: f64) -> Option<f64> {
         if self.n < f64::from(least) {
             return None;
         }

@@ -194,6 +194,7 @@ COMMANDS: dict[str, Any] = {
     "cad.pointclouds.profile": pointclouds.profile,
     "cad.pointclouds.query": pointclouds.query,
     "cad.pointclouds.region": pointclouds.region,
+    "cad.pointclouds.register": pointclouds.register,
     "cad.points.construct": points.construct,
     "cad.polygon.create": polygon.create,
     "cad.polygon.regular": polygon.regular,

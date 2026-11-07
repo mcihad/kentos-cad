@@ -548,6 +548,10 @@
         "size": "small"
        },
        {
+        "command": "pointcloud.register",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.profile",
         "size": "small"
        }
@@ -3865,6 +3869,10 @@
         "size": "small"
        },
        {
+        "command": "pointcloud.register",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.profile",
         "size": "small"
        }
@@ -6413,6 +6421,10 @@
       },
       {
        "command": "pointcloud.overlap",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.register",
        "size": "small"
       },
       {

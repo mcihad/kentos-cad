@@ -72,6 +72,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.
 - MAP-13 / ADR 1500: `cad.pointclouds.overlap`'in web işleyicisi ve Tarama uyumu penceresi.
+- MAP-13 / ADR 1800: `cad.pointclouds.register`'in web işleyicisi ve Tarama kaydı penceresi.
 - Şerit (7 Kasım 2026, DESIGN.md §7.3.1): web'in `Ribbon.fit`'inde yalnız ikon basamağının kaldırılması; panel
   sığmazsa adıyla katlanır, şeritte başlıksız düğme kalmaz.
 - MAP-04 / ADR 1760: `map.features.reconcile`'in web işleyicisi ve Adayları uzlaştır penceresi.
