@@ -610,6 +610,15 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Tam çözünürlük (HiDPI)",
                 "Retina ve 4K ekranda çizim ekranın tam çözünürlüğünde çizilir. Kapalıyken çizim mantıksal piksel başına bir piksel çizilir: 2× ekranda dörtte bir piksel, daha akıcı kaydırma. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler her zaman tam çözünürlüktedir.",
             ),
+        // The desktop's scaled picture while the wheel turns (docs/adr/1068), the owner's choice of 7 November: off,
+        // every wheel step drawn whole, unless asked.
+        boolean("graphics.wheelZoomScaled", false)
+            .scope(SettingScope::Device)
+            .hosts(&[Desktop])
+            .text(
+                "Tekerlek durunca yeniden çiz",
+                "Açıkken tekerlek dönerken son keskin resim büyütülüp küçültülerek gösterilir, tekerlek bırakılınca çizim baştan, keskin çizilir: çok büyük çizimlerde akıcı yakınlaştırma için. Kapalıyken her tekerlek adımında çizim gerçek zamanlı çizilir.",
+            ),
         choice(
             "graphics.symbolSize",
             "plot",

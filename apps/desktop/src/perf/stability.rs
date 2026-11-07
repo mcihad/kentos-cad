@@ -40,6 +40,8 @@ const VISIBLE: u8 = 64;
 /// The app with the mixed drawing open on a GPU.
 fn opened() -> (App, Harness) {
     let (mut app, _) = App::boot(None);
+    // The scaled picture while the wheel turns is measured here (docs/adr/1068): the setting on.
+    let _ = app.settings.choose(&[("graphics.wheelZoomScaled", serde_json::Value::from(true))]);
     let mut h = Harness::new();
     assert!(
         h.on_gpu(),
@@ -604,5 +606,41 @@ fn stability() {
                 "the nearest point is on the true circle: {row}"
             );
         }
+    }
+}
+
+/// `graphics.wheelZoomScaled` (docs/adr/1068, the owner's choice of 7 November): off, the default, a zoom while the
+/// wheel turns draws the frame whole; on, it scales the last sharp picture. Needs a GPU; without one there is nothing
+/// to draw and the test says so.
+#[test]
+fn a_wheel_zoom_draws_whole_unless_the_setting_scales_the_picture() {
+    let (mut app, _) = App::boot(None);
+    assert!(!app.graphics().zoom_scaled, "off unless asked");
+    let mut h = Harness::new();
+    if !h.on_gpu() {
+        eprintln!("no GPU (wgpu): the zoom frame is not drawn here");
+        return;
+    }
+    h.settle(&mut app);
+    let (snapshot, _) = mixed::drawing(2_000, mixed::SEED);
+    let doc = Document::from_v2(snapshot, None).expect("the drawing opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.dialog = None;
+    for (on, scaled) in [(false, false), (true, true), (false, false)] {
+        let _ = app.settings.choose(&[("graphics.wheelZoomScaled", Value::from(on))]);
+        assert_eq!(app.graphics().zoom_scaled, on);
+        // The last sharp picture, drawn whole at rest with the setting as it now is. The setting alone does not draw
+        // the kept picture again (its key is the parts' and the frame's), so a view elsewhere first: as in use, where
+        // the first wheel step after the setting is turned on draws whole and the next ones scale.
+        let (center, scale) = ([app.viewport.camera.center.x, app.viewport.camera.center.y], app.viewport.camera.scale);
+        shot(&mut app, &mut h, center, scale * 0.9);
+        shot(&mut app, &mut h, center, scale);
+        app.viewport.hold_moving(true);
+        app.viewport.camera.scale = scale * 1.16;
+        h.frame(&mut app, &[]);
+        let zoomed = app.viewport.status().stats.picture_zoomed;
+        app.viewport.hold_moving(false);
+        h.frame(&mut app, &[]);
+        assert_eq!(zoomed, scaled, "setting {on}");
     }
 }

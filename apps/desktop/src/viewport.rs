@@ -153,8 +153,8 @@ pub struct Status {
 }
 
 thread_local! {
-    /// Whether a zoom while the wheel turns may scale the last sharp picture (docs/adr/1068); off only in a test's
-    /// control.
+    /// Whether a zoom while the wheel turns may scale the last sharp picture (docs/adr/1068) when the setting asks for
+    /// it (`Graphics::zoom_scaled`); off only in a test's control.
     static ZOOM_SCALED: std::cell::Cell<bool> = const { std::cell::Cell::new(true) };
 }
 
@@ -257,12 +257,15 @@ fn with_mask_labels(
     scene
 }
 
-/// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023),
-/// and the highlights' width in logical pixels (`graphics.highlightWidth`, docs/adr/0195).
+/// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023), whether a zoom
+/// while the wheel turns scales the last sharp picture and draws whole once it stops (`graphics.wheelZoomScaled`,
+/// docs/adr/1068; off: every wheel step drawn whole), and the highlights' width in logical pixels
+/// (`graphics.highlightWidth`, docs/adr/0195).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Graphics {
     pub samples: u32,
     pub hi_dpi: bool,
+    pub zoom_scaled: bool,
     pub highlight_width: u32,
 }
 
@@ -271,6 +274,7 @@ impl Default for Graphics {
         Self {
             samples: 1,
             hi_dpi: true,
+            zoom_scaled: false,
             highlight_width: 1,
         }
     }
@@ -707,7 +711,7 @@ impl Viewport {
             (palette.background.0, accent.0, settings.samples, settings.hi_dpi).hash(&mut h);
             settings.highlight_width.to_bits().hash(&mut h);
             styling.map(|s| (s.screen_symbols, s.line_weights)).hash(&mut h);
-            ZOOM_SCALED.with(std::cell::Cell::get).then(|| h.finish())
+            (graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get)).then(|| h.finish())
         };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,

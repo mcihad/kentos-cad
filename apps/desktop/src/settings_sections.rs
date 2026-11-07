@@ -155,6 +155,7 @@ impl Section {
             Self::Engine => &[
                 "graphics.msaa",
                 "graphics.hiDpi",
+                "graphics.wheelZoomScaled",
                 "graphics.symbolSize",
                 "graphics.lineWeights",
                 "graphics.colorMode",
@@ -568,8 +569,10 @@ impl App {
             )
             .help(Fields::help("graphics.msaa"))
             .row(self.effective_note("graphics.msaa", &f.value("graphics.msaa")));
+        let form = f.switch_field(form, "graphics.hiDpi", None);
+        // The scaled picture while the wheel turns (docs/adr/1068): off unless asked.
         let form = f
-            .switch_field(form, "graphics.hiDpi", None)
+            .switch_field(form, "graphics.wheelZoomScaled", None)
             // The styled drawing (docs/adr/0090), as the web's Çizim motoru → Semboller ve çizgiler.
             .section("Semboller ve çizgiler")
             .field(

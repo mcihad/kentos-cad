@@ -8,7 +8,16 @@
   CLAUDE.md §6.
 - **Web:** ertelendi (ADR 0228); değişiklik masaüstü çizicisinde (`kentos-render-wgpu`) ve masaüstü çizim alanındadır.
   Paylaşılan gölgelendiriciler ve ortak çekirdek değişmedi.
-- **Şema:** `.kcad` değişmedi. Komut, ayar ve pencere değişmedi.
+- **Şema:** `.kcad` değişmedi. Komut ve pencere değişmedi; ayar 7 Kasım'da eklendi (aşağıda).
+- **Değişiklik (7 Kasım 2026, sahibin kararı):** ölçekleme artık bir ayarın arkasındadır ve **ilk değeri kapalıdır**.
+  Sahibin sözü: “bunu uygulama ayarları içine koy … varsayılan olarak bu ayar kapalı olsun”. Ayar
+  `graphics.wheelZoomScaled` (cihaz kapsamı, yalnız masaüstü): Uygulama ayarları › Çizim motoru › Grafik (bu cihaz)
+  › “Tekerlek durunca yeniden çiz”. Kapalıyken her tekerlek adımı gerçek zamanlı bütün çizilir (masaüstü
+  `FrameInput::drawing`'i vermez, §1'in ikinci koşulu sağlanmaz); açıkken bu ADR'nin davranışıdır. Açıldıktan sonraki
+  ilk tekerlek adımı bütün çizilir (tutulan resim ayarla yeniden çizilmez, keskin resim o adımda kaydedilir), sonrakiler
+  ölçeklenir. `perf::stability` ölçümü ayarı açarak yapılır. Test:
+  `perf::stability::a_wheel_zoom_draws_whole_unless_the_setting_scales_the_picture` (kapalı → bütün, açık → ölçekli,
+  kapalı → bütün; GPU ister). §5'in ölçümleri ayar açıkken geçerlidir.
 
 ## Bağlam
 

@@ -3103,6 +3103,7 @@ impl App {
         Graphics {
             samples: self.settings.number("graphics.msaa").max(1.0) as u32,
             hi_dpi: self.settings.bool("graphics.hiDpi"),
+            zoom_scaled: self.settings.bool("graphics.wheelZoomScaled"),
             highlight_width: self
                 .settings
                 .number("graphics.highlightWidth")

@@ -1304,6 +1304,21 @@
       "apply": "recreate"
     },
     {
+      "key": "graphics.wheelZoomScaled",
+      "type": "boolean",
+      "default": false,
+      "scope": "device",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Tekerlek durunca yeniden çiz",
+      "description": "Açıkken tekerlek dönerken son keskin resim büyütülüp küçültülerek gösterilir, tekerlek bırakılınca çizim baştan, keskin çizilir: çok büyük çizimlerde akıcı yakınlaştırma için. Kapalıyken her tekerlek adımında çizim gerçek zamanlı çizilir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "graphics.symbolSize",
       "type": "enum",
       "default": "plot",

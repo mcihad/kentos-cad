@@ -2992,6 +2992,10 @@ düzeltildi: yapı çizgisi olmayan bir çizimde stilli sahnenin uzak yakınlaş
 arayüz karesi). Aynı izle, ADR 1067 → bu dal: 10⁶ uzak tekerlek GPU p50 65,0 → 7,0 ms, MİB p99 22,9 → 1,8 ms, bütçeyi
 aşan arayüz karesi 2 → 0; 10⁵ 15,3 → 2,8 ms. Hepsini seç 10⁶'da 1 131 → 271 ms (ADR 1027'nin sınırları).
 
+**Ayar (7 Kasım 2026):** sahibin kararıyla ölçekleme `graphics.wheelZoomScaled` ayarının arkasına alındı, ilk değeri
+kapalı: kapalıyken her tekerlek adımı gerçek zamanlı bütün çizilir; açıkken (Uygulama ayarları › Çizim motoru › “Tekerlek
+durunca yeniden çiz”) yukarıdaki davranıştır (ADR 1068'in başı).
+
 Kabul satırlarının kanıtı:
 
 - **Tek küçük düzenleme:** 10⁶'da bir düzenleme 1 470 parçadan birini yeniden kurar; MİB ~21 ms (ADR 1062, 1066 komut
