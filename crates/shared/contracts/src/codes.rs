@@ -2002,6 +2002,9 @@ codes! {
     INVALID_PIPE_CHECK = "invalid_pipe_check", Failed, false, "Boru hattı denetiminin sorusu geçerli değil; ileti nedenini söyler.";
     /// A pipe check asked of a road network (docs/adr/1640).
     NOT_A_PIPE_NETWORK = "not_a_pipe_network", Failed, false, "Ağ bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.";
+    /// A pipe run that cannot be drawn: its start or end not a pipe of the network, the end not down the flow, too long,
+    /// no elevation along it (docs/adr/1860).
+    INVALID_PIPE_RUN = "invalid_pipe_run", Failed, false, "Hat profili çizilemiyor; ileti nedenini söyler.";
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
     /// Alternatif etkisi (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";

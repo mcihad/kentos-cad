@@ -119,6 +119,8 @@ pub enum CreateOperation {
     SheetContours,
     /// Kazı ve dolgu bölgeleri (docs/adr/1840): where a comparison surface is below a base and above it, as areas.
     TerrainCutFill,
+    /// Hat profili (docs/adr/1860): a gravity line's longitudinal profile, its frame, lines and bands.
+    PipeProfile,
     /// LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     LandXml,
     /// `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.

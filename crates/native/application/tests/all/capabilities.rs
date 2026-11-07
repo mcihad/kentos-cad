@@ -1051,6 +1051,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "ağ kurulurken yalnız projede olmayan kimlik reddedilir; komut ağı önce adıyla ya da kimliğiyle bulur (unknown_network), bu ret yalnız aradaki bir değişime karşıdır (ADR 1640)",
     ),
     (
+        "cad.pipes.profile",
+        "tools_unavailable",
+        "ağı cad.pipes.check'in yoluyla kurar (pipes_check::load); kaydedilmeyen araçların reddi onunkiyle aynıdır (ADR 1640, 1860)",
+    ),
+    (
+        "cad.pipes.profile",
+        "invalid_network",
+        "ağı cad.pipes.check'in yoluyla kurar (pipes_check::load); ağ önce adıyla ya da kimliğiyle bulunur (unknown_network), bu ret yalnız aradaki bir değişime karşıdır (ADR 1640, 1860)",
+    ),
+    (
         "cad.sources.sync",
         "invalid_extent",
         "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510)",

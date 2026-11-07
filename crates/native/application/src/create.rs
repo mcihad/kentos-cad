@@ -196,6 +196,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::SheetContours) => "Pafta eş yükselti eğrileri",
         // Kazı ve dolgu bölgeleri (docs/adr/1840).
         Some(CreateOperation::TerrainCutFill) => "Kazı ve dolgu bölgeleri",
+        // Hat profili (docs/adr/1860).
+        Some(CreateOperation::PipeProfile) => "Hat profili",
         Some(CreateOperation::LandXml) => "LandXML al",
         Some(CreateOperation::AlignmentLabels) => "Aks km yazısı",
         Some(CreateOperation::ProfileDrawing) => "Boykesit çiz",

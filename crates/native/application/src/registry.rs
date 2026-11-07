@@ -59,6 +59,7 @@ use crate::entities_grade;
 use crate::topology_clean;
 use crate::parcels_check;
 use crate::pipes_check;
+use crate::pipes_profile;
 use crate::asbuilt_check;
 use crate::zoning_check;
 use crate::scenarios_impact;
@@ -553,6 +554,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_PIPES_CHECK => {
                 $then!(pipes_check, kentos_commands::PipesCheck)
+            }
+            kentos_commands::CAD_PIPES_PROFILE => {
+                $then!(pipes_profile, kentos_commands::PipesProfile)
             }
             kentos_commands::CAD_ASBUILT_CHECK => {
                 $then!(asbuilt_check, kentos_commands::AsbuiltCheck)

@@ -3,7 +3,8 @@
 //! heights), the diameter's attribute, unit and catalogue, the ground (a terrain surface, the structures' cover level,
 //! or none) and the limits, every one of them the user's (empty: not checked; KentOS gives none). The result follows
 //! the form. The summary counts the findings by kind, the table lists every pipe with its slope, diameter, cover and
-//! findings (Bulgulu: only those with one); Bulgulu boruları seç selects them, CSV kaydet writes the table.
+//! findings (Bulgulu: only those with one); Bulgulu boruları seç selects them, CSV kaydet writes the table. Hat profili
+//! draws the run from a pipe along the flow as a longitudinal profile under the drawing (`cad.pipes.profile`, docs/adr/1860).
 
 use std::path::PathBuf;
 
@@ -12,10 +13,11 @@ use kentos_ui::widget::grow::Grows;
 use iced::{Center, Element, Task};
 use kentos_commands::{
     CommandResult, NetworkKind, PipeCheck, PipeDiameter, PipeGround, PipeInverts, PipeUnit, PipesCheck, PipesChecked,
+    PipesProfile,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, pipes_check};
+use kentos_native_application::{ExecutionContext, pipes_check, pipes_profile};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
@@ -29,6 +31,8 @@ pub const TITLE: &str = "Boru hattı denetimi";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
 const SELECT: &str = "Bulgulu boruları seç";
+/// The run from the pipe chosen drawn as a longitudinal profile (`cad.pipes.profile`, docs/adr/1860).
+const DRAW_PROFILE: &str = "Hat profilini çiz";
 
 /// Where the inverts are read.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -105,6 +109,12 @@ pub struct State {
     pub max_slope: String,
     pub show: Show,
     pub answer: Option<Result<PipesChecked, String>>,
+    /// Hat profili (docs/adr/1860): the run's first pipe (uid), its last (empty: where the flow ends or splits), the
+    /// layer it is drawn on (the drawing's layers: id and name).
+    pub profile_start: String,
+    pub profile_end: String,
+    pub profile_layer: String,
+    pub layers: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
@@ -124,6 +134,10 @@ pub enum Event {
     MinSlope(String),
     MaxSlope(String),
     Show(Show),
+    ProfileStart(String),
+    ProfileEnd(String),
+    ProfileLayer(String),
+    DrawProfile,
     Select,
     Save,
     Saved(Option<PathBuf>),
@@ -306,8 +320,16 @@ impl App {
         } else {
             Ground::None
         };
+        let layers: Vec<(String, String)> =
+            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let profile_layer = layers
+            .iter()
+            .find(|(_, n)| ["profil", "boykesit"].iter().any(|w| n.to_lowercase().contains(w)))
+            .map_or_else(|| doc.model.layers().active().to_owned(), |l| l.0.clone());
         self.pipes_check = State {
             network: first.0.clone(),
+            profile_layer,
+            layers,
             networks,
             from,
             start: "Akar baş".into(),
@@ -321,8 +343,58 @@ impl App {
             ..State::default()
         };
         self.pipes_check_run();
+        // The profile's first pipe: the first one checked.
+        if let Some(Ok(r)) = &self.pipes_check.answer {
+            self.pipes_check.profile_start = r.pipes.first().map(|p| p.uid.clone()).unwrap_or_default();
+        }
         self.dialog = Some(Dialog::PipesCheck);
         Task::none()
+    }
+
+    /// Hat profilini çiz: the run from the pipe chosen as the check reads it, drawn under the drawing in one undo step.
+    fn pipes_profile_draw(&mut self) {
+        let check = match self.pipes_check_input() {
+            Ok(c) => c,
+            Err(why) => return self.warn(why),
+        };
+        let s = &self.pipes_check;
+        let mut input = PipesProfile {
+            network: check.network,
+            start: s.profile_start.clone(),
+            end: (!s.profile_end.is_empty()).then(|| s.profile_end.clone()),
+            inverts: check.inverts,
+            // The catalogue is the check's question, not the profile's.
+            diameter: check.diameter.map(|d| PipeDiameter { catalog: Vec::new(), ..d }),
+            ground: check.ground,
+            layer_id: s.profile_layer.clone(),
+            at: [0.0, 0.0],
+            datum: None,
+            exaggeration: None,
+            height: None,
+            expected_revision: None,
+        };
+        // Planned at the origin (nothing written), then drawn under the drawing by how far its frame reaches up.
+        let up = match self.document.as_mut().map(|doc| pipes_profile::plan(&ExecutionContext::new(&mut doc.model), &input)) {
+            Some(CommandResult::Completed { output, .. }) => (output.top - output.datum) * output.exaggeration,
+            _ => 0.0,
+        };
+        input.at = self.under_drawing(up);
+        let Some(doc) = self.document.as_mut() else { return };
+        let result = pipes_profile::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            self.say(
+                Level::Success,
+                format!(
+                    "Hat profili çizildi: {} boru, {:.2} m, kıyas kotu {:.2}; {} nesne.",
+                    out.pipes.len(),
+                    out.length,
+                    out.datum,
+                    out.uids.len()
+                ),
+            );
+            self.pipes_check = State::default();
+            self.dialog = None;
+        }
     }
 
     fn pipes_check_names(&self) -> Vec<String> {
@@ -361,6 +433,22 @@ impl App {
             Event::MaxSlope(v) => s.max_slope = v,
             Event::Show(v) => {
                 s.show = v;
+                return Task::none();
+            }
+            Event::ProfileStart(v) => {
+                s.profile_start = v;
+                return Task::none();
+            }
+            Event::ProfileEnd(v) => {
+                s.profile_end = v;
+                return Task::none();
+            }
+            Event::ProfileLayer(v) => {
+                s.profile_layer = v;
+                return Task::none();
+            }
+            Event::DrawProfile => {
+                self.pipes_profile_draw();
                 return Task::none();
             }
             Event::Select => {
@@ -545,6 +633,27 @@ impl App {
             .push(Segmented::new([Show::All, Show::Found], s.show, |v| msg(Event::Show(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.pipes.is_empty());
+        // Hat profili (docs/adr/1860): from a pipe along the flow, to a pipe or where the flow ends or splits.
+        let pipes: Vec<(String, String)> = match &s.answer {
+            Some(Ok(r)) => r.pipes.iter().zip(self.pipes_check_names()).map(|(p, n)| (p.uid.clone(), n)).collect(),
+            _ => Vec::new(),
+        };
+        let ends: Vec<(String, String)> =
+            std::iter::once((String::new(), "Akışın sonu".to_owned())).chain(pipes.iter().cloned()).collect();
+        let profile = Form::new().label_width(110.0).field(
+            "Hat profili",
+            row![
+                container(fields::select_owned(pipes, &s.profile_start, |v| msg(Event::ProfileStart(v)))).width(120),
+                label::caption("bitiş"),
+                container(fields::select_owned(ends, &s.profile_end, |v| msg(Event::ProfileEnd(v)))).width(140),
+                label::caption("katman"),
+                container(fields::select_owned(s.layers.clone(), &s.profile_layer, |v| msg(Event::ProfileLayer(v)))).width(150),
+                words::secondary(DRAW_PROFILE, (ready && !s.profile_start.is_empty()).then(|| msg(Event::DrawProfile)))
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+        let body = body.push(profile);
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
@@ -559,6 +668,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(DRAW_PROFILE) => Some(msg(Event::DrawProfile)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

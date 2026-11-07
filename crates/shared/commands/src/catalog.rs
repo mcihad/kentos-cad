@@ -9652,6 +9652,42 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Hat profili (plan/map-cad.md MAP-16, docs/adr/1860).
+        CommandDescriptor {
+            id: crate::CAD_PIPES_PROFILE.into(),
+            version: crate::CAD_PIPES_PROFILE_VERSION,
+            title: "Hat profili".into(),
+            summary: "Bir altyapı ağında cazibeli hattın boykesitini (kanal boykesiti) bir katmana (layerId) çizer. Hat başlangıç borusundan (start, uid) akış yönünde (ağın yön alanı) ilerler; tek borunun çıktığı her düğümden geçer, istenen bitiş borusunda (end), çıkışta (outlet) ya da çatalda (split) biter. \
+                      Değerler cad.pipes.check'inkidir: akar kotları (iki öznitelik ya da köşe kotları), çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. \
+                      Çizim road.profiles.draw'unki gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”. \
+                      Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict."
+                .into(),
+            aliases: vec!["hatprofili".into(), "kanalboykesiti".into(), "boruboykesiti".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PipesProfile>(),
+            output: schema::<crate::PipesProfiled>(),
+            plan: Some(schema::<crate::PipesProfiled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Atıksu hattının boykesiti, zemin Zemin yüzeyinden".into(),
+                input: json!({
+                    "network": "atiksu",
+                    "start": "0192f640-1640-7000-8000-0000000000e5",
+                    "inverts": {"from": "fields", "start": "Akar baş", "end": "Akar son"},
+                    "diameter": {"field": "Çap", "unit": "mm"},
+                    "ground": {"from": "surface", "surface": "Zemin"},
+                    "layerId": "profil",
+                    "at": [487000.0, 4419700.0]
+                }),
+                output: None,
+            }],
+        },
         // Parsel alan denetimi (plan/map-cad.md MAP-08, docs/adr/1400).
         CommandDescriptor {
             id: crate::CAD_PARCELS_CHECK.into(),
@@ -16302,6 +16338,7 @@ mod tests {
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfile>(e.input.clone()).map(|_| ()),
                     crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
@@ -17269,6 +17306,7 @@ mod tests {
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),
                         crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),

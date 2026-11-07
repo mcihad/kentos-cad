@@ -143,3 +143,63 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/1860: Hat profilini çiz draws the sewer's run from P1 to its outlet as the shared case of
+/// `cad.pipes.profile` says (its objects' count), under the drawing, in one undo step “Hat profili”.
+#[test]
+fn the_profile_of_the_run_is_drawn_in_one_step() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    let profile: Value = serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
+    let want = &profile["cases"][0]["steps"][0]["result"]["output"];
+    let p1 = want["pipes"][0]["uid"].as_str().expect("P1").to_owned();
+    assert_eq!(app.pipes_check.profile_start, p1, "the first pipe checked");
+    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let doc = app.document.as_ref().expect("a drawing");
+    let drawn = want["uids"].as_array().map(Vec::len).unwrap_or(0);
+    assert_eq!(doc.model.entities().count(), before + drawn, "{}", crate::files_testing::last_said(&app));
+    assert!(crate::files_testing::last_said(&app).contains("6 boru"), "{}", crate::files_testing::last_said(&app));
+    assert_eq!(app.dialog, None);
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Hat profili"));
+}
+
+/// The profile drawn under the drawing; `.run/gui-evidence/hat-profili-1860/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn profile_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/hat-profili-1860");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pipes.check"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::PipesCheck(P::DrawProfile));
+        // Framed on the profile: the objects written last.
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let n = doc.entities().count();
+        let slots: Vec<kentos_domain::Slot> =
+            doc.entities().skip(n.saturating_sub(400)).filter(|e| e.base().id > 257).map(|e| kentos_domain::Slot(e.base().id)).collect();
+        app.selection.set(slots);
+        let _ = app.update(Message::Run("view.zoomSelection"));
+        app.selection.clear();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-profil-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

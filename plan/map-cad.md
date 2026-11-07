@@ -1033,6 +1033,14 @@ derinlik yazılmış kot, başka birimde yazılmış çap; 30 bağımsız durum;
 (EPANET) ve SWMM adaptörleri, hat profili, disiplinler arası açıklık, tasarlanan/uygulanan/ölçülen revizyonlar, EK-1
 değerlerinin kural paketi.
 
+**7 Kasım 2026, ikinci tur — Hat profili ([ADR 1860](../docs/adr/1860-pipe-run-profile.md)).** Kapsam: **Harita + Yol +
+CBS**. Araştırma: Türk kanalizasyon boykesiti (çap, eğim, boy, akar, zemin, derinlik; düşey ölçek yatayın 10 katı),
+Civil 3D'nin Pipe Data bandı; İller Bankası şartnamesine yine erişilemedi. Kanıtlanan: `cad.pipes.profile` bir borudan
+akış yönünde hattı izler (bitiş borusu, çıkış ya da çatal), değerleri boru hattı denetiminin kurallarıyla okur ve
+boykesiti yol boykesitinin kurallarıyla çizer: çerçeve ve kot ızgarası, zemin, akar ve tepe, bacalar, dokuz bant; 35
+bağımsız durum (çizilen nesneler sayılır); Boru hattı denetimi penceresinde Hat profilini çiz. Açık: profilin canlı
+güncellenmesi, disiplinler arası açıklık, EPANET/SWMM adaptörleri, tasarlanan/uygulanan/ölçülen revizyonlar.
+
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 
 **Öncelik:** P0 mevcut aktarımı koruma; P1 mühendislik profilleri.

@@ -52,15 +52,26 @@ pub fn plain_number(text: &str) -> Option<f64> {
     plain.then(|| t.replace(',', ".").parse::<f64>().ok()).flatten().filter(|v| v.is_finite())
 }
 
-fn attr(e: &Entity, field: &str) -> Option<f64> {
+pub(crate) fn attr(e: &Entity, field: &str) -> Option<f64> {
     e.base().attrs.get(field).and_then(|v| plain_number(v))
 }
 
 /// The question's own rules, before the drawing is read.
 fn asked(input: &PipesCheck) -> Result<(), Stop> {
+    asked_values(&input.inverts, input.diameter.as_ref(), input.ground.as_ref())?;
+    limits_of(input)
+}
+
+/// The rules of where the values are read (`cad.pipes.check`'s and `cad.pipes.profile`'s): attributes named, a
+/// catalogue of at most 200 sizes above zero, a surface or a cover level's attribute named.
+pub(crate) fn asked_values(
+    inverts: &PipeInverts,
+    diameter: Option<&PipeDiameter>,
+    ground: Option<&PipeGround>,
+) -> Result<(), Stop> {
     let bad = |message: String, path: &str| Err(refuse(codes::INVALID_PIPE_CHECK, message, path));
     let named = |v: &str| !v.trim().is_empty();
-    if let PipeInverts::Fields { start, end } = &input.inverts {
+    if let PipeInverts::Fields { start, end } = inverts {
         if !named(start) {
             return bad("Baş akar kotunun özniteliği boş; özniteliğin adını yazın.".into(), "inverts.start");
         }
@@ -68,7 +79,7 @@ fn asked(input: &PipesCheck) -> Result<(), Stop> {
             return bad("Son akar kotunun özniteliği boş; özniteliğin adını yazın.".into(), "inverts.end");
         }
     }
-    if let Some(d) = &input.diameter {
+    if let Some(d) = diameter {
         if !named(&d.field) {
             return bad("Çapın özniteliği boş; özniteliğin adını yazın.".into(), "diameter.field");
         }
@@ -79,7 +90,7 @@ fn asked(input: &PipesCheck) -> Result<(), Stop> {
             return bad("Katalogdaki çaplar 0'dan büyük olmalı.".into(), &format!("diameter.catalog[{i}]"));
         }
     }
-    match &input.ground {
+    match ground {
         Some(PipeGround::Surface { surface }) if !named(surface) => {
             return bad("Zemin yüzeyi boş; yüzeyin adını ya da kimliğini yazın.".into(), "ground.surface");
         }
@@ -88,6 +99,11 @@ fn asked(input: &PipesCheck) -> Result<(), Stop> {
         }
         _ => {}
     }
+    Ok(())
+}
+
+fn limits_of(input: &PipesCheck) -> Result<(), Stop> {
+    let bad = |message: String, path: &str| Err(refuse(codes::INVALID_PIPE_CHECK, message, path));
     let limits = [
         (input.min_cover, "minCover", "En az örtü"),
         (input.max_cover, "maxCover", "En çok örtü"),
@@ -115,11 +131,11 @@ fn asked(input: &PipesCheck) -> Result<(), Stop> {
 }
 
 /// A pipe's plan path: its vertices, each segment's bulge and the stations (metres along it) of the vertices.
-struct Path {
-    pts: Vec<[f64; 2]>,
-    stations: Vec<f64>,
-    heights: Option<Vec<f64>>,
-    curved: bool,
+pub(crate) struct Path {
+    pub(crate) pts: Vec<[f64; 2]>,
+    pub(crate) stations: Vec<f64>,
+    pub(crate) heights: Option<Vec<f64>>,
+    pub(crate) curved: bool,
 }
 
 fn arc_length(chord: f64, bulge: f64) -> f64 {
@@ -130,7 +146,7 @@ fn arc_length(chord: f64, bulge: f64) -> f64 {
     chord * theta / (2.0 * (theta / 2.0).sin())
 }
 
-fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {
+pub(crate) fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {
     let (pts, bulges, heights, other) = match e {
         Some(Entity::Line(l)) => (
             vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
@@ -161,12 +177,12 @@ fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {
 }
 
 impl Path {
-    fn length(&self) -> f64 {
+    pub(crate) fn length(&self) -> f64 {
         *self.stations.last().unwrap_or(&0.0)
     }
 
     /// The invert at station `s`, by the ends' (fields) or the vertices' heights.
-    fn invert(&self, ends: Option<(f64, f64)>, s: f64) -> Option<f64> {
+    pub(crate) fn invert(&self, ends: Option<(f64, f64)>, s: f64) -> Option<f64> {
         let l = self.length();
         if let Some((i0, i1)) = ends {
             return Some(if l > 0.0 { i0 + (i1 - i0) * s / l } else { i0 });
@@ -185,7 +201,7 @@ struct Sample {
     ground: Option<f64>,
 }
 
-fn diameter_of(e: Option<&Entity>, d: &PipeDiameter) -> Result<f64, ()> {
+pub(crate) fn diameter_of(e: Option<&Entity>, d: &PipeDiameter) -> Result<f64, ()> {
     e.and_then(|e| attr(e, &d.field)).filter(|v| *v > 0.0).ok_or(())
 }
 
@@ -213,19 +229,24 @@ impl Found {
     }
 }
 
-fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
-    asked(input)?;
-    let key = network_caseless(&input.network);
+/// A utility network asked by its id or name, the terrain surface the ground is read from (made, when asked) and the
+/// network built; refused as `cad.pipes.check`'s contract says.
+pub(crate) fn load(
+    doc: &Document,
+    network: &str,
+    ground: Option<&PipeGround>,
+) -> Result<(NetworkDef, Option<terrains::Made>, kentos_geometry_core::ops::network::NetworkSession), Stop> {
+    let key = network_caseless(network);
     let def = doc
         .settings()
         .networks
         .iter()
-        .find(|n| n.id == input.network)
+        .find(|n| n.id == network)
         .or_else(|| doc.settings().networks.iter().find(|n| network_caseless(&n.name) == key))
         .ok_or_else(|| {
             refuse(
                 codes::UNKNOWN_NETWORK,
-                format!("“{}” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.", input.network),
+                format!("“{network}” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin."),
                 "network",
             )
         })?
@@ -237,20 +258,30 @@ fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
             "network",
         ));
     }
-    let made;
-    let surface = match &input.ground {
+    let made = match ground {
         Some(PipeGround::Surface { surface }) => {
             terrains::terrain_project(doc)?;
             let id = crate::road_profiles::surface_id(doc, surface, "ground.surface")?;
             let s = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
-            made = terrains::make(doc, &s);
-            Some(made.built()?)
+            let made = terrains::make(doc, &s);
+            made.built()?;
+            Some(made)
         }
         _ => None,
     };
     let (_, session) = host()
         .map_err(|e| Stop::failed(*e))
         .and_then(|h| h.network(doc, &def.id).map_err(|why| refuse(codes::INVALID_NETWORK, why, "network")))?;
+    Ok((def, made, session))
+}
+
+fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
+    asked(input)?;
+    let (def, made, session) = load(doc, &input.network, input.ground.as_ref())?;
+    let surface = match &made {
+        Some(m) => Some(m.built()?),
+        None => None,
+    };
     let g = &session.graph;
     if g.edges.len() > PIPE_LIMIT {
         return Err(refuse(

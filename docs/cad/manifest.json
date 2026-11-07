@@ -5393,14 +5393,15 @@
    "id": "pipes.check",
    "kind": "command",
    "title": "Boru hattı denetimi…",
-   "level": "query",
+   "level": "semantic",
    "via": [
-    "cad.pipes.check"
+    "cad.pipes.check",
+    "cad.pipes.profile"
    ],
    "operation": null,
-   "python": "kentos.cad.pipes.check",
-   "mcp": "cad.pipes.check",
-   "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640).",
+   "python": "kentos.cad.pipes.check, kentos.cad.pipes.profile",
+   "mcp": "cad.pipes.check, cad.pipes.profile",
+   "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640). Hat profilini çiz seçilen borudan akış yönündeki hattın boykesitini cad.pipes.profile ile tek adımda çizer (ADR 1860).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

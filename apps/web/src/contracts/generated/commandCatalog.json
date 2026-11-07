@@ -58512,6 +58512,319 @@
       ]
     },
     {
+      "id": "cad.pipes.profile",
+      "version": 1,
+      "title": "Hat profili",
+      "summary": "Bir altyapı ağında cazibeli hattın boykesitini (kanal boykesiti) bir katmana (layerId) çizer. Hat başlangıç borusundan (start, uid) akış yönünde (ağın yön alanı) ilerler; tek borunun çıktığı her düğümden geçer, istenen bitiş borusunda (end), çıkışta (outlet) ya da çatalda (split) biter. Değerler cad.pipes.check'inkidir: akar kotları (iki öznitelik ya da köşe kotları), çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çizim road.profiles.draw'unki gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict.",
+      "aliases": [
+        "hatprofili",
+        "kanalboykesiti",
+        "boruboykesiti"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:\nwhere the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,\ndrawn on `layerId` with its frame's lower left at `at`.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a\nsize not above zero; `exaggeration` or `height` not above zero, a datum not finite); `unknown_network`,\n`not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`);\n`invalid_network`, `tools_unavailable`; `invalid_pipe_run` (the start or the end not a pipe of the network, the end\nnot down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the\nlowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,\n`revision_conflict`. Warning: `layer_hidden`.",
+        "properties": {
+          "at": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "length"
+          },
+          "datum": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "diameter": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeDiameter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ground": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeGround"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "height": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "inverts": {
+            "$ref": "#/$defs/PipeInverts"
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "network": {
+            "description": "The network's id or name.",
+            "type": "string"
+          },
+          "start": {
+            "description": "The run's first pipe: its uid.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "network",
+          "start",
+          "inverts",
+          "layerId",
+          "at"
+        ],
+        "title": "PipesProfile",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the\nground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects\nwritten (a plan: none) and the revision after it (a plan: before).",
+        "properties": {
+          "datum": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "ends": {
+            "$ref": "#/$defs/PipeRunEnd"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "ground": {
+            "items": {
+              "$ref": "#/$defs/PipeProfileGround"
+            },
+            "type": "array"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "network": {
+            "type": "string"
+          },
+          "pipes": {
+            "items": {
+              "$ref": "#/$defs/PipeProfilePipe"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "structures": {
+            "items": {
+              "$ref": "#/$defs/PipeProfileStructure"
+            },
+            "type": "array"
+          },
+          "top": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "network",
+          "pipes",
+          "structures",
+          "length",
+          "ends",
+          "datum",
+          "top",
+          "exaggeration",
+          "revision"
+        ],
+        "title": "PipesProfiled",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the\nground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects\nwritten (a plan: none) and the revision after it (a plan: before).",
+        "properties": {
+          "datum": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "ends": {
+            "$ref": "#/$defs/PipeRunEnd"
+          },
+          "exaggeration": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "1"
+          },
+          "ground": {
+            "items": {
+              "$ref": "#/$defs/PipeProfileGround"
+            },
+            "type": "array"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "network": {
+            "type": "string"
+          },
+          "pipes": {
+            "items": {
+              "$ref": "#/$defs/PipeProfilePipe"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "structures": {
+            "items": {
+              "$ref": "#/$defs/PipeProfileStructure"
+            },
+            "type": "array"
+          },
+          "top": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "network",
+          "pipes",
+          "structures",
+          "length",
+          "ends",
+          "datum",
+          "top",
+          "exaggeration",
+          "revision"
+        ],
+        "title": "PipesProfiled",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_pipe_check",
+          "unknown_network",
+          "not_a_pipe_network",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "invalid_network",
+          "tools_unavailable",
+          "invalid_pipe_run",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Atıksu hattının boykesiti, zemin Zemin yüzeyinden",
+          "input": {
+            "at": [
+              487000.0,
+              4419700.0
+            ],
+            "diameter": {
+              "field": "Çap",
+              "unit": "mm"
+            },
+            "ground": {
+              "from": "surface",
+              "surface": "Zemin"
+            },
+            "inverts": {
+              "end": "Akar son",
+              "from": "fields",
+              "start": "Akar baş"
+            },
+            "layerId": "profil",
+            "network": "atiksu",
+            "start": "0192f640-1640-7000-8000-0000000000e5"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.parcels.check",
       "version": 1,
       "title": "Parsel alan denetimi",
@@ -103764,6 +104077,12 @@
       "meaning": "Ağ bir yol ağı; boru hattı denetimi altyapı ağlarını denetler."
     },
     {
+      "code": "invalid_pipe_run",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hat profili çizilemiyor; ileti nedenini söyler."
+    },
+    {
       "code": "not_a_parcel",
       "kind": "failed",
       "retryable": false,
@@ -121066,6 +121385,11 @@
         {
           "const": "terrainCutFill",
           "description": "Kazı ve dolgu bölgeleri (docs/adr/1840): where a comparison surface is below a base and above it, as areas.",
+          "type": "string"
+        },
+        {
+          "const": "pipeProfile",
+          "description": "Hat profili (docs/adr/1860): a gravity line's longitudinal profile, its frame, lines and bands.",
           "type": "string"
         },
         {
@@ -167374,6 +167698,174 @@
           "type": "object"
         }
       ]
+    },
+    "PipeProfileGround": {
+      "description": "A place of the ground line: its distance and height (none: off the surface).",
+      "properties": {
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "station"
+      ],
+      "type": "object"
+    },
+    "PipeProfilePipe": {
+      "description": "A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is\ndrawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown\n(none asked: over the invert).",
+      "properties": {
+        "diameter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "downstream": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "minCover": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reversed": {
+          "type": "boolean"
+        },
+        "slope": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "upstream": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "uid",
+        "from",
+        "to",
+        "length"
+      ],
+      "type": "object"
+    },
+    "PipeProfileStructure": {
+      "description": "A node of the run: its distance; the structure there (its uid and `Ad`), the ground over it (the surface's height\nthere, or the structure's cover level), the invert of the run's pipe coming in and of the one going out, and the\ndepth (the ground less the lower of the two).",
+      "properties": {
+        "depth": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "ground": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "inlet": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outlet": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "station"
+      ],
+      "type": "object"
+    },
+    "PipeRunEnd": {
+      "description": "Why the run ends: at the pipe asked (`end`), where the flow leaves the network (`outlet`), or at a node more than one\npipe leaves (`split`).",
+      "enum": [
+        "end",
+        "outlet",
+        "split"
+      ],
+      "type": "string"
     },
     "PipeUnit": {
       "description": "A length's unit as an attribute is written.",

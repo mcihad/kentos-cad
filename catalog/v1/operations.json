@@ -207,11 +207,12 @@
       "note": "Pencere file.exchange.check'in cevabını gösterir (salt okunur): biçim ve tolerans, Denetle geçici dosyayla gidiş-dönüşü yapar; sayısal sapma ve anlamsal kayıplar ayrı; Kayıplıları seç seçimi değiştirir (ADR 1660)."
     },
     "pipes.check": {
-      "level": "query",
+      "level": "semantic",
       "via": [
-        "cad.pipes.check"
+        "cad.pipes.check",
+        "cad.pipes.profile"
       ],
-      "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640)."
+      "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640). Hat profilini çiz seçilen borudan akış yönündeki hattın boykesitini cad.pipes.profile ile tek adımda çizer (ADR 1860)."
     },
     "parcels.check": {
       "level": "query",

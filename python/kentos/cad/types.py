@@ -1457,6 +1457,7 @@ class CreateOperation(_StrEnum):
     - ``terrainZeroLine``: Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.
     - ``sheetContours``: Pafta eş yükselti eğrileri (docs/adr/1820): a surface's contour lines and heights drawn by BÖHHBÜY m. 78.
     - ``terrainCutFill``: Kazı ve dolgu bölgeleri (docs/adr/1840): where a comparison surface is below a base and above it, as areas.
+    - ``pipeProfile``: Hat profili (docs/adr/1860): a gravity line's longitudinal profile, its frame, lines and bands.
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
@@ -1513,6 +1514,7 @@ class CreateOperation(_StrEnum):
     TERRAIN_ZERO_LINE = "terrainZeroLine"
     SHEET_CONTOURS = "sheetContours"
     TERRAIN_CUT_FILL = "terrainCutFill"
+    PIPE_PROFILE = "pipeProfile"
     LAND_XML = "landXml"
     ALIGNMENT_LABELS = "alignmentLabels"
     PROFILE_DRAWING = "profileDrawing"
@@ -1530,7 +1532,7 @@ class CreateOperation(_StrEnum):
     SPARSE = "sparse"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "pipeProfile", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -5332,6 +5334,19 @@ class PinMatch(_StrEnum):
 
 PinMatchName = Literal["key", "geometry", "nearest"]
 """The names of :class:`PinMatch`, for a plain string."""
+
+
+class PipeRunEnd(_StrEnum):
+    """Why the run ends: at the pipe asked (`end`), where the flow leaves the network (`outlet`), or at a node more than one
+    pipe leaves (`split`).
+    """
+    END = "end"
+    OUTLET = "outlet"
+    SPLIT = "split"
+
+
+PipeRunEndName = Literal["end", "outlet", "split"]
+"""The names of :class:`PipeRunEnd`, for a plain string."""
 
 
 class PipeUnit(_StrEnum):
@@ -65125,6 +65140,147 @@ class PipeFinding(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PipeProfileGround(_Model):
+    """A place of the ground line: its distance and height (none: off the surface).
+    Attributes:
+        station: Unit: m.
+        z: Unit: elevation.
+    """
+    station: float
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeProfileGround:
+        return cls(
+            station=float(data["station"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeProfilePipe(_Model):
+    """A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is
+    drawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown
+    (none asked: over the invert).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        length: Unit: length.
+        diameter: Unit: m.
+        downstream: Unit: elevation.
+        min_cover: Unit: m.
+        slope: Unit: 1.
+        upstream: Unit: elevation.
+    """
+    uid: str
+    from_: float
+    to: float
+    length: float
+    diameter: float | None | Unset = UNSET
+    downstream: float | None | Unset = UNSET
+    min_cover: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    reversed: bool | Unset = UNSET
+    slope: float | None | Unset = UNSET
+    upstream: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["length"] = float(self.length)
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else float(self.diameter)
+        if self.downstream is not UNSET:
+            out["downstream"] = None if self.downstream is None else float(self.downstream)
+        if self.min_cover is not UNSET:
+            out["minCover"] = None if self.min_cover is None else float(self.min_cover)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.reversed is not UNSET:
+            out["reversed"] = self.reversed
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        if self.upstream is not UNSET:
+            out["upstream"] = None if self.upstream is None else float(self.upstream)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeProfilePipe:
+        return cls(
+            uid=data["uid"],
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            length=float(data["length"]),
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else float(data["diameter"]),
+            downstream=UNSET if "downstream" not in data else None if data["downstream"] is None else float(data["downstream"]),
+            min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
+            name=data.get("name", UNSET),
+            reversed=data.get("reversed", UNSET),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+            upstream=UNSET if "upstream" not in data else None if data["upstream"] is None else float(data["upstream"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeProfileStructure(_Model):
+    """A node of the run: its distance; the structure there (its uid and `Ad`), the ground over it (the surface's height
+    there, or the structure's cover level), the invert of the run's pipe coming in and of the one going out, and the
+    depth (the ground less the lower of the two).
+    Attributes:
+        station: Unit: m.
+        depth: Unit: m.
+        ground: Unit: elevation.
+        inlet: Unit: elevation.
+        outlet: Unit: elevation.
+    """
+    station: float
+    depth: float | None | Unset = UNSET
+    ground: float | None | Unset = UNSET
+    inlet: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    outlet: float | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.ground is not UNSET:
+            out["ground"] = None if self.ground is None else float(self.ground)
+        if self.inlet is not UNSET:
+            out["inlet"] = None if self.inlet is None else float(self.inlet)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.outlet is not UNSET:
+            out["outlet"] = None if self.outlet is None else float(self.outlet)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeProfileStructure:
+        return cls(
+            station=float(data["station"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            ground=UNSET if "ground" not in data else None if data["ground"] is None else float(data["ground"]),
+            inlet=UNSET if "inlet" not in data else None if data["inlet"] is None else float(data["inlet"]),
+            name=data.get("name", UNSET),
+            outlet=UNSET if "outlet" not in data else None if data["outlet"] is None else float(data["outlet"]),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PipesCheck(_Model):
     """Input of `cad.pipes.check` v1.
 
@@ -65219,6 +65375,138 @@ class PipesChecked(_Model):
             counts=[PipeCount.from_json(e0) for e0 in data["counts"]],
             parts=data["parts"],
             length=float(data["length"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipesProfile(_Model):
+    """Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:
+    where the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,
+    drawn on `layerId` with its frame's lower left at `at`.
+
+    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a
+    size not above zero; `exaggeration` or `height` not above zero, a datum not finite); `unknown_network`,
+    `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`);
+    `invalid_network`, `tools_unavailable`; `invalid_pipe_run` (the start or the end not a pipe of the network, the end
+    not down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the
+    lowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,
+    `revision_conflict`. Warning: `layer_hidden`.
+    Attributes:
+        network: The network's id or name.
+        start: The run's first pipe: its uid.
+        at: Unit: length.
+        datum: Unit: elevation.
+        exaggeration: Unit: 1.
+        height: Unit: paper-mm.
+    """
+    network: str
+    start: str
+    inverts: PipeInverts
+    layer_id: str
+    at: list[float]
+    datum: float | None | Unset = UNSET
+    diameter: PipeDiameter | None | Unset = UNSET
+    end: str | None | Unset = UNSET
+    exaggeration: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    ground: PipeGround | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["start"] = self.start
+        out["inverts"] = self.inverts.to_json()
+        out["layerId"] = self.layer_id
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.datum is not UNSET:
+            out["datum"] = None if self.datum is None else float(self.datum)
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else self.diameter.to_json()
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.exaggeration is not UNSET:
+            out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.ground is not UNSET:
+            out["ground"] = None if self.ground is None else self.ground.to_json()
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipesProfile:
+        return cls(
+            network=data["network"],
+            start=data["start"],
+            inverts=PipeInverts.from_json(data["inverts"]),
+            layer_id=data["layerId"],
+            at=[float(e0) for e0 in data["at"]],
+            datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
+            end=data.get("end", UNSET),
+            exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            ground=UNSET if "ground" not in data else None if data["ground"] is None else PipeGround.from_json(data["ground"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipesProfiled(_Model):
+    """Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the
+    ground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects
+    written (a plan: none) and the revision after it (a plan: before).
+    Attributes:
+        length: Unit: length.
+        datum: Unit: elevation.
+        top: Unit: elevation.
+        exaggeration: Unit: 1.
+    """
+    network: str
+    pipes: list[PipeProfilePipe]
+    structures: list[PipeProfileStructure]
+    length: float
+    ends: PipeRunEnd | PipeRunEndName
+    datum: float
+    top: float
+    exaggeration: float
+    revision: str
+    ground: list[PipeProfileGround] | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["pipes"] = [e0.to_json() for e0 in self.pipes]
+        out["structures"] = [e0.to_json() for e0 in self.structures]
+        out["length"] = float(self.length)
+        out["ends"] = _enum_out(self.ends)
+        out["datum"] = float(self.datum)
+        out["top"] = float(self.top)
+        out["exaggeration"] = float(self.exaggeration)
+        out["revision"] = self.revision
+        if self.ground is not UNSET:
+            out["ground"] = [e0.to_json() for e0 in self.ground]
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipesProfiled:
+        return cls(
+            network=data["network"],
+            pipes=[PipeProfilePipe.from_json(e0) for e0 in data["pipes"]],
+            structures=[PipeProfileStructure.from_json(e0) for e0 in data["structures"]],
+            length=float(data["length"]),
+            ends=_enum_in(PipeRunEnd, data["ends"]),
+            datum=float(data["datum"]),
+            top=float(data["top"]),
+            exaggeration=float(data["exaggeration"]),
+            revision=data["revision"],
+            ground=[PipeProfileGround.from_json(e0) for e0 in data["ground"]] if "ground" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -128506,10 +128794,17 @@ __all__ = [
     "PipeFinding",
     "PipeGround",
     "PipeInverts",
+    "PipeProfileGround",
+    "PipeProfilePipe",
+    "PipeProfileStructure",
+    "PipeRunEnd",
+    "PipeRunEndName",
     "PipeUnit",
     "PipeUnitName",
     "PipesCheck",
     "PipesChecked",
+    "PipesProfile",
+    "PipesProfiled",
     "PlaceMeasuredPoint",
     "PlaceModulesOperation",
     "PlaceOn",
