@@ -10,13 +10,14 @@
 //! breaks and limits are the user's; KentOS fills in none.
 //!
 //! ```text
-//! ┌ Yüzey analizi ──────────────────────────────────────────────────────────────────────────────────┐
-//! │ Kip [Analiz ▾] Yüzey [▾]  (Analiz) Ölçü [Eğim ▾] Sınırlar [0, 2, 5] Pürüzlülük [▾] Raster [ ]     │
-//! │                           (Fark) Karşılaştırma [▾] Aralıklar [ ]                                  │
-//! │                           (Kalite) Yakın [ ] Erim [ ] Sınır [ ] Kenar [ ] Kontrol [▾] Sınıf [ ]   │
-//! │ ┌ the ranges in plan / the difference's ranges / the check points ┐  tables                 [Önizle]│
-//! │ └──────────────────────────────────────────────────────────────────┘                       [Kapat] │
-//! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
+//! ┌ Yüzey analizi ─────────────────────────────────────────────────────────────────────┐
+//! │ Kip            [Analiz|Fark|Kalite|Kapsam|Yoğunluk]                                  │
+//! │ Yüzey          [▾]            (Fark: Taban yüzeyi [▾] / Karşılaştırma [▾])          │
+//! │ …the mode's rows, one label column (Ölçü, Yöntem, Kazı / dolgu katsayısı …)         │
+//! │ Çizime yaz ─── Katman [▾] [Sıfır hattını çiz] · Bant aralığı [ ] [Kazı ve dolgu …]  │
+//! │ ┌ the picture ┐  the figures and tables                                            │
+//! │ └─────────────┘                                                [Önizle] [Kapat]    │
+//! └────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
 use iced::widget::canvas::{self, Path, Stroke, Text};
@@ -86,6 +87,19 @@ pub enum Mode {
     Quality,
     Coverage,
     Density,
+}
+
+impl std::fmt::Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let k = match self {
+            Mode::Analysis => 0,
+            Mode::Compare => 1,
+            Mode::Quality => 2,
+            Mode::Coverage => 3,
+            Mode::Density => 4,
+        };
+        f.write_str(MODES[k])
+    }
 }
 
 /// What was read last.
@@ -509,39 +523,52 @@ impl App {
             let chosen = at.as_ref().and_then(|s| ids.iter().position(|i| i == s));
             container(Select::new(surfaces.iter().map(|s| Choice::new(s.1.clone())), chosen, move |i| msg(on(ids[i].clone())))).width(170)
         };
-        let field = |hint: &'static str, k: usize, width: f32| {
-            words::field(
-                FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
-                None,
+        // One label column (kentos_ui Form, DESIGN.md): each row a value or a few that belong together, the inputs
+        // plain beside small captions; the drawing's writes in their own section, apart from the footer's Önizle.
+        let input = |hint: &'static str, k: usize, width: f32| {
+            kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
+        };
+        let caption = |words: &'static str| label::caption(words).style(muted);
+        fn pair<'a>(items: Vec<Element<'a, Message>>) -> Element<'a, Message> {
+            items.into_iter().fold(row![].spacing(8).align_y(iced::alignment::Vertical::Center), |r, e| r.push(e)).into()
+        }
+        let yes_no = |on: bool, event: fn(bool) -> Event| {
+            container(Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(on)), move |i| msg(event(i == 1)))).width(90)
+        };
+        let layers_pick = || {
+            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
+            container(
+                Select::new(
+                    lnames.into_iter().map(Choice::new),
+                    w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+                    move |i| msg(Event::Layer(lids[i].clone())),
+                )
+                .placeholder("Katman"),
             )
+            .width(170)
         };
-        let mode_at = match w.mode {
-            Mode::Analysis => 0,
-            Mode::Compare => 1,
-            Mode::Quality => 2,
-            Mode::Coverage => 3,
-            Mode::Density => 4,
+        let mode = kentos_ui::widget::Segmented::new(
+            [Mode::Analysis, Mode::Compare, Mode::Quality, Mode::Coverage, Mode::Density],
+            w.mode,
+            |m| msg(Event::Mode(m)),
+        );
+        let mut form = kentos_ui::widget::Form::new().label_width(150.0).field("Kip", mode);
+        form = if w.mode == Mode::Compare {
+            form.field("Taban yüzeyi", pick_surface(&w.surface, Event::Surface))
+                .field("Karşılaştırma", pick_surface(&w.comparison, Event::Comparison))
+        } else {
+            form.field("Yüzey", pick_surface(&w.surface, Event::Surface))
         };
-        let mode = container(Select::new(MODES.iter().map(|m| Choice::new(*m)), Some(mode_at), |i| {
-            msg(Event::Mode([Mode::Analysis, Mode::Compare, Mode::Quality, Mode::Coverage, Mode::Density][i]))
-        }))
-        .width(110);
-        let mut top = row![words::field("Kip", mode, None), words::field("Yüzey", pick_surface(&w.surface, Event::Surface), None)]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Bottom);
         match w.mode {
             Mode::Analysis => {
                 let measure = container(Select::new(MEASURES.iter().map(|m| Choice::new(*m)), Some(w.measure), |i| msg(Event::Measure(i)))).width(110);
-                let rough = container(Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(w.roughness)), |i| {
-                    msg(Event::Roughness(i == 1))
-                }))
-                .width(80);
-                top = top
-                    .push(words::field("Ölçü", measure, None))
-                    .push(field("ör. 0, 2, 5, 10", 0, 200.0))
-                    .push(words::field("Pürüzlülük", rough, None))
-                    .push(field("yok", 1, 130.0));
+                form = form
+                    .field("Ölçü", pair(vec![measure.into(), caption("sınırlar").into(), input("ör. 0, 2, 5, 10", 0, 200.0).into()]))
+                    .field(
+                        "Pürüzlülük",
+                        pair(vec![yes_no(w.roughness, Event::Roughness).into(), caption("raster hücresi (m)").into(), input("yok", 1, 110.0).into()]),
+                    );
             }
             Mode::Compare => {
                 // The method and the factors (docs/adr/1600): a grid's cell instead of the ranges; the factors are the
@@ -550,30 +577,28 @@ impl App {
                     msg(Event::VolumeGrid(i == 1))
                 }))
                 .width(110);
-                let same = container(Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(w.assume_heights)), |i| {
-                    msg(Event::AssumeHeights(i == 1))
-                }))
-                .width(80);
-                top = top
-                    .push(words::field("Karşılaştırma", pick_surface(&w.comparison, Event::Comparison), None))
-                    .push(words::field("Yöntem", method, None));
-                top = if w.volume_grid { top.push(field("ör. 1", 13, 120.0)) } else { top.push(field("ör. -1, 0, 1", 2, 170.0)) };
-                top = top.push(field("1", 14, 100.0)).push(field("1", 15, 100.0)).push(words::field(SAME_HEIGHTS, same, None));
+                let by: Vec<Element<'_, Message>> = if w.volume_grid {
+                    vec![method.into(), caption("hücre (m)").into(), input("ör. 1", 13, 110.0).into()]
+                } else {
+                    vec![method.into(), caption("fark aralıkları (m)").into(), input("ör. -1, 0, 1", 2, 170.0).into()]
+                };
+                form = form
+                    .field("Yöntem", pair(by))
+                    .field("Kazı / dolgu katsayısı", pair(vec![input("1", 14, 90.0).into(), input("1", 15, 90.0).into()]))
+                    .field(SAME_HEIGHTS, yes_no(w.assume_heights, Event::AssumeHeights));
             }
             Mode::Quality => {
                 let layers = self.relation_layers();
                 let lids: Vec<Option<String>> = std::iter::once(None).chain(layers.iter().map(|(id, _)| Some(id.clone()))).collect();
                 let names: Vec<String> = std::iter::once("Yok".to_owned()).chain(layers.iter().map(|(_, n)| n.clone())).collect();
                 let at = lids.iter().position(|l| *l == w.checks);
-                let checks = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Checks(lids[i].clone())))).width(130);
-                top = top
-                    .push(field("yok", 3, 80.0))
-                    .push(field("yok", 4, 100.0))
-                    .push(field("yok", 5, 100.0))
-                    .push(field("yok", 6, 110.0))
-                    .push(words::field("Kontrol katmanı", checks, None))
-                    .push(field("ör. Sınıf", 7, 100.0))
-                    .push(field("yok", 12, 130.0));
+                let checks = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Checks(lids[i].clone())))).width(170);
+                form = form
+                    .field("Yakın (m)", input("yok", 3, 110.0))
+                    .field("Sivri erimi / sınırı (m)", pair(vec![input("yok", 4, 90.0).into(), input("yok", 5, 90.0).into()]))
+                    .field("Boşluk kenarı (m)", input("yok", 6, 110.0))
+                    .field("Kontrol noktaları", pair(vec![checks.into(), caption("sınıf alanı").into(), input("ör. Sınıf", 7, 110.0).into()]))
+                    .field("Kontrol doğruluğu (m)", input("yok", 12, 110.0));
             }
             Mode::Coverage | Mode::Density => {
                 // The drawing's closed straight-edged objects, by their layer and number.
@@ -593,16 +618,47 @@ impl App {
                     }
                 }
                 let at = ids.iter().position(|b| *b == w.boundary);
-                let boundary = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Boundary(ids[i].clone())))).width(240);
-                top = top.push(words::field("Proje sınırı", boundary, None));
-                top = if w.mode == Mode::Coverage {
-                    top.push(field("yok", 8, 130.0))
+                let boundary = container(Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::Boundary(ids[i].clone())))).width(260);
+                form = form.field("Proje sınırı", boundary);
+                form = if w.mode == Mode::Coverage {
+                    form.field("En uzun kenar (m)", input("yok", 8, 110.0))
                 } else {
-                    top.push(field("ör. 2", 9, 90.0)).push(field("yok", 10, 90.0)).push(field("yok", 11, 90.0))
+                    form.field("Hücre (m)", input("ör. 2", 9, 110.0))
+                        .field("En az nokta", input("yok", 10, 110.0))
+                        .field("İstenen pay", input("yok", 11, 110.0))
                 };
             }
         }
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(top);
+        // What the drawing gets: a layer and the writes, each in its row (Fark, Kapsam, Yoğunluk).
+        match w.mode {
+            Mode::Compare => {
+                let can = w.layer.is_some() && w.comparison.is_some();
+                form = form
+                    .section("Çizime yaz")
+                    .field("Katman", pair(vec![layers_pick().into(), words::secondary(DRAW_ZERO, can.then(|| msg(Event::DrawZero))).into()]))
+                    .field(
+                        "Bant aralığı (m)",
+                        pair(vec![
+                            input("boş: kazı, dolgu", 16, 130.0).into(),
+                            words::secondary(DRAW_ZONES, can.then(|| msg(Event::DrawZones))).into(),
+                        ]),
+                    );
+            }
+            Mode::Coverage => {
+                let can = w.layer.is_some() && !w.fields[8].trim().is_empty();
+                form = form
+                    .section("Çizime yaz")
+                    .field("Katman", pair(vec![layers_pick().into(), words::secondary(DRAW_LOW, can.then(|| msg(Event::DrawLow))).into()]));
+            }
+            Mode::Density => {
+                let can = w.layer.is_some() && !w.fields[9].trim().is_empty() && !w.fields[10].trim().is_empty();
+                form = form
+                    .section("Çizime yaz")
+                    .field("Katman", pair(vec![layers_pick().into(), words::secondary(DRAW_SPARSE, can.then(|| msg(Event::DrawSparse))).into()]));
+            }
+            _ => {}
+        }
+        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(form);
         match &w.preview {
             None => body = body.push(label::caption("Sınırlar ve değerler kullanıcının; KentOS değer vermez. Önizle yüzeyi okur, hiçbir şey yazmaz.").style(muted)),
             Some(Err(why)) => body = body.push(label::caption(why.clone()).style(danger)),
@@ -794,55 +850,6 @@ impl App {
             .is_some_and(|s| !s.excluded.is_empty());
         let ready = matches!(&w.repair, Some((_, Ok(_))));
         let mut bottom = row![].spacing(8).align_y(iced::alignment::Vertical::Center);
-        if w.mode == Mode::Coverage {
-            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
-            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
-            let on_layer = Select::new(
-                lnames.iter().map(|n| Choice::new(n.clone())),
-                w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
-                move |i| msg(Event::Layer(lids[i].clone())),
-            )
-            .placeholder("Katman");
-            let can = w.layer.is_some() && !w.fields[8].trim().is_empty();
-            bottom = bottom
-                .push(label::caption("Katman").style(muted))
-                .push(container(on_layer).width(150))
-                .push(words::secondary(DRAW_LOW, can.then(|| msg(Event::DrawLow))));
-        }
-        if w.mode == Mode::Compare {
-            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
-            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
-            let on_layer = Select::new(
-                lnames.iter().map(|n| Choice::new(n.clone())),
-                w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
-                move |i| msg(Event::Layer(lids[i].clone())),
-            )
-            .placeholder("Katman");
-            let can = w.layer.is_some() && w.comparison.is_some();
-            let interval = kentos_ui::widget::text_field("kazı, dolgu", &w.fields[16]).on_input(|t| msg(Event::Field(16, t))).width(110);
-            bottom = bottom
-                .push(label::caption("Katman").style(muted))
-                .push(container(on_layer).width(150))
-                .push(words::secondary(DRAW_ZERO, can.then(|| msg(Event::DrawZero))))
-                .push(label::caption(FIELDS[16]).style(muted))
-                .push(interval)
-                .push(words::secondary(DRAW_ZONES, can.then(|| msg(Event::DrawZones))));
-        }
-        if w.mode == Mode::Density {
-            let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
-            let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
-            let on_layer = Select::new(
-                lnames.iter().map(|n| Choice::new(n.clone())),
-                w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
-                move |i| msg(Event::Layer(lids[i].clone())),
-            )
-            .placeholder("Katman");
-            let can = w.layer.is_some() && !w.fields[9].trim().is_empty() && !w.fields[10].trim().is_empty();
-            bottom = bottom
-                .push(label::caption("Katman").style(muted))
-                .push(container(on_layer).width(150))
-                .push(words::secondary(DRAW_SPARSE, can.then(|| msg(Event::DrawSparse))));
-        }
         if w.mode == Mode::Quality {
             bottom = bottom
                 .push(words::secondary(LEAVE, spikes.then(|| msg(Event::LeaveSpikes))))

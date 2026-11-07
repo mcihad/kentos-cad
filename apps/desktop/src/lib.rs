@@ -374,6 +374,7 @@ mod register_window_tests;
 mod sheet_contours_window_tests;
 #[cfg(test)]
 mod map_menus_tests;
+#[cfg(test)]
 mod map_survey_panel_tests;
 #[cfg(test)]
 mod route_window_tests;

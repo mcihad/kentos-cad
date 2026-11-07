@@ -66,13 +66,14 @@ impl Default for Panel {
     }
 }
 impl Panel {
-    /// An answer found without the panel (the check on opening, docs/adr/1009) as its result, unless a check of its
-    /// own runs: the health group then stays asked for when it is run again.
-    /// The result shown, if any.
+    /// The result shown, if any (the tests' and the scenes' question).
+    #[cfg(test)]
     pub(crate) fn result(&self) -> Option<&DrawingInspected> {
         self.output.as_ref()
     }
 
+    /// An answer found without the panel (the check on opening, docs/adr/1009) as its result, unless a check of its
+    /// own runs: the health group then stays asked for when it is run again.
     pub(crate) fn adopt(&mut self, session: u64, generation: u64, output: DrawingInspected) {
         if self.busy {
             return;
