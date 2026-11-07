@@ -7322,6 +7322,18 @@ TenantKindName = Literal["organization", "personal"]
 """The names of :class:`TenantKind`, for a plain string."""
 
 
+class TerrainInterpolation(_StrEnum):
+    """How a height between a surface's points is read (docs/adr/1033).
+
+    - ``linear``: On the plane through the corners of the triangle the place is in; nothing outside the surface or in a void,
+    """
+    LINEAR = "linear"
+
+
+TerrainInterpolationName = Literal["linear"]
+"""The names of :class:`TerrainInterpolation`, for a plain string."""
+
+
 class TerrainPlace(_StrEnum):
     """Where a place is on a surface."""
     INSIDE = "inside"
@@ -89621,6 +89633,10 @@ class TerrainHeight(_Model):
         x: Unit: length.
         y: Unit: length.
         aspect: The azimuth it falls towards, radians clockwise from north; none on a flat triangle. Unit: rad.
+        corner: The plan distance from the place to the nearest of those corners. Unit: length.
+        corners: The triangle the height is read on (docs/adr/1033), inside one triangle only: its corners (x, y, z) ordered by
+            x, then y. Unit: length.
+        longest: That triangle's longest plan edge: how far apart the points the height rests on are (ADR 0920's estimate). Unit: length.
         slope: The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet). Unit: grade.
         z: Unit: elevation.
     """
@@ -89628,6 +89644,9 @@ class TerrainHeight(_Model):
     y: float
     place: TerrainPlace | TerrainPlaceName
     aspect: float | None | Unset = UNSET
+    corner: float | None | Unset = UNSET
+    corners: list[list[float]] | None | Unset = UNSET
+    longest: float | None | Unset = UNSET
     slope: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
@@ -89638,6 +89657,12 @@ class TerrainHeight(_Model):
         out["place"] = _enum_out(self.place)
         if self.aspect is not UNSET:
             out["aspect"] = None if self.aspect is None else float(self.aspect)
+        if self.corner is not UNSET:
+            out["corner"] = None if self.corner is None else float(self.corner)
+        if self.corners is not UNSET:
+            out["corners"] = None if self.corners is None else [[float(e1) for e1 in e0] for e0 in self.corners]
+        if self.longest is not UNSET:
+            out["longest"] = None if self.longest is None else float(self.longest)
         if self.slope is not UNSET:
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.z is not UNSET:
@@ -89651,6 +89676,9 @@ class TerrainHeight(_Model):
             y=float(data["y"]),
             place=_enum_in(TerrainPlace, data["place"]),
             aspect=UNSET if "aspect" not in data else None if data["aspect"] is None else float(data["aspect"]),
+            corner=UNSET if "corner" not in data else None if data["corner"] is None else float(data["corner"]),
+            corners=UNSET if "corners" not in data else None if data["corners"] is None else [[float(e1) for e1 in e0] for e0 in data["corners"]],
+            longest=UNSET if "longest" not in data else None if data["longest"] is None else float(data["longest"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
@@ -90926,9 +90954,12 @@ class TerrainsQualityRead(_Model):
 class TerrainsQueried(_Model):
     """Output of `road.terrains.query` v1: the surfaces' reports (one when `surface` is given), and that one's heights
     and section.
+    Attributes:
+        interpolation: How the heights and the section were read, when either was asked (docs/adr/1033).
     """
     surfaces: list[TerrainReport]
     heights: list[TerrainHeight] | Unset = UNSET
+    interpolation: TerrainInterpolation | TerrainInterpolationName | None | Unset = UNSET
     section: list[TerrainSectionPoint] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -90936,6 +90967,8 @@ class TerrainsQueried(_Model):
         out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
         if self.heights is not UNSET:
             out["heights"] = [e0.to_json() for e0 in self.heights]
+        if self.interpolation is not UNSET:
+            out["interpolation"] = None if self.interpolation is None else _enum_out(self.interpolation)
         if self.section is not UNSET:
             out["section"] = [e0.to_json() for e0 in self.section]
         return out
@@ -90945,6 +90978,7 @@ class TerrainsQueried(_Model):
         return cls(
             surfaces=[TerrainReport.from_json(e0) for e0 in data["surfaces"]],
             heights=[TerrainHeight.from_json(e0) for e0 in data["heights"]] if "heights" in data else UNSET,
+            interpolation=UNSET if "interpolation" not in data else None if data["interpolation"] is None else _enum_in(TerrainInterpolation, data["interpolation"]),
             section=[TerrainSectionPoint.from_json(e0) for e0 in data["section"]] if "section" in data else UNSET,
         )
 
@@ -90952,7 +90986,8 @@ class TerrainsQueried(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainsQuery(_Model):
     """Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its
-    heights at places (`at`) and its section along a line (`along`, two places or more).
+    heights at places (`at`) and its section along a line (`along`, two places or more). A height says the triangle it
+    is read on, its longest edge and the nearest corner's distance, inside one triangle only (docs/adr/1033).
 
     Refusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),
     `invalid_places` (a place not finite, a line of one place, more than 100 000 places).
@@ -121604,6 +121639,8 @@ __all__ = [
     "TerrainGaps",
     "TerrainGridSlope",
     "TerrainHeight",
+    "TerrainInterpolation",
+    "TerrainInterpolationName",
     "TerrainLeft",
     "TerrainNearPair",
     "TerrainPlace",

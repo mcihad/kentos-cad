@@ -361,6 +361,13 @@ def height(s, q):
             out["slope"] = slope
             if aspect is not None:
                 out["aspect"] = aspect
+            # Docs/adr/1033: the triangle the height is read on, its corners by x then y; its longest plan edge; the
+            # plan distance to its nearest corner.
+            import math
+            c = sorted([[s["xy"][i][0], s["xy"][i][1], s["z"][i]] for i in t], key=lambda v: (v[0], v[1]))
+            out["corners"] = c
+            out["longest"] = max(math.hypot(c[k][0] - c[(k + 1) % 3][0], c[k][1] - c[(k + 1) % 3][1]) for k in range(3))
+            out["corner"] = min(math.hypot(v[0] - q[0], v[1] - q[1]) for v in c)
         return out
     place = "void" if any(inside_ring(v, q) for v in s["voids"]) else "outside"
     return {"x": float(q[0]), "y": float(q[1]), "place": place}
@@ -708,6 +715,9 @@ def query_cases():
     s_open = build(gather(open_)[0])
 
     def q(name, input_, out, note=None):
+        # Docs/adr/1033: how heights and sections were read, said when the surface gave either.
+        if ("at" in input_ or "along" in input_) and ("heights" in out or "section" in out):
+            out = {**out, "interpolation": "linear"}
         cases.append({"name": name, **({"note": note} if note else {}),
                       "steps": [step("execute", input_, completed(out), {**UNCHANGED, "road": road_of(start)}, W)]})
 

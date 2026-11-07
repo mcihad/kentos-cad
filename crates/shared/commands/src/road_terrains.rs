@@ -114,7 +114,8 @@ pub struct TerrainsEdit {
 }
 
 /// Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its
-/// heights at places (`at`) and its section along a line (`along`, two places or more).
+/// heights at places (`at`) and its section along a line (`along`, two places or more). A height says the triangle it
+/// is read on, its longest edge and the nearest corner's distance, inside one triangle only (docs/adr/1033).
 ///
 /// Refusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),
 /// `invalid_places` (a place not finite, a line of one place, more than 100 000 places).
@@ -323,6 +324,34 @@ pub struct TerrainHeight {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub aspect: Option<f64>,
+    /// The triangle the height is read on (docs/adr/1033), inside one triangle only: its corners (x, y, z) ordered by
+    /// x, then y.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub corners: Option<[[f64; 3]; 3]>,
+    /// That triangle's longest plan edge: how far apart the points the height rests on are (ADR 0920's estimate).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub longest: Option<f64>,
+    /// The plan distance from the place to the nearest of those corners.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub corner: Option<f64>,
+}
+
+/// How a height between a surface's points is read (docs/adr/1033).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TerrainInterpolation {
+    /// On the plane through the corners of the triangle the place is in; nothing outside the surface or in a void,
+    /// nothing extrapolated.
+    Linear,
 }
 
 /// A place of a section: its distance from the line's start, where it is, its height (none off the surface), and
@@ -406,6 +435,10 @@ pub struct TerrainsQueried {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSectionPoint>>", optional))]
     pub section: Vec<TerrainSectionPoint>,
+    /// How the heights and the section were read, when either was asked (docs/adr/1033).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub interpolation: Option<TerrainInterpolation>,
 }
 
 /// Input of `file.import.landxml` v1 (plan/road.md Y2.5, docs/adr/0900 §14): a LandXML file's TIN surface taken into a

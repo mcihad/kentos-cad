@@ -1756,8 +1756,12 @@ class _RoadTerrainsQuery(LocalCommand[TerrainsQuery, TerrainsQueried, TerrainsQu
     (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya
     da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her
     yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin
-    dışında kalıp kalmadığı (gap). Retler: not_a_road_project, unknown_terrain,
-    no_terrain, invalid_places.
+    dışında kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur
+    (interpolation: linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin
+    köşelerini (corners: x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest)
+    ve en yakın köşeye plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem
+    buluşur, verilmez. Kaynak sürümü yüzeyin özetidir (digest). Retler:
+    not_a_road_project, unknown_terrain, no_terrain, invalid_places.
     """
     __slots__ = ()
     id = "road.terrains.query"
@@ -1789,8 +1793,12 @@ class _RoadTerrainsQuery(LocalCommand[TerrainsQuery, TerrainsQueried, TerrainsQu
         outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha
         çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer,
         başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında
-        kalıp kalmadığı (gap). Retler: not_a_road_project, unknown_terrain, no_terrain,
-        invalid_places.
+        kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur (interpolation:
+        linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin köşelerini (corners:
+        x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest) ve en yakın köşeye
+        plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem buluşur, verilmez.
+        Kaynak sürümü yüzeyin özetidir (digest). Retler: not_a_road_project,
+        unknown_terrain, no_terrain, invalid_places.
 
         Args:
             doc: The drawing it works on.

@@ -3531,6 +3531,8 @@ __all__ = [
     "TerrainGaps",
     "TerrainGridSlope",
     "TerrainHeight",
+    "TerrainInterpolation",
+    "TerrainInterpolationName",
     "TerrainLeft",
     "TerrainNearPair",
     "TerrainPlace",

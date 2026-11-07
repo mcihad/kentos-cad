@@ -2,7 +2,8 @@
 
 /**
  * Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its
- * heights at places (`at`) and its section along a line (`along`, two places or more).
+ * heights at places (`at`) and its section along a line (`along`, two places or more). A height says the triangle it
+ * is read on, its longest edge and the nearest corner's distance, inside one triangle only (docs/adr/1033).
  *
  * Refusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),
  * `invalid_places` (a place not finite, a line of one place, more than 100 000 places).
