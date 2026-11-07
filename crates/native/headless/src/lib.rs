@@ -32,6 +32,7 @@ mod dispatch;
 mod error;
 pub mod export;
 pub mod exchange_check;
+pub mod exchange_matrix;
 mod cad_shape_files;
 pub mod file_commands;
 pub mod files;

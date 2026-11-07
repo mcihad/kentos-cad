@@ -97322,6 +97322,131 @@
       ]
     },
     {
+      "id": "file.exchange.matrix",
+      "version": 1,
+      "title": "Destek matrisi",
+      "summary": "Çizimi istenen biçimlerin (formats; boşsa altısı: gpkg, parquet, fgb, gml, shp, dxf) her biriyle file.exchange.check'in gidiş-dönüşünden geçirir (layers ve tolerance onunki gibi) ve her biçimin neyi koruduğunu, yaklaşıklaştırdığını, dönüştürdüğünü, eklediğini ya da kaybettiğini satır satır verir: objects (yazılmayan nesneler, türleriyle), kinds (circle → polygon), curves (kirişe dönen eğriler), z (kaybolan, yoksa eklenen kot), m, attributes (kaybolan, yoksa değişen, yoksa eklenen; adlarıyla), style, identity (kalıcı kimlik), position (toleransı aşan köşeler; en büyük kayma), extra (eşleşmeyen geri okunan). Hücre: format, state (kept, approximated, converted, added, lost), count, detail. Her biçimin denetim cevabı da checks'te. Açık çizim değişmez. Retler: file.exchange.check'inkiler (invalid_tolerance, layer_not_found, yazıcının kendi reddi, exchange_unreadable, file_unwritable), biçimin yolu formats[i] altında.",
+      "aliases": [
+        "destekmatrisi",
+        "bicimmatrisi",
+        "exchangematrix"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `file.exchange.matrix` v1 (Destek matrisi; plan/map-cad.md MAP-17, docs/adr/1880): the drawing's round trip\nthrough each of `formats` (empty: all six, in [`ExchangeFormat::ALL`]'s order; one asked twice is tried once) as\n`file.exchange.check` makes it, with its `layers` and `tolerance`, and what each kept, approximated, converted, added\nor lost, aspect by aspect.\n\nRefusals: `file.exchange.check`'s (`invalid_tolerance`, `layer_not_found`, the writer's own, `exchange_unreadable`,\n`file_unwritable`), the format's path `formats[i]` beside the check's.",
+        "properties": {
+          "formats": {
+            "items": {
+              "$ref": "#/$defs/ExchangeFormat"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "title": "ExchangeMatrix",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.exchange.matrix` v1: the tolerance, the rows in [`EXCHANGE_ASPECTS`]' order, and each format's\n`file.exchange.check` answer the rows are read from.",
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/$defs/ExchangeChecked"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ExchangeRow"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "tolerance",
+          "rows",
+          "checks"
+        ],
+        "title": "ExchangeMatrixed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.exchange.matrix` v1: the tolerance, the rows in [`EXCHANGE_ASPECTS`]' order, and each format's\n`file.exchange.check` answer the rows are read from.",
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/$defs/ExchangeChecked"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ExchangeRow"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "tolerance",
+          "rows",
+          "checks"
+        ],
+        "title": "ExchangeMatrixed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_tolerance",
+          "layer_not_found",
+          "exchange_unreadable",
+          "file_unwritable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimin altı biçimle destek matrisi",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "file.recover",
       "version": 1,
       "title": "Bozuk çizimi kurtar",
@@ -131811,6 +131936,99 @@
         }
       ]
     },
+    "ExchangeCell": {
+      "description": "A cell: the format, what it did to the aspect, how many objects it touched and what (the kinds not written, `circle →\npolygon`, the attributes' names, the greatest offset in metres).",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "detail": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "$ref": "#/$defs/ExchangeFormat"
+        },
+        "state": {
+          "$ref": "#/$defs/ExchangeState"
+        }
+      },
+      "required": [
+        "format",
+        "state",
+        "count"
+      ],
+      "type": "object"
+    },
+    "ExchangeChecked": {
+      "description": "Output of `file.exchange.check` v1: the format and tolerance, the objects of the layers checked, how many were\nmatched with one read back, those not written by kind, the numeric differences, the semantic losses (in\n[`EXCHANGE_LOSSES`]' order, then by detail) and the writer's and the reader's warnings as they said them.",
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/ExchangeFormat"
+        },
+        "losses": {
+          "items": {
+            "$ref": "#/$defs/ExchangeLoss"
+          },
+          "type": "array"
+        },
+        "matched": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "notWritten": {
+          "items": {
+            "$ref": "#/$defs/ExchangeKindCount"
+          },
+          "type": "array"
+        },
+        "numeric": {
+          "$ref": "#/$defs/ExchangeNumeric"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "reader": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "writer": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "format",
+        "tolerance",
+        "objects",
+        "matched",
+        "notWritten",
+        "numeric",
+        "losses",
+        "writer",
+        "reader"
+      ],
+      "type": "object"
+    },
     "ExchangeFormat": {
       "description": "The format of the trip.",
       "enum": [
@@ -131934,6 +132152,36 @@
         "above"
       ],
       "type": "object"
+    },
+    "ExchangeRow": {
+      "description": "A row: its aspect (one of [`EXCHANGE_ASPECTS`]) and a cell for each format tried.",
+      "properties": {
+        "aspect": {
+          "type": "string"
+        },
+        "cells": {
+          "items": {
+            "$ref": "#/$defs/ExchangeCell"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "aspect",
+        "cells"
+      ],
+      "type": "object"
+    },
+    "ExchangeState": {
+      "description": "What a trip did to an aspect: kept it, approximated it (curves to chords, vertices beyond the tolerance), converted it\n(a kind into another, an attribute's value), added something, or lost it.",
+      "enum": [
+        "kept",
+        "approximated",
+        "converted",
+        "added",
+        "lost"
+      ],
+      "type": "string"
     },
     "ExplodeDensity": {
       "description": "How dense an exploded curve's vertices are (docs/adr/0308): its pieces equal in length along it, as many as\nasked, none longer than a length, or as few as keep every chord within a distance of the curve.",

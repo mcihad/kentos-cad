@@ -203,3 +203,93 @@ pub struct ExchangeChecked {
     pub writer: Vec<String>,
     pub reader: Vec<String>,
 }
+
+pub const FILE_EXCHANGE_MATRIX: &str = "file.exchange.matrix";
+pub const FILE_EXCHANGE_MATRIX_VERSION: u32 = 1;
+
+/// A support matrix's rows (docs/adr/1880), in order: the objects written, their kinds, curves, heights, measures,
+/// attributes, style, persistent ids, the vertices' places, and objects read back that match none.
+pub const EXCHANGE_ASPECTS: [&str; 10] =
+    ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "extra"];
+
+/// Input of `file.exchange.matrix` v1 (Destek matrisi; plan/map-cad.md MAP-17, docs/adr/1880): the drawing's round trip
+/// through each of `formats` (empty: all six, in [`ExchangeFormat::ALL`]'s order; one asked twice is tried once) as
+/// `file.exchange.check` makes it, with its `layers` and `tolerance`, and what each kept, approximated, converted, added
+/// or lost, aspect by aspect.
+///
+/// Refusals: `file.exchange.check`'s (`invalid_tolerance`, `layer_not_found`, the writer's own, `exchange_unreadable`,
+/// `file_unwritable`), the format's path `formats[i]` beside the check's.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExchangeMatrix {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ExchangeFormat>>", optional))]
+    pub formats: Vec<ExchangeFormat>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub layers: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tolerance: Option<f64>,
+}
+
+/// What a trip did to an aspect: kept it, approximated it (curves to chords, vertices beyond the tolerance), converted it
+/// (a kind into another, an attribute's value), added something, or lost it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ExchangeState {
+    Kept,
+    Approximated,
+    Converted,
+    Added,
+    Lost,
+}
+
+/// A cell: the format, what it did to the aspect, how many objects it touched and what (the kinds not written, `circle →
+/// polygon`, the attributes' names, the greatest offset in metres).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExchangeCell {
+    pub format: ExchangeFormat,
+    pub state: ExchangeState,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub detail: Option<String>,
+}
+
+/// A row: its aspect (one of [`EXCHANGE_ASPECTS`]) and a cell for each format tried.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExchangeRow {
+    pub aspect: String,
+    pub cells: Vec<ExchangeCell>,
+}
+
+/// Output of `file.exchange.matrix` v1: the tolerance, the rows in [`EXCHANGE_ASPECTS`]' order, and each format's
+/// `file.exchange.check` answer the rows are read from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ExchangeMatrixed {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub tolerance: f64,
+    pub rows: Vec<ExchangeRow>,
+    pub checks: Vec<ExchangeChecked>,
+}

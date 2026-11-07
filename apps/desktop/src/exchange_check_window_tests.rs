@@ -89,3 +89,56 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/1880: Tüm biçimler shows the support matrix of all six formats (the text lost but in DXF, ids kept only by
+/// GeoPackage and GeoParquet); Denetle on one format brings its losses back; nothing is written.
+#[test]
+fn all_formats_give_the_support_matrix() {
+    use kentos_commands::{ExchangeFormat as F, ExchangeState as S};
+    let mut app = opened(Some(Module::Map));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("file.exchangeCheck"));
+    let _ = app.update(Message::ExchangeCheck(X::Matrix));
+    let m = app.exchange_check.matrix.clone().expect("a matrix").expect("checked");
+    assert_eq!(m.checks.len(), 6);
+    let cell = |aspect: &str, f: F| m.rows.iter().find(|r| r.aspect == aspect).and_then(|r| r.cells.iter().find(|c| c.format == f)).map(|c| c.state);
+    assert_eq!(cell("objects", F::Gpkg), Some(S::Lost));
+    assert_eq!(cell("objects", F::Dxf), Some(S::Kept));
+    assert_eq!(cell("identity", F::Gpkg), Some(S::Kept));
+    assert_eq!(cell("identity", F::Shp), Some(S::Lost));
+    assert_eq!(
+        crate::exchange_check_window::cell_words("objects", &m.rows[0].cells[0]),
+        "Kaybolur: yazı 1",
+        "the words of a cell"
+    );
+    let _ = app.update(Message::ExchangeCheck(X::Run));
+    assert!(app.exchange_check.matrix.is_none() && app.exchange_check.answer.is_some());
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+/// The matrix; `.run/gui-evidence/destek-matrisi-1880/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn matrix_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/destek-matrisi-1880");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("file.exchangeCheck"));
+        let _ = app.update(Message::ExchangeCheck(X::Matrix));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-matris-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

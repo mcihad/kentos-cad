@@ -15243,6 +15243,32 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Destek matrisi (plan/map-cad.md MAP-17, docs/adr/1880).
+        CommandDescriptor {
+            id: crate::FILE_EXCHANGE_MATRIX.into(),
+            version: crate::FILE_EXCHANGE_MATRIX_VERSION,
+            title: "Destek matrisi".into(),
+            summary: "Çizimi istenen biçimlerin (formats; boşsa altısı: gpkg, parquet, fgb, gml, shp, dxf) her biriyle file.exchange.check'in gidiş-dönüşünden geçirir (layers ve tolerance onunki gibi) ve her biçimin neyi koruduğunu, yaklaşıklaştırdığını, dönüştürdüğünü, eklediğini ya da kaybettiğini satır satır verir: objects (yazılmayan nesneler, türleriyle), kinds (circle → polygon), curves (kirişe dönen eğriler), z (kaybolan, yoksa eklenen kot), m, attributes (kaybolan, yoksa değişen, yoksa eklenen; adlarıyla), style, identity (kalıcı kimlik), position (toleransı aşan köşeler; en büyük kayma), extra (eşleşmeyen geri okunan). Hücre: format, state (kept, approximated, converted, added, lost), count, detail. Her biçimin denetim cevabı da checks'te. Açık çizim değişmez. \
+                      Retler: file.exchange.check'inkiler (invalid_tolerance, layer_not_found, yazıcının kendi reddi, exchange_unreadable, file_unwritable), biçimin yolu formats[i] altında."
+                .into(),
+            aliases: vec!["destekmatrisi".into(), "bicimmatrisi".into(), "exchangematrix".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExchangeMatrix>(),
+            output: schema::<crate::ExchangeMatrixed>(),
+            plan: Some(schema::<crate::ExchangeMatrixed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin altı biçimle destek matrisi".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
         // Kurtar (docs/adr/1013), held by fixtures/commands/v1/file.recover.json.
         CommandDescriptor {
             id: crate::FILE_RECOVER.into(),
@@ -16107,6 +16133,9 @@ mod tests {
                     }
                     crate::FILE_EXCHANGE_CHECK => {
                         serde_json::from_value::<crate::ExchangeCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXCHANGE_MATRIX => {
+                        serde_json::from_value::<crate::ExchangeMatrix>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_SERVICE => {
                         serde_json::from_value::<crate::LayersService>(e.input.clone()).map(|_| ())

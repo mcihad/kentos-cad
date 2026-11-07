@@ -3566,12 +3566,13 @@
    "title": "Dışa aktarma kaybı denetimi…",
    "level": "query",
    "via": [
-    "file.exchange.check"
+    "file.exchange.check",
+    "file.exchange.matrix"
    ],
    "operation": null,
-   "python": "kentos.cad.file.exchange.check",
-   "mcp": "file.exchange.check",
-   "note": "Pencere file.exchange.check'in cevabını gösterir (salt okunur): biçim ve tolerans, Denetle geçici dosyayla gidiş-dönüşü yapar; sayısal sapma ve anlamsal kayıplar ayrı; Kayıplıları seç seçimi değiştirir (ADR 1660).",
+   "python": "kentos.cad.file.exchange.check, kentos.cad.file.exchange.matrix",
+   "mcp": "file.exchange.check, file.exchange.matrix",
+   "note": "Pencere file.exchange.check'in cevabını gösterir (salt okunur): biçim ve tolerans, Denetle geçici dosyayla gidiş-dönüşü yapar; sayısal sapma ve anlamsal kayıplar ayrı; Kayıplıları seç seçimi değiştirir (ADR 1660). Tüm biçimler altı biçimin destek matrisini file.exchange.matrix ile gösterir (ADR 1880).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

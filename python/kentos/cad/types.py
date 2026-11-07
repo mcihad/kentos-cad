@@ -2340,6 +2340,21 @@ ExchangeFormatName = Literal["gpkg", "parquet", "fgb", "gml", "shp", "dxf"]
 """The names of :class:`ExchangeFormat`, for a plain string."""
 
 
+class ExchangeState(_StrEnum):
+    """What a trip did to an aspect: kept it, approximated it (curves to chords, vertices beyond the tolerance), converted it
+    (a kind into another, an attribute's value), added something, or lost it.
+    """
+    KEPT = "kept"
+    APPROXIMATED = "approximated"
+    CONVERTED = "converted"
+    ADDED = "added"
+    LOST = "lost"
+
+
+ExchangeStateName = Literal["kept", "approximated", "converted", "added", "lost"]
+"""The names of :class:`ExchangeState`, for a plain string."""
+
+
 class ExtractAreaUnit(_StrEnum):
     """An area's unit (CLAUDE.md §5: a dönüm 1000 m², a hectare 10000 m²)."""
     M2 = "m2"
@@ -34454,6 +34469,37 @@ class EventLink(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExchangeCell(_Model):
+    """A cell: the format, what it did to the aspect, how many objects it touched and what (the kinds not written, `circle →
+    polygon`, the attributes' names, the greatest offset in metres).
+    Attributes:
+        count: Unit: count.
+    """
+    format: ExchangeFormat | ExchangeFormatName
+    state: ExchangeState | ExchangeStateName
+    count: int
+    detail: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = _enum_out(self.format)
+        out["state"] = _enum_out(self.state)
+        out["count"] = self.count
+        if self.detail is not UNSET:
+            out["detail"] = self.detail
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeCell:
+        return cls(
+            format=_enum_in(ExchangeFormat, data["format"]),
+            state=_enum_in(ExchangeState, data["state"]),
+            count=data["count"],
+            detail=data.get("detail", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExchangeCheck(_Model):
     """Input of `file.exchange.check` v1: the format, the layers (by id; none: every layer the format's writer takes by
     default) and the tolerance (metres, above 0, at most 10; none: [`EXCHANGE_TOLERANCE`]).
@@ -34588,6 +34634,68 @@ class ExchangeLoss(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExchangeMatrix(_Model):
+    """Input of `file.exchange.matrix` v1 (Destek matrisi; plan/map-cad.md MAP-17, docs/adr/1880): the drawing's round trip
+    through each of `formats` (empty: all six, in [`ExchangeFormat::ALL`]'s order; one asked twice is tried once) as
+    `file.exchange.check` makes it, with its `layers` and `tolerance`, and what each kept, approximated, converted, added
+    or lost, aspect by aspect.
+
+    Refusals: `file.exchange.check`'s (`invalid_tolerance`, `layer_not_found`, the writer's own, `exchange_unreadable`,
+    `file_unwritable`), the format's path `formats[i]` beside the check's.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    formats: list[ExchangeFormat | ExchangeFormatName] | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.formats is not UNSET:
+            out["formats"] = [_enum_out(e0) for e0 in self.formats]
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeMatrix:
+        return cls(
+            formats=[_enum_in(ExchangeFormat, e0) for e0 in data["formats"]] if "formats" in data else UNSET,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeMatrixed(_Model):
+    """Output of `file.exchange.matrix` v1: the tolerance, the rows in [`EXCHANGE_ASPECTS`]' order, and each format's
+    `file.exchange.check` answer the rows are read from.
+    Attributes:
+        tolerance: Unit: length.
+    """
+    tolerance: float
+    rows: list[ExchangeRow]
+    checks: list[ExchangeChecked]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tolerance"] = float(self.tolerance)
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["checks"] = [e0.to_json() for e0 in self.checks]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeMatrixed:
+        return cls(
+            tolerance=float(data["tolerance"]),
+            rows=[ExchangeRow.from_json(e0) for e0 in data["rows"]],
+            checks=[ExchangeChecked.from_json(e0) for e0 in data["checks"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExchangeNumeric(_Model):
     """The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),
     the object of the greatest offset, and how many lie farther than the tolerance.
@@ -34634,6 +34742,26 @@ class ExchangeNumeric(_Model):
             measure=UNSET if "measure" not in data else None if data["measure"] is None else float(data["measure"]),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             offset_uid=data.get("offsetUid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExchangeRow(_Model):
+    """A row: its aspect (one of [`EXCHANGE_ASPECTS`]) and a cell for each format tried."""
+    aspect: str
+    cells: list[ExchangeCell]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["aspect"] = self.aspect
+        out["cells"] = [e0.to_json() for e0 in self.cells]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExchangeRow:
+        return cls(
+            aspect=data["aspect"],
+            cells=[ExchangeCell.from_json(e0) for e0 in data["cells"]],
         )
 
 
@@ -127415,13 +127543,19 @@ __all__ = [
     "EventSide",
     "EventSideName",
     "ExceptModulesOperation",
+    "ExchangeCell",
     "ExchangeCheck",
     "ExchangeChecked",
     "ExchangeFormat",
     "ExchangeFormatName",
     "ExchangeKindCount",
     "ExchangeLoss",
+    "ExchangeMatrix",
+    "ExchangeMatrixed",
     "ExchangeNumeric",
+    "ExchangeRow",
+    "ExchangeState",
+    "ExchangeStateName",
     "ExcludeMapSurveyOperation",
     "ExplodeDensity",
     "ExportAtlas",

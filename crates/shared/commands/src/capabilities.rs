@@ -7423,6 +7423,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Destek matrisi (plan/map-cad.md MAP-17, docs/adr/1880).
+    Entry {
+        id: "file.exchange.matrix",
+        refusals: &[&["invalid_tolerance", "layer_not_found", "exchange_unreadable", "file_unwritable"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "file.recover",
         refusals: &[&[

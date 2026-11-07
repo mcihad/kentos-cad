@@ -58,6 +58,9 @@
 - **Dışa aktarma kaybı denetimi (7 Kasım 2026; MAP-17, [ADR 1660](../../docs/adr/1660-exchange-round-trip-check.md)).**
   `file.exchange.check` (headless): KentOS yazıcısı + okuyucusuyla gidiş-dönüş; `numeric` ve `losses` ayrı; ret
   `exchange_unreadable`; GeoParquet'in yay merkezi ilk noktaya göreli.
+- **Destek matrisi (7 Kasım 2026; MAP-17, [ADR 1880](../../docs/adr/1880-exchange-support-matrix.md)).**
+  `file.exchange.matrix`: açık çizimin altı biçimle gidiş-dönüşü, on özellik satırı (korunur, yaklaşık, dönüşür,
+  eklenir, kaybolur); her sütun file.exchange.check'in cevabı; pencerede Tüm biçimler.
 - **Hat profili (7 Kasım 2026; MAP-16, [ADR 1860](../../docs/adr/1860-pipe-run-profile.md)).** `cad.pipes.profile`: bir
   borudan akış yönünde hattın boykesiti (zemin, akar, tepe, bacalar, dokuz bant), değerler denetiminkiler, çizim yol
   boykesitinin kurallarıyla (×10, 2,5 mm); ret `invalid_pipe_run`; Boru hattı denetimi penceresinde Hat profilini çiz.

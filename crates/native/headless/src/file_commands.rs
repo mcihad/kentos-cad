@@ -1155,6 +1155,11 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
         let typed: kentos_commands::ExchangeCheck = serde_json::from_value(input).map_err(|e| e.to_string())?;
         return Ok((crate::exchange_check::run(doc, &typed, op), None));
     }
+    if command == kentos_commands::FILE_EXCHANGE_MATRIX {
+        // Destek matrisi (docs/adr/1880): the check's trip through each format, its answers read aspect by aspect.
+        let typed: kentos_commands::ExchangeMatrix = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok((crate::exchange_matrix::run(doc, &typed, op), None));
+    }
     if command == kentos_commands::FILE_RECOVER {
         // Kurtar (docs/adr/1013): from file to file; the open drawing is not read or written.
         let typed: kentos_commands::RecoverKcad = serde_json::from_value(input).map_err(|e| e.to_string())?;
@@ -1799,6 +1804,7 @@ fn version_of(command: &str) -> u32 {
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         kentos_commands::FILE_RECOVER => kentos_commands::FILE_RECOVER_VERSION,
         kentos_commands::FILE_EXCHANGE_CHECK => kentos_commands::FILE_EXCHANGE_CHECK_VERSION,
+        kentos_commands::FILE_EXCHANGE_MATRIX => kentos_commands::FILE_EXCHANGE_MATRIX_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
 }
@@ -1878,6 +1884,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         kentos_commands::FILE_EXCHANGE_CHECK => serde_json::from_value::<kentos_commands::ExchangeCheck>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXCHANGE_MATRIX => serde_json::from_value::<kentos_commands::ExchangeMatrix>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         kentos_commands::FILE_RECOVER => serde_json::from_value::<kentos_commands::RecoverKcad>(input.clone())

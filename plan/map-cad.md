@@ -1087,6 +1087,13 @@ ezdxf ile bağımsız sınandı. Denetim GeoParquet yazıcısında büyük koord
 buldu, düzeltildi. Açık: blok, ilişki ve tablo nesneleri, teslim paketinin kayıp raporu, kaynak–türev çatışması, LandXML/IFC
 alt modelleri.
 
+**7 Kasım 2026, ikinci tur — Destek matrisi ([ADR 1880](../docs/adr/1880-exchange-support-matrix.md)).** Kapsam: **CAD +
+CBS** (her modül). Kanıtlanan: `file.exchange.matrix` açık çizimi altı biçimin her biriyle file.exchange.check'in
+gidiş-dönüşünden geçirir ve on satırda (nesneler, tür, eğriler, Z, M, öznitelikler, stil, kimlik, köşe konumu, fazla)
+korunan, yaklaşıklaşan, dönüşen, eklenen ve kaybolanı verir; örnek çizimin matrisi ADR 1660'ın tablosudur; Python'da
+her hücre kuralıyla ayrıca sınanır, GDAL testleri aynen geçer; pencerede Tüm biçimler. Açık: blok/ilişki/tablo örnekleri,
+teslim paketinin matrisi taşıması, kurum profilleri.
+
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 
 **Öncelik:** P0 mevcut okunurluk; P1 üretim bağları. **Kod:** [K20], [K36]–[K39].

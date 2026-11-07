@@ -235,5 +235,55 @@ class ExchangeAgainstGdal(unittest.TestCase):
             shutil.rmtree(folder, ignore_errors=True)
 
 
+# Docs/adr/1880: a matrix cell's rules, written here from the ADR, not from KentOS's code.
+FIRST = {
+    "kinds": [("kindChanged", "converted")],
+    "curves": [("chorded", "approximated")],
+    "z": [("zLost", "lost"), ("zAdded", "added")],
+    "m": [("mLost", "lost")],
+    "attributes": [("attrLost", "lost"), ("attrChanged", "converted"), ("attrAdded", "added")],
+    "style": [("styleLost", "lost")],
+    "identity": [("identityLost", "lost")],
+    "extra": [("extra", "added")],
+}
+
+
+def expected_cell(check: dict, aspect: str) -> tuple[str, int]:
+    if aspect == "objects":
+        n = sum(k["count"] for k in check["notWritten"])
+        return ("lost" if n else "kept"), n
+    if aspect == "position":
+        above = check["numeric"]["above"]
+        return ("approximated" if above else "kept"), above
+    for kind, state in FIRST[aspect]:
+        n = sum(l["count"] for l in check["losses"] if l["kind"] == kind)
+        if n:
+            return state, n
+    return "kept", 0
+
+
+class MatrixFromTheChecks(unittest.TestCase):
+    """`file.exchange.matrix` (docs/adr/1880): its checks are `file.exchange.check`'s, format by format (which the GDAL
+    tests above hold to the files), and every cell follows the ADR's rules from its format's check."""
+
+    def test_the_matrix_reads_each_format_s_check_by_the_rules(self) -> None:
+        w = cad.command("file.exchange.matrix")
+        out = w.run(opened(), w.input_type.from_json({}), op="execute")
+        self.assertIsNone(out.error, out.error and out.error.message)
+        m = out.output.to_json()
+        formats = [c["format"] for c in m["checks"]]
+        self.assertEqual(formats, ["gpkg", "parquet", "fgb", "gml", "shp", "dxf"])
+        check = cad.command("file.exchange.check")
+        for c in m["checks"]:
+            alone = check.run(opened(), check.input_type.from_json({"format": c["format"]}), op="execute").output.to_json()
+            self.assertEqual(c, alone, c["format"])
+        aspects = ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "extra"]
+        self.assertEqual([r["aspect"] for r in m["rows"]], aspects)
+        for row in m["rows"]:
+            for cell, c in zip(row["cells"], m["checks"]):
+                self.assertEqual(cell["format"], c["format"])
+                self.assertEqual((cell["state"], cell["count"]), expected_cell(c, row["aspect"]), f"{row['aspect']} {c['format']}")
+
+
 if __name__ == "__main__":
     unittest.main()

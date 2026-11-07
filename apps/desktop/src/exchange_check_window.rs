@@ -3,14 +3,17 @@
 //! the trip (a temporary file, removed). The answer keeps the two kinds of change apart: Sayısal (the vertices' offset
 //! from the original, heights, measures, lengths, areas) and Anlamsal (what was not written, kinds changed, curves
 //! become chords, heights, measures, attributes, style and ids lost), each loss a row with its count. Kayıplıları seç
-//! selects the objects the losses name.
+//! selects the objects the losses name. Tüm biçimler runs the trip through all six (`file.exchange.matrix`, docs/adr/1880)
+//! and shows the support matrix: what each format keeps, approximates, converts, adds or loses, aspect by aspect.
 
-use iced::widget::{Column, container, row};
-use iced::{Center, Element, Task};
-use kentos_commands::{CallOp, CommandResult, ExchangeCheck, ExchangeChecked, ExchangeFormat};
+use iced::widget::{Column, container};
+use iced::{Element, Task};
+use kentos_commands::{
+    CallOp, CommandResult, ExchangeCell, ExchangeCheck, ExchangeChecked, ExchangeFormat, ExchangeMatrix, ExchangeMatrixed,
+    ExchangeState,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
-use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form};
 
 use crate::app::{App, Dialog, Message};
@@ -23,17 +26,21 @@ pub const TITLE: &str = "Dışa aktarma kaybı denetimi";
 const CLOSE: &str = "Kapat";
 const RUN: &str = "Denetle";
 const SELECT: &str = "Kayıplıları seç";
+/// The support matrix of all six formats (docs/adr/1880).
+const MATRIX: &str = "Tüm biçimler";
 
 #[derive(Clone, Debug)]
 pub struct State {
     pub format: ExchangeFormat,
     pub tolerance: String,
     pub answer: Option<Result<ExchangeChecked, String>>,
+    /// Tüm biçimler's answer (docs/adr/1880): shown instead of the one format's losses until Denetle runs again.
+    pub matrix: Option<Result<ExchangeMatrixed, String>>,
 }
 
 impl Default for State {
     fn default() -> Self {
-        Self { format: ExchangeFormat::Gpkg, tolerance: "0,001".into(), answer: None }
+        Self { format: ExchangeFormat::Gpkg, tolerance: "0,001".into(), answer: None, matrix: None }
     }
 }
 
@@ -42,6 +49,7 @@ pub enum Event {
     Format(String),
     Tolerance(String),
     Run,
+    Matrix,
     Select,
     Close,
 }
@@ -113,6 +121,62 @@ fn detail_words(loss: &str, detail: &str) -> String {
     }
 }
 
+/// A matrix row's aspect in words.
+pub fn aspect_word(aspect: &str) -> &'static str {
+    match aspect {
+        "objects" => "Nesneler",
+        "kinds" => "Tür",
+        "curves" => "Eğriler",
+        "z" => "Kot (Z)",
+        "m" => "Ölçü (M)",
+        "attributes" => "Öznitelikler",
+        "style" => "Nesne stili",
+        "identity" => "Kalıcı kimlik",
+        "position" => "Köşe konumu",
+        "extra" => "Fazla nesne",
+        _ => "—",
+    }
+}
+
+/// A matrix cell in words: what the format did, how many, and what.
+pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
+    let detail = c.detail.as_deref().map(|d| match aspect {
+        "objects" => d
+            .split(", ")
+            .map(|kc| match kc.rsplit_once(' ') {
+                Some((k, n)) => format!("{} {n}", kind_word(k).to_lowercase()),
+                None => kc.to_owned(),
+            })
+            .collect::<Vec<_>>()
+            .join(", "),
+        "position" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m", small(v))),
+        // Kinds and styles by their Turkish names, item by item (the losses' own words); attributes as named.
+        _ => {
+            let loss = match aspect {
+                "kinds" => "kindChanged",
+                "curves" => "chorded",
+                "style" => "styleLost",
+                "extra" => "extra",
+                _ => "",
+            };
+            d.split(", ").map(|x| detail_words(loss, x)).collect::<Vec<_>>().join(", ")
+        }
+    });
+    let word = match c.state {
+        ExchangeState::Kept => "Korunur",
+        ExchangeState::Approximated => "Yaklaşık",
+        ExchangeState::Converted => "Dönüşür",
+        ExchangeState::Added => "Eklenir",
+        ExchangeState::Lost => "Kaybolur",
+    };
+    match (c.state, detail) {
+        (ExchangeState::Kept, Some(d)) if aspect == "position" => format!("{word} ({d})"),
+        (ExchangeState::Kept, _) => word.to_owned(),
+        (_, Some(d)) => format!("{word}: {d}"),
+        (_, None) => format!("{word} ({})", c.count),
+    }
+}
+
 /// A loss's kind in words.
 pub fn loss_word(kind: &str) -> &'static str {
     match kind {
@@ -162,6 +226,25 @@ impl App {
         });
     }
 
+    /// Tüm biçimler: the trip through all six formats, read as the support matrix (a test calls it as the button does).
+    pub(crate) fn exchange_matrix_run(&mut self) {
+        let t = self.exchange_check.tolerance.trim().replace(',', ".");
+        let tolerance = if t.is_empty() { None } else { t.parse::<f64>().ok() };
+        if !t.is_empty() && tolerance.is_none() {
+            self.exchange_check.matrix = Some(Err(format!("Tolerans “{}” bir sayı değil.", self.exchange_check.tolerance)));
+            return;
+        }
+        let Some(doc) = self.document.as_ref() else { return };
+        let input = ExchangeMatrix { formats: Vec::new(), layers: Vec::new(), tolerance };
+        self.exchange_check.matrix = Some(match kentos_headless::exchange_matrix::run(&doc.model, &input, CallOp::Execute) {
+            CommandResult::Completed { output, .. } => serde_json::from_value(output).map_err(|e| e.to_string()),
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                Err(error.message)
+            }
+            _ => Err("Denetlenemedi.".into()),
+        });
+    }
+
     pub(crate) fn exchange_check_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Format(v) => {
@@ -171,7 +254,11 @@ impl App {
                 }
             }
             Event::Tolerance(v) => self.exchange_check.tolerance = v,
-            Event::Run => self.exchange_check_run(),
+            Event::Run => {
+                self.exchange_check.matrix = None;
+                self.exchange_check_run();
+            }
+            Event::Matrix => self.exchange_matrix_run(),
             Event::Select => {
                 let Some(Ok(r)) = &self.exchange_check.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -205,17 +292,44 @@ impl App {
             ExchangeFormat::ALL.iter().map(|x| (key(*x).to_owned(), x.title().to_owned())).collect();
         let form = Form::new()
             .label_width(110.0)
+            .field("Biçim", container(fields::select_owned(formats, key(s.format), |v| msg(Event::Format(v)))).width(200))
             .field(
-                "Biçim",
-                row![
-                    container(fields::select_owned(formats, key(s.format), |v| msg(Event::Format(v)))).width(200),
-                    label::caption("Tolerans (m)"),
-                    container(fields::input(None, "0,001", &s.tolerance, false, false).on_input(|v| msg(Event::Tolerance(v))))
-                        .width(100)
-                ]
-                .spacing(10)
-                .align_y(Center),
+                "Tolerans (m)",
+                container(fields::input(None, "0,001", &s.tolerance, false, false).on_input(|v| msg(Event::Tolerance(v)))).width(200),
             );
+        // Tüm biçimler's matrix (docs/adr/1880), until Denetle runs one format again.
+        if let Some(m) = &s.matrix {
+            let mut lines = Vec::new();
+            let mut rows = Vec::new();
+            match m {
+                Ok(m) => {
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!(
+                            "Çizim altı biçimin her birine yazılıp KentOS'un okuyucusuyla geri okundu (tolerans {}); hücre biçimin o özelliğe yaptığını söyler.",
+                            f.length(m.tolerance)
+                        ),
+                    ));
+                    for r in &m.rows {
+                        let mut cells = vec![aspect_word(&r.aspect).to_owned()];
+                        cells.extend(r.cells.iter().map(|c| cell_words(&r.aspect, c)));
+                        rows.push(cells);
+                    }
+                }
+                Err(why) => lines.push(words::text_line(Kind::Error, why.clone())),
+            }
+            let mut columns = vec![col("Özellik", 120.0)];
+            columns.extend(ExchangeFormat::ALL.iter().map(|x| col(x.title(), 140.0)));
+            let table = sheet(columns, rows, "Matris yok.", 360.0);
+            let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+            return Frame::new(TITLE)
+                .push(body)
+                .aside(words::secondary(MATRIX, Some(msg(Event::Matrix))))
+                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+                .action(words::primary(RUN, Some(msg(Event::Run))))
+                .width(1100.0)
+                .modal(msg(Event::Close));
+        }
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let mut lost = 0;
@@ -287,6 +401,7 @@ impl App {
         let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
         Frame::new(TITLE)
             .push(body)
+            .aside(words::secondary(MATRIX, Some(msg(Event::Matrix))))
             .aside(words::secondary(SELECT, (lost > 0).then(|| msg(Event::Select))))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(RUN, Some(msg(Event::Run))))
@@ -299,6 +414,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(RUN) => Some(msg(Event::Run)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(MATRIX) => Some(msg(Event::Matrix)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
