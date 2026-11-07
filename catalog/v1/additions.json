@@ -3327,6 +3327,20 @@
       "status": "implemented"
     },
     {
+      "id": "processing.run.topology.check",
+      "title": "Topolojiyi kurallarla denetle…",
+      "short": "Topolojiyi denetle",
+      "icon": "topologyCheck",
+      "description": "Projenin topoloji kurallarını İşlem araç kutusundan, bir modelden ya da betikten çalıştırır (cad.topology.check'in denetimi; ADR 1980): bulgular kuralı, sorunu, durumu (Değerlendirilmedi, Hata, İstisna, Yeniden değerlendir), nesneleri, yeri, ölçüsü ve gerekçesiyle tabloda; bulgulu nesneler seçilir. İstisnalar istenirse listelenir. Çizim değişmez.",
+      "aliases": [
+        "KURALDENETLE",
+        "TOPOLOGYRULESCHECK"
+      ],
+      "shortcuts": [],
+      "category": "İşlemler",
+      "status": "implemented"
+    },
+    {
       "id": "processing.run.stats.dbscanSweep",
       "title": "DBSCAN parametre taraması…",
       "short": "DBSCAN taraması",

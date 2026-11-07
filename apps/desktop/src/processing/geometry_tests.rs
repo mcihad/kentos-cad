@@ -2,7 +2,9 @@
 //! geometry drawing (fixtures/processing/v1/geometry.kcad): Tampon's rings on
 //! a layer of their own in one step, Geçerliliği denetle's table and
 //! selection, Koordinat sistemine dönüştür's refusal of the project's own
-//! system, and the pictures for the owner.
+//! system, Topolojiyi kurallarla denetle's findings on the topology drawing
+//! (fixtures/processing/v1/topology.kcad, docs/adr/1980), and the pictures for
+//! the owner.
 
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
@@ -12,11 +14,17 @@ use crate::app::{App, Message};
 use crate::document::Document;
 
 const GEOMETRY: &str = include_str!("../../../../fixtures/processing/v1/geometry.kcad");
+const TOPOLOGY: &str = include_str!("../../../../fixtures/processing/v1/topology.kcad");
 
 /// The app with the geometry drawing open.
 fn app_with_geometry() -> App {
+    app_with(GEOMETRY)
+}
+
+/// The app with a processing drawing open.
+fn app_with(text: &str) -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = DocumentSnapshotV1::from_json(GEOMETRY).expect("the drawing reads");
+    let snapshot = DocumentSnapshotV1::from_json(text).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("the drawing opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -102,6 +110,28 @@ fn the_validity_check_shows_its_table_selects_and_changes_nothing() {
     assert!(!app.document.as_ref().expect("open").model.can_undo());
 }
 
+/// Topolojiyi kurallarla denetle (docs/adr/1980): the project's two rules from the toolbox give cad.topology.check's
+/// findings in the table, select their objects and change nothing.
+#[test]
+fn the_topology_rules_from_the_toolbox_give_the_commands_findings() {
+    let mut app = app_with(TOPOLOGY);
+    let _ = app.update(Message::Run("processing.run.topology.check"));
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, table, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert_eq!(text, "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); bulgulu nesneler seçildi.");
+    let table = table.expect("the table");
+    assert_eq!(table.columns, ["Kural", "Sorun", "Durum", "Nesneler", "Doğu", "Kuzey", "Ölçü", "Gerekçe"]);
+    assert_eq!(
+        table.rows[2],
+        ["r2", "Kısa kenar", "Değerlendirilmedi", "#5", "487050.250", "4420010.000", "0.500 m", ""]
+    );
+    let selected: Vec<u32> = app.selection.ids().iter().map(|s| s.0).collect();
+    assert_eq!(selected, [1, 2, 3, 4, 5]);
+    assert!(!app.document.as_ref().expect("open").model.can_undo());
+}
+
 #[test]
 fn reprojecting_from_the_projects_own_system_is_refused() {
     let mut app = app_with_geometry();
@@ -141,6 +171,7 @@ fn screens() {
         "onar",
         "sadelestir",
         "donustur",
+        "topoloji",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -151,7 +182,7 @@ fn screens() {
                 {
                     continue;
                 }
-                let mut app = app_with_geometry();
+                let mut app = if name == "topoloji" { app_with(TOPOLOGY) } else { app_with_geometry() };
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
@@ -186,6 +217,11 @@ fn screens() {
                     "onar" => {
                         let _ = app.update(Message::Run("processing.run.geometry.repair"));
                         value(&mut app, "input", layer("hatali"));
+                        event(&mut app, Event::Run);
+                    }
+                    "topoloji" => {
+                        let _ = app.update(Message::Run("view.zoomExtents"));
+                        let _ = app.update(Message::Run("processing.run.topology.check"));
                         event(&mut app, Event::Run);
                     }
                     "sadelestir" => {

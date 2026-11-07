@@ -85,6 +85,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-19 / ADR 1920: `cad.field.package`'ın web işleyicisi ve Uygulama kontrolü penceresinin Saha paketi bölümü.
 - MAP-20 / ADR 1940: `road.project.graph`'ın web işleyicisi ve Proje ağacının İş grafiği penceresi.
 - MAP-06 / ADR 1960: web'in Paralel kaydır aracının Topolojik düzenleme açıkken `topology` göndermesi ve komşu önizlemesi.
+- MAP-07 / ADR 1980: web'in İşlem aracı `topology.check` (Topolojiyi kurallarla denetle) ve `fixtures/processing/v1/geometry.json`'ın topoloji durumları.
 - MAP-18 / ADR 1680: web'in pafta girdilerinde (`ProjectInfo`) koordinat bilgisi ve baskı denetiminde `crs_text_mismatch`.
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.
 - MAP-16 / ADR 1640: `cad.pipes.check`'in web işleyicisi ve Boru hattı denetimi penceresi.

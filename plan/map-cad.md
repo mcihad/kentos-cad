@@ -574,6 +574,15 @@ ADR 0148'in temizliğini komut yapar; her taşınma, nesne başına yerinde kala
 alan/boy farkı, kabul eşiğini aşan taşınma (yazma reddeder); Taşınma raporu penceresi ve CSV (20 ortak durum, Rust ve
 Python). Açık: ortak sınırın atomik düzenlenmesi, taşınmaların sahnede işaretlenmesi, büyük veri ölçümü.
 
+**7 Kasım 2026, ikinci tur — Topoloji denetimi İşlem araç kutusunda ([ADR 1980](../docs/adr/1980-topology-check-in-processing.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: GRASS v.clean'in açık sırası, QGIS'in Check validity / Topology Checker'ının
+araç kutusundan, modelden ve betikten çalışması. Kanıtlanan: “Topolojiyi kurallarla denetle” İşlem aracı
+`cad.topology.check`'in kendi denetimini (`topology_check::check_on`, iptal edilebilir) salt okunur çalıştırır;
+bulgular kural, sorun, durum, nesneler, yer, ölçü ve gerekçeyle tabloda, bulgulu nesneler seçili; ortak İşlem
+durumları elle hesaplanan bulgularla (doğrudan ve kopya üstünde); masaüstü penceresi. Ortak sınırın atomik düzenlenmesi
+yaylı ortak kenar dahil ADR 1960 ile geldi. Açık: veri formu yolu, hata katmanı, taşınmaların sahnede işaretlenmesi,
+üçlü birleşim ve çoklu köşe reddi, büyük veri ölçümü.
+
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
 **Öncelik:** P1 teknik veri modeli; resmî işlemler son aşama kapısında.

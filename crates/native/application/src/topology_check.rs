@@ -652,6 +652,23 @@ fn check_in(
     ))
 }
 
+/// Read-only, for a host that reads the drawing outside a command (İşlem araç kutusu's Topolojiyi kurallarla denetle,
+/// docs/adr/1980): the command's answer and warnings, stopping when `stopped` says so; a refusal in its words.
+pub fn check_on(
+    doc: &Document,
+    input: &TopologyCheck,
+    stopped: &dyn Fn() -> bool,
+) -> Result<(TopologyChecked, Vec<CommandWarning>), String> {
+    struct Stops<'a>(&'a dyn Fn() -> bool);
+    impl core::Watch for Stops<'_> {
+        fn progress(&self, _: f64) {}
+        fn stopped(&self) -> bool {
+            (self.0)()
+        }
+    }
+    check_in(doc, input, &Stops(stopped)).map_err(crate::road_corridors::words)
+}
+
 pub fn validate(cx: &ExecutionContext<'_>, input: &TopologyCheck) -> CommandResult<()> {
     match check_in(cx.doc, input, &JobWatch(cx)) {
         Ok(_) => CommandResult::Completed {

@@ -422,6 +422,8 @@ pub const PORTED: &[&str] = &[
     "processing.run.geometry.union",
     "processing.run.geometry.validity",
     "processing.run.geometry.repair",
+    // Topolojiyi kurallarla denetle (docs/adr/1980): the project's rules from the toolbox.
+    "processing.run.topology.check",
     "processing.run.geometry.simplify",
     "processing.run.geometry.reproject",
     // Ağ analizi (docs/adr/0209 §9).

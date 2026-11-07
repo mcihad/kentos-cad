@@ -146,6 +146,23 @@
      }
     }
    }
+  },
+  "topology.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "drawingFont": "barlow",
+    "activeLayer": "parsel",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "topology.check": {
+     "rules": "",
+     "exceptions": false
+    }
+   }
   }
  },
  "cases": [
@@ -2666,6 +2683,151 @@
    "expect": {
     "status": "error",
     "message": "Kaynak sistem projenin sistemiyle aynı; dönüştürülecek bir şey yok."
+   }
+  },
+  {
+   "id": "topology-check",
+   "title": "Topolojiyi kurallarla denetle: iki çakışma ve kısa kenar, yer ve ölçüleriyle; bulgulu nesneler seçilir, çizim değişmez",
+   "document": "topology.kcad",
+   "run": {
+    "tool": "topology.check"
+   },
+   "values": {},
+   "expect": {
+    "status": "ok",
+    "summary": "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); bulgulu nesneler seçildi.",
+    "undo": null,
+    "layers": [],
+    "addedShapes": [],
+    "outputs": {
+     "count": 3,
+     "open": 3,
+     "objects": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "findings": {
+      "columns": [
+       "Kural",
+       "Sorun",
+       "Durum",
+       "Nesneler",
+       "Doğu",
+       "Kuzey",
+       "Ölçü",
+       "Gerekçe"
+      ],
+      "rows": [
+       [
+        "r1",
+        "Çakışma",
+        "Değerlendirilmedi",
+        "#1, #2",
+        "487009.000",
+        "4420005.000",
+        "12.00 m²",
+        ""
+       ],
+       [
+        "r1",
+        "Çakışma",
+        "Değerlendirilmedi",
+        "#3, #4",
+        "487029.500",
+        "4420005.000",
+        "10.00 m²",
+        ""
+       ],
+       [
+        "r2",
+        "Kısa kenar",
+        "Değerlendirilmedi",
+        "#5",
+        "487050.250",
+        "4420010.000",
+        "0.500 m",
+        ""
+       ]
+      ]
+     }
+    },
+    "selection": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
+   }
+  },
+  {
+   "id": "topology-check-one-rule",
+   "title": "Topolojiyi kurallarla denetle: yalnız kısa kenar kuralı",
+   "document": "topology.kcad",
+   "run": {
+    "tool": "topology.check"
+   },
+   "values": {
+    "rules": "r2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 kural 5 nesnede 1 bulgu verdi (1 değerlendirilmedi); bulgulu nesneler seçildi.",
+    "undo": null,
+    "layers": [],
+    "addedShapes": [],
+    "outputs": {
+     "count": 1,
+     "open": 1,
+     "objects": [
+      5
+     ],
+     "findings": {
+      "columns": [
+       "Kural",
+       "Sorun",
+       "Durum",
+       "Nesneler",
+       "Doğu",
+       "Kuzey",
+       "Ölçü",
+       "Gerekçe"
+      ],
+      "rows": [
+       [
+        "r2",
+        "Kısa kenar",
+        "Değerlendirilmedi",
+        "#5",
+        "487050.250",
+        "4420010.000",
+        "0.500 m",
+        ""
+       ]
+      ]
+     }
+    },
+    "selection": [
+     5
+    ]
+   }
+  },
+  {
+   "id": "refuse-topology-rule",
+   "title": "Projede olmayan kural söylenir",
+   "document": "topology.kcad",
+   "run": {
+    "tool": "topology.check"
+   },
+   "values": {
+    "rules": "r9"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Projede “r9” kimlikli topoloji kuralı yok."
    }
   }
  ]

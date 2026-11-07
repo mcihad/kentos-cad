@@ -12,6 +12,7 @@ pub mod dissolve;
 pub mod overlay;
 pub mod reproject;
 pub mod simplify;
+pub mod topology;
 pub mod validity;
 
 use std::collections::BTreeMap;

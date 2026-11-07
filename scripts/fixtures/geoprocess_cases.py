@@ -10,7 +10,9 @@ Two files come out of it:
   Sadeleştir's vertices (Douglas–Peucker as ADR 0140 writes it), Koordinat sistemine dönüştür's vertices (PROJ, through
   pyproj, the registry's paths), and the shares Alan oranıyla paylaştır writes (Fraction × the double, half to even).
 - fixtures/processing/v1/geometry.json (with geometry.kcad): the eleven tools run on a drawing, in the processing
-  cases' format (fixtures/processing/README.md), their objects measured (`addedShapes`).
+  cases' format (fixtures/processing/README.md), their objects measured (`addedShapes`); and Topolojiyi kurallarla
+  denetle (docs/adr/1980) on topology.kcad, five parcels and two rules: each pair of rectangles that overlap, the
+  overlap's area and centroid; each edge shorter than the rule's length, its length and middle; in the rules' order.
 
 Closed forms in mpmath at 50 digits; distances of sample places from a shape in mpmath (a point's, a segment's, an
 arc's, a ring's boundary; inside by crossing number). A sample place stands at least 1 mm inside or outside.
@@ -753,6 +755,68 @@ DOCUMENT = {
 }
 
 
+# Topolojiyi kurallarla denetle's drawing (docs/adr/1980): the parcels of cad.topology.check's cases, the rules on them.
+TOPO_PARCELS = [
+    [(0, 0), (10, 0), (10, 10), (0, 10)],
+    [(8, 2), (18, 2), (18, 8), (8, 8)],
+    [(20, 0), (30, 0), (30, 10), (20, 10)],
+    [(29, 0), (40, 0), (40, 10), (29, 10)],
+    [(50, 0), (60, 0), (60, 10), (50.5, 10), (50, 10)],
+]
+TOPO_SHORT = 1.0
+TOPO_DOCUMENT = {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: topoloji kuralları",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000,
+                 "workspace": "hybrid", "drawingFont": "barlow",
+                 "topology": {"tolerance": 0.001, "rules": [{"id": "r1", "kind": "mustNotOverlap", "layer": "parsel"},
+                                                            {"id": "r2", "kind": "mustNotHaveShortEdges", "layer": "parsel",
+                                                             "value": TOPO_SHORT}]}},
+    "origin": {"x": E, "y": N},
+    "layers": [{"id": "parsel", "name": "Parsel", "type": "layer", "visible": True, "locked": False, "expanded": True,
+                "style": {"color": "#E5484D", "lineType": "continuous", "lineWeight": 0.35}, "children": []}],
+    "activeLayer": "parsel",
+    "entities": [{"kind": "polygon", "id": k + 1, "layerId": "parsel", "attrs": {}, "pts": [{"x": E + x, "y": N + y} for x, y in pts]}
+                 for k, pts in enumerate(TOPO_PARCELS)],
+    "styles": {"items": [], "categories": []},
+}
+
+
+def topology_rows(rules):
+    """The findings by hand, in the rules' order: an overlap of two rectangles (their boxes' meet) at its centroid with
+    its area; an edge shorter than the rule's length at its middle with its length."""
+    rows = []
+    if "r1" in rules:
+        boxes = [(min(x for x, _ in p), min(y for _, y in p), max(x for x, _ in p), max(y for _, y in p)) for p in TOPO_PARCELS[:4]]
+        for i in range(len(boxes)):
+            for j in range(i + 1, len(boxes)):
+                x0, y0 = max(boxes[i][0], boxes[j][0]), max(boxes[i][1], boxes[j][1])
+                x1, y1 = min(boxes[i][2], boxes[j][2]), min(boxes[i][3], boxes[j][3])
+                if x1 > x0 and y1 > y0:
+                    rows.append(["r1", "Çakışma", "Değerlendirilmedi", f"#{i + 1}, #{j + 1}", f"{E + (x0 + x1) / 2:.3f}",
+                                 f"{N + (y0 + y1) / 2:.3f}", f"{(x1 - x0) * (y1 - y0):.2f} m²", ""])
+    if "r2" in rules:
+        for k, p in enumerate(TOPO_PARCELS):
+            for a, b in zip(p, p[1:] + p[:1]):
+                d = math.hypot(b[0] - a[0], b[1] - a[1])
+                if d < TOPO_SHORT:
+                    rows.append(["r2", "Kısa kenar", "Değerlendirilmedi", f"#{k + 1}", f"{E + (a[0] + b[0]) / 2:.3f}",
+                                 f"{N + (a[1] + b[1]) / 2:.3f}", f"{d:.3f} m", ""])
+    return rows
+
+
+def topology_case(cid, title, values, rules):
+    rows = topology_rows(rules)
+    ids = sorted({int(t[1:]) for r in rows for t in r[3].split(", ")})
+    said = f"{len(rules)} kural {len(TOPO_PARCELS)} nesnede {len(rows)} bulgu verdi ({len(rows)} değerlendirilmedi); bulgulu nesneler seçildi."
+    return {"id": cid, "title": title, "document": "topology.kcad", "run": {"tool": "topology.check"}, "values": values,
+            "expect": ok(said, None, [], [], outputs={"count": len(rows), "open": len(rows), "objects": ids,
+                                                     "findings": {"columns": ["Kural", "Sorun", "Durum", "Nesneler", "Doğu",
+                                                                              "Kuzey", "Ölçü", "Gerekçe"], "rows": rows}},
+                         selection=ids)}
+
+
 def layer_id(name):
     """A new layer's id as the runner makes it: “islem-” and the name folded, lower case, other characters as “-”."""
     fold = str.maketrans("çğıöşüÇĞİÖŞÜâîû", "cgiosuCGIOSUaiu")
@@ -994,12 +1058,21 @@ def build_processing():
         "geometry.reproject": {"input": active, "source": "4326", "layer": {"newName": "Dönüştürülen"}},
     }
     defaults = {"lengthDecimals": 3, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim", "measureHeightMm": 2}
+    # Topolojiyi kurallarla denetle (docs/adr/1980): the project's rules from the toolbox, cad.topology.check's findings.
+    cases.append(topology_case("topology-check", "Topolojiyi kurallarla denetle: iki çakışma ve kısa kenar, yer ve ölçüleriyle; bulgulu nesneler seçilir, çizim değişmez",
+                               {}, ["r1", "r2"]))
+    cases.append(topology_case("topology-check-one-rule", "Topolojiyi kurallarla denetle: yalnız kısa kenar kuralı", {"rules": "r2"}, ["r2"]))
+    cases.append({"id": "refuse-topology-rule", "title": "Projede olmayan kural söylenir", "document": "topology.kcad",
+                  "run": {"tool": "topology.check"}, "values": {"rules": "r9"},
+                  "expect": {"status": "error", "message": "Projede “r9” kimlikli topoloji kuralı yok."}})
+    topo_defaults = {**defaults, "activeLayer": "parsel"}
     return {
         "format": "kentos.processing-cases",
         "version": 1,
         "tolerance": 1e-6,
         "measureTolerance": 1e-6,
-        "documents": {"geometry.kcad": {"defaults": defaults, "tools": tools}},
+        "documents": {"geometry.kcad": {"defaults": defaults, "tools": tools},
+                      "topology.kcad": {"defaults": topo_defaults, "tools": {"topology.check": {"rules": "", "exceptions": False}}}},
         "cases": cases,
     }
 
@@ -1008,7 +1081,9 @@ def main():
     core = json.dumps(build_core(), ensure_ascii=False, indent=1) + "\n"
     proc = json.dumps(build_processing(), ensure_ascii=False, indent=1) + "\n"
     doc = json.dumps(DOCUMENT, ensure_ascii=False, indent=1) + "\n"
-    outs = [(CORE_OUT, core), (PROC_DIR / "geometry.json", proc), (PROC_DIR / "geometry.kcad", doc)]
+    topo = json.dumps(TOPO_DOCUMENT, ensure_ascii=False, indent=1) + "\n"
+    outs = [(CORE_OUT, core), (PROC_DIR / "geometry.json", proc), (PROC_DIR / "geometry.kcad", doc),
+            (PROC_DIR / "topology.kcad", topo)]
     if "--check" in sys.argv[1:]:
         bad = [p for p, t in outs if not p.exists() or p.read_text() != t]
         for p in bad:

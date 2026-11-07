@@ -49,6 +49,10 @@
 - **Harita'da proje ağacı (7 Kasım 2026; MAP-20, [ADR 1720](../../docs/adr/1720-map-project-tree-and-rebuild.md)).**
   `.kcad` şema 198 (Harita'nın `road.drawings`/`autoRebuild`, sıfır hattı çizimi); `road.project.*` Harita'yı kabul
   eder; sıfır hattı iki yüzeyin damgasıyla tutulur.
+- **Topoloji denetimi İşlem araç kutusunda (7 Kasım 2026; MAP-07, [ADR 1980](../../docs/adr/1980-topology-check-in-processing.md)).**
+  İşlem aracı `topology.check` (Topolojiyi kurallarla denetle) `cad.topology.check`'in denetimini
+  (`topology_check::check_on`) salt okunur çalıştırır: bulgular tabloda, nesneler seçili; komutu
+  `processing.run.topology.check` additions.json'da.
 - **Paralel kaydırmada ortak sınır (7 Kasım 2026; MAP-06, [ADR 1960](../../docs/adr/1960-parallel-shift-shared-boundary.md)).**
   `cad.shapes.edit` › `edgeShift` + `topology`: komşu parsel ve çizgi uçları aynı adımda kayar, toplam alan korunur,
   `neighbours` boyları söyler; kilitli komşu `neighbour_locked` / `shared_boundary_locked`; çekirdek kuralı: kabarıklığı

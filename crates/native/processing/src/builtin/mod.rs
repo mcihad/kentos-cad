@@ -102,6 +102,8 @@ pub fn tools() -> Vec<Tool> {
         geometry::overlay::union(),
         geometry::validity::validity(),
         geometry::validity::repair_tool(),
+        // Topolojiyi kurallarla denetle (docs/adr/1980): the project's rules from the toolbox; native only for now.
+        geometry::topology::tool(),
         geometry::simplify::tool(),
         geometry::reproject::tool(),
         // Adres (docs/adr/0229 §11, §12): the desktop's; the web's side waits (docs/adr/0228).
