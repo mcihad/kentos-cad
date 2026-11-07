@@ -42,6 +42,29 @@ pub struct ProjectInfo {
     /// `@koordinat_sistemi` when `crs` is not given.
     #[serde(default)]
     pub crs_name: String,
+    /// The project's coordinate facts (docs/adr/1680), each `@` value none when empty: `@datum`, `@elipsoit`,
+    /// `@projeksiyon`, `@kot_sistemi`, `@ikinci_sistem`, `@epsg_kodu` and `@epok`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub datum: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub ellipsoid: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub projection: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub heights: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub second_crs: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub epsg: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub epoch: Option<f64>,
     /// The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214
     /// §2.3): `@name` answered after the book's variables of the same name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

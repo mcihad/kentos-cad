@@ -82,6 +82,7 @@ pub fn library_of(doc: &Document) -> StyleLibrary {
 pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
     let settings = doc.settings();
     let name = crs_name(settings);
+    let facts = kentos_project::facts::coordinate_facts(settings);
     RenderInputs {
         mode: RenderMode::Export,
         named_views: settings.drawn_views(),
@@ -90,6 +91,13 @@ pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
             user: user.to_owned(),
             date: date.to_owned(),
             crs_name: name.clone().unwrap_or_default(),
+            datum: facts.datum,
+            ellipsoid: facts.ellipsoid,
+            projection: facts.projection,
+            heights: facts.heights,
+            second_crs: facts.second,
+            epsg: facts.epsg,
+            epoch: facts.epoch,
             // The drawing's own variables, read after the book's (docs/adr/0214 §2.3).
             variables: settings.variables.iter().map(sheet_variable).collect(),
         },

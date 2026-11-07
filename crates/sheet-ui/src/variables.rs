@@ -350,7 +350,7 @@ impl Designer {
             .push(list(Scope::Project, &d.project, "Projenin değişkeni yok: bütün paftalarda aynı olan değerler (proje no, idare …) için ekleyin."))
             .push(add(Scope::Project, &d.new_project, "Proje değişkeni ekle"))
             .push(
-                label::caption("Hazır değişkenler kendiliğinden dolar: @proje_adi, @pafta_adi, @sayfa, @sayfa_sayisi, @olcek, @tarih, @kullanici, @koordinat_sistemi.")
+                label::caption("Hazır değişkenler kendiliğinden dolar: @proje_adi, @pafta_adi, @sayfa, @sayfa_sayisi, @olcek, @tarih, @kullanici, @koordinat_sistemi; projenin koordinat bilgisi: @epsg_kodu, @datum, @elipsoit, @projeksiyon, @kot_sistemi, @epok, @ikinci_sistem.")
                     .style(style::text::muted),
             );
         if let Some(p) = &d.problem {

@@ -19,6 +19,11 @@ date: string,
  */
 crsName: string, 
 /**
+ * The project's coordinate facts (docs/adr/1680), each `@` value none when empty: `@datum`, `@elipsoit`,
+ * `@projeksiyon`, `@kot_sistemi`, `@ikinci_sistem`, `@epsg_kodu` and `@epok`.
+ */
+datum?: string, ellipsoid?: string, projection?: string, heights?: string, secondCrs?: string, epsg?: string, epoch?: number, 
+/**
  * The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214
  * §2.3): `@name` answered after the book's variables of the same name.
  */

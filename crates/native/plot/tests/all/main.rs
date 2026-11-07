@@ -30,6 +30,7 @@ mod document_quality;
 mod preview;
 
 mod calibration;
+mod coordinate_facts;
 
 mod drawing_set;
 

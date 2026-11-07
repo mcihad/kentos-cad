@@ -27,8 +27,8 @@ use serde_json::json;
 use crate::designer::{Designer, Dialog as Window, Effect};
 use crate::message::Message;
 
-/// The ready names every expression of a sheet may read.
-pub const READY: [&str; 10] = [
+/// The ready names every expression of a sheet may read; the coordinate facts last (docs/adr/1680).
+pub const READY: [&str; 17] = [
     "@proje_adi",
     "@pafta_adi",
     "@sayfa",
@@ -39,6 +39,13 @@ pub const READY: [&str; 10] = [
     "@tarih",
     "@kullanici",
     "@koordinat_sistemi",
+    "@epsg_kodu",
+    "@datum",
+    "@elipsoit",
+    "@projeksiyon",
+    "@kot_sistemi",
+    "@epok",
+    "@ikinci_sistem",
 ];
 
 #[derive(Clone, Debug, PartialEq)]

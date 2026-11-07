@@ -1009,6 +1009,13 @@ PDF ve devam ettirilebilir güncelleme; anotasyon/tabloların kaynak kimliği ve
 yazı ile GIS dinamik etiketin ayrılması, datum/epok/kalite notları ve kurum eksen adları, resmî profil kapısı, eksik
 kaynak/okunmayan anotasyon bulguları. Madde açık kalır.
 
+**7 Kasım 2026 — Paftada koordinat bilgisi ([ADR 1680](../docs/adr/1680-sheet-coordinate-facts.md)).** Kapsam: **CAD + CBS**
+(pafta). Kanıtlanan: pafta yazıları `@datum`, `@elipsoit`, `@projeksiyon`, `@kot_sistemi`, `@epok`, `@ikinci_sistem` ve
+`@epsg_kodu`yu projenin kendi bilgisinden okur (EPSG kaydı ve projenin kot/epok ayarı; ayrılmış ad değil, projenin
+değişkeni önce gelir); baskı öncesi denetim projenin sisteminden başka EPSG kodu ya da datum yazan yazıyı
+`crs_text_mismatch` ile bulur, dönüşüm notunu bulmaz. Açık: kurum eksen adları, kuzey türü notu, ölçme kalite notu,
+resmî profil kapısı.
+
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 
 **Öncelik:** P1 çevrimdışı karşılaştırma; canlı cihaz işi donanım kapısında.

@@ -107,6 +107,7 @@ fn context(workspace: Option<kentos_contracts::Workspace>) -> Context {
             date: "2026-10-02".into(),
             crs_name: "TUREF / TM33".into(),
             variables: Vec::new(),
+            ..kentos_sheet::display::ProjectInfo::default()
         },
         center: Some(GroundPoint {
             x: 484_250.0,

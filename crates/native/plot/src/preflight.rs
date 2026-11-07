@@ -21,6 +21,87 @@ fn finding(item: &str, code: &str, message: String, fix: &str, severity: Severit
         placeholder: false,
     }
 }
+/// The datum families a sheet's text may name, each with the words that name it and the registry's datum id.
+const DATUMS: [(&str, &[&str]); 3] = [
+    ("TUREF", &["TUREF", "ITRF96", "ITRF 96", "ITRF-96"]),
+    ("ED50", &["ED50", "ED 50", "ED-50"]),
+    ("WGS84", &["WGS84", "WGS 84", "WGS-84"]),
+];
+
+/// A text's literal words: its `[% … %]` expressions taken out (they read the project's own values).
+fn literal(content: &str) -> String {
+    let mut out = String::new();
+    let mut rest = content;
+    while let Some(i) = rest.find("[%") {
+        out.push_str(&rest[..i]);
+        match rest[i..].find("%]") {
+            Some(j) => rest = &rest[i + j + 2..],
+            None => {
+                rest = "";
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// The EPSG codes a text names (`EPSG:5256`, `EPSG 5256`, `epsg:5256`).
+fn epsg_codes(text: &str) -> Vec<u32> {
+    let upper = text.to_ascii_uppercase();
+    let mut out = Vec::new();
+    let mut at = 0;
+    while let Some(i) = upper[at..].find("EPSG") {
+        let tail = &upper[at + i + 4..];
+        let tail = tail.trim_start_matches([':', ' ', '-']);
+        let digits: String = tail.chars().take_while(char::is_ascii_digit).collect();
+        if let Ok(code) = digits.parse::<u32>() {
+            out.push(code);
+        }
+        at += i + 4;
+    }
+    out
+}
+
+/// A sheet's texts that name a coordinate system other than the project's (docs/adr/1680; plan/map-cad.md MAP-18:
+/// the grid, datum and epoch from the same project information): an EPSG code that is not the project's own, its
+/// second or its map's; a datum family the project's system is not on, in a text that names none of the project's.
+/// The `@` values (`@epsg_kodu`, `@datum`, `@koordinat_sistemi`) say it from the project.
+pub(crate) fn crs_texts(settings: &kentos_contracts::ProjectSettings, scene: &kentos_sheet::scene::Scene) -> Vec<Finding> {
+    let Some(own) = kentos_project::crs::system(settings.srid).filter(|_| settings.srid != kentos_project::crs::LOCAL_SRID)
+    else {
+        return Vec::new();
+    };
+    let known: Vec<u32> = [Some(settings.srid), settings.second_srid, settings.map_srid].into_iter().flatten().collect();
+    let family = DATUMS.iter().find(|(id, _)| *id == own.datum);
+    let mut out = Vec::new();
+    for (item, _) in scene.all() {
+        let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else { continue };
+        let words = literal(&t.content);
+        let upper = words.to_ascii_uppercase();
+        let names = |list: &[&str]| list.iter().any(|w| upper.contains(w));
+        let foreign_code = epsg_codes(&words).into_iter().find(|c| !known.contains(c));
+        let foreign_datum = family.and_then(|(_, own_words)| {
+            (!names(own_words)).then(|| DATUMS.iter().find(|(id, list)| *id != own.datum && names(list)).map(|(id, _)| *id)).flatten()
+        });
+        let said = match (foreign_code, foreign_datum) {
+            (Some(code), _) => format!("EPSG:{code}"),
+            (None, Some(datum)) => datum.to_owned(),
+            _ => continue,
+        };
+        out.push(finding(
+            &item.id,
+            "crs_text_mismatch",
+            format!(
+                "“{}” yazısı {said} diyor; projenin sistemi {} (EPSG:{}). Pafta, projenin sisteminden başkasını söylüyor.",
+                item.name, own.name, own.srid
+            ),
+            "Sistemi elle yazmak yerine [% @koordinat_sistemi %], [% @epsg_kodu %] ve [% @datum %] kullanın; yazı projenin bilgisini okur.",
+            Severity::Warning,
+        ));
+    }
+    out
+}
+
 /// Native additions to shared layout checks. All source reads happen in the host's background job.
 pub fn inspect(
     doc: &Document,
@@ -48,6 +129,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     out.retain(|f| f.code != "low_resolution");
     let scene = kentos_sheet::scene::Scene::new(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
+    out.extend(crs_texts(doc.settings(), &scene));
     let library = crate::book::library_of(doc);
     let mut line_type_drawer = crate::book::MapDrawer::new(doc, &spatial, &library, None);
     for prim in &list.prims {

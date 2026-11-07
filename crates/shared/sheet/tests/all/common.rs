@@ -241,6 +241,7 @@ pub fn sample_inputs(book: &SheetBook, sheet_id: &str, georeferenced: bool) -> R
             date: "2026-10-02".into(),
             crs_name: String::new(),
             variables: Vec::new(),
+            ..ProjectInfo::default()
         },
         capabilities: Capabilities {
             georeferenced,

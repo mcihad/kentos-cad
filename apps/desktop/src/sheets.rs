@@ -1480,6 +1480,20 @@ impl App {
                         .map(kentos_plot::inputs::sheet_variable)
                         .collect()
                 }),
+                // The coordinate facts (docs/adr/1680), as the printed sheet has them.
+                ..settings.map_or_else(ProjectInfo::default, |s| {
+                    let f = kentos_project::facts::coordinate_facts(s);
+                    ProjectInfo {
+                        datum: f.datum,
+                        ellipsoid: f.ellipsoid,
+                        projection: f.projection,
+                        heights: f.heights,
+                        second_crs: f.second,
+                        epsg: f.epsg,
+                        epoch: f.epoch,
+                        ..ProjectInfo::default()
+                    }
+                })
             },
             // With its transverse Mercator parameters: the core works out the meridian convergence.
             crs: crs.map(|name| {

@@ -587,6 +587,14 @@ fn builtins(book: &SheetBook, sheet: &Sheet, inputs: &RenderInputs, scope: &mut 
     };
     scope.builtin("kagit", VarValue::Text(paper));
     scope.builtin("koordinat_sistemi", text(crs));
+    // The coordinate facts (docs/adr/1680): the project's, never typed on the sheet.
+    scope.builtin("datum", text(&project.datum));
+    scope.builtin("elipsoit", text(&project.ellipsoid));
+    scope.builtin("projeksiyon", text(&project.projection));
+    scope.builtin("kot_sistemi", text(&project.heights));
+    scope.builtin("ikinci_sistem", text(&project.second_crs));
+    scope.builtin("epsg_kodu", text(&project.epsg));
+    scope.builtin("epok", project.epoch.map_or(VarValue::Null, VarValue::Number));
     let (index, count) = match &inputs.page {
         Some(p) => (p.index, p.count),
         None => (
