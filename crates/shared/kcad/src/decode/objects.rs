@@ -297,6 +297,8 @@ pub(super) struct Features {
     pub(super) map_platforms: bool,
     /// Schema 198 (docs/adr/1720): a map project's drawings kept with their sources' stamps.
     pub(super) map_drawings: bool,
+    /// Schema 199 (docs/adr/1740): a GNSS archive's baselines, known points and network adjustments.
+    pub(super) gnss_network: bool,
     /// Schema 190 (docs/adr/1129): the accepted standards findings.
     pub(super) standard_exceptions: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
@@ -615,6 +617,7 @@ impl Features {
             surface_edits: schema >= crate::SCHEMA_WITH_SURFACE_EDITS,
             map_platforms: schema >= crate::SCHEMA_WITH_MAP_PLATFORMS,
             map_drawings: schema >= crate::SCHEMA_WITH_MAP_DRAWINGS,
+            gnss_network: schema >= crate::SCHEMA_WITH_GNSS_NETWORK,
             standard_exceptions: schema >= crate::SCHEMA_WITH_STANDARD_EXCEPTIONS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,

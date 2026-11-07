@@ -3,4 +3,4 @@
 /**
  * What a session's original file is.
  */
-export type SurveyFileFormat = "rinex" | "nmea" | "gpx" | "report";
+export type SurveyFileFormat = "rinex" | "nmea" | "gpx" | "report" | "gvx" | "text";

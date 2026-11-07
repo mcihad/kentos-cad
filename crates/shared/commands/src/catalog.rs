@@ -9759,8 +9759,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::MAP_SURVEY_EDIT.into(),
             version: crate::MAP_SURVEY_EDIT_VERSION,
             title: "GNSS arşivini düzenle".into(),
-            summary: "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz. \
-                      Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system)."
+            summary: "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları okunmaz, uyarı gvx_correlations_ignored; ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed. Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. \
+                      Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing, known_differ, unknown_rule_class, duplicate_station, invalid_covariance, network_too_large, network_disconnected, network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system)."
                 .into(),
             aliases: vec!["gnssarsividuzenle".into()],
             effect: CommandEffect::Document,
@@ -9790,7 +9790,42 @@ pub fn catalog() -> CommandCatalog {
                     input: json!({ "operation": { "op": "exclude", "solution": "cz-3", "reason": "Ağaç altında, float'a düştü" } }),
                     output: None,
                 },
+                CommandExample {
+                    title: "GVX dosyasının bazlarını arşive al".into(),
+                    input: json!({ "operation": { "op": "baselines", "campaign": "kp-1", "file": "/veri/ag-2026-11.gvx" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Ağı BÖHHBÜY C2 sınıfıyla dengeleyip kabul et".into(),
+                    input: json!({ "operation": { "op": "network", "class": "C2", "layer": "gnss" } }),
+                    output: None,
+                },
             ],
+        },
+        CommandDescriptor {
+            id: crate::MAP_SURVEY_NETWORK.into(),
+            version: crate::MAP_SURVEY_NETWORK_VERSION,
+            title: "GNSS ağını dengele".into(),
+            summary: "Harita projesinin GNSS arşivindeki bazlardan (dengelemeye giren, dışlanmamış; campaign verilirse yalnız o arazi ölçümünün) ve uçlarındaki bilinen noktalardan (dışlanmamış; aynı coğrafi çerçeve ve epokta, ölçme epokunda) kurulan ağı iki kez dengeler; hiçbir şey yazmaz. Serbest: tek bilinen nokta (hold, verilmezse ilki) sabit; uyuşumsuz bazlar ve ağın kendi duyarlığı (BÖHHBÜY Madde 15(1)(b)). Dayalı: bilinen noktalar sabit, σ'sı verilmişse kuzey/doğu/yukarı σ'sıyla ağırlıklı (ECEF'e döndürülmüş tam kovaryans); işaretlerin koordinatları (15(1)(ç)). Her aşamada m0, serbestlik, vᵀPv, χ² (%95) ve model testi, uyuşumsuz ölçü sayısı ve en kötüsü; her baz için uzunluk, işlenmiş σX σY σZ (varyans çarpanıyla), serbest dengelemede dengelenmiş vektörün σ'sı, iki aşamada başlangıcının doğu/kuzey/yukarısında artık, w ve durum. Bilinen nokta olmayan işaretler koordinat zinciriyle projeye taşınır, kabul edilen noktasından farkı (dx, dy, dz) verilir. class (KentOS'un paketinde BÖHHBÜY 2018 C1, C2, C3; rules ile başka paket) baz σ'sını a + b·ppm·uzunluk sınırıyla (C1 serbest dengelemenin, C2/C3 işlenmiş σ), noktanın σ kuzey/doğu/yukarısını sınırlarla ve testleri sınıfın güveniyle (C1: 1−α = 0,95, w > 1,96; başkasında Baarda α₀ = 0,001, w > 3,29) denetler. acceptable ve why: kabul edilip edilemeyeceği. Kurum onayı değildir. \
+                      Retler: not_a_map_project, unknown_survey_record, invalid_survey_value, unknown_rule_class, no_baselines, solutions_differ, datum_missing, known_differ, unknown_frame, duplicate_station, invalid_covariance, network_too_large, network_disconnected."
+                .into(),
+            aliases: vec!["gnssagi".into(), "arsivagdengele".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapSurveyNetwork>(),
+            output: schema::<crate::MapSurveyNetworked>(),
+            plan: Some(schema::<crate::MapSurveyNetworked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "BÖHHBÜY C2 sınıfıyla, varyans çarpanı 2".into(),
+                input: json!({ "class": "C2", "scale": 2.0 }),
+                output: None,
+            }],
         },
         CommandDescriptor {
             id: crate::FILE_EXPORT_LANDXML.into(),
@@ -16134,6 +16169,7 @@ mod tests {
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
+                    crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetwork>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdit>(e.input.clone()).map(|_| ()),
                     crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_QUERY => {
@@ -17089,6 +17125,7 @@ mod tests {
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
+                        crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetworked>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
                         crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_STAKEOUT_QUERY => {

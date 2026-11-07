@@ -90,7 +90,7 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
     let core = GnssInput {
         stations: stations
             .iter()
-            .map(|s| GnssStation { name: s.name.clone(), xyz: s.xyz, fixed: s.fixed, sigma: s.sigma })
+            .map(|s| GnssStation { name: s.name.clone(), xyz: s.xyz, fixed: s.fixed, sigma: s.sigma, cov: None })
             .collect(),
         baselines: baselines
             .iter()

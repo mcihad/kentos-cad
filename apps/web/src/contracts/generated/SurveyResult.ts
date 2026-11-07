@@ -11,4 +11,8 @@ export type SurveyResult = { revision: number, solutions: Array<string>, method:
 /**
  * `complete` or `limited` (docs/adr/1230).
  */
-chain: string, reasons?: Array<string>, };
+chain: string, reasons?: Array<string>, 
+/**
+ * The network adjustment `da-N` it was made by (method `network`; docs/adr/1740).
+ */
+adjustment?: string, };

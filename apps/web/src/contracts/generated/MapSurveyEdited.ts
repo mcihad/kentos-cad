@@ -5,4 +5,8 @@
  * revision, how many positions a session took from its file, how many records a remove took, how many accepted points
  * and uses are out of date after, and the drawing's revision.
  */
-export type MapSurveyEdited = { id?: string, uid?: string, pointRevision?: number, observations?: number, removed?: number, stale: number, revision: string, };
+export type MapSurveyEdited = { id?: string, uid?: string, pointRevision?: number, observations?: number, removed?: number, stale: number, 
+/**
+ * The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
+ */
+records?: Array<string>, revision: string, };

@@ -3,4 +3,4 @@
 /**
  * How an accepted point is made of its solutions.
  */
-export type AcceptMethod = "single" | "mean" | "weighted";
+export type AcceptMethod = "single" | "mean" | "weighted" | "network";

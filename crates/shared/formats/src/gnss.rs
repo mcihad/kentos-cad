@@ -12,6 +12,7 @@ use crate::text;
 
 pub mod gpx;
 pub mod gpx_write;
+pub mod gvx;
 pub mod nmea;
 pub mod rinex;
 

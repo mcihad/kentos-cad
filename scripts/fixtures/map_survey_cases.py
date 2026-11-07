@@ -408,14 +408,14 @@ def setup(work="map", survey="start", locked_gnss=False, heights=True):
 def point_entity(layer_id, r, mark, pid):
     e = {"kind": "point", "id": 1, "layerId": layer_id,
          "attrs": {"Ad": mark, "Kabul": pid, "Revizyon": str(r["revision"]), "Yöntem": METHOD[r["method"]],
-                   "Çözüm": ", ".join(r["solutions"]), "Arazi ölçümü": campaign_name()},
+                   "Çözüm": r.get("adjustment") or ", ".join(r["solutions"]), "Arazi ölçümü": campaign_name()},
          "p": {"x": r["x"], "y": r["y"]}}
     if "z" in r:
         e["z"] = r["z"]
     return e
 
 
-METHOD = {"single": "Tek çözüm", "mean": "Ortalama", "weighted": "Ağırlıklı ortalama"}
+METHOD = {"single": "Tek çözüm", "mean": "Ortalama", "weighted": "Ağırlıklı ortalama", "network": "Ağ dengelemesi"}
 
 
 def m3(v):
@@ -588,9 +588,41 @@ class Model:
         r["chain"] = out["chain"]["status"]
         return r
 
+    # ADR 1740: what a network adjustment's point rests on.
+    def network_why(self, a_id):
+        a = self.get("adjustments", a_id) if self.survey.get("adjustments") else None
+        if a is None:
+            return [f"“{a_id}” ağ dengelemesi arşivde yok."]
+        why = []
+        for bid in a["baselines"]:
+            b = self.get("baselines", bid)
+            if b is None:
+                why.append(f"“{bid}” bazı arşivde yok.")
+            elif "excluded" in b:
+                why.append(f"“{bid}” bazı dışlandı: {b['excluded']}")
+            elif not b["adjust"]:
+                why.append(f"“{bid}” bazı dengelemeden çıkarıldı.")
+        for kid in a["known"]:
+            k = self.get("known", kid)
+            if k is None:
+                why.append(f"“{kid}” bilinen noktası arşivde yok.")
+            elif "excluded" in k:
+                why.append(f"“{kid}” bilinen noktası dışlandı: {k['excluded']}")
+        return why
+
+    def campaign_of_result(self, r):
+        if "adjustment" in r:
+            a = self.get("adjustments", r["adjustment"]) if self.survey.get("adjustments") else None
+            b = self.get("baselines", a["baselines"][0]) if a else None
+            return self.get("campaigns", b["campaign"]) if b else None
+        first = self.get("solutions", r["solutions"][0]) if r["solutions"] else None
+        return self.campaign_of(first) if first else None
+
     # §3: why a point is out of date; rows.
     def point_why(self, p):
         why = []
+        if "adjustment" in p["result"]:
+            why.extend(self.network_why(p["result"]["adjustment"]))
         for used in p["result"]["antenna"]:
             s = self.get("sessions", used["session"])
             now = self.vertical(s) if s else None
@@ -600,8 +632,7 @@ class Model:
                 else:
                     why.append(f"“{used['session']}” oturumunun anten yüksekliği {m3(used['height'])} m iken "
                                f"{m3(now)} m oldu.")
-        first = self.get("solutions", p["result"]["solutions"][0])
-        now = self.decision(self.campaign_of(first) if first else None)
+        now = self.decision(self.campaign_of_result(p["result"]))
         if now != p["result"].get("targetEpoch"):
             why.append(f"Epok kararı {epoch_text(p['result'].get('targetEpoch'))} iken {epoch_text(now)} oldu.")
         for sid in p["result"]["solutions"]:
@@ -741,6 +772,32 @@ class Model:
         points = [self.point_row(p) for p in sv["points"]]
         uses = [self.use_row(u) for u in sv["uses"]]
         out = {"campaigns": campaigns, "sessions": sessions, "marks": marks, "points": points, "uses": uses}
+        # ADR 1740: the baselines as they stand, the known points and the network adjustments.
+        if sv.get("baselines"):
+            rows = []
+            for b in sv["baselines"]:
+                c = b["covariance"]
+                row = {"id": b["id"], "campaign": b["campaign"], "from": b["from"], "to": b["to"],
+                       "length": math.sqrt(b["d"][0] * b["d"][0] + b["d"][1] * b["d"][1] + b["d"][2] * b["d"][2]),
+                       "sigma": [math.sqrt(c[0]), math.sqrt(c[3]), math.sqrt(c[5])]}
+                if "excluded" in b:
+                    row["excluded"] = b["excluded"]
+                row["adjust"] = b["adjust"]
+                if "file" in b:
+                    f = b["file"]
+                    row["file"] = {"path": f["path"], "revision": f["revision"], "format": f["format"],
+                                   "state": file_state(f, deep, files)}
+                if "source" in b:
+                    row["source"] = b["source"]
+                used = [a["id"] for a in sv.get("adjustments", []) if b["id"] in a["baselines"]]
+                if used:
+                    row["adjustments"] = used
+                rows.append(row)
+            out["baselines"] = rows
+        if sv.get("known"):
+            out["known"] = copy.deepcopy(sv["known"])
+        if sv.get("adjustments"):
+            out["adjustments"] = copy.deepcopy(sv["adjustments"])
         if of is not None:
             out["object"] = self.object(of, latest)
         out["stale"] = sum(p["state"] == "stale" for p in points) + sum(u["state"] == "stale" for u in uses)
@@ -798,7 +855,9 @@ def file_state(f, deep, files):
     path = f["path"]
     now = files.get(path)
     if now is None and path.startswith("$fixture:map-survey/v1/"):
-        now = sha(WRITTEN[path.split("/")[-1]])
+        # The network's files (map_survey_network_cases.py, ADR 1740) are written there by their own script.
+        name = path.split("/")[-1]
+        now = sha(WRITTEN[name]) if name in WRITTEN else sha((FILES / name).read_bytes())
     if now is None:
         return "missing"
     if not deep:
@@ -1412,6 +1471,11 @@ def built():
          "title": "GNSS arşivini düzenle: arazi ölçümü, RINEX/NMEA oturumu, alıcı ve işlenmiş çözüm, dışlama, kabul, "
                   "yeniden üretme, dayanan, çıkarma", "note": common, "setup": base.document(),
          "cases": edit_cases(base)}
+    # The network's operations (ADR 1740): their own script writes them, here they join the edit's cases. Imported here:
+    # it imports this script as a module.
+    import map_survey_network_cases as net
+    e["cases"] += net.edit_cases()
+    e["title"] += "; baz, bilinen nokta ve ağ dengelemesinin kabulü"
     return q, e
 
 

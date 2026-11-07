@@ -12,13 +12,15 @@ use super::{MAX_UNKNOWNS, Normal, Observed, Statistics, name_key, statistics};
 use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
 
 /// A station: its name, its coordinates when known (m), whether they are held, and when weighted their standard
-/// deviations (m).
+/// deviations (m) or their full covariance xx, xy, xz, yy, yz, zz (m²; a known point's north, east, up deviations turned
+/// into X, Y, Z are correlated, docs/adr/1740).
 #[derive(Clone, Debug, PartialEq)]
 pub struct GnssStation {
     pub name: String,
     pub xyz: Option<[f64; 3]>,
     pub fixed: bool,
     pub sigma: Option<[f64; 3]>,
+    pub cov: Option<[f64; 6]>,
 }
 
 /// A baseline from `from` to `to`: ΔX, ΔY, ΔZ (m) and its covariance's upper triangle xx, xy, xz, yy, yz, zz (m²).
@@ -58,12 +60,14 @@ pub struct AdjustedStation {
     pub held: bool,
 }
 
-/// A baseline's residual vector (computed − observed, m) and its largest component test value and what it says.
+/// A baseline's residual vector (computed − observed, m), its largest component test value and what it says, and the
+/// standard deviations of the adjusted vector's components (m, by m0; docs/adr/1740).
 #[derive(Clone, Debug, PartialEq)]
 pub struct BaselineResidual {
     pub v: [f64; 3],
     pub w: Option<f64>,
     pub flag: &'static str,
+    pub adjusted: [f64; 3],
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -134,8 +138,37 @@ pub fn geodetic(p: [f64; 3]) -> (f64, f64) {
     (lat, lon)
 }
 
+/// An ellipsoid's ECEF point (m) of a latitude, longitude (radians) and ellipsoidal height (m); `a` the semi-major
+/// axis (m), `inv_f` the inverse flattening.
+pub fn to_ecef(a: f64, inv_f: f64, lat: f64, lon: f64, h: f64) -> [f64; 3] {
+    let f = 1.0 / inv_f;
+    let e2 = f * (2.0 - f);
+    let (sl, cl) = (sin(lat), cos(lat));
+    let n = a / (1.0 - e2 * sl * sl).sqrt();
+    [(n + h) * cl * cos(lon), (n + h) * cl * sin(lon), (n * (1.0 - e2) + h) * sl]
+}
+
+/// An ECEF point's latitude, longitude (radians) and ellipsoidal height (m) on an ellipsoid: Bowring's iteration to
+/// convergence, the height from the normal's foot (exact at any latitude short of the poles' axis).
+pub fn to_geodetic(a: f64, inv_f: f64, p: [f64; 3]) -> (f64, f64, f64) {
+    let f = 1.0 / inv_f;
+    let e2 = f * (2.0 - f);
+    let lon = atan2(p[1], p[0]);
+    let r = js_hypot(p[0], p[1]);
+    let mut lat = atan2(p[2], r * (1.0 - e2));
+    for _ in 0..10 {
+        let s = sin(lat);
+        let n = a / (1.0 - e2 * s * s).sqrt();
+        let h = r * cos(lat) + p[2] * s - a * (1.0 - e2 * s * s).sqrt();
+        lat = atan2(p[2], r * (1.0 - e2 * n / (n + h)));
+    }
+    let s = sin(lat);
+    let h = r * cos(lat) + p[2] * s - a * (1.0 - e2 * s * s).sqrt();
+    (lat, lon, h)
+}
+
 /// The rows of the rotation from ECEF to east, north, up at a latitude and longitude.
-fn enu_rows(lat: f64, lon: f64) -> [[f64; 3]; 3] {
+pub fn enu_rows(lat: f64, lon: f64) -> [[f64; 3]; 3] {
     let (sl, cl) = (sin(lat), cos(lat));
     let (sn, cn) = (sin(lon), cos(lon));
     [[-sn, cn, 0.0], [-sl * cn, -sl * sn, cl], [cl * cn, cl * sn, sl]]
@@ -175,8 +208,16 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         {
             return Err(refuse("invalid_input", "Bilinen istasyonun standart sapmaları sıfırdan büyük olmalı.".into(), format!("stations[{i}].sigma")));
         }
-        if s.fixed && s.sigma.is_some() {
+        if (s.fixed && (s.sigma.is_some() || s.cov.is_some())) || (s.sigma.is_some() && s.cov.is_some()) {
             return Err(refuse("invalid_input", format!("“{}” hem sabit hem ağırlıklı olamaz.", s.name.trim()), format!("stations[{i}]")));
+        }
+        if s.cov.is_some() && s.xyz.is_none() {
+            return Err(refuse("invalid_input", format!("“{}” ağırlıklı ama koordinatı yok.", s.name.trim()), format!("stations[{i}].xyz")));
+        }
+        if let Some(c) = s.cov
+            && cholesky3(&c).is_none()
+        {
+            return Err(refuse("invalid_covariance", format!("“{}” istasyonunun kovaryansı pozitif tanımlı değil.", s.name.trim()), format!("stations[{i}].cov")));
         }
     }
     let mut ends: Vec<(usize, usize, [[f64; 3]; 3])> = Vec::new();
@@ -198,7 +239,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     }
     // The datum: fixed and weighted stations, else the minimal constraint.
     let mut fixed: Vec<bool> = input.stations.iter().map(|s| s.fixed).collect();
-    let anchored = input.stations.iter().any(|s| s.fixed || s.sigma.is_some());
+    let anchored = input.stations.iter().any(|s| s.fixed || s.sigma.is_some() || s.cov.is_some());
     let mut held = None;
     if !anchored {
         match (input.datum, input.stations.iter().position(|s| s.xyz.is_some())) {
@@ -291,6 +332,24 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
                 rows.push((vec![(t + c, 1.0 / sg[c])], (x[c] - known(i)[c]) / sg[c], "station", i));
             }
         }
+        // A full covariance: the three pseudo-observations whitened by its Cholesky factor, as a baseline's are.
+        if let (Some(c), Some(x), Some(t)) = (s.cov, s.xyz, slot[i])
+            && let Some(l) = cholesky3(&c)
+        {
+            let wr = whiten(&l, [x[0] - known(i)[0], x[1] - known(i)[1], x[2] - known(i)[2]]);
+            for r in 0..3 {
+                let mut coef = Vec::new();
+                for k in 0..3 {
+                    let mut e = [0.0; 3];
+                    e[k] = 1.0;
+                    let li = whiten(&l, e)[r];
+                    if li != 0.0 {
+                        coef.push((t + k, li));
+                    }
+                }
+                rows.push((coef, wr[r], "station", i));
+            }
+        }
     }
     let mut n = Normal::new(u);
     let mut rhs = vec![0.0; u];
@@ -371,7 +430,18 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         } else {
             "ok"
         };
-        baselines.push(BaselineResidual { v, w, flag });
+        // The adjusted vector Δ = X_to − X_from: its covariance is Q_tt + Q_ff − Q_tf − Q_ft (a held end's blocks 0).
+        let block = |a: Option<usize>, b: Option<usize>, r: usize, c: usize| match (a, b) {
+            (Some(a), Some(b)) => q.get(a + r, b + c),
+            _ => 0.0,
+        };
+        let (st, sf) = (slot[*to], slot[*from]);
+        let mut adjusted = [0.0; 3];
+        for (c, out) in adjusted.iter_mut().enumerate() {
+            let var = block(st, st, c, c) + block(sf, sf, c, c) - block(st, sf, c, c) - block(sf, st, c, c);
+            *out = js_max(var * s0 * s0, 0.0).sqrt();
+        }
+        baselines.push(BaselineResidual { v, w, flag, adjusted });
     }
     Ok(GnssResult { stations, baselines, held, stats })
 }

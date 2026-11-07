@@ -420,6 +420,8 @@ pub enum Dialog {
     ExchangeCheck,
     /// Uygulama kontrolü (asbuilt_window.rs, docs/adr/1700); its state is `App::asbuilt`.
     Asbuilt,
+    /// Arşivden ağ dengelemesi (survey_network_window.rs, docs/adr/1740); its state is `App::survey_network`.
+    SurveyNetwork,
     /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
     Zoning,
     /// Alternatif etkisi (impact_window.rs, docs/adr/1440); its state is `App::impact`.
@@ -850,6 +852,7 @@ pub enum Message {
     PipesCheck(crate::pipes_check_window::Event),
     ExchangeCheck(crate::exchange_check_window::Event),
     Asbuilt(crate::asbuilt_window::Event),
+    SurveyNetwork(crate::survey_network_window::Event),
     Zoning(crate::zoning_window::Event),
     Impact(crate::impact_window::Event),
     Readjustment(crate::readjustment_window::Event),
@@ -1515,6 +1518,7 @@ pub struct App {
     pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) asbuilt: crate::asbuilt_window::State,
+    pub(crate) survey_network: crate::survey_network_window::State,
     pub(crate) zoning: crate::zoning_window::State,
     pub(crate) impact: crate::impact_window::State,
     pub(crate) readjustment: crate::readjustment_window::State,
@@ -1973,6 +1977,7 @@ impl App {
             pipes_check: Default::default(),
             exchange_check: Default::default(),
             asbuilt: Default::default(),
+            survey_network: Default::default(),
             zoning: Default::default(),
             impact: Default::default(),
             readjustment: Default::default(),
@@ -2755,6 +2760,7 @@ impl App {
             Message::PipesCheck(event) => return self.pipes_check_event(event),
             Message::ExchangeCheck(event) => return self.exchange_check_event(event),
             Message::Asbuilt(event) => return self.asbuilt_event(event),
+            Message::SurveyNetwork(event) => return self.survey_network_event(event),
             Message::Zoning(event) => return self.zoning_event(event),
             Message::Impact(event) => return self.impact_event(event),
             Message::Readjustment(event) => return self.readjustment_event(event),
@@ -3622,6 +3628,7 @@ impl App {
             "pipes.check" => return self.open_pipes_check(),
             "file.exchangeCheck" => return self.open_exchange_check(),
             "asbuilt.check" => return self.open_asbuilt(),
+            "map.survey.adjustment" => return self.open_survey_network(),
             "zoning.check" => return self.open_zoning(),
             "scenario.impact" => return self.open_impact(),
             "readjustment.distribute" => return self.open_readjustment(),

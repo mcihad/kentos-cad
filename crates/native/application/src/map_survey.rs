@@ -9,10 +9,10 @@ use std::path::Path;
 
 use kentos_commands::{
     AcceptMethod, AntennaUsed, ChainStatus, CommandResult, CrsPoint, CrsSide, CrsTransform, FixCount, HeightKind,
-    HeightReference, MapSurvey, MapSurveyQuery, MapSurveyTree, SurveyCampaign, SurveyCampaignRow, SurveyFileRow,
-    SurveyFileState as F, SurveyMarkRow, SurveyObject, SurveyPoint, SurveyPointRow, SurveyReplay, SurveyResult,
-    SurveySession, SurveySessionRow, SurveySolution, SurveySolutionRow, SurveyState as S, SurveyUse, SurveyUseRow,
-    VelocityModel, survey_seconds, survey_time,
+    HeightReference, MapSurvey, MapSurveyQuery, MapSurveyTree, SurveyBaseline, SurveyBaselineRow, SurveyCampaign,
+    SurveyCampaignRow, SurveyFileRow, SurveyFileState as F, SurveyMarkRow, SurveyObject, SurveyPoint, SurveyPointRow,
+    SurveyReplay, SurveyResult, SurveySession, SurveySessionRow, SurveySolution, SurveySolutionRow, SurveyState as S,
+    SurveyUse, SurveyUseRow, VelocityModel, survey_seconds, survey_time,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -70,9 +70,57 @@ pub(crate) fn present(doc: &Document, uid: &kentos_commands::EntityId) -> bool {
     doc.slot_of(Uuid::from_bytes(uid.0)).is_some()
 }
 
-/// Why an accepted point is out of date now: a session's antenna, the epoch decision, an excluded solution.
+/// The campaign a result's epoch decision is of: its first solution's, or its network adjustment's first baseline's.
+pub(crate) fn campaign_of_result<'a>(survey: &'a MapSurvey, r: &SurveyResult) -> Option<&'a SurveyCampaign> {
+    match r.adjustment.as_deref() {
+        Some(a) => survey
+            .adjustment(a)
+            .and_then(|a| a.baselines.first())
+            .and_then(|b| survey.baseline(b))
+            .and_then(|b| survey.campaign(&b.campaign)),
+        None => r.solutions.first().and_then(|s| survey.solution(s)).and_then(|s| campaign_of(survey, s)),
+    }
+}
+
+/// Why a network adjustment's result is out of date: the adjustment gone, a baseline of it excluded, out of the
+/// adjustment or gone, a known point of it excluded or gone (docs/adr/1740).
+fn network_why(survey: &MapSurvey, adjustment: &str) -> Vec<String> {
+    let Some(a) = survey.adjustment(adjustment) else {
+        return vec![format!("“{adjustment}” ağ dengelemesi arşivde yok.")];
+    };
+    let mut why = Vec::new();
+    for id in &a.baselines {
+        match survey.baseline(id) {
+            None => why.push(format!("“{id}” bazı arşivde yok.")),
+            Some(b) => {
+                if let Some(reason) = &b.excluded {
+                    why.push(format!("“{id}” bazı dışlandı: {reason}"));
+                } else if !b.adjust {
+                    why.push(format!("“{id}” bazı dengelemeden çıkarıldı."));
+                }
+            }
+        }
+    }
+    for id in &a.known {
+        match survey.known_point(id) {
+            None => why.push(format!("“{id}” bilinen noktası arşivde yok.")),
+            Some(k) => {
+                if let Some(reason) = &k.excluded {
+                    why.push(format!("“{id}” bilinen noktası dışlandı: {reason}"));
+                }
+            }
+        }
+    }
+    why
+}
+
+/// Why an accepted point is out of date now: a session's antenna, the epoch decision, an excluded solution; for a
+/// network's point, what its adjustment rests on.
 pub(crate) fn point_why(doc: &Document, survey: &MapSurvey, p: &SurveyPoint) -> Vec<String> {
     let mut why = Vec::new();
+    if let Some(a) = p.result.adjustment.as_deref() {
+        why.extend(network_why(survey, a));
+    }
     for used in &p.result.antenna {
         let now = survey.session(&used.session).and_then(vertical);
         if now != Some(used.height) {
@@ -87,7 +135,7 @@ pub(crate) fn point_why(doc: &Document, survey: &MapSurvey, p: &SurveyPoint) -> 
             }
         }
     }
-    let campaign = p.result.solutions.first().and_then(|s| survey.solution(s)).and_then(|s| campaign_of(survey, s));
+    let campaign = campaign_of_result(survey, &p.result);
     let now = decision(doc, campaign);
     if now != p.result.target_epoch {
         why.push(format!("Epok kararı {} iken {} oldu.", epoch_text(p.result.target_epoch), epoch_text(now)));
@@ -324,7 +372,50 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapS
         points.iter().filter(|p| p.state == S::Stale).count() + uses.iter().filter(|u| u.state == S::Stale).count(),
     );
     let object = target.map(|u| object(doc, survey, &u, &latest));
-    Ok(MapSurveyTree { campaigns, sessions, marks, points, uses, object, stale, deep, revision: doc.revision().to_string() })
+    let baselines = survey.baselines.iter().map(|b| baseline_row(survey, b, deep)).collect();
+    Ok(MapSurveyTree {
+        campaigns,
+        sessions,
+        marks,
+        points,
+        uses,
+        baselines,
+        known: survey.known.clone(),
+        adjustments: survey.adjustments.clone(),
+        object,
+        stale,
+        deep,
+        revision: doc.revision().to_string(),
+    })
+}
+
+/// A baseline's length (m).
+pub(crate) fn baseline_length(b: &SurveyBaseline) -> f64 {
+    (b.d[0] * b.d[0] + b.d[1] * b.d[1] + b.d[2] * b.d[2]).sqrt()
+}
+
+/// A baseline's row: its length, its processed standard deviations, its file as it stands, the adjustments made with
+/// it (docs/adr/1740).
+fn baseline_row(survey: &MapSurvey, b: &SurveyBaseline, deep: bool) -> SurveyBaselineRow {
+    let c = b.covariance;
+    SurveyBaselineRow {
+        id: b.id.clone(),
+        campaign: b.campaign.clone(),
+        from: b.from.clone(),
+        to: b.to.clone(),
+        length: baseline_length(b),
+        sigma: [c[0].sqrt(), c[3].sqrt(), c[5].sqrt()],
+        excluded: b.excluded.clone(),
+        adjust: b.adjust,
+        file: b.file.as_ref().map(|f| SurveyFileRow {
+            path: f.path.clone(),
+            revision: f.revision.clone(),
+            format: f.format,
+            state: file_state(&f.path, &f.revision, deep),
+        }),
+        source: b.source.clone(),
+        adjustments: survey.adjustments.iter().filter(|a| a.baselines.contains(&b.id)).map(|a| a.id.clone()).collect(),
+    }
 }
 
 fn file_state(path: &str, revision: &str, deep: bool) -> F {
@@ -412,8 +503,15 @@ pub(crate) fn compute(
         }
     }
     let n = sols.len();
+    if method == AcceptMethod::Network {
+        return Err(fail(
+            codes::METHOD_COUNT,
+            "Ağ dengelemesi çözümlerle seçilmez; noktayı ağ dengelemesiyle (network) kabul edin.".into(),
+            at,
+        ));
+    }
     let fits = match method {
-        AcceptMethod::Single => n == 1,
+        AcceptMethod::Single | AcceptMethod::Network => n == 1,
         AcceptMethod::Mean | AcceptMethod::Weighted => n >= 2,
     };
     if !fits {
@@ -475,7 +573,7 @@ pub(crate) fn compute(
         heights.push(s.height + s.antenna_applied - h);
     }
     let (lat, lon, height, sigma) = match method {
-        AcceptMethod::Single => (first.lat, first.lon, heights[0], first.sigma),
+        AcceptMethod::Single | AcceptMethod::Network => (first.lat, first.lon, heights[0], first.sigma),
         AcceptMethod::Mean => {
             let (mut a, mut b, mut c) = (0.0, 0.0, 0.0);
             for (s, h) in sols.iter().zip(&heights) {
@@ -501,12 +599,54 @@ pub(crate) fn compute(
             (v(0), v(1), v(2), Some([g(0), g(1), g(2)]))
         }
     };
+    let placed = place(doc, campaign, (lat, lon, height), first.srid, first.epoch, at)?;
+    Ok(SurveyResult {
+        revision: 1,
+        solutions: ids.to_vec(),
+        method,
+        lat,
+        lon,
+        height,
+        srid: first.srid,
+        epoch: first.epoch,
+        target_epoch: placed.target,
+        antenna,
+        sigma,
+        x: placed.x,
+        y: placed.y,
+        z: placed.z,
+        chain: placed.chain,
+        reasons: Vec::new(),
+        adjustment: None,
+    })
+}
+
+/// A mark's place in the project: x, y, z there, whether the chain was complete, the epoch decision it went to.
+pub(crate) struct Placed {
+    pub x: f64,
+    pub y: f64,
+    pub z: Option<f64>,
+    pub chain: String,
+    pub target: Option<f64>,
+}
+
+/// A mark's latitude, longitude (degrees) and ellipsoidal height (m) in `srid` at `epoch` moved into the project by the
+/// coordinate chain itself (docs/adr/1340 §3): to the campaign's epoch decision with its velocity grid; the chain's own
+/// refusal kept, its path the operation's. `at` is the input's path for the other refusals.
+pub(crate) fn place(
+    doc: &Document,
+    campaign: Option<&SurveyCampaign>,
+    (lat, lon, height): (f64, f64, f64),
+    srid: u32,
+    epoch: Option<f64>,
+    at: &str,
+) -> Result<Placed, Stop> {
     let target = decision(doc, campaign);
     let with_z = doc.settings().heights.is_some();
     let ellipsoidal = HeightReference { kind: HeightKind::Ellipsoidal, vertical_srid: None, geoid: None };
     let input = CrsTransform {
         points: vec![CrsPoint { x: lon, y: lat, z: with_z.then_some(height) }],
-        from: Some(CrsSide { srid: Some(first.srid), heights: with_z.then_some(ellipsoidal), epoch: first.epoch }),
+        from: Some(CrsSide { srid: Some(srid), heights: with_z.then_some(ellipsoidal), epoch }),
         to: Some(CrsSide { srid: None, heights: None, epoch: target }),
         uncertainty: None,
         velocity: campaign
@@ -534,18 +674,7 @@ pub(crate) fn compute(
             at,
         ));
     };
-    Ok(SurveyResult {
-        revision: 1,
-        solutions: ids.to_vec(),
-        method,
-        lat,
-        lon,
-        height,
-        srid: first.srid,
-        epoch: first.epoch,
-        target_epoch: target,
-        antenna,
-        sigma,
+    Ok(Placed {
         x: p.x,
         y: p.y,
         z: p.z,
@@ -553,7 +682,7 @@ pub(crate) fn compute(
             ChainStatus::Complete => "complete".into(),
             ChainStatus::Limited => "limited".into(),
         },
-        reasons: Vec::new(),
+        target,
     })
 }
 

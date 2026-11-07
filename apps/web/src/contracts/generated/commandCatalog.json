@@ -58349,8 +58349,20 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and\nuses are out of date, whether it was deep, and the revision read.",
+        "description": "Output of `map.survey.query` v1: the archive in its order (with its baselines, known points and network\nadjustments, docs/adr/1740), the object asked about, how many accepted points and uses are out of date, whether it\nwas deep, and the revision read.",
         "properties": {
+          "adjustments": {
+            "items": {
+              "$ref": "#/$defs/SurveyAdjustment"
+            },
+            "type": "array"
+          },
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/SurveyBaselineRow"
+            },
+            "type": "array"
+          },
           "campaigns": {
             "items": {
               "$ref": "#/$defs/SurveyCampaignRow"
@@ -58359,6 +58371,12 @@
           },
           "deep": {
             "type": "boolean"
+          },
+          "known": {
+            "items": {
+              "$ref": "#/$defs/SurveyKnown"
+            },
+            "type": "array"
           },
           "marks": {
             "items": {
@@ -58419,8 +58437,20 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and\nuses are out of date, whether it was deep, and the revision read.",
+        "description": "Output of `map.survey.query` v1: the archive in its order (with its baselines, known points and network\nadjustments, docs/adr/1740), the object asked about, how many accepted points and uses are out of date, whether it\nwas deep, and the revision read.",
         "properties": {
+          "adjustments": {
+            "items": {
+              "$ref": "#/$defs/SurveyAdjustment"
+            },
+            "type": "array"
+          },
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/SurveyBaselineRow"
+            },
+            "type": "array"
+          },
           "campaigns": {
             "items": {
               "$ref": "#/$defs/SurveyCampaignRow"
@@ -58429,6 +58459,12 @@
           },
           "deep": {
             "type": "boolean"
+          },
+          "known": {
+            "items": {
+              "$ref": "#/$defs/SurveyKnown"
+            },
+            "type": "array"
           },
           "marks": {
             "items": {
@@ -58508,7 +58544,7 @@
       "id": "map.survey.edit",
       "version": 1,
       "title": "GNSS arşivini düzenle",
-      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
+      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları okunmaz, uyarı gvx_correlations_ignored; ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed. Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing, known_differ, unknown_rule_class, duplicate_station, invalid_covariance, network_too_large, network_disconnected, network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
       "aliases": [
         "gnssarsividuzenle"
       ],
@@ -58526,7 +58562,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,\n“GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,\n“Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,\n`file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,\n`no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,\n`solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,\n`no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, and the coordinate chain's own\n(`epoch_unsupported`, `velocity_missing`, `geoid_missing` …) when the point cannot be moved into the project.",
+        "description": "Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,\n“GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,\n“Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”, “Baz ekle”,\n“Bilinen nokta ekle”, “Ağ dengelemesini kabul et”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,\n`file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,\n`no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,\n`solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,\n`no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, the network's (`no_baselines`, `datum_missing`,\n`known_differ`, `unknown_rule_class`, `network_too_large`, `network_disconnected`, `network_blunder`,\n`network_test_failed`) and the coordinate chain's own (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …)\nwhen a point cannot be moved into the project.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -58569,6 +58605,13 @@
               "null"
             ],
             "x-unit": "version"
+          },
+          "records": {
+            "description": "The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "removed": {
             "format": "uint32",
@@ -58623,6 +58666,13 @@
               "null"
             ],
             "x-unit": "version"
+          },
+          "records": {
+            "description": "The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "removed": {
             "format": "uint32",
@@ -58687,11 +58737,25 @@
           "epoch_unsupported",
           "velocity_missing",
           "geoid_missing",
-          "no_system"
+          "no_system",
+          "no_baselines",
+          "datum_missing",
+          "known_differ",
+          "unknown_rule_class",
+          "duplicate_station",
+          "invalid_covariance",
+          "network_too_large",
+          "network_disconnected",
+          "network_blunder",
+          "network_test_failed"
         ],
         "warnings": [
           "rinex_differs",
-          "gnss_lines_skipped"
+          "gnss_lines_skipped",
+          "gvx_correlations_ignored",
+          "baseline_text_stations",
+          "network_rules_failed",
+          "network_unchecked"
         ]
       },
       "examples": [
@@ -58728,6 +58792,290 @@
               "reason": "Ağaç altında, float'a düştü",
               "solution": "cz-3"
             }
+          }
+        },
+        {
+          "title": "GVX dosyasının bazlarını arşive al",
+          "input": {
+            "operation": {
+              "campaign": "kp-1",
+              "file": "/veri/ag-2026-11.gvx",
+              "op": "baselines"
+            }
+          }
+        },
+        {
+          "title": "Ağı BÖHHBÜY C2 sınıfıyla dengeleyip kabul et",
+          "input": {
+            "operation": {
+              "class": "C2",
+              "layer": "gnss",
+              "op": "network"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "map.survey.network",
+      "version": 1,
+      "title": "GNSS ağını dengele",
+      "summary": "Harita projesinin GNSS arşivindeki bazlardan (dengelemeye giren, dışlanmamış; campaign verilirse yalnız o arazi ölçümünün) ve uçlarındaki bilinen noktalardan (dışlanmamış; aynı coğrafi çerçeve ve epokta, ölçme epokunda) kurulan ağı iki kez dengeler; hiçbir şey yazmaz. Serbest: tek bilinen nokta (hold, verilmezse ilki) sabit; uyuşumsuz bazlar ve ağın kendi duyarlığı (BÖHHBÜY Madde 15(1)(b)). Dayalı: bilinen noktalar sabit, σ'sı verilmişse kuzey/doğu/yukarı σ'sıyla ağırlıklı (ECEF'e döndürülmüş tam kovaryans); işaretlerin koordinatları (15(1)(ç)). Her aşamada m0, serbestlik, vᵀPv, χ² (%95) ve model testi, uyuşumsuz ölçü sayısı ve en kötüsü; her baz için uzunluk, işlenmiş σX σY σZ (varyans çarpanıyla), serbest dengelemede dengelenmiş vektörün σ'sı, iki aşamada başlangıcının doğu/kuzey/yukarısında artık, w ve durum. Bilinen nokta olmayan işaretler koordinat zinciriyle projeye taşınır, kabul edilen noktasından farkı (dx, dy, dz) verilir. class (KentOS'un paketinde BÖHHBÜY 2018 C1, C2, C3; rules ile başka paket) baz σ'sını a + b·ppm·uzunluk sınırıyla (C1 serbest dengelemenin, C2/C3 işlenmiş σ), noktanın σ kuzey/doğu/yukarısını sınırlarla ve testleri sınıfın güveniyle (C1: 1−α = 0,95, w > 1,96; başkasında Baarda α₀ = 0,001, w > 3,29) denetler. acceptable ve why: kabul edilip edilemeyeceği. Kurum onayı değildir. Retler: not_a_map_project, unknown_survey_record, invalid_survey_value, unknown_rule_class, no_baselines, solutions_differ, datum_missing, known_differ, unknown_frame, duplicate_station, invalid_covariance, network_too_large, network_disconnected.",
+      "aliases": [
+        "gnssagi",
+        "arsivagdengele"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading\nonly. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their\ncovariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first\notherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).\n\nRefusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,\n`unknown_rule_class`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`, `network_too_large`,\n`network_disconnected`.",
+        "properties": {
+          "campaign": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "class": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hold": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GnssRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scale": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          }
+        },
+        "title": "MapSurveyNetwork",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,\nthe baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's\nresult, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can\nbe accepted and, if not, why, and the drawing's revision.",
+        "properties": {
+          "acceptable": {
+            "type": "boolean"
+          },
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/NetworkBaseline"
+            },
+            "type": "array"
+          },
+          "constrained": {
+            "$ref": "#/$defs/NetworkStage"
+          },
+          "current": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "epoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
+          "free": {
+            "$ref": "#/$defs/NetworkStage"
+          },
+          "known": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NetworkRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/NetworkStation"
+            },
+            "type": "array"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "srid",
+          "known",
+          "baselines",
+          "stations",
+          "free",
+          "constrained",
+          "acceptable",
+          "revision"
+        ],
+        "title": "MapSurveyNetworked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,\nthe baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's\nresult, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can\nbe accepted and, if not, why, and the drawing's revision.",
+        "properties": {
+          "acceptable": {
+            "type": "boolean"
+          },
+          "baselines": {
+            "items": {
+              "$ref": "#/$defs/NetworkBaseline"
+            },
+            "type": "array"
+          },
+          "constrained": {
+            "$ref": "#/$defs/NetworkStage"
+          },
+          "current": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "epoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
+          "free": {
+            "$ref": "#/$defs/NetworkStage"
+          },
+          "known": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NetworkRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "srid": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/$defs/NetworkStation"
+            },
+            "type": "array"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "srid",
+          "known",
+          "baselines",
+          "stations",
+          "free",
+          "constrained",
+          "acceptable",
+          "revision"
+        ],
+        "title": "MapSurveyNetworked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_map_project",
+          "unknown_survey_record",
+          "invalid_survey_value",
+          "unknown_rule_class",
+          "no_baselines",
+          "solutions_differ",
+          "datum_missing",
+          "known_differ",
+          "unknown_frame",
+          "duplicate_station",
+          "invalid_covariance",
+          "network_too_large",
+          "network_disconnected"
+        ],
+        "warnings": [
+          "network_rules_failed",
+          "network_unchecked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "BÖHHBÜY C2 sınıfıyla, varyans çarpanı 2",
+          "input": {
+            "class": "C2",
+            "scale": 2.0
           }
         }
       ]
@@ -101554,6 +101902,54 @@
       "meaning": "Bir istasyon datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı."
     },
     {
+      "code": "network_blunder",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağda uyuşumsuz baz var: dışlayıp nedenini yazın ya da yeniden işleyin, sonra yeniden dengeleyin."
+    },
+    {
+      "code": "network_test_failed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağın model testi (χ²) geçmedi: varyans çarpanını m0² yapıp yeniden dengeleyin."
+    },
+    {
+      "code": "known_differ",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bilinen noktalar aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin."
+    },
+    {
+      "code": "unknown_rule_class",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kural paketinde bu sınıf yok (BÖHHBÜY 2018: C1, C2, C3)."
+    },
+    {
+      "code": "gvx_correlations_ignored",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "GVX oturumlarının vektörler arası çapraz korelasyonları okunmadı; vektörler birbirinden bağımsız dengelenir."
+    },
+    {
+      "code": "baseline_text_stations",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Baz metninin K ve N satırları arşive alınmadı; bilinen noktaları çerçevesi ve epokuyla Bilinen nokta ekle ile girin."
+    },
+    {
+      "code": "network_rules_failed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ağ seçilen sınıfın sınırlarını tutmuyor (baz ya da nokta standart sapması); rapor hangisi olduğunu söyler."
+    },
+    {
+      "code": "network_unchecked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ağda fazla ölçü yok; uyuşumsuz baz ve model sınanamaz."
+    },
+    {
       "code": "not_a_point",
       "kind": "failed",
       "retryable": false,
@@ -105001,6 +105397,11 @@
         {
           "const": "weighted",
           "description": "Each component weighted by 1/σ².",
+          "type": "string"
+        },
+        {
+          "const": "network",
+          "description": "A network adjustment of baseline vectors held by known points (docs/adr/1740): no solutions, its `da-N`.",
           "type": "string"
         }
       ]
@@ -111070,6 +111471,34 @@
       ],
       "type": "object"
     },
+    "BaselineSigmaOf": {
+      "description": "Whose standard deviations a class's baseline limit is checked on: the processor's (the vector's covariance by the\nvariance factor) or the free adjustment's (the adjusted vector's, by its m0).",
+      "enum": [
+        "processed",
+        "adjusted"
+      ],
+      "type": "string"
+    },
+    "BaselineSolution": {
+      "description": "How a baseline vector was made (GVX 1.0's SOLUTION_TYPE).",
+      "oneOf": [
+        {
+          "const": "postProcessed",
+          "description": "Processed in office software from both receivers' observations.",
+          "type": "string"
+        },
+        {
+          "const": "singleBaseRtk",
+          "description": "A real-time vector from one base station.",
+          "type": "string"
+        },
+        {
+          "const": "networkRtk",
+          "description": "A real-time vector from a network's correctors.",
+          "type": "string"
+        }
+      ]
+    },
     "BaselineStation": {
       "additionalProperties": false,
       "description": "A station: its name; its X, Y, Z when known (m); held fixed; or weighted by its standard deviations (m).",
@@ -111109,6 +111538,37 @@
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "BaselineTest": {
+      "description": "A baseline's test in a stage: its residual (computed − observed) in the local east, north, up of its start (m),\nits largest component test value (none: not checked) and what it says (`ok`, `blunder`, `uncontrolled`).",
+      "properties": {
+        "flag": {
+          "type": "string"
+        },
+        "v": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "w": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "v",
+        "flag"
       ],
       "type": "object"
     },
@@ -133177,6 +133637,99 @@
       ],
       "type": "object"
     },
+    "GnssRuleClass": {
+      "additionalProperties": false,
+      "description": "A class of a GNSS network rule package (docs/adr/1740): a baseline component's standard deviation's limit, a\nconstant (m) and parts per million of its length, and whose; a station's limits after the adjustment held by the\nknown points, σφ and σλ (as north and east, m) and σh (m); and, when the class says one, the tests' confidence\n1 − α (otherwise Baarda's α₀ = 0.001).",
+      "properties": {
+        "articles": {
+          "description": "The articles the class's numbers come from.",
+          "type": "string"
+        },
+        "baselineOf": {
+          "$ref": "#/$defs/BaselineSigmaOf"
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "constant": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "type": "string"
+        },
+        "ppm": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "ppm"
+        }
+      },
+      "required": [
+        "id",
+        "constant",
+        "ppm",
+        "baselineOf",
+        "horizontal",
+        "height",
+        "articles"
+      ],
+      "type": "object"
+    },
+    "GnssRules": {
+      "additionalProperties": false,
+      "description": "A GNSS network rule package: who issues it, the document, when it holds, its release and its classes. KentOS's is\nBÖHHBÜY 2018's (`catalog/v1/rules/gnss-ag-bohhbuy-2018.json`); none of its numbers is a constant in code.",
+      "properties": {
+        "classes": {
+          "items": {
+            "$ref": "#/$defs/GnssRuleClass"
+          },
+          "type": "array"
+        },
+        "effective": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "release",
+        "jurisdiction",
+        "source",
+        "effective",
+        "classes"
+      ],
+      "type": "object"
+    },
     "GpkgCoverage": {
       "description": "A gridded coverage of heights or other values (OGC 17-066r1, `gpkg_2d_gridded_coverage_ancillary`): its tiles\nare 16-bit PNG integers or 32-bit float TIFFs; a value is (stored × the tile's scale + its offset) × `scale` +\n`offset`.",
       "properties": {
@@ -143784,9 +144337,27 @@
       "additionalProperties": false,
       "description": "A map project's GNSS campaign archive.",
       "properties": {
+        "adjustments": {
+          "items": {
+            "$ref": "#/$defs/SurveyAdjustment"
+          },
+          "type": "array"
+        },
+        "baselines": {
+          "items": {
+            "$ref": "#/$defs/SurveyBaseline"
+          },
+          "type": "array"
+        },
         "campaigns": {
           "items": {
             "$ref": "#/$defs/SurveyCampaign"
+          },
+          "type": "array"
+        },
+        "known": {
+          "items": {
+            "$ref": "#/$defs/SurveyKnown"
           },
           "type": "array"
         },
@@ -144282,7 +144853,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "A solution left out, with why; it stays in the record.",
+          "description": "A solution `cz-N`, a baseline `bz-N` or a known point `bn-N` left out, with why; it stays in the record.",
           "properties": {
             "op": {
               "const": "exclude",
@@ -144304,7 +144875,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "An excluded solution taken back.",
+          "description": "An excluded solution, baseline or known point taken back.",
           "properties": {
             "op": {
               "const": "include",
@@ -144322,7 +144893,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "Whether a solution goes into the adjustment.",
+          "description": "Whether a solution or a baseline goes into the adjustment.",
           "properties": {
             "adjust": {
               "type": "boolean"
@@ -144339,6 +144910,230 @@
             "op",
             "solution",
             "adjust"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Baseline vectors `bz-N` of a campaign read from a file (an absolute path): a GVX 1.0 file (NGS) or KentOS's\nbaseline text (`B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`); each goes into the adjustment.",
+          "properties": {
+            "campaign": {
+              "type": "string"
+            },
+            "file": {
+              "type": "string"
+            },
+            "op": {
+              "const": "baselines",
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "campaign",
+            "file"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "One baseline vector `bz-N` typed in: from mark to mark, ΔX ΔY ΔZ (m; ECEF, the antenna heights applied) and its\ncovariance xx, xy, xz, yy, yz, zz (m²).",
+          "properties": {
+            "campaign": {
+              "type": "string"
+            },
+            "covariance": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 6,
+              "minItems": 6,
+              "type": "array",
+              "x-unit": "m2"
+            },
+            "d": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array",
+              "x-unit": "m"
+            },
+            "end": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "from": {
+              "type": "string"
+            },
+            "op": {
+              "const": "baseline",
+              "type": "string"
+            },
+            "recipe": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "solution": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/BaselineSolution"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "start": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "campaign",
+            "from",
+            "to",
+            "d",
+            "covariance"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held\nfixed, or weighted by `sigma` north, east, up (m).",
+          "properties": {
+            "epoch": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "year"
+            },
+            "height": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "m"
+            },
+            "lat": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "lon": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "deg"
+            },
+            "mark": {
+              "type": "string"
+            },
+            "op": {
+              "const": "known",
+              "type": "string"
+            },
+            "sigma": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "m"
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "srid": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "epsg"
+            }
+          },
+          "required": [
+            "op",
+            "mark",
+            "lat",
+            "lon",
+            "height",
+            "srid"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The network adjusted as `map.survey.network` adjusts it and accepted (docs/adr/1740): `da-N`, and each mark that\nis not a known point accepted (its object on `layer`, the active layer when not given) or made again, in one\nstep. Refused while a baseline is a blunder or the model test fails.",
+          "properties": {
+            "campaign": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "class": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "hold": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "layer": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "network",
+              "type": "string"
+            },
+            "rules": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GnssRules"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scale": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "1"
+            }
+          },
+          "required": [
+            "op"
           ],
           "type": "object"
         },
@@ -148287,6 +149082,76 @@
       ],
       "type": "object"
     },
+    "NetworkBaseline": {
+      "description": "A baseline of the network: its marks and length (m), its processed standard deviations σX σY σZ (by the variance\nfactor), the free stage's of the adjusted vector, its test in each stage, and the class's limit and whether it\nholds (when a class is checked).",
+      "properties": {
+        "adjusted": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "constrained": {
+          "$ref": "#/$defs/BaselineTest"
+        },
+        "free": {
+          "$ref": "#/$defs/BaselineTest"
+        },
+        "from": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "limit": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "rules": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "to",
+        "length",
+        "sigma",
+        "adjusted",
+        "free",
+        "constrained"
+      ],
+      "type": "object"
+    },
     "NetworkClosures": {
       "description": "The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first\nday closes from always, an empty last day until ever. Its weekdays and hours (docs/adr/0568): an edge closed on\nthe days its weekday field names (`Pzt-Cum`, `Cmt, Paz`, `1-5`; empty: every day) and, when its hours field holds\nany, only in those hours (`22:00-06:00`, `07:00-09:00, 17:00-19:00`; empty: the whole day). An edge whose four\nvalues are all empty is not closed.",
       "properties": {
@@ -148720,6 +149585,243 @@
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "NetworkRules": {
+      "description": "What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,\nwhose baseline standard deviations were checked, whether all holds, and how many baselines and stations do not.",
+      "properties": {
+        "articles": {
+          "type": "string"
+        },
+        "baselineOf": {
+          "$ref": "#/$defs/BaselineSigmaOf"
+        },
+        "baselines": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "class": {
+          "type": "string"
+        },
+        "confidence": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "package": {
+          "type": "string"
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        },
+        "stations": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "package",
+        "release",
+        "class",
+        "articles",
+        "baselineOf",
+        "passed",
+        "baselines",
+        "stations"
+      ],
+      "type": "object"
+    },
+    "NetworkStage": {
+      "description": "One stage of the adjustment: the marks held fixed, m0 (none without degrees of freedom), the degrees of freedom,\nvᵀPv, the χ² quantile (95 %) and whether the model test passed, the test value above which a baseline is a\nblunder, how many are and the worst one.",
+      "properties": {
+        "blunders": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "chi2": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "dof": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "held": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "m0": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "omega": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "worst": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "held",
+        "dof",
+        "omega",
+        "limit",
+        "blunders"
+      ],
+      "type": "object"
+    },
+    "NetworkStation": {
+      "description": "A mark of the network after the stage held by the known points: its known point (`bn-N`) and whether it is held\nfixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard\ndeviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a\nknown point, when the coordinate chain reaches the project), how far that is from where its accepted point is now\n(project units), and whether the class's limits hold for it.",
+      "properties": {
+        "dx": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "system"
+        },
+        "dy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "system"
+        },
+        "dz": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "held": {
+          "type": "boolean"
+        },
+        "known": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lat": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "lon": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "point": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rules": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "x": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "system"
+        },
+        "y": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "system"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "mark",
+        "held",
+        "lat",
+        "lon",
+        "height",
+        "sigma"
       ],
       "type": "object"
     },
@@ -185041,6 +186143,107 @@
       ],
       "type": "object"
     },
+    "SurveyAdjustment": {
+      "additionalProperties": false,
+      "description": "A network adjustment the project accepted, `da-N` (docs/adr/1740): what it was made of (its baselines, its known\npoints, the one the free stage held), with what (the variance factor, the rule class and package checked), what\nit said (both stages' m0, degrees of freedom and model test; whether the rules held) and in which frame and epoch.\nThe accepted points it made name it.",
+      "properties": {
+        "baselines": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dof": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "freeDof": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "freeM0": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "hold": {
+          "type": "string"
+        },
+        "id": {
+          "description": "`da-N`.",
+          "type": "string"
+        },
+        "known": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "m0": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "rules": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rulesPassed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "scale": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "epsg"
+        }
+      },
+      "required": [
+        "id",
+        "baselines",
+        "known",
+        "hold",
+        "scale",
+        "freeDof",
+        "dof",
+        "srid"
+      ],
+      "type": "object"
+    },
     "SurveyAntenna": {
       "additionalProperties": false,
       "description": "A session's antenna: its type and serial, the height measured and to where; a slant height with the maker's\nradius and the measuring point's height above the ARP; the eccentricity east and north (m).",
@@ -185100,6 +186303,206 @@
       },
       "required": [
         "height"
+      ],
+      "type": "object"
+    },
+    "SurveyBaseline": {
+      "additionalProperties": false,
+      "description": "A baseline vector `bz-N` (docs/adr/1740): from mark to mark, ΔX, ΔY, ΔZ in Earth-centred, Earth-fixed axes (m)\nwith the antenna heights applied by its processor, and its covariance xx, xy, xz, yy, yz, zz (m²); its campaign,\nwhen it was observed (GPS time), how and with what it was made, the file it was read from and its id there; left\nout with a reason, never deleted; whether it goes into the network adjustment.",
+      "properties": {
+        "adjust": {
+          "type": "boolean"
+        },
+        "campaign": {
+          "type": "string"
+        },
+        "covariance": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "x-unit": "m2"
+        },
+        "d": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "end": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "epochs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "excluded": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from": {
+          "type": "string"
+        },
+        "id": {
+          "description": "`bz-N`.",
+          "type": "string"
+        },
+        "recipe": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "satellites": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "software": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "solution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BaselineSolution"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "description": "Its id in the file (GVX's `ID`, the text's line).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "campaign",
+        "from",
+        "to",
+        "d",
+        "covariance",
+        "adjust"
+      ],
+      "type": "object"
+    },
+    "SurveyBaselineRow": {
+      "description": "A baseline vector as it stands (docs/adr/1740): its record's marks, its length (m) and processed standard\ndeviations σX σY σZ (m), whether it is excluded and why, whether it goes into the adjustment, its file and its id\nthere, and the network adjustments (`da-N`) made with it.",
+      "properties": {
+        "adjust": {
+          "type": "boolean"
+        },
+        "adjustments": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "campaign": {
+          "type": "string"
+        },
+        "excluded": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SurveyFileRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "campaign",
+        "from",
+        "to",
+        "length",
+        "sigma",
+        "adjust"
       ],
       "type": "object"
     },
@@ -185242,6 +186645,16 @@
           "const": "report",
           "description": "A processing report (a solution's).",
           "type": "string"
+        },
+        {
+          "const": "gvx",
+          "description": "NGS's GNSS Vector Exchange 1.0 (baseline vectors; docs/adr/1740).",
+          "type": "string"
+        },
+        {
+          "const": "text",
+          "description": "KentOS's baseline text: `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz` (docs/adr/1380 §5).",
+          "type": "string"
         }
       ]
     },
@@ -185293,6 +186706,82 @@
       "required": [
         "name",
         "sha256"
+      ],
+      "type": "object"
+    },
+    "SurveyKnown": {
+      "additionalProperties": false,
+      "description": "A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1\npoint) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,\neast, up (m) weighted; where they come from; left out with a reason, never deleted.",
+      "properties": {
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "excluded": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "height": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "id": {
+          "description": "`bn-N`.",
+          "type": "string"
+        },
+        "lat": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "lon": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "sigma": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "srid": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "epsg"
+        }
+      },
+      "required": [
+        "id",
+        "mark",
+        "lat",
+        "lon",
+        "height",
+        "srid"
       ],
       "type": "object"
     },
@@ -185505,6 +186994,13 @@
       "additionalProperties": false,
       "description": "What an accepted point is, once made: its solutions and method, the mark's position in the solutions' frame and\nepoch, the epoch decision it was moved to, each session's vertical antenna height, σ when known, the project's x,\ny and z, whether the coordinate chain was complete, and why it was made again.",
       "properties": {
+        "adjustment": {
+          "description": "The network adjustment `da-N` it was made by (method `network`; docs/adr/1740).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "antenna": {
           "items": {
             "$ref": "#/$defs/AntennaUsed"

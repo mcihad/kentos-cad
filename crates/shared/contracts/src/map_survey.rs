@@ -21,6 +21,12 @@ pub const MAX_SURVEY_SESSIONS: usize = 10_000;
 pub const MAX_SURVEY_SOLUTIONS: usize = 100_000;
 pub const MAX_SURVEY_POINTS: usize = 10_000;
 pub const MAX_SURVEY_USES: usize = 10_000;
+/// At most this many baseline vectors, known points and network adjustments (docs/adr/1740).
+pub const MAX_SURVEY_BASELINES: usize = 100_000;
+pub const MAX_SURVEY_KNOWN: usize = 10_000;
+pub const MAX_SURVEY_ADJUSTMENTS: usize = 1000;
+/// The longest baseline component (m): more than the Earth's diameter is not a baseline.
+pub const MOST_BASELINE_COMPONENT: f64 = 2.0e7;
 /// At most this many positions in one session: a day at one a second.
 pub const MAX_SESSION_OBSERVATIONS: usize = 86_400;
 /// At most this many older results an accepted point keeps.
@@ -203,6 +209,10 @@ pub enum SurveyFileFormat {
     Gpx,
     /// A processing report (a solution's).
     Report,
+    /// NGS's GNSS Vector Exchange 1.0 (baseline vectors; docs/adr/1740).
+    Gvx,
+    /// KentOS's baseline text: `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz` (docs/adr/1380 §5).
+    Text,
 }
 
 /// A file the archive rests on: an absolute path and the SHA-256 of the content read (its revision).
@@ -450,6 +460,8 @@ pub enum AcceptMethod {
     Mean,
     /// Each component weighted by 1/σ².
     Weighted,
+    /// A network adjustment of baseline vectors held by known points (docs/adr/1740): no solutions, its `da-N`.
+    Network,
 }
 
 impl AcceptMethod {
@@ -459,6 +471,7 @@ impl AcceptMethod {
             AcceptMethod::Single => "Tek çözüm",
             AcceptMethod::Mean => "Ortalama",
             AcceptMethod::Weighted => "Ağırlıklı ortalama",
+            AcceptMethod::Network => "Ağ dengelemesi",
         }
     }
 }
@@ -522,6 +535,10 @@ pub struct SurveyResult {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub reasons: Vec<String>,
+    /// The network adjustment `da-N` it was made by (method `network`; docs/adr/1740).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub adjustment: Option<String>,
 }
 
 /// A point accepted into the project: its mark, its object, its result now and its older ones (oldest first).
@@ -551,6 +568,158 @@ pub struct PointRevision {
     pub point: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
+}
+
+/// How a baseline vector was made (GVX 1.0's SOLUTION_TYPE).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BaselineSolution {
+    /// Processed in office software from both receivers' observations.
+    PostProcessed,
+    /// A real-time vector from one base station.
+    SingleBaseRtk,
+    /// A real-time vector from a network's correctors.
+    NetworkRtk,
+}
+
+/// A baseline vector `bz-N` (docs/adr/1740): from mark to mark, ΔX, ΔY, ΔZ in Earth-centred, Earth-fixed axes (m)
+/// with the antenna heights applied by its processor, and its covariance xx, xy, xz, yy, yz, zz (m²); its campaign,
+/// when it was observed (GPS time), how and with what it was made, the file it was read from and its id there; left
+/// out with a reason, never deleted; whether it goes into the network adjustment.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyBaseline {
+    /// `bz-N`.
+    pub id: String,
+    pub campaign: String,
+    pub from: String,
+    pub to: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub d: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m2")))]
+    pub covariance: [f64; 6],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub solution: Option<BaselineSolution>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub software: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub epochs: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub satellites: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<SurveyFile>,
+    /// Its id in the file (GVX's `ID`, the text's line).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub recipe: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub excluded: Option<String>,
+    pub adjust: bool,
+}
+
+/// A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1
+/// point) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,
+/// east, up (m) weighted; where they come from; left out with a reason, never deleted.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyKnown {
+    /// `bn-N`.
+    pub id: String,
+    pub mark: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub lat: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub lon: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sigma: Option<[f64; 3]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub excluded: Option<String>,
+}
+
+/// A network adjustment the project accepted, `da-N` (docs/adr/1740): what it was made of (its baselines, its known
+/// points, the one the free stage held), with what (the variance factor, the rule class and package checked), what
+/// it said (both stages' m0, degrees of freedom and model test; whether the rules held) and in which frame and epoch.
+/// The accepted points it made name it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyAdjustment {
+    /// `da-N`.
+    pub id: String,
+    pub baselines: Vec<String>,
+    pub known: Vec<String>,
+    pub hold: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub scale: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub class: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules_passed: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub free_m0: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub free_dof: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub m0: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub dof: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
 }
 
 /// Objects made from accepted points (a surface, a contour): the operation, the objects and each point's revision.
@@ -589,6 +758,15 @@ pub struct MapSurvey {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyUse>>"))]
     pub uses: Vec<SurveyUse>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyBaseline>>"))]
+    pub baselines: Vec<SurveyBaseline>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyKnown>>"))]
+    pub known: Vec<SurveyKnown>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyAdjustment>>"))]
+    pub adjustments: Vec<SurveyAdjustment>,
 }
 
 impl MapSurvey {
@@ -599,6 +777,9 @@ impl MapSurvey {
             && self.solutions.is_empty()
             && self.points.is_empty()
             && self.uses.is_empty()
+            && self.baselines.is_empty()
+            && self.known.is_empty()
+            && self.adjustments.is_empty()
     }
 
     pub fn campaign(&self, id: &str) -> Option<&SurveyCampaign> {
@@ -625,6 +806,36 @@ impl MapSurvey {
     /// The accepted point whose result now uses `solution`.
     pub fn point_using(&self, solution: &str) -> Option<&SurveyPoint> {
         self.points.iter().find(|p| p.result.solutions.iter().any(|s| s == solution))
+    }
+
+    pub fn baseline(&self, id: &str) -> Option<&SurveyBaseline> {
+        self.baselines.iter().find(|b| b.id == id)
+    }
+
+    pub fn known_point(&self, id: &str) -> Option<&SurveyKnown> {
+        self.known.iter().find(|k| k.id == id)
+    }
+
+    pub fn adjustment(&self, id: &str) -> Option<&SurveyAdjustment> {
+        self.adjustments.iter().find(|a| a.id == id)
+    }
+
+    /// Whether it holds what schema 199 brought (docs/adr/1740): baselines, known points, network adjustments, a point
+    /// made by a network.
+    pub fn has_network(&self) -> bool {
+        !self.baselines.is_empty()
+            || !self.known.is_empty()
+            || !self.adjustments.is_empty()
+            || self.points.iter().any(|p| {
+                std::iter::once(&p.result)
+                    .chain(&p.history)
+                    .any(|r| r.method == AcceptMethod::Network || r.adjustment.is_some())
+            })
+    }
+
+    /// The accepted point whose result now was made by the adjustment `adjustment`.
+    pub fn point_by(&self, adjustment: &str) -> Option<&SurveyPoint> {
+        self.points.iter().find(|p| p.result.adjustment.as_deref() == Some(adjustment))
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -762,6 +973,9 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
         ("solutions", survey.solutions.len(), MAX_SURVEY_SOLUTIONS),
         ("points", survey.points.len(), MAX_SURVEY_POINTS),
         ("uses", survey.uses.len(), MAX_SURVEY_USES),
+        ("baselines", survey.baselines.len(), MAX_SURVEY_BASELINES),
+        ("known", survey.known.len(), MAX_SURVEY_KNOWN),
+        ("adjustments", survey.adjustments.len(), MAX_SURVEY_ADJUSTMENTS),
     ];
     for (field, n, most) in limits {
         if n > most {
@@ -822,7 +1036,7 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
             if let Some(why) = file_problem(f) {
                 return fail(at("file"), why);
             }
-            if f.format == SurveyFileFormat::Report {
+            if !matches!(f.format, SurveyFileFormat::Rinex | SurveyFileFormat::Nmea | SurveyFileFormat::Gpx) {
                 return fail(at("file.format"), "oturumun dosyası RINEX, NMEA ya da GPX olur");
             }
         }
@@ -868,6 +1082,9 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
             _ => return fail(at("from"), "ham ölçüm aralığı oturumun konumları içinde olmalı"),
         }
     }
+    if let Some(found) = network_problem(survey, &mut ids) {
+        return Some(found);
+    }
     let mut marks = BTreeSet::new();
     let mut uids = std::collections::HashSet::new();
     for (i, p) in survey.points.iter().enumerate() {
@@ -889,7 +1106,13 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
         {
             return fail(at("result.revision"), "revizyonlar 1'den başlayıp sırayla artar; bugünkü sonuç sonuncudur");
         }
-        if p.result.solutions.is_empty() {
+        if p.result.method == AcceptMethod::Network {
+            if !p.result.solutions.is_empty() || p.result.adjustment.as_deref().and_then(|a| survey.adjustment(a)).is_none() {
+                return fail(at("result.adjustment"), "ağ dengelemesiyle kabul edilen noktanın çözümü olmaz, arşivdeki dengelemesi olur");
+            }
+        } else if p.result.adjustment.is_some() {
+            return fail(at("result.adjustment"), "yalnız ağ dengelemesiyle kabul edilen noktanın dengelemesi olur");
+        } else if p.result.solutions.is_empty() {
             return fail(at("result.solutions"), "kabul edilen noktanın en az bir çözümü olur");
         }
         for s in &p.result.solutions {
@@ -931,6 +1154,143 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
                 Some(p) if pr.revision >= 1 && pr.revision <= p.result.revision => {}
                 _ => return fail(at("points"), "dayananın noktaları arşivde ve revizyonları geçerli olmalı"),
             }
+        }
+    }
+    None
+}
+
+/// Why a baseline's numbers cannot be kept: the field and the words.
+pub fn baseline_numbers_problem(b: &SurveyBaseline) -> Option<(&'static str, String)> {
+    if !b.d.iter().all(|v| v.is_finite() && v.abs() <= MOST_BASELINE_COMPONENT) {
+        return Some(("d", "bazın bileşenleri en çok 20 000 km olan sonlu sayılar olmalı (m)".into()));
+    }
+    if b.d.iter().all(|v| *v == 0.0) {
+        return Some(("d", "bazın uzunluğu sıfır olamaz".into()));
+    }
+    if !covariance_ok(&b.covariance) {
+        return Some(("covariance", "bazın kovaryansı pozitif tanımlı olmalı (köşegen, 2×2 ve 3×3 öncü küçükler 0'dan büyük)".into()));
+    }
+    None
+}
+
+/// Why a known point's numbers cannot be kept: the field and the words.
+pub fn known_numbers_problem(k: &SurveyKnown) -> Option<(&'static str, String)> {
+    if !(k.lat.is_finite() && (-90.0..=90.0).contains(&k.lat)) {
+        return Some(("lat", "enlem −90 ile 90 derece arasında olmalı".into()));
+    }
+    if !(k.lon.is_finite() && (-180.0..=180.0).contains(&k.lon)) {
+        return Some(("lon", "boylam −180 ile 180 derece arasında olmalı".into()));
+    }
+    if !(k.height.is_finite() && k.height.abs() <= 100_000.0) {
+        return Some(("height", "elipsoit yüksekliği en çok 100 km olan sonlu bir sayı olmalı".into()));
+    }
+    if k.srid == 0 {
+        return Some(("srid", "bilinen noktanın çerçevesi bir EPSG kodu olmalı".into()));
+    }
+    if let Some(why) = k.epoch.and_then(crate::epoch_problem) {
+        return Some(("epoch", why));
+    }
+    if k.sigma.is_some_and(|g| !g.iter().all(|v| v.is_finite() && *v > 0.0)) {
+        return Some(("sigma", "σ değerleri 0'dan büyük sonlu sayılar olmalı (m)".into()));
+    }
+    None
+}
+
+/// The baselines', known points' and network adjustments' rules (docs/adr/1740); `ids` are the archive's ids so far.
+fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Option<(String, String)> {
+    for (i, b) in survey.baselines.iter().enumerate() {
+        let at = |f: &str| format!("baselines[{i}].{f}");
+        if !survey_numbered(&b.id, "bz-") || !ids.insert(b.id.as_str()) {
+            return fail(at("id"), "bazın kimliği bz-1, bz-2 … biçiminde ve tek olmalı");
+        }
+        if survey.campaign(&b.campaign).is_none() {
+            return fail(at("campaign"), "bazın arazi ölçümü arşivde olmalı");
+        }
+        if !survey_text_ok(&b.from, MOST_SURVEY_TEXT) || !survey_text_ok(&b.to, MOST_SURVEY_TEXT) || b.from == b.to {
+            return fail(at("to"), "bazın iki ucu boşlukla başlayıp bitmeyen 1–200 karakterlik iki ayrı işarettir");
+        }
+        if let Some((field, why)) = baseline_numbers_problem(b) {
+            return fail(at(field), &why);
+        }
+        let start = b.start.as_deref().map(survey_time);
+        let end = b.end.as_deref().map(survey_time);
+        if matches!(start, Some(None)) || matches!(end, Some(None)) {
+            return fail(at("start"), "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı");
+        }
+        if let (Some(Some(a)), Some(Some(z))) = (&start, &end)
+            && z < a
+        {
+            return fail(at("end"), "bitiş başlangıçtan önce olamaz");
+        }
+        if !opt_text(&b.software, MOST_SURVEY_TEXT) || !opt_text(&b.source, MOST_SURVEY_TEXT) {
+            return fail(at("software"), "yazılım ve dosyadaki kimlik boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+        }
+        if !opt_text(&b.recipe, MOST_RECIPE_TEXT) {
+            return fail(at("recipe"), "yeniden işleme tarifi boşlukla başlayıp bitmeyen 1–2000 karakter olmalı");
+        }
+        if !opt_text(&b.excluded, MOST_REASON_TEXT) {
+            return fail(at("excluded"), "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+        }
+        if let Some(f) = &b.file
+            && (file_problem(f).is_some() || !matches!(f.format, SurveyFileFormat::Gvx | SurveyFileFormat::Text))
+        {
+            return fail(at("file"), "bazın dosyası mutlak yolu ve SHA-256'sıyla verilen bir GVX ya da baz metnidir");
+        }
+    }
+    let mut held = BTreeSet::new();
+    for (i, k) in survey.known.iter().enumerate() {
+        let at = |f: &str| format!("known[{i}].{f}");
+        if !survey_numbered(&k.id, "bn-") || !ids.insert(k.id.as_str()) {
+            return fail(at("id"), "bilinen noktanın kimliği bn-1, bn-2 … biçiminde ve tek olmalı");
+        }
+        if !survey_text_ok(&k.mark, MOST_SURVEY_TEXT) {
+            return fail(at("mark"), "işaret boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+        }
+        if k.excluded.is_none() && !held.insert(k.mark.as_str()) {
+            return fail(at("mark"), "bir işaretin dışlanmamış tek bilinen noktası olur");
+        }
+        if let Some((field, why)) = known_numbers_problem(k) {
+            return fail(at(field), &why);
+        }
+        if !opt_text(&k.source, MOST_REASON_TEXT) {
+            return fail(at("source"), "kaynak boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+        }
+        if !opt_text(&k.excluded, MOST_REASON_TEXT) {
+            return fail(at("excluded"), "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+        }
+    }
+    for (i, a) in survey.adjustments.iter().enumerate() {
+        let at = |f: &str| format!("adjustments[{i}].{f}");
+        if !survey_numbered(&a.id, "da-") || !ids.insert(a.id.as_str()) {
+            return fail(at("id"), "dengelemenin kimliği da-1, da-2 … biçiminde ve tek olmalı");
+        }
+        let mut seen = BTreeSet::new();
+        if a.baselines.is_empty() || a.baselines.iter().any(|b| survey.baseline(b).is_none() || !seen.insert(b.as_str())) {
+            return fail(at("baselines"), "dengelemenin bazları arşivde, tek tek ve en az bir tane olmalı");
+        }
+        if a.known.is_empty() || a.known.iter().any(|k| survey.known_point(k).is_none() || !seen.insert(k.as_str())) {
+            return fail(at("known"), "dengelemenin bilinen noktaları arşivde, tek tek ve en az bir tane olmalı");
+        }
+        if !a.known.contains(&a.hold) {
+            return fail(at("hold"), "serbest dengelemede tutulan nokta dengelemenin bilinen noktalarından olmalı");
+        }
+        if !(a.scale.is_finite() && a.scale > 0.0) {
+            return fail(at("scale"), "varyans çarpanı 0'dan büyük sonlu bir sayı olmalı");
+        }
+        if !opt_text(&a.class, MOST_SURVEY_TEXT) || !opt_text(&a.rules, MOST_SURVEY_TEXT) || a.class.is_some() != a.rules.is_some() {
+            return fail(at("class"), "sınıf ve kural paketi birlikte, boşlukla başlayıp bitmeyen 1–200 karakter olur");
+        }
+        if a.rules_passed.is_some() != a.class.is_some() {
+            return fail(at("rulesPassed"), "kuralların sonucu yalnız sınıf denetlendiyse yazılır");
+        }
+        if [a.free_m0, a.m0].iter().flatten().any(|m| !(m.is_finite() && *m >= 0.0)) {
+            return fail(at("m0"), "m0 eksi olmayan sonlu bir sayı olmalı");
+        }
+        if a.srid == 0 {
+            return fail(at("srid"), "dengelemenin çerçevesi bir EPSG kodu olmalı");
+        }
+        if let Some(why) = a.epoch.and_then(crate::epoch_problem) {
+            return fail(at("epoch"), &why);
         }
     }
     None

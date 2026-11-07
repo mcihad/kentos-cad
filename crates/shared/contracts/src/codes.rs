@@ -2011,6 +2011,22 @@ codes! {
     NETWORK_TOO_LARGE = "network_too_large", Failed, false, "Ağ yoğun çözümün alabileceğinden büyük (en çok 1500 bilinmeyen).";
     /// GNSS baz ağı: a station no baseline ties to the datum.
     NETWORK_DISCONNECTED = "network_disconnected", Failed, false, "Bir istasyon datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.";
+    /// GNSS ağı (docs/adr/1740): a baseline the outlier test calls a blunder; the network is not accepted.
+    NETWORK_BLUNDER = "network_blunder", Failed, false, "Ağda uyuşumsuz baz var: dışlayıp nedenini yazın ya da yeniden işleyin, sonra yeniden dengeleyin.";
+    /// GNSS ağı: the model test (χ²) failed; the network is not accepted.
+    NETWORK_TEST_FAILED = "network_test_failed", Failed, false, "Ağın model testi (χ²) geçmedi: varyans çarpanını m0² yapıp yeniden dengeleyin.";
+    /// GNSS ağı: the known points are not in one frame and epoch.
+    KNOWN_DIFFER = "known_differ", Failed, false, "Bilinen noktalar aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin.";
+    /// GNSS ağı: a class the rule package does not have.
+    UNKNOWN_RULE_CLASS = "unknown_rule_class", Failed, false, "Kural paketinde bu sınıf yok (BÖHHBÜY 2018: C1, C2, C3).";
+    /// GNSS ağı: a GVX file's cross-correlations between vectors were not read.
+    GVX_CORRELATIONS_IGNORED = "gvx_correlations_ignored", Warning, false, "GVX oturumlarının vektörler arası çapraz korelasyonları okunmadı; vektörler birbirinden bağımsız dengelenir.";
+    /// GNSS ağı: a baseline text's K and N lines were not taken into the archive.
+    BASELINE_TEXT_STATIONS = "baseline_text_stations", Warning, false, "Baz metninin K ve N satırları arşive alınmadı; bilinen noktaları çerçevesi ve epokuyla Bilinen nokta ekle ile girin.";
+    /// GNSS ağı: the class's limits do not hold (a baseline's or a station's standard deviation).
+    NETWORK_RULES_FAILED = "network_rules_failed", Warning, false, "Ağ seçilen sınıfın sınırlarını tutmuyor (baz ya da nokta standart sapması); rapor hangisi olduğunu söyler.";
+    /// GNSS ağı: no degrees of freedom, so no blunder and no model can be tested.
+    NETWORK_UNCHECKED = "network_unchecked", Warning, false, "Ağda fazla ölçü yok; uyuşumsuz baz ve model sınanamaz.";
     /// Kodla çiz (docs/adr/1360): an object given is not a point.
     NOT_A_POINT = "not_a_point", Failed, false, "Verilen nesne nokta değil; Kodla çiz kodlu noktaları işler.";
     /// Kodla çiz: no point given or found holds a code.

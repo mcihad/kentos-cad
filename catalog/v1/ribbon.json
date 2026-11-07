@@ -1076,6 +1076,10 @@
        {
         "command": "map.survey.select",
         "size": "small"
+       },
+       {
+        "command": "map.survey.adjustment",
+        "size": "small"
        }
       ]
      },
@@ -7121,6 +7125,9 @@
    "map.survey.select": [
     "harita",
     "cbs"
+   ],
+   "map.survey.adjustment": [
+    "harita"
    ]
   }
  }

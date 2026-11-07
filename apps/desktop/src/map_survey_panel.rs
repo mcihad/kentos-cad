@@ -169,8 +169,8 @@ impl App {
         }
     }
 
-    /// The arazi ölçümü a new session goes to: the last one, made when there is none.
-    fn survey_campaign(&mut self) -> Option<String> {
+    /// The arazi ölçümü a new session (or a baseline file, docs/adr/1740) goes to: the last one, made when there is none.
+    pub(crate) fn survey_campaign(&mut self) -> Option<String> {
         let last = self
             .document
             .as_ref()
@@ -433,6 +433,8 @@ fn session_item<'a>(s: &SurveySessionRow) -> StatusItem<'a, Message> {
         kentos_commands::SurveyFileFormat::Nmea => "NMEA",
         kentos_commands::SurveyFileFormat::Gpx => "GPX",
         kentos_commands::SurveyFileFormat::Report => "rapor",
+        kentos_commands::SurveyFileFormat::Gvx => "GVX",
+        kentos_commands::SurveyFileFormat::Text => "baz metni",
     });
     let height = s.vertical.map_or("anten yok".to_owned(), |h| format!("{h:.3} m"));
     let mut detail = Vec::new();

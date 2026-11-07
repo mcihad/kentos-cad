@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 199 (docs/adr/1740): a GNSS archive's baselines, known points, network adjustments and network points.
+    if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_network) {
+        return crate::SCHEMA_WITH_GNSS_NETWORK;
+    }
     // Schema 198 (docs/adr/1720): a map project's drawings, and its drawing them again by itself; a zero line's drawing in
     // any project.
     if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.command == "road.terrains.zeroline"))

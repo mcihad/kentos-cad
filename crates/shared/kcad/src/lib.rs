@@ -835,11 +835,14 @@ pub const SCHEMA_WITH_SURFACE_EDITS: u32 = 196;
 pub const SCHEMA_WITH_MAP_PLATFORMS: u32 = 197;
 /// Schema 198 (docs/adr/1720): what a map project's commands drew from its surfaces and pads (`settings.road.drawings`).
 pub const SCHEMA_WITH_MAP_DRAWINGS: u32 = 198;
+/// Schema 199 (docs/adr/1740): a GNSS archive's baselines, known points and network adjustments, and its points made by
+/// a network (`settings.mapSurvey`).
+pub const SCHEMA_WITH_GNSS_NETWORK: u32 = 199;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 196] = [
+pub const SCHEMAS: [u32; 197] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1036,6 +1039,7 @@ pub const SCHEMAS: [u32; 196] = [
     SCHEMA_WITH_SURFACE_EDITS,
     SCHEMA_WITH_MAP_PLATFORMS,
     SCHEMA_WITH_MAP_DRAWINGS,
+    SCHEMA_WITH_GNSS_NETWORK,
 ];
 
 /// The file a drawing is saved as.

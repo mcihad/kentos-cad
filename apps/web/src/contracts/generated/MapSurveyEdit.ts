@@ -4,14 +4,17 @@ import type { MapSurveyOperation } from "./MapSurveyOperation";
 /**
  * Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,
  * “GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,
- * “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”).
+ * “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”, “Baz ekle”,
+ * “Bilinen nokta ekle”, “Ağ dengelemesini kabul et”).
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
  * `unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,
  * `file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,
  * `no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,
  * `solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,
- * `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, and the coordinate chain's own
- * (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …) when the point cannot be moved into the project.
+ * `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, the network's (`no_baselines`, `datum_missing`,
+ * `known_differ`, `unknown_rule_class`, `network_too_large`, `network_disconnected`, `network_blunder`,
+ * `network_test_failed`) and the coordinate chain's own (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …)
+ * when a point cannot be moved into the project.
  */
 export type MapSurveyEdit = { operation: MapSurveyOperation, expectedRevision?: string, };

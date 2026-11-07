@@ -2517,6 +2517,13 @@ def document(d):
                                                        or d["settings"].get("road", {}).get("autoRebuild"))):
         # A map project's drawings kept with their sources' stamps, and its drawing them again (docs/adr/1720).
         schema = max(schema, 198)
+    surveyed = d["settings"].get("mapSurvey", {})
+    if any(surveyed.get(k) for k in ("baselines", "known", "adjustments")) or any(
+            r.get("method") == "network" or "adjustment" in r
+            for p in surveyed.get("points", []) for r in [p["result"], *p.get("history", [])]):
+        # A GNSS archive's baselines, known points and network adjustments, its points made by a network
+        # (docs/adr/1740).
+        schema = max(schema, 199)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3475,7 +3482,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-199.kcad"] = container(root(cmap(parts), version=uint(199)))
+    files["schema-version-200.kcad"] = container(root(cmap(parts), version=uint(200)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5862,6 +5869,28 @@ def build():
         broken_survey = copy.deepcopy(surveyed)
         change(broken_survey)
         out[f"broken/map-survey-{name}.kcad"] = container(document(broken_survey))
+    # Schema 199 (docs/adr/1740): the archive's baselines (from a GVX file, typed in, one excluded), known points (one
+    # held, one excluded), a network adjustment and the point it made; schema 198 refuses them, and a baseline with one
+    # mark at both ends, a non positive definite baseline covariance, a second known point not excluded on one mark, an
+    # adjustment naming a baseline not in the archive and a network point with a solution are refused.
+    networked = load("map-survey-network.json")
+    networked_data = document(networked)
+    assert networked_data.count(b"\x67version\x18\xc7") == 1, "a GNSS archive's network is schema 199"
+    out["map-survey-network.kcad"] = container(networked_data)
+    out["broken/map-survey-network-in-schema-198.kcad"] = container(
+        networked_data.replace(b"\x67version\x18\xc7", b"\x67version\x18\xc6"))
+    for name, change in (
+            ("baseline-one-mark", lambda d: d["settings"]["mapSurvey"]["baselines"][0].update({"to": "ANKR"})),
+            ("baseline-covariance", lambda d: d["settings"]["mapSurvey"]["baselines"][1].update(
+                {"covariance": [1e-05, 2e-05, 0.0, 1e-05, 0.0, 4e-05]})),
+            ("known-twice", lambda d: (d["settings"]["mapSurvey"]["known"][1].pop("excluded"),
+                                       d["settings"]["mapSurvey"]["known"][1].update({"mark": "ANKR"}))),
+            ("adjustment-unknown-baseline", lambda d: d["settings"]["mapSurvey"]["adjustments"][0]["baselines"].append("bz-9")),
+            ("network-point-solution", lambda d: d["settings"]["mapSurvey"]["points"][1]["result"].update(
+                {"solutions": ["cz-1"]}))):
+        broken_network = copy.deepcopy(networked)
+        change(broken_network)
+        out[f"broken/map-survey-{name}.kcad"] = container(document(broken_network))
     # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
     # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
     # item without a file, an object in two derivations and a draft status written are refused.

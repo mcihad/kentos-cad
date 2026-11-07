@@ -13,13 +13,16 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
 use crate::{
-    AcceptMethod, SolutionKind, SurveyAntenna, SurveyFileFormat, SurveyGrid, SurveyReceiver, SurveyResult, TimeSystem,
+    AcceptMethod, BaselineSolution, SolutionKind, SurveyAdjustment, SurveyAntenna, SurveyFileFormat, SurveyGrid,
+    SurveyKnown, SurveyReceiver, SurveyResult, TimeSystem,
 };
 
 pub const MAP_SURVEY_QUERY: &str = "map.survey.query";
 pub const MAP_SURVEY_QUERY_VERSION: u32 = 1;
 pub const MAP_SURVEY_EDIT: &str = "map.survey.edit";
 pub const MAP_SURVEY_EDIT_VERSION: u32 = 1;
+pub const MAP_SURVEY_NETWORK: &str = "map.survey.network";
+pub const MAP_SURVEY_NETWORK_VERSION: u32 = 1;
 
 /// Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
 /// file is only looked for. `uid` also says what that object is in the archive.
@@ -216,6 +219,38 @@ pub struct SurveySolutionRow {
     pub excluded: Option<String>,
 }
 
+/// A baseline vector as it stands (docs/adr/1740): its record's marks, its length (m) and processed standard
+/// deviations σX σY σZ (m), whether it is excluded and why, whether it goes into the adjustment, its file and its id
+/// there, and the network adjustments (`da-N`) made with it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyBaselineRow {
+    pub id: String,
+    pub campaign: String,
+    pub from: String,
+    pub to: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sigma: [f64; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub excluded: Option<String>,
+    pub adjust: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<SurveyFileRow>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub adjustments: Vec<String>,
+}
+
 /// A mark: its sessions in the archive's order, its solutions, its accepted point.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -300,8 +335,9 @@ pub struct SurveyObject {
     pub used: Option<SurveyUseRow>,
 }
 
-/// Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and
-/// uses are out of date, whether it was deep, and the revision read.
+/// Output of `map.survey.query` v1: the archive in its order (with its baselines, known points and network
+/// adjustments, docs/adr/1740), the object asked about, how many accepted points and uses are out of date, whether it
+/// was deep, and the revision read.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -313,6 +349,15 @@ pub struct MapSurveyTree {
     pub marks: Vec<SurveyMarkRow>,
     pub points: Vec<SurveyPointRow>,
     pub uses: Vec<SurveyUseRow>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyBaselineRow>>"))]
+    pub baselines: Vec<SurveyBaselineRow>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyKnown>>"))]
+    pub known: Vec<SurveyKnown>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyAdjustment>>"))]
+    pub adjustments: Vec<SurveyAdjustment>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub object: Option<SurveyObject>,
@@ -504,12 +549,86 @@ pub enum MapSurveyOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         recipe: Option<String>,
     },
-    /// A solution left out, with why; it stays in the record.
+    /// A solution `cz-N`, a baseline `bz-N` or a known point `bn-N` left out, with why; it stays in the record.
     Exclude { solution: String, reason: String },
-    /// An excluded solution taken back.
+    /// An excluded solution, baseline or known point taken back.
     Include { solution: String },
-    /// Whether a solution goes into the adjustment.
+    /// Whether a solution or a baseline goes into the adjustment.
     Adjust { solution: String, adjust: bool },
+    /// Baseline vectors `bz-N` of a campaign read from a file (an absolute path): a GVX 1.0 file (NGS) or KentOS's
+    /// baseline text (`B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`); each goes into the adjustment.
+    Baselines { campaign: String, file: String },
+    /// One baseline vector `bz-N` typed in: from mark to mark, ΔX ΔY ΔZ (m; ECEF, the antenna heights applied) and its
+    /// covariance xx, xy, xz, yy, yz, zz (m²).
+    Baseline {
+        campaign: String,
+        from: String,
+        to: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        d: [f64; 3],
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m2")))]
+        covariance: [f64; 6],
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        start: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        end: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        solution: Option<BaselineSolution>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        recipe: Option<String>,
+    },
+    /// A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held
+    /// fixed, or weighted by `sigma` north, east, up (m).
+    Known {
+        mark: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+        lat: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+        lon: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        height: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+        srid: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+        epoch: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+        sigma: Option<[f64; 3]>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        source: Option<String>,
+    },
+    /// The network adjusted as `map.survey.network` adjusts it and accepted (docs/adr/1740): `da-N`, and each mark that
+    /// is not a known point accepted (its object on `layer`, the active layer when not given) or made again, in one
+    /// step. Refused while a baseline is a blunder or the model test fails.
+    Network {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        campaign: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+        scale: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        class: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        rules: Option<GnssRules>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        hold: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        layer: Option<String>,
+    },
     /// A mark's point accepted: its object on `layer` (the active layer when not given) and `kn-N`, in one step.
     Accept {
         mark: String,
@@ -541,15 +660,18 @@ pub enum MapSurveyOperation {
 
 /// Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,
 /// “GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,
-/// “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”).
+/// “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”, “Baz ekle”,
+/// “Bilinen nokta ekle”, “Ağ dengelemesini kabul et”).
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
 /// `unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,
 /// `file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,
 /// `no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,
 /// `solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,
-/// `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, and the coordinate chain's own
-/// (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …) when the point cannot be moved into the project.
+/// `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, the network's (`no_baselines`, `datum_missing`,
+/// `known_differ`, `unknown_rule_class`, `network_too_large`, `network_disconnected`, `network_blunder`,
+/// `network_test_failed`) and the coordinate chain's own (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …)
+/// when a point cannot be moved into the project.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -592,9 +714,302 @@ pub struct MapSurveyEdited {
     pub removed: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stale: u32,
+    /// The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub records: Vec<String>,
     pub revision: String,
 }
 
 fn is_zero(n: &u32) -> bool {
     *n == 0
+}
+
+/// Whose standard deviations a class's baseline limit is checked on: the processor's (the vector's covariance by the
+/// variance factor) or the free adjustment's (the adjusted vector's, by its m0).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BaselineSigmaOf {
+    Processed,
+    Adjusted,
+}
+
+/// A class of a GNSS network rule package (docs/adr/1740): a baseline component's standard deviation's limit, a
+/// constant (m) and parts per million of its length, and whose; a station's limits after the adjustment held by the
+/// known points, σφ and σλ (as north and east, m) and σh (m); and, when the class says one, the tests' confidence
+/// 1 − α (otherwise Baarda's α₀ = 0.001).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GnssRuleClass {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub constant: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
+    pub ppm: f64,
+    pub baseline_of: BaselineSigmaOf,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub horizontal: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub confidence: Option<f64>,
+    /// The articles the class's numbers come from.
+    pub articles: String,
+}
+
+/// A GNSS network rule package: who issues it, the document, when it holds, its release and its classes. KentOS's is
+/// BÖHHBÜY 2018's (`catalog/v1/rules/gnss-ag-bohhbuy-2018.json`); none of its numbers is a constant in code.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GnssRules {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub release: u32,
+    pub jurisdiction: String,
+    pub source: String,
+    pub effective: String,
+    pub classes: Vec<GnssRuleClass>,
+}
+
+/// KentOS's GNSS network rule package (BÖHHBÜY 2018, Articles 15, 20 and 22).
+pub fn gnss_rules_default() -> Option<GnssRules> {
+    serde_json::from_str(include_str!("../../../../catalog/v1/rules/gnss-ag-bohhbuy-2018.json")).ok()
+}
+
+/// Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading
+/// only. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their
+/// covariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first
+/// otherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).
+///
+/// Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
+/// `unknown_rule_class`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`, `network_too_large`,
+/// `network_disconnected`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MapSurveyNetwork {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub campaign: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub scale: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub class: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<GnssRules>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub hold: Option<String>,
+}
+
+/// One stage of the adjustment: the marks held fixed, m0 (none without degrees of freedom), the degrees of freedom,
+/// vᵀPv, the χ² quantile (95 %) and whether the model test passed, the test value above which a baseline is a
+/// blunder, how many are and the worst one.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkStage {
+    pub held: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub m0: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub dof: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub omega: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub chi2: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub passed: Option<bool>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub limit: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub blunders: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub worst: Option<String>,
+}
+
+/// A baseline's test in a stage: its residual (computed − observed) in the local east, north, up of its start (m),
+/// its largest component test value (none: not checked) and what it says (`ok`, `blunder`, `uncontrolled`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BaselineTest {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub v: [f64; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub w: Option<f64>,
+    pub flag: String,
+}
+
+/// A baseline of the network: its marks and length (m), its processed standard deviations σX σY σZ (by the variance
+/// factor), the free stage's of the adjusted vector, its test in each stage, and the class's limit and whether it
+/// holds (when a class is checked).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkBaseline {
+    pub id: String,
+    pub from: String,
+    pub to: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sigma: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub adjusted: [f64; 3],
+    pub free: BaselineTest,
+    pub constrained: BaselineTest,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub limit: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<bool>,
+}
+
+/// A mark of the network after the stage held by the known points: its known point (`bn-N`) and whether it is held
+/// fixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard
+/// deviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a
+/// known point, when the coordinate chain reaches the project), how far that is from where its accepted point is now
+/// (project units), and whether the class's limits hold for it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkStation {
+    pub mark: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub known: Option<String>,
+    pub held: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub lat: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub lon: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub sigma: [f64; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub point: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub x: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub y: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub z: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub dx: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub dy: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub dz: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<bool>,
+}
+
+/// What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,
+/// whose baseline standard deviations were checked, whether all holds, and how many baselines and stations do not.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkRules {
+    pub package: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub release: u32,
+    pub class: String,
+    pub articles: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub confidence: Option<f64>,
+    pub baseline_of: BaselineSigmaOf,
+    pub passed: bool,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub baselines: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub stations: u32,
+}
+
+/// Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,
+/// the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
+/// result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
+/// be accepted and, if not, why, and the drawing's revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MapSurveyNetworked {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
+    pub known: Vec<String>,
+    pub baselines: Vec<NetworkBaseline>,
+    pub stations: Vec<NetworkStation>,
+    pub free: NetworkStage,
+    pub constrained: NetworkStage,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<NetworkRules>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub current: Option<String>,
+    pub acceptable: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub why: Vec<String>,
+    pub revision: String,
 }

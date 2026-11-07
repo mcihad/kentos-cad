@@ -1237,6 +1237,14 @@
       ],
       "note": "Seçilen dosya map.survey.edit session ile okunur ve oturum olur (ADR 1340 §4)."
     },
+    "map.survey.adjustment": {
+      "level": "semantic",
+      "via": [
+        "map.survey.network",
+        "map.survey.edit"
+      ],
+      "note": "Pencerenin cevabı map.survey.network'ün; baz içe aktarma, bilinen nokta, dışlama ve Kabul et map.survey.edit'e gider (ADR 1740)."
+    },
     "map.survey.select": {
       "level": "session",
       "note": "Kabul edilen noktaların kimlikleri map.survey.query'den; yalnız seçim (ADR 1340 §1)."

@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `198`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-199.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `199`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-200.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -902,6 +902,18 @@ projesinde çizim varken seçer; 197 ve öncesi bunu `bad_value` sayar (`broken/
 hattı çizimi (`road.terrains.zeroline`, ADR 1620) de her projede 198'indir; 197 komutu tanımaz
 (`broken/zeroline-drawing-in-schema-197.kcad`). Örnek
 `map-drawings.json/.kcad`.
+
+**Şema 199** (ADR 1740; MAP-03, MAP-05): GNSS arşivinin ağı. `mapSurvey` baz vektörlerini (`baselines`, `bz-N`: arazi
+ölçümü, iki ayrı işaret, ECEF ΔX ΔY ΔZ ve pozitif tanımlı kovaryans, gözlem zamanları, çözüm türü, yazılım, GVX ya da baz
+metni dosyası ve oradaki kimliği, yeniden işleme tarifi, dışlama nedeni, `adjust`), bilinen noktaları (`known`, `bn-N`:
+işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok, σ kuzey/doğu/yukarı ise ağırlıklı, kaynak, dışlama;
+bir işaretin dışlanmamış tek bilinen noktası olur) ve ağ dengelemelerini (`adjustments`, `da-N`: bazları ve bilinen
+noktaları arşivde ve birer kez, serbest dengelemede tutulan, varyans çarpanı, sınıf ve kural paketi birlikte, iki
+aşamanın m0'ı ve serbestliği, çerçeve, epok) taşır; kabul edilen noktanın sonucu `method: network` ve `adjustment` ile
+dengelemesini adlandırır, çözümü olmaz. Yazıcı 199'u bunlardan biri varken seçer; 198 ve öncesi `bad_value` sayar
+(`broken/map-survey-network-in-schema-198.kcad`). Bozuklar: iki ucu aynı işaret olan baz, pozitif tanımlı olmayan baz
+kovaryansı, bir işarette iki dışlanmamış bilinen nokta, arşivde olmayan bazı adlandıran dengeleme, çözümü olan ağ noktası
+(`broken/map-survey-*.kcad`). Örnek `map-survey-network.json/.kcad`.
 
 **Şema 189** (ADR 1260; MAP-07): topoloji ayarlarının kalite `profile`'ı ve istisnanın
 `decision`, `reason`, `ruleDigest`, `scope` alanları (§6.4.5). Yazıcı 189'u yalnız profil ya da bu alanlardan biri

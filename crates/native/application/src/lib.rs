@@ -318,6 +318,7 @@ pub mod pointcloud_overlap;
 pub mod map_work_edit;
 pub mod map_survey;
 pub mod map_survey_edit;
+pub mod map_survey_network;
 pub mod road_corridors_draw;
 pub mod road_corridors_edit;
 pub mod road_corridors_query;
@@ -1452,6 +1453,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (kentos_commands::MAP_SURVEY_QUERY, kentos_commands::MAP_SURVEY_QUERY_VERSION),
     (kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION),
+    (kentos_commands::MAP_SURVEY_NETWORK, kentos_commands::MAP_SURVEY_NETWORK_VERSION),
     (kentos_commands::ROAD_STAKEOUT_QUERY, kentos_commands::ROAD_STAKEOUT_QUERY_VERSION),
     (kentos_commands::FILE_EXPORT_LANDXML, kentos_commands::FILE_EXPORT_LANDXML_VERSION),
     (kentos_commands::FILE_EXPORT_IFC, kentos_commands::FILE_EXPORT_IFC_VERSION),

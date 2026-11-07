@@ -348,6 +348,7 @@ COMMANDS: dict[str, Any] = {
     "file.recover": file.recover,
     "map.features.code": map.features.code,
     "map.survey.edit": map.survey.edit,
+    "map.survey.network": map.survey.network,
     "map.survey.query": map.survey.query,
     "map.work.edit": map.work.edit,
     "map.work.query": map.work.query,

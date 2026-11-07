@@ -316,6 +316,27 @@ NMEA `gnss_nmea_cases.py` ile, projeye taşıma PROJ ile). **Açık:** baz vekt�
 adaptörü, GGA'nın düzeltme yaşı, dayanan kaydının yüzey komutlarınca kendiliğinden yazılması, gerçek kullanıcı
 projesinde GUI kabulü, web. Canlı RTK/NTRIP (HYB-24) ertelendi; gerçek alıcı kabulü ayrıca bekler. Madde `[ ]` kalır.
 
+**7 Kasım 2026 — Arşivden GNSS ağı ([ADR 1740](../docs/adr/1740-gnss-network-from-archive.md)), MAP-03.2 ve MAP-05.2
+birlikte.** Kapsam: **Harita + CBS** (düzenleme ve pencere Harita'nın; `map.survey.network` Harita ve CBS'nin, salt
+okunur). Araştırma:
+- NGS'nin GVX 1.0 belgesi: işaretten işarete ECEF vektörü, SD/P korelasyon matrisi, GPS zamanı;
+- TBC: dengelenmiş koordinat ek kayıtla son değer olur, karşılaştırma raporu;
+- Leica Infinity: önce iç kısıtlı, sonra kısıtlı dengeleme, sonuç “saklanınca” yazılır;
+- BÖHHBÜY Madde 15, 20, 22: tek noktaya dayalı serbest dengeleme ve uyuşumsuz baz testi, sonra TUSAGA-Aktif'e dayalı
+  dengeleme; C1/C2/C3 baz ve nokta σ sınırları; güven 0,95.
+
+Kanıtlanan alt maddeler:
+- **Model:** arşivde baz vektörü (`bz-N`, tam kovaryans, dosyası ve kimliği, dışlama, dengeleme seçimi), bilinen nokta
+  (`bn-N`, sabit ya da σ'lı) ve dengeleme kaydı (`da-N`: bazlar, bilinen noktalar, tutulan nokta, çarpan, sınıf, iki
+  aşamanın m0'ı ve serbestliği). `.kcad` şema 199; bağımsız okuyucu da.
+- **Veri alışverişi:** GVX 1.0 ve KentOS baz metninden içe aktarma.
+- **“Dengelemeye giren”:** artık gerçekten dengelemeye giriyor.
+- **Kabulden kanıtlanan:** anten ya da epok değil, bir baz dışlanınca ağın noktaları güncel değil, nedeni yazılı.
+
+Ortak durumlar: `map.survey.network` 30, `map.survey.edit`'e 33 yeni (bağımsız `map_survey_network_cases.py`).
+**Açık:** GVX oturum çapraz korelasyonları, bilinen noktaların hız ızgarasıyla ölçme epokuna taşınması, arşiv
+panelinde bazlar, gerçek kullanıcı projesinde GUI kabulü, web. Madde `[ ]` kalır.
+
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K12], [K20], [K25]–[K27].
@@ -400,6 +421,22 @@ referans faktörü, vektör ağırlık ölçeği; GVX; DynAdjust. Kanıtlanan: k
 işaretlenir), istasyonların doğu/kuzey/yukarı sapmaları; analiz hiçbir şey yazmaz. `cad.survey.baselines` (25 ortak
 durum, numpy/scipy/pyproj bağımsız başvurusu), GNSS baz ağı penceresi. Açık: seyrek çözüm ve büyük ağ ölçümü, robust
 kestirim, iç kısıtlı serbest ağ, GVX/SINEX, arşivden ağ kurma, kabul edilen çözümün yazılması, deformasyon.
+
+**7 Kasım 2026 — MAP-05.2: arşivden ağ ve kabul ([ADR 1740](../docs/adr/1740-gnss-network-from-archive.md)).** Kapsam:
+**Harita + CBS**. Kanıtlanan:
+- **Kaynak ve önsel belirsizlik ayrı:** bilinen noktanın σ'sı kuzey/doğu/yukarı verilir, ECEF'te ilişkili kovaryansa
+  döner. Çekirdek tam kovaryanslı ağırlıklı istasyonu öğrendi.
+- **İki aşama:** tek noktaya dayalı serbest dengeleme ve bilinen noktalara dayalı dengeleme; her ikisinde χ² ve Baarda.
+  Sınıfın güveni varsa (C1: 0,95) test onunla yapılır.
+- **Analiz:** fark vektörü (kabul edilmiş noktadan dx, dy, dz) ve güven bölgesi (σ kuzey/doğu/yukarı); kaynak veri
+  değişmez.
+- **Kabul:** uyuşumsuz ölçü ya da düşen model testiyle reddedilir. Kabulde `da-N`, yeni noktalar ve eski sonucu
+  korunarak taşınan noktalar ile ona dayananların güncelliği tek geri alma adımıdır. Aynı ağ ikinci kez kabul edilmez.
+- **Sınıf:** BÖHHBÜY C1/C2/C3 baz ve nokta sınırları veri olarak (kural paketi).
+
+Kabulün “kabul ve Undo bütün etkileri kapsasın” satırı kanıtlandı (ortak durumlar ve masaüstü testi). **Açık:** seyrek
+çözüm ve 1500 bilinmeyen üstü ölçüm, robust kestirim, Madde 15(1)(c) benzerlik dönüşümü, deformasyon. Madde `[ ]`
+kalır.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

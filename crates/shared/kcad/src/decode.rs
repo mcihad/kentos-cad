@@ -1050,6 +1050,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }
+                // Schema 199 (docs/adr/1740): its baselines, known points, network adjustments and network points.
+                if !has.gnss_network && v.has_network() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "GNSS arşivinin bazları, bilinen noktaları ve ağ dengelemeleri şema 199'dan önce yazılmaz",
+                    ));
+                }
                 map_survey = Some(v);
             }
             "mapWork" if has.map_work => {

@@ -118,13 +118,15 @@ class AcceptMethod(_StrEnum):
     - ``single``: One solution.
     - ``mean``: The arithmetic mean of two or more.
     - ``weighted``: Each component weighted by 1/σ².
+    - ``network``: A network adjustment of baseline vectors held by known points (docs/adr/1740): no solutions, its `da-N`.
     """
     SINGLE = "single"
     MEAN = "mean"
     WEIGHTED = "weighted"
+    NETWORK = "network"
 
 
-AcceptMethodName = Literal["single", "mean", "weighted"]
+AcceptMethodName = Literal["single", "mean", "weighted", "network"]
 """The names of :class:`AcceptMethod`, for a plain string."""
 
 
@@ -793,6 +795,34 @@ class BaselineDatum(_StrEnum):
 
 BaselineDatumName = Literal["given", "minimal"]
 """The names of :class:`BaselineDatum`, for a plain string."""
+
+
+class BaselineSigmaOf(_StrEnum):
+    """Whose standard deviations a class's baseline limit is checked on: the processor's (the vector's covariance by the
+    variance factor) or the free adjustment's (the adjusted vector's, by its m0).
+    """
+    PROCESSED = "processed"
+    ADJUSTED = "adjusted"
+
+
+BaselineSigmaOfName = Literal["processed", "adjusted"]
+"""The names of :class:`BaselineSigmaOf`, for a plain string."""
+
+
+class BaselineSolution(_StrEnum):
+    """How a baseline vector was made (GVX 1.0's SOLUTION_TYPE).
+
+    - ``postProcessed``: Processed in office software from both receivers' observations.
+    - ``singleBaseRtk``: A real-time vector from one base station.
+    - ``networkRtk``: A real-time vector from a network's correctors.
+    """
+    POST_PROCESSED = "postProcessed"
+    SINGLE_BASE_RTK = "singleBaseRtk"
+    NETWORK_RTK = "networkRtk"
+
+
+BaselineSolutionName = Literal["postProcessed", "singleBaseRtk", "networkRtk"]
+"""The names of :class:`BaselineSolution`, for a plain string."""
 
 
 class BatchOnError(_StrEnum):
@@ -7244,14 +7274,18 @@ class SurveyFileFormat(_StrEnum):
     - ``nmea``
     - ``gpx``
     - ``report``: A processing report (a solution's).
+    - ``gvx``: NGS's GNSS Vector Exchange 1.0 (baseline vectors; docs/adr/1740).
+    - ``text``: KentOS's baseline text: `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz` (docs/adr/1380 §5).
     """
     RINEX = "rinex"
     NMEA = "nmea"
     GPX = "gpx"
     REPORT = "report"
+    GVX = "gvx"
+    TEXT = "text"
 
 
-SurveyFileFormatName = Literal["rinex", "nmea", "gpx", "report"]
+SurveyFileFormatName = Literal["rinex", "nmea", "gpx", "report", "gvx", "text"]
 """The names of :class:`SurveyFileFormat`, for a plain string."""
 
 
@@ -9921,6 +9955,10 @@ class MapSurveyOperation(_Union):
     - :class:`ExcludeMapSurveyOperation` (``op: exclude``)
     - :class:`IncludeMapSurveyOperation` (``op: include``)
     - :class:`AdjustMapSurveyOperation` (``op: adjust``)
+    - :class:`BaselinesMapSurveyOperation` (``op: baselines``)
+    - :class:`BaselineMapSurveyOperation` (``op: baseline``)
+    - :class:`KnownMapSurveyOperation` (``op: known``)
+    - :class:`NetworkMapSurveyOperation` (``op: network``)
     - :class:`AcceptMapSurveyOperation` (``op: accept``)
     - :class:`RegenerateMapSurveyOperation` (``op: regenerate``)
     - :class:`UseMapSurveyOperation` (``op: use``)
@@ -17656,6 +17694,35 @@ class BaselineStation(_Model):
             fixed=data.get("fixed", UNSET),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
             xyz=UNSET if "xyz" not in data else None if data["xyz"] is None else [float(e0) for e0 in data["xyz"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineTest(_Model):
+    """A baseline's test in a stage: its residual (computed − observed) in the local east, north, up of its start (m),
+    its largest component test value (none: not checked) and what it says (`ok`, `blunder`, `uncontrolled`).
+    Attributes:
+        v: Unit: m.
+        w: Unit: 1.
+    """
+    v: list[float]
+    flag: str
+    w: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["v"] = [float(e0) for e0 in self.v]
+        out["flag"] = self.flag
+        if self.w is not UNSET:
+            out["w"] = None if self.w is None else float(self.w)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineTest:
+        return cls(
+            v=[float(e0) for e0 in data["v"]],
+            flag=data["flag"],
+            w=UNSET if "w" not in data else None if data["w"] is None else float(data["w"]),
         )
 
 
@@ -39531,6 +39598,92 @@ class GnssPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GnssRuleClass(_Model):
+    """A class of a GNSS network rule package (docs/adr/1740): a baseline component's standard deviation's limit, a
+    constant (m) and parts per million of its length, and whose; a station's limits after the adjustment held by the
+    known points, σφ and σλ (as north and east, m) and σh (m); and, when the class says one, the tests' confidence
+    1 − α (otherwise Baarda's α₀ = 0.001).
+    Attributes:
+        constant: Unit: m.
+        ppm: Unit: ppm.
+        horizontal: Unit: m.
+        height: Unit: m.
+        articles: The articles the class's numbers come from.
+        confidence: Unit: 1.
+    """
+    id: str
+    constant: float
+    ppm: float
+    baseline_of: BaselineSigmaOf | BaselineSigmaOfName
+    horizontal: float
+    height: float
+    articles: str
+    confidence: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["constant"] = float(self.constant)
+        out["ppm"] = float(self.ppm)
+        out["baselineOf"] = _enum_out(self.baseline_of)
+        out["horizontal"] = float(self.horizontal)
+        out["height"] = float(self.height)
+        out["articles"] = self.articles
+        if self.confidence is not UNSET:
+            out["confidence"] = None if self.confidence is None else float(self.confidence)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GnssRuleClass:
+        return cls(
+            id=data["id"],
+            constant=float(data["constant"]),
+            ppm=float(data["ppm"]),
+            baseline_of=_enum_in(BaselineSigmaOf, data["baselineOf"]),
+            horizontal=float(data["horizontal"]),
+            height=float(data["height"]),
+            articles=data["articles"],
+            confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GnssRules(_Model):
+    """A GNSS network rule package: who issues it, the document, when it holds, its release and its classes. KentOS's is
+    BÖHHBÜY 2018's (`catalog/v1/rules/gnss-ag-bohhbuy-2018.json`); none of its numbers is a constant in code.
+    Attributes:
+        release: Unit: version.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    classes: list[GnssRuleClass]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GnssRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            classes=[GnssRuleClass.from_json(e0) for e0 in data["classes"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GpkgCoverage(_Model):
     """A gridded coverage of heights or other values (OGC 17-066r1, `gpkg_2d_gridded_coverage_ancillary`): its tiles
     are 16-bit PNG integers or 32-bit float TIFFs; a value is (stored × the tile's scale + its offset) × `scale` +
@@ -52094,7 +52247,10 @@ class LostPin(_Model):
 @dataclass(kw_only=True, slots=True)
 class MapSurvey(_Model):
     """A map project's GNSS campaign archive."""
+    adjustments: list[SurveyAdjustment] | Unset = UNSET
+    baselines: list[SurveyBaseline] | Unset = UNSET
     campaigns: list[SurveyCampaign] | Unset = UNSET
+    known: list[SurveyKnown] | Unset = UNSET
     points: list[SurveyPoint] | Unset = UNSET
     sessions: list[SurveySession] | Unset = UNSET
     solutions: list[SurveySolution] | Unset = UNSET
@@ -52102,8 +52258,14 @@ class MapSurvey(_Model):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.adjustments is not UNSET:
+            out["adjustments"] = [e0.to_json() for e0 in self.adjustments]
+        if self.baselines is not UNSET:
+            out["baselines"] = [e0.to_json() for e0 in self.baselines]
         if self.campaigns is not UNSET:
             out["campaigns"] = [e0.to_json() for e0 in self.campaigns]
+        if self.known is not UNSET:
+            out["known"] = [e0.to_json() for e0 in self.known]
         if self.points is not UNSET:
             out["points"] = [e0.to_json() for e0 in self.points]
         if self.sessions is not UNSET:
@@ -52117,7 +52279,10 @@ class MapSurvey(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> MapSurvey:
         return cls(
+            adjustments=[SurveyAdjustment.from_json(e0) for e0 in data["adjustments"]] if "adjustments" in data else UNSET,
+            baselines=[SurveyBaseline.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
             campaigns=[SurveyCampaign.from_json(e0) for e0 in data["campaigns"]] if "campaigns" in data else UNSET,
+            known=[SurveyKnown.from_json(e0) for e0 in data["known"]] if "known" in data else UNSET,
             points=[SurveyPoint.from_json(e0) for e0 in data["points"]] if "points" in data else UNSET,
             sessions=[SurveySession.from_json(e0) for e0 in data["sessions"]] if "sessions" in data else UNSET,
             solutions=[SurveySolution.from_json(e0) for e0 in data["solutions"]] if "solutions" in data else UNSET,
@@ -52129,15 +52294,18 @@ class MapSurvey(_Model):
 class MapSurveyEdit(_Model):
     """Input of `map.survey.edit` v1: one operation, one undo step (“Arazi ölçümü ekle”, “Arazi ölçümünü değiştir”,
     “GNSS oturumu ekle”, “Oturumu değiştir”, “Alıcı çözümü”, “Çözüm ekle”, “Çözümü dışla”, “Dışlamayı kaldır”,
-    “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”).
+    “Dengeleme seçimi”, “Noktayı kabul et”, “Noktayı yeniden üret”, “Dayanan kaydı”, “Arşivden çıkar”, “Baz ekle”,
+    “Bilinen nokta ekle”, “Ağ dengelemesini kabul et”).
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
     `unknown_survey_record`, `unknown_work_item`, `invalid_survey_text`, `invalid_survey_value`, `invalid_file_path`,
     `file_not_found`, `unreadable_gnss_file`, `nothing_to_set`, `survey_in_use`, `unknown_frame`, `no_observations`,
     `no_ellipsoidal_height`, `solution_excluded`, `mark_mismatch`, `method_count`, `sigma_missing`,
     `solutions_differ`, `antenna_unknown`, `antenna_eccentric`, `already_accepted`, `layer_not_found`, `layer_locked`,
-    `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, and the coordinate chain's own
-    (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …) when the point cannot be moved into the project.
+    `no_entities`, `invalid_uid`, `entity_not_found`, `survey_full`, the network's (`no_baselines`, `datum_missing`,
+    `known_differ`, `unknown_rule_class`, `network_too_large`, `network_disconnected`, `network_blunder`,
+    `network_test_failed`) and the coordinate chain's own (`epoch_unsupported`, `velocity_missing`, `geoid_missing` …)
+    when a point cannot be moved into the project.
     """
     operation: MapSurveyOperation
     expected_revision: str | None | Unset = UNSET
@@ -52166,6 +52334,7 @@ class MapSurveyEdited(_Model):
         stale: Unit: count.
         observations: Unit: count.
         point_revision: Unit: version.
+        records: The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
         removed: Unit: count.
     """
     stale: int
@@ -52173,6 +52342,7 @@ class MapSurveyEdited(_Model):
     id: str | None | Unset = UNSET
     observations: int | Unset = UNSET
     point_revision: int | None | Unset = UNSET
+    records: list[str] | Unset = UNSET
     removed: int | Unset = UNSET
     uid: str | None | Unset = UNSET
 
@@ -52186,6 +52356,8 @@ class MapSurveyEdited(_Model):
             out["observations"] = self.observations
         if self.point_revision is not UNSET:
             out["pointRevision"] = self.point_revision
+        if self.records is not UNSET:
+            out["records"] = list(self.records)
         if self.removed is not UNSET:
             out["removed"] = self.removed
         if self.uid is not UNSET:
@@ -52200,8 +52372,114 @@ class MapSurveyEdited(_Model):
             id=data.get("id", UNSET),
             observations=data.get("observations", UNSET),
             point_revision=data.get("pointRevision", UNSET),
+            records=list(data["records"]) if "records" in data else UNSET,
             removed=data.get("removed", UNSET),
             uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurveyNetwork(_Model):
+    """Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading
+    only. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their
+    covariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first
+    otherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).
+
+    Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
+    `unknown_rule_class`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`, `network_too_large`,
+    `network_disconnected`.
+    Attributes:
+        scale: Unit: 1.
+    """
+    campaign: str | None | Unset = UNSET
+    class_: str | None | Unset = UNSET
+    hold: str | None | Unset = UNSET
+    rules: GnssRules | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.campaign is not UNSET:
+            out["campaign"] = self.campaign
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.hold is not UNSET:
+            out["hold"] = self.hold
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyNetwork:
+        return cls(
+            campaign=data.get("campaign", UNSET),
+            class_=data.get("class", UNSET),
+            hold=data.get("hold", UNSET),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else GnssRules.from_json(data["rules"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapSurveyNetworked(_Model):
+    """Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,
+    the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
+    result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
+    be accepted and, if not, why, and the drawing's revision.
+    Attributes:
+        srid: Unit: epsg.
+        epoch: Unit: year.
+    """
+    srid: int
+    known: list[str]
+    baselines: list[NetworkBaseline]
+    stations: list[NetworkStation]
+    free: NetworkStage
+    constrained: NetworkStage
+    acceptable: bool
+    revision: str
+    current: str | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    rules: NetworkRules | None | Unset = UNSET
+    why: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["srid"] = self.srid
+        out["known"] = list(self.known)
+        out["baselines"] = [e0.to_json() for e0 in self.baselines]
+        out["stations"] = [e0.to_json() for e0 in self.stations]
+        out["free"] = self.free.to_json()
+        out["constrained"] = self.constrained.to_json()
+        out["acceptable"] = self.acceptable
+        out["revision"] = self.revision
+        if self.current is not UNSET:
+            out["current"] = self.current
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.why is not UNSET:
+            out["why"] = list(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapSurveyNetworked:
+        return cls(
+            srid=data["srid"],
+            known=list(data["known"]),
+            baselines=[NetworkBaseline.from_json(e0) for e0 in data["baselines"]],
+            stations=[NetworkStation.from_json(e0) for e0 in data["stations"]],
+            free=NetworkStage.from_json(data["free"]),
+            constrained=NetworkStage.from_json(data["constrained"]),
+            acceptable=data["acceptable"],
+            revision=data["revision"],
+            current=data.get("current", UNSET),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else NetworkRules.from_json(data["rules"]),
+            why=list(data["why"]) if "why" in data else UNSET,
         )
 
 
@@ -52233,8 +52511,9 @@ class MapSurveyQuery(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class MapSurveyTree(_Model):
-    """Output of `map.survey.query` v1: the archive in its order, the object asked about, how many accepted points and
-    uses are out of date, whether it was deep, and the revision read.
+    """Output of `map.survey.query` v1: the archive in its order (with its baselines, known points and network
+    adjustments, docs/adr/1740), the object asked about, how many accepted points and uses are out of date, whether it
+    was deep, and the revision read.
     Attributes:
         stale: Unit: count.
     """
@@ -52246,6 +52525,9 @@ class MapSurveyTree(_Model):
     stale: int
     deep: bool
     revision: str
+    adjustments: list[SurveyAdjustment] | Unset = UNSET
+    baselines: list[SurveyBaselineRow] | Unset = UNSET
+    known: list[SurveyKnown] | Unset = UNSET
     object: SurveyObject | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -52258,6 +52540,12 @@ class MapSurveyTree(_Model):
         out["stale"] = self.stale
         out["deep"] = self.deep
         out["revision"] = self.revision
+        if self.adjustments is not UNSET:
+            out["adjustments"] = [e0.to_json() for e0 in self.adjustments]
+        if self.baselines is not UNSET:
+            out["baselines"] = [e0.to_json() for e0 in self.baselines]
+        if self.known is not UNSET:
+            out["known"] = [e0.to_json() for e0 in self.known]
         if self.object is not UNSET:
             out["object"] = None if self.object is None else self.object.to_json()
         return out
@@ -52273,6 +52561,9 @@ class MapSurveyTree(_Model):
             stale=data["stale"],
             deep=data["deep"],
             revision=data["revision"],
+            adjustments=[SurveyAdjustment.from_json(e0) for e0 in data["adjustments"]] if "adjustments" in data else UNSET,
+            baselines=[SurveyBaselineRow.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
+            known=[SurveyKnown.from_json(e0) for e0 in data["known"]] if "known" in data else UNSET,
             object=UNSET if "object" not in data else None if data["object"] is None else SurveyObject.from_json(data["object"]),
         )
 
@@ -55102,6 +55393,60 @@ class NavigatorReadResult(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NetworkBaseline(_Model):
+    """A baseline of the network: its marks and length (m), its processed standard deviations σX σY σZ (by the variance
+    factor), the free stage's of the adjusted vector, its test in each stage, and the class's limit and whether it
+    holds (when a class is checked).
+    Attributes:
+        length: Unit: m.
+        sigma: Unit: m.
+        adjusted: Unit: m.
+        limit: Unit: m.
+    """
+    id: str
+    from_: str
+    to: str
+    length: float
+    sigma: list[float]
+    adjusted: list[float]
+    free: BaselineTest
+    constrained: BaselineTest
+    limit: float | None | Unset = UNSET
+    rules: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["length"] = float(self.length)
+        out["sigma"] = [float(e0) for e0 in self.sigma]
+        out["adjusted"] = [float(e0) for e0 in self.adjusted]
+        out["free"] = self.free.to_json()
+        out["constrained"] = self.constrained.to_json()
+        if self.limit is not UNSET:
+            out["limit"] = None if self.limit is None else float(self.limit)
+        if self.rules is not UNSET:
+            out["rules"] = self.rules
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkBaseline:
+        return cls(
+            id=data["id"],
+            from_=data["from"],
+            to=data["to"],
+            length=float(data["length"]),
+            sigma=[float(e0) for e0 in data["sigma"]],
+            adjusted=[float(e0) for e0 in data["adjusted"]],
+            free=BaselineTest.from_json(data["free"]),
+            constrained=BaselineTest.from_json(data["constrained"]),
+            limit=UNSET if "limit" not in data else None if data["limit"] is None else float(data["limit"]),
+            rules=data.get("rules", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkClosures(_Model):
     """The edge fields of a closure's first and last day (docs/adr/0567 §2): `YYYY-MM-DD`, both days in; an empty first
     day closes from always, an empty last day until ever. Its weekdays and hours (docs/adr/0568): an edge closed on
@@ -55458,6 +55803,194 @@ class NetworkProfile(_Model):
             forbidden=[ProfileForbid.from_json(e0) for e0 in data["forbidden"]] if "forbidden" in data else UNSET,
             limits=[ProfileLimit.from_json(e0) for e0 in data["limits"]] if "limits" in data else UNSET,
             top_speed=UNSET if "topSpeed" not in data else None if data["topSpeed"] is None else float(data["topSpeed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkRules(_Model):
+    """What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,
+    whose baseline standard deviations were checked, whether all holds, and how many baselines and stations do not.
+    Attributes:
+        release: Unit: version.
+        baselines: Unit: count.
+        stations: Unit: count.
+        confidence: Unit: 1.
+    """
+    package: str
+    release: int
+    class_: str
+    articles: str
+    baseline_of: BaselineSigmaOf | BaselineSigmaOfName
+    passed: bool
+    baselines: int
+    stations: int
+    confidence: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["package"] = self.package
+        out["release"] = self.release
+        out["class"] = self.class_
+        out["articles"] = self.articles
+        out["baselineOf"] = _enum_out(self.baseline_of)
+        out["passed"] = self.passed
+        out["baselines"] = self.baselines
+        out["stations"] = self.stations
+        if self.confidence is not UNSET:
+            out["confidence"] = None if self.confidence is None else float(self.confidence)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkRules:
+        return cls(
+            package=data["package"],
+            release=data["release"],
+            class_=data["class"],
+            articles=data["articles"],
+            baseline_of=_enum_in(BaselineSigmaOf, data["baselineOf"]),
+            passed=data["passed"],
+            baselines=data["baselines"],
+            stations=data["stations"],
+            confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkStage(_Model):
+    """One stage of the adjustment: the marks held fixed, m0 (none without degrees of freedom), the degrees of freedom,
+    vᵀPv, the χ² quantile (95 %) and whether the model test passed, the test value above which a baseline is a
+    blunder, how many are and the worst one.
+    Attributes:
+        dof: Unit: count.
+        omega: Unit: 1.
+        limit: Unit: 1.
+        blunders: Unit: count.
+        chi2: Unit: 1.
+        m0: Unit: 1.
+    """
+    held: list[str]
+    dof: int
+    omega: float
+    limit: float
+    blunders: int
+    chi2: float | None | Unset = UNSET
+    m0: float | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+    worst: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["held"] = list(self.held)
+        out["dof"] = self.dof
+        out["omega"] = float(self.omega)
+        out["limit"] = float(self.limit)
+        out["blunders"] = self.blunders
+        if self.chi2 is not UNSET:
+            out["chi2"] = None if self.chi2 is None else float(self.chi2)
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        if self.worst is not UNSET:
+            out["worst"] = self.worst
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkStage:
+        return cls(
+            held=list(data["held"]),
+            dof=data["dof"],
+            omega=float(data["omega"]),
+            limit=float(data["limit"]),
+            blunders=data["blunders"],
+            chi2=UNSET if "chi2" not in data else None if data["chi2"] is None else float(data["chi2"]),
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            passed=data.get("passed", UNSET),
+            worst=data.get("worst", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkStation(_Model):
+    """A mark of the network after the stage held by the known points: its known point (`bn-N`) and whether it is held
+    fixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard
+    deviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a
+    known point, when the coordinate chain reaches the project), how far that is from where its accepted point is now
+    (project units), and whether the class's limits hold for it.
+    Attributes:
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: Unit: m.
+        sigma: Unit: m.
+        dx: Unit: system.
+        dy: Unit: system.
+        dz: Unit: elevation.
+        x: Unit: system.
+        y: Unit: system.
+        z: Unit: elevation.
+    """
+    mark: str
+    held: bool
+    lat: float
+    lon: float
+    height: float
+    sigma: list[float]
+    dx: float | None | Unset = UNSET
+    dy: float | None | Unset = UNSET
+    dz: float | None | Unset = UNSET
+    known: str | None | Unset = UNSET
+    point: str | None | Unset = UNSET
+    rules: bool | None | Unset = UNSET
+    x: float | None | Unset = UNSET
+    y: float | None | Unset = UNSET
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mark"] = self.mark
+        out["held"] = self.held
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["sigma"] = [float(e0) for e0 in self.sigma]
+        if self.dx is not UNSET:
+            out["dx"] = None if self.dx is None else float(self.dx)
+        if self.dy is not UNSET:
+            out["dy"] = None if self.dy is None else float(self.dy)
+        if self.dz is not UNSET:
+            out["dz"] = None if self.dz is None else float(self.dz)
+        if self.known is not UNSET:
+            out["known"] = self.known
+        if self.point is not UNSET:
+            out["point"] = self.point
+        if self.rules is not UNSET:
+            out["rules"] = self.rules
+        if self.x is not UNSET:
+            out["x"] = None if self.x is None else float(self.x)
+        if self.y is not UNSET:
+            out["y"] = None if self.y is None else float(self.y)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkStation:
+        return cls(
+            mark=data["mark"],
+            held=data["held"],
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            sigma=[float(e0) for e0 in data["sigma"]],
+            dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
+            dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
+            dz=UNSET if "dz" not in data else None if data["dz"] is None else float(data["dz"]),
+            known=data.get("known", UNSET),
+            point=data.get("point", UNSET),
+            rules=data.get("rules", UNSET),
+            x=UNSET if "x" not in data else None if data["x"] is None else float(data["x"]),
+            y=UNSET if "y" not in data else None if data["y"] is None else float(data["y"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 
 
@@ -89575,6 +90108,81 @@ class SurveyAdjustedPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyAdjustment(_Model):
+    """A network adjustment the project accepted, `da-N` (docs/adr/1740): what it was made of (its baselines, its known
+    points, the one the free stage held), with what (the variance factor, the rule class and package checked), what
+    it said (both stages' m0, degrees of freedom and model test; whether the rules held) and in which frame and epoch.
+    The accepted points it made name it.
+    Attributes:
+        id: `da-N`.
+        scale: Unit: 1.
+        free_dof: Unit: count.
+        dof: Unit: count.
+        srid: Unit: epsg.
+        epoch: Unit: year.
+        free_m0: Unit: 1.
+        m0: Unit: 1.
+    """
+    id: str
+    baselines: list[str]
+    known: list[str]
+    hold: str
+    scale: float
+    free_dof: int
+    dof: int
+    srid: int
+    class_: str | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    free_m0: float | None | Unset = UNSET
+    m0: float | None | Unset = UNSET
+    rules: str | None | Unset = UNSET
+    rules_passed: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["baselines"] = list(self.baselines)
+        out["known"] = list(self.known)
+        out["hold"] = self.hold
+        out["scale"] = float(self.scale)
+        out["freeDof"] = self.free_dof
+        out["dof"] = self.dof
+        out["srid"] = self.srid
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.free_m0 is not UNSET:
+            out["freeM0"] = None if self.free_m0 is None else float(self.free_m0)
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.rules is not UNSET:
+            out["rules"] = self.rules
+        if self.rules_passed is not UNSET:
+            out["rulesPassed"] = self.rules_passed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyAdjustment:
+        return cls(
+            id=data["id"],
+            baselines=list(data["baselines"]),
+            known=list(data["known"]),
+            hold=data["hold"],
+            scale=float(data["scale"]),
+            free_dof=data["freeDof"],
+            dof=data["dof"],
+            srid=data["srid"],
+            class_=data.get("class", UNSET),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            free_m0=UNSET if "freeM0" not in data else None if data["freeM0"] is None else float(data["freeM0"]),
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            rules=data.get("rules", UNSET),
+            rules_passed=data.get("rulesPassed", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyAntenna(_Model):
     """A session's antenna: its type and serial, the height measured and to where; a slant height with the maker's
     radius and the measuring point's height above the ARP; the eccentricity east and north (m).
@@ -89624,6 +90232,149 @@ class SurveyAntenna(_Model):
             reference=_enum_in(AntennaReference, data["reference"]) if "reference" in data else UNSET,
             serial=data.get("serial", UNSET),
             type=data.get("type", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyBaseline(_Model):
+    """A baseline vector `bz-N` (docs/adr/1740): from mark to mark, ΔX, ΔY, ΔZ in Earth-centred, Earth-fixed axes (m)
+    with the antenna heights applied by its processor, and its covariance xx, xy, xz, yy, yz, zz (m²); its campaign,
+    when it was observed (GPS time), how and with what it was made, the file it was read from and its id there; left
+    out with a reason, never deleted; whether it goes into the network adjustment.
+    Attributes:
+        id: `bz-N`.
+        d: Unit: m.
+        covariance: Unit: m2.
+        epochs: Unit: count.
+        satellites: Unit: count.
+        source: Its id in the file (GVX's `ID`, the text's line).
+    """
+    id: str
+    campaign: str
+    from_: str
+    to: str
+    d: list[float]
+    covariance: list[float]
+    adjust: bool
+    end: str | None | Unset = UNSET
+    epochs: int | None | Unset = UNSET
+    excluded: str | None | Unset = UNSET
+    file: SurveyFile | None | Unset = UNSET
+    recipe: str | None | Unset = UNSET
+    satellites: int | None | Unset = UNSET
+    software: str | None | Unset = UNSET
+    solution: BaselineSolution | BaselineSolutionName | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["campaign"] = self.campaign
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["d"] = [float(e0) for e0 in self.d]
+        out["covariance"] = [float(e0) for e0 in self.covariance]
+        out["adjust"] = self.adjust
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.epochs is not UNSET:
+            out["epochs"] = self.epochs
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.recipe is not UNSET:
+            out["recipe"] = self.recipe
+        if self.satellites is not UNSET:
+            out["satellites"] = self.satellites
+        if self.software is not UNSET:
+            out["software"] = self.software
+        if self.solution is not UNSET:
+            out["solution"] = None if self.solution is None else _enum_out(self.solution)
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.start is not UNSET:
+            out["start"] = self.start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyBaseline:
+        return cls(
+            id=data["id"],
+            campaign=data["campaign"],
+            from_=data["from"],
+            to=data["to"],
+            d=[float(e0) for e0 in data["d"]],
+            covariance=[float(e0) for e0 in data["covariance"]],
+            adjust=data["adjust"],
+            end=data.get("end", UNSET),
+            epochs=data.get("epochs", UNSET),
+            excluded=data.get("excluded", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else SurveyFile.from_json(data["file"]),
+            recipe=data.get("recipe", UNSET),
+            satellites=data.get("satellites", UNSET),
+            software=data.get("software", UNSET),
+            solution=UNSET if "solution" not in data else None if data["solution"] is None else _enum_in(BaselineSolution, data["solution"]),
+            source=data.get("source", UNSET),
+            start=data.get("start", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyBaselineRow(_Model):
+    """A baseline vector as it stands (docs/adr/1740): its record's marks, its length (m) and processed standard
+    deviations σX σY σZ (m), whether it is excluded and why, whether it goes into the adjustment, its file and its id
+    there, and the network adjustments (`da-N`) made with it.
+    Attributes:
+        length: Unit: m.
+        sigma: Unit: m.
+    """
+    id: str
+    campaign: str
+    from_: str
+    to: str
+    length: float
+    sigma: list[float]
+    adjust: bool
+    adjustments: list[str] | Unset = UNSET
+    excluded: str | None | Unset = UNSET
+    file: SurveyFileRow | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["campaign"] = self.campaign
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["length"] = float(self.length)
+        out["sigma"] = [float(e0) for e0 in self.sigma]
+        out["adjust"] = self.adjust
+        if self.adjustments is not UNSET:
+            out["adjustments"] = list(self.adjustments)
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else self.file.to_json()
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyBaselineRow:
+        return cls(
+            id=data["id"],
+            campaign=data["campaign"],
+            from_=data["from"],
+            to=data["to"],
+            length=float(data["length"]),
+            sigma=[float(e0) for e0 in data["sigma"]],
+            adjust=data["adjust"],
+            adjustments=list(data["adjustments"]) if "adjustments" in data else UNSET,
+            excluded=data.get("excluded", UNSET),
+            file=UNSET if "file" not in data else None if data["file"] is None else SurveyFileRow.from_json(data["file"]),
+            source=data.get("source", UNSET),
         )
 
 
@@ -89893,6 +90644,65 @@ class SurveyGrid(_Model):
         return cls(
             name=data["name"],
             sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyKnown(_Model):
+    """A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1
+    point) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,
+    east, up (m) weighted; where they come from; left out with a reason, never deleted.
+    Attributes:
+        id: `bn-N`.
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: Unit: m.
+        srid: Unit: epsg.
+        epoch: Unit: year.
+        sigma: Unit: m.
+    """
+    id: str
+    mark: str
+    lat: float
+    lon: float
+    height: float
+    srid: int
+    epoch: float | None | Unset = UNSET
+    excluded: str | None | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["mark"] = self.mark
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["srid"] = self.srid
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.excluded is not UNSET:
+            out["excluded"] = self.excluded
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyKnown:
+        return cls(
+            id=data["id"],
+            mark=data["mark"],
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            srid=data["srid"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            excluded=data.get("excluded", UNSET),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+            source=data.get("source", UNSET),
         )
 
 
@@ -90167,6 +90977,7 @@ class SurveyResult(_Model):
         x: Unit: system.
         y: Unit: system.
         chain: `complete` or `limited` (docs/adr/1230).
+        adjustment: The network adjustment `da-N` it was made by (method `network`; docs/adr/1740).
         epoch: Unit: year.
         sigma: Unit: m.
         target_epoch: Unit: year.
@@ -90183,6 +90994,7 @@ class SurveyResult(_Model):
     x: float
     y: float
     chain: str
+    adjustment: str | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
     reasons: list[str] | Unset = UNSET
     sigma: list[float] | None | Unset = UNSET
@@ -90202,6 +91014,8 @@ class SurveyResult(_Model):
         out["x"] = float(self.x)
         out["y"] = float(self.y)
         out["chain"] = self.chain
+        if self.adjustment is not UNSET:
+            out["adjustment"] = self.adjustment
         if self.epoch is not UNSET:
             out["epoch"] = None if self.epoch is None else float(self.epoch)
         if self.reasons is not UNSET:
@@ -90228,6 +91042,7 @@ class SurveyResult(_Model):
             x=float(data["x"]),
             y=float(data["y"]),
             chain=data["chain"],
+            adjustment=data.get("adjustment", UNSET),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             reasons=list(data["reasons"]) if "reasons" in data else UNSET,
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
@@ -111850,7 +112665,7 @@ class SolutionMapSurveyOperation(MapSurveyOperation):
 
 @dataclass(kw_only=True, slots=True)
 class ExcludeMapSurveyOperation(MapSurveyOperation):
-    """A solution left out, with why; it stays in the record."""
+    """A solution `cz-N`, a baseline `bz-N` or a known point `bn-N` left out, with why; it stays in the record."""
     TAG_VALUE: ClassVar[str] = "exclude"
     solution: str
     reason: str
@@ -111871,7 +112686,7 @@ class ExcludeMapSurveyOperation(MapSurveyOperation):
 
 @dataclass(kw_only=True, slots=True)
 class IncludeMapSurveyOperation(MapSurveyOperation):
-    """An excluded solution taken back."""
+    """An excluded solution, baseline or known point taken back."""
     TAG_VALUE: ClassVar[str] = "include"
     solution: str
 
@@ -111889,7 +112704,7 @@ class IncludeMapSurveyOperation(MapSurveyOperation):
 
 @dataclass(kw_only=True, slots=True)
 class AdjustMapSurveyOperation(MapSurveyOperation):
-    """Whether a solution goes into the adjustment."""
+    """Whether a solution or a baseline goes into the adjustment."""
     TAG_VALUE: ClassVar[str] = "adjust"
     solution: str
     adjust: bool
@@ -111905,6 +112720,175 @@ class AdjustMapSurveyOperation(MapSurveyOperation):
         return cls(
             solution=data["solution"],
             adjust=data["adjust"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselinesMapSurveyOperation(MapSurveyOperation):
+    """Baseline vectors `bz-N` of a campaign read from a file (an absolute path): a GVX 1.0 file (NGS) or KentOS's
+    baseline text (`B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`); each goes into the adjustment.
+    """
+    TAG_VALUE: ClassVar[str] = "baselines"
+    campaign: str
+    file: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "baselines"}
+        out["campaign"] = self.campaign
+        out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselinesMapSurveyOperation:
+        return cls(
+            campaign=data["campaign"],
+            file=data["file"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineMapSurveyOperation(MapSurveyOperation):
+    """One baseline vector `bz-N` typed in: from mark to mark, ΔX ΔY ΔZ (m; ECEF, the antenna heights applied) and its
+    covariance xx, xy, xz, yy, yz, zz (m²).
+    Attributes:
+        d: Unit: m.
+        covariance: Unit: m2.
+    """
+    TAG_VALUE: ClassVar[str] = "baseline"
+    campaign: str
+    from_: str
+    to: str
+    d: list[float]
+    covariance: list[float]
+    end: str | None | Unset = UNSET
+    recipe: str | None | Unset = UNSET
+    solution: BaselineSolution | BaselineSolutionName | None | Unset = UNSET
+    start: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "baseline"}
+        out["campaign"] = self.campaign
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["d"] = [float(e0) for e0 in self.d]
+        out["covariance"] = [float(e0) for e0 in self.covariance]
+        if self.end is not UNSET:
+            out["end"] = self.end
+        if self.recipe is not UNSET:
+            out["recipe"] = self.recipe
+        if self.solution is not UNSET:
+            out["solution"] = None if self.solution is None else _enum_out(self.solution)
+        if self.start is not UNSET:
+            out["start"] = self.start
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineMapSurveyOperation:
+        return cls(
+            campaign=data["campaign"],
+            from_=data["from"],
+            to=data["to"],
+            d=[float(e0) for e0 in data["d"]],
+            covariance=[float(e0) for e0 in data["covariance"]],
+            end=data.get("end", UNSET),
+            recipe=data.get("recipe", UNSET),
+            solution=UNSET if "solution" not in data else None if data["solution"] is None else _enum_in(BaselineSolution, data["solution"]),
+            start=data.get("start", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class KnownMapSurveyOperation(MapSurveyOperation):
+    """A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held
+    fixed, or weighted by `sigma` north, east, up (m).
+    Attributes:
+        lat: Unit: deg.
+        lon: Unit: deg.
+        height: Unit: m.
+        srid: Unit: epsg.
+        epoch: Unit: year.
+        sigma: Unit: m.
+    """
+    TAG_VALUE: ClassVar[str] = "known"
+    mark: str
+    lat: float
+    lon: float
+    height: float
+    srid: int
+    epoch: float | None | Unset = UNSET
+    sigma: list[float] | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "known"}
+        out["mark"] = self.mark
+        out["lat"] = float(self.lat)
+        out["lon"] = float(self.lon)
+        out["height"] = float(self.height)
+        out["srid"] = self.srid
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KnownMapSurveyOperation:
+        return cls(
+            mark=data["mark"],
+            lat=float(data["lat"]),
+            lon=float(data["lon"]),
+            height=float(data["height"]),
+            srid=data["srid"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkMapSurveyOperation(MapSurveyOperation):
+    """The network adjusted as `map.survey.network` adjusts it and accepted (docs/adr/1740): `da-N`, and each mark that
+    is not a known point accepted (its object on `layer`, the active layer when not given) or made again, in one
+    step. Refused while a baseline is a blunder or the model test fails.
+    Attributes:
+        scale: Unit: 1.
+    """
+    TAG_VALUE: ClassVar[str] = "network"
+    campaign: str | None | Unset = UNSET
+    class_: str | None | Unset = UNSET
+    hold: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    rules: GnssRules | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "network"}
+        if self.campaign is not UNSET:
+            out["campaign"] = self.campaign
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.hold is not UNSET:
+            out["hold"] = self.hold
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkMapSurveyOperation:
+        return cls(
+            campaign=data.get("campaign", UNSET),
+            class_=data.get("class", UNSET),
+            hold=data.get("hold", UNSET),
+            layer=data.get("layer", UNSET),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else GnssRules.from_json(data["rules"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -123034,7 +124018,7 @@ _LEDGER_BY: dict[str, type[LedgerBy]] = {"stations": StationsLedgerBy, "regions"
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
-_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "remove": RemoveMapSurveyOperation}
+_MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "baselines": BaselinesMapSurveyOperation, "baseline": BaselineMapSurveyOperation, "known": KnownMapSurveyOperation, "network": NetworkMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "remove": RemoveMapSurveyOperation}
 
 
 _MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
@@ -123597,9 +124581,16 @@ __all__ = [
     "BaselineDatum",
     "BaselineDatumName",
     "BaselineDimensionMeasure",
+    "BaselineMapSurveyOperation",
     "BaselineResult",
+    "BaselineSigmaOf",
+    "BaselineSigmaOfName",
+    "BaselineSolution",
+    "BaselineSolutionName",
     "BaselineStation",
+    "BaselineTest",
     "BaselineVector",
+    "BaselinesMapSurveyOperation",
     "BatchOnError",
     "BatchOnErrorName",
     "BatchRow",
@@ -124545,6 +125536,8 @@ __all__ = [
     "GmlFileWritten",
     "GmlLayerWritten",
     "GnssPoint",
+    "GnssRuleClass",
+    "GnssRules",
     "GpkgCoverage",
     "GpkgExported",
     "GpkgImported",
@@ -124836,6 +125829,7 @@ __all__ = [
     "KindExtractValue",
     "KmAsk",
     "KmPlaces",
+    "KnownMapSurveyOperation",
     "KnownPoint",
     "LabelAbbreviate",
     "LabelAlign",
@@ -125069,6 +126063,8 @@ __all__ = [
     "MapSurvey",
     "MapSurveyEdit",
     "MapSurveyEdited",
+    "MapSurveyNetwork",
+    "MapSurveyNetworked",
     "MapSurveyOperation",
     "MapSurveyQuery",
     "MapSurveyTree",
@@ -125213,6 +126209,7 @@ __all__ = [
     "NavigateViewportPaperOp",
     "NavigatorRead",
     "NavigatorReadResult",
+    "NetworkBaseline",
     "NetworkClosures",
     "NetworkConnect",
     "NetworkConnectName",
@@ -125229,8 +126226,12 @@ __all__ = [
     "NetworkKindName",
     "NetworkLayer",
     "NetworkLevels",
+    "NetworkMapSurveyOperation",
     "NetworkPeriod",
     "NetworkProfile",
+    "NetworkRules",
+    "NetworkStage",
+    "NetworkStation",
     "NetworkSubnetworks",
     "NetworkTerminals",
     "NetworkTurns",
@@ -126722,7 +127723,10 @@ __all__ = [
     "SurveyAdjust",
     "SurveyAdjusted",
     "SurveyAdjustedPoint",
+    "SurveyAdjustment",
     "SurveyAntenna",
+    "SurveyBaseline",
+    "SurveyBaselineRow",
     "SurveyBaselines",
     "SurveyBaselinesAdjusted",
     "SurveyCampaign",
@@ -126734,6 +127738,7 @@ __all__ = [
     "SurveyFileState",
     "SurveyFileStateName",
     "SurveyGrid",
+    "SurveyKnown",
     "SurveyMarkRow",
     "SurveyObject",
     "SurveyPoint",
