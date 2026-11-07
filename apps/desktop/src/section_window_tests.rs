@@ -623,5 +623,8 @@ fn the_window_says_what_the_sections_are_computed_from() {
     send(&mut app, W::Choose(Chosen::Set(0)));
     let said = app.section_window.as_ref().expect("open").preview.sources.clone().expect("the sources");
     assert!(said.starts_with("Kaynaklar: takım k-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"), "{said}");
-    assert!(said.contains("arazi t-1 (kabul edilmedi)"), "{said}");
+    // Docs/adr/1040: the ground by its digest of now, to eight digits, and its acceptance.
+    let ground = said.split(", arazi t-1 (").nth(1).expect("the ground");
+    assert!(ground.len() > 8 && ground[..8].bytes().all(|b| b.is_ascii_hexdigit()), "{said}");
+    assert!(ground.ends_with("…, kabul edilmedi)"), "{said}");
 }

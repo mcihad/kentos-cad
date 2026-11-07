@@ -57,7 +57,7 @@ fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(Secti
 /// What a set's sections are computed from, each as it is now (docs/adr/1039): an id the project does not have reads
 /// revision 0.
 pub fn sources_of(doc: &kentos_domain::Document, def: &kentos_commands::SectionSetDef) -> kentos_commands::SectionSources {
-    use kentos_commands::{RoadSource, RoadSurfaceSource};
+    use kentos_commands::RoadSource;
     let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
     kentos_commands::SectionSources {
         set: RoadSource { id: def.id.clone(), revision: def.revision },
@@ -74,10 +74,7 @@ pub fn sources_of(doc: &kentos_domain::Document, def: &kentos_commands::SectionS
             id: id.clone(),
             revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
         }),
-        surface: def.surface.as_ref().map(|id| RoadSurfaceSource {
-            id: id.clone(),
-            built: crate::road_terrains::surfaces(doc).iter().find(|s| s.id == *id).and_then(|s| s.built.clone()),
-        }),
+        surface: def.surface.as_ref().map(|id| crate::road_sources::surface(doc, id)),
     }
 }
 

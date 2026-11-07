@@ -763,9 +763,10 @@ def sections_cases():
 
 # ── road.sections.query ────────────────────────────────────────────────────────────────────────────────────────────
 
-def sources_of(asked, road):
+def sources_of(asked, road, doc=None):
     """Docs/adr/1039: what the asked set's sections are computed from, each as `road` has it now; an id the project
-    does not have reads revision 0."""
+    does not have reads revision 0; the surface with its digest of now (docs/adr/1040) in `doc` (none: the default
+    drawing)."""
     d = next(x for x in road["sections"] if x["id"] == asked or x["name"].lower() == asked.lower())
 
     def rev(kind, id_):
@@ -776,8 +777,7 @@ def sources_of(asked, road):
         if d.get(key):
             out[key] = {"id": d[key], "revision": rev(kind, d[key])}
     if d.get("surface"):
-        sf = next((x for x in road.get("surfaces", []) if x["id"] == d["surface"]), None)
-        out["surface"] = {"id": d["surface"], **({"built": sf["built"]} if sf and sf.get("built") else {})}
+        out["surface"] = pcmd.surface_source(road, d["surface"], doc)
     return out
 
 
@@ -788,7 +788,7 @@ def query_cases():
     def q(name, input_, out, warns=(), setup_=None, sets=start, op="execute", supers=None):
         road = road_of(templates, sets, supers=supers)
         if out is not None and input_.get("set") and "sections" in out:
-            out = {**out, "sources": sources_of(input_["set"], road)}
+            out = {**out, "sources": sources_of(input_["set"], road, setup_)}
         result = completed(None, warns) if op == "validate" else completed(out, warns)
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road})], setup_))
 

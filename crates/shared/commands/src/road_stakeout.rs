@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::{RoadSource, RoadSurfaceSource};
+
 pub const ROAD_STAKEOUT_QUERY: &str = "road.stakeout.query";
 pub const ROAD_STAKEOUT_QUERY_VERSION: u32 = 1;
 
@@ -105,32 +107,6 @@ pub struct StakeRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub ground_offset: Option<f64>,
-}
-
-/// A source a road answer was computed from, as it is now (docs/adr/1038, 1039): its id and revision.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct RoadSource {
-    pub id: String,
-    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
-    pub revision: u32,
-}
-
-/// The terrain surface a road answer was computed on (docs/adr/1038, 1039): its id and the digest of the sources it was
-/// last accepted from (absent: never accepted).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct RoadSurfaceSource {
-    pub id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub built: Option<String>,
 }
 
 /// An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.

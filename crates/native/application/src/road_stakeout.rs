@@ -282,38 +282,22 @@ pub fn preview(doc: &Document, input: &StakeoutQuery) -> Result<(StakeoutQueried
     answer(doc, input).map_err(words)
 }
 
-/// The stakeout table as a workbook's sheet (docs/adr/0223's writer): km, region, code, side, offset (and its ground
-/// length where the table has it), Y (east), X (north) and Z, in the table's order.
-/// What the corridor's stakeout is computed from, each as it is now (docs/adr/1038).
+/// What the corridor's stakeout is computed from, each as it is now (docs/adr/1038, 1040): the corridor's chain and its
+/// earthwork volumes.
 fn sources_of(doc: &Document, def: &kentos_commands::CorridorDef) -> kentos_commands::StakeoutSources {
-    use kentos_commands::{RoadSource, RoadSurfaceSource, StakeoutVolume};
-    let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
-    let profile = doc.road_profiles().iter().find(|p| p.id == def.profile).map_or(0, |p| p.revision);
-    let mut templates: Vec<RoadSource> = Vec::new();
-    for r in &def.regions {
-        if !templates.iter().any(|t| t.id == r.template) {
-            let revision = doc.road_templates().iter().find(|t| t.id == r.template).map_or(0, |t| t.revision);
-            templates.push(RoadSource { id: r.template.clone(), revision });
-        }
-    }
+    let chain = crate::road_sources::corridor(doc, def);
     kentos_commands::StakeoutSources {
-        corridor: RoadSource { id: def.id.clone(), revision: def.revision },
-        alignment: RoadSource { id: def.alignment.clone(), revision: alignment },
-        profile: RoadSource { id: def.profile.clone(), revision: profile },
-        templates,
-        superelevation: def.superelevation.as_ref().map(|id| RoadSource {
-            id: id.clone(),
-            revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
-        }),
-        surface: Some(RoadSurfaceSource {
-            id: def.surface.clone(),
-            built: crate::road_terrains::surfaces(doc).iter().find(|s| s.id == def.surface).and_then(|s| s.built.clone()),
-        }),
+        corridor: chain.corridor,
+        alignment: chain.alignment,
+        profile: chain.profile,
+        templates: chain.templates,
+        superelevation: chain.superelevation,
+        surface: Some(chain.surface),
         volumes: doc
             .road_volumes()
             .iter()
             .filter(|v| v.corridor == def.id)
-            .map(|v| StakeoutVolume { id: v.id.clone(), revision: v.revision, approved: v.approved.is_some() })
+            .map(|v| kentos_commands::StakeoutVolume { id: v.id.clone(), revision: v.revision, approved: v.approved.is_some() })
             .collect(),
     }
 }
@@ -335,7 +319,7 @@ pub fn sources_sheet(table: &StakeoutQueried, written: &str) -> kentos_commands:
         rows.push(row("Dever", &d.id, d.revision.to_string()));
     }
     if let Some(g) = &s.surface {
-        rows.push(row("Arazi", &g.id, g.built.clone().unwrap_or_else(|| "kabul edilmedi".into())));
+        rows.push(row("Arazi", &g.id, crate::road_sources::surface_words(g)));
     }
     rows.extend(s.volumes.iter().map(|v| {
         row("Kübaj", &v.id, format!("{}{}", v.revision, if v.approved { " (onaylı)" } else { "" }))
@@ -347,6 +331,8 @@ pub fn sources_sheet(table: &StakeoutQueried, written: &str) -> kentos_commands:
     }
 }
 
+/// The stakeout table as a workbook's sheet (docs/adr/0223's writer): km, region, code, side, offset (and its ground
+/// length where the table has it), Y (east), X (north) and Z, in the table's order.
 pub fn sheet(table: &StakeoutQueried) -> kentos_commands::WorkbookSheet {
     use kentos_commands::{CellKind, WorkbookColumn};
     let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };

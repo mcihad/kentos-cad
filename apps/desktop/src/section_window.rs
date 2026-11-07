@@ -1556,8 +1556,7 @@ fn sources_words(s: &kentos_commands::SectionSources) -> String {
         }
     }
     if let Some(g) = &s.surface {
-        let built = g.built.as_ref().map_or("kabul edilmedi".to_owned(), |b| format!("kabul {}…", &b[..b.len().min(8)]));
-        words.push_str(&format!(", arazi {} ({built})", g.id));
+        words.push_str(&format!(", {}", crate::road_dialog::surface_source_words(g)));
     }
     words
 }

@@ -124,22 +124,10 @@ def ground_offset(a, p, offset, height):
 
 
 def sources(c, road):
-    """Docs/adr/1038: what the corridor's stakeout is computed from, each as `road` has it now: the corridor, its
-    alignment and profile, its regions' templates in order and once each, its superelevation schedule, its surface and
-    the digest it was last accepted from, and its earthwork volumes."""
-    def rev(kind, id_):
-        return next((x.get("revision", 0) for x in road.get(kind, []) if x["id"] == id_), 0)
-    templates = []
-    for r in c["regions"]:
-        if r["template"] not in [t["id"] for t in templates]:
-            templates.append({"id": r["template"], "revision": rev("templates", r["template"])})
-    out = {"corridor": {"id": c["id"], "revision": c.get("revision", 0)},
-           "alignment": {"id": c["alignment"], "revision": rev("alignments", c["alignment"])},
-           "profile": {"id": c["profile"], "revision": rev("profiles", c["profile"])}, "templates": templates}
-    if c.get("superelevation"):
-        out["superelevation"] = {"id": c["superelevation"], "revision": rev("superelevations", c["superelevation"])}
-    sf = next((x for x in road.get("surfaces", []) if x["id"] == c["surface"]), None)
-    out["surface"] = {"id": c["surface"], **({"built": sf["built"]} if sf and sf.get("built") else {})}
+    """Docs/adr/1038: what the corridor's stakeout is computed from, each as `road` has it now: the corridor's chain
+    (scripts/fixtures/road_corridor_command_cases.py's `corridor_sources`, the surface's digest of now with docs/adr/1040)
+    and its earthwork volumes."""
+    out = ccmd.corridor_sources(c, road)
     volumes = [{"id": v["id"], "revision": v.get("revision", 0), "approved": "approved" in v}
                for v in road.get("volumes", []) if v["corridor"] == c["id"]]
     if volumes:

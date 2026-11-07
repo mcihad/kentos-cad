@@ -79,6 +79,40 @@ ALIGNMENTS = [{"id": "g-1", "name": "Ana aks", "revision": 1, "pis": MAIN_PIS, "
               {"id": "g-3", "name": "Sağ kenar", "revision": 1, "offsetOf": {"alignment": "g-1", "offset": 5.0}}]
 
 
+
+def surface_source(road, sid, doc=None):
+    """Docs/adr/1040: terrain surface `sid` of `road` as a road answer names it: its id, the digest of what it is made
+    of now and the digest it was last accepted from. The digest is scripts/fixtures/road_terrain_command_cases.py's
+    over the drawing's points with an elevation on its points layers (and their sublayers) or named by uid, in the
+    drawing's order; `doc` is the drawing (none: this file's). None where `road` has no such surface; a surface made of
+    anything but points is not this helper's."""
+    import road_terrain_command_cases as tcmd  # noqa: PLC0415 (the terrain reference's digest)
+    s = next((x for x in (road or {}).get("surfaces", []) if x["id"] == sid), None)
+    if s is None:
+        return {"id": sid}
+    assert set(s) <= {"id", "name", "points", "built", "tolerance", "maxEdge"}, s
+    assert set(s.get("points", {})) <= {"layers", "uids"}, s
+    tree = doc["layers"] if doc else LAYERS
+    entities = doc["entities"] if doc else ENTITIES
+    uids = doc["uids"] if doc else UIDS
+    layers = set()
+
+    def under(nodes, inside):
+        for n in nodes:
+            hit = inside or n["id"] in s["points"].get("layers", [])
+            if hit:
+                layers.add(n["id"])
+            under(n.get("children", []), hit)
+    under(tree, False)
+    named = set(s["points"].get("uids", []))
+    points = [(e["p"]["x"], e["p"]["y"], e["z"], u) for e, u in zip(entities, uids)
+              if (u in named or e["layerId"] in layers) and e["kind"] == "point" and e.get("z") is not None]
+    out = {"id": sid, "digest": tcmd.digest({"points": points, "breaklines": [], "voids": [], "boundary": None,
+                                             "tolerance": s.get("tolerance"), "maxEdge": s.get("maxEdge")})}
+    if s.get("built"):
+        out["built"] = s["built"]
+    return out
+
 def pv(id_, s, z, **curve):
     out = {"id": id_, "station": float(s), "elevation": float(z)}
     out.update({k: float(v) for k, v in curve.items()})

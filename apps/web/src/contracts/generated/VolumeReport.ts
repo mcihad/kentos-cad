@@ -6,6 +6,7 @@ import type { VolumeLayer } from "./VolumeLayer";
 import type { VolumeMethod } from "./VolumeMethod";
 import type { VolumeRow } from "./VolumeRow";
 import type { VolumeRule } from "./VolumeRule";
+import type { VolumeSources } from "./VolumeSources";
 
 /**
  * An earthwork volume as it is now: its sources, whether its corridor's alignment changed since, its rows (by
@@ -47,4 +48,9 @@ curve?: VolumeCurve,
 /**
  * What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
  */
-basis?: VolumeBasis, };
+basis?: VolumeBasis, 
+/**
+ * What it is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): only in `road.volumes.query`'s
+ * answer, where it computes.
+ */
+sources?: VolumeSources, };

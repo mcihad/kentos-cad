@@ -367,6 +367,7 @@ pub mod road_profiles_fit;
 pub mod road_ifc;
 pub mod road_scene;
 pub mod road_landxml;
+pub mod road_sources;
 pub mod road_stakeout;
 pub mod road_stakeout_send;
 pub mod road_sheets;

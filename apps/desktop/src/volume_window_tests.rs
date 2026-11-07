@@ -964,6 +964,44 @@ fn screens_states() {
 
 /// The grid method in the window (docs/adr/0974): without a cell it says so; with 2 m it computes on the grid and says
 /// the method and the cell; saved, the cell is kept.
+/// ROAD-VOL-01 (docs/adr/1040): the window says what the volume is computed from and by which algorithm, as
+/// `road.volumes.query` does; the ground's acceptance follows the drawing: accepted, then a ground point deleted.
+#[test]
+fn the_window_says_what_the_volume_is_computed_from() {
+    use kentos_native_application::ExecutionContext;
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let said = |app: &App| {
+        let rep = app.volume_window.as_ref().and_then(|w| w.preview.report.clone()).expect("computes");
+        (crate::volume_window::method_words(&rep), crate::road_dialog::volume_sources_words(rep.sources.as_ref().expect("sources")))
+    };
+    let (method, sources) = said(&app);
+    assert!(method.starts_with("Yöntem: Ortalama alan (kentos.end-area/1), "), "{method}");
+    assert!(sources.starts_with("Kaynaklar: koridor c-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"), "{sources}");
+    assert!(sources.ends_with("…, kabul edilmedi)"), "{sources}");
+    let accepted = kentos_native_application::road_terrains_edit::execute(
+        &mut ExecutionContext::new(model(&mut app)),
+        kentos_commands::TerrainsEdit {
+            operation: kentos_commands::TerrainsEditOperation::Accept,
+            surface: None,
+            id: Some("t-1".into()),
+            expected_revision: None,
+        },
+    );
+    assert!(matches!(accepted, kentos_commands::CommandResult::Completed { .. }), "{accepted:?}");
+    send(&mut app, W::Choose(0));
+    assert!(said(&app).1.ends_with("…, kabul edildi)"), "{}", said(&app).1);
+    let first = model(&mut app).entities_with_uids().next().map(|(uid, _)| uid.to_string()).expect("a point");
+    let gone = kentos_native_application::delete::execute(
+        &mut ExecutionContext::new(model(&mut app)),
+        serde_json::from_value(serde_json::json!({ "uids": [first] })).expect("the input"),
+    );
+    assert!(matches!(gone, kentos_commands::CommandResult::Completed { .. }), "{gone:?}");
+    send(&mut app, W::Choose(0));
+    assert!(said(&app).1.ends_with("…, kabulden sonra değişti)"), "{}", said(&app).1);
+}
+
 #[test]
 fn the_window_computes_on_a_grid() {
     let mut app = app();
@@ -977,7 +1015,7 @@ fn the_window_computes_on_a_grid() {
     let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
     assert_eq!(rep.step, Some(2.0));
     assert!(rep.cut > 1000.0 && rep.cut_area.is_some(), "{rep:?}");
-    assert_eq!(crate::volume_window::method_words(rep), "Yöntem: Izgara, hücre 2 m.");
+    assert_eq!(crate::volume_window::method_words(rep), "Yöntem: Izgara (kentos.grid-midpoint/1), hücre 2 m.");
     send(&mut app, W::Save);
     assert_eq!(model(&mut app).road_volumes()[2].cell, Some(2.0));
 }
@@ -1123,6 +1161,65 @@ fn screens_basis() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y102-kubaj-{step}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Kübaj saying what it is computed from (docs/adr/1040): the ground never accepted, light at 1440 px; accepted,
+/// light; a ground point deleted after it was accepted, dark at 1100 px; `.run/gui-evidence/yol-y105/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_sources -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_sources() {
+    use iced::Size;
+    use kentos_native_application::ExecutionContext;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y105");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = app();
+    let _ = app.update(Message::RibbonTab("corridor"));
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    for (step, theme, size) in [
+        ("kabul-edilmedi", "light", Size::new(1440.0, 900.0)),
+        ("kabul-edildi", "light", Size::new(1440.0, 900.0)),
+        ("kabulden-sonra-degisti-koyu", "dark", Size::new(1100.0, 760.0)),
+    ] {
+        match step {
+            "kabul-edildi" => {
+                let _ = kentos_native_application::road_terrains_edit::execute(
+                    &mut ExecutionContext::new(model(&mut app)),
+                    kentos_commands::TerrainsEdit {
+                        operation: kentos_commands::TerrainsEditOperation::Accept,
+                        surface: None,
+                        id: Some("t-1".into()),
+                        expected_revision: None,
+                    },
+                );
+            }
+            "kabulden-sonra-degisti-koyu" => {
+                let first = model(&mut app).entities_with_uids().next().map(|(uid, _)| uid.to_string()).expect("a point");
+                let _ = kentos_native_application::delete::execute(
+                    &mut ExecutionContext::new(model(&mut app)),
+                    serde_json::from_value(serde_json::json!({ "uids": [first] })).expect("the input"),
+                );
+            }
+            _ => {}
+        }
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        send(&mut app, W::Choose(0));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y105-kubaj-kaynaklar-{step}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

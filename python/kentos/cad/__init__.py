@@ -3801,6 +3801,7 @@ __all__ = [
     "VolumeRuleName",
     "VolumeSides",
     "VolumeSidesName",
+    "VolumeSources",
     "VolumeSpread",
     "VolumeStateRow",
     "VolumeStatesRead",

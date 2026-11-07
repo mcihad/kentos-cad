@@ -150,6 +150,11 @@ const METHODS: [(VolumeMethod, &str); 4] = [
 /// between two sections.
 pub(crate) fn method_words(rep: &VolumeReport) -> String {
     let name = METHODS.iter().find(|m| m.0 == rep.method).map_or("", |m| m.1);
+    // Docs/adr/1040: the method's algorithm by name and version, where it computed.
+    let name = match road_volumes::basis_of(rep) {
+        Some(b) => format!("{name} ({})", b.algorithm),
+        None => name.to_owned(),
+    };
     let comma = |v: f64| trimmed(v).replace('.', ",");
     match (rep.method, rep.step) {
         (VolumeMethod::Grid, Some(c)) => format!("Yöntem: {name}, hücre {} m.", comma(c)),
@@ -499,7 +504,13 @@ impl App {
             return;
         };
         let def = r.def();
-        w.preview = match def.clone().and_then(|d| road_volumes::preview(&doc.model, &d)) {
+        w.preview = match def.clone().and_then(|d| {
+            road_volumes::preview(&doc.model, &d).map(|(mut report, warnings)| {
+                // Docs/adr/1040: what it is computed from, as the query says it.
+                report.sources = road_volumes::sources_of(&doc.model, &d);
+                (report, warnings)
+            })
+        }) {
             Err(e) => Preview { why: Some(e), ..Preview::default() },
             Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
         };
@@ -1192,8 +1203,14 @@ impl App {
             .label_width(110.0)
             .section("Tanım")
             .field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))))
-            .field("Koridor", on_corridor)
-            .field("Yöntem", on_method);
+            .field("Koridor", on_corridor);
+        // Docs/adr/1040: what the volume is computed from, each as it is now, under its corridor: in the form's column,
+        // which scrolls by itself, not under the picture, whose room full screen is the sheet's and the diagram's
+        // (picture_tests, full screen at 1920 × 1080: 453 px, 428 with the line there, under its least of 440).
+        if let Some(s) = w.preview.report.as_ref().and_then(|rep| rep.sources.as_ref()) {
+            form = form.help(road_dialog::volume_sources_words(s));
+        }
+        let mut form = form.field("Yöntem", on_method);
         if r.method == VolumeMethod::Grid {
             form = form
                 .field("Hücre (m)", kentos_ui::widget::text_field("", &r.cell).on_input(|t| msg(Event::Cell(t))))

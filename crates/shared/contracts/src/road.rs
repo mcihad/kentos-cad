@@ -1357,6 +1357,57 @@ pub struct VolumeBenchDef {
     pub height: f64,
 }
 
+/// A source a road answer was computed from, as it is now (docs/adr/1038, 1039, 1040): its id and revision (0 where
+/// the project has no such source).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSource {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+}
+
+/// The terrain surface a road answer was computed on (docs/adr/1038, 1039, 1040): its id, the digest of what it is
+/// made of now (the drawing's points and lines it was triangulated from, with its method; absent where the project
+/// has no such surface) and the digest it was last accepted from (absent: never accepted). The two differ when the
+/// drawing changed after the surface was accepted: the answer is the drawing's of now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSurfaceSource {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub built: Option<String>,
+}
+
+/// What an earthwork volume is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): its corridor, the
+/// corridor's alignment and profile, its regions' templates in order and once each, its superelevation schedule and
+/// its terrain surface (the original ground; the design is the corridor's).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeSources {
+    pub corridor: RoadSource,
+    pub alignment: RoadSource,
+    pub profile: RoadSource,
+    pub templates: Vec<RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<RoadSource>,
+    pub surface: RoadSurfaceSource,
+}
+
 /// An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,
 /// the totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

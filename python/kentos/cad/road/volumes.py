@@ -978,9 +978,15 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
     sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü
     (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar
     (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km
-    aralığı, kazının yerinde ve dolgunun sıkışmış olduğu. Kurp düzeltmeli hesapta kazı
-    ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit
-    yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
+    aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin algoritması adı ve
+    sürümüyle (ADR 1040: kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1,
+    kentos.prismoidal/1, kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar
+    satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden
+    hesaplandığını sources'ta söyler (ADR 1040): koridorun, aksının, boykesitinin,
+    bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin
+    bugünkü kaynak özeti (digest) ve son kabul özeti (built). Kurp düzeltmeli hesapta
+    kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen
+    kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
     satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen
     aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş
     kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve
@@ -1018,7 +1024,13 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt
         çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları,
         yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun
-        sıkışmış olduğu. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve
+        sıkışmış olduğu ve yöntemin algoritması adı ve sürümüyle (ADR 1040:
+        kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1, kentos.prismoidal/1,
+        kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar satırların km sırasıyla
+        binary64 toplamıdır). Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler
+        (ADR 1040): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
+        çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul
+        özeti (built). Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve
         düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler
         (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır:
         km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının

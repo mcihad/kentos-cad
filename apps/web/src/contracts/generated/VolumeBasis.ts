@@ -6,6 +6,8 @@ import type { VolumeSides } from "./VolumeSides";
 /**
  * What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
  * the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
- * version, the two lines, the sides, the stations it covers and the states its cut and fill are in.
+ * version, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is
+ * computed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,
+ * `kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).
  */
-export type VolumeBasis = { name: string, given: boolean, version: string, top: VolumeLine, bottom: VolumeLine, sides: VolumeSides, from: number, to: number, cut: MaterialState, fill: MaterialState, };
+export type VolumeBasis = { name: string, given: boolean, version: string, top: VolumeLine, bottom: VolumeLine, sides: VolumeSides, from: number, to: number, cut: MaterialState, fill: MaterialState, algorithm: string, };

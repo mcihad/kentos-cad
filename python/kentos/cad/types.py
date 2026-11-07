@@ -74784,7 +74784,8 @@ class RoadSheetsSections(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RoadSource(_Model):
-    """A source a road answer was computed from, as it is now (docs/adr/1038, 1039): its id and revision.
+    """A source a road answer was computed from, as it is now (docs/adr/1038, 1039, 1040): its id and revision (0 where
+    the project has no such source).
     Attributes:
         revision: Unit: version.
     """
@@ -74807,17 +74808,22 @@ class RoadSource(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RoadSurfaceSource(_Model):
-    """The terrain surface a road answer was computed on (docs/adr/1038, 1039): its id and the digest of the sources it was
-    last accepted from (absent: never accepted).
+    """The terrain surface a road answer was computed on (docs/adr/1038, 1039, 1040): its id, the digest of what it is
+    made of now (the drawing's points and lines it was triangulated from, with its method; absent where the project
+    has no such surface) and the digest it was last accepted from (absent: never accepted). The two differ when the
+    drawing changed after the surface was accepted: the answer is the drawing's of now.
     """
     id: str
     built: str | None | Unset = UNSET
+    digest: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         if self.built is not UNSET:
             out["built"] = self.built
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
         return out
 
     @classmethod
@@ -74825,6 +74831,7 @@ class RoadSurfaceSource(_Model):
         return cls(
             id=data["id"],
             built=data.get("built", UNSET),
+            digest=data.get("digest", UNSET),
         )
 
 
@@ -94868,7 +94875,9 @@ class VolumeApprovalReport(_Model):
 class VolumeBasis(_Model):
     """What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
     the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
-    version, the two lines, the sides, the stations it covers and the states its cut and fill are in.
+    version, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is
+    computed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,
+    `kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).
     Attributes:
         from_: Unit: m.
         to: Unit: m.
@@ -94883,6 +94892,7 @@ class VolumeBasis(_Model):
     to: float
     cut: MaterialState | MaterialStateName
     fill: MaterialState | MaterialStateName
+    algorithm: str
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -94896,6 +94906,7 @@ class VolumeBasis(_Model):
         out["to"] = float(self.to)
         out["cut"] = _enum_out(self.cut)
         out["fill"] = _enum_out(self.fill)
+        out["algorithm"] = self.algorithm
         return out
 
     @classmethod
@@ -94911,6 +94922,7 @@ class VolumeBasis(_Model):
             to=float(data["to"]),
             cut=_enum_in(MaterialState, data["cut"]),
             fill=_enum_in(MaterialState, data["fill"]),
+            algorithm=data["algorithm"],
         )
 
 
@@ -95429,6 +95441,8 @@ class VolumeReport(_Model):
         layers: The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
             pavement.
         rule: Its rule, where it has one (docs/adr/0975 §2).
+        sources: What it is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): only in `road.volumes.query`'s
+            answer, where it computes.
         step: The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive
             sections (m); absent where there is no interval. Unit: m.
         strip: The topsoil stripped in all (m³), where the volume strips. Unit: volume.
@@ -95455,6 +95469,7 @@ class VolumeReport(_Model):
     layers: list[VolumeLayer] | Unset = UNSET
     problem: str | None | Unset = UNSET
     rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
+    sources: VolumeSources | None | Unset = UNSET
     step: float | None | Unset = UNSET
     strip: float | None | Unset = UNSET
     uncovered: float | None | Unset = UNSET
@@ -95491,6 +95506,8 @@ class VolumeReport(_Model):
             out["problem"] = self.problem
         if self.rule is not UNSET:
             out["rule"] = None if self.rule is None else _enum_out(self.rule)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else self.sources.to_json()
         if self.step is not UNSET:
             out["step"] = None if self.step is None else float(self.step)
         if self.strip is not UNSET:
@@ -95523,6 +95540,7 @@ class VolumeReport(_Model):
             layers=[VolumeLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             problem=data.get("problem", UNSET),
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else VolumeSources.from_json(data["sources"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
             uncovered=UNSET if "uncovered" not in data else None if data["uncovered"] is None else float(data["uncovered"]),
@@ -95649,6 +95667,42 @@ class VolumeRowChange(_Model):
             approved_fill=UNSET if "approvedFill" not in data else None if data["approvedFill"] is None else float(data["approvedFill"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeSources(_Model):
+    """What an earthwork volume is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): its corridor, the
+    corridor's alignment and profile, its regions' templates in order and once each, its superelevation schedule and
+    its terrain surface (the original ground; the design is the corridor's).
+    """
+    corridor: RoadSource
+    alignment: RoadSource
+    profile: RoadSource
+    templates: list[RoadSource]
+    surface: RoadSurfaceSource
+    superelevation: RoadSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor.to_json()
+        out["alignment"] = self.alignment.to_json()
+        out["profile"] = self.profile.to_json()
+        out["templates"] = [e0.to_json() for e0 in self.templates]
+        out["surface"] = self.surface.to_json()
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeSources:
+        return cls(
+            corridor=RoadSource.from_json(data["corridor"]),
+            alignment=RoadSource.from_json(data["alignment"]),
+            profile=RoadSource.from_json(data["profile"]),
+            templates=[RoadSource.from_json(e0) for e0 in data["templates"]],
+            surface=RoadSurfaceSource.from_json(data["surface"]),
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else RoadSource.from_json(data["superelevation"]),
         )
 
 
@@ -122172,6 +122226,7 @@ __all__ = [
     "VolumeRuleName",
     "VolumeSides",
     "VolumeSidesName",
+    "VolumeSources",
     "VolumeSpread",
     "VolumeStateRow",
     "VolumeStatesRead",

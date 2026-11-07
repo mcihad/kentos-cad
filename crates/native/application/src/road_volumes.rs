@@ -521,6 +521,7 @@ pub(crate) fn compute_on(
         gaps: joined,
         rule: def.rule,
         basis: None,
+        sources: None,
         layers: layer_list,
         approval: None,
         problem: None,
@@ -645,10 +646,10 @@ pub(crate) fn approval_of(def: &VolumeDef, now: &VolumeReport, at: String, note:
     }
 }
 
-/// A report for a volume that does not compute: its sources and why.
 /// What a volume measures (docs/adr/1037), from its report: its rule (the default where it names none: the road's top
 /// against the ground, against the stripped ground where it strips, as before the rules), the method's sides, its rows'
-/// stations; none without a row.
+/// stations; how it is computed (docs/adr/1040): its method's algorithm, the curved end area where it corrects on
+/// curves; none without a row.
 pub fn basis_of(report: &VolumeReport) -> Option<kentos_commands::VolumeBasis> {
     use kentos_commands::{MaterialState, VolumeBasis, VolumeLine, VolumeMethod, VolumeRule, VolumeSides};
     let (first, last) = (report.rows.first()?, report.rows.last()?);
@@ -667,9 +668,25 @@ pub fn basis_of(report: &VolumeReport) -> Option<kentos_commands::VolumeBasis> {
         to: last.to,
         cut: MaterialState::InPlace,
         fill: MaterialState::Compacted,
+        algorithm: match report.method {
+            VolumeMethod::EndArea if report.curve.is_some() => kentos_road::volume::END_AREA_CURVED,
+            VolumeMethod::EndArea => kentos_road::volume::END_AREA,
+            VolumeMethod::Prismoidal => kentos_road::volume::PRISMOIDAL,
+            VolumeMethod::Surfaces => kentos_road::volume::SURFACES,
+            VolumeMethod::Grid => kentos_road::volume::GRID,
+        }
+        .to_owned(),
     })
 }
 
+/// What a volume is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): its corridor's chain; none where
+/// the project has no such corridor.
+pub fn sources_of(doc: &Document, def: &VolumeDef) -> Option<kentos_commands::VolumeSources> {
+    let corridor = doc.road_corridors().iter().find(|c| c.id == def.corridor)?;
+    Some(crate::road_sources::corridor(doc, corridor))
+}
+
+/// A report for a volume that does not compute: its sources and why.
 pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
     VolumeReport {
         id: def.id.clone(),
@@ -692,6 +709,7 @@ pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
         gaps: Vec::new(),
         rule: def.rule,
         basis: None,
+        sources: None,
         layers: Vec::new(),
         approval: None,
         problem: Some(why),

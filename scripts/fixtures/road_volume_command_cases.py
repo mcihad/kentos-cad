@@ -771,18 +771,28 @@ RULE_WORDS = {"roadGround": "Yol–Zemin", "formationGround": "Formasyon–Zemin
               "formationTopsoil": "Formasyon–Bitkisel Toprak"}
 
 
-def with_basis(v, r):
+# Docs/adr/1040: the methods' algorithms by name and version; the end area corrected on curves is its own.
+ALGORITHMS = {"endArea": "kentos.end-area/1", "prismoidal": "kentos.prismoidal/1",
+              "surfaces": "kentos.tin-overlay/1", "grid": "kentos.grid-midpoint/1"}
+
+
+def with_basis(v, r, road, doc=None):
     """Docs/adr/1037: what the volume measures. Its rule, or the default: the road's top against the ground, against
     the stripped ground where it strips; the lines by the rule's name; the sides by the method; the stations of its
-    rows; the cut in place, the fill compacted."""
+    rows; the cut in place, the fill compacted; its method's algorithm (docs/adr/1040). Docs/adr/1040: what it is
+    computed from, its corridor's chain as `road` has it now (scripts/fixtures/road_corridor_command_cases.py's)."""
+    c = next(x for x in road["corridors"] if x["id"] == v["corridor"])
+    r = {**r, "sources": ccmd.corridor_sources(c, road, doc)}
     if not r.get("rows"):
         return r
     rule = v.get("rule") or ("roadTopsoil" if v.get("strip") else "roadGround")
+    algorithm = "kentos.end-area-curved/1" if v["method"] == "endArea" and "curve" in r else ALGORITHMS[v["method"]]
     basis = {"name": RULE_WORDS[rule], "given": v.get("rule") is not None, "version": "kentos.volume-rule/1",
              "top": "formation" if rule.startswith("formation") else "road",
              "bottom": "topsoil" if rule.endswith("Topsoil") else "ground",
              "sides": "daylights" if v["method"] in ("endArea", "prismoidal") else "corridor",
-             "from": r["rows"][0]["from"], "to": r["rows"][-1]["to"], "cut": "inPlace", "fill": "compacted"}
+             "from": r["rows"][0]["from"], "to": r["rows"][-1]["to"], "cut": "inPlace", "fill": "compacted",
+             "algorithm": algorithm}
     return {**r, "basis": basis}
 
 
@@ -791,12 +801,13 @@ def query_cases():
 
     def q(name, input_, volumes=START, corridors=CORRIDORS, op="execute"):
         one = input_.get("volume")
+        road = road_of(volumes, corridors)
         if one is None:
             reports, warns = [], []
             for v in volumes:
                 try:
                     r, w = compute(v, corridors)
-                    reports.append(with_basis(v, r))
+                    reports.append(with_basis(v, r, road))
                     warns += w
                 except Refused as e:
                     reports.append(broken(v, e.result["error"]["message"]))
@@ -804,7 +815,7 @@ def query_cases():
         else:
             v = next(x for x in volumes if x["id"] == one or x["name"].lower() == one.lower())
             r, warns = compute(v, corridors)
-            out = {"volumes": [with_basis(v, r)]}
+            out = {"volumes": [with_basis(v, r, road)]}
         result = completed(None, warns) if op == "validate" else completed(out, warns)
         default = volumes is START and corridors is CORRIDORS and ccmd.TEMPLATES == [scmd.TK1, scmd.TK2]
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(volumes, corridors)})],
@@ -898,6 +909,20 @@ def query_cases():
     q("Kurp düzeltmesi, sıyırmayla", {"volume": "v-1"},
       [{**V1, "curve": True, "strip": [{"from": 0.0, "to": 600.0, "depth": 0.3}], "rule": "roadTopsoil"}, V2])
     q("Kurp düzeltmesi, diş kazısıyla", {"volume": "v-1"}, [{**V1, "curve": True, "bench": {"slope": 12.0, "height": 0.5}}, V2])
+    # Docs/adr/1040: the ground accepted from today's drawing says the same digest twice; accepted before a point was
+    # added (the drawing without its first ground point), it says the one it was accepted from beside today's.
+    doc = setup()
+    assert doc["entities"][0]["layerId"] == "zemin" and doc["entities"][0].get("z") is not None
+    before = {**doc, "entities": doc["entities"][1:], "uids": doc["uids"][1:]}
+    for name_, of in (("Kabul edilmiş arazinin özeti", doc), ("Kabulden sonra değişen arazinin özeti", before)):
+        accepted = copy.deepcopy(doc)
+        accepted["settings"]["road"]["surfaces"][0]["built"] = pcmd.surface_source(
+            accepted["settings"]["road"], "t-1", of)["digest"]
+        road = accepted["settings"]["road"]
+        r, warns = compute(V1)
+        out = {"volumes": [with_basis(V1, r, road)]}
+        cases.append(case(name_, [step("execute", {"volume": "v-1"}, completed(out, warns), {**UNCHANGED, "road": road})],
+                          accepted))
     return file("road.volumes.query", "Kübajı sorgula", setup(), cases)
 
 

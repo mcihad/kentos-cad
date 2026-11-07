@@ -18,8 +18,9 @@ fn answer(doc: &kentos_domain::Document, input: &VolumesQuery) -> Result<(Volume
             match common::compute(doc, v) {
                 Ok((mut r, w)) => {
                     warnings.extend(w);
-                    // Docs/adr/1037: what it measures and how.
+                    // Docs/adr/1037, 1040: what it measures, how and from what.
                     r.basis = common::basis_of(&r);
+                    r.sources = common::sources_of(doc, v);
                     volumes.push(r);
                 }
                 Err(stop) => volumes.push(common::broken(v, words(stop))),
@@ -30,6 +31,7 @@ fn answer(doc: &kentos_domain::Document, input: &VolumesQuery) -> Result<(Volume
     let (_, def) = common::find(own, name, "volume")?;
     let (mut r, w) = common::compute(doc, def)?;
     r.basis = common::basis_of(&r);
+    r.sources = common::sources_of(doc, def);
     Ok((VolumesQueried { volumes: vec![r] }, w))
 }
 

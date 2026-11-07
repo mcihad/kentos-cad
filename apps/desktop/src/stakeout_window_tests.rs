@@ -194,5 +194,10 @@ fn the_table_says_its_sources_and_when_it_was_written() {
     assert_eq!(sheet.name, "Kaynaklar");
     assert_eq!(sheet.rows[0], vec!["Üretildi".to_owned(), "2026-11-07 10:00:00".to_owned(), String::new()]);
     assert!(sheet.rows.iter().any(|r| r[0] == "Tip kesit" && r[1] == "tk-2" && r[2] == "2"), "{:?}", sheet.rows);
-    assert!(sheet.rows.iter().any(|r| r[0] == "Arazi" && r[2] == "kabul edilmedi"), "{:?}", sheet.rows);
+    // Docs/adr/1040: the ground's digest of now with its acceptance.
+    assert!(
+        sheet.rows.iter().any(|r| r[0] == "Arazi" && r[2].len() == 64 + " (kabul edilmedi)".len() && r[2].ends_with(" (kabul edilmedi)")),
+        "{:?}",
+        sheet.rows
+    );
 }

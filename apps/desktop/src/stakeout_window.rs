@@ -344,23 +344,14 @@ impl App {
                 )));
                 // Docs/adr/1038: what the table is computed from, each as it is now.
                 let src = &t.sources;
-                let mut said = format!(
-                    "Kaynaklar: koridor {} ({}), aks {} ({}), boykesit {} ({}), tip kesit {}",
-                    src.corridor.id,
-                    src.corridor.revision,
-                    src.alignment.id,
-                    src.alignment.revision,
-                    src.profile.id,
-                    src.profile.revision,
-                    src.templates.iter().map(|x| format!("{} ({})", x.id, x.revision)).collect::<Vec<_>>().join(", ")
+                let mut said = crate::road_dialog::chain_words(
+                    &src.corridor,
+                    &src.alignment,
+                    &src.profile,
+                    &src.templates,
+                    src.superelevation.as_ref(),
+                    src.surface.as_ref(),
                 );
-                if let Some(d) = &src.superelevation {
-                    said.push_str(&format!(", dever {} ({})", d.id, d.revision));
-                }
-                if let Some(g) = &src.surface {
-                    let built = g.built.as_ref().map_or("kabul edilmedi".to_owned(), |b| format!("kabul {}…", &b[..b.len().min(8)]));
-                    said.push_str(&format!(", arazi {} ({built})", g.id));
-                }
                 for v in &src.volumes {
                     said.push_str(&format!(", kübaj {} ({}{})", v.id, v.revision, if v.approved { ", onaylı" } else { "" }));
                 }

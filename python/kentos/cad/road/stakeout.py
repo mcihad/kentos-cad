@@ -29,7 +29,8 @@ class _RoadStakeoutQuery(LocalCommand[StakeoutQuery, StakeoutQueried, StakeoutQu
     """``road.stakeout.query`` v1. Aplikasyon cetveli: Koridorun kodlu kesit noktalarını
     km'leriyle verir; hiçbir şey yazmaz. Cevap neyden hesaplandığını sources'ta söyler
     (ADR 1038): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
-    çizelgesinin bugünkü sürümleri, arazinin son kabul edildiği kaynak özeti ve
+    çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest, ADR 1040) ve
+    son kabul edildiği özet (built; ikisi farklıysa çizim kabulden sonra değişmiştir) ve
     koridorun kübaj hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve
     yazıldığı zamanı Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod
     (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis,
@@ -68,11 +69,12 @@ class _RoadStakeoutQuery(LocalCommand[StakeoutQuery, StakeoutQueried, StakeoutQu
         """Aplikasyon cetveli: Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey
         yazmaz. Cevap neyden hesaplandığını sources'ta söyler (ADR 1038): koridorun,
         aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü
-        sürümleri, arazinin son kabul edildiği kaynak özeti ve koridorun kübaj hesapları
-        (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı Kaynaklar
-        sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN,
-        ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme
-        (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin
+        sürümleri, arazinin bugünkü kaynak özeti (digest, ADR 1040) ve son kabul edildiği
+        özet (built; ikisi farklıysa çizim kabulden sonra değişmiştir) ve koridorun kübaj
+        hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı
+        Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 …
+        left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden
+        öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin
         uçları); step ile her step metrede (step'in katları ve aralığın uçları, her
         bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da
         her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme

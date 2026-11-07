@@ -250,6 +250,54 @@ impl<'a> RoadDialog<'a> {
     }
 }
 
+/// The terrain surface a road answer was computed on, in words (docs/adr/1040): its id, its digest of now to eight
+/// digits and whether it was accepted from it ("arazi t-1 (5e1f02aa…, kabul edilmedi)").
+pub(crate) fn surface_source_words(g: &kentos_commands::RoadSurfaceSource) -> String {
+    match &g.digest {
+        Some(d) => format!(
+            "arazi {} ({}…, {})",
+            g.id,
+            &d[..d.len().min(8)],
+            kentos_native_application::road_sources::acceptance_words(g)
+        ),
+        None => format!("arazi {} (projede yok)", g.id),
+    }
+}
+
+/// What a corridor's results are computed from in a line (docs/adr/1038, 1040): "Kaynaklar: koridor c-1 (3), aks g-1
+/// (1), boykesit b-1 (1), tip kesit tk-1 (1), tk-2 (2), dever d-1 (1), arazi t-1 (…)".
+pub(crate) fn chain_words(
+    corridor: &kentos_commands::RoadSource,
+    alignment: &kentos_commands::RoadSource,
+    profile: &kentos_commands::RoadSource,
+    templates: &[kentos_commands::RoadSource],
+    superelevation: Option<&kentos_commands::RoadSource>,
+    surface: Option<&kentos_commands::RoadSurfaceSource>,
+) -> String {
+    let mut said = format!(
+        "Kaynaklar: koridor {} ({}), aks {} ({}), boykesit {} ({}), tip kesit {}",
+        corridor.id,
+        corridor.revision,
+        alignment.id,
+        alignment.revision,
+        profile.id,
+        profile.revision,
+        templates.iter().map(|x| format!("{} ({})", x.id, x.revision)).collect::<Vec<_>>().join(", ")
+    );
+    if let Some(d) = superelevation {
+        said.push_str(&format!(", dever {} ({})", d.id, d.revision));
+    }
+    if let Some(g) = surface {
+        said.push_str(&format!(", {}", surface_source_words(g)));
+    }
+    said
+}
+
+/// What an earthwork volume is computed from in a line (docs/adr/1040).
+pub(crate) fn volume_sources_words(s: &kentos_commands::VolumeSources) -> String {
+    chain_words(&s.corridor, &s.alignment, &s.profile, &s.templates, s.superelevation.as_ref(), Some(&s.surface))
+}
+
 /// The least height a window's table is given before the window scrolls: a head and three rows.
 const DETAIL_LEAST: f32 = 120.0;
 
