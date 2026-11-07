@@ -118,8 +118,8 @@ içi izin görmediği farklar:
 
 | # | Gerçek kullanımda | Paket |
 |---|---|---|
-| G1 | Araç çalışırken komut satırını istem ve seçenek çipleri dolduruyor. "Komut satırına tıkla" çipe düşüp menüsünü açıyor; seçenek harfi fareyle komut satırına yazılamıyor | ADV-08, ADV-11 |
-| G2 | Dikdörtgen duvarda yazılan "E" (Kalınlık'ın harfi) aracı bırakıp Uzat'ı başlatıyor (S8 doğrulandı) | ADV-08 |
+| G1 | Araç çalışırken komut satırını istem ve seçenek çipleri dolduruyor; yazı alanı görünmüyor. "Komut satırına tıkla" çipe düşüp menüsünü açıyor. Seçenek harfi çizim alanında küçük harfle yazılınca çalışıyor ("e" → "duvar kalınlığını yazın"), ama bunu ekranda bir şey söylemiyor | ADV-08, ADV-11 |
+| G2 | Büyük harf (Shift+E) aracın seçeneği sayılmıyor: Dikdörtgen duvarı bırakıp Uzat'ı başlatıyor. Küçük "e" doğru çalışıyor (7 Kasım'da gerçek pencerede ikisi de denendi; ilk denemede sürücünün yazdığı büyük "E" yanlışlıkla "E bozuk" diye kaydedilmişti) | ADV-08 (M4) |
 | G3 | Tablo yerleşince şerit kendiliğinden Tablo sekmesine geçiyor; sonraki Çizelge ▾ tıkı başka düğmeye gidiyor, ikinci çizelge sessizce oluşmuyor | ADV-09 |
 | G4 | Duvar ölçüleri "Ölçü katmanı: Çizim", Hepsini etiketle "Etiket katmanı: Çizim (sabit)"; yeni projenin Ölçü ve Yazı katmanları kullanılmıyor | ADV-14 |
 | G5 | Dikdörtgen duvarın varsayılanı 0,20 m, Stil: Yok | ADV-13 |

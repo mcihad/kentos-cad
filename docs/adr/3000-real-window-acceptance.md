@@ -88,9 +88,13 @@ Mimari kabulü bugüne kadar kod içi izlerle yapıldı (`kentos-cad kullan`, `s
 - **Aynı KLM kurallarıyla kod içi iz** (`acceptance-flat.json`): 158 etkileşim, 207,7 s. Ama içinde fareyle yapılamayan
   `focus` adımları ve komut satırına yazılan seçenek harfleri var.
 - **Gerçek pencerede görülen, kod içi izin görmediği farklar:**
-  1. Araç çalışırken komut satırını istem ve seçenek çipleri dolduruyor. "Komut satırına tıkla" çipe düşüp menüsünü
-     açıyor; yani seçenek harfi komut satırına fareyle yazılamıyor.
-  2. Dikdörtgen duvar çalışırken yazılan "E" (Kalınlık seçeneğinin harfi) aracı bırakıp **Uzat**'ı başlatıyor.
+  1. Araç çalışırken komut satırını istem ve seçenek çipleri dolduruyor; yazı alanı görünmüyor. "Komut satırına tıkla"
+     çipe düşüp menüsünü açıyor. Seçenek harfi çizim alanında küçük harfle yazılınca çalışıyor ("e" → "duvar
+     kalınlığını yazın"), ama bunu ekranda hiçbir şey söylemiyor.
+  2. Büyük harf (Shift+E) aracın seçeneği sayılmıyor (`keys::option_letter` Shift'i dışarıda bırakıyor): Dikdörtgen
+     duvarı bırakıp **Uzat**'ı başlatıyor. Küçük "e" doğru çalışıyor. İlk denemede sürücü büyük "E"yi Shift'le
+     yazmıştı ve bu "E bozuk" diye kaydedilmişti; ikisi ayrı ayrı denenip düzeltildi
+     (`.run/gui-evidence/mimari-m3/harf/harf-ozet.png`).
   3. Bir tablo yerleşince şerit kendiliğinden bağlamsal **Tablo** sekmesine geçiyor. Kullanıcının bir sonraki Çizelge ▾
      tıkı başka düğmeye gidiyor; ikinci çizelge oluşmadı, Mimari sekmesine dönmek gerekti.
   4. Duvar ölçüleri "Ölçü katmanı: Çizim", Hepsini etiketle "Etiket katmanı: Çizim (sabit)" ile çalışıyor. Yeni projede
