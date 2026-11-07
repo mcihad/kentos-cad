@@ -53,6 +53,12 @@
     - Açıklık parçaları rollüdür (`opening::Part`); parça mutlak kalınlık değil nesne kaleminin payını taşır
       (`PieceStroke::weight_scale`).
     - Kasa ve kanat bütün kalem; yay, cam, denizlik ve duvarın malzeme sınırları yarısı (ISO 128-23 ince = kalın / 2).
+  - **Kapı ve pencere ölçeğe göre (M11, [ADR 3010](../adr/3010-openings-by-scale.md)):**
+    - Parçalar duvarın ayrıntı düzeyiyle çizilir (`opening::pieces_at`, `Part::shown_at`).
+      - 1:200 kanat ve cam; 1:100 ve yay, pencere yüzleri; 1:50 ve 1:20 bütün parçalar.
+      - Kasası çizilmeyen pencere duvar ucundan ucuna uzanır.
+    - Depo açıklığı görünüşe bağlı nesnelerden sayar; DXF düz parçaları aynı görünüşü alır. Yakalama ve Patlat bütün
+      sembolü kullanır.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

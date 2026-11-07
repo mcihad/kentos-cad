@@ -247,7 +247,7 @@ pub fn plain_joined(
     let mut out = vec![None; entities.len()];
     for (i, e) in entities.iter().enumerate() {
         if let Entity::Opening(o) = e {
-            out[i] = Some(crate::openings::plain_pieces(&o.base, &o.opening));
+            out[i] = Some(crate::openings::plain_pieces(&o.base, &o.opening, view));
         }
     }
     for ((i, shape), drawn) in walls.iter().zip(solved.drawn) {
@@ -466,6 +466,125 @@ mod tests {
         assert!(
             hole.iter().all(|e| e.base().look.line_type == Some(LineType::Dashed)),
             "above the cut: dashed"
+        );
+    }
+
+    /// A door and a window go out as the drawing at the file's scale shows them (docs/adr/3010), as the walls beside
+    /// them: at 1:200 the door's leaf and the window's glass, at 1:100 the swing and the window's faces too (jamb to
+    /// jamb, no frame drawn), at 1:50 the frame's sides as well.
+    #[test]
+    fn a_door_and_a_window_go_out_as_the_scale_draws_them() {
+        use kentos_contracts::{
+            EntityBase, OpeningEntity, OpeningFields, OpeningForm, OpeningOperation, OpeningSide,
+            WallEntity,
+        };
+        use kentos_geometry_core::geom::wall::Detail;
+        use kentos_geometry_core::jsmath::{js_max, js_min};
+        let wall = WallFields {
+            pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 6.0, y: 0.0 }],
+            bulges: None,
+            closed: false,
+            width: 0.25,
+            justify: WallJustify::Center,
+            offset: 0.0,
+            style: None,
+            components: Vec::new(),
+            caps: WallCaps::Closed,
+            fill: None,
+            height: None,
+            arch: ArchInfo::default(),
+            joins: WallJoins::default(),
+            cleanup: true,
+        };
+        let base = |id: u32| EntityBase {
+            look: Default::default(),
+            id,
+            layer_id: "0".into(),
+            color: None,
+            attrs: Default::default(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        };
+        let uid = "0192f5a1-2590-7000-8000-000000000072".to_owned();
+        let opening = |id: u32, at: f64, width: f64, form: OpeningForm| {
+            let (s0, s1) = (at - width / 2.0, at + width / 2.0);
+            Entity::Opening(OpeningEntity {
+                base: base(id),
+                opening: OpeningFields {
+                    host: uid.clone(),
+                    at,
+                    anchor: Default::default(),
+                    width,
+                    form,
+                    leaves: 1,
+                    operation: OpeningOperation::Swing,
+                    hand: Default::default(),
+                    side: OpeningSide::Left,
+                    swing: None,
+                    show_swing: true,
+                    frame: Some(0.06),
+                    sill: None,
+                    head: None,
+                    depth: None,
+                    inset: None,
+                    style: None,
+                    number: None,
+                    type_version: None,
+                    overrides: Vec::new(),
+                    build: None,
+                    place: [(s0, 0.125), (s0, -0.125), (s1, 0.125), (s1, -0.125)]
+                        .into_iter()
+                        .map(|(x, y)| Vec2 { x, y })
+                        .collect(),
+                    broken: None,
+                },
+            })
+        };
+        let entities = vec![
+            Entity::Wall(WallEntity {
+                base: base(1),
+                wall,
+            }),
+            opening(2, 1.5, 0.9, OpeningForm::Door),
+            opening(3, 4.0, 1.2, OpeningForm::Window),
+        ];
+        let at = |detail: Detail, scale: f64| {
+            let plain = plain_joined(&entities, View { detail, scale }, |id| {
+                (id == 1).then(|| uid.clone())
+            });
+            (
+                plain[1].clone().expect("the door"),
+                plain[2].clone().expect("the window"),
+            )
+        };
+        let (door, window) = at(Detail::Schematic, 200.0);
+        assert_eq!(
+            (door.len(), window.len()),
+            (1, 1),
+            "1:200: the leaf, the glass"
+        );
+        let (door, window) = at(Detail::Schematic, 100.0);
+        assert_eq!(
+            (door.len(), window.len()),
+            (2, 3),
+            "1:100: and the swing, the window's faces"
+        );
+        for e in &window {
+            let Entity::Line(l) = e else { panic!("{e:?}") };
+            let (x0, x1) = (js_min(l.a.x, l.b.x), js_max(l.a.x, l.b.x));
+            assert!(
+                (x0 - 3.4).abs() < 1e-9 && (x1 - 4.6).abs() < 1e-9,
+                "jamb to jamb: {x0}–{x1}"
+            );
+        }
+        let (door, window) = at(Detail::Standard, 50.0);
+        assert_eq!(
+            (door.len(), window.len()),
+            (4, 5),
+            "1:50: and the frame's sides"
         );
     }
 }

@@ -42,7 +42,7 @@ const ADD: &str = "Bileşen ekle";
 /// The details a component may be drawn from, in order.
 const DETAILS: [(WallDetail, &str); 3] = [
     (WallDetail::Schematic, "Şematik"),
-    (WallDetail::Standard, "Standart"),
+    (WallDetail::Standard, "Uygulama"),
     (WallDetail::Detailed, "Ayrıntılı"),
 ];
 

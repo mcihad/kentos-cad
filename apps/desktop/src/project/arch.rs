@@ -1,5 +1,5 @@
 //! Proje ayarları › Mimari (docs/adr/0339 §3, §6): the project's levels, a row each (Ad, Kot, Kat yüksekliği; up,
-//! down, delete; Kat ekle), and the detail the walls are drawn at (Ölçeğe göre, Şematik, Standart, Ayrıntılı). What
+//! down, delete; Kat ekle), and the detail the walls are drawn at (Otomatik, Şematik, Uygulama, Ayrıntılı). What
 //! does not hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch`,
 //! which keeps a level a wall names.
 
@@ -73,7 +73,7 @@ const METHODS: [(Option<kentos_commands::SpaceMethod>, &str); 3] = [
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
     (None, "Otomatik"),
     (Some(WallDetail::Schematic), "Şematik"),
-    (Some(WallDetail::Standard), "Standart"),
+    (Some(WallDetail::Standard), "Uygulama"),
     (Some(WallDetail::Detailed), "Ayrıntılı"),
 ];
 

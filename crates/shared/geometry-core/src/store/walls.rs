@@ -190,3 +190,61 @@ fn another_views_pieces_are_those_of_a_store_at_that_view() {
     assert_eq!(a.expanded_at(4.0, detailed), None, "a line has no pieces");
     assert_eq!(a.expanded_at(9.0, detailed), None, "no such object");
 }
+
+/// A door and a window follow the store's view as its walls do (docs/adr/3010): the screen's zoom and a sheet's scale
+/// redraw them. At 1:200 schematic the door is its leaf and the window its glass; at 1:100 the swing and the window's
+/// faces too; at 1:50 the frame's sides as well. Another view's pieces (`expanded_at`) are the same as the store's at it.
+#[test]
+fn a_door_and_a_window_follow_the_stores_view() {
+    let json = r##"[
+        {"id":1,"layerId":"a","kind":"wall","pts":[{"x":0,"y":0},{"x":6,"y":0}],"width":0.25,"justify":"center"},
+        {"id":2,"layerId":"a","kind":"opening","at":1.5,"width":0.9,"form":"door",
+         "place":[{"x":1.05,"y":0.125},{"x":1.05,"y":-0.125},{"x":1.95,"y":0.125},{"x":1.95,"y":-0.125}],"frame":0.05},
+        {"id":3,"layerId":"a","kind":"opening","at":4,"width":1.2,"form":"window",
+         "place":[{"x":3.4,"y":0.125},{"x":3.4,"y":-0.125},{"x":4.6,"y":0.125},{"x":4.6,"y":-0.125}],"frame":0.06}
+    ]"##;
+    let mut s = Store::new();
+    s.put_json(json).unwrap();
+    s.set_hosts([(2.0, Some(1.0)), (3.0, Some(1.0))]);
+    let count = |s: &Store, id: f64| {
+        s.get(id)
+            .unwrap()
+            .expanded
+            .as_ref()
+            .map_or(0, |x| x.shapes.len())
+    };
+    let standard = View {
+        detail: Detail::Standard,
+        scale: 50.0,
+    };
+    for (view, door, window) in [
+        (
+            View {
+                detail: Detail::Schematic,
+                scale: 200.0,
+            },
+            1,
+            1,
+        ),
+        (
+            View {
+                detail: Detail::Schematic,
+                scale: 100.0,
+            },
+            2,
+            3,
+        ),
+        (standard, 4, 5),
+    ] {
+        s.set_wall_view(view);
+        assert_eq!((count(&s, 2.0), count(&s, 3.0)), (door, window), "{view:?}");
+    }
+    // The store at 1:50 gives another view its own pieces: the schematic window without its frame's sides.
+    let schematic = View {
+        detail: Detail::Schematic,
+        scale: 100.0,
+    };
+    assert_eq!(s.wall_view(), standard);
+    assert_eq!(s.expanded_at(3.0, schematic).unwrap().shapes.len(), 3);
+    assert_eq!(count(&s, 3.0), 5, "its own pieces untouched");
+}

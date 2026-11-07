@@ -25,6 +25,10 @@ pub const SPAN_TOLERANCE: f64 = 1e-9;
 /// The plan's cut height above the floor, metres (docs/adr/0719 §2; the contract's `PLAN_CUT_HEIGHT`).
 pub const PLAN_CUT: f64 = 1.1;
 
+/// Up to 1:`SWING_UP_TO` a schematic drawing shows a door's swing and a window's faces; beyond (1:200 and smaller) a
+/// door is its leaf and a window its glass in the wall's hole (docs/adr/3010).
+pub const SWING_UP_TO: f64 = 150.0;
+
 /// What an opening is (the contract's `OpeningForm`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Form {
@@ -688,17 +692,21 @@ pub struct Mark {
     pub part: Part,
 }
 
-/// What a piece of an opening is (docs/adr/3009): its pen follows from it.
+/// What a piece of an opening is (docs/adr/3009): its pen and the scales it is drawn at (docs/adr/3010) follow from it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Part {
-    /// Kasa: the frame's sides and a window's frame faces.
+    /// Kasa: the frame's sides, cut at the jambs.
     Frame,
+    /// A window's faces: its frame's lines along the light, on the wall's faces.
+    Face,
     /// Kanat: a leaf, a sliding sash, a fixed panel.
     Leaf,
     /// Açılma yayı: a leaf's swing, a revolving door's drum.
     Swing,
-    /// Cam and kayıt: a window's glass line and its mullions.
+    /// Cam: a window's glass line.
     Glass,
+    /// Kayıt: a window's mullions.
+    Mullion,
     /// Denizlik.
     Sill,
     /// Eşik.
@@ -716,13 +724,35 @@ pub enum Part {
 }
 
 impl Part {
-    /// Its share of the opening's pen: the frame and the leaves the whole, the rest ISO 128-23's narrow line, half
-    /// the wide (Table 2's 1:2): a door's swing, a window's glass, a sill, a threshold, a casing, a track, the use
-    /// zone and a recess's lines.
+    /// Its share of the opening's pen: the frame, a window's faces and the leaves the whole, the rest ISO 128-23's
+    /// narrow line, half the wide (Table 2's 1:2): a door's swing, a window's glass and mullions, a sill, a threshold,
+    /// a casing, a track, the use zone and a recess's lines.
     pub fn pen(self) -> f64 {
         match self {
-            Part::Frame | Part::Leaf => 1.0,
+            Part::Frame | Part::Face | Part::Leaf => 1.0,
             _ => 0.5,
+        }
+    }
+
+    /// Whether a drawing at `view` shows it (docs/adr/3010, ADV-15), as a Revit door's subcategories show by the
+    /// view's detail level: the detail is the walls' (`wall::View`), from the sheet's scale or the view's own.
+    /// - schematic beyond 1:[`SWING_UP_TO`] (1:200): the leaves and a window's glass in the wall's hole;
+    /// - schematic (1:100): and a door's swing and a window's faces;
+    /// - standard (1:50) and detailed (1:20): every part, the frame's sides, the mullions, the sill, the threshold, a
+    ///   sliding leaf's track and the casings too.
+    ///
+    /// The use zone the designer asked for, a recess's outline and a flue's cross at every scale.
+    pub fn shown_at(self, view: wall::View) -> bool {
+        let schematic = view.detail == wall::Detail::Schematic;
+        match self {
+            Part::Leaf | Part::Glass | Part::Zone | Part::Outline | Part::Cross => true,
+            Part::Swing | Part::Face => !schematic || view.scale <= SWING_UP_TO,
+            Part::Frame
+            | Part::Mullion
+            | Part::Sill
+            | Part::Threshold
+            | Part::Track
+            | Part::Casing => !schematic,
         }
     }
 }
@@ -973,6 +1003,32 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     symbol_parts(place, spec).into_iter().map(|(_, s)| s).collect()
 }
 
+/// [`pieces`] as a drawing at `view` shows them (docs/adr/3010): a door's and a window's parts by the view's detail and
+/// scale ([`Part::shown_at`]), the other forms' all. [`pieces`] is every part, as the 1:20 detail shows them.
+///
+/// Drawn without its frame's sides, a window's faces, glass and leaves span the whole hole, jamb to jamb: else the frame
+/// it no longer draws leaves a gap its width at each end (6 cm, 0.6 mm at 1:100). Its use zone stays the light's. A
+/// door keeps its leaf's width and its hinge.
+pub fn pieces_at(place: &[Vec2], spec: &Spec, view: wall::View) -> Vec<Mark> {
+    let mut out = pieces(place, spec);
+    if spec.form == Form::Window
+        && !Part::Frame.shown_at(view)
+        && (spec.frame > 0.0 || spec.build.fit > 0.0)
+    {
+        let mut bare = spec.clone();
+        bare.frame = 0.0;
+        bare.build.fit = 0.0;
+        let zone: Vec<Mark> = out.into_iter().filter(|m| m.part == Part::Zone).collect();
+        out = pieces(place, &bare)
+            .into_iter()
+            .filter(|m| m.part != Part::Zone)
+            .chain(zone)
+            .collect();
+    }
+    out.retain(|m| m.part.shown_at(view));
+    out
+}
+
 /// [`symbol`]'s pieces, each with what it is (docs/adr/3009): its pen follows from that.
 pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
     if !matches!(spec.form, Form::Door | Form::Window) {
@@ -1007,8 +1063,14 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
     let depth = dr - dl;
     match spec.form {
         Form::Window => {
-            out.push((Part::Frame, line(p.along_start(fit + fr, dl), p.along_end(fit + fr, dl))));
-            out.push((Part::Frame, line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr))));
+            out.push((
+                Part::Face,
+                line(p.along_start(fit + fr, dl), p.along_end(fit + fr, dl)),
+            ));
+            out.push((
+                Part::Face,
+                line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr)),
+            ));
             if spec.operation == Operation::Slide && spec.leaves > 2 {
                 out.extend(leaves(multi_slide(&p, spec, true)));
             } else if spec.operation == Operation::Slide {
@@ -1029,7 +1091,10 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
             let n = f64::from(b.mullions);
             for i in 1..=b.mullions {
                 let s = fit + fr + clear * f64::from(i) / (n + 1.0);
-                out.push((Part::Glass, line(p.along_start(s, dl), p.along_start(s, dr))));
+                out.push((
+                    Part::Mullion,
+                    line(p.along_start(s, dl), p.along_start(s, dr)),
+                ));
             }
             if let Some(board) = b.sill_board.filter(|v| *v > 0.0) {
                 // The sill board on the face away from the side it opens to.

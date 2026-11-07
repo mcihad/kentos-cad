@@ -81,6 +81,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   panelinde Katman satırı olsun; web'in DXF yazıcısı EK-4 katmanındaki taramaları "-T" katmanına koysun.
 - M10 / ADR 3009: web'in çizimi parçanın `weightScale`'ini (açıklığın yayı, camı; duvarın malzeme sınırları 0,5) nesnenin
   kalınlığıyla çarpsın.
+- M11 / ADR 3010: web'in çizimi deponun duvar görünüşünü (`set_wall_view`) paftanın ölçeğine ve ekranın yakınlığına göre
+  seçsin; seçmedikçe kapı ve pencere webde her ölçekte bütün parçalarıyla (Uygulama) çizilir.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

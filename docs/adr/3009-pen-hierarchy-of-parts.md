@@ -58,8 +58,9 @@ Tarih: 2026-11-07. Durum: kabul (M10, ADV-14; plan S4).
 - **Ekran:** kalınlık gösterimi zaten açık (ADR 0793). 1:100'de 0,25 mm yaklaşık 1 piksel, yarısı da en az 1 piksel
   kalır; fark 1:50'de ve kâğıtta görünür.
 - **Kapsam dışı:**
-  - çizim ölçeğine göre çizgi grubu (1:100'de 0,35, 1:50'de 0,5; ISO Tablo 2): katman kalınlıkları bugün sabit
-    (ADV-15, M11–M12);
+  - çizim ölçeğine göre çizgi grubu: katman kalınlıkları bugün sabit (ADV-15, M12). ISO 128-23 §5 genişliği "çizimin
+    türüne, boyutuna ve ölçeğine göre" seçtirir; Tablo 2 grupları verir, ölçekle eşleştirmez. (7 Kasım düzeltmesi,
+    M11: ilk yazımda "1:100'de 0,35, 1:50'de 0,5" Tablo 2'ye mal edilmişti.)
   - kesme düzleminin önündeki parçaların uzun çizgi-noktalı kalın çizgisi (M13);
   - DXF'te parça başına kalınlık: DXF parçaları katmanın kalınlığını (ByLayer) taşımayı sürdürür.
 
@@ -99,6 +100,6 @@ Tarih: 2026-11-07. Durum: kabul (M10, ADV-14; plan S4).
 
 ## Kalanlar
 
-- Ölçeğe göre çizgi grubu (M11–M12), kesme düzleminin önündeki çizgiler (M13).
+- Ölçeğe göre çizgi grubu (M12), kesme düzleminin önündeki çizgiler (M13).
 - DXF'te parça başına kalınlık; kapı yayının DXF'te ayrı katmanı (EK-4 bir ad vermiyor).
 - Kolon, merdiven ve döşemenin görünen ve kesilen parçalarına rol.

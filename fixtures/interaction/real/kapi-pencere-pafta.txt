@@ -1,0 +1,76 @@
+# M11 (docs/adr/3010) on a sheet, as a hand does it: the 11 × 8 m walls, a door and a window, a sheet from the + beside
+# Model (Mimari pafta, its map at the project's 1:100), then the map's Ölçek set to 50 and to 200. Each time Sığdır,
+# then eight wheel turns in over the door and the window: 1:100 the door's leaf and swing and the window's three lines
+# jamb to jamb; 1:50 the frame's sides too; 1:200 the leaf and the glass alone.
+# The map stays selected after its first change: the second goes straight to its Ölçek field.
+# Where they lie on the paper (measured on 8 November 2026, A1 at %25: 0.944 px a millimetre, the map's centre
+# (Y 5.5, X 3.6 m) at (641, 503)): the door 2.5 m left of the centre and 3.6 m below, the window 0.5 m right; at 1:N
+# a metre is 1000/N mm.
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 115 84    # araç: Dikdörtgen duvar
+wait 400
+move 500 450
+type 0,0
+key Return
+type 11,8
+key Return
+wait 500
+key Escape
+key Home
+wait 800
+click 452 75    # araç: Kapı
+wait 400
+click 360 748   # kapı: alttaki dış duvar
+wait 300
+key Escape
+key Escape
+click 509 75    # araç: Pencere
+wait 400
+click 559 748   # pencere: alttaki dış duvar
+wait 300
+key Escape
+key Escape
+key Home
+wait 1000
+click 96 820    # Model'in yanındaki +: yeni pafta
+wait 1500
+click 927 739   # Paftayı oluştur
+wait 2500
+shot p00-pafta
+wheel 631 537 8   # 1:100: kapı ile pencerenin arasına yaklaş
+wait 1500
+shot p01-1-100
+click 1050 56   # Sığdır
+wait 800
+click 110 283   # Öğeler: Görünüm penceresi
+wait 600
+wheel 1280 600 -6   # Öğe panelini aşağı kaydır
+wait 600
+click 1350 471   # Ölçek (1:...)
+key ctrl+a
+type 50
+key Return
+wait 1500
+key Escape
+wait 300
+wheel 622 571 8   # 1:50: kapı ile pencerenin arasına yaklaş
+wait 1500
+shot p02-1-50
+click 1050 56   # Sığdır
+wait 800
+# Görünüm penceresi hâlâ seçili ve panel kaydırılmış: satırına yeniden tıklamak seçimi kaldırırdı.
+click 1350 471   # Ölçek (1:...)
+key ctrl+a
+type 200
+key Return
+wait 1500
+key Escape
+wait 300
+wheel 636 520 8   # 1:200: kapı ile pencerenin arasına yaklaş
+wait 1500
+shot p03-1-200

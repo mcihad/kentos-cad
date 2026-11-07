@@ -690,9 +690,9 @@ impl Store {
         }
         self.wall_view = view;
         let walls: Vec<u32> = (0..self.slots.len() as u32)
-            // A space's label is sized on paper too (docs/adr/0342 §2).
+            // A space's label is sized on paper too (docs/adr/0342 §2); a door's parts follow the detail (docs/adr/3010).
             .filter(|&s| {
-                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Space { .. } | Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. }))
+                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Opening { .. } | Shape::Space { .. } | Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. }))
             })
             .collect();
         for s in &walls {
@@ -758,26 +758,28 @@ impl Store {
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2).
             Shape::Space { parts, space } => self.space_pieces(parts, space, true, view.scale),
-            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2); a flue's cross, and the outline of one
-            // plan does not cut dashed (docs/adr/0719 §2).
-            Shape::Opening { place, opening, .. } => crate::geom::opening::pieces(place, opening)
-                .into_iter()
-                .map(|m| crate::block::Piece {
-                    shape: m.shape,
-                    color: None,
-                    line_weight: None,
-                    by_layer: Vec::new(),
-                    gates: Vec::new(),
-                    // Its share of the opening's pen (docs/adr/3009): a swing, glass or sill the narrow line.
-                    stroke: crate::block::PieceStroke {
-                        line_type: m.dashed.then(|| "dashed".to_owned()),
-                        weight_scale: Some(m.part.pen()).filter(|s| *s != 1.0),
-                        ..Default::default()
-                    },
-                    attribute: None,
-                    annotation_origin: None,
-                })
-                .collect(),
+            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2) the view's detail and scale show
+            // (docs/adr/3010); a flue's cross, and the outline of one plan does not cut dashed (docs/adr/0719 §2).
+            Shape::Opening { place, opening, .. } => {
+                crate::geom::opening::pieces_at(place, opening, view)
+                    .into_iter()
+                    .map(|m| crate::block::Piece {
+                        shape: m.shape,
+                        color: None,
+                        line_weight: None,
+                        by_layer: Vec::new(),
+                        gates: Vec::new(),
+                        // Its share of the opening's pen (docs/adr/3009): a swing, glass or sill the narrow line.
+                        stroke: crate::block::PieceStroke {
+                            line_type: m.dashed.then(|| "dashed".to_owned()),
+                            weight_scale: Some(m.part.pen()).filter(|s| *s != 1.0),
+                            ..Default::default()
+                        },
+                        attribute: None,
+                        annotation_origin: None,
+                    })
+                    .collect()
+            }
             _ => return (None, b),
         };
         self.expanded_of(pieces, b)
@@ -838,6 +840,7 @@ impl Store {
         let depends = matches!(
             it.shape,
             Shape::Wall { .. }
+                | Shape::Opening { .. }
                 | Shape::Space { .. }
                 | Shape::Grid { .. }
                 | Shape::Column { .. }
