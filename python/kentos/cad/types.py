@@ -74783,6 +74783,52 @@ class RoadSheetsSections(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadSource(_Model):
+    """A source a road answer was computed from, as it is now (docs/adr/1038, 1039): its id and revision.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadSource:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadSurfaceSource(_Model):
+    """The terrain surface a road answer was computed on (docs/adr/1038, 1039): its id and the digest of the sources it was
+    last accepted from (absent: never accepted).
+    """
+    id: str
+    built: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.built is not UNSET:
+            out["built"] = self.built
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadSurfaceSource:
+        return cls(
+            id=data["id"],
+            built=data.get("built", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadsEdit(_Model):
     """`cad.roads.edit`'s input.
 
@@ -76335,6 +76381,45 @@ class SectionSide(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SectionSources(_Model):
+    """What a set's sections are computed from, each as it is now (docs/adr/1039; ROAD-SEC-04): the set, its alignment,
+    its profile, template and superelevation schedule where it names them, and its terrain surface with the digest it
+    was last accepted from.
+    """
+    set: RoadSource
+    alignment: RoadSource
+    profile: RoadSource | None | Unset = UNSET
+    superelevation: RoadSource | None | Unset = UNSET
+    surface: RoadSurfaceSource | None | Unset = UNSET
+    template: RoadSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set.to_json()
+        out["alignment"] = self.alignment.to_json()
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        if self.template is not UNSET:
+            out["template"] = None if self.template is None else self.template.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionSources:
+        return cls(
+            set=RoadSource.from_json(data["set"]),
+            alignment=RoadSource.from_json(data["alignment"]),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else RoadSource.from_json(data["profile"]),
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else RoadSource.from_json(data["superelevation"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else RoadSurfaceSource.from_json(data["surface"]),
+            template=UNSET if "template" not in data else None if data["template"] is None else RoadSource.from_json(data["template"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SectionView(_Model):
     """A section view drawn: its station and km, its frame's lower left and upper right, its datum and top elevations, its
     cut and fill areas (m²) when the platform was built.
@@ -76571,14 +76656,20 @@ class SectionsEdit(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SectionsQueried(_Model):
-    """Output of `road.sections.query` v1."""
+    """Output of `road.sections.query` v1.
+    Attributes:
+        sources: With a set asked, what its sections are computed from, each as it is now (docs/adr/1039).
+    """
     sets: list[SectionSetReport]
     sections: list[SectionRow]
+    sources: SectionSources | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["sets"] = [e0.to_json() for e0 in self.sets]
         out["sections"] = [e0.to_json() for e0 in self.sections]
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else self.sources.to_json()
         return out
 
     @classmethod
@@ -76586,6 +76677,7 @@ class SectionsQueried(_Model):
         return cls(
             sets=[SectionSetReport.from_json(e0) for e0 in data["sets"]],
             sections=[SectionRow.from_json(e0) for e0 in data["sections"]],
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else SectionSources.from_json(data["sources"]),
         )
 
 
@@ -83647,40 +83739,17 @@ class StakeoutSent(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
-class StakeoutSource(_Model):
-    """A source a stakeout was computed from, as it is now (docs/adr/1038): its id and revision.
-    Attributes:
-        revision: Unit: version.
-    """
-    id: str
-    revision: int
-
-    def to_json(self) -> dict[str, Any]:
-        out: dict[str, Any] = {}
-        out["id"] = self.id
-        out["revision"] = self.revision
-        return out
-
-    @classmethod
-    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSource:
-        return cls(
-            id=data["id"],
-            revision=data["revision"],
-        )
-
-
-@dataclass(kw_only=True, slots=True)
 class StakeoutSources(_Model):
     """What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and
     profile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's
     earthwork volumes.
     """
-    corridor: StakeoutSource
-    alignment: StakeoutSource
-    profile: StakeoutSource
-    templates: list[StakeoutSource]
-    superelevation: StakeoutSource | None | Unset = UNSET
-    surface: StakeoutSurface | None | Unset = UNSET
+    corridor: RoadSource
+    alignment: RoadSource
+    profile: RoadSource
+    templates: list[RoadSource]
+    superelevation: RoadSource | None | Unset = UNSET
+    surface: RoadSurfaceSource | None | Unset = UNSET
     volumes: list[StakeoutVolume] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -83700,36 +83769,13 @@ class StakeoutSources(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> StakeoutSources:
         return cls(
-            corridor=StakeoutSource.from_json(data["corridor"]),
-            alignment=StakeoutSource.from_json(data["alignment"]),
-            profile=StakeoutSource.from_json(data["profile"]),
-            templates=[StakeoutSource.from_json(e0) for e0 in data["templates"]],
-            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else StakeoutSource.from_json(data["superelevation"]),
-            surface=UNSET if "surface" not in data else None if data["surface"] is None else StakeoutSurface.from_json(data["surface"]),
+            corridor=RoadSource.from_json(data["corridor"]),
+            alignment=RoadSource.from_json(data["alignment"]),
+            profile=RoadSource.from_json(data["profile"]),
+            templates=[RoadSource.from_json(e0) for e0 in data["templates"]],
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else RoadSource.from_json(data["superelevation"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else RoadSurfaceSource.from_json(data["surface"]),
             volumes=[StakeoutVolume.from_json(e0) for e0 in data["volumes"]] if "volumes" in data else UNSET,
-        )
-
-
-@dataclass(kw_only=True, slots=True)
-class StakeoutSurface(_Model):
-    """The terrain surface a stakeout was computed on (docs/adr/1038): its id and the digest of the sources it was last
-    accepted from (absent: never accepted).
-    """
-    id: str
-    built: str | None | Unset = UNSET
-
-    def to_json(self) -> dict[str, Any]:
-        out: dict[str, Any] = {}
-        out["id"] = self.id
-        if self.built is not UNSET:
-            out["built"] = self.built
-        return out
-
-    @classmethod
-    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSurface:
-        return cls(
-            id=data["id"],
-            built=data.get("built", UNSET),
         )
 
 
@@ -121270,8 +121316,10 @@ __all__ = [
     "RoadSheetsLaid",
     "RoadSheetsPlan",
     "RoadSheetsSections",
+    "RoadSource",
     "RoadSourceKind",
     "RoadSourceKindName",
+    "RoadSurfaceSource",
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",
@@ -121345,6 +121393,7 @@ __all__ = [
     "SectionSetDef",
     "SectionSetReport",
     "SectionSide",
+    "SectionSources",
     "SectionStations",
     "SectionView",
     "SectionsDraw",
@@ -121639,9 +121688,7 @@ __all__ = [
     "StakeoutSendFormat",
     "StakeoutSendFormatName",
     "StakeoutSent",
-    "StakeoutSource",
     "StakeoutSources",
-    "StakeoutSurface",
     "StakeoutVolume",
     "StandardBlockReference",
     "StandardConflict",

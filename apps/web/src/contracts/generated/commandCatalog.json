@@ -40751,7 +40751,7 @@
       "id": "road.sections.query",
       "version": 1,
       "title": "Enkesitleri sorgula",
-      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR 1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz, section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone, section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
+      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. Bir takım sorulunca kesitlerin neyden hesaplandığını sources'ta söyler (ADR 1039): takımın, aksının, boykesitinin, tip kesitinin ve dever çizelgesinin bugünkü sürümleri, arazinin son kabul özeti. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR 1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz, section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone, section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
       "aliases": [
         "enkesitsor"
       ],
@@ -40803,6 +40803,17 @@
               "$ref": "#/$defs/SectionSetReport"
             },
             "type": "array"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionSources"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a set asked, what its sections are computed from, each as it is now (docs/adr/1039)."
           }
         },
         "required": [
@@ -40827,6 +40838,17 @@
               "$ref": "#/$defs/SectionSetReport"
             },
             "type": "array"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionSources"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a set asked, what its sections are computed from, each as it is now (docs/adr/1039)."
           }
         },
         "required": [
@@ -167485,6 +167507,25 @@
       ],
       "type": "object"
     },
+    "RoadSource": {
+      "description": "A source a road answer was computed from, as it is now (docs/adr/1038, 1039): its id and revision.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
     "RoadSourceKind": {
       "description": "What kind of road source a drawing depends on (docs/adr/0911 §1).",
       "enum": [
@@ -167502,6 +167543,24 @@
         "platform"
       ],
       "type": "string"
+    },
+    "RoadSurfaceSource": {
+      "description": "The terrain surface a road answer was computed on (docs/adr/1038, 1039): its id and the digest of the sources it was\nlast accepted from (absent: never accepted).",
+      "properties": {
+        "built": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
     },
     "RoadWork": {
       "description": "What is drawn or tidied.",
@@ -168946,6 +169005,62 @@
         "kind",
         "hinge",
         "points"
+      ],
+      "type": "object"
+    },
+    "SectionSources": {
+      "description": "What a set's sections are computed from, each as it is now (docs/adr/1039; ROAD-SEC-04): the set, its alignment,\nits profile, template and superelevation schedule where it names them, and its terrain surface with the digest it\nwas last accepted from.",
+      "properties": {
+        "alignment": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "set": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "superelevation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surface": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSurfaceSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "template": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "set",
+        "alignment"
       ],
       "type": "object"
     },
@@ -175866,41 +175981,22 @@
       ],
       "type": "string"
     },
-    "StakeoutSource": {
-      "description": "A source a stakeout was computed from, as it is now (docs/adr/1038): its id and revision.",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "revision": {
-          "format": "uint32",
-          "minimum": 0,
-          "type": "integer",
-          "x-unit": "version"
-        }
-      },
-      "required": [
-        "id",
-        "revision"
-      ],
-      "type": "object"
-    },
     "StakeoutSources": {
       "description": "What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and\nprofile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's\nearthwork volumes.",
       "properties": {
         "alignment": {
-          "$ref": "#/$defs/StakeoutSource"
+          "$ref": "#/$defs/RoadSource"
         },
         "corridor": {
-          "$ref": "#/$defs/StakeoutSource"
+          "$ref": "#/$defs/RoadSource"
         },
         "profile": {
-          "$ref": "#/$defs/StakeoutSource"
+          "$ref": "#/$defs/RoadSource"
         },
         "superelevation": {
           "anyOf": [
             {
-              "$ref": "#/$defs/StakeoutSource"
+              "$ref": "#/$defs/RoadSource"
             },
             {
               "type": "null"
@@ -175910,7 +176006,7 @@
         "surface": {
           "anyOf": [
             {
-              "$ref": "#/$defs/StakeoutSurface"
+              "$ref": "#/$defs/RoadSurfaceSource"
             },
             {
               "type": "null"
@@ -175919,7 +176015,7 @@
         },
         "templates": {
           "items": {
-            "$ref": "#/$defs/StakeoutSource"
+            "$ref": "#/$defs/RoadSource"
           },
           "type": "array"
         },
@@ -175935,24 +176031,6 @@
         "alignment",
         "profile",
         "templates"
-      ],
-      "type": "object"
-    },
-    "StakeoutSurface": {
-      "description": "The terrain surface a stakeout was computed on (docs/adr/1038): its id and the digest of the sources it was last\naccepted from (absent: never accepted).",
-      "properties": {
-        "built": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "id": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "id"
       ],
       "type": "object"
     },

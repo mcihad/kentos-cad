@@ -107,26 +107,26 @@ pub struct StakeRow {
     pub ground_offset: Option<f64>,
 }
 
-/// A source a stakeout was computed from, as it is now (docs/adr/1038): its id and revision.
+/// A source a road answer was computed from, as it is now (docs/adr/1038, 1039): its id and revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
-pub struct StakeoutSource {
+pub struct RoadSource {
     pub id: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub revision: u32,
 }
 
-/// The terrain surface a stakeout was computed on (docs/adr/1038): its id and the digest of the sources it was last
-/// accepted from (absent: never accepted).
+/// The terrain surface a road answer was computed on (docs/adr/1038, 1039): its id and the digest of the sources it was
+/// last accepted from (absent: never accepted).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
-pub struct StakeoutSurface {
+pub struct RoadSurfaceSource {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -155,16 +155,16 @@ pub struct StakeoutVolume {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StakeoutSources {
-    pub corridor: StakeoutSource,
-    pub alignment: StakeoutSource,
-    pub profile: StakeoutSource,
-    pub templates: Vec<StakeoutSource>,
+    pub corridor: RoadSource,
+    pub alignment: RoadSource,
+    pub profile: RoadSource,
+    pub templates: Vec<RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub superelevation: Option<StakeoutSource>,
+    pub superelevation: Option<RoadSource>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    pub surface: Option<StakeoutSurface>,
+    pub surface: Option<RoadSurfaceSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StakeoutVolume>>", optional))]
     pub volumes: Vec<StakeoutVolume>,

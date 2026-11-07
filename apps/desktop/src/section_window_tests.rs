@@ -614,3 +614,14 @@ fn screens_missing() {
         println!("{}", file.display());
     }
 }
+
+/// ROAD-SEC-04 (docs/adr/1039): Enkesit says what a set's sections are computed from, as the query does.
+#[test]
+fn the_window_says_what_the_sections_are_computed_from() {
+    let mut app = app(true);
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    let said = app.section_window.as_ref().expect("open").preview.sources.clone().expect("the sources");
+    assert!(said.starts_with("Kaynaklar: takım k-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"), "{said}");
+    assert!(said.contains("arazi t-1 (kabul edilmedi)"), "{said}");
+}

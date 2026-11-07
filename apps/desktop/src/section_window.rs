@@ -418,6 +418,8 @@ pub struct Preview {
     /// The sections whose design lies over ground the surface does not give, as the query's warning says them
     /// (docs/adr/1034).
     pub(crate) missing: Option<String>,
+    /// What the sections are computed from, as the query says it (docs/adr/1039).
+    pub(crate) sources: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -601,6 +603,7 @@ impl App {
                     typed => match road_sections::preview(&doc.model, &def, typed.and_then(Result::ok).as_ref()) {
                         Err(e) => Preview { why: Some(e), ..Preview::default() },
                         Ok((rows, warnings)) => Preview {
+                            sources: Some(sources_words(&kentos_native_application::road_sections_query::sources_of(&doc.model, &def))),
                             rows,
                             why: warnings.iter().find(|w| w.code == "section_surface_gone").map(|w| w.message.clone()),
                             open: warnings.iter().find(|w| w.code == "section_open").map(|w| w.message.clone()),
@@ -1481,6 +1484,9 @@ impl App {
         if let Some(missing) = &w.preview.missing {
             col = col.push(label::caption(missing.clone()).style(warn));
         }
+        if let Some(sources) = &w.preview.sources {
+            col = col.push(label::caption(sources.clone()).style(muted));
+        }
         if stale {
             col = col.push(label::caption("Aks değişti: km'leri denetleyip aksa yeniden bağlayın.").style(warn));
         }
@@ -1539,6 +1545,21 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// The sources a set's sections are computed from in a line (docs/adr/1039).
+fn sources_words(s: &kentos_commands::SectionSources) -> String {
+    let mut words = format!("Kaynaklar: takım {} ({}), aks {} ({})", s.set.id, s.set.revision, s.alignment.id, s.alignment.revision);
+    for (what, src) in [("boykesit", &s.profile), ("tip kesit", &s.template), ("dever", &s.superelevation)] {
+        if let Some(x) = src {
+            words.push_str(&format!(", {what} {} ({})", x.id, x.revision));
+        }
+    }
+    if let Some(g) = &s.surface {
+        let built = g.built.as_ref().map_or("kabul edilmedi".to_owned(), |b| format!("kabul {}…", &b[..b.len().min(8)]));
+        words.push_str(&format!(", arazi {} ({built})", g.id));
+    }
+    words
 }
 
 /// A sloping ground for a template's look, 16 m either side of the axis (from 40 m before docs/adr/0975 §3: the layers

@@ -452,27 +452,30 @@ edit = _RoadSectionsEdit()
 
 class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQueried]):
     """``road.sections.query`` v1. Enkesitleri sorgula: Yol projesinin kesit hattı
-    takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set
-    verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile
-    yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen
-    kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda
-    tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini
-    (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar
-    buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse
-    dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve
-    dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde
-    integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip
-    kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan
-    üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu
-    alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu −
-    üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen)
-    takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin
-    yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR
-    1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz,
-    section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone,
-    section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project,
-    unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık
-    kurulamıyorsa geometrinin retleri.
+    takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. Bir
+    takım sorulunca kesitlerin neyden hesaplandığını sources'ta söyler (ADR 1039):
+    takımın, aksının, boykesitinin, tip kesitinin ve dever çizelgesinin bugünkü
+    sürümleri, arazinin son kabul özeti. set verilmezse her takımın raporu; verilince
+    yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit
+    hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin
+    dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu
+    iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda
+    section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi
+    üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin
+    araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç
+    arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde
+    araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa
+    pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve
+    tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin:
+    yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık
+    çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri
+    sorulunca neden söylenir. Her kesit şeridin yüzeyin dışında ya da boşluğunda kalan
+    öteleme aralıklarını missing'de verir (ADR 1034); tasarımın altına düşen aralıkta
+    kazı ve dolgu alana katılmaz, section_ground_missing söyler. Uyarılar:
+    section_set_stale, section_surface_gone, section_open, section_ground_missing,
+    pavement_unbuilt. Retler: not_a_road_project, unknown_section_set,
+    invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa
+    geometrinin retleri.
     """
     __slots__ = ()
     id = "road.sections.query"
@@ -494,25 +497,27 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
         expected: Expected | None = None,
     ) -> SectionsQueried:
         """Enkesitleri sorgula: Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün
-        kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu;
-        verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o
-        km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği
-        her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu
-        ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir;
-        kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter.
-        Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu
-        şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı
-        (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali.
-        Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı
-        varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon
-        ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı
-        (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki).
-        Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km
-        listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin yüzeyin
-        dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR 1034);
-        tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz, section_ground_missing
-        söyler. Uyarılar: section_set_stale, section_surface_gone, section_open,
-        section_ground_missing, pavement_unbuilt. Retler: not_a_road_project,
+        kuruldukları gibi verir; hiçbir şey yazmaz. Bir takım sorulunca kesitlerin neyden
+        hesaplandığını sources'ta söyler (ADR 1039): takımın, aksının, boykesitinin, tip
+        kesitinin ve dever çizelgesinin bugünkü sürümleri, arazinin son kabul özeti. set
+        verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile
+        yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen
+        kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda
+        tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini
+        (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar
+        buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse
+        dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve
+        dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde
+        integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip
+        kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan
+        üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu
+        alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu −
+        üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen)
+        takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin
+        yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR
+        1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz,
+        section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone,
+        section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project,
         unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık
         kurulamıyorsa geometrinin retleri.
 

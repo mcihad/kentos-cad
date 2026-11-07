@@ -390,6 +390,31 @@ pub struct SectionLayer {
     pub area: f64,
 }
 
+/// What a set's sections are computed from, each as it is now (docs/adr/1039; ROAD-SEC-04): the set, its alignment,
+/// its profile, template and superelevation schedule where it names them, and its terrain surface with the digest it
+/// was last accepted from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SectionSources {
+    pub set: crate::RoadSource,
+    pub alignment: crate::RoadSource,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile: Option<crate::RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub template: Option<crate::RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<crate::RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface: Option<crate::RoadSurfaceSource>,
+}
+
 /// Output of `road.sections.query` v1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -399,6 +424,10 @@ pub struct SectionLayer {
 pub struct SectionsQueried {
     pub sets: Vec<SectionSetReport>,
     pub sections: Vec<SectionRow>,
+    /// With a set asked, what its sections are computed from, each as it is now (docs/adr/1039).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<SectionSources>,
 }
 
 /// Input of `road.sections.draw` v1: a sample line set's sections (`set`: its id or name; only those at `stations`,

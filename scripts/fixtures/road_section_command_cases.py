@@ -763,13 +763,33 @@ def sections_cases():
 
 # ── road.sections.query ────────────────────────────────────────────────────────────────────────────────────────────
 
+def sources_of(asked, road):
+    """Docs/adr/1039: what the asked set's sections are computed from, each as `road` has it now; an id the project
+    does not have reads revision 0."""
+    d = next(x for x in road["sections"] if x["id"] == asked or x["name"].lower() == asked.lower())
+
+    def rev(kind, id_):
+        return next((x.get("revision", 0) for x in road.get(kind, []) if x["id"] == id_), 0)
+    out = {"set": {"id": d["id"], "revision": d.get("revision", 0)},
+           "alignment": {"id": d["alignment"], "revision": rev("alignments", d["alignment"])}}
+    for key, kind in (("profile", "profiles"), ("template", "templates"), ("superelevation", "superelevations")):
+        if d.get(key):
+            out[key] = {"id": d[key], "revision": rev(kind, d[key])}
+    if d.get("surface"):
+        sf = next((x for x in road.get("surfaces", []) if x["id"] == d["surface"]), None)
+        out["surface"] = {"id": d["surface"], **({"built": sf["built"]} if sf and sf.get("built") else {})}
+    return out
+
+
 def query_cases():
     templates, start = [TK1, TK2], [S1, S2]
     cases = []
 
     def q(name, input_, out, warns=(), setup_=None, sets=start, op="execute", supers=None):
-        result = completed(None, warns) if op == "validate" else completed(out, warns)
         road = road_of(templates, sets, supers=supers)
+        if out is not None and input_.get("set") and "sections" in out:
+            out = {**out, "sources": sources_of(input_["set"], road)}
+        result = completed(None, warns) if op == "validate" else completed(out, warns)
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road})], setup_))
 
     def no(name, input_, result, setup_=None, sets=start):
@@ -840,8 +860,10 @@ def query_cases():
         at = stations_of(d) if stations_ is None or sup_ else stations_
         rows_, warns_ = sections(d, at, tpls)
         input_ = {"set": "k-1", **({"stations": stations_} if stations_ and not sup_ else {})}
-        cases.append(case(name, [step("execute", input_, completed({"sets": [report(d)], "sections": rows_}, warns_),
-                                      {**UNCHANGED, "road": road_of(tpls, [d, S2], supers=SUPERS if sup_ else None)})],
+        road_ = road_of(tpls, [d, S2], supers=SUPERS if sup_ else None)
+        cases.append(case(name, [step("execute", input_, completed({"sets": [report(d)], "sections": rows_,
+                                                                     "sources": sources_of("k-1", road_)}, warns_),
+                                      {**UNCHANGED, "road": road_})],
                           setup(templates=tpls, sets=[d, S2], supers=SUPERS if sup_ else None)))
     out, warns = one(S1, [200.0])
     q("Plan cevabı verir", {"set": "k-1", "stations": [200.0]}, out, warns, op="plan")

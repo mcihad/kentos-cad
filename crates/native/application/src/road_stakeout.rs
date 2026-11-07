@@ -286,26 +286,26 @@ pub fn preview(doc: &Document, input: &StakeoutQuery) -> Result<(StakeoutQueried
 /// length where the table has it), Y (east), X (north) and Z, in the table's order.
 /// What the corridor's stakeout is computed from, each as it is now (docs/adr/1038).
 fn sources_of(doc: &Document, def: &kentos_commands::CorridorDef) -> kentos_commands::StakeoutSources {
-    use kentos_commands::{StakeoutSource, StakeoutSurface, StakeoutVolume};
+    use kentos_commands::{RoadSource, RoadSurfaceSource, StakeoutVolume};
     let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
     let profile = doc.road_profiles().iter().find(|p| p.id == def.profile).map_or(0, |p| p.revision);
-    let mut templates: Vec<StakeoutSource> = Vec::new();
+    let mut templates: Vec<RoadSource> = Vec::new();
     for r in &def.regions {
         if !templates.iter().any(|t| t.id == r.template) {
             let revision = doc.road_templates().iter().find(|t| t.id == r.template).map_or(0, |t| t.revision);
-            templates.push(StakeoutSource { id: r.template.clone(), revision });
+            templates.push(RoadSource { id: r.template.clone(), revision });
         }
     }
     kentos_commands::StakeoutSources {
-        corridor: StakeoutSource { id: def.id.clone(), revision: def.revision },
-        alignment: StakeoutSource { id: def.alignment.clone(), revision: alignment },
-        profile: StakeoutSource { id: def.profile.clone(), revision: profile },
+        corridor: RoadSource { id: def.id.clone(), revision: def.revision },
+        alignment: RoadSource { id: def.alignment.clone(), revision: alignment },
+        profile: RoadSource { id: def.profile.clone(), revision: profile },
         templates,
-        superelevation: def.superelevation.as_ref().map(|id| StakeoutSource {
+        superelevation: def.superelevation.as_ref().map(|id| RoadSource {
             id: id.clone(),
             revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
         }),
-        surface: Some(StakeoutSurface {
+        surface: Some(RoadSurfaceSource {
             id: def.surface.clone(),
             built: crate::road_terrains::surfaces(doc).iter().find(|s| s.id == def.surface).and_then(|s| s.built.clone()),
         }),
