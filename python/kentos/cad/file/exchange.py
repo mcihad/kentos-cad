@@ -22,29 +22,30 @@ if TYPE_CHECKING:
 
 
 class _FileExchangeCheck(LocalCommand[ExchangeCheck, ExchangeChecked, ExchangeChecked]):
-    """``file.exchange.check`` v1. Devir denetimi: Çizimi (layers boşsa biçimin yazıcısının
-    varsayılan katmanlarını) seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp,
-    dxf) KentOS'un yazıcısıyla geçici bir dosyaya yazar, KentOS'un aynı biçim
-    okuyucusuyla çizimin boş bir kopyasına (ayarlar ve katmanlar, nesnesiz) geri okur ve
-    nesne nesne karşılaştırır; dosya silinir, açık çizim değişmez. Eşleme: kalıcı
-    kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en yakın
-    nesne. Sayısal (numeric): geri okunan her köşenin özgün geometriye uzaklığı (çizgi,
-    yay, daire kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa
-    kot ve ölçü farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın nesnesi ve
-    toleransı (metre, varsayılan 0,001) aşanların sayısı. Anlamsal (losses): notWritten
-    (türüne göre), kindChanged (circle → polygon gibi), chorded (eğri kirişe döndü),
-    zLost, zAdded, mLost, attrLost, attrChanged, attrAdded (öznitelik adıyla), styleLost
-    (color, lineWeight, symbol), identityLost (kalıcı kimlik korunmadı), extra
-    (eşleşmeyen geri okunan); her biri sayısı ve özgün nesnelerin kimlikleriyle (en çok
-    100). Yazıcının ve okuyucunun uyarıları writer ve reader'da. Sonuç KentOS'un
-    yazıcısıyla okuyucusunun birlikte yaptığıdır; başka bir programın okuduğu
-    kendisinindir. Retler: invalid_tolerance, layer_not_found (layers[i]), yazıcının
-    kendi reddi (export.<alan>), exchange_unreadable, file_unwritable.
+    """``file.exchange.check`` v1. Dışa aktarma kaybı denetimi: Çizimi (layers boşsa
+    biçimin yazıcısının varsayılan katmanlarını) seçilen değişim biçimine (gpkg,
+    parquet, fgb, gml, shp, dxf) KentOS'un yazıcısıyla geçici bir dosyaya yazar,
+    KentOS'un aynı biçim okuyucusuyla çizimin boş bir kopyasına (ayarlar ve katmanlar,
+    nesnesiz) geri okur ve nesne nesne karşılaştırır; dosya silinir, açık çizim
+    değişmez. Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı
+    ve kutu merkezi en yakın nesne. Sayısal (numeric): geri okunan her köşenin özgün
+    geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri, NURBS 1024 parçalık
+    çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en
+    büyükleri, en büyük kaymanın nesnesi ve toleransı (metre, varsayılan 0,001)
+    aşanların sayısı. Anlamsal (losses): notWritten (türüne göre), kindChanged (circle →
+    polygon gibi), chorded (eğri kirişe döndü), zLost, zAdded, mLost, attrLost,
+    attrChanged, attrAdded (öznitelik adıyla), styleLost (color, lineWeight, symbol),
+    identityLost (kalıcı kimlik korunmadı), extra (eşleşmeyen geri okunan); her biri
+    sayısı ve özgün nesnelerin kimlikleriyle (en çok 100). Yazıcının ve okuyucunun
+    uyarıları writer ve reader'da. Sonuç KentOS'un yazıcısıyla okuyucusunun birlikte
+    yaptığıdır; başka bir programın okuduğu kendisinindir. Retler: invalid_tolerance,
+    layer_not_found (layers[i]), yazıcının kendi reddi (export.<alan>),
+    exchange_unreadable, file_unwritable.
     """
     __slots__ = ()
     id = "file.exchange.check"
     version = 1
-    title = "Devir denetimi"
+    title = "Dışa aktarma kaybı denetimi"
     scope = "document"
     input_type = ExchangeCheck
     output_type = ExchangeChecked
@@ -61,24 +62,24 @@ class _FileExchangeCheck(LocalCommand[ExchangeCheck, ExchangeChecked, ExchangeCh
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ExchangeChecked:
-        """Devir denetimi: Çizimi (layers boşsa biçimin yazıcısının varsayılan katmanlarını)
-        seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp, dxf) KentOS'un yazıcısıyla
-        geçici bir dosyaya yazar, KentOS'un aynı biçim okuyucusuyla çizimin boş bir
-        kopyasına (ayarlar ve katmanlar, nesnesiz) geri okur ve nesne nesne karşılaştırır;
-        dosya silinir, açık çizim değişmez. Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı
-        (nokta, çizgi, alan) aynı ve kutu merkezi en yakın nesne. Sayısal (numeric): geri
-        okunan her köşenin özgün geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri,
-        NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve
-        alan farkı; en büyükleri, en büyük kaymanın nesnesi ve toleransı (metre, varsayılan
-        0,001) aşanların sayısı. Anlamsal (losses): notWritten (türüne göre), kindChanged
-        (circle → polygon gibi), chorded (eğri kirişe döndü), zLost, zAdded, mLost,
-        attrLost, attrChanged, attrAdded (öznitelik adıyla), styleLost (color, lineWeight,
-        symbol), identityLost (kalıcı kimlik korunmadı), extra (eşleşmeyen geri okunan); her
-        biri sayısı ve özgün nesnelerin kimlikleriyle (en çok 100). Yazıcının ve okuyucunun
-        uyarıları writer ve reader'da. Sonuç KentOS'un yazıcısıyla okuyucusunun birlikte
-        yaptığıdır; başka bir programın okuduğu kendisinindir. Retler: invalid_tolerance,
-        layer_not_found (layers[i]), yazıcının kendi reddi (export.<alan>),
-        exchange_unreadable, file_unwritable.
+        """Dışa aktarma kaybı denetimi: Çizimi (layers boşsa biçimin yazıcısının varsayılan
+        katmanlarını) seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp, dxf) KentOS'un
+        yazıcısıyla geçici bir dosyaya yazar, KentOS'un aynı biçim okuyucusuyla çizimin boş
+        bir kopyasına (ayarlar ve katmanlar, nesnesiz) geri okur ve nesne nesne
+        karşılaştırır; dosya silinir, açık çizim değişmez. Eşleme: kalıcı kimliği aynı olan,
+        yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en yakın nesne. Sayısal
+        (numeric): geri okunan her köşenin özgün geometriye uzaklığı (çizgi, yay, daire
+        kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa kot ve ölçü
+        farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın nesnesi ve toleransı
+        (metre, varsayılan 0,001) aşanların sayısı. Anlamsal (losses): notWritten (türüne
+        göre), kindChanged (circle → polygon gibi), chorded (eğri kirişe döndü), zLost,
+        zAdded, mLost, attrLost, attrChanged, attrAdded (öznitelik adıyla), styleLost
+        (color, lineWeight, symbol), identityLost (kalıcı kimlik korunmadı), extra
+        (eşleşmeyen geri okunan); her biri sayısı ve özgün nesnelerin kimlikleriyle (en çok
+        100). Yazıcının ve okuyucunun uyarıları writer ve reader'da. Sonuç KentOS'un
+        yazıcısıyla okuyucusunun birlikte yaptığıdır; başka bir programın okuduğu
+        kendisinindir. Retler: invalid_tolerance, layer_not_found (layers[i]), yazıcının
+        kendi reddi (export.<alan>), exchange_unreadable, file_unwritable.
 
         Args:
             doc: The drawing it works on.
@@ -164,7 +165,7 @@ class _FileExchangeCheck(LocalCommand[ExchangeCheck, ExchangeChecked, ExchangeCh
 
 
 check = _FileExchangeCheck()
-"""Devir denetimi (``file.exchange.check``)."""
+"""Dışa aktarma kaybı denetimi (``file.exchange.check``)."""
 
 
 __all__ = ["check"]

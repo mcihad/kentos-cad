@@ -4,12 +4,12 @@
   "commands": [
     {
       "id": "file.exchangeCheck",
-      "title": "Devir denetimi…",
-      "short": "Devir denetimi",
+      "title": "Dışa aktarma kaybı denetimi…",
+      "short": "Aktarma kaybı",
       "icon": "exchangeCheck",
       "description": "Çizimi seçilen değişim biçimine (GeoPackage, GeoParquet, FlatGeobuf, GML, Shapefile, DXF) KentOS'un yazıcısıyla geçici bir dosyaya yazar ve KentOS'un okuyucusuyla geri okur (file.exchange.check; ADR 1660): sayısal sapma (köşe kayması, kot, ölçü, uzunluk, alan) ve anlamsal kayıplar (yazılmayan, türü değişen, kirişe dönen, kaybolan kot/ölçü/öznitelik/stil/kimlik) ayrı söylenir. Salt okunur; dosya silinir; Kayıplıları seç.",
       "aliases": [
-        "DEVIRDENETIMI",
+        "AKTARMAKAYBI",
         "KAYIPRAPORU",
         "ROUNDTRIP"
       ],

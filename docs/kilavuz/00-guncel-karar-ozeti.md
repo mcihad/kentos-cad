@@ -38,7 +38,7 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
-- **Devir denetimi (7 Kasım 2026; MAP-17, [ADR 1660](../../docs/adr/1660-exchange-round-trip-check.md)).**
+- **Dışa aktarma kaybı denetimi (7 Kasım 2026; MAP-17, [ADR 1660](../../docs/adr/1660-exchange-round-trip-check.md)).**
   `file.exchange.check` (headless): KentOS yazıcısı + okuyucusuyla gidiş-dönüş; `numeric` ve `losses` ayrı; ret
   `exchange_unreadable`; GeoParquet'in yay merkezi ilk noktaya göreli.
 - **Boru hattı denetimi (7 Kasım 2026; MAP-16, [ADR 1640](../../docs/adr/1640-gravity-pipe-check.md)).** `cad.pipes.check`

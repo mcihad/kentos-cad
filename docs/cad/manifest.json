@@ -3547,7 +3547,7 @@
   {
    "id": "file.exchangeCheck",
    "kind": "command",
-   "title": "Devir denetimi…",
+   "title": "Dışa aktarma kaybı denetimi…",
    "level": "query",
    "via": [
     "file.exchange.check"

@@ -952,7 +952,7 @@ KentOS→dış biçim→KentOS karşılaştırması yap. Sayısal hata ve semant
 kayıplar ayrı raporlansın. Hem kaynak hem türev değiştiğinde geri alma
 çatışma versin; kaybolan dış kaynakta proje açılabilsin.
 
-**7 Kasım 2026 — Devir denetimi ([ADR 1660](../docs/adr/1660-exchange-round-trip-check.md)).** Kapsam: **CAD + CBS**
+**7 Kasım 2026 — Dışa aktarma kaybı denetimi ([ADR 1660](../docs/adr/1660-exchange-round-trip-check.md)).** Kapsam: **CAD + CBS**
 (her modül). Kanıtlanan: `file.exchange.check` çizimi GeoPackage, GeoParquet, FlatGeobuf, GML, Shapefile ya da DXF'e
 KentOS'un yazıcısıyla yazıp okuyucusuyla geri okur; sayısal sapma (köşe kayması, kot, ölçü, uzunluk, alan) ile anlamsal
 kayıplar (yazılmayan, tür, kiriş, Z/M, öznitelik, stil, kimlik, fazla) ayrı raporlanır. Altı biçim GDAL `ogrinfo` ve

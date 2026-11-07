@@ -416,7 +416,7 @@ pub enum Dialog {
     ParcelsCheck,
     /// Boru hattı denetimi (pipes_check_window.rs, docs/adr/1640); its state is `App::pipes_check`.
     PipesCheck,
-    /// Devir denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
+    /// Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
     ExchangeCheck,
     /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
     Zoning,

@@ -1,4 +1,4 @@
-//! `file.exchange.check` v1 (plan/map-cad.md MAP-17, docs/adr/1660): Devir denetimi. The drawing's layers written to
+//! `file.exchange.check` v1 (plan/map-cad.md MAP-17, docs/adr/1660): Dışa aktarma kaybı denetimi. The drawing's layers written to
 //! an exchange format by KentOS's writer (the format's `file.export.*` on a copy of the drawing), read back by KentOS's
 //! reader (`file.import.*`) into an empty copy (the settings and layers, no objects), and compared:
 //!

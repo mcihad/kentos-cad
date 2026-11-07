@@ -14979,11 +14979,11 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
-        // Devir denetimi (plan/map-cad.md MAP-17, docs/adr/1660).
+        // Dışa aktarma kaybı denetimi (plan/map-cad.md MAP-17, docs/adr/1660).
         CommandDescriptor {
             id: crate::FILE_EXCHANGE_CHECK.into(),
             version: crate::FILE_EXCHANGE_CHECK_VERSION,
-            title: "Devir denetimi".into(),
+            title: "Dışa aktarma kaybı denetimi".into(),
             summary: "Çizimi (layers boşsa biçimin yazıcısının varsayılan katmanlarını) seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp, dxf) KentOS'un yazıcısıyla geçici bir dosyaya yazar, KentOS'un aynı biçim okuyucusuyla çizimin boş bir kopyasına (ayarlar ve katmanlar, nesnesiz) geri okur ve nesne nesne karşılaştırır; dosya silinir, açık çizim değişmez. \
                       Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en yakın nesne. \
                       Sayısal (numeric): geri okunan her köşenin özgün geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın nesnesi ve toleransı (metre, varsayılan 0,001) aşanların sayısı. \
@@ -14991,7 +14991,7 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       Sonuç KentOS'un yazıcısıyla okuyucusunun birlikte yaptığıdır; başka bir programın okuduğu kendisinindir. \
                       Retler: invalid_tolerance, layer_not_found (layers[i]), yazıcının kendi reddi (export.<alan>), exchange_unreadable, file_unwritable."
                 .into(),
-            aliases: vec!["devirdenetimi".into(), "kayipraporu".into(), "roundtrip".into()],
+            aliases: vec!["aktarmakaybi".into(), "kayipraporu".into(), "roundtrip".into()],
             effect: CommandEffect::Query,
             hosts: vec![CommandHost::Desktop],
             headless: true,

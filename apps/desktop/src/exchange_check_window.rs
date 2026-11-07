@@ -1,4 +1,4 @@
-//! Devir denetimi (docs/adr/1660; `file.exchangeCheck`): the drawing taken to an exchange format and back by KentOS's
+//! Dışa aktarma kaybı denetimi (docs/adr/1660; `file.exchangeCheck`): the drawing taken to an exchange format and back by KentOS's
 //! own writer and reader (`file.exchange.check`), read only. The form names the format and the tolerance; Denetle runs
 //! the trip (a temporary file, removed). The answer keeps the two kinds of change apart: Sayısal (the vertices' offset
 //! from the original, heights, measures, lengths, areas) and Anlamsal (what was not written, kinds changed, curves
@@ -19,7 +19,7 @@ use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;
 use crate::traces::Control;
 
-pub const TITLE: &str = "Devir denetimi";
+pub const TITLE: &str = "Dışa aktarma kaybı denetimi";
 const CLOSE: &str = "Kapat";
 const RUN: &str = "Denetle";
 const SELECT: &str = "Kayıplıları seç";

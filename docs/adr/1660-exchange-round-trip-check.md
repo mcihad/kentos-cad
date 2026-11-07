@@ -1,10 +1,14 @@
-# 1660 — Devir denetimi: değişim biçiminden gidiş-dönüş, sayısal sapma ve anlamsal kayıp ayrı (`file.exchange.check`)
+# 1660 — Dışa aktarma kaybı denetimi: değişim biçiminden gidiş-dönüş, sayısal sapma ve anlamsal kayıp ayrı (`file.exchange.check`)
 
 Tarih: 2026-11-07. plan/map-cad.md MAP-17, ilk dilim. Kabul satırı: “KentOS→dış biçim→KentOS karşılaştırması yap.
 Sayısal hata ve semantik kayıplar ayrı raporlansın”. Durum: taslak. İlgili ADR'ler:
 - [ADR 0179](0179-data-compare.md): veri karşılaştırma kuralı;
 - [ADR 0253](0253-command-protocol.md) §10: dosya yazan komutlar;
 - [ADR 0627](0627-geopackage-tiles-coverages-links-and-profiles.md): GeoPackage dışa aktarma.
+
+**Ad (7 Kasım 2026):** önce “Devir denetimi” adıyla yazıldı (plandaki “veri devri”). Sahibi adın ne anlama geldiğini
+sordu; “devir” Türkçede dönme ve dönem anlamına da gelir. Pencerenin ve komutun başlığı **Dışa aktarma kaybı
+denetimi** oldu; komutun kimliği (`file.exchange.check`) ve davranışı değişmedi.
 
 ## Dayanak
 
@@ -54,7 +58,7 @@ Sayısal hata ve semantik kayıplar ayrı raporlansın”. Durum: taslak. İlgil
    Her biri sayısı ve özgün nesnelerin kimlikleriyle (en çok 100). Yazıcının ve okuyucunun uyarıları ayrıca verilir.
 5. **Retler:** `invalid_tolerance`, `layer_not_found`, yazıcının kendi reddi (`export.<alan>`), `exchange_unreadable`
    (yeni: KentOS'un okuyucusu KentOS'un dosyasını reddetti), `file_unwritable`.
-6. **Masaüstü, Devir denetimi penceresi** (Dosya › Alışveriş › Dışa aktar › Denetim; Harita, CBS, Yol, Mimari):
+6. **Masaüstü, Dışa aktarma kaybı denetimi penceresi** (Dosya › Alışveriş › Dışa aktar › Denetim; Harita, CBS, Yol, Mimari):
    - Biçim ve Tolerans; Denetle.
    - Özet: eşlenen ve yazılmayanlar; Sayısal satırı; yazıcının sözleri.
    - Anlamsal kayıplar tablosu: türler ve ayrıntılar Türkçe.
@@ -96,7 +100,7 @@ Sayısal hata ve semantik kayıplar ayrı raporlansın”. Durum: taslak. İlgil
   - Retler sınanır; açık çizim değişmez.
 - **Masaüstü** (`exchange_check_window_tests`): GeoPackage ve DXF gidiş-dönüşü, sayı olmayan tolerans, Kayıplıları
   seç, her modülde.
-  Resimler `.run/gui-evidence/devir-denetimi-1660/` altındadır.
+  Resimler `.run/gui-evidence/aktarma-kaybi-1660/` altındadır.
 - **Biçimlerin bugünkü tablosu** (bu çizimle):
 
   | Biçim | Yazılmayan | Tür | Kiriş | M | Kimlik | Ek öznitelik |

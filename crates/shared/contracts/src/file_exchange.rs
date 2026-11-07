@@ -1,4 +1,4 @@
-//! Devir denetimi (plan/map-cad.md MAP-17, docs/adr/1660): the drawing written to an exchange format and read back by
+//! Dışa aktarma kaybı denetimi (plan/map-cad.md MAP-17, docs/adr/1660): the drawing written to an exchange format and read back by
 //! KentOS's own reader of that format, into an empty copy of the drawing (its settings and layers, no objects), then
 //! compared object by object. What the trip changed is said in two kinds apart (the plan's acceptance: “sayısal hata ve
 //! semantik kayıplar ayrı raporlansın”):

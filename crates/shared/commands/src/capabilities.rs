@@ -7265,7 +7265,7 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
-    // Devir denetimi (plan/map-cad.md MAP-17, docs/adr/1660).
+    // Dışa aktarma kaybı denetimi (plan/map-cad.md MAP-17, docs/adr/1660).
     Entry {
         id: "file.exchange.check",
         refusals: &[&["invalid_tolerance", "layer_not_found", "exchange_unreadable", "file_unwritable"]],

@@ -443,7 +443,7 @@ pub(crate) const TITLES: [(&str, &str); 438] = [
     ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.dwg", "DWG dışa aktar"),
-    ("file.exchange.check", "Devir denetimi"),
+    ("file.exchange.check", "Dışa aktarma kaybı denetimi"),
     ("file.recover", "Bozuk çizimi kurtar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),

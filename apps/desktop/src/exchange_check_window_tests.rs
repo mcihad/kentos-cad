@@ -1,4 +1,4 @@
-//! Devir denetimi (exchange_check_window.rs, docs/adr/1660) on fixtures/exchange/v1/devir.json: GeoPackage keeps ids,
+//! Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660) on fixtures/exchange/v1/devir.json: GeoPackage keeps ids,
 //! arcs, heights and measures (the text is not written, the circle comes back an area); DXF loses the measures; a
 //! tolerance that is no number is said; Kayıplıları seç selects the objects the losses name; nothing is written to
 //! the drawing. Every module offers it from Dosya › Dışa aktar. And its pictures.
@@ -55,7 +55,7 @@ fn every_module_offers_it() {
     }
 }
 
-/// `.run/gui-evidence/devir-denetimi-1660/`:
+/// `.run/gui-evidence/aktarma-kaybi-1660/`:
 ///
 /// ```text
 /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange_check_window_tests::screens -- --ignored --nocapture
@@ -65,7 +65,7 @@ fn every_module_offers_it() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/devir-denetimi-1660");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/aktarma-kaybi-1660");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name, format) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis", "parquet"),

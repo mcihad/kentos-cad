@@ -1151,7 +1151,7 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
         return Ok(crate::publish::run(doc,&typed,op,progress));
     }
     if command == kentos_commands::FILE_EXCHANGE_CHECK {
-        // Devir denetimi (docs/adr/1660): a round trip through a temporary file; the open drawing is not changed.
+        // Dışa aktarma kaybı denetimi (docs/adr/1660): a round trip through a temporary file; the open drawing is not changed.
         let typed: kentos_commands::ExchangeCheck = serde_json::from_value(input).map_err(|e| e.to_string())?;
         return Ok((crate::exchange_check::run(doc, &typed, op), None));
     }

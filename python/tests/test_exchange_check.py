@@ -1,4 +1,4 @@
-"""`file.exchange.check` (Devir denetimi, docs/adr/1660; plan/map-cad.md MAP-17) against an independent reader.
+"""`file.exchange.check` (Dışa aktarma kaybı denetimi, docs/adr/1660; plan/map-cad.md MAP-17) against an independent reader.
 
 The drawing is fixtures/exchange/v1/devir.json (scripts/fixtures/exchange_drawing.py). For each format the file is
 written by KentOS (`file.export.*`) and read by GDAL's `ogrinfo` (DXF: ezdxf), no KentOS code. What the file holds,

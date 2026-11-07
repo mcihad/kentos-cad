@@ -54,7 +54,7 @@ def document():
     ents = []
     for n, e in enumerate(ENTITIES, 1):
         ents.append({**e, "id": n})
-    return {"format": "kentos.document", "version": 2, "name": "Devir", "settings": {
+    return {"format": "kentos.document", "version": 2, "name": "Aktarım örneği", "settings": {
         "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map", "drawingFont": "barlow"},
         "origin": {"x": X0, "y": Y0}, "layers": layers, "activeLayer": "0", "entities": ents,
@@ -65,7 +65,7 @@ def main():
     text = json.dumps(document(), ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         ok = OUT.exists() and OUT.read_text("utf-8") == text
-        print("Devir çizimi güncel." if ok else f"{OUT.relative_to(ROOT)} güncel değil.")
+        print("Aktarım örneği çizimi güncel." if ok else f"{OUT.relative_to(ROOT)} güncel değil.")
         return 0 if ok else 1
     OUT.write_text(text, "utf-8")
     print(f"yazıldı: {OUT.relative_to(ROOT)}")
