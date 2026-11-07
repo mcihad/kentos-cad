@@ -346,6 +346,12 @@ pub struct SectionRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pavement: Option<SectionPavement>,
+    /// The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no
+    /// height there, and no cut or fill counted under the design there.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub missing: Vec<[f64; 2]>,
 }
 
 /// A pavement on a section (docs/adr/0975 §1): each layer's name and area, the pavement under and above the ground,

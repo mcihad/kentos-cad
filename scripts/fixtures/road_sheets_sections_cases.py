@@ -70,7 +70,7 @@ def lay(input_, sheet_sets=()):
         warns.append(HIDDEN)
     if d["id"] == "k-2":
         warns.append(scmd.stale_warning(d))
-    warns += [w for w in scmd.sections(d, stations, TEMPLATES)[1] if w["code"] == "section_open"]
+    warns += [w for w in scmd.sections(d, stations, TEMPLATES)[1] if w["code"] in ("section_open", "section_ground_missing")]
     source = input_.get("source", {"type": "system", "id": "sys:cad-teknik"})
     if source["id"] not in ("sys:cad-teknik", "sys:gis-atlas"):
         raise Refused(failed("unknown_template", f"“{source['id']}” sistem şablonu yok; cad.sheets.set(details=true) ile "

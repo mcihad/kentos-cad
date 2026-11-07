@@ -40751,7 +40751,7 @@
       "id": "road.sections.query",
       "version": 1,
       "title": "Enkesitleri sorgula",
-      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
+      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR 1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz, section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone, section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
       "aliases": [
         "enkesitsor"
       ],
@@ -40848,6 +40848,7 @@
           "section_surface_gone",
           "section_lines_cross",
           "section_open",
+          "section_ground_missing",
           "section_superelevation_gone",
           "pavement_unbuilt"
         ]
@@ -40869,7 +40870,7 @@
       "id": "road.sections.draw",
       "version": 1,
       "title": "Enkesit çiz",
-      "summary": "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open.",
+      "summary": "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open, section_ground_missing.",
       "aliases": [
         "enkesitciz"
       ],
@@ -41071,7 +41072,8 @@
         "warnings": [
           "layer_hidden",
           "section_set_stale",
-          "section_open"
+          "section_open",
+          "section_ground_missing"
         ]
       },
       "examples": [
@@ -56726,7 +56728,8 @@
         "warnings": [
           "layer_hidden",
           "section_set_stale",
-          "section_open"
+          "section_open",
+          "section_ground_missing"
         ]
       },
       "examples": [
@@ -93941,6 +93944,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kübajın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı."
+    },
+    {
+      "code": "section_ground_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı kesitlerde tasarımın altında arazi yok; oradaki kazı ve dolgu alana katılmadı."
     },
     {
       "code": "section_open",
@@ -168660,6 +168669,20 @@
               "type": "null"
             }
           ]
+        },
+        "missing": {
+          "description": "The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no\nheight there, and no cut or fill counted under the design there.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
         },
         "pavement": {
           "anyOf": [

@@ -740,6 +740,9 @@ codes! {
     /// (docs/adr/0934 §2).
     VOLUME_CURVE_PAST_CENTRE = "volume_curve_past_centre", Warning, false, "Kübajın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı.";
     /// A warning: a side's slope meets the terrain nowhere on the swath (docs/adr/0903 §4).
+    /// A warning: sections whose design lies over ground the surface does not give; no cut or fill is counted there
+    /// (docs/adr/1034).
+    SECTION_GROUND_MISSING = "section_ground_missing", Warning, false, "Bazı kesitlerde tasarımın altında arazi yok; oradaki kazı ve dolgu alana katılmadı.";
     SECTION_OPEN = "section_open", Warning, false, "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin.";
     /// No superelevation schedule of the id or name.
     UNKNOWN_SUPERELEVATION = "unknown_superelevation", Failed, false, "Bu kimlikte ya da adda dever çizelgesi yok.";

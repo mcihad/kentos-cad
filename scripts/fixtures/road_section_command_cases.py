@@ -358,7 +358,7 @@ def sections(d, at, templates, extra_supers=()):
                          "message": f"“{d['name']}” kesit takımının dever çizelgesi kurulamıyor (“p9” PI'sinde kurp yok); "
                                     "şeritler tip kesitin eğimiyle verildi.", "path": "set"})
         sup = None
-    rows, open_, unpaved = [], [], []
+    rows, open_, unpaved, under = [], [], [], []
     widths, found = widths_of(d, at)
     w = crossing_warning(d, at, found)
     if w:
@@ -379,6 +379,10 @@ def sections(d, at, templates, extra_supers=()):
                 g["offset"] -= left
             row["ground"] = [{"offset": g["offset"], **({"z": g["z"]} if g["z"] is not None else {}), "gap": g["gap"]}
                              for g in ground]
+            # Docs/adr/1034: the swath's stretches off the surface, each from a place to the next one flagged a gap.
+            missing = [[ground[k - 1]["offset"], ground[k]["offset"]] for k in range(1, len(ground)) if ground[k]["gap"]]
+            if missing:
+                row["missing"] = missing
         red = ev(s) if ev else None
         if red is not None:
             row["axis"] = red[0]
@@ -410,6 +414,9 @@ def sections(d, at, templates, extra_supers=()):
             for side, word in ((lside, "sol"), (rside, "sağ")):
                 if side["kind"] == "open":
                     open_.append(f"km {row['kmText']} {word}")
+            lo, hi = float(lside["points"][-1][0]), float(rside["points"][-1][0])
+            if any(m[0] < hi and m[1] > lo for m in row.get("missing", [])):
+                under.append(f"km {row['kmText']}")
         rows.append(row)
     if unpaved:
         warnings.append({"code": "pavement_unbuilt",
@@ -419,6 +426,11 @@ def sections(d, at, templates, extra_supers=()):
         warnings.append({"code": "section_open",
                          "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: "
                                     f"{', '.join(open_)}. Şeridi genişletin.", "path": "set"})
+    if under:
+        warnings.append({"code": "section_ground_missing",
+                         "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): "
+                                    f"{', '.join(under)}. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da "
+                                    "boşluğu doldurun.", "path": "set"})
     return rows, warnings
 
 
@@ -949,7 +961,7 @@ def draw_cases():
                           setup_ or (None if sets is start else setup(sets=sets, layers=layers))))
 
     def opens(d, at):
-        return [w for w in sections(d, at, templates)[1] if w["code"] == "section_open"]
+        return [w for w in sections(d, at, templates)[1] if w["code"] in ("section_open", "section_ground_missing")]
 
     hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
     base = {"set": "k-1", "layerId": "0", "at": [0.0, -100.0]}

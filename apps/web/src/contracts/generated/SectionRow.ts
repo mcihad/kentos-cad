@@ -19,4 +19,9 @@ axis?: number, ground: Array<SectionGround>, left?: SectionSide, right?: Section
 /**
  * The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
  */
-pavement?: SectionPavement, };
+pavement?: SectionPavement, 
+/**
+ * The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no
+ * height there, and no cut or fill counted under the design there.
+ */
+missing?: Array<[number, number]>, };

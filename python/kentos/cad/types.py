@@ -76069,6 +76069,8 @@ class SectionRow(_Model):
         axis: The axis' design elevation; absent without a profile or outside it. Unit: elevation.
         cut: Unit: area.
         fill: Unit: area.
+        missing: The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no
+            height there, and no cut or fill counted under the design there. Unit: m.
         pavement: The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
     """
     station: float
@@ -76080,6 +76082,7 @@ class SectionRow(_Model):
     cut: float | None | Unset = UNSET
     fill: float | None | Unset = UNSET
     left: SectionSide | None | Unset = UNSET
+    missing: list[list[float]] | Unset = UNSET
     pavement: SectionPavement | None | Unset = UNSET
     right: SectionSide | None | Unset = UNSET
 
@@ -76098,6 +76101,8 @@ class SectionRow(_Model):
             out["fill"] = None if self.fill is None else float(self.fill)
         if self.left is not UNSET:
             out["left"] = None if self.left is None else self.left.to_json()
+        if self.missing is not UNSET:
+            out["missing"] = [[float(e1) for e1 in e0] for e0 in self.missing]
         if self.pavement is not UNSET:
             out["pavement"] = None if self.pavement is None else self.pavement.to_json()
         if self.right is not UNSET:
@@ -76116,6 +76121,7 @@ class SectionRow(_Model):
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
             left=UNSET if "left" not in data else None if data["left"] is None else SectionSide.from_json(data["left"]),
+            missing=[[float(e1) for e1 in e0] for e0 in data["missing"]] if "missing" in data else UNSET,
             pavement=UNSET if "pavement" not in data else None if data["pavement"] is None else SectionPavement.from_json(data["pavement"]),
             right=UNSET if "right" not in data else None if data["right"] is None else SectionSide.from_json(data["right"]),
         )

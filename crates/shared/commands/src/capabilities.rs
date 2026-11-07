@@ -1825,6 +1825,7 @@ const ENTRIES: &[Entry] = &[
             "section_surface_gone",
             "section_lines_cross",
             "section_open",
+            "section_ground_missing",
             "section_superelevation_gone",
             "pavement_unbuilt",
         ],
@@ -1845,7 +1846,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "section_set_stale", "section_open"],
+        warnings: &["layer_hidden", "section_set_stale", "section_open", "section_ground_missing"],
         targets: none,
     },
     // KentOS Yol's superelevation (plan/road.md Y6, docs/adr/0904).
@@ -2510,7 +2511,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "section_set_stale", "section_open"],
+        warnings: &["layer_hidden", "section_set_stale", "section_open", "section_ground_missing"],
         targets: none,
     },
     Entry {

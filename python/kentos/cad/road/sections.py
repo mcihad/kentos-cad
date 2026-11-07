@@ -42,7 +42,7 @@ class _RoadSectionsDraw(LocalCommand[SectionsDraw, SectionsDrawn, SectionsDrawn]
     not_a_road_project, unknown_section_set, invalid_label, invalid_section_set,
     invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer,
     layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden,
-    section_set_stale, section_open.
+    section_set_stale, section_open, section_ground_missing.
     """
     __slots__ = ()
     id = "road.sections.draw"
@@ -83,7 +83,7 @@ class _RoadSectionsDraw(LocalCommand[SectionsDraw, SectionsDrawn, SectionsDrawn]
         alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set,
         invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found,
         not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict;
-        uyarılar layer_hidden, section_set_stale, section_open.
+        uyarılar layer_hidden, section_set_stale, section_open, section_ground_missing.
 
         Args:
             doc: The drawing it works on.
@@ -466,10 +466,13 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
     üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu
     alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu −
     üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen)
-    takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar:
-    section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler:
-    not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks
-    ya da boykesit artık kurulamıyorsa geometrinin retleri.
+    takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin
+    yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR
+    1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz,
+    section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone,
+    section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project,
+    unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık
+    kurulamıyorsa geometrinin retleri.
     """
     __slots__ = ()
     id = "road.sections.query"
@@ -505,8 +508,11 @@ class _RoadSectionsQuery(LocalCommand[SectionsQuery, SectionsQueried, SectionsQu
         ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı
         (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki).
         Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km
-        listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale,
-        section_surface_gone, section_open, pavement_unbuilt. Retler: not_a_road_project,
+        listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin yüzeyin
+        dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR 1034);
+        tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz, section_ground_missing
+        söyler. Uyarılar: section_set_stale, section_surface_gone, section_open,
+        section_ground_missing, pavement_unbuilt. Retler: not_a_road_project,
         unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık
         kurulamıyorsa geometrinin retleri.
 

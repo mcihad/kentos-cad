@@ -5613,6 +5613,12 @@
                       "gap": false
                     }
                   ],
+                  "missing": [
+                    [
+                      -20.0,
+                      7.267770351892782
+                    ]
+                  ],
                   "axis": 109.0,
                   "left": {
                     "kind": "open",
@@ -5876,6 +5882,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 0+050.000 sol. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 0+050.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -20480,6 +20491,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      20.799038918735164,
+                      60.0
+                    ]
+                  ],
                   "axis": 101.91176470588235,
                   "left": {
                     "kind": "cut",
@@ -23091,6 +23108,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      -25.0,
+                      25.0
+                    ]
+                  ],
                   "axis": 102.0,
                   "left": {
                     "kind": "open",
@@ -23185,6 +23208,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 1+000.000 sol, km 1+000.000 sağ. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 1+000.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -33636,6 +33664,12 @@
                       "gap": false
                     }
                   ],
+                  "missing": [
+                    [
+                      -20.0,
+                      7.267770351892782
+                    ]
+                  ],
                   "axis": 109.0,
                   "left": {
                     "kind": "open",
@@ -33899,6 +33933,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 0+050.000 sol. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 0+050.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -52683,6 +52722,11 @@
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 0+050.000 sol. Şeridi genişletin.",
                 "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 0+050.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
+                "path": "set"
               }
             ]
           },
@@ -71055,6 +71099,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      -25.0,
+                      25.0
+                    ]
+                  ],
                   "axis": 102.0,
                   "left": {
                     "kind": "open",
@@ -71130,6 +71180,12 @@
                       "offset": 25.0,
                       "gap": true
                     }
+                  ],
+                  "missing": [
+                    [
+                      0.0,
+                      25.0
+                    ]
                   ],
                   "axis": 101.95990184670912,
                   "left": {
@@ -71237,6 +71293,12 @@
                       "offset": 25.0,
                       "gap": true
                     }
+                  ],
+                  "missing": [
+                    [
+                      16.87293849810272,
+                      25.0
+                    ]
                   ],
                   "axis": 101.93831154644297,
                   "left": {
@@ -74676,6 +74738,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 1+000.000 sol, km 1+000.000 sağ, km 1+013.633 sağ. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 1+000.000, km 1+013.633. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -81004,6 +81071,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      -25.0,
+                      25.0
+                    ]
+                  ],
                   "axis": 102.0,
                   "left": {
                     "kind": "open",
@@ -82414,6 +82487,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 1+000.000 sol, km 1+000.000 sağ. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 1+000.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]

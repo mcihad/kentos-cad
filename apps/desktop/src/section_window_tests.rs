@@ -568,3 +568,49 @@ fn screens_place_under() {
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
     println!("{}", file.display());
 }
+
+/// ROAD-SEC-08 (docs/adr/1034): a set whose design lies over ground the surface does not give says so in Enkesit, as
+/// the query's warning; its sections give the swath's stretches off the surface.
+#[test]
+fn the_window_says_where_the_design_has_no_ground() {
+    let mut app = app(true);
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(1)));
+    let w = app.section_window.as_ref().expect("open");
+    let missing = w.preview.missing.clone().expect("the warning");
+    assert!(missing.contains("km 0+050.000") && missing.contains("alana katılmadı"), "{missing}");
+    assert!(w.preview.rows.iter().any(|r| !r.missing.is_empty()), "a section gives its stretches off the surface");
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    assert!(app.section_window.as_ref().expect("open").preview.missing.is_none(), "the main set has ground under its design");
+}
+
+/// Enkesit on the side set, its first section over a stretch off the surface, light and dark; `.run/gui-evidence/yol-y99/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib section_window_tests::screens_missing -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_missing() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y99");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 760.0), "koyu")] {
+        let mut app = app(true);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("section.editor"));
+        send(&mut app, W::Choose(Chosen::Set(1)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y99-enkesit-arazisiz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

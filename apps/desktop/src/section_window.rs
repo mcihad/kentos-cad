@@ -415,6 +415,9 @@ pub struct Preview {
     pub(crate) open: Option<String>,
     /// The lines meeting on a curve's inside, as the query's warning says them (docs/adr/0933 §3).
     pub(crate) crossing: Option<String>,
+    /// The sections whose design lies over ground the surface does not give, as the query's warning says them
+    /// (docs/adr/1034).
+    pub(crate) missing: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -602,6 +605,7 @@ impl App {
                             why: warnings.iter().find(|w| w.code == "section_surface_gone").map(|w| w.message.clone()),
                             open: warnings.iter().find(|w| w.code == "section_open").map(|w| w.message.clone()),
                             crossing: warnings.iter().find(|w| w.code == "section_lines_cross").map(|w| w.message.clone()),
+                            missing: warnings.iter().find(|w| w.code == "section_ground_missing").map(|w| w.message.clone()),
                         },
                     },
                 }
@@ -1474,6 +1478,9 @@ impl App {
         if let Some(open) = &w.preview.open {
             col = col.push(label::caption(open.clone()).style(warn));
         }
+        if let Some(missing) = &w.preview.missing {
+            col = col.push(label::caption(missing.clone()).style(warn));
+        }
         if stale {
             col = col.push(label::caption("Aks değişti: km'leri denetleyip aksa yeniden bağlayın.").style(warn));
         }
@@ -1903,6 +1910,18 @@ impl canvas::Program<Message> for Chart<'_> {
                 &Path::line(Point::new(x(0.0), plot.y), Point::new(x(0.0), plot.y + plot.height)),
                 Stroke { line_dash: LineDash { segments: &[5.0, 4.0], offset: 0 }, ..thin(t.accent) },
             );
+        }
+        // Docs/adr/1034: the swath's stretches off the surface, faint, so a design over them shows it has no ground.
+        if let Some(r) = self.row {
+            for m in &r.missing {
+                let (a, b) = (x(m[0].max(o0)), x(m[1].min(o1)));
+                if b > a + 0.5 {
+                    frame.fill_rectangle(Point::new(a, plot.y), iced::Size::new(b - a, plot.height), t.warning.scale_alpha(0.12));
+                    if b - a > 60.0 {
+                        word(&mut frame, "arazi yok".into(), Point::new(a + 6.0, plot.y + 4.0), t.warning, false);
+                    }
+                }
+            }
         }
         let terrain = Path::new(|b| {
             let mut open = false;
