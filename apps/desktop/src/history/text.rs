@@ -276,7 +276,7 @@ pub(crate) const TITLES: [(&str, &str); 450] = [
     ("cad.orthophoto.check", "Ortofoto doğruluk denetimi"),
     ("cad.orthophoto.compare", "Ortofoto karşılaştırması"),
     ("cad.readjustment.distribute", "Düzenleme dağıtım taslağı"),
-    ("cad.scenarios.impact", "Alternatif etkisi"),
+    ("cad.scenarios.impact", "Senaryo ölçüleri"),
     ("cad.zoning.check", "İmar planı denetimi"),
     ("cad.field.package", "Saha paketi"),
     ("cad.asbuilt.check", "Uygulama kontrolü"),

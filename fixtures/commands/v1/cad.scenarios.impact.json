@@ -3,12 +3,12 @@
  "version": 1,
  "command": "cad.scenarios.impact",
  "commandVersion": 1,
- "title": "Alternatif etkisi",
+ "title": "Senaryo ölçüleri",
  "note": "ADR 1440. Bağımsız başvuru scripts/fixtures/scenarios_impact_cases.py: ölçüler, eşleme ve damga elle (rasyonel shoelace, SHA-256); KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
-  "name": "Alternatif etkisi",
+  "name": "Senaryo ölçüleri",
   "settings": {
    "srid": 5254,
    "lengthDecimals": 3,
@@ -646,14 +646,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -808,14 +808,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -992,14 +992,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "stale": false,
@@ -1166,14 +1166,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "0d073cdb8090db30",
        "stale": true,
@@ -1191,7 +1191,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -1839,14 +1839,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "0d073cdb8090db30",
        "revision": "$current"
@@ -1863,7 +1863,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -2502,14 +2502,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "stale": true,
@@ -2626,14 +2626,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 1, alternatifte 3; inşaat alanı onlarsız hesaplandı.",
-        "Kullanımı (YolKimlik) olmayan alan: mevcut durumda 5, alternatifte 6."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 1, senaryoda 3; inşaat alanı onlarsız hesaplandı.",
+        "Kullanımı (YolKimlik) olmayan alan: mevcut durumda 5, senaryoda 6."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -2790,14 +2790,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -2813,7 +2813,7 @@
    ]
   },
   {
-   "name": "aynı alternatif: değişiklik yok",
+   "name": "aynı senaryo: değişiklik yok",
    "steps": [
     {
      "op": "plan",
@@ -2915,7 +2915,7 @@
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -2932,7 +2932,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -3388,7 +3388,7 @@
    }
   },
   {
-   "name": "boş alternatif: hepsi kaldırılmış",
+   "name": "boş senaryo: hepsi kaldırılmış",
    "steps": [
     {
      "op": "plan",
@@ -3526,7 +3526,7 @@
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -3543,7 +3543,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -3966,14 +3966,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "e3b0c44298fc1c14",
        "revision": "$current"
@@ -3990,7 +3990,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -4467,14 +4467,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -4491,7 +4491,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -5128,14 +5128,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 2; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 2; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -5152,7 +5152,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -5740,7 +5740,7 @@
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "630f735bb84f41f5",
        "revision": "$current"
@@ -5757,7 +5757,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -6044,7 +6044,7 @@
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "630f735bb84f41f5",
        "revision": "$current"
@@ -6061,7 +6061,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -6392,14 +6392,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -6416,7 +6416,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -7048,7 +7048,7 @@
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "25b815c3caaa4f29",
        "revision": "$current"
@@ -7065,7 +7065,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -7467,14 +7467,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -7644,15 +7644,15 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez.",
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez.",
         "Geçirimsizlik payı verilmemiş kullanım: sanayi, yesil; geçirimsiz alan onlarsız hesaplandı."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -7835,14 +7835,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -8025,14 +8025,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -8214,16 +8214,16 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez.",
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez.",
         "Erişilecek kullanım (meydan) mevcut durumda yok; erişen alan 0.",
-        "Erişilecek kullanım (meydan) alternatifte yok; erişen alan 0."
+        "Erişilecek kullanım (meydan) senaryoda yok; erişen alan 0."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -8423,14 +8423,14 @@
         }
        ],
        "gaps": [
-        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
-        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, senaryoda 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, senaryoda 1; değişiklikleri izlenemez."
        ],
        "assumptions": [
         "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
        "revision": "$current"
@@ -8604,7 +8604,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Alternatif etkisi",
+    "name": "Senaryo ölçüleri",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,

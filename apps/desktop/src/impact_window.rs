@@ -1,4 +1,4 @@
-//! Alternatif etkisi (docs/adr/1440; `scenario.impact`): a scenario (a design alternative) beside the field state it
+//! Senaryo ölçüleri (docs/adr/1440; `scenario.impact`; “Alternatif etkisi” until 2026-11-07): a scenario beside the field state it
 //! replaces, by `cad.scenarios.impact`, read only. The scenario chosen on one line; the summary says the base's
 //! stamp (stale when it changed since the report last saved this session), the data's gaps and the assumptions; a
 //! choice shows the measures, the areas by use or the decisions that changed. Raporu kaydet writes them all as CSV
@@ -19,7 +19,9 @@ use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::traces::Control;
 
-pub const TITLE: &str = "Alternatif etkisi";
+pub const TITLE: &str = "Senaryo ölçüleri";
+/// The window's first line: what it does, in a sentence (the owner's wording, 2026-11-07).
+pub const LEAD: &str = "Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır.";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "Raporu kaydet…";
 
@@ -115,11 +117,11 @@ fn uses_of(text: &str) -> Vec<String> {
 /// The report as CSV: the stamp, the measures, the uses, the changes, the gaps and the assumptions (numbers as
 /// computed, not rounded).
 pub fn csv(r: &ScenariosImpacted) -> String {
-    let mut out = format!("Alternatif;{};Taban damgası;{}\n\nÖlçü;Birim;Mevcut durum;Alternatif;Fark;Yöntem\n", r.name, r.stamp);
+    let mut out = format!("Senaryo;{};Taban damgası;{}\n\nÖlçü;Birim;Mevcut durum;Senaryo;Fark;Yöntem\n", r.name, r.stamp);
     for m in &r.measures {
         out.push_str(&format!("{};{};{};{};{};{}\n", m.label, m.unit, m.base, m.alternative, m.difference, m.method));
     }
-    out.push_str("\nKullanım;Mevcut durum (m²);Alternatif (m²);Fark (m²)\n");
+    out.push_str("\nKullanım;Mevcut durum (m²);Senaryo (m²);Fark (m²)\n");
     for u in &r.uses {
         out.push_str(&format!("{};{};{};{}\n", u.code, u.base, u.alternative, u.difference));
     }
@@ -182,7 +184,7 @@ impl App {
         });
     }
 
-    /// Alternatif etkisi (`scenario.impact`): the scenario at hand, else the first.
+    /// Senaryo ölçüleri (`scenario.impact`): the scenario at hand, else the first.
     pub(crate) fn open_impact(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
@@ -193,7 +195,7 @@ impl App {
             .map(|n| (n.id.clone(), n.name.clone()))
             .collect();
         let Some(first) = self.scenario_at_hand().or_else(|| scenarios.first().map(|(id, _)| id.clone())) else {
-            self.warn("Projede alternatif (senaryo) yok; önce Senaryo oluştur ile tasarım katmanlarının bir alternatifini yapın.");
+            self.warn("Projede senaryo yok; önce Senaryo oluştur ile tasarım katmanlarından bir senaryo kurun.");
             return Task::none();
         };
         self.impact = State { scenarios, scenario: first, ..State::default() };
@@ -245,7 +247,7 @@ impl App {
                     async {
                         rfd::AsyncFileDialog::new()
                             .set_title(TITLE)
-                            .set_file_name("alternatif-etkisi.csv")
+                            .set_file_name("senaryo-olculeri.csv")
                             .add_filter("CSV", &["csv"])
                             .save_file()
                             .await
@@ -274,7 +276,7 @@ impl App {
         // docs/adr/2040: the measures that take the user's values; empty ones are not computed.
         let form = Form::new()
             .label_width(170.0)
-            .field("Alternatif", container(pick).width(300))
+            .field("Senaryo", container(pick).width(300))
             .section("Ölçüler (değerler sizin)")
             .field("Geçirimsizlik payları", text(&s.shares, "konut 0,6; park 0,1; yesil 0,05", Event::Shares, 420.0))
             .field(
@@ -290,7 +292,7 @@ impl App {
             Some(Ok(r)) => {
                 let layers: Vec<&str> = r.layers.iter().map(|l| l.name.as_str()).collect();
                 let (kind, stamp) = match r.stale {
-                    Some(true) => (Kind::Error, format!("Taban, kaydedilen rapordan sonra değişti: alternatif eski tabana göre (damga {}). Alternatifi gözden geçirin; kendiliğinden yeni veriye uymuş sayılmaz.", r.stamp)),
+                    Some(true) => (Kind::Error, format!("Taban, kaydedilen rapordan sonra değişti: senaryo eski tabana göre (damga {}). Senaryoyu gözden geçirin; kendiliğinden yeni veriye uymuş sayılmaz.", r.stamp)),
                     Some(false) => (Kind::Ok, format!("Taban kaydedilen rapordan beri aynı (damga {}).", r.stamp)),
                     None => (Kind::Info, format!("Taban damgası {}; raporu kaydedince sonraki karşılaştırma tabanın değişip değişmediğini söyler.", r.stamp)),
                 };
@@ -309,7 +311,7 @@ impl App {
                 let signed = |unit: &str, v: f64| if v > 0.0 { format!("+{}", fmt(unit, v)) } else { fmt(unit, v) };
                 table = match s.view {
                     View::Measures => sheet(
-                        vec![col("Ölçü", 270.0), num("Mevcut durum", 120.0), num("Alternatif", 120.0), num("Fark", 120.0), col("Birim", 50.0)],
+                        vec![col("Ölçü", 270.0), num("Mevcut durum", 120.0), num("Senaryo", 120.0), num("Fark", 120.0), col("Birim", 50.0)],
                         r.measures
                             .iter()
                             .map(|m| vec![m.label.clone(), fmt(&m.unit, m.base), fmt(&m.unit, m.alternative), signed(&m.unit, m.difference), unit_word(&m.unit).to_owned()])
@@ -318,7 +320,7 @@ impl App {
                         260.0,
                     ),
                     View::Uses => sheet(
-                        vec![col("Kullanım", 190.0), num("Mevcut durum", 120.0), num("Alternatif", 120.0), num("Fark", 120.0)],
+                        vec![col("Kullanım", 190.0), num("Mevcut durum", 120.0), num("Senaryo", 120.0), num("Fark", 120.0)],
                         r.uses
                             .iter()
                             .map(|u| vec![if u.code.is_empty() { "(yok)".to_owned() } else { u.code.clone() }, f.area(u.base), f.area(u.alternative), signed("m2", u.difference)])
@@ -358,6 +360,7 @@ impl App {
         let body = kentos_ui::widget::grow::Grows::new()
             .spacing(12.0)
             .width(iced::Fill)
+            .push(kentos_ui::label::caption(LEAD))
             .push(form)
             .push(words::summary(lines))
             .push(Segmented::new(views, s.view, |v| msg(Event::View(v))))

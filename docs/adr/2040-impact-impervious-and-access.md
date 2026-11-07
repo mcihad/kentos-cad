@@ -43,6 +43,19 @@ verisiyle kesin uygunluk sonucu verilmesin.” İlgili: [ADR 1440](1440-design-a
    - Yüzde, bir ondalıkla “%44,4” diye yazılır.
    - Gövde artık kayar: kısa pencerede de alt düğmeler görünür.
 
+## Ad (7 Kasım 2026)
+
+Sahip “Alternatif etkisi” kavramını anlaşılmaz buldu. Arayüzün geri kalanı (Senaryo oluştur, Senaryoyu karşılaştır,
+Mevcut durum) “senaryo” der; “alternatif” ArcGIS Urban'ın teriminden gelmişti. Sahibin onayıyla:
+
+- pencerenin ve komutun adı **Senaryo ölçüleri** oldu;
+- pencerenin ilk satırı: “Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır.”;
+- seçim, sütun ve iletilerde “alternatif” yerine “senaryo” yazılır;
+- komutun kimliği (`cad.scenarios.impact`, `scenario.impact`) ve çıktı alanları değişmedi; eski ad takma ad olarak
+  aranabilir.
+
+Resimler artık `.run/gui-evidence/senaryo-olculeri-1440/` altındadır.
+
 ## Kanıt
 
 - **Ortak durumlar:** `scripts/fixtures/scenarios_impact_cases.py` iki ölçüyü elle aldı. Durum sayısı 21'den 30'a çıktı;
@@ -62,7 +75,7 @@ verisiyle kesin uygunluk sonucu verilmesin.” İlgili: [ADR 1440](1440-design-a
   - formdan yazılan paylar ve erişim ortak durumun ölçülerini verir;
   - okunamayan pay söylenir.
 
-  Resimler `.run/gui-evidence/alternatif-etkisi-1440/` altındadır.
+  Resimler `.run/gui-evidence/senaryo-olculeri-1440/` altındadır.
 
 ## Sonra
 

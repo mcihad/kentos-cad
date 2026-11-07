@@ -1,4 +1,4 @@
-//! `cad.scenarios.impact` v1 (plan/map-cad.md MAP-10, docs/adr/1440): Alternatif etkisi, read only. The scenario's
+//! `cad.scenarios.impact` v1 (plan/map-cad.md MAP-10, docs/adr/1440): Senaryo ölçüleri, read only. The scenario's
 //! pairs (`scenario_pairs`: a base layer and the scenario's layer standing for it) measured side by side: objects,
 //! the areas (the shared core's planar `entity_area`), the lines' length, the building capacity (area × KAKS), the
 //! areas by use; the decisions that changed, matched by their key; the data's gaps and the assumptions. The base's
@@ -274,7 +274,7 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
             share(yg, yw),
             &format!("Erişen alanın {from} alanlarının toplamına oranı; {from} alanı olmayan tarafta 0."),
         ));
-        for (has_from, has_to, side) in [(xw > 0.0, xt, "mevcut durumda"), (yw > 0.0, yt, "alternatifte")] {
+        for (has_from, has_to, side) in [(xw > 0.0, xt, "mevcut durumda"), (yw > 0.0, yt, "senaryoda")] {
             if has_from && !has_to {
                 asked_gaps.push(format!("Erişilecek kullanım ({to}) {side} yok; erişen alan 0."));
             }
@@ -347,16 +347,16 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
     let mut gaps = Vec::new();
     if b.no_kaks + a.no_kaks > 0 {
         gaps.push(format!(
-            "KAKS'ı olmayan yapılaşan alan: mevcut durumda {}, alternatifte {}; inşaat alanı onlarsız hesaplandı.",
+            "KAKS'ı olmayan yapılaşan alan: mevcut durumda {}, senaryoda {}; inşaat alanı onlarsız hesaplandı.",
             b.no_kaks, a.no_kaks
         ));
     }
     if b.no_use + a.no_use > 0 {
-        gaps.push(format!("Kullanımı ({field}) olmayan alan: mevcut durumda {}, alternatifte {}.", b.no_use, a.no_use));
+        gaps.push(format!("Kullanımı ({field}) olmayan alan: mevcut durumda {}, senaryoda {}.", b.no_use, a.no_use));
     }
     if b.no_key + a.no_key > 0 {
         gaps.push(format!(
-            "Anahtarı ({key}) olmayan alan: mevcut durumda {}, alternatifte {}; değişiklikleri izlenemez.",
+            "Anahtarı ({key}) olmayan alan: mevcut durumda {}, senaryoda {}; değişiklikleri izlenemez.",
             b.no_key, a.no_key
         ));
     }
@@ -365,7 +365,7 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         format!("Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:{}).", doc.settings().srid),
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.".to_owned(),
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.".to_owned(),
-        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer.".to_owned(),
+        "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer.".to_owned(),
     ];
     let now = stamp(doc, &bases);
     let names = |l: &str| doc.layers().get(l).map_or_else(|| l.to_owned(), |n| n.name.clone());

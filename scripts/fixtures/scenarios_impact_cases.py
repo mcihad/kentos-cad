@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.scenarios.impact` (Alternatif etkisi; plan/map-cad.md MAP-10, docs/adr/1440), without
+"""The shared cases of `cad.scenarios.impact` (Senaryo ölçüleri; plan/map-cad.md MAP-10, docs/adr/1440), without
 KentOS code.
 
     python3 scripts/fixtures/scenarios_impact_cases.py           # writes fixtures/commands/v1/cad.scenarios.impact.json
@@ -91,7 +91,7 @@ def setup(base=None, alt=None, layers=None):
     ents = [copy.deepcopy(e) for e in (base if base is not None else BASE) + (alt if alt is not None else ALT)]
     for i, e in enumerate(ents, start=1):
         e["id"] = i
-    return {"format": "kentos.document", "version": 2, "name": "Alternatif etkisi",
+    return {"format": "kentos.document", "version": 2, "name": "Senaryo ölçüleri",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                          "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
             "origin": {"x": X0, "y": Y0}, "layers": layers or tree(), "activeLayer": "karar", "entities": ents,
@@ -261,7 +261,7 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
         share = lambda g_, w_: g_ / w_ * 100 if w_ > 0 else 0.0  # noqa: E731
         measures.append(m("accessShare", "Erişen alanın payı", "%", share(xg, xw), share(yg, yw),
                           f"Erişen alanın {fr} alanlarının toplamına oranı; {fr} alanı olmayan tarafta 0."))
-        for has_from, has_to, where in ((xw > 0, xt, "mevcut durumda"), (yw > 0, yt, "alternatifte")):
+        for has_from, has_to, where in ((xw > 0, xt, "mevcut durumda"), (yw > 0, yt, "senaryoda")):
             if has_from and not has_to:
                 asked_gaps.append(f"Erişilecek kullanım ({to}) {where} yok; erişen alan 0.")
     uses = [{"code": c, "base": b["uses"].get(c, 0.0), "alternative": a["uses"].get(c, 0.0),
@@ -295,12 +295,12 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
             changes.append(change(k, "added", ea=ea, aa=aa))
     gaps = []
     if b["noKaks"] + a["noKaks"]:
-        gaps.append(f"KAKS'ı olmayan yapılaşan alan: mevcut durumda {b['noKaks']}, alternatifte {a['noKaks']}; inşaat "
+        gaps.append(f"KAKS'ı olmayan yapılaşan alan: mevcut durumda {b['noKaks']}, senaryoda {a['noKaks']}; inşaat "
                     "alanı onlarsız hesaplandı.")
     if b["noUse"] + a["noUse"]:
-        gaps.append(f"Kullanımı ({field}) olmayan alan: mevcut durumda {b['noUse']}, alternatifte {a['noUse']}.")
+        gaps.append(f"Kullanımı ({field}) olmayan alan: mevcut durumda {b['noUse']}, senaryoda {a['noUse']}.")
     if b["noKey"] + a["noKey"]:
-        gaps.append(f"Anahtarı ({key}) olmayan alan: mevcut durumda {b['noKey']}, alternatifte {a['noKey']}; "
+        gaps.append(f"Anahtarı ({key}) olmayan alan: mevcut durumda {b['noKey']}, senaryoda {a['noKey']}; "
                     "değişiklikleri izlenemez.")
     gaps += asked_gaps
     now = stamp(s, bases)
@@ -311,7 +311,7 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
            "assumptions": [f"Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:{s['settings']['srid']}).",
                            "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
                            "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
-                           "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."],
+                           "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."],
            "stamp": now}
     if since is not None:
         out["stale"] = since != now
@@ -378,10 +378,10 @@ def cases():
         ok("damga başka karşılaştırmanın: eskimiş sayılır", BASE_SETUP, since="0000000000000000"),
         ok("başka kullanım alanı ve anahtar", BASE_SETUP, field="YolKimlik", key="Kullanim"),
         ok("boş alan adı ilk değere döner", BASE_SETUP, field="  ", key=" "),
-        ok("aynı alternatif: değişiklik yok", setup(alt=[dict(copy.deepcopy(e), layerId={"karar": "alt-a-karar",
+        ok("aynı senaryo: değişiklik yok", setup(alt=[dict(copy.deepcopy(e), layerId={"karar": "alt-a-karar",
                                                                                           "yol": "alt-a-yol"}[e["layerId"]])
                                                      for e in BASE])),
-        ok("boş alternatif: hepsi kaldırılmış", setup(alt=[])),
+        ok("boş senaryo: hepsi kaldırılmış", setup(alt=[])),
         ok("boş taban: hepsi eklenmiş", setup(base=[])),
         ok("virgüllü KAKS okunur", setup(alt=[dict(copy.deepcopy(e), attrs=dict(e["attrs"], KAKS="1,50"))
                                               if e["attrs"].get("KararKimlik") == "K2" else e for e in ALT])),
@@ -423,14 +423,14 @@ def cases():
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.scenarios.impact", "commandVersion": 1,
-           "title": "Alternatif etkisi",
+           "title": "Senaryo ölçüleri",
            "note": "ADR 1440. Bağımsız başvuru scripts/fixtures/scenarios_impact_cases.py: ölçüler, eşleme ve damga "
                    "elle (rasyonel shoelace, SHA-256); KentOS kodu yok.",
            "setup": BASE_SETUP, "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         ok_ = OUT.exists() and OUT.read_text("utf-8") == text
-        print("Alternatif etkisi ortak durumları güncel." if ok_ else f"{OUT.relative_to(ROOT)} güncel değil.")
+        print("Senaryo ölçüleri ortak durumları güncel." if ok_ else f"{OUT.relative_to(ROOT)} güncel değil.")
         return 0 if ok_ else 1
     OUT.write_text(text, "utf-8")
     print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(doc['cases'])} durum)")

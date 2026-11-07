@@ -2478,7 +2478,7 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
-    // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
+    // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
     Entry {
         id: "cad.scenarios.impact",
         // invalid_input: the asked measures' values (docs/adr/2040).

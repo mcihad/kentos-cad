@@ -114,11 +114,12 @@
     },
     {
       "id": "scenario.impact",
-      "title": "Alternatif etkisi…",
-      "short": "Alternatif etkisi",
+      "title": "Senaryo ölçüleri…",
+      "short": "Senaryo ölçüleri",
       "icon": "scenarioImpact",
-      "description": "Bir tasarım alternatifini (senaryo) yerine geçtiği mevcut durumla ölçer (cad.scenarios.impact; ADR 1440): nesne sayısı, alanların toplamı, çizgi uzunluğu, inşaat alanı (alan × KAKS) birimi ve yöntemiyle; kullanıma göre alanlar; anahtarıyla izlenen değişen kararlar; veri eksikleri ve varsayımlar. Tek puanla en iyi alternatif seçilmez. Raporu kaydet CSV yazar ve taban damgasını saklar: taban sonradan değişince alternatifin eskidiği söylenir. Harita ve CBS'de.",
+      "description": "Seçilen senaryoyu mevcut durumla sayılarla karşılaştırır (cad.scenarios.impact; ADR 1440, 2040): nesne sayısı, alanların toplamı, çizgi uzunluğu, inşaat alanı (alan × KAKS) birimi ve yöntemiyle; kullanıma göre alanlar; anahtarıyla izlenen değişen kararlar; istenirse geçirimsiz alan ve erişim (değerler kullanıcının); veri eksikleri ve varsayımlar. Tek puanla en iyi senaryo seçilmez. Raporu kaydet CSV yazar ve taban damgasını saklar: taban sonradan değişince senaryonun eskidiği söylenir. Harita ve CBS'de. Eski adı Alternatif etkisi.",
       "aliases": [
+        "SENARYOOLCULERI",
         "ALTERNATIFETKISI",
         "SENARYOETKISI"
       ],

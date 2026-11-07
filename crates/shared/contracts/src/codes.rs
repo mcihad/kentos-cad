@@ -2008,7 +2008,7 @@ codes! {
     /// no elevation along it (docs/adr/1860).
     INVALID_PIPE_RUN = "invalid_pipe_run", Failed, false, "Hat profili çizilemiyor; ileti nedenini söyler.";
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
-    /// Alternatif etkisi (docs/adr/1440): a scenario none of whose layers stands for a base layer.
+    /// Senaryo ölçüleri (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
     /// Düzenleme dağıtım taslağı (docs/adr/1460): rounded values that do not add up while the remainder rule is `reject`.
     NEEDS_RULE = "needs_rule", Failed, false, "Yuvarlanan değerler toplamı tutmuyor ve artık kuralı yok; hiçbir şey dağıtılmadı.";

@@ -197,16 +197,16 @@ edit = _ScenariosEdit()
 
 
 class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, ScenariosImpacted]):
-    """``cad.scenarios.impact`` v1. Alternatif etkisi: Bir senaryoyu (tasarım alternatifi)
-    yerine geçtiği mevcut durumla yan yana ölçer: nesne sayısı, alanların toplamı (m²,
-    düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin
-    birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla
-    (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed,
-    geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri
-    eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek
-    puanla en iyi alternatif seçilmez. stamp mevcut durumun katmanlarının özetidir:
+    """``cad.scenarios.impact`` v1. Senaryo ölçüleri: Seçilen senaryoyu yerine geçtiği
+    mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı
+    (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her
+    birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar;
+    anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added,
+    removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla;
+    veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar.
+    Tek puanla en iyi senaryo seçilmez. stamp mevcut durumun katmanlarının özetidir:
     önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri
-    değişti mi söyler (alternatif kendiliğinden yeni veriye uymuş sayılmaz). İstenince,
+    değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince,
     değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious
     (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı
     verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları):
@@ -219,7 +219,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
     __slots__ = ()
     id = "cad.scenarios.impact"
     version = 1
-    title = "Alternatif etkisi"
+    title = "Senaryo ölçüleri"
     scope = "document"
     input_type = ScenariosImpact
     output_type = ScenariosImpacted
@@ -239,20 +239,20 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ScenariosImpacted:
-        """Alternatif etkisi: Bir senaryoyu (tasarım alternatifi) yerine geçtiği mevcut durumla
-        yan yana ölçer: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu
-        (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma
-        (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik)
-        eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra
-        kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı
-        olmayan alanlar) ve varsayımlar. Tek puanla en iyi alternatif seçilmez. stamp mevcut
-        durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile
-        verilince stale taban o zamandan beri değişti mi söyler (alternatif kendiliğinden
-        yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (ADR
-        2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1):
-        geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access
-        (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz
-        uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from
+        """Senaryo ölçüleri: Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan
+        yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin
+        uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi;
+        kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer
+        KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision,
+        both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı,
+        kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo
+        seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın
+        damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo
+        kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki
+        ölçü daha (ADR 2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik
+        payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği;
+        access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına
+        düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from
         alanlarına oranı (%), to alanı olmayan taraf veri eksiği. Salt okunur. Retler:
         invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
         access.from/to boş), scenario_not_found, nothing_to_compare.
@@ -365,7 +365,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
 
 
 impact = _ScenariosImpact()
-"""Alternatif etkisi (``cad.scenarios.impact``)."""
+"""Senaryo ölçüleri (``cad.scenarios.impact``)."""
 
 
 __all__ = ["edit", "impact"]

@@ -131,9 +131,9 @@
   paketin `mosaic`'i × iri YÖA (m. 67(6), paket sürüm 2); arazi noktalarıyla her görüntünün kendi denetimi.
 - **Düzenleme dağıtım taslağı (6 Kasım 2026; MAP-11, [ADR 1460](../../docs/adr/1460-readjustment-distribution-draft.md)).**
   `cad.readjustment.distribute` (Harita + CBS, salt okunur, hep taslak): oranlar kural paketinin verisi, sayılar kesin.
-- **Alternatif etkisi (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).**
-  `cad.scenarios.impact` (Harita + CBS, salt okunur): senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban
-  damgasıyla eskime; tek puan yok.
+- **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
+  Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
+  senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.
 - **İmar planı denetimi (6 Kasım 2026; MAP-09, [ADR 1420](../../docs/adr/1420-zoning-plan-typed-check.md)).**
   Yerleşik `imar-plani` profili ve `cad.zoning.check` (Harita + CBS, salt okunur); karar renkten değil tipli değerden;
   MPYY/PlanGML uygunluğu iddia edilmez.

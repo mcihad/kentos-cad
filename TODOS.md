@@ -66,7 +66,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-07 / ADR 1262: `cad.topology.clean`'in web işleyicisi ve Taşınma raporu penceresi.
 - MAP-08 / ADR 1400: `cad.parcels.check`'in web işleyicisi, Parsel alan denetimi penceresi; web'in `cad.parcels.create`'i numarayı adada arasın (üç yeni ortak durum).
 - MAP-09 / ADR 1420: `cad.zoning.check`'in web işleyicisi, İmar planı denetimi penceresi; web'in profil listesi üç yerleşik profili (imar-plani) söylesin.
-- MAP-10 / ADR 1440: `cad.scenarios.impact`'in web işleyicisi ve Alternatif etkisi penceresi.
+- MAP-10 / ADR 1440: `cad.scenarios.impact`'in web işleyicisi ve Senaryo ölçüleri penceresi (eski adı Alternatif etkisi).
 - MAP-11 / ADR 1460: `cad.readjustment.distribute`'in web işleyicisi ve Düzenleme dağıtım taslağı penceresi.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
@@ -88,7 +88,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-07 / ADR 1980: web'in İşlem aracı `topology.check` (Topolojiyi kurallarla denetle) ve `fixtures/processing/v1/geometry.json`'ın topoloji durumları.
 - MAP-08 / ADR 2000: `cad.parcels.boundaries`'ın web işleyicisi ve Parsel alan denetiminin Sınır grafiği penceresi.
 - MAP-09 / ADR 2020: web'in İmar planı denetiminde `outsideUpper` ve `roadGap` türleri (sözler ve süzgeç grupları).
-- MAP-10 / ADR 2040: web'in Alternatif etkisi penceresinde geçirimsizlik payları ve erişim girdileri.
+- MAP-10 / ADR 2040: web'in Senaryo ölçüleri penceresinde geçirimsizlik payları ve erişim girdileri.
 - MAP-18 / ADR 1680: web'in pafta girdilerinde (`ProjectInfo`) koordinat bilgisi ve baskı denetiminde `crs_text_mismatch`.
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.
 - MAP-16 / ADR 1640: `cad.pipes.check`'in web işleyicisi ve Boru hattı denetimi penceresi.

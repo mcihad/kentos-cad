@@ -38,7 +38,8 @@ eskimesi; tek puan yerine ölçütler ve veri eksikleri). Durum: taslak. İlgili
      saklanması `.kcad` alanı ister; sonraki iştir.
 4. **Tek puan yok:** ölçüler yan yana verilir. Veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve
    varsayımlar cevaptadır, böylece eksik veriyle kesin sonuç verilmez. Tablo, CSV ve rapor aynı sayıları kullanır.
-5. **Pencere Alternatif etkisi…** (`scenario.impact`, ikon `scenarioImpact`):
+5. **Pencere Alternatif etkisi…** (`scenario.impact`, ikon `scenarioImpact`; 7 Kasım 2026'dan beri adı **Senaryo ölçüleri…**,
+   bkz. [ADR 2040](2040-impact-impervious-and-access.md) “Ad”):
    - **Yeri:** Harita'da Plan › İmar planı (Senaryo oluştur ile birlikte), CBS'de Analiz › Zaman ve senaryo. Yol ve
      Mimari sunmaz.
    - **İçerik:**

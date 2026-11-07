@@ -1,6 +1,6 @@
-//! Alternatif etkisi (impact_window.rs, docs/adr/1440) on the shared cases' drawing of `cad.scenarios.impact`: the
-//! alternative's measures and changed decisions; Raporu kaydet writes the CSV and keeps the stamp, so after the
-//! field state changes the comparison says the alternative is stale; nothing is written to the drawing; the impervious
+//! Senaryo ölçüleri (impact_window.rs, docs/adr/1440) on the shared cases' drawing of `cad.scenarios.impact`: the
+//! scenario's measures and changed decisions; Raporu kaydet writes the CSV and keeps the stamp, so after the
+//! field state changes the comparison says the scenario is stale; nothing is written to the drawing; the impervious
 //! shares and the access typed give the shared case's measures, a share that does not read is said (docs/adr/2040).
 //! Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
@@ -35,12 +35,12 @@ fn the_alternative_is_measured_saved_and_found_stale_when_the_base_moves() {
     assert_eq!(r.stale, None);
     let _ = app.update(Message::Impact(I::View(View::Changes)));
     // Raporu kaydet: the CSV, and the stamp kept.
-    let dir = std::env::temp_dir().join(format!("kentos-alternatif-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("kentos-senaryo-olculeri-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let file = dir.join("rapor.csv");
     app.impact_save(file.clone());
     let text = std::fs::read_to_string(&file).expect("written");
-    assert!(text.starts_with(&format!("Alternatif;Alternatif A;Taban damgası;{}", r.stamp)), "{text}");
+    assert!(text.starts_with(&format!("Senaryo;Alternatif A;Taban damgası;{}", r.stamp)), "{text}");
     assert!(text.contains("K2;Kararı değişti;ticaret-konut;konut;1500;1500;2625;2250"), "{text}");
     let _ = std::fs::remove_dir_all(dir);
     assert_eq!(app.impact.answer.clone().expect("an answer").expect("compared").stale, Some(false));
@@ -92,7 +92,7 @@ fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
     }
 }
 
-/// `.run/gui-evidence/alternatif-etkisi-1440/`:
+/// `.run/gui-evidence/senaryo-olculeri-1440/`:
 ///
 /// ```text
 /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib impact_window_tests::screens -- --ignored --nocapture
@@ -102,7 +102,7 @@ fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/alternatif-etkisi-1440");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/senaryo-olculeri-1440");
     std::fs::create_dir_all(&out).expect("a folder");
     for (view, stem) in [(View::Measures, "1-olculer"), (View::Changes, "2-degisen-kararlar")] {
         for (theme, size, name) in

@@ -430,7 +430,7 @@ pub enum Dialog {
     FeaturesReconcile,
     /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
     Zoning,
-    /// Alternatif etkisi (impact_window.rs, docs/adr/1440); its state is `App::impact`.
+    /// Senaryo ölçüleri (impact_window.rs, docs/adr/1440); its state is `App::impact`.
     Impact,
     /// Düzenleme dağıtım taslağı (readjustment_window.rs, docs/adr/1460); its state is `App::readjustment`.
     Readjustment,
@@ -1552,7 +1552,7 @@ pub struct App {
     pub(crate) overlap: crate::overlap_window::State,
     pub(crate) register: crate::register_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
-    /// Alternatif etkisi's base stamps saved this session, by scenario (docs/adr/1440 §3).
+    /// Senaryo ölçüleri's base stamps saved this session, by scenario (docs/adr/1440 §3).
     pub(crate) impact_stamps: crate::impact_window::Stamps,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
     pub(crate) xref_watch: crate::xrefs_watch::Watch,

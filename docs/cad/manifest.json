@@ -8496,7 +8496,7 @@
   {
    "id": "scenario.impact",
    "kind": "command",
-   "title": "Alternatif etkisi…",
+   "title": "Senaryo ölçüleri…",
    "level": "query",
    "via": [
     "cad.scenarios.impact"

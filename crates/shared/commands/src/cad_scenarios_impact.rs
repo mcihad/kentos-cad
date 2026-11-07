@@ -1,5 +1,5 @@
-//! `cad.scenarios.impact` v1 (plan/map-cad.md MAP-10, docs/adr/1440): Alternatif etkisi, read only. A scenario (a
-//! design alternative: a group whose layers stand for base layers, docs/adr/0210 §9) set beside the field state it
+//! `cad.scenarios.impact` v1 (plan/map-cad.md MAP-10, docs/adr/1440): Senaryo ölçüleri (“Alternatif etkisi” until
+//! 2026-11-07), read only. A scenario (a design alternative: a group whose layers stand for base layers, docs/adr/0210 §9) set beside the field state it
 //! replaces: each measure with its unit and its method, on both sides and their difference; the areas by use; every
 //! decision that changed, matched by its key (added, removed, its geometry, its decision, both), with its area and
 //! capacity before and after; the gaps in the data that leave a measure short; the assumptions. No single score picks

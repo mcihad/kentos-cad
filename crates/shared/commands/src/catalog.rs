@@ -9569,15 +9569,15 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
-        // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
+        // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
         CommandDescriptor {
             id: crate::CAD_SCENARIOS_IMPACT.into(),
             version: crate::CAD_SCENARIOS_IMPACT_VERSION,
-            title: "Alternatif etkisi".into(),
-            summary: "Bir senaryoyu (tasarım alternatifi) yerine geçtiği mevcut durumla yan yana ölçer: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi alternatif seçilmez. \
-                      stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (alternatif kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği. Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş), scenario_not_found, nothing_to_compare."
+            title: "Senaryo ölçüleri".into(),
+            summary: "Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo seçilmez. \
+                      stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği. Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş), scenario_not_found, nothing_to_compare."
                 .into(),
-            aliases: vec!["alternatifetkisi".into(), "senaryoetkisi".into()],
+            aliases: vec!["senaryoolculeri".into(), "alternatifetkisi".into(), "senaryoetkisi".into()],
             effect: CommandEffect::Query,
             hosts: vec![CommandHost::Desktop],
             headless: true,
@@ -9589,7 +9589,7 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::ScenariosImpacted>(),
             plan: Some(schema::<crate::ScenariosImpacted>()),
             capabilities: None,
-            examples: vec![CommandExample { title: "Alternatif A'yı mevcut durumla".into(), input: json!({ "scenario": "alternatif-a" }), output: None }],
+            examples: vec![CommandExample { title: "Bir senaryoyu mevcut durumla".into(), input: json!({ "scenario": "alternatif-a" }), output: None }],
         },
         // İmar planı denetimi (plan/map-cad.md MAP-09, docs/adr/1420).
         CommandDescriptor {
