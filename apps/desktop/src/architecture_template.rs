@@ -125,17 +125,14 @@ impl App {
             return label::body("Şablon farkı okunamadı.").into();
         };
         let session = w.session;
-        let projected = self
-            .document
-            .as_ref()
-            .is_some_and(|d| d.settings().has_system());
+        // The package's own words, read from it (docs/adr/3007): the texts said cm / 1:50 by hand.
+        let package = Package::read();
         let choices = [
             Choice::new("Mevcut birim ve çizim ölçeğini koru"),
-            Choice::new(if projected {
-                "Ofis ayarlarını uygula — m / 1:50 (sistem birimi)"
-            } else {
-                "Ofis paketinin ayarlarını uygula — cm / 1:50"
-            }),
+            Choice::new(format!(
+                "Ofis paketinin ayarlarını uygula — {}",
+                package.settings
+            )),
         ];
         let pick = Select::new(
             choices,
@@ -222,9 +219,9 @@ impl App {
             body = body.push(label::body(why));
         }
         Frame::new("Mimari şablonunu gözden geçir")
-            .push(label::muted("Ofis paketi cm / 1:50, iki kat ve üç A3 pafta içerir. Model geometrisi yeniden ölçeklenmez. Mevcut tanım, yazı tipi ve katman durumları korunur."))
+            .push(label::muted(format!("Ofis paketi {}, {} kat ve {} A3 pafta içerir. Model geometrisi yeniden ölçeklenmez. Mevcut tanım, yazı tipi ve katman durumları korunur.", package.settings, package.levels, package.sheets)))
             .push(pick).scroll(body)
-            .push(label::caption("Tüm paket tek geri alma adımıdır. Paftalar kendi 1:50 / 1:20 oranlarıyla eklenir."))
+            .push(label::caption(format!("Tüm paket tek geri alma adımıdır. Paftalar kendi ölçekleriyle eklenir: {}.", package.sheet_scales)))
             .action(button(label::body("Vazgeç"))
 .padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press(Message::DialogClosed))
             .action(button(label::body("Uygula"))
@@ -233,6 +230,51 @@ impl App {
             })))
             .width(650.).max_height(650.)
 .modal(Message::DialogClosed)
+    }
+}
+
+/// What the window says of KentOS's Mimari package, from its data.
+pub(crate) struct Package {
+    /// Its unit and plot scale: “m / 1:100”.
+    pub(crate) settings: String,
+    pub(crate) levels: usize,
+    pub(crate) sheets: usize,
+    /// Its sheets' scales, each once in order: “1:100 ve 1:20”.
+    pub(crate) sheet_scales: String,
+}
+
+impl Package {
+    pub(crate) fn read() -> Self {
+        let Some(t) = kentos_commands::builtin_template("mimari") else {
+            return Self {
+                settings: String::new(),
+                levels: 0,
+                sheets: 0,
+                sheet_scales: String::new(),
+            };
+        };
+        let mut scales: Vec<String> = Vec::new();
+        for s in &t.sheets {
+            let text = kentos_project::wizard::scale_text(f64::from(s.scale));
+            if !scales.contains(&text) {
+                scales.push(text);
+            }
+        }
+        let sheet_scales = match scales.split_last() {
+            Some((last, rest)) if !rest.is_empty() => format!("{} ve {last}", rest.join(", ")),
+            Some((last, _)) => last.clone(),
+            None => String::new(),
+        };
+        Self {
+            settings: format!(
+                "{} / {}",
+                t.unit.mark(),
+                kentos_project::wizard::scale_text(t.plot_scale)
+            ),
+            levels: t.levels.len(),
+            sheets: t.sheets.len(),
+            sheet_scales,
+        }
     }
 }
 

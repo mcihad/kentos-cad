@@ -62,6 +62,13 @@ pub fn offered(settings: &kentos_commands::ProjectSettings) -> Vec<WallStyleDef>
     all
 }
 
+/// The wall tools take `style`, as choosing it under Stil does: its key and its new walls' thickness. KentOS Mimari
+/// starts its tools on one this way (docs/adr/3007).
+pub fn take_style(memory: &mut Memory, style: &WallStyleDef) {
+    memory.wall_style = Some(style_key(&style.id));
+    memory.wall_width = style.new_width();
+}
+
 /// The style the session chose, when one of [`offered`] still has its id.
 pub fn chosen(
     memory: &Memory,
@@ -221,10 +228,7 @@ pub fn choose(key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
                 .into_iter()
                 .find(|s| s.name.to_lowercase() == folded || s.id == typed.trim());
             match found {
-                Some(s) => {
-                    cx.memory.wall_style = Some(style_key(&s.id));
-                    cx.memory.wall_width = s.new_width();
-                }
+                Some(s) => take_style(cx.memory, &s),
                 None => cx.say(
                     Level::Warn,
                     format!(

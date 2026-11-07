@@ -2559,10 +2559,9 @@ pub(crate) fn hex_color(text: &str) -> Color {
     Color::from_rgb8(0x9a, 0xa0, 0xa6)
 }
 
-/// The architecture tabs: their tab row scrolls in a narrow window. Every tab, these as the others, keeps its buttons'
-/// names at every width (DESIGN.md §7.3.1, 7 November 2026).
-/// A module program's own ribbon tab, kept in sight on a narrow strip (docs/adr/3005): KentOS Mimari's Mimari.
-fn program_tab(module: kentos_launch::Module) -> Option<&'static str> {
+/// A module program's own ribbon tab: kept in sight on a narrow strip (docs/adr/3005), and the one a new project opens
+/// on (docs/adr/3007). KentOS Mimari's Mimari.
+pub(crate) fn program_tab(module: kentos_launch::Module) -> Option<&'static str> {
     match module {
         kentos_launch::Module::Architecture => Some("arch"),
         _ => None,

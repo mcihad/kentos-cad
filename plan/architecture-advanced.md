@@ -122,15 +122,15 @@ içi izin görmediği farklar:
 | G2 | Büyük harf (Shift+E) aracın seçeneği sayılmıyor: Dikdörtgen duvarı bırakıp Uzat'ı başlatıyor. Küçük "e" doğru çalışıyor (7 Kasım'da gerçek pencerede ikisi de denendi; ilk denemede sürücünün yazdığı büyük "E" yanlışlıkla "E bozuk" diye kaydedilmişti) | ADV-08 (M4) |
 | G3 | Tablo yerleşince şerit kendiliğinden Tablo sekmesine geçiyor; sonraki Çizelge ▾ tıkı başka düğmeye gidiyor, ikinci çizelge sessizce oluşmuyor | ADV-09 |
 | G4 | Duvar ölçüleri "Ölçü katmanı: Çizim", Hepsini etiketle "Etiket katmanı: Çizim (sabit)"; yeni projenin Ölçü ve Yazı katmanları kullanılmıyor | ADV-14 |
-| G5 | Dikdörtgen duvarın varsayılanı 0,20 m, Stil: Yok | ADV-13 |
+| G5 | Dikdörtgen duvarın varsayılanı 0,20 m, Stil: Yok **(M8'de düzeldi: KentOS Mimari'de Dış duvar 25, 0,25 m)** | ADV-13 (M8) |
 | G6 | Kenetleme ve ızgara açıkken fareyle konan pencereler 1–2 cm kayıyor (dış zincir 1.900 · 2.952 · 2.095 · 0.953; kod içi izde 1.910 · 2.940 · 2.100 · 0.950); kullanıcı bunu yerleştirirken görmüyor | ADV-11 (ölçüyle yerleştirme) |
 | G7 | Görünen alanda çizelgeye yer yok; ikinci çizelgenin noktası birincinin üstüne düşünce tık tabloyu seçti, ileti yok | ADV-24 |
 | G8 | Gerçek Mimari şeridi kod içi `kentos-cad` resimlerinden farklı (büyük düğmeler, katlanmış Proje ▾) | ADV-26 |
-| G9 | Yeni proje Giriş sekmesinde açılıyor (S12 doğrulandı) | ADV-09, ADV-13 |
+| G9 | Yeni proje Giriş sekmesinde açılıyor (S12 doğrulandı) **(M8'de düzeldi: yeni proje Mimari sekmesinde açılıyor)** | ADV-09, ADV-13 (M8) |
 | G10 | Geçici ölçü yazısı mahal etiketinin, kapı ve pencere etiketleri duvar çizgisinin üstüne biniyor (S19 doğrulandı) | ADV-16 |
 | G11 | F1 (Fare ve klavye kısayolları) penceresi Esc'yle kapanmıyor; Kapat düğmesi kapatıyor **(M7'de düzeldi: yazı alanının yuttuğu Esc pencereyi kapatıyor)** | ADV-09 (M7) |
 | G12 | Durum çubuğu uyarıyı kesiyor: "Duvar sürüyor: “L”…" 1440 px'te okunmuyor, tam metin yalnız Komut geçmişi'nde | ADV-09 |
-| G13 | Şerit etiket uzunluğuna duyarlı. Bir etiket 3 harf kısalınca Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyor; 4 harf uzayınca kentos-cad'in Mimari sekmesinde bir panel ikona iniyor (M4'te görüldü) | ADV-09 (M8) |
+| G13 | Şerit etiket uzunluğuna duyarlı. Bir etiket 3 harf kısalınca Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyor; 4 harf uzayınca kentos-cad'in Mimari sekmesinde bir panel ikona iniyor (M4'te görüldü) | ADV-09 (M15) |
 
 ## 2. Piyasa araştırması
 
@@ -601,7 +601,7 @@ _Durum (7 Kasım 2026):_ Sekme satırı ve Öznitelikler yapıldı (M6, [ADR 300
   - Esc F1'i kapatıyor (G11).
 - Kalanlar:
   - pencerelerin yüzer ya da dok paneli olması;
-  - şeridin yeniden düzeni (M8);
+  - şeridin yeniden düzeni (M15);
   - sağ tık menüsü ve üzerine gelme kartı;
   - alt panel.
 
@@ -692,7 +692,16 @@ söylenir. Dayanak S13.
 - "lavabo" aramasından duvara hizalı yerleşime ≤ 3 eylem.
 - Banyo örneğinde kullanım alanı çakışması işaretlenir.
 
-#### ADV-13 — Mimari başlangıç, şablon ve varsayılanlar [ ]
+#### ADV-13 — Mimari başlangıç, şablon ve varsayılanlar [~]
+
+_Durum (7 Kasım 2026):_ Başlangıç yapıldı (M8, [ADR 3007](../docs/adr/3007-mimari-start-ground-floor-hatched-wall.md)).
+- Yeni Mimari projesi Zemin kat'la (3,00 m) ve Mimari sekmesinde açılıyor.
+- Duvar araçları Dış duvar 25 ile başlıyor; ilk duvar 1:100'de poşeli.
+- Şablon m ve 1:100. Ayarsız eski otomasyon çağrısı cm ve 1:50 yazmayı sürdürüyor.
+- Kalanlar:
+  - ilk duvarın kendi katmanı (M9);
+  - malzemeleri ADR 0791 kitaplığından gelen stiller ve 13,5 cm'lik iç bölme;
+  - mahal adı listesi, örnek 2+1 projesi, ilk beş dakikanın ipuçları.
 
 **Kullanıcı sonucu:** Boş projede ilk duvar poşesiyle, katıyla ve kendi katmanında çıkar. Dayanak S4, S12.
 
@@ -1011,14 +1020,14 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M8 | Mimari başlangıç ve varsayılan duvar stilleri | ADV-13 | İlk duvar poşeli ve Zemin katta; şablon m ve 1:100 |
+| M8 | Mimari başlangıç ve varsayılan duvar stilleri | ADV-13 | İlk duvar poşeli ve Zemin katta; şablon m ve 1:100 **(M8, ADR 3007: yapıldı; Mimari sekmesiyle açılış M15'ten alındı; malzeme bağı ve örnek proje kaldı)** |
 | M9 | Katman anahtarı (EK-4) | ADV-14 | 2+1 örneği türlerine göre katmanlarda; DXF'te aynısı |
 | M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı |
 | M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı |
 | M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte |
 | M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler |
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım |
-| M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme; Mimari sekmesiyle açılış |
+| M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) |
 | M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |
 | M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart |
 

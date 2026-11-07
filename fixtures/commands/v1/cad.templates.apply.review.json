@@ -362,7 +362,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -441,7 +441,7 @@
                 "mode": "template",
                 "previousUnit": "m",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -478,7 +478,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -557,7 +557,7 @@
                 "mode": "template",
                 "previousUnit": "m",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -918,7 +918,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -997,7 +997,7 @@
                 "mode": "template",
                 "previousUnit": "m",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -1034,7 +1034,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -1113,7 +1113,7 @@
                 "mode": "template",
                 "previousUnit": "m",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -1444,7 +1444,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -1523,7 +1523,7 @@
                 "mode": "template",
                 "previousUnit": "mm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -1560,7 +1560,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -1639,7 +1639,7 @@
                 "mode": "template",
                 "previousUnit": "mm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -2000,7 +2000,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -2079,7 +2079,7 @@
                 "mode": "template",
                 "previousUnit": "mm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -2116,7 +2116,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -2195,7 +2195,7 @@
                 "mode": "template",
                 "previousUnit": "mm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -2526,7 +2526,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -2605,7 +2605,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -2642,7 +2642,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -2721,7 +2721,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -3082,7 +3082,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -3161,7 +3161,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -3198,7 +3198,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -3277,7 +3277,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -3608,7 +3608,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -3687,7 +3687,7 @@
                 "mode": "template",
                 "previousUnit": "in",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -3724,7 +3724,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -3803,7 +3803,7 @@
                 "mode": "template",
                 "previousUnit": "in",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -4164,7 +4164,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -4243,7 +4243,7 @@
                 "mode": "template",
                 "previousUnit": "in",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -4280,7 +4280,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -4359,7 +4359,7 @@
                 "mode": "template",
                 "previousUnit": "in",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -4690,7 +4690,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -4769,7 +4769,7 @@
                 "mode": "template",
                 "previousUnit": "ft",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -4806,7 +4806,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -4885,7 +4885,7 @@
                 "mode": "template",
                 "previousUnit": "ft",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -5246,7 +5246,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -5325,7 +5325,7 @@
                 "mode": "template",
                 "previousUnit": "ft",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -5362,7 +5362,7 @@
           "result": {
             "status": "completed",
             "output": {
-              "unit": "cm",
+              "unit": "m",
               "layers": [
                 "A-DUVAR",
                 "A-KAPI",
@@ -5441,7 +5441,7 @@
                 "mode": "template",
                 "previousUnit": "ft",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -5604,7 +5604,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -5767,7 +5767,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -5930,7 +5930,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -6093,7 +6093,7 @@
                 "mode": "template",
                 "previousUnit": "cm",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -7083,7 +7083,7 @@
                 "mode": "template",
                 "previousUnit": "m",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -7201,7 +7201,284 @@
                 "mode": "template",
                 "previousUnit": "m",
                 "previousPlotScale": 100,
-                "plotScale": 50.0,
+                "plotScale": 100.0,
+                "spaceMethod": "net",
+                "preserved": []
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koordinat sistemine paketin metresi birim verilmeden uygulanır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Şablon",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 100,
+          "workspace": "cad"
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "a": {
+              "x": 0,
+              "y": 0
+            },
+            "b": {
+              "x": 5,
+              "y": 0
+            }
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "settingsMode": "template"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "m",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet",
+                "Tek kişilik yatak",
+                "Komodin",
+                "Koltuk",
+                "İkili kanepe",
+                "Yuvarlak masa",
+                "Çalışma masası",
+                "TV ünitesi",
+                "Kitaplık",
+                "Asma klozet",
+                "Pisuvar",
+                "Köşe duş",
+                "Dolaplı lavabo",
+                "Çamaşır makinesi",
+                "Kurutma makinesi",
+                "Evye",
+                "Ocak",
+                "Buzdolabı",
+                "Bulaşık makinesi",
+                "Fırın",
+                "Alt dolap",
+                "Üst dolap",
+                "Revizyon"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current",
+              "review": {
+                "mode": "template",
+                "previousUnit": "m",
+                "previousPlotScale": 100,
+                "plotScale": 100.0,
+                "spaceMethod": "net",
+                "preserved": []
+              }
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "validate",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "settingsMode": "template"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.templates.apply",
+          "input": {
+            "name": "mimari",
+            "settingsMode": "template"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "unit": "m",
+              "layers": [
+                "A-DUVAR",
+                "A-KAPI",
+                "A-PENCERE",
+                "A-MOBİLYA",
+                "A-EKSEN",
+                "A-ÖLÇÜ",
+                "A-YAZI",
+                "A-TARAMA",
+                "A-REVİZYON",
+                "A-YARDIMCI"
+              ],
+              "styles": [
+                "A-Yazı",
+                "A-Başlık",
+                "A-Ölçü"
+              ],
+              "blocks": [
+                "Kapı",
+                "Çift kanatlı kapı",
+                "Pencere",
+                "Masa",
+                "Sandalye",
+                "Kanepe",
+                "Çift kişilik yatak",
+                "Dolap",
+                "Lavabo",
+                "Klozet",
+                "Duş teknesi",
+                "Küvet",
+                "Kot işareti",
+                "Kuzey oku",
+                "Kesit işareti",
+                "Antet",
+                "Tek kişilik yatak",
+                "Komodin",
+                "Koltuk",
+                "İkili kanepe",
+                "Yuvarlak masa",
+                "Çalışma masası",
+                "TV ünitesi",
+                "Kitaplık",
+                "Asma klozet",
+                "Pisuvar",
+                "Köşe duş",
+                "Dolaplı lavabo",
+                "Çamaşır makinesi",
+                "Kurutma makinesi",
+                "Evye",
+                "Ocak",
+                "Buzdolabı",
+                "Bulaşık makinesi",
+                "Fırın",
+                "Alt dolap",
+                "Üst dolap",
+                "Revizyon"
+              ],
+              "wallStyles": [
+                "Dış duvar 25",
+                "İç duvar 15",
+                "Gazbeton 20",
+                "Betonarme perde 25",
+                "Bölme duvar 10"
+              ],
+              "levels": [
+                "Zemin kat",
+                "1. kat"
+              ],
+              "sheets": [
+                "A-101 Zemin kat planı",
+                "A-301 Kesitler",
+                "A-501 Detaylar"
+              ],
+              "revision": "$current",
+              "review": {
+                "mode": "template",
+                "previousUnit": "m",
+                "previousPlotScale": 100,
+                "plotScale": 100.0,
                 "spaceMethod": "net",
                 "preserved": []
               }
@@ -7278,7 +7555,8 @@
           "command": "cad.templates.apply",
           "input": {
             "name": "mimari",
-            "settingsMode": "template"
+            "settingsMode": "template",
+            "unit": "cm"
           },
           "result": {
             "status": "failed",
@@ -7357,7 +7635,8 @@
           "command": "cad.templates.apply",
           "input": {
             "name": "mimari",
-            "settingsMode": "template"
+            "settingsMode": "template",
+            "unit": "cm"
           },
           "result": {
             "status": "failed",
@@ -7436,7 +7715,8 @@
           "command": "cad.templates.apply",
           "input": {
             "name": "mimari",
-            "settingsMode": "template"
+            "settingsMode": "template",
+            "unit": "cm"
           },
           "result": {
             "status": "failed",

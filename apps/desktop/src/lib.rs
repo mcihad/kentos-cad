@@ -90,6 +90,7 @@ mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
 mod arch_project;
+mod arch_start;
 mod architecture_settings;
 mod architecture_ribbon;
 mod architecture_template;

@@ -1,0 +1,22 @@
+# M8: KentOS Mimari'de yeni proje Mimari sekmesinde ve Zemin kat'ta açılır; ilk duvar Dış duvar 25 ile poşeli yazılır
+# (docs/adr/3007). Boş projeden ilk duvara üç eylem: Dikdörtgen duvar, iki köşe.
+# Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/mimari-baslangic.txt .run/gui-evidence/mimari-m8/sonra --modul mimari
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 2000
+shot m8-sonra-1-yeni-proje
+click 114 80    # 1. eylem: Dikdörtgen duvar (Mimari sekmesi açık)
+wait 600
+shot m8-sonra-2-arac
+click 400 300   # 2. eylem: ilk köşe
+wait 300
+click 750 550   # 3. eylem: karşı köşe, duvar yazılır
+wait 900
+shot m8-sonra-3-ilk-duvar
+key Escape
+key Escape
+wait 300
+click 400 425   # duvarın sol kenarı: seç
+wait 900
+shot m8-sonra-4-secili-duvar

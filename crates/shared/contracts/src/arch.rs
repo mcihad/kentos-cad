@@ -1189,6 +1189,18 @@ pub struct ArchLevel {
     pub height: Option<f64>,
 }
 
+/// A new Mimari project's level (docs/adr/3007): Zemin kat at ±0.00, 3.00 m floor to floor, the Mimari template's
+/// first level (`catalog/v1/templates/mimari.json`). Within PAİY 28(1)'s 3.60 m for a dwelling's storey, and a slab with
+/// its floor leaves more than 28(4)'s 2.60 m clear height. A project began with no level: the first wall had none.
+pub fn ground_floor() -> ArchLevel {
+    ArchLevel {
+        id: "zemin".into(),
+        name: "Zemin kat".into(),
+        elevation: 0.0,
+        height: Some(3.0),
+    }
+}
+
 /// The most findings of Mimari denetim a project keeps as exceptions (docs/adr/0732 §3).
 pub const AUDIT_EXCEPTIONS_MAX: usize = 10_000;
 

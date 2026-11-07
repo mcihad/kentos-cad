@@ -3139,7 +3139,7 @@
       "title": "Mimari şablonu",
       "short": "Şablon",
       "icon": "archTemplate",
-      "description": "Mimari ofis paketini önce farkıyla gösterir. Mevcut birim ve çizim ölçeği varsayılan olarak korunur; eksik katman, stil, blok, kat ve paftalar tek geri alma adımında eklenir. İstenirse cm / 1:50 paket ayarı açıkça seçilir; model geometrisi yeniden ölçeklenmez.",
+      "description": "Mimari ofis paketini önce farkıyla gösterir. Mevcut birim ve çizim ölçeği varsayılan olarak korunur; eksik katman, stil, blok, kat ve paftalar tek geri alma adımında eklenir. İstenirse paketin m / 1:100 ayarı (yeni Mimari projesiyle aynı) açıkça seçilir; model geometrisi yeniden ölçeklenmez.",
       "aliases": [
         "MIMARISABLON",
         "ARCHTEMPLATE"

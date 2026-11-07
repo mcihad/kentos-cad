@@ -165,7 +165,7 @@ Eski sözcükler (Benimse, Çiz, Ç) yazılınca yine okunur.
 - **Şerit yan etkisi** (gerçek pencerede görüldü, önlendi). Önce "Duvar birleşimi"nin adı değiştirilmek istendi:
   - Kısa "Uç birleşimi" ile Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyordu.
   - Uzun "Duvar ucu birleşimi" ile kentos-cad'in Mimari sekmesinde bir panel 1440 px'te ikona iniyordu (`ribbon_tests`).
-  - Bu yüzden öbür araç yeniden adlandırıldı; şeridin yeniden düzeni M8'in işi.
+  - Bu yüzden öbür araç yeniden adlandırıldı; şeridin yeniden düzeni M15'in işi.
 - **Ayrı bulgular:**
   - `active_level::tests::a_drawing_opens_on_the_level_and_view_it_was_saved_with`, 2 MiB'lık test yığınını taşırıyor
     (64 MiB'la 0,16 s'de geçiyor; M4 olmadan da aynı).

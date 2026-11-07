@@ -21,21 +21,27 @@ fn apply_event(app: &App) -> Message {
 #[test]
 fn opening_changing_policy_and_cancelling_a_template_write_nothing() {
     let mut app = app();
+    // A drawing other than the package: centimetres at 1:200.
+    let mut settings = app.document.as_ref().unwrap().settings().clone();
+    settings.drawing_unit = Some(kentos_commands::DrawingUnit::Cm);
+    settings.plot_scale = 200.;
+    app.document.as_mut().unwrap().model.set_settings(settings);
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let _ = app.update(Message::Run("arch.template"));
     assert_eq!(app.dialog, Some(Dialog::ArchTemplate));
     let w = app.arch_template.as_ref().unwrap();
     assert_eq!(w.input.settings_mode, Some(TemplateSettingsMode::Keep));
-    assert_eq!(w.plan.unit, kentos_commands::DrawingUnit::M);
-    assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 100.);
+    assert_eq!(w.plan.unit, kentos_commands::DrawingUnit::Cm);
+    assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 200.);
     let session = w.session;
     let _ = app.update(Message::ArchTemplate(Event::Mode {
         session,
         mode: TemplateSettingsMode::Template,
     }));
+    // The package's: metres and 1:100, a new Mimari project's (docs/adr/3007).
     let w = app.arch_template.as_ref().unwrap();
-    assert_eq!(w.plan.unit, kentos_commands::DrawingUnit::Cm);
-    assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 50.);
+    assert_eq!(w.plan.unit, kentos_commands::DrawingUnit::M);
+    assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 100.);
     assert_eq!(
         app.document.as_ref().unwrap().model.to_snapshot_v2(),
         before
@@ -161,6 +167,7 @@ fn a_projected_cad_previews_and_applies_the_office_scale_in_metres() {
     settings.srid = 5256;
     // A legacy file can have a redundant display unit; the coordinate system wins.
     settings.drawing_unit = Some(kentos_commands::DrawingUnit::Cm);
+    settings.plot_scale = 500.;
     app.document.as_mut().unwrap().model.set_settings(settings);
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let _ = app.update(Message::Run("arch.template"));
@@ -174,7 +181,7 @@ fn a_projected_cad_previews_and_applies_the_office_scale_in_metres() {
     let w = app.arch_template.as_ref().unwrap();
     assert_eq!(w.input.unit, Some(kentos_commands::DrawingUnit::M));
     assert_eq!(w.plan.unit, kentos_commands::DrawingUnit::M);
-    assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 50.);
+    assert_eq!(w.plan.review.as_ref().unwrap().plot_scale, 100.);
     assert_eq!(
         app.document.as_ref().unwrap().model.to_snapshot_v2(),
         before
@@ -184,7 +191,16 @@ fn a_projected_cad_previews_and_applies_the_office_scale_in_metres() {
     let doc = &mut app.document.as_mut().unwrap().model;
     assert_eq!(doc.settings().unit(), kentos_commands::DrawingUnit::M);
     assert_eq!(doc.settings().srid, 5256);
-    assert_eq!(doc.settings().plot_scale, 50.);
+    assert_eq!(doc.settings().plot_scale, 100.);
     doc.undo();
     assert_eq!(doc.to_snapshot_v2(), before);
+}
+
+#[test]
+fn the_window_says_the_package_as_its_data_has_it() {
+    // The texts said “cm / 1:50” and “1:50 / 1:20 oranlarıyla” by hand (docs/adr/3007).
+    let p = super::Package::read();
+    assert_eq!(p.settings, "m / 1:100");
+    assert_eq!((p.levels, p.sheets), (2, 3));
+    assert_eq!(p.sheet_scales, "1:100 ve 1:20");
 }

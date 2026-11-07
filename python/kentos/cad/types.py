@@ -94405,10 +94405,9 @@ class TemplatesApply(_Model):
             `template` applies the shown package settings without rescaling geometry.
             Both preserve existing definitions and make the whole package one undo step.
             Absent: the original ADR 0346 v1 behaviour, for existing automation.
-        unit: Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
-            any supported local display unit; a coordinate system requires metres.
-            Absent uses the package's unit (cm), rejected on a projected drawing.
-            Rejected with keep. Geometry coordinates never rescale.
+        unit: Legacy absent settingsMode: mm/cm, only empty drawings; absent: cm. Explicit template
+            mode: any supported local display unit; absent: the package's (m); a coordinate system
+            requires metres. Rejected with keep. Geometry coordinates never rescale.
     """
     name: str
     expected_revision: str | None | Unset = UNSET

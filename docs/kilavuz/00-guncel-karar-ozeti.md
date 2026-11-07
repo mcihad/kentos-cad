@@ -40,6 +40,10 @@
   - **Düzenleyiciler (M7, [ADR 3006](../adr/3006-editors-ask-and-pick-from-drawing.md)):**
     - Kendi kaydı olan düzenleyici değişiklik varken yan tık, × ve Esc'te `kentos_ui::widget::unsaved` ile sorar.
     - Seçimle çalışan pencerede "Çizimden seç" pencereyi çeker, Enter geri getirir.
+  - **Başlangıç (M8, [ADR 3007](../adr/3007-mimari-start-ground-floor-hatched-wall.md)):**
+    - İşi Mimari olan yeni proje Zemin kat'la açılır (`ground_floor`: ±0,00, 3,00 m; PAİY 28).
+    - KentOS Mimari'de yeni proje Mimari sekmesinde açılır; duvar araçları Dış duvar 25 ile başlar, ilk duvar poşelidir.
+    - Şablon m ve 1:100'dür. Ayarsız eski `cad.templates.apply` çağrısı cm ve 1:50 yazmayı sürdürür.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

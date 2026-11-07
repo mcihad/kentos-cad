@@ -2983,10 +2983,10 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_TEMPLATES_APPLY_VERSION,
             title: "Mimari şablonu".into(),
             summary: "Mimari çalışma paketinin eksik katman, yazı/ölçü stili, blok, duvar stili, kat ve paftalarını ekler. \
-                      settingsMode=keep birim ve çizim ölçeğini korur (GUI varsayılanı); settingsMode=template gösterilen paket ayarını (cm / 1:50, unit verilirse o gösterim birimi) uygular. Koordinat sistemli projede birim metre kalır; template kipi bu projede unit=m ister, başka birim unit_needs_local olur. Model koordinatlarını yeniden ölçeklemez. \
+                      settingsMode=keep birim ve çizim ölçeğini korur (GUI varsayılanı); settingsMode=template gösterilen paket ayarını (m / 1:100, yeni Mimari projesiyle aynı; unit verilirse o gösterim birimi) uygular. Koordinat sistemli projede birim metre kalır; template kipi bu projede başka birimi unit_needs_local ile reddeder. Model koordinatlarını yeniden ölçeklemez. \
                       Açık kiplerde mevcut tanımlar, fontlar ve katman durumları korunur; planın review alanı önce/sonra birim-ölçek/mahal yöntemi ile kimlik/ad eşleşmesinde korunacak parçaları verir. Tüm paket ayarlar ve paftalar dahil tek undo adımıdır; hata kısmi yazmaz. keep ile unit birlikte template_settings_conflict olur. \
-                      settingsMode alanı yoksa eski v1 davranışı sürer: boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her çizime 1:50; ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu korumak içindir; yeni çağrılar açık kip kullanmalı. \
-                      Paket: mimari-ofis standardı, KentOS blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:50 ve A-501 1:20 A3 paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse conflict olur."
+                      settingsMode alanı yoksa eski v1 davranışı sürer: boş çizime cm (unit yalnız mm/cm), nesneli çizimde birimi koruma uyarısı, her çizime 1:50 (paketin kendisi m / 1:100 olsa da); ayarlar ve pafta kitabı bu eski çağrıda undo dışında. Eski otomasyonu korumak içindir; yeni çağrılar açık kip kullanmalı. \
+                      Paket: mimari-ofis standardı, KentOS blok kitaplığı ve duvar stilleri, iki kat, A-101/A-301 1:100 ve A-501 1:20 A3 paftalar. Çıktı eklenen adları sayar; plan yazmaz. expectedRevision değişmişse conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,

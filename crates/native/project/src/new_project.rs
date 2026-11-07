@@ -14,9 +14,10 @@
 use std::f64::consts::PI;
 
 use kentos_contracts::{
-    AngleUnit, AreaUnit, Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION, DocumentSnapshotV1,
-    DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode, LayerNodeType,
-    LayerStyle, LineType, PointStyle, PointSymbol, ProjectSettings, ProjectStyles, Vec2, Workspace,
+    AngleUnit, ArchSettings, AreaUnit, Bounds, CadWork, DOCUMENT_FORMAT, DOCUMENT_VERSION,
+    DocumentSnapshotV1, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerNode,
+    LayerNodeType, LayerStyle, LineType, PointStyle, PointSymbol, ProjectSettings, ProjectStyles,
+    Vec2, Workspace, ground_floor,
 };
 use kentos_domain::default_style;
 
@@ -171,6 +172,11 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
             annotation: o.annotation.clone(),
             // A local drawing has no heights' system: they rest on nothing but itself.
             heights: o.heights.clone().filter(|_| !crs.is_local()),
+            // A building's project starts on its ground floor (docs/adr/3007): the first wall has a level.
+            arch: (cad && o.cad_work == Some(CadWork::Architecture)).then(|| ArchSettings {
+                levels: vec![ground_floor()],
+                ..ArchSettings::default()
+            }),
             ..default_settings(crs.srid)
         },
         origin: work_area_centre(crs),
@@ -588,5 +594,44 @@ mod tests {
         assert!(refused.expect_err("unknown").contains("EPSG:1234"));
         let b = sheet_around(Vec2 { x: 0.0, y: 0.0 }, 1000.0, false);
         assert_eq!((b.max_x - b.min_x, b.max_y - b.min_y), (500.0, 375.0));
+    }
+
+    #[test]
+    fn a_mimari_project_starts_on_its_ground_floor_and_no_other_work_has_levels() {
+        // docs/adr/3007: the first wall of a new building had no level.
+        let made = |cad_work: Option<CadWork>| {
+            new_project(&NewProject {
+                name: "Konut".into(),
+                srid: 0,
+                plot_scale: 100.0,
+                workspace: Workspace::Cad,
+                drawing_font: DrawingFont::Barlow,
+                province: None,
+                drawing_unit: Some(DrawingUnit::M),
+                annotation: None,
+                cad_work,
+                heights: None,
+            })
+            .expect("a project")
+            .settings
+            .arch
+        };
+        let arch = made(Some(CadWork::Architecture)).expect("a building's settings");
+        assert_eq!(arch.levels, vec![ground_floor()]);
+        assert_eq!(
+            (
+                arch.levels[0].name.as_str(),
+                arch.levels[0].elevation,
+                arch.levels[0].height
+            ),
+            ("Zemin kat", 0.0, Some(3.0))
+        );
+        assert_eq!(
+            arch.active_level, None,
+            "the level at ±0.00 is the active one by the rule"
+        );
+        for other in [None, Some(CadWork::Map), Some(CadWork::Road)] {
+            assert_eq!(made(other), None, "{other:?}");
+        }
     }
 }

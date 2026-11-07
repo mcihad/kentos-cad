@@ -75,6 +75,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - Şerit (7 Kasım 2026, DESIGN.md §7.3.1): web'in `Ribbon.fit`'inde yalnız ikon basamağının kaldırılması; panel
   sığmazsa adıyla katlanır, şeritte başlıksız düğme kalmaz.
 - MAP-04 / ADR 1760: `map.features.reconcile`'in web işleyicisi ve Adayları uzlaştır penceresi.
+- M8 / ADR 3007: web'in `model/newProject.ts`'i işi Mimari olan yeni projeye Zemin kat'ı (`zemin`, ±0,00, 3,00 m) koysun;
+  web'in Mimari şablonu penceresi paketin m / 1:100'ünü paketten okusun.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

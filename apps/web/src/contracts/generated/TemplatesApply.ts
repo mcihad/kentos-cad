@@ -13,10 +13,9 @@ export type TemplatesApply = {
  */
 name: string, 
 /**
- * Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
- * any supported local display unit; a coordinate system requires metres.
- * Absent uses the package's unit (cm), rejected on a projected drawing.
- * Rejected with keep. Geometry coordinates never rescale.
+ * Legacy absent settingsMode: mm/cm, only empty drawings; absent: cm. Explicit template
+ * mode: any supported local display unit; absent: the package's (m); a coordinate system
+ * requires metres. Rejected with keep. Geometry coordinates never rescale.
  */
 unit?: DrawingUnit, 
 /**

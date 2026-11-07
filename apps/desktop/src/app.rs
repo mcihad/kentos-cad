@@ -2060,6 +2060,8 @@ impl App {
             server_quiet: false,
             server_health: None,
         };
+        // KentOS Mimari's wall tools start on a hatched style (docs/adr/3007).
+        app.start_architecture_tools();
         // A module's program offers its own module's copies and those of no module (docs/adr/0802).
         app.recovery.offer_only(program);
         if !app.recovery.offers.is_empty() {

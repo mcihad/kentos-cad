@@ -50,13 +50,15 @@ class TemplateReview(unittest.TestCase):
         entity = doc.entity(uid).entity
         plan = cad.templates.apply.plan(doc, name='mimari', settings_mode='template', unit='ft')
         self.assertEqual(plan.unit.value, 'ft')
-        self.assertEqual(plan.review.plot_scale, 50)
+        # The package's scale: 1:100 since docs/adr/3007.
+        self.assertEqual(plan.review.plot_scale, 100)
         cad.templates.apply(doc, name='mimari', settings_mode='template', unit='ft',
                             expected_revision=plan.revision)
         self.assertEqual(doc.entity(uid).entity, entity)
         self.assertEqual(doc.info().units.drawing.value, 'ft')
         doc.undo()
         self.assertEqual(doc.info().settings.plot_scale, 100)
+        # The call without settingsMode keeps ADR 0346's centimetres and 1:50 (docs/adr/0659, 3007).
         old = cad.Document.new(workspace='cad')
         result = cad.templates.apply(old, name='mimari')
         self.assertNotIn('review', result.to_json())
@@ -79,11 +81,14 @@ class TemplateReview(unittest.TestCase):
         self.assertEqual(doc.info(), before)
 
     def test_projected_cad_keeps_the_coordinate_system_unit(self):
-        doc = cad.Document.new(workspace='cad', coords='real', srid=5256, plot_scale=100)
+        doc = cad.Document.new(workspace='cad', coords='real', srid=5256, plot_scale=500)
         before = doc.info()
         with self.assertRaises(cad.CommandFailed) as caught:
-            cad.templates.apply(doc, name='mimari', settings_mode='template')
+            cad.templates.apply(doc, name='mimari', settings_mode='template', unit='cm')
         self.assertEqual(caught.exception.code, 'unit_needs_local')
+        self.assertEqual(doc.info(), before)
+        # The package is metres since docs/adr/3007: no unit given is no refusal.
+        self.assertEqual(cad.templates.apply.plan(doc, name='mimari', settings_mode='template').unit.value, 'm')
         self.assertEqual(doc.info(), before)
         plan = cad.templates.apply.plan(doc, name='mimari', settings_mode='template', unit='m')
         self.assertEqual(plan.unit.value, 'm')
@@ -92,6 +97,6 @@ class TemplateReview(unittest.TestCase):
                             expected_revision=plan.revision)
         self.assertEqual(doc.info().settings.srid, 5256)
         self.assertEqual(doc.info().units.drawing.value, 'm')
-        self.assertEqual(doc.info().settings.plot_scale, 50)
+        self.assertEqual(doc.info().settings.plot_scale, 100)
         doc.undo()
         self.assertEqual(doc.info().settings, before.settings)

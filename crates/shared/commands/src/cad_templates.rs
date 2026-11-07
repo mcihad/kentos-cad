@@ -45,6 +45,14 @@ pub struct WorkTemplate {
     pub sheets: Vec<TemplateSheet>,
 }
 
+/// The unit `cad.templates.apply` without settingsMode writes when it is given none: ADR 0346's v1 call, kept for
+/// existing automation (docs/adr/0659), writes centimetres as the package had them then. The package itself is metres
+/// since docs/adr/3007 (a new Mimari project's unit); only an explicit settingsMode reads it.
+pub const LEGACY_TEMPLATE_UNIT: DrawingUnit = DrawingUnit::Cm;
+
+/// The plot scale the same old call writes: 1:50, as the package had it then; the package's is 1:100 (docs/adr/3007).
+pub const LEGACY_TEMPLATE_PLOT_SCALE: f64 = 50.0;
+
 /// KentOS's templates, by name.
 pub const BUILTIN_TEMPLATES: &[(&str, &str)] = &[(
     "mimari",
@@ -71,10 +79,9 @@ pub fn builtin_template(name: &str) -> Option<WorkTemplate> {
 pub struct TemplatesApply {
     /// The template's name: `mimari`.
     pub name: String,
-    /// Legacy absent settingsMode: mm/cm, only empty drawings. Explicit template mode:
-    /// any supported local display unit; a coordinate system requires metres.
-    /// Absent uses the package's unit (cm), rejected on a projected drawing.
-    /// Rejected with keep. Geometry coordinates never rescale.
+    /// Legacy absent settingsMode: mm/cm, only empty drawings; absent: cm. Explicit template
+    /// mode: any supported local display unit; absent: the package's (m); a coordinate system
+    /// requires metres. Rejected with keep. Geometry coordinates never rescale.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<DrawingUnit>,
@@ -168,4 +175,24 @@ pub struct TemplatePreserved {
     pub name: String,
     /// The matching key: id, name, or idAndName. Its existing value wins.
     pub matched_by: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_mimari_package_starts_where_a_new_mimari_project_does() {
+        // docs/adr/3007: the package was cm and 1:50 while a new Mimari project is metres and 1:100 (ADR 0626).
+        let t = builtin_template("mimari").expect("KentOS's template");
+        assert_eq!((t.unit, t.plot_scale), (DrawingUnit::M, 100.0));
+        assert_eq!(t.levels[0], crate::ground_floor());
+        let scales: Vec<u32> = t.sheets.iter().map(|s| s.scale).collect();
+        assert_eq!(scales, [100, 100, 20]);
+        // The old call keeps what it wrote (docs/adr/0659).
+        assert_eq!(
+            (LEGACY_TEMPLATE_UNIT, LEGACY_TEMPLATE_PLOT_SCALE),
+            (DrawingUnit::Cm, 50.0)
+        );
+    }
 }

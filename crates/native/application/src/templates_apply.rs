@@ -1,12 +1,14 @@
 //! Architectural package installation. ADR 0659's explicit keep/template modes preserve
 //! existing definitions, preview differences and group metadata with model/sheets undo.
 //! Absent settingsMode retains ADR 0346 v1 behaviour for existing automation; its settings
-//! remain outside undo and its legacy fixture/output contract is unchanged.
+//! remain outside undo and its legacy fixture/output contract is unchanged, centimetres and 1:50 included although
+//! the package itself is metres and 1:100 since docs/adr/3007.
 
 use kentos_commands::{
-    BlockEditOperation, BlocksEdit, CommandResult, CommandWarning, DrawingUnit, StandardsApply,
-    TemplateSettingsMode, TemplateSheet, TemplatesApplied, TemplatesApply, WorkTemplate,
-    builtin_template, builtin_wall_styles,
+    BlockEditOperation, BlocksEdit, CommandResult, CommandWarning, DrawingUnit,
+    LEGACY_TEMPLATE_PLOT_SCALE, LEGACY_TEMPLATE_UNIT, StandardsApply, TemplateSettingsMode,
+    TemplateSheet, TemplatesApplied, TemplatesApply, WorkTemplate, builtin_template,
+    builtin_wall_styles,
 };
 use kentos_domain::{Document, Uuid};
 use serde_json::{Value, json};
@@ -183,7 +185,11 @@ fn write(
     // 2. The settings: legacy no undo step.
     let mut s = doc.settings().clone();
     let empty = doc.entities().next().is_none();
-    let unit = input.unit.unwrap_or(t.unit);
+    // The call without settingsMode keeps ADR 0346's centimetres and 1:50 (docs/adr/0659); the explicit modes take
+    // the package's own, metres and 1:100 since docs/adr/3007.
+    let unit = input
+        .unit
+        .unwrap_or(if safe { t.unit } else { LEGACY_TEMPLATE_UNIT });
     let now = s.drawing_unit.unwrap_or_default();
     if input.settings_mode != Some(TemplateSettingsMode::Keep) && now != unit {
         if empty || input.settings_mode == Some(TemplateSettingsMode::Template) {
@@ -205,7 +211,11 @@ fn write(
         s.drawing_unit.unwrap_or_default()
     };
     if input.settings_mode != Some(TemplateSettingsMode::Keep) {
-        s.plot_scale = t.plot_scale;
+        s.plot_scale = if safe {
+            t.plot_scale
+        } else {
+            LEGACY_TEMPLATE_PLOT_SCALE
+        };
     }
     let mut arch = s.arch.clone().unwrap_or_default();
     for l in &t.levels {
