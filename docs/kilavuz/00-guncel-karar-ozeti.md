@@ -49,6 +49,9 @@
 - **Harita'da proje ağacı (7 Kasım 2026; MAP-20, [ADR 1720](../../docs/adr/1720-map-project-tree-and-rebuild.md)).**
   `.kcad` şema 198 (Harita'nın `road.drawings`/`autoRebuild`, sıfır hattı çizimi); `road.project.*` Harita'yı kabul
   eder; sıfır hattı iki yüzeyin damgasıyla tutulur.
+- **Geçirimsiz alan ve erişim (7 Kasım 2026; MAP-10, [ADR 2040](../../docs/adr/2040-impact-impervious-and-access.md)).**
+  `cad.scenarios.impact` + `impervious` (kullanıcının payları) ve `access` (kullanıcının uzaklığı; ağırlık merkezinden
+  çekirdeğin kesin uzaklığı); değer verilmezse ölçü yok; ret `invalid_input`.
 - **Yol devamlılığı ve üst plan kapsaması (7 Kasım 2026; MAP-09, [ADR 2020](../../docs/adr/2020-zoning-road-continuity-and-upper-plan.md)).**
   `cad.zoning.check` + `outsideUpper` (alt plan üst planın dışında) ve `roadGap` (kopuk yol aksı; Yollar katmanı
   isteğe bağlı); sarkan uç kuralı bağlantı olarak kendi katmanının alanlarını alır, plan sınırları yolların katmanına konur.

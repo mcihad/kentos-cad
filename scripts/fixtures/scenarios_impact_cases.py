@@ -14,7 +14,11 @@ The rules, by hand:
   when the vertices differ, decision when the non-empty trimmed attributes differ, both), then the alternative's new
   keys (added);
 - the stamp: SHA-256 over the base layers' objects, “id|layer|kind|k=v;…|xbits,ybits;…”, its first 8 bytes in hex;
-  `stale` is whether a given stamp differs from it.
+  `stale` is whether a given stamp differs from it;
+- asked for (docs/adr/2040), the user's values: the impervious area Σ area × the share of its use (a use with area and
+  no share a gap), and the area reached, a `from` area whose centroid (a rectangle's middle) lies within the distance
+  of a `to` area (the distance to a rectangle: 0 inside, else to its box), with its share of the `from` areas (0 with
+  none); a side with `from` areas and no `to` area a gap.
 """
 
 import copy
@@ -140,7 +144,7 @@ def kaks(e):
 
 def side(s, layers, field, key):
     out = {"objects": 0, "area": 0.0, "length": 0.0, "capacity": 0.0, "noKaks": 0, "noUse": 0, "noKey": 0,
-           "uses": {}, "keyed": []}
+           "uses": {}, "keyed": [], "areas": []}
     for layer in layers:
         for e in [e for e in s["entities"] if e["layerId"] == layer]:
             out["objects"] += 1
@@ -149,6 +153,7 @@ def side(s, layers, field, key):
                 a = shoelace(e)
                 out["area"] += a
                 u = get(field)
+                out["areas"].append((e, u, a))
                 if not u:
                     out["noUse"] += 1
                 out["uses"][u] = out["uses"].get(u, 0.0) + a
@@ -185,7 +190,42 @@ def stamp(s, layers):
     return h.digest()[:8].hex()
 
 
-def report(s, field="Kullanim", key="KararKimlik", since=None):
+def box(e):
+    xs, ys = [p["x"] for p in e["pts"]], [p["y"] for p in e["pts"]]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def impervious(sd, shares):
+    total, missing = 0.0, []
+    for _, u, a in sd["areas"]:
+        if u in shares:
+            total += a * shares[u]
+        elif a > 0 and u not in missing:
+            missing.append(u)
+    return total, missing
+
+
+def reached(sd, access):
+    targets = [box(e) for e, u, _ in sd["areas"] if u in access["to"]]
+    got = whole = 0.0
+    for e, u, a in sd["areas"]:
+        if u not in access["from"]:
+            continue
+        whole += a
+        x0, y0, x1, y1 = box(e)
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        near = lambda t: (max(t[0] - cx, 0, cx - t[2]) ** 2 + max(t[1] - cy, 0, cy - t[3]) ** 2) ** 0.5  # noqa: E731
+        if any(near(t) <= access["distance"] for t in targets):
+            got += a
+    return got, whole, bool(targets)
+
+
+def rs(v):
+    """A number as Rust writes an f64 (40.0 as 40)."""
+    return str(int(v)) if float(v).is_integer() else repr(float(v))
+
+
+def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None, access=None):
     ps = pairs(s)
     bases, alts = [b for b, _ in ps], [l for _, l in ps]
     b, a = side(s, bases, field, key), side(s, alts, field, key)
@@ -201,6 +241,29 @@ def report(s, field="Kullanim", key="KararKimlik", since=None):
         m("capacity", "İnşaat alanı (alan × KAKS)", "m2", b["capacity"], a["capacity"],
           "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."),
     ]
+    asked_gaps = []
+    if impervious_ is not None:
+        (x, mb), (y, ma) = impervious(b, impervious_), impervious(a, impervious_)
+        given = ", ".join(f"{c} {rs(k)}" for c, k in sorted(impervious_.items()))
+        measures.append(m("impervious", "Geçirimsiz alan", "m2", x, y,
+                          f"Her alanın alanı × kullanımının verilen geçirimsizlik payı ({given}); payı verilmeyen kullanım "
+                          "sayılmaz (Veri eksikleri)."))
+        missing = sorted(set(mb) | set(ma))
+        if missing:
+            words = ", ".join(w or "(kullanımı yok)" for w in missing)
+            asked_gaps.append(f"Geçirimsizlik payı verilmemiş kullanım: {words}; geçirimsiz alan onlarsız hesaplandı.")
+    if access is not None:
+        (xg, xw, xt), (yg, yw, yt) = reached(b, access), reached(a, access)
+        fr, to, d = ", ".join(access["from"]), ", ".join(access["to"]), rs(access["distance"])
+        measures.append(m("access", f"Erişen alan ({fr} → {to}, {d} m)", "m2", xg, yg,
+                          f"Kullanımı {fr} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alana düz uzaklık "
+                          f"en çok {d} m ise alanı sayılır; merkez alanın içindeyse uzaklık 0."))
+        share = lambda g_, w_: g_ / w_ * 100 if w_ > 0 else 0.0  # noqa: E731
+        measures.append(m("accessShare", "Erişen alanın payı", "%", share(xg, xw), share(yg, yw),
+                          f"Erişen alanın {fr} alanlarının toplamına oranı; {fr} alanı olmayan tarafta 0."))
+        for has_from, has_to, where in ((xw > 0, xt, "mevcut durumda"), (yw > 0, yt, "alternatifte")):
+            if has_from and not has_to:
+                asked_gaps.append(f"Erişilecek kullanım ({to}) {where} yok; erişen alan 0.")
     uses = [{"code": c, "base": b["uses"].get(c, 0.0), "alternative": a["uses"].get(c, 0.0),
              "difference": a["uses"].get(c, 0.0) - b["uses"].get(c, 0.0)}
             for c in sorted(set(b["uses"]) | set(a["uses"]))]
@@ -239,6 +302,7 @@ def report(s, field="Kullanim", key="KararKimlik", since=None):
     if b["noKey"] + a["noKey"]:
         gaps.append(f"Anahtarı ({key}) olmayan alan: mevcut durumda {b['noKey']}, alternatifte {a['noKey']}; "
                     "değişiklikleri izlenemez.")
+    gaps += asked_gaps
     now = stamp(s, bases)
     names = {"karar": "Karar alanları", "yol": "Yollar"}
     out = {"scenario": "alt-a", "name": "Alternatif A",
@@ -265,6 +329,8 @@ def ok(name, s=None, op="plan", **kw):
     for k, first in (("field", "Kullanim"), ("key", "KararKimlik")):
         if k in given:
             given[k] = given[k].strip() or first
+    if "impervious" in given:
+        given["impervious_"] = given.pop("impervious")
     out = report(s, **given)
     case = {"name": name, "steps": [{"op": op, "input": input_, "result": {
         "status": "completed", "output": None if op == "validate" else out, "warnings": []}, "expect": SAME,
@@ -274,15 +340,18 @@ def ok(name, s=None, op="plan", **kw):
     return case
 
 
-def refused(name, input_, code, message, s=None):
+def refused(name, input_, code, message, s=None, path="scenario"):
     case = {"name": name, "steps": [{"op": "execute", "input": input_, "result": {"status": "failed", "error": {
-        "code": code, "message": message, "path": "scenario"}}, "expect": SAME}]}
+        "code": code, "message": message, "path": path}}, "expect": SAME}]}
     if s is not None:
         case["setup"] = s
     return case
 
 
 BASE_SETUP = setup()
+# docs/adr/2040: the user's impervious shares by use and an access question (the cases' own values, not KentOS's).
+SHARES = {"konut": 0.6, "ticaret-konut": 0.8, "park": 0.1, "egitim": 0.5, "sanayi": 0.9, "yesil": 0.05}
+ACCESS = {"distance": 40.0, "from": ["konut"], "to": ["park", "yesil"]}
 
 
 def moved_base():
@@ -327,6 +396,21 @@ def cases():
         ok("park, yeşil, meydan, yol inşaat alanı taşımaz", setup(
             base=[area("karar", (0, 0, 10, 10), KararKimlik="A", Kullanim=u) for u in ("park", "yesil", "meydan", "yol")],
             alt=[])),
+        # docs/adr/2040: the impervious area and the access, the user's values.
+        ok("geçirimsizlik payları verilmiş: geçirimsiz alan", BASE_SETUP, impervious=SHARES),
+        ok("payı verilmeyen kullanım eksik sayılır", BASE_SETUP,
+           impervious={k: v for k, v in SHARES.items() if k not in ("sanayi", "yesil")}),
+        ok("erişim: konuttan parka ve yeşil alana 40 m", BASE_SETUP, access=ACCESS),
+        ok("erişim: 50 m'de mevcut durumdaki konut da erişir", BASE_SETUP, access=dict(ACCESS, distance=50.0)),
+        ok("erişilecek kullanım hiçbir tarafta yok: iki eksik", BASE_SETUP,
+           access={"distance": 40.0, "from": ["konut"], "to": ["meydan"]}),
+        ok("geçirimsizlik ve erişim birlikte", BASE_SETUP, impervious=SHARES, access=ACCESS),
+        refused("geçirimsizlik payı 1'den büyük", {"scenario": "alt-a", "impervious": {"konut": 1.5}}, "invalid_input",
+                "“konut” kullanımının geçirimsizlik payı 0 ile 1 arasında olmalı (yazılan 1.5).", path="impervious.konut"),
+        refused("erişim uzaklığı 0", {"scenario": "alt-a", "access": {"distance": 0.0, "from": ["konut"], "to": ["park"]}},
+                "invalid_input", "Erişim uzaklığı 0'dan büyük olmalı (yazılan 0).", path="access.distance"),
+        refused("erişen kullanım yok", {"scenario": "alt-a", "access": {"distance": 40.0, "from": [], "to": ["park"]}},
+                "invalid_input", "Erişen kullanım verilmemiş; en az bir kullanım kodu yazın.", path="access.from"),
         refused("senaryo değil", {"scenario": "imar"}, "scenario_not_found",
                 "“imar” kimlikli senaryo çizimde yok. Bir senaryo grubunun kimliğini verin."),
         refused("çizimde olmayan senaryo", {"scenario": "alt-z"}, "scenario_not_found",

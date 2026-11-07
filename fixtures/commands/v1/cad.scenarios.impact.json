@@ -7311,6 +7311,1229 @@
    }
   },
   {
+   "name": "geçirimsizlik payları verilmiş: geçirimsiz alan",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "impervious": {
+       "konut": 0.6,
+       "ticaret-konut": 0.8,
+       "park": 0.1,
+       "egitim": 0.5,
+       "sanayi": 0.9,
+       "yesil": 0.05
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "impervious",
+         "label": "Geçirimsiz alan",
+         "unit": "m2",
+         "base": 3690.0,
+         "alternative": 2535.0,
+         "difference": -1155.0,
+         "method": "Her alanın alanı × kullanımının verilen geçirimsizlik payı (egitim 0.5, konut 0.6, park 0.1, sanayi 0.9, ticaret-konut 0.8, yesil 0.05); payı verilmeyen kullanım sayılmaz (Veri eksikleri)."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "payı verilmeyen kullanım eksik sayılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "impervious": {
+       "konut": 0.6,
+       "ticaret-konut": 0.8,
+       "park": 0.1,
+       "egitim": 0.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "impervious",
+         "label": "Geçirimsiz alan",
+         "unit": "m2",
+         "base": 2790.0,
+         "alternative": 2520.0,
+         "difference": -270.0,
+         "method": "Her alanın alanı × kullanımının verilen geçirimsizlik payı (egitim 0.5, konut 0.6, park 0.1, ticaret-konut 0.8); payı verilmeyen kullanım sayılmaz (Veri eksikleri)."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez.",
+        "Geçirimsizlik payı verilmemiş kullanım: sanayi, yesil; geçirimsiz alan onlarsız hesaplandı."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "erişim: konuttan parka ve yeşil alana 40 m",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 40.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 40 m)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 1600.0,
+         "difference": 1600.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alana düz uzaklık en çok 40 m ise alanı sayılır; merkez alanın içindeyse uzaklık 0."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 0.0,
+         "alternative": 44.44444444444444,
+         "difference": 44.44444444444444,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "erişim: 50 m'de mevcut durumdaki konut da erişir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 50.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 50 m)",
+         "unit": "m2",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alana düz uzaklık en çok 50 m ise alanı sayılır; merkez alanın içindeyse uzaklık 0."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 100.0,
+         "alternative": 100.0,
+         "difference": 0.0,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "erişilecek kullanım hiçbir tarafta yok: iki eksik",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 40.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "meydan"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → meydan, 40 m)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı meydan olan en yakın alana düz uzaklık en çok 40 m ise alanı sayılır; merkez alanın içindeyse uzaklık 0."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 0.0,
+         "alternative": 0.0,
+         "difference": 0.0,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez.",
+        "Erişilecek kullanım (meydan) mevcut durumda yok; erişen alan 0.",
+        "Erişilecek kullanım (meydan) alternatifte yok; erişen alan 0."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "geçirimsizlik ve erişim birlikte",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scenario": "alt-a",
+      "impervious": {
+       "konut": 0.6,
+       "ticaret-konut": 0.8,
+       "park": 0.1,
+       "egitim": 0.5,
+       "sanayi": 0.9,
+       "yesil": 0.05
+      },
+      "access": {
+       "distance": 40.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park",
+        "yesil"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "scenario": "alt-a",
+       "name": "Alternatif A",
+       "layers": [
+        {
+         "base": "karar",
+         "layer": "alt-a-karar",
+         "name": "Karar alanları"
+        },
+        {
+         "base": "yol",
+         "layer": "alt-a-yol",
+         "name": "Yollar"
+        }
+       ],
+       "field": "Kullanim",
+       "key": "KararKimlik",
+       "measures": [
+        {
+         "id": "objects",
+         "label": "Nesne sayısı",
+         "unit": "count",
+         "base": 6,
+         "alternative": 8,
+         "difference": 2,
+         "method": "Karşılaştırılan katmanlardaki bütün nesneler."
+        },
+        {
+         "id": "area",
+         "label": "Alanların toplamı",
+         "unit": "m2",
+         "base": 6000.0,
+         "alternative": 5100.0,
+         "difference": -900.0,
+         "method": "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."
+        },
+        {
+         "id": "length",
+         "label": "Çizgilerin uzunluğu",
+         "unit": "m",
+         "base": 100.0,
+         "alternative": 165.0,
+         "difference": 65.0,
+         "method": "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."
+        },
+        {
+         "id": "capacity",
+         "label": "İnşaat alanı (alan × KAKS)",
+         "unit": "m2",
+         "base": 6625.0,
+         "alternative": 5250.0,
+         "difference": -1375.0,
+         "method": "Her yapılaşan alanın alanı × KAKS; KAKS'ı olmayan alan sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "impervious",
+         "label": "Geçirimsiz alan",
+         "unit": "m2",
+         "base": 3690.0,
+         "alternative": 2535.0,
+         "difference": -1155.0,
+         "method": "Her alanın alanı × kullanımının verilen geçirimsizlik payı (egitim 0.5, konut 0.6, park 0.1, sanayi 0.9, ticaret-konut 0.8, yesil 0.05); payı verilmeyen kullanım sayılmaz (Veri eksikleri)."
+        },
+        {
+         "id": "access",
+         "label": "Erişen alan (konut → park, yesil, 40 m)",
+         "unit": "m2",
+         "base": 0.0,
+         "alternative": 1600.0,
+         "difference": 1600.0,
+         "method": "Kullanımı konut olan alanların ağırlık merkezinden kullanımı park, yesil olan en yakın alana düz uzaklık en çok 40 m ise alanı sayılır; merkez alanın içindeyse uzaklık 0."
+        },
+        {
+         "id": "accessShare",
+         "label": "Erişen alanın payı",
+         "unit": "%",
+         "base": 0.0,
+         "alternative": 44.44444444444444,
+         "difference": 44.44444444444444,
+         "method": "Erişen alanın konut alanlarının toplamına oranı; konut alanı olmayan tarafta 0."
+        }
+       ],
+       "uses": [
+        {
+         "code": "egitim",
+         "base": 600.0,
+         "alternative": 600.0,
+         "difference": 0.0
+        },
+        {
+         "code": "konut",
+         "base": 2000.0,
+         "alternative": 3600.0,
+         "difference": 1600.0
+        },
+        {
+         "code": "park",
+         "base": 900.0,
+         "alternative": 600.0,
+         "difference": -300.0
+        },
+        {
+         "code": "sanayi",
+         "base": 1000.0,
+         "alternative": 0.0,
+         "difference": -1000.0
+        },
+        {
+         "code": "ticaret-konut",
+         "base": 1500.0,
+         "alternative": 0.0,
+         "difference": -1500.0
+        },
+        {
+         "code": "yesil",
+         "base": 0.0,
+         "alternative": 300.0,
+         "difference": 300.0
+        }
+       ],
+       "changes": [
+        {
+         "key": "K2",
+         "change": "decision",
+         "baseUse": "ticaret-konut",
+         "alternativeUse": "konut",
+         "baseArea": 1500.0,
+         "alternativeArea": 1500.0,
+         "baseCapacity": 2625.0,
+         "alternativeCapacity": 2250.0
+        },
+        {
+         "key": "K3",
+         "change": "geometry",
+         "baseUse": "park",
+         "alternativeUse": "park",
+         "baseArea": 900.0,
+         "alternativeArea": 600.0,
+         "baseCapacity": 0.0,
+         "alternativeCapacity": 0.0
+        },
+        {
+         "key": "K6",
+         "change": "removed",
+         "baseUse": "sanayi",
+         "baseArea": 1000.0,
+         "baseCapacity": 1000.0
+        },
+        {
+         "key": "K5",
+         "change": "added",
+         "alternativeUse": "yesil",
+         "alternativeArea": 300.0,
+         "alternativeCapacity": 0.0
+        }
+       ],
+       "gaps": [
+        "KAKS'ı olmayan yapılaşan alan: mevcut durumda 0, alternatifte 1; inşaat alanı onlarsız hesaplandı.",
+        "Anahtarı (KararKimlik) olmayan alan: mevcut durumda 0, alternatifte 1; değişiklikleri izlenemez."
+       ],
+       "assumptions": [
+        "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:5254).",
+        "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.",
+        "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.",
+        "Tek puan yok: ölçüler yan yana verilir; alternatifi kullanıcı seçer."
+       ],
+       "stamp": "9825692c3bf05e6e",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "geçirimsizlik payı 1'den büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "impervious": {
+       "konut": 1.5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“konut” kullanımının geçirimsizlik payı 0 ile 1 arasında olmalı (yazılan 1.5).",
+       "path": "impervious.konut"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "erişim uzaklığı 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 0.0,
+       "from": [
+        "konut"
+       ],
+       "to": [
+        "park"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Erişim uzaklığı 0'dan büyük olmalı (yazılan 0).",
+       "path": "access.distance"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "erişen kullanım yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scenario": "alt-a",
+      "access": {
+       "distance": 40.0,
+       "from": [],
+       "to": [
+        "park"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Erişen kullanım verilmemiş; en az bir kullanım kodu yazın.",
+       "path": "access.from"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
    "name": "senaryo değil",
    "steps": [
     {

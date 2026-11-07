@@ -2481,7 +2481,8 @@ const ENTRIES: &[Entry] = &[
     // Alternatif etkisi (plan/map-cad.md MAP-10, docs/adr/1440).
     Entry {
         id: "cad.scenarios.impact",
-        refusals: &[&["scenario_not_found", "nothing_to_compare"]],
+        // invalid_input: the asked measures' values (docs/adr/2040).
+        refusals: &[&["invalid_input", "scenario_not_found", "nothing_to_compare"]],
         warnings: &[],
         targets: none,
     },

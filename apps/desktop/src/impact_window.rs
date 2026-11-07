@@ -7,9 +7,9 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use iced::widget::{Column, container};
+use iced::widget::container;
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, ScenariosImpact, ScenariosImpacted};
+use kentos_commands::{CommandResult, ImpactAccess, ScenariosImpact, ScenariosImpacted};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, scenarios_impact};
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
@@ -49,12 +49,21 @@ pub struct State {
     pub scenario: String,
     pub view: View,
     pub answer: Option<Result<ScenariosImpacted, String>>,
+    /// docs/adr/2040, the user's values: the impervious shares (“konut 0,6; park 0,1”), the access's uses and distance.
+    pub shares: String,
+    pub from: String,
+    pub to: String,
+    pub distance: String,
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Scenario(String),
     View(View),
+    Shares(String),
+    From(String),
+    To(String),
+    Distance(String),
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -80,8 +89,27 @@ fn unit_word(u: &str) -> &'static str {
     match u {
         "m2" => "m²",
         "m" => "m",
+        "%" => "%",
         _ => "adet",
     }
+}
+
+/// The impervious shares as typed, “konut 0,6; park 0,1”: each use and its share; none when empty.
+pub fn shares_of(text: &str) -> Result<Option<BTreeMap<String, f64>>, String> {
+    let mut out = BTreeMap::new();
+    for part in text.split(';').map(str::trim).filter(|p| !p.is_empty()) {
+        let (code, value) = part.rsplit_once(char::is_whitespace).ok_or_else(|| {
+            format!("Geçirimsizlik payı “{part}” okunamadı; “konut 0,6; park 0,1” gibi kullanım ve pay yazın.")
+        })?;
+        let v = value.replace(',', ".").parse::<f64>().map_err(|_| format!("“{value}” bir sayı değil (geçirimsizlik payı)."))?;
+        out.insert(code.trim().to_owned(), v);
+    }
+    Ok((!out.is_empty()).then_some(out))
+}
+
+/// The uses as typed, “park, yesil”.
+fn uses_of(text: &str) -> Vec<String> {
+    text.split([',', ';']).map(str::trim).filter(|u| !u.is_empty()).map(str::to_owned).collect()
 }
 
 /// The report as CSV: the stamp, the measures, the uses, the changes, the gaps and the assumptions (numbers as
@@ -124,7 +152,26 @@ pub fn csv(r: &ScenariosImpacted) -> String {
 impl App {
     fn impact_run(&mut self) {
         let since = self.impact_stamps.get(&self.impact.scenario).cloned();
-        let input = ScenariosImpact { scenario: self.impact.scenario.clone(), field: None, key: None, since };
+        let s = &self.impact;
+        let impervious = match shares_of(&s.shares) {
+            Ok(v) => v,
+            Err(why) => {
+                self.impact.answer = Some(Err(why));
+                return;
+            }
+        };
+        let access = if s.distance.trim().is_empty() {
+            None
+        } else {
+            match s.distance.trim().replace(',', ".").parse::<f64>() {
+                Ok(distance) => Some(ImpactAccess { distance, from: uses_of(&s.from), to: uses_of(&s.to) }),
+                Err(_) => {
+                    self.impact.answer = Some(Err(format!("Erişim uzaklığı “{}” bir sayı değil.", s.distance.trim())));
+                    return;
+                }
+            }
+        };
+        let input = ScenariosImpact { scenario: s.scenario.clone(), since, impervious, access, ..ScenariosImpact::default() };
         let Some(doc) = self.document.as_mut() else { return };
         self.impact.answer = Some(match scenarios_impact::plan(&ExecutionContext::new(&mut doc.model), &input) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -177,6 +224,22 @@ impl App {
                 self.impact_run();
             }
             Event::View(v) => self.impact.view = v,
+            Event::Shares(v) => {
+                self.impact.shares = v;
+                self.impact_run();
+            }
+            Event::From(v) => {
+                self.impact.from = v;
+                self.impact_run();
+            }
+            Event::To(v) => {
+                self.impact.to = v;
+                self.impact_run();
+            }
+            Event::Distance(v) => {
+                self.impact.distance = v;
+                self.impact_run();
+            }
             Event::Save => {
                 return Task::perform(
                     async {
@@ -205,7 +268,22 @@ impl App {
         let s = &self.impact;
         let f = self.format();
         let pick = crate::style::fields::select_owned(s.scenarios.clone(), &s.scenario, |id| msg(Event::Scenario(id)));
-        let form = Form::new().label_width(110.0).field("Alternatif", container(pick).width(300));
+        let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
+            container(crate::style::fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)
+        };
+        // docs/adr/2040: the measures that take the user's values; empty ones are not computed.
+        let form = Form::new()
+            .label_width(170.0)
+            .field("Alternatif", container(pick).width(300))
+            .section("Ölçüler (değerler sizin)")
+            .field("Geçirimsizlik payları", text(&s.shares, "konut 0,6; park 0,1; yesil 0,05", Event::Shares, 420.0))
+            .field(
+                "Erişim kimden / kime",
+                iced::widget::row![text(&s.from, "konut", Event::From, 205.0), text(&s.to, "park, yesil", Event::To, 205.0)]
+                    .spacing(10),
+            )
+            .field("Erişim uzaklığı (m)", text(&s.distance, "—", Event::Distance, 120.0))
+            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık.");
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Karşılaştırma yok.");
         match &s.answer {
@@ -225,12 +303,13 @@ impl App {
                 let fmt = |unit: &str, v: f64| match unit {
                     "m2" => f.area(v),
                     "m" => f.length(v),
+                    "%" => format!("{:.1} %", v).replace('.', ","),
                     _ => format!("{v}"),
                 };
                 let signed = |unit: &str, v: f64| if v > 0.0 { format!("+{}", fmt(unit, v)) } else { fmt(unit, v) };
                 table = match s.view {
                     View::Measures => sheet(
-                        vec![col("Ölçü", 190.0), num("Mevcut durum", 120.0), num("Alternatif", 120.0), num("Fark", 120.0), col("Birim", 50.0)],
+                        vec![col("Ölçü", 270.0), num("Mevcut durum", 120.0), num("Alternatif", 120.0), num("Fark", 120.0), col("Birim", 50.0)],
                         r.measures
                             .iter()
                             .map(|m| vec![m.label.clone(), fmt(&m.unit, m.base), fmt(&m.unit, m.alternative), signed(&m.unit, m.difference), unit_word(&m.unit).to_owned()])
@@ -275,18 +354,20 @@ impl App {
             None => {}
         }
         let views = [View::Measures, View::Uses, View::Changes];
-        let body = Column::new()
-            .spacing(12)
+        // The body scrolls and the table takes what is left, so the footer stays on a short window.
+        let body = kentos_ui::widget::grow::Grows::new()
+            .spacing(12.0)
+            .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
             .push(Segmented::new(views, s.view, |v| msg(Event::View(v))))
-            .push(table);
+            .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         let ready = matches!(s.answer, Some(Ok(_)));
         Frame::new(TITLE)
-            .push(body)
+            .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
-            .width(820.0)
+            .width(900.0)
             .modal(msg(Event::Close))
     }
 

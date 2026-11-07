@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    ImpactAccess,
     ScenarioOperation,
     ScenarioOperationName,
     ScenariosEdit,
@@ -205,8 +206,15 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
     eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek
     puanla en iyi alternatif seçilmez. stamp mevcut durumun katmanlarının özetidir:
     önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri
-    değişti mi söyler (alternatif kendiliğinden yeni veriye uymuş sayılmaz). Salt
-    okunur. Retler: scenario_not_found, nothing_to_compare.
+    değişti mi söyler (alternatif kendiliğinden yeni veriye uymuş sayılmaz). İstenince,
+    değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious
+    (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı
+    verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları):
+    ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan
+    from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri
+    eksiği. Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında,
+    access.distance 0'dan büyük değil, access.from/to boş), scenario_not_found,
+    nothing_to_compare.
     """
     __slots__ = ()
     id = "cad.scenarios.impact"
@@ -223,7 +231,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         /,
         *,
         scenario: str,
+        access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        impervious: Mapping[str, float] | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -238,13 +248,21 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         olmayan alanlar) ve varsayımlar. Tek puanla en iyi alternatif seçilmez. stamp mevcut
         durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile
         verilince stale taban o zamandan beri değişti mi söyler (alternatif kendiliğinden
-        yeni veriye uymuş sayılmaz). Salt okunur. Retler: scenario_not_found,
-        nothing_to_compare.
+        yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (ADR
+        2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1):
+        geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access
+        (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz
+        uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from
+        alanlarına oranı (%), to alanı olmayan taraf veri eksiği. Salt okunur. Retler:
+        invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
+        access.from/to boş), scenario_not_found, nothing_to_compare.
 
         Args:
             doc: The drawing it works on.
             scenario:
+            access:
             field:
+            impervious: Unit: 1.
             key:
             since:
             request_id: Names this write: sent again with the same call it is answered as
@@ -261,7 +279,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         """
         return self.execute_input(doc, ScenariosImpact(
             scenario=scenario,
+            access=access,
             field=field,
+            impervious=_opt(impervious, lambda x: dict(x)),
             key=key,
             since=since,
         ), request_id=request_id, expected=expected)
@@ -272,7 +292,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         /,
         *,
         scenario: str,
+        access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        impervious: Mapping[str, float] | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
     ) -> ScenariosImpacted:
@@ -281,7 +303,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         """
         return self.plan_input(doc, ScenariosImpact(
             scenario=scenario,
+            access=access,
             field=field,
+            impervious=_opt(impervious, lambda x: dict(x)),
             key=key,
             since=since,
         ))
@@ -292,7 +316,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         /,
         *,
         scenario: str,
+        access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        impervious: Mapping[str, float] | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -301,7 +327,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         """
         return self.validate_input(doc, ScenariosImpact(
             scenario=scenario,
+            access=access,
             field=field,
+            impervious=_opt(impervious, lambda x: dict(x)),
             key=key,
             since=since,
         ))
@@ -312,7 +340,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         /,
         *,
         scenario: str,
+        access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        impervious: Mapping[str, float] | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
         op: str = "execute",
@@ -326,7 +356,9 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         """
         return self.answer_input(doc, ScenariosImpact(
             scenario=scenario,
+            access=access,
             field=field,
+            impervious=_opt(impervious, lambda x: dict(x)),
             key=key,
             since=since,
         ), op=op, request_id=request_id, expected=expected)

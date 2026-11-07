@@ -88,6 +88,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-07 / ADR 1980: web'in İşlem aracı `topology.check` (Topolojiyi kurallarla denetle) ve `fixtures/processing/v1/geometry.json`'ın topoloji durumları.
 - MAP-08 / ADR 2000: `cad.parcels.boundaries`'ın web işleyicisi ve Parsel alan denetiminin Sınır grafiği penceresi.
 - MAP-09 / ADR 2020: web'in İmar planı denetiminde `outsideUpper` ve `roadGap` türleri (sözler ve süzgeç grupları).
+- MAP-10 / ADR 2040: web'in Alternatif etkisi penceresinde geçirimsizlik payları ve erişim girdileri.
 - MAP-18 / ADR 1680: web'in pafta girdilerinde (`ProjectInfo`) koordinat bilgisi ve baskı denetiminde `crs_text_mismatch`.
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.
 - MAP-16 / ADR 1640: `cad.pipes.check`'in web işleyicisi ve Boru hattı denetimi penceresi.

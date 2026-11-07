@@ -723,6 +723,14 @@ Kanıtlanan: alternatifin sınırı (senaryonun yerine geçen tasarım katmanlar
 ve varsayımlar, taban damgasıyla eskime (`cad.scenarios.impact`, 21 ortak durum; kabuldeki yol/yeşil alan değişikliği).
 Açık: damganın çizimde saklanması, erişim/eğim/altyapı/geçirimsizlik/risk ölçüleri, zarf ve harita gösterimi.
 
+**7 Kasım 2026, ikinci tur — Geçirimsiz alan ve erişim ([ADR 2040](../docs/adr/2040-impact-impervious-and-access.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Urban'ın tek puansız yan yana ölçüleri; geçirimsizlik payı ve erişim
+uzaklığının kurum kararı olduğu (KentOS değer vermez). Kanıtlanan: `cad.scenarios.impact` istenince geçirimsiz alanı
+(Σ alan × kullanıcının payı; payı verilmeyen kullanım eksik) ve erişimi (ağırlık merkezi hedef kullanıma düz uzaklıkta
+olan alan ve payı, yaylar kesin; hedefi olmayan taraf eksik) verir; 30 bağımsız durum (Rust, Python); pencerede
+“Ölçüler (değerler sizin)” bölümü. Açık: eğim, altyapıya yakınlık, risk, ağ üzerinden erişim, damganın çizimde
+saklanması, zarf ve harita gösterimi.
+
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 
 **Öncelik:** P2; `GIS-06/GIS-07` gereği en son, sahibiyle ayrı kapsam.

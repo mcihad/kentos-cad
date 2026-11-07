@@ -1,7 +1,8 @@
 //! Alternatif etkisi (impact_window.rs, docs/adr/1440) on the shared cases' drawing of `cad.scenarios.impact`: the
 //! alternative's measures and changed decisions; Raporu kaydet writes the CSV and keeps the stamp, so after the
-//! field state changes the comparison says the alternative is stale; nothing is written to the drawing. Harita and
-//! GIS offer it, Yol and Mimari do not. And its pictures.
+//! field state changes the comparison says the alternative is stale; nothing is written to the drawing; the impervious
+//! shares and the access typed give the shared case's measures, a share that does not read is said (docs/adr/2040).
+//! Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -55,6 +56,35 @@ fn the_alternative_is_measured_saved_and_found_stale_when_the_base_moves() {
     assert_eq!(app.impact.answer.clone().expect("an answer").expect("compared").stale, Some(true));
 }
 
+/// docs/adr/2040: the user's impervious shares and access typed in the form give the shared case's measures.
+#[test]
+fn the_impervious_shares_and_the_access_typed_give_the_case_s_measures() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("scenario.impact"));
+    for e in [
+        I::Shares("konut 0,6; ticaret-konut 0,8; park 0,1; egitim 0,5; sanayi 0,9; yesil 0,05".into()),
+        I::From("konut".into()),
+        I::To("park, yesil".into()),
+        I::Distance("40".into()),
+    ] {
+        let _ = app.update(Message::Impact(e));
+    }
+    let r = app.impact.answer.clone().expect("an answer").expect("compared");
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.scenarios.impact.json")).expect("cases");
+    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "geçirimsizlik ve erişim birlikte")
+        .expect("the case")["steps"][0]["result"]["output"]["measures"]
+        .clone();
+    for id in ["impervious", "access", "accessShare"] {
+        let got = r.measures.iter().find(|m| m.id == id).expect("the measure");
+        let w = want.as_array().expect("measures").iter().find(|m| m["id"] == id).expect("the case's");
+        assert!((got.alternative - w["alternative"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9, "{id}");
+        assert!((got.base - w["base"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-9, "{id}");
+    }
+    let _ = app.update(Message::Impact(I::Shares("konut altmış".into())));
+    assert_eq!(app.impact.answer.clone().expect("an answer"), Err("“altmış” bir sayı değil (geçirimsizlik payı).".into()));
+}
+
 #[test]
 fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
     for (module, yes) in [(Module::Map, true), (Module::Gis, true), (Module::Road, false), (Module::Architecture, false)] {
@@ -84,6 +114,15 @@ fn screens() {
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("scenario.impact"));
+            // docs/adr/2040: the user's shares and access, so the measures show them.
+            for e in [
+                I::Shares("konut 0,6; ticaret-konut 0,8; park 0,1; egitim 0,5; sanayi 0,9; yesil 0,05".into()),
+                I::From("konut".into()),
+                I::To("park, yesil".into()),
+                I::Distance("40".into()),
+            ] {
+                let _ = app.update(Message::Impact(e));
+            }
             let _ = app.update(Message::Impact(I::View(view)));
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {

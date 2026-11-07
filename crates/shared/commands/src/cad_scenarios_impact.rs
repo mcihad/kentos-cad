@@ -16,10 +16,13 @@ pub const CAD_SCENARIOS_IMPACT_VERSION: u32 = 1;
 
 /// Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:
 /// `Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an
-/// earlier comparison (`since`) to say whether the base has changed since.
+/// earlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,
+/// their values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's
+/// area; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses.
 ///
-/// Refusals: `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare`
-/// (`scenario`: none of its layers stands for a base layer).
+/// Refusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`: not above zero;
+/// `access.from`, `access.to`: no use given), `scenario_not_found` (`scenario`: no such node, or not a scenario group),
+/// `nothing_to_compare` (`scenario`: none of its layers stands for a base layer).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -36,6 +39,27 @@ pub struct ScenariosImpact {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub since: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub impervious: Option<std::collections::BTreeMap<String, f64>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub access: Option<ImpactAccess>,
+}
+
+/// Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)
+/// and the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactAccess {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub distance: f64,
+    pub from: Vec<String>,
+    pub to: Vec<String>,
 }
 
 /// A base layer and the scenario's layer standing for it, by id and name.

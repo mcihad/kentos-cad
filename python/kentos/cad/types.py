@@ -44466,6 +44466,33 @@ class ImagesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactAccess(_Model):
+    """Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)
+    and the straight distance, metres, from a `from` area's centroid to the nearest `to` area (0 inside it).
+    Attributes:
+        distance: Unit: m.
+    """
+    distance: float
+    from_: list[str]
+    to: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["from"] = list(self.from_)
+        out["to"] = list(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactAccess:
+        return cls(
+            distance=float(data["distance"]),
+            from_=list(data["from"]),
+            to=list(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactChange(_Model):
     """A decision that differs: its key, what changed (`added`, `removed`, `geometry`, `decision`, `both`), its use, area
     and capacity on each side that has it.
@@ -80784,21 +80811,32 @@ class ScenariosEdited(_Model):
 class ScenariosImpact(_Model):
     """Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:
     `Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an
-    earlier comparison (`since`) to say whether the base has changed since.
+    earlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,
+    their values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's
+    area; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses.
 
-    Refusals: `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare`
-    (`scenario`: none of its layers stands for a base layer).
+    Refusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`: not above zero;
+    `access.from`, `access.to`: no use given), `scenario_not_found` (`scenario`: no such node, or not a scenario group),
+    `nothing_to_compare` (`scenario`: none of its layers stands for a base layer).
+    Attributes:
+        impervious: Unit: 1.
     """
     scenario: str
+    access: ImpactAccess | None | Unset = UNSET
     field: str | None | Unset = UNSET
+    impervious: dict[str, float] | None | Unset = UNSET
     key: str | None | Unset = UNSET
     since: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["scenario"] = self.scenario
+        if self.access is not UNSET:
+            out["access"] = None if self.access is None else self.access.to_json()
         if self.field is not UNSET:
             out["field"] = self.field
+        if self.impervious is not UNSET:
+            out["impervious"] = None if self.impervious is None else {k0: float(e0) for k0, e0 in self.impervious.items()}
         if self.key is not UNSET:
             out["key"] = self.key
         if self.since is not UNSET:
@@ -80809,7 +80847,9 @@ class ScenariosImpact(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ScenariosImpact:
         return cls(
             scenario=data["scenario"],
+            access=UNSET if "access" not in data else None if data["access"] is None else ImpactAccess.from_json(data["access"]),
             field=data.get("field", UNSET),
+            impervious=UNSET if "impervious" not in data else None if data["impervious"] is None else {k0: float(e0) for k0, e0 in data["impervious"].items()},
             key=data.get("key", UNSET),
             since=data.get("since", UNSET),
         )
@@ -128627,6 +128667,7 @@ __all__ = [
     "ImagesEdit",
     "ImagesEdited",
     "ImagesOperation",
+    "ImpactAccess",
     "ImpactChange",
     "ImpactCorridor",
     "ImpactDerived",
