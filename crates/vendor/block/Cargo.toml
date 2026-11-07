@@ -1,0 +1,17 @@
+# KentOS: the crates.io release of block 0.1.6 (MIT) with one change, written by scripts/vendor/block.py
+# (KENTOS.md). Not a workspace member; the workspace takes it through [patch.crates-io].
+[package]
+name = "block"
+version = "0.1.6"
+authors = ["Steven Sheldon"]
+description = "Rust interface for Apple's C language extension of blocks."
+keywords = ["blocks", "osx", "ios", "objective-c"]
+readme = "README.md"
+repository = "http://github.com/SSheldon/rust-block"
+documentation = "http://ssheldon.github.io/rust-objc/block/"
+license = "MIT"
+
+# The release's `extern` blocks name no ABI (the C ABI, as written in 2017): a crates.io dependency's lints are capped,
+# a path dependency's are not; the one lint it raises stays quiet as it did.
+[lints.rust]
+missing_abi = "allow"

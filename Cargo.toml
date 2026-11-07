@@ -155,7 +155,7 @@ default-members = [
 ]
 # GeographicLib's Rust port with libm's functions (docs/adr/0171): the release's own code, a path
 # dependency of the geometry core but not a member (its tests run by hand, its lints its authors').
-exclude = ["crates/shared/geographiclib-rs"]
+exclude = ["crates/shared/geographiclib-rs", "crates/vendor/block"]
 
 [workspace.package]
 version = "0.1.0"
@@ -322,3 +322,10 @@ panic = "abort"
 inherits = "wasm"
 lto = false
 codegen-units = 16
+
+# Apple's blocks (wgpu-hal 27's Metal backend, through `metal`, under iced 0.14): the crates.io release of block 0.1.6
+# with its extern static declared of an inhabited opaque type (crates/vendor/block, written by scripts/vendor/block.py;
+# the owner's approval, 2026-11-07). The release's static of an uninhabited type is a future error (rust-lang/rust#74840)
+# that cargo reported at every build. Take the patch out when iced and wgpu move to objc2's blocks.
+[patch.crates-io]
+block = { path = "crates/vendor/block" }
