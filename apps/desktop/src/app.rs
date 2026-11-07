@@ -4262,6 +4262,10 @@ impl App {
         if text.is_empty() {
             return Task::none();
         }
+        // The program's own names first (module_names.rs, docs/adr/3002): in KentOS Mimari, PENCERE is the window.
+        if let Some(task) = self.run_module_name(text) {
+            return task;
+        }
         // AutoCAD takma adları, when the preference is on (alias_profile.rs, docs/adr/0282):
         // the profile holds no name of KentOS's, which keep their meaning.
         if let Some(task) = self.run_profile_name(text) {

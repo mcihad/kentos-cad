@@ -300,6 +300,29 @@ impl App {
                 .collect();
             blocks.push((count, group(category, rows)));
         }
+        // This program's own names (module_names.rs, docs/adr/3002): KentOS Mimari's DU, KP, PN, MH …
+        if let Some(names) = self.module_names() {
+            // The group's name finds the whole group (“mimari”).
+            let whole = fold_turkish(names.title).contains(&query);
+            let rows: Vec<Element<'_, Message>> = crate::module_names::shortcut_rows(names)
+                .into_iter()
+                .filter(|(what, how)| {
+                    query.is_empty()
+                        || whole
+                        || fold_turkish(what).contains(&query)
+                        || fold_turkish(how).contains(&query)
+                })
+                .map(|(what, how)| {
+                    row![label::body(what).width(Fill), kbd(how)]
+                        .spacing(12)
+                        .align_y(Center)
+                        .into()
+                })
+                .collect();
+            if !rows.is_empty() {
+                blocks.push((rows.len(), group(names.title, rows)));
+            }
+        }
         // AutoCAD's names in the command line, or where to turn them on (docs/adr/0282).
         let autocad: Vec<Element<'_, Message>> =
             crate::alias_profile::shortcut_rows(self.autocad_names())

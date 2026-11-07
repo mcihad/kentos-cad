@@ -128,6 +128,7 @@ içi izin görmediği farklar:
 | G8 | Gerçek Mimari şeridi kod içi `kentos-cad` resimlerinden farklı (büyük düğmeler, katlanmış Proje ▾) | ADV-26 |
 | G9 | Yeni proje Giriş sekmesinde açılıyor (S12 doğrulandı) | ADV-09, ADV-13 |
 | G10 | Geçici ölçü yazısı mahal etiketinin, kapı ve pencere etiketleri duvar çizgisinin üstüne biniyor (S19 doğrulandı) | ADV-16 |
+| G11 | F1 (Fare ve klavye kısayolları) penceresi Esc'yle kapanmıyor; Kapat düğmesi kapatıyor | ADV-09 (M7) |
 
 ## 2. Piyasa araştırması
 
@@ -530,9 +531,15 @@ alt maddeyle ilerler.
 
 #### ADV-08 — Kritik kullanım hataları: Esc, adlar, terimler ve harfler [~]
 
-_Durum (7 Kasım 2026):_ Esc yapıldı (M2, [ADR 3001](../docs/adr/3001-escape-keeps-the-wall-chain.md)). Duvar
-zincirinde ilk Esc çizilen parçaları yazıyor ve araçta kalıyor, ikinci Esc çıkıyor. Gerçek pencerede önce/sonra
-resimleriyle doğrulandı. Kalanlar: takma adlar (M3), terimler, harfler ve "Açı" (M4), komut geçmişi (M5).
+_Durum (7 Kasım 2026):_
+- **Esc yapıldı** (M2, [ADR 3001](../docs/adr/3001-escape-keeps-the-wall-chain.md)). Duvar zincirinde ilk Esc çizilen
+  parçaları yazıyor ve araçta kalıyor, ikinci Esc çıkıyor. Gerçek pencerede önce/sonra resimleriyle doğrulandı.
+- **Adlar yapıldı** (M3, [ADR 3002](../docs/adr/3002-mimari-typed-names.md)):
+  - Mimari'ye özgü adlar: PENCERE → Pencere; DU, DD, OB, KP, PN, MH, DS, KL, AK, MR, RM, MD, ET; ODA, LAVABO …
+  - Komut listesinde, Komut ara'da ve F1'de görünüyorlar.
+  - AutoCAD profiline Architecture adları (WALLADD …) eklendi.
+- **Kalanlar:** en sık araçlara tek tuş (sahibin kararı); terimler, harfler (Shift'li harf dahil) ve "Açı" (M4); komut
+  geçmişi (M5).
 
 **Kullanıcı sonucu:** Çizilen iş Esc'de kaybolmaz. "pencere" yazınca pencere aracı açılır. Aynı şeyin her yerde tek adı ve
 tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S10, S14.
@@ -960,7 +967,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 |---|---|---|---|
 | M1 | Ölçüm altyapısı | ADV-26 | **(M1, ADR 3000: gerçek pencere düzeneği ve 2+1 tabanı 147 etkileşim / 177,6 s yapıldı; `kullan --modul`, `snapshot --sekme` kaldı)** |
 | M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim **(M2, ADR 3001: yapıldı)** |
-| M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari |
+| M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari **(M3, ADR 3002: yapıldı; tek tuş kısayolu sahibin kararına kaldı)** |
 | M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz |
 | M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet |
 | M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür |
@@ -1076,7 +1083,7 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 | Ölçü | Bugün | Hedef | Faz |
 |---|---|---|---|
 | Esc'de kaybolan duvar parçası | bütün zincir → **0 (M2)** | 0 | 0 |
-| Kısayolu olan mimari komut | 0 | en sık 5 araç | 0 |
+| Kısayolu ya da kısa adı olan mimari komut | 0 → **13 iki harfli ad (M3)** | en sık araçlara tek tuş (sahibin kararı) | 0 |
 | İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
 | 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |
 | Aynı ikonu paylaşan komut | 10 | 0 | 1 |

@@ -40,15 +40,26 @@ pub enum Hit {
 /// the app ranks the user's models with them, `App::hits`).
 #[cfg(test)]
 pub fn search(query: &str) -> Vec<&'static Command> {
-    scored_commands(&fold_turkish(query))
+    scored_commands(&fold_turkish(query), None)
         .into_iter()
         .take(LIMIT)
         .map(|(_, c)| c)
         .collect()
 }
 
-/// Every command the folded text finds, with its rank (lower is better).
-fn scored_commands(q: &str) -> Vec<(f64, &'static Command)> {
+/// `search` as a module's program ranks (its own names, docs/adr/3002).
+#[cfg(test)]
+pub fn search_in(query: &str, names: Option<&crate::module_names::Names>) -> Vec<&'static Command> {
+    scored_commands(&fold_turkish(query), names)
+        .into_iter()
+        .take(LIMIT)
+        .map(|(_, c)| c)
+        .collect()
+}
+
+/// Every command the folded text finds, with its rank (lower is better); a module's program reads a command's
+/// names as its own names say (module_names.rs, docs/adr/3002: PENCERE is the window in KentOS Mimari).
+fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(f64, &'static Command)> {
     if q.is_empty() {
         return Vec::new();
     }
@@ -57,7 +68,10 @@ fn scored_commands(q: &str) -> Vec<(f64, &'static Command)> {
         .iter()
         .filter_map(|command| {
             let mut score = f64::INFINITY;
-            for alias in command.aliases {
+            let aliases = names
+                .and_then(|n| n.aliases_of(command.id, command.aliases))
+                .unwrap_or_else(|| command.aliases.to_vec());
+            for alias in aliases {
                 let alias = fold_turkish(alias);
                 if alias == q {
                     score = score.min(0.0);
@@ -112,7 +126,7 @@ impl App {
     pub(crate) fn hits(&self) -> Vec<Hit> {
         let q = fold_turkish(&self.ribbon_search);
         // A module's program finds only its own commands (docs/adr/0802).
-        let mut scored: Vec<(f64, Hit)> = scored_commands(&q)
+        let mut scored: Vec<(f64, Hit)> = scored_commands(&q, self.module_names())
             .into_iter()
             .filter(|(_, c)| self.offers(c.id))
             .map(|(score, c)| (score, Hit::Command(c)))

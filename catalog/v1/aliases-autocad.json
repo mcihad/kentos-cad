@@ -2,7 +2,7 @@
   "format": "kentos.aliasProfile/1",
   "id": "autocad",
   "title": "AutoCAD takma adları",
-  "source": "AutoCAD'in acad.pgp dosyasındaki varsayılan kısaltmalar ve komut adları; yalnız KentOS'ta karşılığı olanlar ve KentOS'un zaten tanımadıkları (docs/adr/0282).",
+  "source": "AutoCAD'in acad.pgp dosyasındaki varsayılan kısaltmalar ve komut adları; yalnız KentOS'ta karşılığı olanlar ve KentOS'un zaten tanımadıkları (docs/adr/0282); sonda AutoCAD 2027'ye dahil Architecture toolset'in sık kullanılan komutlarından KentOS Mimari'de karşılığı olanlar (WALLADD, DOORADD …; docs/adr/3002).",
   "names": [
     { "name": "ADC", "autocad": "ADCENTER", "command": "file.takeFrom" },
     { "name": "ARRAYRECT", "autocad": "ARRAYRECT", "command": "tool.array" },
@@ -65,6 +65,16 @@
     { "name": "UNITS", "autocad": "UNITS", "command": "file.settings" },
     { "name": "VIEW", "autocad": "VIEW", "command": "view.namedViews" },
     { "name": "VPORTS", "autocad": "VPORTS", "command": "view.split" },
-    { "name": "W", "autocad": "WBLOCK", "command": "file.saveSelection" }
+    { "name": "W", "autocad": "WBLOCK", "command": "file.saveSelection" },
+    { "name": "WALLADD", "autocad": "WALLADD", "command": "tool.wall" },
+    { "name": "DOORADD", "autocad": "DOORADD", "command": "tool.door" },
+    { "name": "WINDOWADD", "autocad": "WINDOWADD", "command": "tool.window" },
+    { "name": "SPACEADD", "autocad": "SPACEADD", "command": "tool.space" },
+    { "name": "SLABADD", "autocad": "SLABADD", "command": "tool.slab" },
+    { "name": "STAIRADD", "autocad": "STAIRADD", "command": "tool.stair" },
+    { "name": "WALLCLEANUPI", "autocad": "WALLCLEANUPI", "command": "tool.wallJoins" },
+    { "name": "WALLSTYLEEDIT", "autocad": "WALLSTYLEEDIT", "command": "arch.wallStyles" },
+    { "name": "DIMADD", "autocad": "DIMADD", "command": "tool.wallDimensions" },
+    { "name": "PROJECTNAVIGATORTOGGLE", "autocad": "PROJECTNAVIGATORTOGGLE", "command": "arch.navigator" }
   ]
 }

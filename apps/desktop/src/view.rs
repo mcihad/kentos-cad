@@ -1319,7 +1319,7 @@ impl App {
         // A module's program lists only its own commands (docs/adr/0802).
         let mut commands: Vec<LineCommand<'_>> = all_line_commands(self.autocad_names())
             .filter(|(id, _)| self.offers(id))
-            .map(|(_, line)| line)
+            .map(|(id, line)| self.module_line(id, line))
             .collect::<Vec<_>>();
         commands.extend(self.model_line_commands());
         let line = line
@@ -2328,8 +2328,16 @@ impl App {
         }
         all_line_commands(self.autocad_names())
             .filter(|(id, _)| self.offers(id))
-            .map(|(_, line)| line)
+            .map(|(id, line)| self.module_line(id, line))
             .collect()
+    }
+
+    /// A row of the command line's list with this program's own names (module_names.rs, docs/adr/3002).
+    fn module_line(&self, id: &'static str, line: LineCommand<'static>) -> LineCommand<'static> {
+        match self.module_names() {
+            Some(names) => names.line(id, line),
+            None => line,
+        }
     }
 }
 
