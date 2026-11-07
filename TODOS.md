@@ -86,6 +86,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.
 - MAP-16 / ADR 1640: `cad.pipes.check`'in web işleyicisi ve Boru hattı denetimi penceresi.
 - MAP-15 / ADR 1620: `road.terrains.zeroline`'ın web işleyicisi ve Yüzey analizi › Fark'ın Sıfır hattını çiz'i.
+- MAP-15 / ADR 1840: `road.terrains.cutfill`'in web işleyicisi, Fark'ın Kazı ve dolgu bölgelerini çiz'i ve web okuyucusunda
+  `.kcad` şema 205.
 - MAP-15 / ADR 1600: web'in Yüzey analizi › Fark'ında yöntem (TIN/ızgara), hücre ve kazı/dolgu katsayıları.
 - MAP-15 / ADR 1580: `io/kcad.ts` şema 197 (harita projesinin platformları), web'in platform ve drenaj
   komutlarının Harita'yı kabul etmesi, Arazi sekmesinin Tesviye ve Drenaj panelleri Harita'da.

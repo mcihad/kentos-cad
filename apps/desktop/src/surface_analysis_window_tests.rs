@@ -674,3 +674,96 @@ fn screens_heights() {
         println!("{}", file.display());
     }
 }
+
+/// `road.terrains.cutfill`'s drawing (the zero line's with a bank and the plane and the mound at TM coordinates).
+fn cutfill_app() -> (App, serde_json::Value) {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.cutfill.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    (app, cases)
+}
+
+/// docs/adr/1840: Fark's Kazı ve dolgu bölgelerini çiz writes the mound's zones over the plane in 0.2 m bands as the
+/// shared case says, each a closed area with its kind, area and volume, the cut red; one undo step; the drawing kept.
+#[test]
+fn fark_draws_the_cut_and_fill_zones_in_one_step() {
+    let (mut app, cases) = cutfill_app();
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Tümsek 0,2 m'lik bantlarla: on bir bölge").expect("the case");
+    let want = case["steps"][0]["result"]["output"]["zones"].as_array().expect("zones").clone();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Compare));
+    send(&mut app, W::Surface("t-5".into()));
+    send(&mut app, W::Comparison("t-10".into()));
+    send(&mut app, W::Layer("kazi-dolgu".into()));
+    send(&mut app, W::Field(16, "0,2".into()));
+    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    send(&mut app, W::DrawZones);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert_eq!(doc.entities().count(), before + 2 * want.len(), "{}", crate::files_testing::last_said(&app));
+    // Each zone its solid hatch, then its closed area.
+    assert!(matches!(doc.entities().nth(before), Some(kentos_commands::Entity::Hatch(_))));
+    let first = doc.entities().nth(before + 1).expect("the first zone");
+    assert_eq!(first.base().layer_id, "kazi-dolgu");
+    assert_eq!(first.base().attrs.get("Tür").map(String::as_str), Some("Kazı"));
+    let area: f64 = first.base().attrs.get("Alan (m²)").and_then(|a| a.parse().ok()).expect("its area");
+    assert!((area - want[0]["area"].as_f64().unwrap()).abs() < 1e-6);
+    assert!(matches!(first, kentos_commands::Entity::Polygon(_)));
+    assert!(crate::files_testing::last_said(&app).contains("9 kazı"), "{}", crate::files_testing::last_said(&app));
+    let kept = doc.settings().road.as_ref().map(|r| r.drawings.iter().filter(|d| d.command == "road.terrains.cutfill").count());
+    assert_eq!(kept, Some(1), "the drawing kept with its surfaces");
+    let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("saves");
+    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xcd"), "schema 205");
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Kazı ve dolgu bölgeleri"));
+}
+
+/// Fark's cut and fill zones; `.run/gui-evidence/kazi-dolgu-1840/`.
+#[test]
+#[ignore = "writes pictures"]
+fn screens_cut_fill() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kazi-dolgu-1840");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        for (interval, file) in [("", "iki"), ("0,2", "bantli")] {
+            let (mut app, _) = cutfill_app();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            let _ = app.update(Message::RibbonTab("terrain"));
+            let _ = app.update(Message::Run("terrain.analysis"));
+            send(&mut app, W::Mode(Mode::Compare));
+            send(&mut app, W::Surface("t-5".into()));
+            send(&mut app, W::Comparison("t-10".into()));
+            send(&mut app, W::Layer("kazi-dolgu".into()));
+            send(&mut app, W::Field(16, interval.into()));
+            send(&mut app, W::Preview);
+            if interval.is_empty() {
+                snapshot.settle(&mut app, App::view, &mut update);
+                let path = out.join(format!("1-fark-{name}.png"));
+                snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+                println!("{}", path.display());
+            }
+            send(&mut app, W::DrawZones);
+            send(&mut app, W::Close);
+            // Framed on the mound's 10 m square (the drawing also holds lattices at TM coordinates, far away).
+            snapshot.settle(&mut app, App::view, &mut update);
+            let b = app.viewport.bounds;
+            app.viewport.camera.center.x = 6005.0;
+            app.viewport.camera.center.y = 5.0;
+            app.viewport.camera.scale = f64::from(b.width.min(b.height)) / 12.0;
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("2-bolgeler-{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
+}

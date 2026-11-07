@@ -25,6 +25,7 @@ pub(crate) fn drawing_words(command: &str) -> &'static str {
         "road.junctions.draw" => "Kavşak çizimi",
         "road.terrains.contours" => "Eş yükselti eğrileri",
         "road.terrains.zeroline" => "Sıfır hattı",
+        "road.terrains.cutfill" => "Kazı ve dolgu bölgeleri",
         _ => "Yol çizimi",
     }
 }

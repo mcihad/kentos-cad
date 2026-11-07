@@ -159,7 +159,7 @@ fn clip(poly: &[[f64; 2]], a: [f64; 2], b: [f64; 2]) -> Vec<[f64; 2]> {
 }
 
 /// A convex polygon's part where the linear `d` (given at its corners) is ≥ 0 (`above`) or ≤ 0, with `d` there.
-fn split(poly: &[([f64; 2], f64)], above: bool) -> Vec<([f64; 2], f64)> {
+pub(crate) fn split(poly: &[([f64; 2], f64)], above: bool) -> Vec<([f64; 2], f64)> {
     let keep = |d: f64| if above { d >= 0.0 } else { d <= 0.0 };
     let mut out = Vec::with_capacity(poly.len() + 1);
     for i in 0..poly.len() {
@@ -176,7 +176,7 @@ fn split(poly: &[([f64; 2], f64)], above: bool) -> Vec<([f64; 2], f64)> {
 }
 
 /// A convex polygon's plan area and the integral of the linear `d` over it (a fan from its first corner).
-fn integral(poly: &[([f64; 2], f64)]) -> (f64, f64) {
+pub(crate) fn integral(poly: &[([f64; 2], f64)]) -> (f64, f64) {
     let (mut area, mut volume) = (0.0, 0.0);
     for i in 1..poly.len().saturating_sub(1) {
         let (a, b, c) = (poly[0], poly[i], poly[i + 1]);
@@ -446,7 +446,7 @@ pub struct Difference {
 }
 
 /// The part of a convex polygon with the linear `d` on the `above` side of `level`.
-fn cut_at(poly: &[([f64; 2], f64)], level: f64, above: bool) -> Vec<([f64; 2], f64)> {
+pub(crate) fn cut_at(poly: &[([f64; 2], f64)], level: f64, above: bool) -> Vec<([f64; 2], f64)> {
     let shifted: Vec<([f64; 2], f64)> = poly.iter().map(|(p, d)| (*p, d - level)).collect();
     split(&shifted, above).into_iter().map(|(p, d)| (p, d + level)).collect()
 }

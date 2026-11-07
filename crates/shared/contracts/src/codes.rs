@@ -701,6 +701,8 @@ codes! {
     NO_CONTOURS = "no_contours", Failed, false, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok.";
     /// Two surfaces whose difference changes sign nowhere: no cut and fill boundary (docs/adr/1620).
     NO_ZERO_LINE = "no_zero_line", Failed, false, "İki yüzeyin farkı hiçbir yerde işaret değiştirmiyor: sıfır hattı yok.";
+    /// Two surfaces that do not overlap, or coincide wherever they do: no cut or fill zone (docs/adr/1840).
+    NO_CUT_FILL = "no_cut_fill", Failed, false, "İki yüzey örtüşmüyor ya da örtüştükleri her yerde çakışıyor: kazı ya da dolgu bölgesi yok.";
     /// A LandXML file with no surface, none of the name asked, or one without points (plan/road.md Y2.5).
     LANDXML_NO_SURFACE = "landxml_no_surface", Failed, false, "LandXML dosyasında alınacak yüzey yok.";
     /// A LandXML file with no alignment KentOS takes: none in it, a name it does not have, none whose elements make

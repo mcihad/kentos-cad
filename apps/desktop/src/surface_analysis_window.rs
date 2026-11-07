@@ -52,8 +52,10 @@ const DRAW_LOW: &str = "Düşük güvenli alanları çiz";
 const DRAW_SPARSE: &str = "Seyrek alanları çiz";
 /// Fark's cut and fill boundary written on the layer chosen (docs/adr/1620).
 const DRAW_ZERO: &str = "Sıfır hattını çiz";
+/// Fark's cut and fill zones written as areas on the layer chosen, banded by the interval when given (docs/adr/1840).
+const DRAW_ZONES: &str = "Kazı ve dolgu bölgelerini çiz";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 16] = [
+pub(crate) const FIELDS: [&str; 17] = [
     "Sınırlar",
     "Raster hücresi (m)",
     "Fark aralıkları (m)",
@@ -71,6 +73,8 @@ pub(crate) const FIELDS: [&str; 16] = [
     "Izgara hücresi (m)",
     "Kazı katsayısı",
     "Dolgu katsayısı",
+    // Fark's cut and fill zones' bands (docs/adr/1840): empty, the cut and the fill only.
+    "Bant aralığı (m)",
 ];
 const MODES: [&str; 5] = ["Analiz", "Fark", "Kalite", "Kapsam", "Yoğunluk"];
 const MEASURES: [&str; 3] = ["Kot (m)", "Eğim (%)", "Bakı (°)"];
@@ -114,7 +118,7 @@ pub struct Window {
     pub(crate) boundary: Option<String>,
     /// Kapsam's layer for the low confidence areas.
     pub(crate) layer: Option<String>,
-    pub(crate) fields: [String; 16],
+    pub(crate) fields: [String; 17],
     pub(crate) preview: Option<Result<Read, String>>,
     pub(crate) warnings: Vec<String>,
     /// A repair asked (Kalite: the spikes left out, or everything taken back) and its difference, before it is written.
@@ -137,6 +141,8 @@ pub enum Event {
     DrawLow,
     /// Fark: the cut and fill boundary written (`road.terrains.zeroline`).
     DrawZero,
+    /// Fark: the cut and fill zones written as areas (`road.terrains.cutfill`).
+    DrawZones,
     DrawSparse,
     Field(usize, String),
     Preview,
@@ -375,6 +381,38 @@ impl App {
                             "Sıfır hattı çizildi: {} çizgi ({closed} kapalı), {:.2} m.",
                             out.lines.len(),
                             out.length
+                        ),
+                    );
+                }
+                return Task::none();
+            }
+            Event::DrawZones => {
+                let (Some(base), Some(comparison), Some(layer)) = (w.surface.clone(), w.comparison.clone(), w.layer.clone())
+                else {
+                    return Task::none();
+                };
+                let interval = match number(&w.fields[16], FIELDS[16]) {
+                    Ok(i) => i,
+                    Err(why) => {
+                        self.warn(why);
+                        return Task::none();
+                    }
+                };
+                let input = kentos_commands::TerrainsCutFill { base, comparison, layer_id: layer, interval, expected_revision: None };
+                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let result = kentos_native_application::road_terrains_cutfill::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input,
+                );
+                if let Some(out) = self.answered(result) {
+                    let cut = out.zones.iter().filter(|z| z.kind == kentos_commands::CutFillKind::Cut).count();
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "Kazı ve dolgu bölgeleri çizildi: {cut} kazı ({:.3} m³), {} dolgu ({:.3} m³).",
+                            out.cut,
+                            out.zones.len() - cut,
+                            out.fill
                         ),
                     );
                 }
@@ -781,10 +819,14 @@ impl App {
             )
             .placeholder("Katman");
             let can = w.layer.is_some() && w.comparison.is_some();
+            let interval = kentos_ui::widget::text_field("kazı, dolgu", &w.fields[16]).on_input(|t| msg(Event::Field(16, t))).width(110);
             bottom = bottom
                 .push(label::caption("Katman").style(muted))
                 .push(container(on_layer).width(150))
-                .push(words::secondary(DRAW_ZERO, can.then(|| msg(Event::DrawZero))));
+                .push(words::secondary(DRAW_ZERO, can.then(|| msg(Event::DrawZero))))
+                .push(label::caption(FIELDS[16]).style(muted))
+                .push(interval)
+                .push(words::secondary(DRAW_ZONES, can.then(|| msg(Event::DrawZones))));
         }
         if w.mode == Mode::Density {
             let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
@@ -829,6 +871,7 @@ impl App {
             Control::Press(DRAW_LOW) => Some(msg(Event::DrawLow)),
             Control::Press(DRAW_SPARSE) => Some(msg(Event::DrawSparse)),
             Control::Press(DRAW_ZERO) => Some(msg(Event::DrawZero)),
+            Control::Press(DRAW_ZONES) => Some(msg(Event::DrawZones)),
             Control::Pick(SAME_HEIGHTS, "Var") => Some(msg(Event::AssumeHeights(true))),
             Control::Pick(SAME_HEIGHTS, "Yok") => Some(msg(Event::AssumeHeights(false))),
             Control::Fill(name, t) if !name.is_empty() && FIELDS.contains(&name) => {

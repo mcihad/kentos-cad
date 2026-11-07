@@ -7072,6 +7072,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kazı ve dolgu bölgeleri (plan/map-cad.md MAP-15, docs/adr/1840).
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_CUTFILL.into(),
+            version: crate::ROAD_TERRAINS_CUTFILL_VERSION,
+            title: "Kazı ve dolgu bölgeleri".into(),
+            summary: "İki arazi yüzeyinin kazı ve dolgu bölgelerini (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) yazar: karşılaştırmanın tabanın altında kaldığı yer kazı, üstünde kaldığı yer dolgu; her bölge aynı halkalarla bir düz tarama (dolgusu) ve bir delikli kapalı alandır (verisi). \
+                      Örtüşmenin her parçasında fark (karşılaştırma − taban) doğrusaldır; parça sıfırda ve interval verilirse onun katlarında kesilir (bant k: [k·interval, (k+1)·interval); bantsız: bir kazı, bir dolgu bandı), bir bandın parçaları çekirdeğin alan cebiriyle (1 µm) bölgelere birleşir. Her bölgenin alanı ve hacmi parçalarının toplamıdır; kazı ve dolgu hacimleri road.terrains.compare'in kesin TIN–TIN hacimleridir. \
+                      İkisi de öznitelikleriyle (Tür, Alan, Hacim, bantta alt ve üst sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın taraması daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz, söylenir. Çizim iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden çizer. \
+                      Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill."
+                .into(),
+            aliases: vec!["kazidolgu".into(), "kazidolguharitasi".into(), "cutfill".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsCutFill>(),
+            output: schema::<crate::TerrainsCutFilled>(),
+            plan: Some(schema::<crate::TerrainsCutFilled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Tasarım yüzeyinin mevcut zeminle 1 m'lik kazı-dolgu haritası".into(),
+                input: json!({ "base": "Mevcut zemin", "comparison": "Tasarım", "layerId": "kazi-dolgu", "interval": 1.0 }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_IMPORT_LANDXML.into(),
             version: crate::FILE_IMPORT_LANDXML_VERSION,
@@ -16072,6 +16100,9 @@ mod tests {
                     crate::ROAD_TERRAINS_ZEROLINE => {
                         serde_json::from_value::<crate::TerrainsZeroLine>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_CUTFILL => {
+                        serde_json::from_value::<crate::TerrainsCutFill>(e.input.clone()).map(|_| ())
+                    }
                     crate::FILE_IMPORT_LANDXML => {
                         serde_json::from_value::<crate::ImportLandxml>(e.input.clone()).map(|_| ())
                     }
@@ -17006,6 +17037,10 @@ mod tests {
                         }
                         crate::ROAD_TERRAINS_ZEROLINE => {
                             serde_json::from_value::<crate::TerrainsZeroLined>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_CUTFILL => {
+                            serde_json::from_value::<crate::TerrainsCutFilled>(output.clone())
                                 .map(|_| ())
                         }
                         crate::FILE_IMPORT_LANDXML => {

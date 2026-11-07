@@ -3074,9 +3074,10 @@
         "road.terrains.analysis",
         "road.terrains.compare",
         "road.terrains.quality",
-        "road.terrains.zeroline"
+        "road.terrains.zeroline",
+        "road.terrains.cutfill"
       ],
-      "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; Fark'ın Sıfır hattını çiz'i road.terrains.zeroline ile tek adımda yazar (plan/road.md Y18.5, ADR 0916 §5, ADR 1620)."
+      "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; Fark'ın Sıfır hattını çiz'i road.terrains.zeroline, Kazı ve dolgu bölgelerini çiz'i road.terrains.cutfill ile tek adımda yazar (plan/road.md Y18.5, ADR 0916 §5, ADR 1620, 1840)."
     },
     "swept.editor": {
       "level": "semantic",

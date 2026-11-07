@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `204`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-205.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `205`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-206.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -875,6 +875,12 @@ en çok 64 harflik bir sözcük, sürüm 32 bitlik doğal sayıdır. `algorithm`
 küçük harf, rakam, nokta ve tire, en çok 64 harf). İkisi de isteğe bağlıdır; şema 204'ten önce yapılan onayda yoktur.
 Yazıcı 204'ü bir onay bunlardan birini taşıyınca seçer; 203 ve öncesi alanları `unknown_field` sayar
 (`broken/road-approval-sources-in-schema-203.kcad`). Örnek `road-approval-sources.json/.kcad`.
+
+**Şema 205** (ADR 1840; MAP-15): iki yüzeyin kazı ve dolgu bölgelerinin çizimi (`road.terrains.cutfill`), yol ya da
+harita projesinin `road.drawings`'inde sıfır hattınınki gibi kaynaklarının damgalarıyla (taban ana kaynak, karşılaştırma
+öbür kaynak); girdisinde isteğe bağlı `interval` (bantların aralığı, m) olur. Kaydın biçimi şema 198'inkidir, yalnız
+komutu yenidir. Yazıcı 205'i böyle bir çizim varken seçer; 204 ve öncesi komutu tanımaz, `bad_value` sayar
+(`broken/cutfill-drawing-in-schema-204.kcad`). Örnek `map-cutfill.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

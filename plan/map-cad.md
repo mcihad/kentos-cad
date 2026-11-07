@@ -980,6 +980,15 @@ iki yüzeyin farkının sıfır olduğu çizgileri tabanın kotuyla 3B çoklu ç
 söyler; 23 bağımsız durum; Fark'ta Sıfır hattını çiz. Açık: kazı/dolgu bölgelerinin alan olarak yazılması, canlı
 güncelleme.
 
+**7 Kasım 2026, ikinci tur — Kazı ve dolgu bölgeleri ([ADR 1840](../docs/adr/1840-cut-and-fill-zones.md)).** Kapsam:
+**Harita + Yol** (CBS aynı sayıları öznitelikten okur). Araştırma: ArcGIS Surface Difference (Volume/SArea/Code
+çokgenleri, aynı sınıfın bitişik parçaları tek çokgen), Civil 3D Volumes Dashboard (datumla bantlama), OpenRoads
+Create Cut Fill Volumes. Kanıtlanan: `road.terrains.cutfill` farkın bölgelerini delikli alan olarak yazar (bantsız
+kazı/dolgu ya da `interval` bantları), alan ve hacim öznitelikte, bölgelerin hacmi `road.terrains.compare`'in kesin
+hacmi; çakışık alan bölge olmaz; çizim iki yüzeyin damgasıyla tutulur (yüzey değişince eskir, yeniden üretilir),
+`.kcad` şema 205; 33 bağımsız durum (shapely ile birleştirme, proje koordinatlarında da); Fark'ta Kazı ve dolgu
+bölgelerini çiz. Açık: malzeme bölgesi, stok sahası, bölge yazısı ve miktar tablosu, kesit yöntemi.
+
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 
 **Öncelik:** P1 teknik envanter/tasarım; P2 uzman çözücüler. **Kod:** [K31], [K32], [K40].

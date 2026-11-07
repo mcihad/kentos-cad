@@ -61,6 +61,9 @@
 - **Boru hattı denetimi (7 Kasım 2026; MAP-16, [ADR 1640](../../docs/adr/1640-gravity-pipe-check.md)).** `cad.pipes.check`
   salt okunur: altyapı ağının boruları cazibeli hat; örtü/eğim sınırları kullanıcınındır (EK-1 okunamadı, değer yok);
   birim hatası önerilir, düzeltilmez; retler `invalid_pipe_check`, `not_a_pipe_network`.
+- **Kazı ve dolgu bölgeleri (7 Kasım 2026; MAP-15, [ADR 1840](../../docs/adr/1840-cut-and-fill-zones.md)).**
+  `road.terrains.cutfill`: farkın bölgeleri delikli alan (bantlı ya da kazı/dolgu), alan ve hacim öznitelikte, toplamlar
+  compare'inki; çizim iki yüzeyle tutulur, `.kcad` şema 205; sıfır payı 1 nm, halka kuralı 1 µm; ret `no_cut_fill`.
 - **Sıfır hattı (7 Kasım 2026; MAP-15, [ADR 1620](../../docs/adr/1620-cut-fill-zero-line.md)).** `road.terrains.zeroline`:
   iki yüzeyin kazı-dolgu sınırı, 3B çoklu çizgi, tek adım; ret `no_zero_line`.
 - **Hacim yöntemi ve katsayılar (7 Kasım 2026; MAP-15, [ADR 1600](../../docs/adr/1600-surface-volume-method-and-factors.md)).**

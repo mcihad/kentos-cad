@@ -1456,6 +1456,7 @@ class CreateOperation(_StrEnum):
     - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     - ``terrainZeroLine``: Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.
     - ``sheetContours``: Pafta eş yükselti eğrileri (docs/adr/1820): a surface's contour lines and heights drawn by BÖHHBÜY m. 78.
+    - ``terrainCutFill``: Kazı ve dolgu bölgeleri (docs/adr/1840): where a comparison surface is below a base and above it, as areas.
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
@@ -1511,6 +1512,7 @@ class CreateOperation(_StrEnum):
     TERRAIN_CONTOURS = "terrainContours"
     TERRAIN_ZERO_LINE = "terrainZeroLine"
     SHEET_CONTOURS = "sheetContours"
+    TERRAIN_CUT_FILL = "terrainCutFill"
     LAND_XML = "landXml"
     ALIGNMENT_LABELS = "alignmentLabels"
     PROFILE_DRAWING = "profileDrawing"
@@ -1528,7 +1530,7 @@ class CreateOperation(_StrEnum):
     SPARSE = "sparse"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "terrainCutFill", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -1638,6 +1640,16 @@ class CulvertInlet(_StrEnum):
 
 CulvertInletName = Literal["pipeSquareHeadwall", "pipeGrooveHeadwall", "pipeGrooveProjecting", "boxWingwall30To75", "boxWingwall90And15", "boxWingwall0", "boxHeadwallChamfer"]
 """The names of :class:`CulvertInlet`, for a plain string."""
+
+
+class CutFillKind(_StrEnum):
+    """Whether a zone is cut (the comparison below the base) or fill."""
+    CUT = "cut"
+    FILL = "fill"
+
+
+CutFillKindName = Literal["cut", "fill"]
+"""The names of :class:`CutFillKind`, for a plain string."""
 
 
 class DerivationStatus(_StrEnum):
@@ -95411,6 +95423,54 @@ class TerrainContour(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainCutFillZone(_Model):
+    """A zone as written: cut or fill; with an interval its band of the difference, `[from, to)` (m); its plan area, its
+    volume (m³, the cut's and the fill's alike above 0); its outer ring (counterclockwise, from its smallest place, x
+    then y) and its holes (clockwise, each from its smallest place, ordered by it).
+    Attributes:
+        area: Unit: area.
+        volume: Unit: volume.
+        ring: Unit: length.
+        from_: Unit: m.
+        holes: Unit: length.
+        to: Unit: m.
+    """
+    kind: CutFillKind | CutFillKindName
+    area: float
+    volume: float
+    ring: list[list[float]]
+    from_: float | None | Unset = UNSET
+    holes: list[list[list[float]]] | Unset = UNSET
+    to: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["area"] = float(self.area)
+        out["volume"] = float(self.volume)
+        out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else float(self.from_)
+        if self.holes is not UNSET:
+            out["holes"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.holes]
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else float(self.to)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainCutFillZone:
+        return cls(
+            kind=_enum_in(CutFillKind, data["kind"]),
+            area=float(data["area"]),
+            volume=float(data["volume"]),
+            ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            holes=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
+            to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainDifferenceAt(_Model):
     """A difference's extreme: its value (comparison − base) and where.
     Attributes:
@@ -96605,6 +96665,130 @@ class TerrainsCreate(_Model):
             points=SurfaceSources.from_json(data["points"]) if "points" in data else UNSET,
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
             voids=list(data["voids"]) if "voids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCutFill(_Model):
+    """Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the
+    part of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference
+    `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
+
+    Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
+    `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
+    `invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),
+    `no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.
+    Attributes:
+        layer_id: The layer the zones go on.
+        interval: Unit: m.
+    """
+    base: str
+    comparison: str
+    layer_id: str
+    expected_revision: str | None | Unset = UNSET
+    interval: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["comparison"] = self.comparison
+        out["layerId"] = self.layer_id
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.interval is not UNSET:
+            out["interval"] = None if self.interval is None else float(self.interval)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCutFill:
+        return cls(
+            base=data["base"],
+            comparison=data["comparison"],
+            layer_id=data["layerId"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsCutFilled(_Model):
+    """Output of `road.terrains.cutfill` v1, and its plan: the surfaces' ids, the interval asked, the zones (by band, cut
+    first, then by their ring's first place); the cut and fill volumes (the zones' sums, `road.terrains.compare`'s
+    exact ones), the net (fill − cut), their plan areas (a coincident place in neither); the area where the surfaces
+    coincide (no zone there), the area both cover and the comparison's area off the base; the least and the largest
+    difference; the objects written, each zone's hatch then its closed area (a plan: none), and the revision after it (a
+    plan: before).
+    Attributes:
+        cut: Unit: volume.
+        fill: Unit: volume.
+        net: Unit: volume.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        coincident: Unit: area.
+        covered: Unit: area.
+        uncovered: Unit: area.
+        least: Unit: m.
+        largest: Unit: m.
+        interval: Unit: m.
+    """
+    base: str
+    comparison: str
+    zones: list[TerrainCutFillZone]
+    cut: float
+    fill: float
+    net: float
+    cut_area: float
+    fill_area: float
+    coincident: float
+    covered: float
+    uncovered: float
+    least: float
+    largest: float
+    revision: str
+    interval: float | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["base"] = self.base
+        out["comparison"] = self.comparison
+        out["zones"] = [e0.to_json() for e0 in self.zones]
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["net"] = float(self.net)
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        out["coincident"] = float(self.coincident)
+        out["covered"] = float(self.covered)
+        out["uncovered"] = float(self.uncovered)
+        out["least"] = float(self.least)
+        out["largest"] = float(self.largest)
+        out["revision"] = self.revision
+        if self.interval is not UNSET:
+            out["interval"] = None if self.interval is None else float(self.interval)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsCutFilled:
+        return cls(
+            base=data["base"],
+            comparison=data["comparison"],
+            zones=[TerrainCutFillZone.from_json(e0) for e0 in data["zones"]],
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            net=float(data["net"]),
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+            coincident=float(data["coincident"]),
+            covered=float(data["covered"]),
+            uncovered=float(data["uncovered"]),
+            least=float(data["least"]),
+            largest=float(data["largest"]),
+            revision=data["revision"],
+            interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -126617,6 +126801,8 @@ __all__ = [
     "CustomDatum",
     "CustomPaperLegendEntries",
     "CustomSheetTemplateSource",
+    "CutFillKind",
+    "CutFillKindName",
     "DataProfile",
     "DatasetDescription",
     "DatasetDim",
@@ -129516,6 +129702,7 @@ __all__ = [
     "TerrainCheckpoints",
     "TerrainCheckpointsAsk",
     "TerrainContour",
+    "TerrainCutFillZone",
     "TerrainDifferenceAt",
     "TerrainDifferenceBand",
     "TerrainFigures",
@@ -129550,6 +129737,8 @@ __all__ = [
     "TerrainsCoverageDrawn",
     "TerrainsCovered",
     "TerrainsCreate",
+    "TerrainsCutFill",
+    "TerrainsCutFilled",
     "TerrainsDensity",
     "TerrainsDensityRead",
     "TerrainsEdit",

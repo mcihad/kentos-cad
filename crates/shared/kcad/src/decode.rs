@@ -1557,19 +1557,19 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::UnknownField, at, "aks noktasının ovesi şema 192 ister"));
                 }
                 if !has.road_speed && road_has_speed(&v) {
-                    return Err(r.fail_at(Code::UnknownField, at, "aksın proje hızı şema 193 ister"));
+                    return Err(r.fail_at(Code::UnknownField, at, "aksın proje hızı şema 200 ister"));
                 }
                 if !has.road_approval_sources && road_has_approval_sources(&v) {
-                    return Err(r.fail_at(Code::UnknownField, at, "kübaj onayının kaynakları ve algoritması şema 197 ister"));
+                    return Err(r.fail_at(Code::UnknownField, at, "kübaj onayının kaynakları ve algoritması şema 204 ister"));
                 }
                 if !has.road_cloud_conversions && road_has_cloud_conversions(&v) {
-                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının çevrilen kotları şema 196 ister"));
+                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının çevrilen kotları şema 203 ister"));
                 }
                 if !has.road_cloud_heights && road_has_cloud_heights(&v) {
-                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının düşey sistemi şema 195 ister"));
+                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının düşey sistemi şema 202 ister"));
                 }
                 if !has.road_places && road_has_places(&v) {
-                    return Err(r.fail_at(Code::UnknownField, at, "aksın uçlarında gidilen yerler şema 194 ister"));
+                    return Err(r.fail_at(Code::UnknownField, at, "aksın uçlarında gidilen yerler şema 201 ister"));
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 167 ister"));
@@ -1873,6 +1873,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         // A zero line's drawing (docs/adr/1720) is schema 198's, in any project.
         if !has.map_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.zeroline") {
             return Err(relation("road", "sıfır hattı çizimi şema 198'den önce yazılmaz (road.terrains.zeroline)", r));
+        }
+        // Cut and fill zones' drawing (docs/adr/1840) is schema 205's, in any project.
+        if !has.cutfill_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.cutfill") {
+            return Err(relation("road", "kazı ve dolgu bölgeleri çizimi şema 205'ten önce yazılmaz (road.terrains.cutfill)", r));
         }
         if cad_work != Some(CadWork::Road) && !(map && fits) {
             return Err(relation(

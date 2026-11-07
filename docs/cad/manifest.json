@@ -5512,6 +5512,22 @@
    "tests": 0
   },
   {
+   "id": "pointcloud.register",
+   "kind": "command",
+   "title": "Tarama kaydı…",
+   "level": "query",
+   "via": [
+    "cad.pointclouds.register"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.register",
+   "mcp": "cad.pointclouds.register",
+   "note": "Pencere ikinci bulutu birinciye cad.pointclouds.register ile oturtur ve kaydı denetler (salt okunur); CSV kaydet dönüşüm matrisini, en kötü hücreleri ve kontrol noktalarını yazar (ADR 1800).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "pointcloud.style",
    "kind": "command",
    "title": "Nokta bulutu stili…",
@@ -10216,12 +10232,13 @@
     "road.terrains.analysis",
     "road.terrains.compare",
     "road.terrains.quality",
-    "road.terrains.zeroline"
+    "road.terrains.zeroline",
+    "road.terrains.cutfill"
    ],
    "operation": null,
-   "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality, Connection: road.terrains.zeroline",
-   "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality, road.terrains.zeroline",
-   "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; Fark'ın Sıfır hattını çiz'i road.terrains.zeroline ile tek adımda yazar (plan/road.md Y18.5, ADR 0916 §5, ADR 1620).",
+   "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality, Connection: road.terrains.zeroline, Connection: road.terrains.cutfill",
+   "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality, road.terrains.zeroline, road.terrains.cutfill",
+   "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; Fark'ın Sıfır hattını çiz'i road.terrains.zeroline, Kazı ve dolgu bölgelerini çiz'i road.terrains.cutfill ile tek adımda yazar (plan/road.md Y18.5, ADR 0916 §5, ADR 1620, 1840).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -10254,6 +10271,22 @@
    "python": "Connection: road.terrains.create",
    "mcp": "road.terrains.create",
    "note": null,
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "terrain.sheetContours",
+   "kind": "command",
+   "title": "Pafta eğrileri…",
+   "level": "semantic",
+   "via": [
+    "road.terrains.sheetcontours"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.sheetcontours",
+   "mcp": "road.terrains.sheetcontours",
+   "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

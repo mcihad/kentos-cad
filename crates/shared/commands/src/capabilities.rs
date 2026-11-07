@@ -1630,6 +1630,18 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden"],
         targets: none,
     },
+    // Kazı ve dolgu bölgeleri (plan/map-cad.md MAP-15, docs/adr/1840).
+    Entry {
+        id: "road.terrains.cutfill",
+        refusals: &[
+            &["not_a_road_project"],
+            LAYER,
+            REVISION,
+            &["invalid_analysis", "unknown_terrain", "terrain_unbuildable", "no_cut_fill"],
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     Entry {
         id: "road.terrains.contours",
         refusals: &[

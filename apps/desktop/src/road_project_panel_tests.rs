@@ -137,6 +137,36 @@ fn a_map_project_s_tree_shows_its_zero_line_stale_and_draws_it_again() {
     assert!(bytes.is_ok(), "a map project with its drawings saves: {:?}", bytes.err());
 }
 
+/// docs/adr/1840: cut and fill zones drawn in a Harita project are kept with both surfaces; one of Tümsek's heights set
+/// makes them stale, Hepsini yeniden üret draws them again (the zones as many), and the project saves (schema 205).
+#[test]
+fn a_map_project_s_cut_and_fill_zones_go_stale_and_are_drawn_again() {
+    let (mut app, _) = App::boot(None);
+    app.program = Some(kentos_launch::Module::Map);
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.cutfill.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["setup"]["settings"]["cadWork"] == "map").expect("a map case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.entities().filter(|e| e.base().layer_id == "kazi-dolgu").count());
+    crate::program_scenes::command(&mut app, "road.terrains.cutfill", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "kazi-dolgu"}));
+    assert_eq!(count(&app), 4, "a cut and a fill zone, each a hatch and an area");
+    let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
+                         "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
+    crate::program_scenes::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
+    let t = tree(&app);
+    let zones = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zones");
+    assert_eq!(zones.state, S::Stale, "{zones:?}");
+    assert_eq!(zones.why, ["“Tümsek” yüzeyi çizildiğinden beri değişti."]);
+    send(&mut app, P::Rebuild(None, false));
+    assert!(tree(&app).nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
+    assert_eq!(count(&app), 4, "drawn again in place");
+    let doc = app.document.as_ref().expect("a drawing");
+    let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2());
+    assert!(bytes.is_ok(), "a map project with its zones saves: {:?}", bytes.err());
+}
+
 /// `.run/gui-evidence/harita-proje-agaci-1720/`:
 ///
 /// ```text

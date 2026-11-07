@@ -2517,6 +2517,9 @@ def document(d):
                                                        or d["settings"].get("road", {}).get("autoRebuild"))):
         # A map project's drawings kept with their sources' stamps, and its drawing them again (docs/adr/1720).
         schema = max(schema, 198)
+    if any(x.get("command") == "road.terrains.cutfill" for x in d["settings"].get("road", {}).get("drawings", [])):
+        # Two surfaces' cut and fill zones kept as a drawing (docs/adr/1840).
+        schema = max(schema, 205)
     surveyed = d["settings"].get("mapSurvey", {})
     if any(surveyed.get(k) for k in ("baselines", "known", "adjustments")) or any(
             r.get("method") == "network" or "adjustment" in r
@@ -3498,7 +3501,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-205.kcad"] = container(root(cmap(parts), version=uint(205)))
+    files["schema-version-206.kcad"] = container(root(cmap(parts), version=uint(206)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5858,6 +5861,12 @@ def build():
     assert zeroed_data.count(b"\x67version\x18\xc6") == 1, "a zero line's drawing is schema 198"
     out["broken/zeroline-drawing-in-schema-197.kcad"] = container(
         zeroed_data.replace(b"\x67version\x18\xc6", b"\x67version\x18\xc5"))
+    # Schema 205 (docs/adr/1840): two surfaces' cut and fill zones kept as a drawing; 204 does not know its command.
+    zoned = document(load("map-cutfill.json"))
+    assert zoned.count(b"\x67version\x18\xcd") == 1, "cut and fill zones' drawing is schema 205"
+    out["map-cutfill.kcad"] = container(zoned)
+    out["broken/cutfill-drawing-in-schema-204.kcad"] = container(
+        zoned.replace(b"\x67version\x18\xcd", b"\x67version\x18\xcc"))
     # Schema 196 (docs/adr/1560): a surface's edits (a point added, a height set, an edge put in, a triangle taken
     # out); schema 195 refuses them, and an edge with both ends at one place is refused.
     edited = load("surface-edits.json")

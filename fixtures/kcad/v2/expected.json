@@ -179,6 +179,8 @@
     {"file": "broken/map-survey-adjustment-unknown-baseline.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/map-survey-network-point-solution.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/zeroline-drawing-in-schema-197.kcad", "sniff": "kcad", "error": "bad_value"},
+    {"file": "map-cutfill.kcad", "sniff": "kcad", "content": "map-cutfill.json"},
+    {"file": "broken/cutfill-drawing-in-schema-204.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/surface-edits-in-schema-195.kcad", "sniff": "kcad", "error": "unknown_field"},
     {"file": "broken/surface-edits-edge-of-no-length.kcad", "sniff": "kcad", "error": "bad_value"},
     {"file": "broken/map-surfaces-in-schema-194.kcad", "sniff": "kcad", "error": "bad_value"},
@@ -513,7 +515,7 @@
     { "file": "broken/non-text-key.kcad", "sniff": "kcad", "error": "non_text_key" },
 
     { "file": "broken/wrong-format.kcad", "sniff": "kcad", "error": "schema_format" },
-    { "file": "broken/schema-version-205.kcad", "sniff": "kcad", "error": "schema_version" },
+    { "file": "broken/schema-version-206.kcad", "sniff": "kcad", "error": "schema_version" },
     { "file": "broken/unknown-field.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "broken/missing-field.kcad", "sniff": "kcad", "error": "missing_field" },
     { "file": "broken/int-for-float.kcad", "sniff": "kcad", "error": "wrong_type" },

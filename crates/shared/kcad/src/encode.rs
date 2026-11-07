@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 205 (docs/adr/1840): two surfaces' cut and fill zones kept as a drawing.
+    if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.command == "road.terrains.cutfill")) {
+        return crate::SCHEMA_WITH_CUTFILL_DRAWINGS;
+    }
     // Schema 204 (docs/adr/1041): a volume approval's sources and algorithm.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_approval_sources) {
         return crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES;
