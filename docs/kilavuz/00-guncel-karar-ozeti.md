@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Boru hattı denetimi (7 Kasım 2026; MAP-16, [ADR 1640](../../docs/adr/1640-gravity-pipe-check.md)).** `cad.pipes.check`
+  salt okunur: altyapı ağının boruları cazibeli hat; örtü/eğim sınırları kullanıcınındır (EK-1 okunamadı, değer yok);
+  birim hatası önerilir, düzeltilmez; retler `invalid_pipe_check`, `not_a_pipe_network`.
 - **Sıfır hattı (7 Kasım 2026; MAP-15, [ADR 1620](../../docs/adr/1620-cut-fill-zero-line.md)).** `road.terrains.zeroline`:
   iki yüzeyin kazı-dolgu sınırı, 3B çoklu çizgi, tek adım; ret `no_zero_line`.
 - **Hacim yöntemi ve katsayılar (7 Kasım 2026; MAP-15, [ADR 1600](../../docs/adr/1600-surface-volume-method-and-factors.md)).**

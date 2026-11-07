@@ -56302,6 +56302,240 @@
       ]
     },
     {
+      "id": "cad.pipes.check",
+      "version": 1,
+      "title": "Boru hattı denetimi",
+      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). Sınırlar (minCover, maxCover, minSlope, maxSlope) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
+      "aliases": [
+        "borudenetimi",
+        "kanaldenetimi",
+        "boruortusu",
+        "tersegim"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a\ngreatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`.",
+        "properties": {
+          "diameter": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeDiameter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ground": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeGround"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "inverts": {
+            "$ref": "#/$defs/PipeInverts"
+          },
+          "maxCover": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "maxSlope": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "minCover": {
+            "description": "The least and the greatest cover over the crown (metres).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "minSlope": {
+            "description": "The least and the greatest slope, metres a metre (0.003 is 3 ‰).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "network": {
+            "description": "The network's id or name.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "network",
+          "inverts"
+        ],
+        "title": "PipesCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else\n`invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in\n[`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.",
+        "properties": {
+          "counts": {
+            "items": {
+              "$ref": "#/$defs/PipeCount"
+            },
+            "type": "array"
+          },
+          "coverTo": {
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/PipeFinding"
+            },
+            "type": "array"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "network": {
+            "type": "string"
+          },
+          "parts": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "pipes": {
+            "items": {
+              "$ref": "#/$defs/PipeCheck"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "network",
+          "coverTo",
+          "pipes",
+          "findings",
+          "counts",
+          "parts",
+          "length"
+        ],
+        "title": "PipesChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else\n`invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in\n[`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.",
+        "properties": {
+          "counts": {
+            "items": {
+              "$ref": "#/$defs/PipeCount"
+            },
+            "type": "array"
+          },
+          "coverTo": {
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/PipeFinding"
+            },
+            "type": "array"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "network": {
+            "type": "string"
+          },
+          "parts": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "pipes": {
+            "items": {
+              "$ref": "#/$defs/PipeCheck"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "network",
+          "coverTo",
+          "pipes",
+          "findings",
+          "counts",
+          "parts",
+          "length"
+        ],
+        "title": "PipesChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_pipe_check",
+          "unknown_network",
+          "not_a_pipe_network",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "invalid_network",
+          "tools_unavailable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Atıksu ağı, akar kotları özniteliklerde, örtü Zemin yüzeyinden",
+          "input": {
+            "diameter": {
+              "field": "Çap",
+              "unit": "mm"
+            },
+            "ground": {
+              "from": "surface",
+              "surface": "Zemin"
+            },
+            "inverts": {
+              "end": "Akar son",
+              "from": "fields",
+              "start": "Akar baş"
+            },
+            "network": "atiksu"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.parcels.check",
       "version": 1,
       "title": "Parsel alan denetimi",
@@ -100697,6 +100931,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "invalid_pipe_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Boru hattı denetiminin sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "not_a_pipe_network",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağ bir yol ağı; boru hattı denetimi altyapı ağlarını denetler."
     },
     {
       "code": "not_a_parcel",
@@ -162657,6 +162903,275 @@
         "labelPins"
       ],
       "type": "object"
+    },
+    "PipeCheck": {
+      "description": "A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's\ndirection field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its\ndiameter (metres), the least cover and where, the greatest cover, and its findings' kinds.",
+      "properties": {
+        "diameter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "downstream": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "findings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "maxCover": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "minCover": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "minCoverAt": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "system"
+        },
+        "reversed": {
+          "type": "boolean"
+        },
+        "slope": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "grade"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "upstream": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "uid",
+        "layer",
+        "length",
+        "findings"
+      ],
+      "type": "object"
+    },
+    "PipeCount": {
+      "description": "A kind's count.",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "count"
+      ],
+      "type": "object"
+    },
+    "PipeDiameter": {
+      "additionalProperties": false,
+      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit).",
+      "properties": {
+        "catalog": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "value"
+        },
+        "field": {
+          "type": "string"
+        },
+        "unit": {
+          "$ref": "#/$defs/PipeUnit"
+        }
+      },
+      "required": [
+        "field",
+        "unit"
+      ],
+      "type": "object"
+    },
+    "PipeFinding": {
+      "description": "A finding: its kind (one of [`PIPE_FINDINGS`]), the pipe, where, its measure (a gap in height, a cover, a slope, a\npart's length) and, for a unit mistake, the unit the value would fit in.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        }
+      },
+      "required": [
+        "kind",
+        "uid",
+        "at"
+      ],
+      "type": "object"
+    },
+    "PipeGround": {
+      "description": "Where the ground over a pipe is read.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A terrain surface of a Harita or Yol project (its id or name): the cover all along the pipe.",
+          "properties": {
+            "from": {
+              "const": "surface",
+              "type": "string"
+            },
+            "surface": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "from",
+            "surface"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The cover level attribute of the structure (a junction of the network) at each of the pipe's ends: the cover at\nthe ends only.",
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "from": {
+              "const": "structures",
+              "type": "string"
+            }
+          },
+          "required": [
+            "from",
+            "field"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "PipeInverts": {
+      "description": "Where a pipe's inverts (the inside bottom's heights, metres) are read.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Two attributes: the invert at the pipe's drawn start and at its drawn end; between them it is linear along the\npipe.",
+          "properties": {
+            "end": {
+              "type": "string"
+            },
+            "from": {
+              "const": "fields",
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "from",
+            "start",
+            "end"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The pipe's vertices' heights (a line's two, a polyline's every one): linear between them.",
+          "properties": {
+            "from": {
+              "const": "heights",
+              "type": "string"
+            }
+          },
+          "required": [
+            "from"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "PipeUnit": {
+      "description": "A length's unit as an attribute is written.",
+      "enum": [
+        "mm",
+        "cm",
+        "m"
+      ],
+      "type": "string"
     },
     "PlaceOn": {
       "description": "A place on an object named by the object's persistent id.",

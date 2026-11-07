@@ -5309,6 +5309,22 @@
    "tests": 0
   },
   {
+   "id": "pipes.check",
+   "kind": "command",
+   "title": "Boru hattı denetimi…",
+   "level": "query",
+   "via": [
+    "cad.pipes.check"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pipes.check",
+   "mcp": "cad.pipes.check",
+   "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "platform.editor",
    "kind": "command",
    "title": "Platform…",

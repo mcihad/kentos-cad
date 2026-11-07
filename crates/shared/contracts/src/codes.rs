@@ -1976,6 +1976,11 @@ codes! {
     /// A topological clean-up that would move a vertex past the quality profile's acceptance threshold (docs/adr/1262).
     CLEAN_BEYOND_ACCEPTANCE = "clean_beyond_acceptance", Failed, false, "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı.";
     /// Parsel alan denetimi (docs/adr/1400): an object given that is not an area.
+    /// A pipe check's question that cannot be asked: an empty attribute's name, a limit not above zero, a least above a
+    /// greatest, a catalogue too long or a size not above zero (docs/adr/1640).
+    INVALID_PIPE_CHECK = "invalid_pipe_check", Failed, false, "Boru hattı denetiminin sorusu geçerli değil; ileti nedenini söyler.";
+    /// A pipe check asked of a road network (docs/adr/1640).
+    NOT_A_PIPE_NETWORK = "not_a_pipe_network", Failed, false, "Ağ bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.";
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
     /// Alternatif etkisi (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";

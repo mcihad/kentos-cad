@@ -178,6 +178,13 @@
       ],
       "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420)."
     },
+    "pipes.check": {
+      "level": "query",
+      "via": [
+        "cad.pipes.check"
+      ],
+      "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640)."
+    },
     "parcels.check": {
       "level": "query",
       "via": [

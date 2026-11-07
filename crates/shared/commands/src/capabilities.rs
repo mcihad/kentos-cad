@@ -2428,6 +2428,22 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Boru hattı denetimi (plan/map-cad.md MAP-16, docs/adr/1640).
+    Entry {
+        id: "cad.pipes.check",
+        refusals: &[&[
+            "invalid_pipe_check",
+            "unknown_network",
+            "not_a_pipe_network",
+            "not_a_road_project",
+            "unknown_terrain",
+            "terrain_unbuildable",
+            "invalid_network",
+            "tools_unavailable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     // Parsel alan denetimi (plan/map-cad.md MAP-08, docs/adr/1400).
     Entry {
         id: "cad.parcels.check",

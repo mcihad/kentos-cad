@@ -904,6 +904,16 @@ bağlantısız hat, ters eğim, yetersiz örtü ve yanlış birimi yakala.
 Girdi/sonucu motorun bağımsız örneğiyle doğrula. Yakınsamayan analiz
 başarılı diye sahneye yazılmasın; iptal UI'ı ve ana veriyi kilitlemesin.
 
+**7 Kasım 2026 — Boru hattı denetimi ([ADR 1640](../docs/adr/1640-gravity-pipe-check.md)).** Kapsam: **Harita + Yol +
+CBS**. Araştırma: Civil 3D'nin Cover and Slope ve Pipe Drop Across Structure kuralları; yönetmeliğin sayısal sınırları
+(Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik EK-1) bakanlık sunucusunun sertifikası doğrulanamadığı
+için okunamadı, İller Bankası şartnamesine de erişilemedi: sınırlar kullanıcınındır, KentOS değer koymaz. Kanıtlanan:
+`cad.pipes.check` bir altyapı ağının borularını cazibeli hat olarak denetler: bağlantısız parça, bacasız uç, ters eğim,
+eğimsiz, çıkışı girişten yüksek baca, örtü (yüzeyden her TIN kenarı kesişiminde ya da kapak kotundan), cm/mm ya da
+derinlik yazılmış kot, başka birimde yazılmış çap; 30 bağımsız durum; Boru hattı denetimi penceresi. Açık: basınçlı su
+(EPANET) ve SWMM adaptörleri, hat profili, disiplinler arası açıklık, tasarlanan/uygulanan/ölçülen revizyonlar, EK-1
+değerlerinin kural paketi.
+
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 
 **Öncelik:** P0 mevcut aktarımı koruma; P1 mühendislik profilleri.

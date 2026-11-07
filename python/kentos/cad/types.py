@@ -5262,6 +5262,17 @@ PinMatchName = Literal["key", "geometry", "nearest"]
 """The names of :class:`PinMatch`, for a plain string."""
 
 
+class PipeUnit(_StrEnum):
+    """A length's unit as an attribute is written."""
+    MM = "mm"
+    CM = "cm"
+    M = "m"
+
+
+PipeUnitName = Literal["mm", "cm", "m"]
+"""The names of :class:`PipeUnit`, for a plain string."""
+
+
 class PlanBox(_StrEnum):
     """How the box was applied.
 
@@ -10981,6 +10992,38 @@ class PerpendicularReference(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PerpendicularReference:
         return _variant(_PERPENDICULAR_REFERENCE, "PerpendicularReference", "kind", data).from_json(data)
+
+
+class PipeGround(_Union):
+    """Where the ground over a pipe is read.
+
+    One of:
+
+    - :class:`SurfacePipeGround` (``from: surface``)
+    - :class:`StructuresPipeGround` (``from: structures``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "from"
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeGround:
+        return _variant(_PIPE_GROUND, "PipeGround", "from", data).from_json(data)
+
+
+class PipeInverts(_Union):
+    """Where a pipe's inverts (the inside bottom's heights, metres) are read.
+
+    One of:
+
+    - :class:`FieldsPipeInverts` (``from: fields``)
+    - :class:`HeightsPipeInverts` (``from: heights``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "from"
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeInverts:
+        return _variant(_PIPE_INVERTS, "PipeInverts", "from", data).from_json(data)
 
 
 class PointConstruction(_Union):
@@ -63375,6 +63418,260 @@ class PinnedObject(_Model):
         return cls(
             uid=data["uid"],
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeCheck(_Model):
+    """A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
+    direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
+    diameter (metres), the least cover and where, the greatest cover, and its findings' kinds.
+    Attributes:
+        length: Unit: length.
+        diameter: Unit: length.
+        downstream: Unit: elevation.
+        max_cover: Unit: length.
+        min_cover: Unit: length.
+        min_cover_at: Unit: system.
+        slope: Unit: grade.
+        upstream: Unit: elevation.
+    """
+    uid: str
+    layer: str
+    length: float
+    findings: list[str]
+    diameter: float | None | Unset = UNSET
+    downstream: float | None | Unset = UNSET
+    max_cover: float | None | Unset = UNSET
+    min_cover: float | None | Unset = UNSET
+    min_cover_at: list[float] | None | Unset = UNSET
+    reversed: bool | Unset = UNSET
+    slope: float | None | Unset = UNSET
+    upstream: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["length"] = float(self.length)
+        out["findings"] = list(self.findings)
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else float(self.diameter)
+        if self.downstream is not UNSET:
+            out["downstream"] = None if self.downstream is None else float(self.downstream)
+        if self.max_cover is not UNSET:
+            out["maxCover"] = None if self.max_cover is None else float(self.max_cover)
+        if self.min_cover is not UNSET:
+            out["minCover"] = None if self.min_cover is None else float(self.min_cover)
+        if self.min_cover_at is not UNSET:
+            out["minCoverAt"] = None if self.min_cover_at is None else [float(e0) for e0 in self.min_cover_at]
+        if self.reversed is not UNSET:
+            out["reversed"] = self.reversed
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else float(self.slope)
+        if self.upstream is not UNSET:
+            out["upstream"] = None if self.upstream is None else float(self.upstream)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeCheck:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            length=float(data["length"]),
+            findings=list(data["findings"]),
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else float(data["diameter"]),
+            downstream=UNSET if "downstream" not in data else None if data["downstream"] is None else float(data["downstream"]),
+            max_cover=UNSET if "maxCover" not in data else None if data["maxCover"] is None else float(data["maxCover"]),
+            min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
+            min_cover_at=UNSET if "minCoverAt" not in data else None if data["minCoverAt"] is None else [float(e0) for e0 in data["minCoverAt"]],
+            reversed=data.get("reversed", UNSET),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
+            upstream=UNSET if "upstream" not in data else None if data["upstream"] is None else float(data["upstream"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeCount(_Model):
+    """A kind's count.
+    Attributes:
+        count: Unit: count.
+    """
+    kind: str
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeCount:
+        return cls(
+            kind=data["kind"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeDiameter(_Model):
+    """The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit).
+    Attributes:
+        catalog: Unit: value.
+    """
+    field: str
+    unit: PipeUnit | PipeUnitName
+    catalog: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["unit"] = _enum_out(self.unit)
+        if self.catalog is not UNSET:
+            out["catalog"] = [float(e0) for e0 in self.catalog]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeDiameter:
+        return cls(
+            field=data["field"],
+            unit=_enum_in(PipeUnit, data["unit"]),
+            catalog=[float(e0) for e0 in data["catalog"]] if "catalog" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeFinding(_Model):
+    """A finding: its kind (one of [`PIPE_FINDINGS`]), the pipe, where, its measure (a gap in height, a cover, a slope, a
+    part's length) and, for a unit mistake, the unit the value would fit in.
+    Attributes:
+        at: Unit: system.
+        value: Unit: value.
+    """
+    kind: str
+    uid: str
+    at: list[float]
+    unit: str | None | Unset = UNSET
+    value: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["uid"] = self.uid
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
+        if self.value is not UNSET:
+            out["value"] = None if self.value is None else float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeFinding:
+        return cls(
+            kind=data["kind"],
+            uid=data["uid"],
+            at=[float(e0) for e0 in data["at"]],
+            unit=data.get("unit", UNSET),
+            value=UNSET if "value" not in data else None if data["value"] is None else float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipesCheck(_Model):
+    """Input of `cad.pipes.check` v1.
+
+    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a
+    greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
+    name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
+    surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
+    `tools_unavailable`.
+    Attributes:
+        network: The network's id or name.
+        max_cover: Unit: length.
+        max_slope: Unit: grade.
+        min_cover: The least and the greatest cover over the crown (metres). Unit: length.
+        min_slope: The least and the greatest slope, metres a metre (0.003 is 3 ‰). Unit: grade.
+    """
+    network: str
+    inverts: PipeInverts
+    diameter: PipeDiameter | None | Unset = UNSET
+    ground: PipeGround | None | Unset = UNSET
+    max_cover: float | None | Unset = UNSET
+    max_slope: float | None | Unset = UNSET
+    min_cover: float | None | Unset = UNSET
+    min_slope: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["inverts"] = self.inverts.to_json()
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else self.diameter.to_json()
+        if self.ground is not UNSET:
+            out["ground"] = None if self.ground is None else self.ground.to_json()
+        if self.max_cover is not UNSET:
+            out["maxCover"] = None if self.max_cover is None else float(self.max_cover)
+        if self.max_slope is not UNSET:
+            out["maxSlope"] = None if self.max_slope is None else float(self.max_slope)
+        if self.min_cover is not UNSET:
+            out["minCover"] = None if self.min_cover is None else float(self.min_cover)
+        if self.min_slope is not UNSET:
+            out["minSlope"] = None if self.min_slope is None else float(self.min_slope)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipesCheck:
+        return cls(
+            network=data["network"],
+            inverts=PipeInverts.from_json(data["inverts"]),
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
+            ground=UNSET if "ground" not in data else None if data["ground"] is None else PipeGround.from_json(data["ground"]),
+            max_cover=UNSET if "maxCover" not in data else None if data["maxCover"] is None else float(data["maxCover"]),
+            max_slope=UNSET if "maxSlope" not in data else None if data["maxSlope"] is None else float(data["maxSlope"]),
+            min_cover=UNSET if "minCover" not in data else None if data["minCover"] is None else float(data["minCover"]),
+            min_slope=UNSET if "minSlope" not in data else None if data["minSlope"] is None else float(data["minSlope"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipesChecked(_Model):
+    """Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else
+    `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
+    [`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.
+    Attributes:
+        parts: Unit: count.
+        length: Unit: length.
+    """
+    network: str
+    cover_to: str
+    pipes: list[PipeCheck]
+    findings: list[PipeFinding]
+    counts: list[PipeCount]
+    parts: int
+    length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["coverTo"] = self.cover_to
+        out["pipes"] = [e0.to_json() for e0 in self.pipes]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["counts"] = [e0.to_json() for e0 in self.counts]
+        out["parts"] = self.parts
+        out["length"] = float(self.length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipesChecked:
+        return cls(
+            network=data["network"],
+            cover_to=data["coverTo"],
+            pipes=[PipeCheck.from_json(e0) for e0 in data["pipes"]],
+            findings=[PipeFinding.from_json(e0) for e0 in data["findings"]],
+            counts=[PipeCount.from_json(e0) for e0 in data["counts"]],
+            parts=data["parts"],
+            length=float(data["length"]),
         )
 
 
@@ -116785,6 +117082,81 @@ class CirclePerpendicularReference(PerpendicularReference):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurfacePipeGround(PipeGround):
+    """A terrain surface of a Harita or Yol project (its id or name): the cover all along the pipe."""
+    TAG_VALUE: ClassVar[str] = "surface"
+    surface: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"from": "surface"}
+        out["surface"] = self.surface
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurfacePipeGround:
+        return cls(
+            surface=data["surface"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StructuresPipeGround(PipeGround):
+    """The cover level attribute of the structure (a junction of the network) at each of the pipe's ends: the cover at
+    the ends only.
+    """
+    TAG_VALUE: ClassVar[str] = "structures"
+    field: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"from": "structures"}
+        out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StructuresPipeGround:
+        return cls(
+            field=data["field"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsPipeInverts(PipeInverts):
+    """Two attributes: the invert at the pipe's drawn start and at its drawn end; between them it is linear along the
+    pipe.
+    """
+    TAG_VALUE: ClassVar[str] = "fields"
+    start: str
+    end: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"from": "fields"}
+        out["start"] = self.start
+        out["end"] = self.end
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsPipeInverts:
+        return cls(
+            start=data["start"],
+            end=data["end"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HeightsPipeInverts(PipeInverts):
+    """The pipe's vertices' heights (a line's two, a polyline's every one): linear between them."""
+    TAG_VALUE: ClassVar[str] = "heights"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"from": "heights"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HeightsPipeInverts:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class MidPointConstruction(PointConstruction):
     """İki nokta ortası: halfway from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "mid"
@@ -122355,6 +122727,12 @@ _PAVEMENT_EDGE: dict[str, type[PavementEdge]] = {"vertical": VerticalPavementEdg
 _PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
 
 
+_PIPE_GROUND: dict[str, type[PipeGround]] = {"surface": SurfacePipeGround, "structures": StructuresPipeGround}
+
+
+_PIPE_INVERTS: dict[str, type[PipeInverts]] = {"fields": FieldsPipeInverts, "heights": HeightsPipeInverts}
+
+
 _POINT_CONSTRUCTION: dict[str, type[PointConstruction]] = {"mid": MidPointConstruction, "extension": ExtensionPointConstruction, "parallel": ParallelPointConstruction, "track": TrackPointConstruction, "polar": PolarPointConstruction, "along": AlongPointConstruction}
 
 
@@ -123573,6 +123951,7 @@ __all__ = [
     "FieldsEdited",
     "FieldsMigrate",
     "FieldsMigrated",
+    "FieldsPipeInverts",
     "FieldsUsage",
     "FieldsUsed",
     "FieldsWrite",
@@ -123843,6 +124222,7 @@ __all__ = [
     "HeightMethodName",
     "HeightReference",
     "HeightTextEdit",
+    "HeightsPipeInverts",
     "Helmert",
     "HidePaperEmptyTable",
     "HidePaperOp",
@@ -124834,7 +125214,17 @@ __all__ = [
     "PinMatchName",
     "PinMove",
     "PinnedObject",
+    "PipeCheck",
+    "PipeCount",
     "PipeCulvertShapeDef",
+    "PipeDiameter",
+    "PipeFinding",
+    "PipeGround",
+    "PipeInverts",
+    "PipeUnit",
+    "PipeUnitName",
+    "PipesCheck",
+    "PipesChecked",
     "PlaceMeasuredPoint",
     "PlaceModulesOperation",
     "PlaceOn",
@@ -125821,6 +126211,7 @@ __all__ = [
     "StretchSpread",
     "StretchTopology",
     "StretchWindow",
+    "StructuresPipeGround",
     "StyleEditOperation",
     "StyleEditOperationName",
     "StyleFont",
@@ -125870,6 +126261,7 @@ __all__ = [
     "SurfaceCloudDef",
     "SurfaceEdit",
     "SurfaceExclusion",
+    "SurfacePipeGround",
     "SurfaceSources",
     "SurveyAdjust",
     "SurveyAdjusted",

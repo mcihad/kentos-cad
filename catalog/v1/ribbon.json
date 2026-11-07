@@ -497,6 +497,10 @@
        {
         "command": "drainage.editor",
         "size": "large"
+       },
+       {
+        "command": "pipes.check",
+        "size": "large"
        }
       ]
      },
@@ -3808,6 +3812,7 @@
        }
       ],
       "overflow": [
+       "pipes.check",
        "network.subnetworks",
        "linearRef.eventLinks"
       ]

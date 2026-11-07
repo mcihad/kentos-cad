@@ -414,6 +414,8 @@ pub enum Dialog {
     CleanReport,
     /// Parsel alan denetimi (parcels_check_window.rs, docs/adr/1400); its state is `App::parcels_check`.
     ParcelsCheck,
+    /// Boru hattı denetimi (pipes_check_window.rs, docs/adr/1640); its state is `App::pipes_check`.
+    PipesCheck,
     /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
     Zoning,
     /// Alternatif etkisi (impact_window.rs, docs/adr/1440); its state is `App::impact`.
@@ -841,6 +843,7 @@ pub enum Message {
     Grade(crate::grade_window::Event),
     CleanReport(crate::clean_report_window::Event),
     ParcelsCheck(crate::parcels_check_window::Event),
+    PipesCheck(crate::pipes_check_window::Event),
     Zoning(crate::zoning_window::Event),
     Impact(crate::impact_window::Event),
     Readjustment(crate::readjustment_window::Event),
@@ -1503,6 +1506,7 @@ pub struct App {
     pub(crate) grade: crate::grade_window::State,
     pub(crate) clean_report: crate::clean_report_window::State,
     pub(crate) parcels_check: crate::parcels_check_window::State,
+    pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) zoning: crate::zoning_window::State,
     pub(crate) impact: crate::impact_window::State,
     pub(crate) readjustment: crate::readjustment_window::State,
@@ -1958,6 +1962,7 @@ impl App {
             grade: Default::default(),
             clean_report: Default::default(),
             parcels_check: Default::default(),
+            pipes_check: Default::default(),
             zoning: Default::default(),
             impact: Default::default(),
             readjustment: Default::default(),
@@ -2737,6 +2742,7 @@ impl App {
             Message::Grade(event) => return self.grade_event(event),
             Message::CleanReport(event) => return self.clean_report_event(event),
             Message::ParcelsCheck(event) => return self.parcels_check_event(event),
+            Message::PipesCheck(event) => return self.pipes_check_event(event),
             Message::Zoning(event) => return self.zoning_event(event),
             Message::Impact(event) => return self.impact_event(event),
             Message::Readjustment(event) => return self.readjustment_event(event),
@@ -3601,6 +3607,7 @@ impl App {
             "tool.grade" => return self.open_grade(),
             "topology.cleanReport" => return self.open_clean_report(),
             "parcels.check" => return self.open_parcels_check(),
+            "pipes.check" => return self.open_pipes_check(),
             "zoning.check" => return self.open_zoning(),
             "scenario.impact" => return self.open_impact(),
             "readjustment.distribute" => return self.open_readjustment(),

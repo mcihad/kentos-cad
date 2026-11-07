@@ -1023,6 +1023,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",
     ),
     (
+        "cad.pipes.check",
+        "tools_unavailable",
+        "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; ağı kuran araçların reddi cad.processing.run'ınkiyle aynıdır (ADR 1640)",
+    ),
+    (
+        "cad.pipes.check",
+        "invalid_network",
+        "ağ kurulurken yalnız projede olmayan kimlik reddedilir; komut ağı önce adıyla ya da kimliğiyle bulur (unknown_network), bu ret yalnız aradaki bir değişime karşıdır (ADR 1640)",
+    ),
+    (
         "cad.sources.sync",
         "invalid_extent",
         "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510)",

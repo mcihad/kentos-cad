@@ -9481,6 +9481,39 @@ pub fn catalog() -> CommandCatalog {
             capabilities: None,
             examples: vec![CommandExample { title: "Çizimin imar planı".into(), input: json!({}), output: None }],
         },
+        // Boru hattı denetimi (plan/map-cad.md MAP-16, docs/adr/1640).
+        CommandDescriptor {
+            id: crate::CAD_PIPES_CHECK.into(),
+            version: crate::CAD_PIPES_CHECK_VERSION,
+            title: "Boru hattı denetimi".into(),
+            summary: "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). \
+                      Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). \
+                      Sınırlar (minCover, maxCover, minSlope, maxSlope) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. \
+                      Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable."
+                .into(),
+            aliases: vec!["borudenetimi".into(), "kanaldenetimi".into(), "boruortusu".into(), "tersegim".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PipesCheck>(),
+            output: schema::<crate::PipesChecked>(),
+            plan: Some(schema::<crate::PipesChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Atıksu ağı, akar kotları özniteliklerde, örtü Zemin yüzeyinden".into(),
+                input: json!({
+                    "network": "atiksu",
+                    "inverts": {"from": "fields", "start": "Akar baş", "end": "Akar son"},
+                    "diameter": {"field": "Çap", "unit": "mm"},
+                    "ground": {"from": "surface", "surface": "Zemin"}
+                }),
+                output: None,
+            }],
+        },
         // Parsel alan denetimi (plan/map-cad.md MAP-08, docs/adr/1400).
         CommandDescriptor {
             id: crate::CAD_PARCELS_CHECK.into(),
@@ -16031,6 +16064,7 @@ mod tests {
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
@@ -16984,6 +17018,7 @@ mod tests {
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
