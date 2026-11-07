@@ -49,11 +49,13 @@ impl Group {
     pub fn holds(self, kind: &str) -> bool {
         match self {
             Group::All => true,
-            Group::Plans => matches!(kind, "missingLayer" | "noLevel" | "upperMissing" | "levelOrder" | "noPlan"),
+            Group::Plans => {
+                matches!(kind, "missingLayer" | "noLevel" | "upperMissing" | "levelOrder" | "outsideUpper" | "noPlan")
+            }
             Group::Decisions => {
                 matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview")
             }
-            Group::Areas => matches!(kind, "overlap" | "uncovered" | "outside"),
+            Group::Areas => matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap"),
             Group::Notes => matches!(kind, "noteMissing" | "noteUnused"),
         }
     }
@@ -66,6 +68,7 @@ pub fn kind_word(kind: &str) -> &'static str {
         "noLevel" => "Kademe yok",
         "upperMissing" => "Üst plan yok",
         "levelOrder" => "Kademe sırası",
+        "outsideUpper" => "Üst plan dışına taşma",
         "noPlan" => "Planı yok",
         "noUse" => "Kullanım yok",
         "unknownUse" => "Bilinmeyen kullanım",
@@ -75,6 +78,7 @@ pub fn kind_word(kind: &str) -> &'static str {
         "overlap" => "Karar çelişkisi",
         "uncovered" => "Kararsız kısım",
         "outside" => "Plan dışına taşma",
+        "roadGap" => "Kopuk yol",
         "noteMissing" => "Plan notu yok",
         "noteUnused" => "Anılmayan not",
         _ => "Bulgu",
@@ -192,7 +196,7 @@ impl App {
     }
 
     /// A finding's objects as the table names them: a plan by its PlanKimlik, a decision by its KararKimlik, a note
-    /// by its number.
+    /// by its number, a road axis by its YolKimlik (docs/adr/2020).
     fn zoning_names(&self, f: &ZoningFinding) -> String {
         let Some(doc) = self.document.as_ref() else { return String::new() };
         let names: Vec<String> = f
@@ -201,7 +205,7 @@ impl App {
             .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s)))
             .map(|e| {
                 let a = &e.base().attrs;
-                ["PlanKimlik", "KararKimlik", "NotNo"]
+                ["PlanKimlik", "KararKimlik", "NotNo", "YolKimlik"]
                     .iter()
                     .find_map(|k| a.get(*k).filter(|v| !v.trim().is_empty()).map(|v| v.trim().to_owned()))
                     .map_or_else(|| format!("#{}", e.base().id), |v| if a.contains_key("NotNo") { format!("Not {v}") } else { v })

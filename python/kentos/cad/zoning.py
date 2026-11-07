@@ -24,14 +24,16 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
     imar-plani profilinin tipli nesnelerinden denetler: plan sınırı (kademe, üst plan),
     karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan
     notları), plan notu (no, kapsam). Bulgular: missingLayer (profil katmanı yok),
-    noLevel, upperMissing, levelOrder (üst plan üst kademede değil), noPlan, noUse,
-    unknownUse, missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş
-    değer 0 sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden
-    geçir), overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında
-    kararsız kısım), outside (karar plan dışına taşıyor), noteMissing, noteUnused. Alan
-    ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz.
-    Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası
-    değildir. Ret: invalid_input (tolerance).
+    noLevel, upperMissing, levelOrder (üst plan üst kademede değil), outsideUpper (plan
+    sınırı üst planının sınırı dışına taşıyor, ADR 2020), noPlan, noUse, unknownUse,
+    missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0
+    sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir),
+    overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız
+    kısım), outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol
+    aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020),
+    noteMissing, noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01)
+    bundan dar parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da
+    mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance).
     """
     __slots__ = ()
     id = "cad.zoning.check"
@@ -55,14 +57,16 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
         tipli nesnelerinden denetler: plan sınırı (kademe, üst plan), karar alanı (kullanım,
         TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu
         (no, kapsam). Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing,
-        levelOrder (üst plan üst kademede değil), noPlan, noUse, unknownUse, missingValue
+        levelOrder (üst plan üst kademede değil), outsideUpper (plan sınırı üst planının
+        sınırı dışına taşıyor, ADR 2020), noPlan, noUse, unknownUse, missingValue
         (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz),
         declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki
         karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım),
-        outside (karar plan dışına taşıyor), noteMissing, noteUnused. Alan ölçen bulgu area
-        taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur;
-        Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret:
-        invalid_input (tolerance).
+        outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu
+        ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020), noteMissing,
+        noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar
+        parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata
+        uygunluk iddiası değildir. Ret: invalid_input (tolerance).
 
         Args:
             doc: The drawing it works on.

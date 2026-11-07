@@ -1,5 +1,6 @@
-//! İmar planı denetimi (zoning_window.rs, docs/adr/1420) on the shared cases' drawings of `cad.zoning.check`: the
-//! messy plan's sixteen findings, the Alan group's four, Seç ve göster selecting their objects; the clean plan none;
+//! İmar planı denetimi (zoning_window.rs, docs/adr/1420, 2020) on the shared cases' drawings of `cad.zoning.check`: the
+//! messy plan's seventeen findings, the Alan group's four, Seç ve göster selecting their objects; the clean plan none;
+//! a broken road axis's Kopuk yol in the Alan group, its road selected; a plan outside its upper plan;
 //! a drawing without the profile's layers offered Profili uygula, after which the layers are there. Harita and GIS
 //! offer it, Yol and Mimari do not. And its pictures.
 
@@ -33,12 +34,38 @@ fn the_messy_plan_is_found_out_and_its_areas_shown() {
     let _ = app.update(Message::Run("zoning.check"));
     assert_eq!(app.dialog, Some(Dialog::Zoning));
     let r = app.zoning.answer.clone().expect("an answer").expect("checked");
-    assert_eq!((r.plans, r.decisions, r.notes, r.findings.len()), (4, 7, 3, 16));
+    assert_eq!((r.plans, r.decisions, r.notes, r.findings.len()), (4, 7, 3, 17));
+    assert_eq!(r.counts.get("outsideUpper"), Some(&1), "UIP-3 lies outside UIP-1");
     let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
     let _ = app.update(Message::Zoning(Z::Show));
     assert_eq!(app.dialog, None);
     // UIP-1 (uncovered), K1, K2 and K5 (the two overlaps, K5 outside).
     assert_eq!(app.selection.ids(), [Slot(5), Slot(9), Slot(6), Slot(1)]);
+}
+
+const ROAD_GAP: &str = "kopuk yol aksı: ucu ne yola ne plan sınırına değiyor";
+const OUTSIDE_UPPER: &str = "alt plan üst planın sınırının dışına taşıyor";
+
+/// docs/adr/2020: a road axis that ends in the middle of the plan is a Kopuk yol in the Alan group, and Seç ve göster
+/// selects it; a plan outside its upper plan is an Üst plan dışına taşma in the Plan ve kademe group.
+#[test]
+fn a_broken_road_and_a_plan_outside_its_upper_plan() {
+    let mut app = opened(Some(Module::Map), ROAD_GAP);
+    let _ = app.update(Message::Run("zoning.check"));
+    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let kinds: Vec<&str> = r.findings.iter().map(|f| f.kind.as_str()).collect();
+    assert_eq!(kinds, ["roadGap"]);
+    assert_eq!(crate::zoning_window::kind_word("roadGap"), "Kopuk yol");
+    assert!(r.findings[0].message.contains("(Y 487050.000, X 4420045.000)"), "{}", r.findings[0].message);
+    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+    let _ = app.update(Message::Zoning(Z::Show));
+    assert_eq!(app.selection.ids().len(), 1, "the road");
+    let mut app = opened(Some(Module::Map), OUTSIDE_UPPER);
+    let _ = app.update(Message::Run("zoning.check"));
+    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    assert_eq!(r.findings.iter().map(|f| f.kind.as_str()).collect::<Vec<_>>(), ["outsideUpper"]);
+    assert!(Group::Plans.holds("outsideUpper"));
+    assert_eq!(r.findings[0].area, Some(1000.0), "UIP-1's 20 m × 50 m past NIP-1");
 }
 
 #[test]
@@ -96,6 +123,17 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        // docs/adr/2020: the broken road in the Alan group.
+        let mut app = opened(Some(Module::Map), ROAD_GAP);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("zoning.check"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("kopuk-yol-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

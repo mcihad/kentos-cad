@@ -14,6 +14,11 @@ lists are read from it, as the command reads them):
   adedi or Hmax), each neither given nor declared “planda verilmeyen”: missingValue (0 is a value); a value declared
   and given: declaredValued; KAKS > TAKS × kat adedi: kaksReview; a note number named but absent: noteMissing;
 - a note for areas (Kapsam alan) no decision names: noteUnused;
+- a plan whose upper plan is among the plans, its part outside the upper plan's boundary, counted as below:
+  outsideUpper, both named (docs/adr/2020);
+- with the road layer (Yollar), each road axis's end farther than the tolerance from every other road and from every
+  plan boundary's edges: roadGap, its road named and the end said (Y, X to the millimetre), the first end before the
+  last (docs/adr/2020); without the layer no road is checked;
 - plan by plan, over its boundary and the decisions that name it (a plan without decisions skipped): two decisions'
   common part, a boundary's part no decision covers, a decision's part outside the boundary, each piece counted when
   its mean width 2A/P passes the tolerance (docs/adr/0202 §2), the area the sum of the counted pieces. The areas here
@@ -31,11 +36,14 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.zoning.check.json"
 PROFILE = json.loads((ROOT / "catalog/v1/profiles/imar-plani.json").read_text("utf-8"))
 X0, Y0 = 487000.0, 4420000.0
-KINDS = ["missingLayer", "noLevel", "upperMissing", "levelOrder", "noPlan", "noUse", "unknownUse", "missingValue",
-         "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "noteMissing", "noteUnused"]
+KINDS = ["missingLayer", "noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noUse", "unknownUse",
+         "missingValue", "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "roadGap", "noteMissing",
+         "noteUnused"]
 OPEN = {"park", "yesil", "meydan", "yol"}
 RANK = ["msp", "cdp", "nip", "uip"]
-LAYER_IDS = {"plan-siniri": "plan", "karar-alani": "karar", "plan-notu": "notlar"}
+LAYER_IDS = {"plan-siniri": "plan", "karar-alani": "karar", "plan-notu": "notlar", "yol-aksi": "yollar"}
+ROADS = ("plan-siniri", "karar-alani", "plan-notu", "yol-aksi")
+CLASS_OF = {"plan": "plan-siniri", "karar": "karar-alani", "notlar": "plan-notu", "yollar": "yol-aksi"}
 
 
 def uid(n):
@@ -86,6 +94,10 @@ def note(no, at, kapsam="alan", metin="Plan notu metni."):
     return ("notlar", at, {"NotNo": no, "Metin": metin, "Kapsam": kapsam})
 
 
+def road(kimlik, pts):
+    return ("yollar", pts, {"YolKimlik": kimlik, "Tur": "tasit"})
+
+
 def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
     ents = []
     for i, (layer, geo, attrs) in enumerate(objects, start=1):
@@ -93,6 +105,9 @@ def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
         if layer == "notlar":
             ents.append({"kind": "point", "id": i, "layerId": layer, "attrs": a,
                          "p": {"x": X0 + geo[0], "y": Y0 + geo[1]}})
+        elif layer == "yollar":
+            ents.append({"kind": "polyline", "id": i, "layerId": layer, "attrs": a,
+                         "pts": [{"x": X0 + x, "y": Y0 + y} for x, y in geo]})
         else:
             ents.append({"kind": "polygon", "id": i, "layerId": layer, "attrs": a, "pts": rect_pts(geo)})
     return {"format": "kentos.document", "version": 2, "name": "İmar planı denetimi",
@@ -188,6 +203,9 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
         if ul in RANK and lv in RANK and RANK.index(ul) >= RANK.index(lv):
             say("levelOrder", [i, j], None, f"Üst plan “{up}” ({label('plan-seviye', ul)}) bu planın "
                                             f"({label('plan-seviye', lv)}) üstünde bir kademe değil.")
+        area = counted(pieces([o[1]], [q[1]]), tolerance)
+        if area is not None:
+            say("outsideUpper", [i, j], area, f"Plan sınırı, üst plan “{up}” sınırının dışına taşıyor.")
     numbers = {g(o, "NotNo") for _, o in notes if g(o, "NotNo")}
     named = set()
     uses = domain("plan-kullanim")
@@ -257,6 +275,27 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
             area = counted(pieces([o[1]], [po[1]]), tolerance)
             if area is not None:
                 say("outside", [i], area, "Karar alanı plan sınırının dışına taşıyor.")
+    # The roads: each end against the other roads' segments and the plan boundaries' edges.
+    roads = [(i, o) for i, o in items if o[0] == "yollar" and "yol-aksi" in classes]
+
+    def to_segment(p, a, b):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        l2 = dx * dx + dy * dy
+        t = 0.0 if l2 == 0 else max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2))
+        return ((p[0] - a[0] - t * dx) ** 2 + (p[1] - a[1] - t * dy) ** 2) ** 0.5
+
+    def rect_edges(r):
+        x0, y0, x1, y1 = r
+        c = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+        return [(c[k], c[(k + 1) % 4]) for k in range(4)]
+
+    for i, o in roads:
+        for end in (o[1][0], o[1][-1]):
+            near = any(to_segment(end, a, b) <= tolerance for j, q in roads if j != i for a, b in zip(q[1], q[1][1:]))
+            near = near or any(to_segment(end, a, b) <= tolerance for _, q in plans for a, b in rect_edges(q[1]))
+            if not near:
+                say("roadGap", [i], None, f"“{g(o, 'YolKimlik')}” yol aksının ucu (Y {X0 + end[0]:.3f}, X {Y0 + end[1]:.3f}) "
+                                          "başka bir yola ya da plan sınırına bağlanmıyor (kopuk yol).")
     found.sort(key=lambda f: (f[0], f[1]))
     findings = [f[2] for f in found]
     counts = {}
@@ -319,8 +358,7 @@ SAME = {"revision": "same", "canUndo": False}
 
 
 def case(name, objects, op="plan", classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=None, expect=None):
-    kept = [o for o in objects if {"plan": "plan-siniri", "karar": "karar-alani", "notlar": "plan-notu"}[o[0]] in
-            classes]
+    kept = [o for o in objects if CLASS_OF[o[0]] in classes]
     out = check(kept, classes, 0.01 if tolerance is None else tolerance)
     if expect is not None:
         assert [f["kind"] for f in out["findings"]] == expect, (name, [f["kind"] for f in out["findings"]])
@@ -341,7 +379,7 @@ def cases():
     return [
         case("temiz plan: bulgu yok", GOOD, expect=[]),
         case("karışık plan: her bulgu türü, türün sırasıyla", MESSY,
-             expect=["noLevel", "upperMissing", "levelOrder", "noPlan", "noPlan", "noUse", "unknownUse",
+             expect=["noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noPlan", "noUse", "unknownUse",
                      "missingValue", "declaredValued", "kaksReview", "overlap", "overlap", "uncovered", "outside",
                      "noteMissing", "noteUnused"]),
         case("uygula: salt okunur", MESSY, op="execute"),
@@ -377,6 +415,20 @@ def cases():
         case("üst plan aynı kademede", with_(GOOD, 1, Seviye="uip"), expect=["levelOrder"]),
         case("üst plan yok", with_(GOOD, 0, UstPlan="CDP-1"), expect=["upperMissing"]),
         case("kademesi olmayan plan", with_(GOOD, 1, Seviye=None), expect=["noLevel"]),
+        # docs/adr/2020: a plan outside its upper plan, the roads' continuity.
+        case("alt plan üst planın sınırının dışına taşıyor", geo(GOOD, 1, (-20, -20, 80, 80), ), expect=["outsideUpper"]),
+        case("yollar plan sınırına ve birbirine bağlı: bulgu yok", GOOD + [road("Y1", [(0, 25), (100, 25)]),
+                                                                       road("Y2", [(50, 0), (50, 25)])],
+             classes=ROADS, expect=[]),
+        case("kopuk yol aksı: ucu ne yola ne plan sınırına değiyor", GOOD + [road("Y1", [(0, 25), (100, 25)]),
+                                                                          road("Y3", [(50, 25), (50, 45)])],
+             classes=ROADS, expect=["roadGap"]),
+        case("iki ucu da kopuk yol: iki bulgu, baştaki önce", GOOD + [road("Y4", [(20, 10), (30, 10), (30, 20)])],
+             classes=ROADS, expect=["roadGap", "roadGap"]),
+        case("plan sınırına toleransta yaklaşan yol bağlı sayılır", GOOD + [road("Y5", [(0, 40), (100.005, 40)])],
+             classes=ROADS, expect=[]),
+        case("plan sınırına toleranstan uzak kalan yol kopuk", GOOD + [road("Y6", [(0, 40), (99.95, 40)])],
+             classes=ROADS, expect=["roadGap"]),
         refused("tolerans sıfır", 0.0, "0"),
         refused("tolerans eksi", -1.0, "-1"),
     ]

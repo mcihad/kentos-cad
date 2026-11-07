@@ -1,8 +1,10 @@
-//! `cad.zoning.check` v1 (plan/map-cad.md MAP-09, docs/adr/1420): İmar planı denetimi, read only. The layers and the
-//! value lists come from the KentOS profile `imar-plani` (data, not code); the overlaps of decisions, a plan boundary
-//! not covered by decisions and a decision outside the plan come from the topology core's rules (Çakışmamalı,
-//! … tarafından kapsanmalı) over those two layers. Nothing is written; no legal or schema conformity is claimed. The
-//! shared cases are `fixtures/commands/v1/cad.zoning.check.json`.
+//! `cad.zoning.check` v1 (plan/map-cad.md MAP-09, docs/adr/1420, 2020): İmar planı denetimi, read only. The layers and
+//! the value lists come from the KentOS profile `imar-plani` (data, not code); the overlaps of decisions, a plan
+//! boundary not covered by decisions, a decision outside the plan and a plan outside its upper plan come from the
+//! topology core's rules (Çakışmamalı, … içinde kalmalı) over those layers; a road axis whose end meets neither another
+//! road nor a plan boundary from its Sarkan uç olmamalı (docs/adr/2020; the road layer is optional: without it no road
+//! is checked). Nothing is written; no legal or schema conformity is claimed. The shared cases are
+//! `fixtures/commands/v1/cad.zoning.check.json`.
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -20,11 +22,12 @@ use crate::geometry::shape;
 use crate::profiles::{Place, find, path_words};
 
 /// The kinds in the order the answer lists them.
-pub const KINDS: [&str; 15] = [
+pub const KINDS: [&str; 17] = [
     "missingLayer",
     "noLevel",
     "upperMissing",
     "levelOrder",
+    "outsideUpper",
     "noPlan",
     "noUse",
     "unknownUse",
@@ -34,6 +37,7 @@ pub const KINDS: [&str; 15] = [
     "overlap",
     "uncovered",
     "outside",
+    "roadGap",
     "noteMissing",
     "noteUnused",
 ];
@@ -140,6 +144,21 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
     let plans = of("plan-siniri", "polygon");
     let decisions = of("karar-alani", "polygon");
     let notes = of("plan-notu", "point");
+    // The road axes (docs/adr/2020): their layer if the drawing has it; none is no finding.
+    let road_layer = p.classes.iter().find(|c| c.id == "yol-aksi").and_then(|c| match find(doc.layers().nodes(), &c.layer) {
+        Place::Layer(id) => Some(id),
+        _ => None,
+    });
+    let roads: Vec<Item<'_>> = road_layer
+        .map(|layer| {
+            order
+                .iter()
+                .enumerate()
+                .filter(|(_, e)| e.base().layer_id == layer && matches!(e.kind(), "line" | "polyline"))
+                .map(|(at, e)| Item { at, uid: doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(), e })
+                .collect()
+        })
+        .unwrap_or_default();
 
     // The plans: their level, their upper plan.
     let rank = |code: &str| ["msp", "cdp", "nip", "uip"].iter().position(|c| *c == code);
@@ -316,6 +335,74 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
                 "uncovered" => say("uncovered", &items, area, "Plan sınırının bir kısmında karar yok.".into()),
                 _ => say("outside", &items, area, "Karar alanı plan sınırının dışına taşıyor.".into()),
             }
+        }
+    }
+
+    // A plan outside its upper plan (docs/adr/2020): the topology core's … içinde kalmalı, pair by pair (a plan may be
+    // one pair's lower and another's upper, so each pair takes its own copies).
+    let pairs: Vec<(&Item<'_>, &Item<'_>)> = plans
+        .iter()
+        .filter_map(|lower| {
+            let up = lower.get("UstPlan");
+            (!up.is_empty()).then(|| plans.iter().find(|q| q.get("PlanKimlik") == up).map(|upper| (lower, upper))).flatten()
+        })
+        .collect();
+    if !pairs.is_empty() {
+        let mut shapes: Vec<Shape> = Vec::new();
+        let (mut on, mut uids, mut rules) = (Vec::new(), Vec::new(), Vec::new());
+        for (k, (lower, upper)) in pairs.iter().enumerate() {
+            for (item, name) in [(lower, format!("alt:{k}")), (upper, format!("ust:{k}"))] {
+                shapes.push(shape(item.e));
+                on.push(name);
+                uids.push(item.uid.clone());
+            }
+            rules.push(Rule {
+                id: format!("{k}"),
+                kind: Kind::MustBeCoveredBy,
+                layer: format!("alt:{k}"),
+                other: Some(format!("ust:{k}")),
+                value: None,
+            });
+        }
+        let checked = check(&Objects { shapes: &shapes, layers: &on, uids: &uids }, &rules, tolerance, &[]);
+        for f in checked.findings {
+            let (lower, upper) = pairs[f.rule];
+            say(
+                "outsideUpper",
+                &[lower, upper],
+                f.measure,
+                format!("Plan sınırı, üst plan “{}” sınırının dışına taşıyor.", upper.get("PlanKimlik")),
+            );
+        }
+    }
+    // A road axis's end that meets neither another road nor a plan boundary (docs/adr/2020): Sarkan uç olmamalı over
+    // the roads, the plan boundaries its connectors (the rule takes its own layer's areas as connectors, so the plan
+    // boundaries go on the roads' layer here).
+    if !roads.is_empty() {
+        let mut shapes: Vec<Shape> = roads.iter().map(|r| shape(r.e)).collect();
+        let mut on: Vec<String> = vec!["yol".to_owned(); roads.len()];
+        let mut uids: Vec<String> = roads.iter().map(|r| r.uid.clone()).collect();
+        for plan in &plans {
+            shapes.push(shape(plan.e));
+            on.push("yol".to_owned());
+            uids.push(plan.uid.clone());
+        }
+        let rule = Rule { id: "0".into(), kind: Kind::MustNotHaveDangles, layer: "yol".into(), other: None, value: None };
+        let checked = check(&Objects { shapes: &shapes, layers: &on, uids: &uids }, &[rule], tolerance, &[]);
+        for f in checked.findings {
+            let Some(&k) = f.objects.first().filter(|&&k| k < roads.len()) else { continue };
+            let road = &roads[k];
+            say(
+                "roadGap",
+                &[road],
+                None,
+                format!(
+                    "“{}” yol aksının ucu (Y {:.3}, X {:.3}) başka bir yola ya da plan sınırına bağlanmıyor (kopuk yol).",
+                    road.get("YolKimlik"),
+                    f.at.x,
+                    f.at.y
+                ),
+            );
         }
     }
 

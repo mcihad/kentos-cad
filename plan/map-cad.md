@@ -676,6 +676,14 @@ yol aksı) ve `cad.zoning.check` (15 bulgu türü: boş ≠ 0 ≠ verilmeyen, ka
 eksik/anılmayan not, üst/alt plan kademesi; 28 ortak durum), pencere Seç ve göster ile sahnede. Açık: resmî şema ve
 eşleme, plan değişikliği taslağı, üst plan sınırı kapsaması, yol devamlılığı, sembolün karardan seçilmesi.
 
+**7 Kasım 2026, ikinci tur — Yol devamlılığı ve üst plan kapsaması ([ADR 2020](../docs/adr/2020-zoning-road-continuity-and-upper-plan.md)).**
+Kapsam: **Harita + CBS**. Araştırma: MPYY'nin alt kademenin üst kademe içinde olması (ADR 1420'nin kaydı), planx'in yol
+sürekliliği denetimi. Kanıtlanan: `cad.zoning.check` iki bulgu türü aldı: `outsideUpper` (alt planın üst planın sınırı
+dışındaki parçası, alanıyla) ve `roadGap` (Yollar katmanı varsa yol aksının ne yola ne plan sınırına değen ucu, yeriyle);
+ikisi de topoloji çekirdeğinin kurallarıyla; eski çizimlerin bulguları değişmez; 34 bağımsız durum (Rust, Python);
+pencerede Üst plan dışına taşma ve Kopuk yol, yol kimliğiyle ve Seç ve göster ile. Açık: resmî şema ve eşleme, plan
+değişikliği taslağı, sembolün karardan seçilmesi.
+
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K21], [K30], [K31], [K40].
