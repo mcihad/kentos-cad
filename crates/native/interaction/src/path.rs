@@ -132,6 +132,11 @@ pub const WIPEOUT_LABEL: &str = "Maske";
 /// Dik kapat with the first and the last edge parallel (docs/adr/0166 §4).
 pub const NO_SQUARE_CLOSE: &str = "Dik kapatılamıyor: ilk kenar ile son kenar paralel.";
 
+/// What Esc says when it ends a wall chain and keeps it (docs/adr/3001).
+pub fn esc_kept(segments: usize) -> String {
+    format!("Esc zinciri bitirdi: çizilen {segments} parça duvar kaldı. Araçtan çıkmak için yeniden Esc, geri almak için Ctrl+Z.")
+}
+
 /// What the tool draws.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Shape {
@@ -2391,6 +2396,29 @@ impl Tool for Path {
         // Newest first: the tool's own Geri (G), which takes back the last
         // point (or the arc's through-point); with no point, the drawing's undo.
         !self.pts.is_empty() && self.option("G", cx)
+    }
+
+    /// Esc on a wall chain (docs/adr/3001): a question asked is left first; then the segments already drawn are written
+    /// as Enter writes them and the tool stays for the next chain, as Revit's first Esc ends a chain and AutoCAD keeps
+    /// what was drawn. The next Esc leaves. A chain without a finished segment has nothing to keep.
+    fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        if self.shape != Shape::Wall || self.separator_level.is_some() {
+            return false;
+        }
+        if self.wall_ask.take().is_some() {
+            self.see(cx);
+            return true;
+        }
+        if self.pts.len() < Shape::Wall.min() {
+            return false;
+        }
+        let segments = self.pts.len() - 1;
+        let revision = cx.doc.revision();
+        self.finish(cx);
+        if cx.doc.revision() != revision {
+            cx.say(Level::Info, esc_kept(segments));
+        }
+        true
     }
 
     fn preview(&self, format: &Format) -> Preview {

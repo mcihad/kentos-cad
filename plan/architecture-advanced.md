@@ -528,7 +528,11 @@ alt maddeyle ilerler.
 
 ### 4.1 Arayüz sağlığı ve hız
 
-#### ADV-08 — Kritik kullanım hataları: Esc, adlar, terimler ve harfler [ ]
+#### ADV-08 — Kritik kullanım hataları: Esc, adlar, terimler ve harfler [~]
+
+_Durum (7 Kasım 2026):_ Esc yapıldı (M2, [ADR 3001](../docs/adr/3001-escape-keeps-the-wall-chain.md)). Duvar
+zincirinde ilk Esc çizilen parçaları yazıyor ve araçta kalıyor, ikinci Esc çıkıyor. Gerçek pencerede önce/sonra
+resimleriyle doğrulandı. Kalanlar: takma adlar (M3), terimler, harfler ve "Açı" (M4), komut geçmişi (M5).
 
 **Kullanıcı sonucu:** Çizilen iş Esc'de kaybolmaz. "pencere" yazınca pencere aracı açılır. Aynı şeyin her yerde tek adı ve
 tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S10, S14.
@@ -955,7 +959,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | M1 | Ölçüm altyapısı | ADV-26 | **(M1, ADR 3000: gerçek pencere düzeneği ve 2+1 tabanı 147 etkileşim / 177,6 s yapıldı; `kullan --modul`, `snapshot --sekme` kaldı)** |
-| M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim |
+| M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim **(M2, ADR 3001: yapıldı)** |
 | M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari |
 | M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz |
 | M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet |
@@ -1071,7 +1075,7 @@ Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım
 
 | Ölçü | Bugün | Hedef | Faz |
 |---|---|---|---|
-| Esc'de kaybolan duvar parçası | bütün zincir | 0 | 0 |
+| Esc'de kaybolan duvar parçası | bütün zincir → **0 (M2)** | 0 | 0 |
 | Kısayolu olan mimari komut | 0 | en sık 5 araç | 0 |
 | İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
 | 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |

@@ -93,6 +93,7 @@ mod typed_units;
 mod vertex_points;
 mod view_twist;
 mod wipeouts;
+mod wall_chain_escape;
 mod wall_rectangle;
 mod architecture_settings;
 mod wall_dimensions;
