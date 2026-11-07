@@ -1150,6 +1150,12 @@ değişkeni önce gelir); baskı öncesi denetim projenin sisteminden başka EPS
 `crs_text_mismatch` ile bulur, dönüşüm notunu bulmaz. Açık: kurum eksen adları, kuzey türü notu, ölçme kalite notu,
 resmî profil kapısı.
 
+**7 Kasım 2026, ikinci tur — Paftada kuzey bilgisi ([ADR 1900](../docs/adr/1900-sheet-north-facts.md)).** Kapsam: **CAD +
+CBS** (pafta). Kanıtlanan: pafta yazıları `@yakinsama` (GK–CK), `@manyetik_sapma` (CK–MK, WMM2025, paftanın tarihinde)
+ve `@grid_manyetik` (GK–MK) okur; bağlı haritanın ya da ilk haritanın merkezinde, kuzey okunun hesabıyla; değerler
+PROJ (pyproj) ve pygeomag'ın WMM2025'iyle bağımsız sınandı. Açık: kurum eksen adları, ölçme kalite notu, resmî profil
+kapısı.
+
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 
 **Öncelik:** P1 çevrimdışı karşılaştırma; canlı cihaz işi donanım kapısında.

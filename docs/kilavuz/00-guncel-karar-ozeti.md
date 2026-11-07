@@ -58,6 +58,9 @@
 - **Dışa aktarma kaybı denetimi (7 Kasım 2026; MAP-17, [ADR 1660](../../docs/adr/1660-exchange-round-trip-check.md)).**
   `file.exchange.check` (headless): KentOS yazıcısı + okuyucusuyla gidiş-dönüş; `numeric` ve `losses` ayrı; ret
   `exchange_unreadable`; GeoParquet'in yay merkezi ilk noktaya göreli.
+- **Paftada kuzey bilgisi (7 Kasım 2026; MAP-18, [ADR 1900](../../docs/adr/1900-sheet-north-facts.md)).** Pafta yazısı
+  `@yakinsama`, `@manyetik_sapma` (WMM2025, paftanın tarihinde), `@grid_manyetik` okur: bağlı haritanın ya da ilk
+  haritanın merkezinde, kuzey diyagramının sözleri ve toplamıyla; bilinmeyen boştur.
 - **Destek matrisi (7 Kasım 2026; MAP-17, [ADR 1880](../../docs/adr/1880-exchange-support-matrix.md)).**
   `file.exchange.matrix`: açık çizimin altı biçimle gidiş-dönüşü, on özellik satırı (korunur, yaklaşık, dönüşür,
   eklenir, kaybolur); her sütun file.exchange.check'in cevabı; pencerede Tüm biçimler.

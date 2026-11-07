@@ -28,7 +28,7 @@ use crate::designer::{Designer, Dialog as Window, Effect};
 use crate::message::Message;
 
 /// The ready names every expression of a sheet may read; the coordinate facts last (docs/adr/1680).
-pub const READY: [&str; 17] = [
+pub const READY: [&str; 20] = [
     "@proje_adi",
     "@pafta_adi",
     "@sayfa",
@@ -46,6 +46,9 @@ pub const READY: [&str; 17] = [
     "@kot_sistemi",
     "@epok",
     "@ikinci_sistem",
+    "@yakinsama",
+    "@manyetik_sapma",
+    "@grid_manyetik",
 ];
 
 #[derive(Clone, Debug, PartialEq)]

@@ -382,6 +382,39 @@ impl Declination {
 /// An angle's size in degrees and minutes, “5°41'” (the sign is the caller's). The minute mark
 /// is the apostrophe, as `geodesy::dms` writes it: every drawing face draws it as a narrow tick,
 /// where Barlow's prime (U+2032) is 0.6 em wide, nearly half of it empty (“6°19′  D”).
+/// A map's north facts as a sheet's texts read them (docs/adr/1900): `@yakinsama` (grid north to true north, the
+/// convergence: signed degrees and minutes), `@manyetik_sapma` (true north to magnetic, the World Magnetic Model's at the
+/// map's centre on `date`, “5°41' D (WMM2025, 2026-10)”) and `@grid_manyetik` (grid north to magnetic, “5°35' D”): the
+/// north diagram's three lines, by its own sums; each none where not known (no place on the ground, no date, outside the
+/// model).
+pub(crate) fn north_texts(
+    inputs: &super::RenderInputs,
+    map: &str,
+    frame: &super::map::MapFrame,
+    date: Option<&str>,
+) -> [Option<String>; 3] {
+    let place = inputs.crs.as_ref().and_then(|c| c.tm).zip(frame.center).and_then(|(tm, c)| geodesy::tm_inverse(&tm, c.x, c.y));
+    let gamma = place
+        .map(|g| g.convergence)
+        .or_else(|| inputs.maps.iter().find(|m| m.item == map).and_then(|m| m.convergence));
+    let model = crate::wmm::info();
+    let declination = match (place, date.and_then(crate::wmm::decimal_year), &model) {
+        (Some(g), Some(year), Some(info)) if crate::wmm::valid(year) => {
+            crate::wmm::declination(g.lat, g.lon, year).map(|d| (d, info.model.clone(), date.and_then(|d| d.get(..7)).unwrap_or_default().to_owned()))
+        }
+        _ => None,
+    };
+    let side = |d: f64| if d < 0.0 { "B" } else { "D" };
+    [
+        gamma.map(|g| format!("{}{}", if g < 0.0 { "−" } else { "+" }, dm(g))),
+        declination.as_ref().map(|(d, model, month)| format!("{} {} ({model}, {month})", dm(*d), side(*d))),
+        gamma.zip(declination.as_ref().map(|x| x.0)).map(|(g, d)| {
+            let m = -g + d;
+            format!("{} {}", dm(m), side(m))
+        }),
+    ]
+}
+
 fn dm(deg: f64) -> String {
     let total = libm::round(deg.abs() * 60.0) as i64;
     format!("{}°{:02}'", total / 60, total % 60)

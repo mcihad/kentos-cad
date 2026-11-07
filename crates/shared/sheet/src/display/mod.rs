@@ -522,14 +522,17 @@ pub(crate) struct Ctx<'a> {
 }
 
 impl Ctx<'_> {
-    /// The scope for an item: a text tied to a map reads that map's scale as `@olcek`.
+    /// The scope for an item: a text tied to a map reads that map's scale as `@olcek` and its north facts
+    /// (`@yakinsama`, `@manyetik_sapma`, `@grid_manyetik`, docs/adr/1900).
     pub fn scope_for(&self, item: &Item) -> Scope {
         let mut s = self.scope.clone();
-        if let Some(m) = item.kind.map_link().and_then(|id| self.maps.get(id)) {
-            s.builtins
-                .retain(|(n, _)| n != "OLCEK" && n != "OLCEK_PAYDA");
+        if let Some((id, m)) = item.kind.map_link().and_then(|id| self.maps.get(id).map(|m| (id, m))) {
+            s.builtins.retain(|(n, _)| {
+                !["OLCEK", "OLCEK_PAYDA", "YAKINSAMA", "MANYETIK_SAPMA", "GRID_MANYETIK"].contains(&n.as_str())
+            });
             s.builtin("olcek", VarValue::Text(format!("1/{}", m.scale)));
             s.builtin("olcek_payda", VarValue::Number(m.scale));
+            north_builtins(&mut s, self.inputs, id, m);
         }
         s
     }
@@ -545,6 +548,20 @@ impl Ctx<'_> {
         }
         r.text
     }
+}
+
+/// A map's north facts into a scope (docs/adr/1900): the date is the scope's `@tarih` (a sheet's or the project's
+/// variable of that name, else today's), as the north arrow reads it.
+fn north_builtins(s: &mut Scope, inputs: &RenderInputs, id: &str, m: &map::MapFrame) {
+    let date = match s.lookup("@tarih") {
+        Some(VarValue::Text(t)) => Some(t.clone()),
+        _ => None,
+    };
+    let [gamma, declination, grid] = marks::north_texts(inputs, id, m, date.as_deref());
+    let value = |t: Option<String>| t.map_or(VarValue::Null, VarValue::Text);
+    s.builtin("yakinsama", value(gamma));
+    s.builtin("manyetik_sapma", value(declination));
+    s.builtin("grid_manyetik", value(grid));
 }
 
 pub(crate) fn eval_note(item: &str, expression: &str, e: &Eval) -> Note {
@@ -891,17 +908,21 @@ fn sheet_scope(
         }
     }
     let primary = drawn.iter().find_map(|(it, _)| match &it.kind {
-        ItemKind::Map(m) if m.overview_of.is_none() => maps.get(&it.id).map(|f| f.scale),
+        ItemKind::Map(m) if m.overview_of.is_none() => maps.get(&it.id).map(|f| (it.id.clone(), f.clone())),
         _ => None,
     });
     match primary {
-        Some(s) => {
-            scope.builtin("olcek", VarValue::Text(format!("1/{s}")));
-            scope.builtin("olcek_payda", VarValue::Number(s));
+        Some((id, f)) => {
+            scope.builtin("olcek", VarValue::Text(format!("1/{}", f.scale)));
+            scope.builtin("olcek_payda", VarValue::Number(f.scale));
+            north_builtins(&mut scope, inputs, &id, &f);
         }
         None => {
             scope.builtin("olcek", VarValue::Null);
             scope.builtin("olcek_payda", VarValue::Null);
+            for name in ["yakinsama", "manyetik_sapma", "grid_manyetik"] {
+                scope.builtin(name, VarValue::Null);
+            }
         }
     }
     (scope, drawn, maps)
