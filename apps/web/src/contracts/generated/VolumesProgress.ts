@@ -7,6 +7,8 @@
  *
  * Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
  * `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
- * survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+ * survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),
+ * `unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).
+ * `assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).
  */
-export type VolumesProgress = { volume: string, survey: string, previous?: string, };
+export type VolumesProgress = { volume: string, survey: string, previous?: string, assumeHeights?: boolean, };

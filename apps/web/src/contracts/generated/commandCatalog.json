@@ -37166,7 +37166,7 @@
       "id": "road.terrains.query",
       "version": 1,
       "title": "Arazi yüzeyini sorgula",
-      "summary": "Yol projesinin arazi yüzeylerini kaynaklarından bugün kurulduğu gibi verir; hiçbir şey yazmaz. Her yüzeyin durumu (current: son kabul edildiği kaynaklarla aynı; stale: kaynakları ya da tanımı değişti; new: hiç kabul edilmedi; unbuildable: kurulamıyor, problem nedenini ve yerini söyler), kaynaklarının özeti, kullanılamayan kaynakları ve ölçüleri (köşe, üçgen, kısıt kenarı, plan alanı m², en düşük ve en yüksek kot, birleşen, bölünen, kırpılan). surface (kimlik ya da ad) verilince yalnız o yüzey; at yerlerin kotları (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında kalıp kalmadığı (gap). Retler: not_a_road_project, unknown_terrain, no_terrain, invalid_places.",
+      "summary": "Yol projesinin arazi yüzeylerini kaynaklarından bugün kurulduğu gibi verir; hiçbir şey yazmaz. Her yüzeyin durumu (current: son kabul edildiği kaynaklarla aynı; stale: kaynakları ya da tanımı değişti; new: hiç kabul edilmedi; unbuildable: kurulamıyor, problem nedenini ve yerini söyler), kaynaklarının özeti, kullanılamayan kaynakları ve ölçüleri (köşe, üçgen, kısıt kenarı, plan alanı m², en düşük ve en yüksek kot, birleşen, bölünen, kırpılan). surface (kimlik ya da ad) verilince yalnız o yüzey; at yerlerin kotları (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur (interpolation: linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin köşelerini (corners: x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest) ve en yakın köşeye plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem buluşur, verilmez. Kaynak sürümü yüzeyin özetidir (digest). Retler: not_a_road_project, unknown_terrain, no_terrain, invalid_places.",
       "aliases": [
         "kotsor"
       ],
@@ -37183,7 +37183,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its\nheights at places (`at`) and its section along a line (`along`, two places or more).\n\nRefusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),\n`invalid_places` (a place not finite, a line of one place, more than 100 000 places).",
+        "description": "Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its\nheights at places (`at`) and its section along a line (`along`, two places or more). A height says the triangle it\nis read on, its longest edge and the nearest corner's distance, inside one triangle only (docs/adr/1033).\n\nRefusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),\n`invalid_places` (a place not finite, a line of one place, more than 100 000 places).",
         "properties": {
           "along": {
             "items": {
@@ -37231,6 +37231,17 @@
             },
             "type": "array"
           },
+          "interpolation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainInterpolation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the heights and the section were read, when either was asked (docs/adr/1033)."
+          },
           "section": {
             "items": {
               "$ref": "#/$defs/TerrainSectionPoint"
@@ -37259,6 +37270,17 @@
               "$ref": "#/$defs/TerrainHeight"
             },
             "type": "array"
+          },
+          "interpolation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainInterpolation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the heights and the section were read, when either was asked (docs/adr/1033)."
           },
           "section": {
             "items": {
@@ -37913,7 +37935,7 @@
       "id": "road.alignments.create",
       "version": 1,
       "title": "Aks oluştur",
-      "summary": "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. ove: true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki dairenin arası. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinde (cadWork road) PI'lardan bir yatay güzergâh (aks) kurar ve tanımını projenin yol ayarlarına yazar: aliyman, kurp ve klotoid tek analitik biçimde (kentos.alignment/1). pis başlangıç, ara PI'lar ve bitiştir; her ara PI'da radius (yoksa kurp yok, kırık nokta), spiralIn ve spiralOut (giriş ve çıkış klotoidinin boyu, m; A² = R·L). Eşit olmayan klotoidlerde kurpun merkezi iki teğetin içe R+p kadar ötelenmiş doğrularının kesişimidir. ove: true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki dairenin arası. designSpeed yolun proje hızıdır (km/sa, 0'dan büyük, en çok 200; ADR 0985); bir PI'nın speed'i yalnız kendi kurbu içindir (KGM aynı yolda bir kurba V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin V'si budur; paralel aksın hızı kaynağınındır. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision, revision_conflict.",
       "aliases": [
         "aksolustur",
         "guzergah"
@@ -37933,6 +37955,21 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Input of `road.alignments.create` v1: a new alignment from its PIs, or a parallel axis (`offsetOf`) of one; its id\nwhen not given is the first free of `g-1`, `g-2` …\n\nRefusals, in this order: `not_a_road_project`, `invalid_alignment` (the definition by `road_problem`, path the\nfield's; or PIs that make no alignment: two at one place, the direction turning back, a curve on the start or the\nend), `alignment_spirals_long` (a PI's clothoids turn more than its deflection), `alignment_curves_overlap` (two\ncurves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an\nequation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where\na curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.",
         "properties": {
+          "designSpeed": {
+            "description": "The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
+          },
+          "endPlace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -37964,6 +38001,13 @@
               "$ref": "#/$defs/AlignmentPi"
             },
             "type": "array"
+          },
+          "startPlace": {
+            "description": "Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "stationing": {
             "anyOf": [
@@ -38164,7 +38208,7 @@
       "id": "road.alignments.edit",
       "version": 1,
       "title": "Aksı düzenle",
-      "summary": "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset) aksınkinin yerini alır; boş stationing km'yi sıfırlar. reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel aksta offset, designSpeed) aksınkinin yerini alır; boş stationing km'yi sıfırlar, designSpeed 0 proje hızını kaldırır; proje hızı ve PI'ların speed'i geometri değildir, aksın revizyonu artmaz (ADR 0985). reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long, alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use, invalid_revision, revision_conflict.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -38183,6 +38227,21 @@
         "properties": {
           "alignment": {
             "type": "string"
+          },
+          "designSpeed": {
+            "description": "The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "km/h"
+          },
+          "endPlace": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -38215,6 +38274,13 @@
             },
             "type": [
               "array",
+              "null"
+            ]
+          },
+          "startPlace": {
+            "description": "Where the road leads beyond its start, beyond its end (docs/adr/1028); \"\" clears one. Not the geometry: the\nrevision stays.",
+            "type": [
+              "string",
               "null"
             ]
           },
@@ -39260,7 +39326,7 @@
       "id": "road.profiles.lengths",
       "version": 1,
       "title": "Düşey kurp boyu öner",
-      "summary": "Bir boykesitin her düşey kurbu için verilen ölçütlerin istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. Durma görüş mesafesi v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü kendi verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez. Cevap: düz yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki boyu (dairenin aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı. Uyarılar: profile_stale, vertical_curve_short. Retler: invalid_profile_lengths, not_a_road_project, unknown_road_profile.",
+      "summary": "Bir boykesitin her düşey kurbu için verilen ölçütlerin istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. speed verilmezse boykesitin aksının proje hızıdır (ADR 0986). Durma görüş mesafesi v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü kendi verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez. Cevap: düz yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki boyu (dairenin aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı. Uyarılar: profile_stale, vertical_curve_short. Retler: invalid_profile_lengths, not_a_road_project, unknown_road_profile.",
       "aliases": [
         "kurpboyu",
         "dusaykurpboyu"
@@ -39352,8 +39418,12 @@
             "type": "string"
           },
           "speed": {
+            "description": "The design speed; absent: the profile's alignment's (docs/adr/0986).",
             "format": "double",
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "x-unit": "km/h"
           },
           "step": {
@@ -39374,8 +39444,7 @@
           }
         },
         "required": [
-          "profile",
-          "speed"
+          "profile"
         ],
         "title": "RoadProfilesLengths",
         "type": "object"
@@ -39960,7 +40029,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
+        "description": "Input of `road.profiles.draw` v1 (plan/road.md Y4, docs/adr/0902 §8): a profile drawn on a layer as lines and texts,\nso it goes to sheets and DXF as Netcad's and Civil 3D's profile views do, from its first to its last PVI. The frame's\nlower left is `at` (the first PVI's station at the `datum` elevation); a metre of station is a drawing unit, a metre\nof elevation `exaggeration` units (10 when absent). Inside: the elevation grid with its heights, the terrain (black;\noff the surface left out), the design (red) line and each curve's sizes and K. Under it the bands: km, black and red\nelevations and their difference at every round `every` metres of km (50 when absent) and at the ends, and the grades.\nTexts are `height` paper millimetres high at the project's drawing scale (2.5 when absent). The datum when absent is a\nmetre under the lowest elevation shown, floored; the top a metre over the highest, ceiled. `from` and `to` (internal\nstations, m) draw a view of part of the profile, as a plan–profile sheet's (docs/adr/0908 §10): the frame, the lines,\nthe curves' texts, the bands and the grades between them only, the datum and top from what is shown there.\n\nRefusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or\n`exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the\nlowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's\n(`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and\nthe geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.",
         "properties": {
           "at": {
             "items": {
@@ -39982,6 +40051,13 @@
               }
             ],
             "description": "The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,\nEğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay\nGeometri, Düşey Geometri and Dever."
+          },
+          "corridor": {
+            "description": "The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the\nprofile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,\nSAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "datum": {
             "format": "double",
@@ -40022,6 +40098,13 @@
             ],
             "x-unit": "m"
           },
+          "haul": {
+            "description": "The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say\n(docs/adr/0995; KGM 2019: \"Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur\"; the\n2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and\nwaste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "height": {
             "format": "double",
             "type": [
@@ -40035,6 +40118,15 @@
           },
           "profile": {
             "type": "string"
+          },
+          "span": {
+            "description": "The metres of elevation the frame holds (docs/adr/0990; KGM 2019: \"Profillerin paftalarda ayrılan genişliğe\nsığmaması durumunda kot taşıma çizgisi yapılacaktır\"): the frame is `span` × `exaggeration` high and the view is\nsplit on whole metres of station where the lines would leave it, each part with its own datum (a grid step under\nits lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one\ndatum, the frame as high as the lines.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
           },
           "superelevation": {
             "description": "The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);\nabsent: the band says none was given.",
@@ -40105,6 +40197,13 @@
           },
           "revision": {
             "type": "string"
+          },
+          "splits": {
+            "description": "With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.",
+            "items": {
+              "$ref": "#/$defs/ProfileSplit"
+            },
+            "type": "array"
           },
           "top": {
             "format": "double",
@@ -40178,6 +40277,13 @@
           "revision": {
             "type": "string"
           },
+          "splits": {
+            "description": "With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.",
+            "items": {
+              "$ref": "#/$defs/ProfileSplit"
+            },
+            "type": "array"
+          },
           "top": {
             "format": "double",
             "type": "number",
@@ -40211,6 +40317,12 @@
           "unknown_road_profile",
           "invalid_label",
           "unknown_superelevation",
+          "unknown_corridor",
+          "invalid_road_corridor",
+          "no_terrain",
+          "unknown_haul",
+          "invalid_haul",
+          "unknown_volume",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -40815,7 +40927,7 @@
       "id": "road.sections.query",
       "version": 1,
       "title": "Enkesitleri sorgula",
-      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Uyarılar: section_set_stale, section_surface_gone, section_open, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
+      "summary": "Yol projesinin kesit hattı takımlarını ve enkesitlerini bugün kuruldukları gibi verir; hiçbir şey yazmaz. Bir takım sorulunca kesitlerin neyden hesaplandığını sources'ta söyler (ADR 1039): takımın, aksının, boykesitinin, tip kesitinin ve dever çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest; çizim kabulden sonra değiştiyse son kabul özetinden, built, farklıdır, ADR 1040) ve son kabul özeti. set verilmezse her takımın raporu; verilince yalnız onunki ve kesitleri (stations ile yalnız takımın o km'lerindekiler): kesit hattının uçları, arazi (yüzeyin üçgen kenarlarını kestiği her yer, kesin; yüzeyin dışı gap), boykesitin kırmızı kotunda tip kesitin platformu ve şevleri. Takım raporu iç kurpta buluşan kol çiftlerini (crossings) verir; kırpmayan takımda section_lines_cross uyarılır, kırpanda kollar buluşmada biter. Menteşede arazi üstteyse yarma (hendek, yarma şevi yukarı), değilse dolgu (dolgu şevi aşağı); şevin araziyle ilk buluştuğu yer daylight, kesin. Yarma ve dolgu alanı (m²) iki uç arasında proje ile arazi arasındaki alanın kapalı biçimde integrali. Şerit içinde araziyle buluşmayan yan open'dır, kot uydurulmaz. Tip kesitin üstyapısı varsa pavement: tabaka alanları, zeminin altında ve üstünde kalan üstyapı, formasyon ve tabaka tabanları (soldan sağa), formasyondan yarma ve dolgu alanı (Formasyon–Zemin: yolun yarması + zeminin altındaki üstyapı, dolgusu − üstündeki). Raporda km'si artık çıkmayan (çizgisi silinmiş ya da aksı kesmeyen) takımın km listesi boştur; kesitleri sorulunca neden söylenir. Her kesit şeridin yüzeyin dışında ya da boşluğunda kalan öteleme aralıklarını missing'de verir (ADR 1034); tasarımın altına düşen aralıkta kazı ve dolgu alana katılmaz, section_ground_missing söyler. Uyarılar: section_set_stale, section_surface_gone, section_open, section_ground_missing, pavement_unbuilt. Retler: not_a_road_project, unknown_section_set, invalid_section_set, invalid_places ve aks ya da boykesit artık kurulamıyorsa geometrinin retleri.",
       "aliases": [
         "enkesitsor"
       ],
@@ -40867,6 +40979,17 @@
               "$ref": "#/$defs/SectionSetReport"
             },
             "type": "array"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionSources"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a set asked, what its sections are computed from, each as it is now (docs/adr/1039)."
           }
         },
         "required": [
@@ -40891,6 +41014,17 @@
               "$ref": "#/$defs/SectionSetReport"
             },
             "type": "array"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SectionSources"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With a set asked, what its sections are computed from, each as it is now (docs/adr/1039)."
           }
         },
         "required": [
@@ -40912,6 +41046,7 @@
           "section_surface_gone",
           "section_lines_cross",
           "section_open",
+          "section_ground_missing",
           "section_superelevation_gone",
           "pavement_unbuilt"
         ]
@@ -40933,7 +41068,7 @@
       "id": "road.sections.draw",
       "version": 1,
       "title": "Enkesit çiz",
-      "summary": "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open.",
+      "summary": "Yol projesinin bir kesit takımının enkesitlerini (set: kimliği ya da adı; stations ile yalnız takımın o km'lerindekiler) bir katmana çizgi ve yazı nesneleri olarak yazar, paftaya ve DXF'e gider: görünüşler at'tan (sayfanın sol üstü) başlayarak satırlarda columns tane (yoksa 5), soldan sağa sonra aşağı. Bir görünüş şerit genişliğinde (ötelemenin bir metresi bir çizim birimi) ve takımın en uzun kot aralığı boyunda (kotun bir metresi exaggeration birim, yoksa 1); kıyas kotu en alçak kotun bir metre altı, aşağı yuvarlanmış. Her görünüşte çerçeve, kot ve öteleme ızgaraları ve sayıları, arazi (siyah; yüzeyin dışı çizilmez), platform ve şevler (kırmızı), eksen, üstünde km, altında eksen kotu ile yarma ve dolgu alanı. Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. Cevap her görünüşün km'si, çerçevesi, kıyas ve tepe kotu, alanları ile ızgara aralıklarıdır. Tek geri alma adımı “Enkesit çiz”. Retler: not_a_road_project, unknown_section_set, invalid_label, invalid_section_set, invalid_places, no_terrain, layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision, revision_conflict; uyarılar layer_hidden, section_set_stale, section_open, section_ground_missing.",
       "aliases": [
         "enkesitciz"
       ],
@@ -41135,7 +41270,8 @@
         "warnings": [
           "layer_hidden",
           "section_set_stale",
-          "section_open"
+          "section_open",
+          "section_ground_missing"
         ]
       },
       "examples": [
@@ -41465,7 +41601,7 @@
       "id": "road.superelevations.check",
       "version": 1,
       "title": "Deveri denetle",
-      "summary": "Bir dever çizelgesini tip kesitin şerit genişlikleriyle okur ve kullanıcının sınırlarıyla denetler; hiçbir şey yazmaz. Göreli eğim: şerit kenarının dönme eksenine (çizelgenin pivot'u: eksen, sol, sağ, iç ya da dış kenar; kenar etrafında bütün genişlik döner) göre km başına yükselmesi, eğimin ve genişlemenin kırılma noktaları arasındaki her aralıkta iki yanın en büyüğü, kesin. speed (km/sa) verilirse her kurbun yanal sürtünme ihtiyacı: nokta kütle dengesi V²/(gR) = (e + f)/(1 − e·f), e merkeze doğru eğimi en az olan yanınki (ters eğimli dış yan eksi), g 9,80665; daire kısmında kırılma noktalarında kesin, klotoidde step metrede bir (öntanımlı 1). mostRelative (oran; 0,005 = 1:200) ve mostFriction aşılan yerleri bulgu yapar; sınırlar tasarım standardınındır, KentOS sayı vermez. Cevap: dönme ekseni, göreli eğim satırları, kurpların sürtünmesi (en çok istendiği km, yarıçap, dever), bulgular ve adım. Uyarı: superelevation_limit_broken. Retler: not_a_road_project, unknown_superelevation, unknown_road_template, invalid_superelevation_check.",
+      "summary": "Bir dever çizelgesini tip kesitin şerit genişlikleriyle okur ve kullanıcının sınırlarıyla denetler; hiçbir şey yazmaz. Göreli eğim: şerit kenarının dönme eksenine (çizelgenin pivot'u: eksen, sol, sağ, iç ya da dış kenar; kenar etrafında bütün genişlik döner) göre km başına yükselmesi, eğimin ve genişlemenin kırılma noktaları arasındaki her aralıkta iki yanın en büyüğü, kesin. speed (km/sa) verilirse, verilmezse kurbun kendi proje hızında (PI'nın, yoksa aksın; ADR 0986) her kurbun yanal sürtünme ihtiyacı: nokta kütle dengesi V²/(gR) = (e + f)/(1 − e·f), e merkeze doğru eğimi en az olan yanınki (ters eğimli dış yan eksi), g 9,80665; daire kısmında kırılma noktalarında kesin, klotoidde step metrede bir (öntanımlı 1). mostRelative (oran; 0,005 = 1:200) ve mostFriction aşılan yerleri bulgu yapar; sınırlar tasarım standardınındır, KentOS sayı vermez. Cevap: dönme ekseni, göreli eğim satırları, kurpların sürtünmesi (en çok istendiği km, yarıçap, dever), bulgular ve adım. Uyarı: superelevation_limit_broken. Retler: not_a_road_project, unknown_superelevation, unknown_road_template, invalid_superelevation_check.",
       "aliases": [
         "deverdenetle"
       ],
@@ -41650,7 +41786,7 @@
       "id": "road.superelevations.widen",
       "version": 1,
       "title": "Genişletme öner",
-      "summary": "Bir dever çizelgesinin aksındaki her kurp için tasarım taşıtına göre kaplama genişletmesi önerir; hiçbir şey yazmaz. AASHTO: W_c = N(U + C) + (N − 1)·F_A + Z, genişletme W_c − W_n. N ve W_n tip kesitin şerit sayısı ve teğetteki şerit genişliğidir. U = u + R − √(R² − ΣLᵢ²): taşıtın kararlı durum izi, ΣLᵢ² = L₁² − k² + L₂² (mafsal ötelemesi eksi). F_A = √(R² + A(2L + A)) − R ön çıkıntının genişliğidir, Z = 0,1·V/√R. method: standard (öntanımlı) ya da simple (N(U + C)). Taşıt road.swept.query'ninkidir; track lastiklerin dıştan dışa iz genişliğidir, yoksa taşıtın genişliği alınır. clearance (C, şerit başına), speed, step (yukarı yuvarlama) ve least (bunun altı yazılmaz) standardındır, KentOS sayı vermez. drive: taşıt her kurpta aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı duruma varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı, teğet genişliği, her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki genişletmesi ve sürüşü; kararlı dönülemeyen kurplar. Uyarılar: widening_unturnable, superelevation_stale. Retler: invalid_widening, not_a_road_project, unknown_superelevation, unknown_road_template.",
+      "summary": "Bir dever çizelgesinin aksındaki her kurp için tasarım taşıtına göre kaplama genişletmesi önerir; hiçbir şey yazmaz. AASHTO: W_c = N(U + C) + (N − 1)·F_A + Z, genişletme W_c − W_n. N ve W_n tip kesitin şerit sayısı ve teğetteki şerit genişliğidir. U = u + R − √(R² − ΣLᵢ²): taşıtın kararlı durum izi, ΣLᵢ² = L₁² − k² + L₂² (mafsal ötelemesi eksi). F_A = √(R² + A(2L + A)) − R ön çıkıntının genişliğidir, Z = 0,1·V/√R. method: standard (öntanımlı) ya da simple (N(U + C)). Taşıt road.swept.query'ninkidir; track lastiklerin dıştan dışa iz genişliğidir, yoksa taşıtın genişliği alınır. clearance (C, şerit başına), speed, step (yukarı yuvarlama) ve least (bunun altı yazılmaz) standardındır, KentOS sayı vermez; speed verilmezse her kurp kendi proje hızıyla okunur (ADR 0986). drive: taşıt her kurpta aks üzerinde sürülür (tractrix) ve ulaştığı en büyük iz söylenir; kararlı duruma varmayan kısa kurpta formülün altında kalır. Cevap: şerit sayısı, teğet genişliği, her kurbun U, F_A, Z, W_c, genişletmesi, önerisi, çizelgedeki genişletmesi ve sürüşü; kararlı dönülemeyen kurplar. Uyarılar: widening_unturnable, superelevation_stale. Retler: invalid_widening, not_a_road_project, unknown_superelevation, unknown_road_template.",
       "aliases": [
         "genisletme"
       ],
@@ -41872,7 +42008,7 @@
       "id": "road.superelevations.transitions",
       "version": 1,
       "title": "Geçiş öner",
-      "summary": "Kurplardan kurulan bir dever çizelgesinin her kurbu için geçişi önerir; hiçbir şey yazmaz (docs/adr/0940). Geçiş boyu (runoff) göreli eğimden: kurbun kendi geçişindeki en dik kenar eğimi G çizelgenin dönme ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa geçiştir. Runout L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6; kaydırmadan: √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin üstündedir: en az klotoid boyu, teğet payı 0. Klotoidsiz kurpta teğet payı onTangent'tir. Ardışık iki kurbun teğetteki geçişleri (runout + payı) aradaki teğete sığmalıdır. mostRelative, speed, comfort, shift, mostShift, onTangent ve step (yukarı yuvarlama) standardındır, KentOS sayı vermez. Cevap: her kurbun TS, ST, yarıçap, dever, klotoidleri, şimdiki geçişi ve göreli eğimi, göreli eğimden geçiş, konfor ve kaydırma klotoidleri, önerilen geçiş ve payı, runout ve tam deverli boy; bulgular (spiralShort, spiralLong, full, tangent). Uyarılar: superelevation_transition_conflict. Retler: invalid_superelevation_transition, not_a_road_project, unknown_superelevation, unknown_road_template.",
+      "summary": "Kurplardan kurulan bir dever çizelgesinin her kurbu için geçişi önerir; hiçbir şey yazmaz (docs/adr/0940). Geçiş boyu (runoff) göreli eğimden: kurbun kendi geçişindeki en dik kenar eğimi G çizelgenin dönme ekseni ve genişletmesiyle okunur ve L·G/Δ en kısa geçiştir. Runout L·|n|/e. Klotoid konfordan (Shortt): v·(v²/R − g·e)/C, v = V/3,6; kaydırmadan: √(24·p·R) en az, √(24·p_max·R) en çok. Klotoidli kurpta geçiş klotoidin üstündedir: en az klotoid boyu, teğet payı 0. Klotoidsiz kurpta teğet payı onTangent'tir. Ardışık iki kurbun teğetteki geçişleri (runout + payı) aradaki teğete sığmalıdır. mostRelative, speed, comfort, shift, mostShift, onTangent ve step (yukarı yuvarlama) standardındır, KentOS sayı vermez; speed verilmezse her kurp kendi proje hızıyla okunur (ADR 0986). Cevap: her kurbun TS, ST, yarıçap, dever, klotoidleri, şimdiki geçişi ve göreli eğimi, göreli eğimden geçiş, konfor ve kaydırma klotoidleri, önerilen geçiş ve payı, runout ve tam deverli boy; bulgular (spiralShort, spiralLong, full, tangent). Uyarılar: superelevation_transition_conflict. Retler: invalid_superelevation_transition, not_a_road_project, unknown_superelevation, unknown_road_template.",
       "aliases": [
         "gecis",
         "runoff"
@@ -43576,7 +43712,7 @@
       "id": "road.volumes.query",
       "version": 1,
       "title": "Kübajı sorgula",
-      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler (ADR 1037): Netpro'nun adıyla kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin algoritması adı ve sürümüyle (ADR 1040: kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1, kentos.prismoidal/1, kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler (ADR 1040): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul özeti (built). Onaylı kübajın approval'ı, onay kaynaklarını saklıyorsa onaydan beri değişenleri moved'da sayar (ADR 1041): her biri türü (corridor, alignment, profile, template, superelevation, surface, algorithm), kimliği (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti) ile; onaydan önce saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
       "aliases": [
         "kubajsor",
         "kübajsor"
@@ -43669,7 +43805,7 @@
       "id": "road.volumes.approve",
       "version": 1,
       "title": "Kübajı onayla",
-      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına yazılır. Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır. revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved, invalid_volume, invalid_revision, revision_conflict.",
+      "summary": "Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına yazılır; onay hesabın kaynaklarını (sources: koridor, aks, boykesit, tip kesitler, dever sürümleri, arazinin o anki özeti ve son kabul özeti) ve yöntemin algoritmasını (algorithm, ör. kentos.end-area/1) da saklar (ADR 1041, KCAD şema 197). Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır ve onaydan beri değişen kaynakları approval.moved'da sayar (source, id, then, now). revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved, invalid_volume, invalid_revision, revision_conflict.",
       "aliases": [
         "kubajonayla",
         "kübajonayla"
@@ -44110,7 +44246,7 @@
       "id": "road.volumes.progress",
       "version": 1,
       "title": "Dönem metrajı",
-      "summary": "Bir kübaj hesabının (volume) işinin bir ara ölçüye (survey: arazi yüzeyinin kimliği ya da adı) göre ne kadarının yapıldığını okur; hiçbir şey yazmaz (docs/adr/0942). Tasarım koridorun üst yüzeyi, ilk arazi koridorun yüzeyidir; üçü kesin bindirilir. Yarmada (z_o > z_d) yapılan max(0, z_o − max(z_n, z_d)), kalan max(0, min(z_n, z_o) − z_d), fazla kazı max(0, z_d − z_n); dolguda yapılan max(0, min(z_n, z_d) − z_o), kalan max(0, z_d − max(z_n, z_o)), fazla dolgu max(0, z_n − z_d). Ölçünün örttüğü her yerde yapılan + kalan tasarımın kendi kazısı ve dolgusudur; yarmanın üstüne yığılan ya da dolgu yerinden kazılan malzeme tasarımın işi değildir. previous (önceki ölçü) verilirse onun işi ve dönemin işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.",
+      "summary": "Bir kübaj hesabının (volume) işinin bir ara ölçüye (survey: arazi yüzeyinin kimliği ya da adı) göre ne kadarının yapıldığını okur; hiçbir şey yazmaz (docs/adr/0942). Tasarım koridorun üst yüzeyi, ilk arazi koridorun yüzeyidir; üçü kesin bindirilir. Yarmada (z_o > z_d) yapılan max(0, z_o − max(z_n, z_d)), kalan max(0, min(z_n, z_o) − z_d), fazla kazı max(0, z_d − z_n); dolguda yapılan max(0, min(z_n, z_d) − z_o), kalan max(0, z_d − max(z_n, z_o)), fazla dolgu max(0, z_n − z_d). Ölçünün örttüğü her yerde yapılan + kalan tasarımın kendi kazısı ve dolgusudur; yarmanın üstüne yığılan ya da dolgu yerinden kazılan malzeme tasarımın işi değildir. previous (önceki ölçü) verilirse onun işi ve dönemin işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı uygulanmaz). Kotlar (ADR 1029): karşılaştırılan yüzeylerin kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret, sıfır ayrım ya da geoit tahmini yapılmaz. Uyarılar: heights_assumed (kotlar varsayımla aynı sayıldı), volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, unproven_heights (kotların düşey sistemi gösterilemiyor), invalid_volume.",
       "aliases": [
         "donemmetraji",
         "arametraj",
@@ -44130,8 +44266,11 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a\nsurvey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it\n(`previous`). The original ground is the volume's corridor's surface; the design its top surface.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),\n`invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a\nsurvey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).",
+        "description": "Input of `road.volumes.progress` v1 (plan/road.md Y36, docs/adr/0942): an earthwork volume (its id or name), a\nsurvey of the site now (`survey`: a terrain surface's id or name) and, for a period's work, the survey before it\n(`previous`). The original ground is the volume's corridor's surface; the design its top surface.\n\nRefusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),\n`invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a\nsurvey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),\n`unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).\n`assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).",
         "properties": {
+          "assumeHeights": {
+            "type": "boolean"
+          },
           "previous": {
             "type": [
               "string",
@@ -44360,9 +44499,11 @@
           "not_a_road_project",
           "unknown_volume",
           "unknown_terrain",
+          "unproven_heights",
           "invalid_volume"
         ],
         "warnings": [
+          "heights_assumed",
           "volume_progress_uncovered",
           "volume_progress_backward"
         ]
@@ -49327,7 +49468,7 @@
       "id": "road.terrains.compare",
       "version": 1,
       "title": "Yüzeyleri karşılaştır",
-      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Uyarılar: compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable.",
+      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, unproven_heights, terrain_unbuildable.",
       "aliases": [
         "yuzeyfarki",
         "yuzeykarsilastir",
@@ -49346,8 +49487,11 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over\n0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out).",
+        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over\n0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:\nthe two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the\ndifference is a draft (`heights_assumed`).",
         "properties": {
+          "assumeHeights": {
+            "type": "boolean"
+          },
           "base": {
             "type": "string"
           },
@@ -49656,9 +49800,11 @@
           "not_a_road_project",
           "invalid_analysis",
           "unknown_terrain",
+          "unproven_heights",
           "terrain_unbuildable"
         ],
         "warnings": [
+          "heights_assumed",
           "compare_uncovered"
         ]
       },
@@ -51135,7 +51281,7 @@
       "id": "road.terrains.cloud",
       "version": 1,
       "title": "Buluttan arazi",
-      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
+      "summary": "Nokta bulutlarından (clouds: bulut nesnelerinin kimlikleri) arazi yüzeyinin noktalarını çıkarır. Yalnız istenen LAS sınıflarının (classes; ASPRS'de 2 zemin) ve dönüşlerin (returns: all, first, last, single) noktaları, area verilmişse kapalı çoklu çizginin ya da alanın içinde kalanlar alınır; bulut bir kez okunur. Noktalar cell metrelik plan ızgarasında seyreltilir: her hücrede merkezine en yakın nokta (eşitlikte ilk okunan), zTolerance ile kotları bundan çok yayılan hücrenin en alçağı ve en yükseği de, near ile yüzeyin kırık hatlarına bu erimdeki her nokta. Kalanlar layerId katmanına kotlarıyla çok noktalı nesneler olarak yazılır (tek geri alma adımı “Buluttan arazi”) ve katman yüzeyin nokta kaynağı olur: surface ile projedeki yüzeye eklenir, name ile yeni yüzey kurulur (breaklines ve boundary ile). Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). heights bulutun kotlarını söyler (dosya söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların kotları cad.crs.transform gibi geoit modelleriyle projenin kotlarına çevrilir (H = h − N; ADR 1032) ve kayda heights (from, to) yazılır; projenin kotları bilinmiyorsa heights_unknown, geoit özeti ya da ızgarası yoksa geoid_required ya da geoid_missing, iki ayrı datumda geoit yoksa vertical_unsupported, nokta ızgaranın dışındaysa invalid_cloud_terrain; dosya başka sistem söylüyorsa cloud_heights_differ. Uyarılar: layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri, invalid_heights, heights_unknown, geoid_required, geoid_missing, vertical_unsupported, cloud_heights_differ, too_many_cloud_points, cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.",
       "aliases": [
         "buluttanarazi",
         "bulutyuzey"
@@ -51153,7 +51299,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.cloud` v1: the clouds (their objects' ids), the LAS classes taken (2 is the ASPRS\nground), the returns, an optional area (a closed polyline's or an area's id), the thinning (`cell` m; `zTolerance`\nm: a steeper cell keeps its lowest and highest; `near` m: every point within it of the surface's breaklines is\nkept), the layer the points go on, and either `surface` (a project's surface by its id or name: the layer joins its\npoints) or `name` (a new surface of the layer, with `breaklines` and `boundary` if given). Nothing is filled in: the\nclasses, the cell and the tolerances are the user's.\n\nRefusals, in this order: `not_a_road_project`, `not_a_pointcloud`, `invalid_cloud_terrain` (no cloud or class, both\nor neither of surface and name, a thinning value not positive, an area not a closed polyline or area, more kept\npoints than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,\n19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,\n`cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,\n`invalid_revision`,\n`revision_conflict`.",
+        "description": "Input of `road.terrains.cloud` v1: the clouds (their objects' ids), the LAS classes taken (2 is the ASPRS\nground), the returns, an optional area (a closed polyline's or an area's id), the thinning (`cell` m; `zTolerance`\nm: a steeper cell keeps its lowest and highest; `near` m: every point within it of the surface's breaklines is\nkept), the layer the points go on, and either `surface` (a project's surface by its id or name: the layer joins its\npoints) or `name` (a new surface of the layer, with `breaklines` and `boundary` if given). Nothing is filled in: the\nclasses, the cell and the tolerances are the user's.\n\nRefusals, in this order: `not_a_road_project`, `not_a_pointcloud`, `invalid_cloud_terrain` (no cloud or class, both\nor neither of surface and name, a thinning value not positive, an area not a closed polyline or area, more kept\npoints than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,\n19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,\n`cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,\nwith `heights` (docs/adr/1032, before the clouds are read) `invalid_heights`, `heights_unknown` (the project's are\nnot said), `geoid_required`, `geoid_missing`, `vertical_unsupported` (as `cad.crs.transform`), `invalid_cloud_terrain`\n(a kept point the geoid's grid does not reach), and `cloud_heights_differ` (a file naming another system),\n`invalid_revision`,\n`revision_conflict`.",
         "properties": {
           "area": {
             "type": [
@@ -51206,6 +51352,17 @@
               "string",
               "null"
             ]
+          },
+          "heights": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HeightReference"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them\nturned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them."
           },
           "layerId": {
             "type": "string"
@@ -51427,6 +51584,12 @@
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
+          "invalid_heights",
+          "heights_unknown",
+          "geoid_required",
+          "geoid_missing",
+          "vertical_unsupported",
+          "cloud_heights_differ",
           "too_many_cloud_points",
           "cloud_ground_empty",
           "invalid_terrain",
@@ -59559,7 +59722,7 @@
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
-      "summary": "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml.",
+      "summary": "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Aksın proje hızı ve kurplarının kendi hızları Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Dosya projenin sistemlerini CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu; ADR 1031). machineControl: true makine kontrolü içindir: projenin kotlarının düşey sistemi söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini o sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml, field_heights_unknown, unproven_heights.",
       "aliases": [
         "landxmlver",
         "landxmlout"
@@ -59577,7 +59740,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id\nor name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the\nfile's date and time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path` (empty, relative, not `.xml`, its folder not\nthere), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that\ndoes not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`\n(a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose\nalignment is not written).",
+        "description": "Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id\nor name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the\nfile's date and time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path` (empty, relative, not `.xml`, its folder not\nthere), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that\ndoes not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`\n(a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose\nalignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with\n`machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.",
         "properties": {
           "alignments": {
             "items": {
@@ -59587,6 +59750,10 @@
               "array",
               "null"
             ]
+          },
+          "machineControl": {
+            "description": "For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each\nsurface's cloud ground in it (`unproven_heights`).",
+            "type": "boolean"
           },
           "overwrite": {
             "type": "boolean"
@@ -59704,7 +59871,9 @@
           "file_exists",
           "unknown_terrain",
           "unknown_alignment",
-          "invalid_landxml"
+          "invalid_landxml",
+          "field_heights_unknown",
+          "unproven_heights"
         ],
         "warnings": [
           "export_losses"
@@ -60088,7 +60257,7 @@
       "id": "road.alignments.import",
       "version": 1,
       "title": "LandXML'den aks al",
-      "summary": "LandXML dosyasının akslarını KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision, revision_conflict.",
+      "summary": "LandXML dosyasının akslarını KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Aksı adıyla anan Roadway'in DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond 3,6 ile km/sa'e çevrilir) en uzun aralığınki aksın proje hızı, dairesel kısmının ortası başka hızlı aralığa düşen kurbun kendi hızı olur; 0'dan büyük, en çok 200 km/sa olmayan landxml_left ile alınmaz (ADR 0988). Km denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision, revision_conflict.",
       "aliases": [
         "landxmlaksal"
       ],
@@ -60208,7 +60377,7 @@
       "id": "road.stakeout.query",
       "version": 1,
       "title": "Aplikasyon cetveli",
-      "summary": "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.",
+      "summary": "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Cevap neyden hesaplandığını sources'ta söyler (ADR 1038): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest, ADR 1040) ve son kabul edildiği özet (built; ikisi farklıysa çizim kabulden sonra değişmiştir) ve koridorun kübaj hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.",
       "aliases": [
         "aplikasyoncetveli",
         "yolaplikasyon"
@@ -60297,6 +60466,10 @@
             },
             "type": "array"
           },
+          "sources": {
+            "$ref": "#/$defs/StakeoutSources",
+            "description": "What it was computed from (docs/adr/1038)."
+          },
           "stations": {
             "format": "uint32",
             "minimum": 0,
@@ -60310,7 +60483,8 @@
           "distances",
           "method",
           "stations",
-          "rows"
+          "rows",
+          "sources"
         ],
         "title": "StakeoutQueried",
         "type": "object"
@@ -60338,6 +60512,10 @@
             },
             "type": "array"
           },
+          "sources": {
+            "$ref": "#/$defs/StakeoutSources",
+            "description": "What it was computed from (docs/adr/1038)."
+          },
           "stations": {
             "format": "uint32",
             "minimum": 0,
@@ -60351,7 +60529,8 @@
           "distances",
           "method",
           "stations",
-          "rows"
+          "rows",
+          "sources"
         ],
         "title": "StakeoutQueried",
         "type": "object"
@@ -60390,7 +60569,7 @@
       "id": "road.stakeout.send",
       "version": 1,
       "title": "Aplikasyonu alete gönder",
-      "summary": "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send.",
+      "summary": "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Sahaya giden kotlar projenin söylediği düşey sisteme bağlıdır: söylenmemişse ret (field_heights_unknown; ADR 1031, BÖHHBÜY: TUDKA99'a dayalı Helmert ortometrik yükseklik); LandXML dosyası sistemleri CoordinateSystem'de söyler. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send, field_heights_unknown.",
       "aliases": [
         "aplikasyongonder",
         "aletegonder"
@@ -60408,7 +60587,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.stakeout.send` v1: the stakeout table's points (`road.stakeout.query`'s corridor, range, step and\ncodes; places on the grid) written to `path` as `format` (`.xml` for LandXML, `.gsi`, `.xyz`, `.jxl`, `.raw`,\n`.csv` for the instrument files). The points are named by number from `first` (1 without it); a code the format\ncannot carry is left off the point (said). `job` is JobXML's job and Nikon RAW's comment (the corridor's name\nwithout it); `stamp` (`YYYY-MM-DDThh:mm:ss`) the file's time (now without it).\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid\n`path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without\n`overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot\ncarry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),\n`export_losses` (points the format cannot carry; strings of one point).",
+        "description": "Input of `road.stakeout.send` v1: the stakeout table's points (`road.stakeout.query`'s corridor, range, step and\ncodes; places on the grid) written to `path` as `format` (`.xml` for LandXML, `.gsi`, `.xyz`, `.jxl`, `.raw`,\n`.csv` for the instrument files). The points are named by number from `first` (1 without it); a code the format\ncannot carry is left off the point (said). `job` is JobXML's job and Nikon RAW's comment (the corridor's name\nwithout it); `stamp` (`YYYY-MM-DDThh:mm:ss`) the file's time (now without it).\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid\n`path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without\n`overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot\ncarry, a first number not in [1, 99 999 999]), `field_heights_unknown` (docs/adr/1031: the project does not say its\nheights' system; after the first number and the stamp). Warnings: the query's, `stakeout_code_dropped` (codes left\noff), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's\nsystems in its `CoordinateSystem`.",
         "properties": {
           "codes": {
             "items": {
@@ -60660,7 +60839,8 @@
           "invalid_stakeout",
           "invalid_file_path",
           "file_exists",
-          "invalid_stakeout_send"
+          "invalid_stakeout_send",
+          "field_heights_unknown"
         ],
         "warnings": [
           "corridor_stale",
@@ -60746,6 +60926,13 @@
             ],
             "description": "The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order."
           },
+          "corridor": {
+            "description": "With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "exaggeration": {
             "format": "double",
             "type": [
@@ -60775,9 +60962,23 @@
             ],
             "x-unit": "m"
           },
+          "haul": {
+            "description": "With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "layerId": {
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "matchLines": {
+            "description": "Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the\nmiddle of their overlap, a line across the alignment and on each side \"EŞLEŞME ÇİZGİSİ KM : …\" with the other\nsheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).",
+            "type": [
+              "boolean",
               "null"
             ]
           },
@@ -61002,6 +61203,13 @@
           "invalid_options",
           "not_fixed_map",
           "bad_drawing_info",
+          "unknown_corridor",
+          "invalid_label",
+          "invalid_road_corridor",
+          "no_terrain",
+          "unknown_haul",
+          "invalid_haul",
+          "unknown_volume",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -61312,7 +61520,8 @@
         "warnings": [
           "layer_hidden",
           "section_set_stale",
-          "section_open"
+          "section_open",
+          "section_ground_missing"
         ]
       },
       "examples": [
@@ -98861,6 +99070,12 @@
       "meaning": "Kübajın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı."
     },
     {
+      "code": "section_ground_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı kesitlerde tasarımın altında arazi yok; oradaki kazı ve dolgu alana katılmadı."
+    },
+    {
       "code": "section_open",
       "kind": "warning",
       "retryable": false,
@@ -99063,6 +99278,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dönem metrajı sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
+      "code": "unproven_heights",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Karşılaştırılan yüzeylerin kotlarının aynı düşey sistemde olduğu gösterilemiyor; ileti hangi kaynağın sistemini bilmediğini söyler."
+    },
+    {
+      "code": "heights_assumed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kotların aynı düşey sistemde olduğu varsayıldı; sonuç taslaktır."
+    },
+    {
+      "code": "field_heights_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sahaya giden kotların düşey sistemi bilinmiyor: projenin kotlarını Proje ayarları › Kotlar'da söyleyin."
+    },
+    {
+      "code": "cloud_heights_differ",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bulutun kotları projeninkinden ya da öbür kaynaklarınkinden başka bir düşey sistemde."
     },
     {
       "code": "volume_progress_uncovered",
@@ -106967,6 +107206,22 @@
       "additionalProperties": false,
       "description": "A horizontal alignment's definition (docs/adr/0901): its PIs, or the alignment it is parallel to; its km.",
       "properties": {
+        "designSpeed": {
+          "description": "The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for\nand the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre\nseçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis\nhas its source's.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "km/h"
+        },
+        "endPlace": {
+          "description": "Where the road leads beyond its end (\"ANKARA-NİĞDE OTOYOLU →\"); as `start_place`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "id": {
           "description": "Unique in the project; what a profile, a corridor or a parallel axis names.",
           "type": "string"
@@ -106999,6 +107254,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "version"
+        },
+        "startPlace": {
+          "description": "Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name\non a red arrow at the plan's end toward it (\"← KAMAN\"). At most 80 characters. A parallel axis has its source's.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "stationing": {
           "anyOf": [
@@ -107356,6 +107618,15 @@
           "type": "number",
           "x-unit": "m"
         },
+        "speed": {
+          "description": "The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):\nKGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "km/h"
+        },
         "spiralIn": {
           "description": "The entry clothoid's length; absent or 0: none.",
           "format": "double",
@@ -107703,7 +107974,7 @@
       "oneOf": [
         {
           "const": "set",
-          "description": "The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.",
+          "description": "The given fields (`name`, `pis`, `stationing`, `offset`, `designSpeed`) replace the alignment's.",
           "type": "string"
         },
         {
@@ -115541,6 +115812,23 @@
         "xyz"
       ],
       "type": "string"
+    },
+    "CloudHeights": {
+      "additionalProperties": false,
+      "description": "What the ground taken from clouds rests on when the call says the clouds' heights (docs/adr/1032): `from`, the\nclouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to\nthe other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/HeightReference"
+        },
+        "to": {
+          "$ref": "#/$defs/HeightReference"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "type": "object"
     },
     "CloudMismatch": {
       "description": "A place the sources of one cloud disagree: what differs, which sources, in words.",
@@ -146576,6 +146864,21 @@
       ],
       "type": "object"
     },
+    "MaterialState": {
+      "description": "A material's state as a volume measures it (docs/adr/1037).",
+      "oneOf": [
+        {
+          "const": "inPlace",
+          "description": "In place (yerinde): the cut before it is dug.",
+          "type": "string"
+        },
+        {
+          "const": "compacted",
+          "description": "Compacted (sıkışmış): the fill's body.",
+          "type": "string"
+        }
+      ]
+    },
     "MaterialTarget": {
       "description": "What a material is bound to: a wall style's component, a wall's component, a slab.",
       "oneOf": [
@@ -168681,6 +168984,38 @@
         }
       ]
     },
+    "ProfileSplit": {
+      "description": "A part of a profile view split to a fixed span of elevation (docs/adr/0990): its stations and its datum and top.",
+      "properties": {
+        "datum": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "datum",
+        "top"
+      ],
+      "type": "object"
+    },
     "ProfileStore": {
       "description": "Where `cad.profiles.import` keeps a profile or a mapping (docs/adr/0735).",
       "oneOf": [
@@ -176002,6 +176337,26 @@
       ],
       "type": "object"
     },
+    "RoadSource": {
+      "additionalProperties": false,
+      "description": "A source a road answer was computed from, as it is now (docs/adr/1038, 1039, 1040): its id and revision (0 where\nthe project has no such source).",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
     "RoadSourceKind": {
       "description": "What kind of road source a drawing depends on (docs/adr/0911 §1).",
       "enum": [
@@ -176019,6 +176374,31 @@
         "platform"
       ],
       "type": "string"
+    },
+    "RoadSurfaceSource": {
+      "additionalProperties": false,
+      "description": "The terrain surface a road answer was computed on (docs/adr/1038, 1039, 1040): its id, the digest of what it is\nmade of now (the drawing's points and lines it was triangulated from, with its method; absent where the project\nhas no such surface) and the digest it was last accepted from (absent: never accepted). The two differ when the\ndrawing changed after the surface was accepted: the answer is the drawing's of now.",
+      "properties": {
+        "built": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
     },
     "RoadWork": {
       "description": "What is drawn or tidied.",
@@ -177212,6 +177592,20 @@
             }
           ]
         },
+        "missing": {
+          "description": "The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no\nheight there, and no cut or fill counted under the design there.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
         "pavement": {
           "anyOf": [
             {
@@ -177449,6 +177843,62 @@
         "kind",
         "hinge",
         "points"
+      ],
+      "type": "object"
+    },
+    "SectionSources": {
+      "description": "What a set's sections are computed from, each as it is now (docs/adr/1039; ROAD-SEC-04): the set, its alignment,\nits profile, template and superelevation schedule where it names them, and its terrain surface with the digest it\nwas last accepted from.",
+      "properties": {
+        "alignment": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "set": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "superelevation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surface": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSurfaceSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "template": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "set",
+        "alignment"
       ],
       "type": "object"
     },
@@ -184389,6 +184839,82 @@
       ],
       "type": "string"
     },
+    "StakeoutSources": {
+      "description": "What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and\nprofile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's\nearthwork volumes.",
+      "properties": {
+        "alignment": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "corridor": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "profile": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "superelevation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surface": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSurfaceSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templates": {
+          "items": {
+            "$ref": "#/$defs/RoadSource"
+          },
+          "type": "array"
+        },
+        "volumes": {
+          "items": {
+            "$ref": "#/$defs/StakeoutVolume"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "corridor",
+        "alignment",
+        "profile",
+        "templates"
+      ],
+      "type": "object"
+    },
+    "StakeoutVolume": {
+      "description": "An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "approved"
+      ],
+      "type": "object"
+    },
     "StandardBlockReference": {
       "additionalProperties": false,
       "description": "A named block library release required by an office standard. The\npublication identifies a reusable type; geometry stays in its library.",
@@ -186685,6 +187211,17 @@
           ],
           "x-unit": "m"
         },
+        "heights": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CloudHeights"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);\nabsent: the call said none, the points' heights are the files'."
+        },
         "kept": {
           "format": "uint64",
           "minimum": 0,
@@ -186717,6 +187254,13 @@
         "returns": {
           "$ref": "#/$defs/CloudReturns",
           "default": "all"
+        },
+        "vertical": {
+          "description": "The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`\nname or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a\nrecord made before the rule).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "zTolerance": {
           "format": "double",
@@ -192618,6 +193162,43 @@
           ],
           "x-unit": "rad"
         },
+        "corner": {
+          "description": "The plan distance from the place to the nearest of those corners.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "corners": {
+          "description": "The triangle the height is read on (docs/adr/1033), inside one triangle only: its corners (x, y, z) ordered by\nx, then y.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "longest": {
+          "description": "That triangle's longest plan edge: how far apart the points the height rests on are (ADR 0920's estimate).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "place": {
           "$ref": "#/$defs/TerrainPlace"
         },
@@ -192655,6 +193236,16 @@
         "place"
       ],
       "type": "object"
+    },
+    "TerrainInterpolation": {
+      "description": "How a height between a surface's points is read (docs/adr/1033).",
+      "oneOf": [
+        {
+          "const": "linear",
+          "description": "On the plane through the corners of the triangle the place is in; nothing outside the surface or in a void,\nnothing extrapolated.",
+          "type": "string"
+        }
+      ]
     },
     "TerrainLeft": {
       "description": "What a surface names and could not use, and why: `missing` (not in the drawing), `no_height`, `arc_edge`,\n`wrong_kind`, `not_closed`, `too_few`.",
@@ -192761,6 +193352,13 @@
     "TerrainReport": {
       "description": "A surface as its sources give it now.",
       "properties": {
+        "algorithm": {
+          "description": "The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's\nconstrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "built": {
           "description": "The digest it was last accepted from.",
           "type": [
@@ -197395,6 +197993,13 @@
       "additionalProperties": false,
       "description": "An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,\nthe totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.",
       "properties": {
+        "algorithm": {
+          "description": "The method's algorithm by name and version they were computed by (docs/adr/1040, 1041; schema 197): none on an\napproval made before.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "at": {
           "description": "The day it was approved, YYYY-MM-DD.",
           "type": "string"
@@ -197470,6 +198075,17 @@
           "type": "array",
           "x-unit": "volume"
         },
+        "sources": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeSources"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the figures were computed from when approved, each as it was then (docs/adr/1041; schema 197): none on an\napproval made before."
+        },
         "strip": {
           "format": "double",
           "type": [
@@ -197513,7 +198129,7 @@
       "type": "object"
     },
     "VolumeApprovalReport": {
-      "description": "An approved volume against today's: the approval as written, whether the figures changed, today's totals less the\napproved ones and the stretches that changed.",
+      "description": "An approved volume against today's: the approval as written, whether the figures changed, today's totals less the\napproved ones and the stretches that changed; the sources that moved since (docs/adr/1041), in the order of\n`VolumeSourceKind` (empty where the approval does not keep its sources: one made before).",
       "properties": {
         "approved": {
           "$ref": "#/$defs/VolumeApprovalDef"
@@ -197541,6 +198157,12 @@
           "type": "number",
           "x-unit": "volume"
         },
+        "moved": {
+          "items": {
+            "$ref": "#/$defs/VolumeSourceMove"
+          },
+          "type": "array"
+        },
         "rows": {
           "items": {
             "$ref": "#/$defs/VolumeRowChange"
@@ -197556,6 +198178,62 @@
         "factoredCutChange",
         "factoredFillChange",
         "rows"
+      ],
+      "type": "object"
+    },
+    "VolumeBasis": {
+      "description": "What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is\nthe default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's\nversion, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is\ncomputed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,\n`kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).",
+      "properties": {
+        "algorithm": {
+          "type": "string"
+        },
+        "bottom": {
+          "$ref": "#/$defs/VolumeLine"
+        },
+        "cut": {
+          "$ref": "#/$defs/MaterialState"
+        },
+        "fill": {
+          "$ref": "#/$defs/MaterialState"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "given": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sides": {
+          "$ref": "#/$defs/VolumeSides"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "$ref": "#/$defs/VolumeLine"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "given",
+        "version",
+        "top",
+        "bottom",
+        "sides",
+        "from",
+        "to",
+        "cut",
+        "fill",
+        "algorithm"
       ],
       "type": "object"
     },
@@ -197879,6 +198557,16 @@
       ],
       "type": "object"
     },
+    "VolumeLine": {
+      "description": "A line a volume is measured between (docs/adr/1037): the road's top (finished grade), the formation under its\npavement, the ground, or the ground under its stripped topsoil.",
+      "enum": [
+        "road",
+        "formation",
+        "ground",
+        "topsoil"
+      ],
+      "type": "string"
+    },
     "VolumeListed": {
       "description": "An earthwork volume in a list.",
       "properties": {
@@ -197952,6 +198640,17 @@
             }
           ],
           "description": "The approval against today's figures, where approved."
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeBasis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer."
         },
         "bench": {
           "description": "The benches cut in all (m³), where the volume benches.",
@@ -198069,6 +198768,17 @@
             }
           ],
           "description": "Its rule, where it has one (docs/adr/0975 §2)."
+        },
+        "sources": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeSources"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): only in `road.volumes.query`'s\nanswer, where it computes."
         },
         "stale": {
           "type": "boolean"
@@ -198300,6 +199010,97 @@
           "type": "string"
         }
       ]
+    },
+    "VolumeSides": {
+      "description": "Where a volume's sides are (docs/adr/1037): each section's daylight points (the end area and prismoidal methods),\nor the corridor's top surface's edge (the surfaces and grid methods).",
+      "enum": [
+        "daylights",
+        "corridor"
+      ],
+      "type": "string"
+    },
+    "VolumeSourceKind": {
+      "description": "A source of an approved volume (docs/adr/1041): the corridor, its alignment, profile, a template, the\nsuperelevation schedule, the terrain surface, or the method's algorithm.",
+      "enum": [
+        "corridor",
+        "alignment",
+        "profile",
+        "template",
+        "superelevation",
+        "surface",
+        "algorithm"
+      ],
+      "type": "string"
+    },
+    "VolumeSourceMove": {
+      "description": "A source that is not as the approval had it (docs/adr/1041): which, its id (the algorithm's name), and what it was\nthen and is now: a revision as decimal text, the surface's digest, the algorithm's version. None then: it was no\nsource of the approved figures; none now: it is none of today's.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "now": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/VolumeSourceKind"
+        },
+        "then": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "source",
+        "id"
+      ],
+      "type": "object"
+    },
+    "VolumeSources": {
+      "additionalProperties": false,
+      "description": "What an earthwork volume is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): its corridor, the\ncorridor's alignment and profile, its regions' templates in order and once each, its superelevation schedule and\nits terrain surface (the original ground; the design is the corridor's).",
+      "properties": {
+        "alignment": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "corridor": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "profile": {
+          "$ref": "#/$defs/RoadSource"
+        },
+        "superelevation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surface": {
+          "$ref": "#/$defs/RoadSurfaceSource"
+        },
+        "templates": {
+          "items": {
+            "$ref": "#/$defs/RoadSource"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "corridor",
+        "alignment",
+        "profile",
+        "templates",
+        "surface"
+      ],
+      "type": "object"
     },
     "VolumeSpread": {
       "description": "A volume's spread and bound: its value (bank, m³), its standard deviation from the heights' random error, the shift's\neffect, and the 95 % bound `|shift| + 1.96·σ`; whether the bound is within the share accepted (none: not asked).",

@@ -70,6 +70,43 @@ fn elements(a: &LxAlignment) -> Result<Vec<FitElement>, String> {
 }
 
 /// The km: the file's start and its equations, the km back worked out where the file does not say it.
+/// The file's design speeds for an alignment built from it (docs/adr/0988), its stations as `staStart` + the station
+/// along it: the speed over the longest stretch is the alignment's; a curve whose circular part's middle lies in a
+/// stretch of another speed holds that one. A speed not above 0 or above 200 km/h is left and said.
+fn speeds_of(a: &LxAlignment, b: &crate::road_alignments::Built, warnings: &mut Vec<CommandWarning>) -> (Option<f64>, Vec<(String, f64)>) {
+    let max = kentos_commands::MAX_DESIGN_SPEED;
+    let mut stretches: Vec<(f64, f64, f64)> = Vec::new();
+    for s in &a.speeds {
+        if !(s.speed > 0.0 && s.speed <= max) {
+            warnings.push(left(format!("“{}” aksının {} km/sa'lik proje hızı alınmadı: 0'dan büyük, en çok {max} km/sa olmalı.", a.name, s.speed)));
+            continue;
+        }
+        let from = s.sta_start.unwrap_or(a.sta_start) - a.sta_start;
+        let to = s.sta_end.unwrap_or(a.sta_start + a.length) - a.sta_start;
+        stretches.push((from, to, s.speed));
+    }
+    let mut lengths: Vec<(f64, f64)> = Vec::new();
+    for &(from, to, v) in &stretches {
+        match lengths.iter_mut().find(|(w, _)| *w == v) {
+            Some(l) => l.1 += (to - from).max(0.0),
+            None => lengths.push((v, (to - from).max(0.0))),
+        }
+    }
+    let design = lengths.iter().max_by(|x, y| x.1.total_cmp(&y.1)).map(|l| l.0);
+    let own = b
+        .core
+        .curves
+        .iter()
+        .filter(|c| c.radius > 0.0)
+        .filter_map(|c| {
+            let mid = 0.5 * (c.stations[1] + c.stations[2]);
+            let v = stretches.iter().find(|(from, to, _)| *from <= mid && mid <= *to)?.2;
+            (Some(v) != design).then(|| (c.pi.clone(), v))
+        })
+        .collect();
+    (design, own)
+}
+
 fn stationing(a: &LxAlignment) -> Option<AlignmentStationing> {
     let mut equations = Vec::new();
     let (mut ahead, mut dir, mut at) = (a.sta_start, 1.0, 0.0);
@@ -153,16 +190,19 @@ fn check(doc: &Document, input: &AlignmentsImport) -> Result<Checked, Stop> {
             ));
         }
         let id = (1..).map(|n| format!("g-{n}")).find(|id| list.iter().all(|d| &d.id != id)).unwrap_or_default();
-        let def = AlignmentDef {
+        let mut def = AlignmentDef {
             id: id.clone(),
             name: a.name.clone(),
             revision: 1,
             pis: pis
                 .iter()
-                .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: p.spiral_in, spiral_out: p.spiral_out, ove: false })
+                .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: p.spiral_in, spiral_out: p.spiral_out, ove: false, speed: None })
                 .collect(),
             offset_of: None,
             stationing: stationing(a),
+            design_speed: None,
+            start_place: None,
+            end_place: None,
         };
         let mut with = list.clone();
         with.push(def.clone());
@@ -190,6 +230,12 @@ fn check(doc: &Document, input: &AlignmentsImport) -> Result<Checked, Stop> {
         if deviation > FIT {
             skip(format!("PI'larından kurulan aks dosyanın elemanlarından {deviation:.4} m ayrılıyor (en çok {FIT} m)"), &mut warnings);
             continue;
+        }
+        // Docs/adr/0988: the file's design speeds.
+        let (design, own) = speeds_of(a, &built, &mut warnings);
+        def.design_speed = design;
+        for p in &mut def.pis {
+            p.speed = own.iter().find(|(pi, _)| *pi == p.id).map(|(_, v)| *v);
         }
         let mut names = Vec::new();
         if !input.without_profiles {

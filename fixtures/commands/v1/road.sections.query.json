@@ -3265,7 +3265,29 @@
                   "cut": 22.756324536038758,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -4576,7 +4598,29 @@
                   "cut": 22.756324536038758,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -5203,7 +5247,29 @@
                   "cut": 59.53810747784356,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -5613,6 +5679,12 @@
                       "gap": false
                     }
                   ],
+                  "missing": [
+                    [
+                      -20.0,
+                      7.267770351892782
+                    ]
+                  ],
                   "axis": 109.0,
                   "left": {
                     "kind": "open",
@@ -5865,7 +5937,29 @@
                   "cut": 33.69015459516917,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-2",
+                  "revision": 3
+                },
+                "alignment": {
+                  "id": "g-2",
+                  "revision": 3
+                },
+                "profile": {
+                  "id": "b-2",
+                  "revision": 4
+                },
+                "template": {
+                  "id": "tk-2",
+                  "revision": 2
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
@@ -5876,6 +5970,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 0+050.000 sol. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 0+050.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -6296,7 +6395,25 @@
                   ],
                   "axis": 103.21323529411765
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -8608,7 +8725,25 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -10902,7 +11037,29 @@
                   "ground": [],
                   "axis": 101.70588235294117
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-2",
+                  "digest": "0a703c4983390323d354ef6e8eb1da99fa0a1b25e52bbbc20d6bffeca3483a62"
+                }
+              }
             },
             "warnings": [
               {
@@ -13204,7 +13361,28 @@
                   "ground": [],
                   "axis": 101.70588235294117
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-yok"
+                }
+              }
             },
             "warnings": [
               {
@@ -15650,7 +15828,29 @@
                   "cut": 11.889143526257653,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
@@ -18159,7 +18359,29 @@
                   "cut": 47.59071859080113,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -20480,6 +20702,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      20.799038918735164,
+                      60.0
+                    ]
+                  ],
                   "axis": 101.91176470588235,
                   "left": {
                     "kind": "cut",
@@ -20795,7 +21023,29 @@
                   "cut": 141.76567607775553,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -23091,6 +23341,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      -25.0,
+                      25.0
+                    ]
+                  ],
                   "axis": 102.0,
                   "left": {
                     "kind": "open",
@@ -23179,12 +23435,39 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 1+000.000 sol, km 1+000.000 sağ. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 1+000.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -26033,7 +26316,33 @@
                   "cut": 0.0,
                   "fill": 8.638913457418196
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "superelevation": {
+                  "id": "d-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -28889,7 +29198,33 @@
                   "cut": 0.0,
                   "fill": 9.402277739117718
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "superelevation": {
+                  "id": "d-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -31283,7 +31618,33 @@
                   "cut": 17.569491443354895,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "superelevation": {
+                  "id": "d-3",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
@@ -33636,6 +33997,12 @@
                       "gap": false
                     }
                   ],
+                  "missing": [
+                    [
+                      -20.0,
+                      7.267770351892782
+                    ]
+                  ],
                   "axis": 109.0,
                   "left": {
                     "kind": "open",
@@ -33888,7 +34255,33 @@
                   "cut": 33.01300274223776,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-2",
+                  "revision": 3
+                },
+                "alignment": {
+                  "id": "g-2",
+                  "revision": 3
+                },
+                "profile": {
+                  "id": "b-2",
+                  "revision": 4
+                },
+                "template": {
+                  "id": "tk-2",
+                  "revision": 2
+                },
+                "superelevation": {
+                  "id": "d-2",
+                  "revision": 2
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
@@ -33899,6 +34292,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 0+050.000 sol. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 0+050.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -36586,7 +36984,29 @@
                   "cut": 149.68848584316572,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-2",
+                  "revision": 2
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -41199,7 +41619,29 @@
                     "formationFill": 0.0
                   }
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -43940,7 +44382,29 @@
                     "formationFill": 0.0
                   }
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -47418,7 +47882,33 @@
                     "formationFill": 0.0
                   }
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "superelevation": {
+                  "id": "d-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -49867,7 +50357,29 @@
                   "cut": 17.569491443354895,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
@@ -52316,7 +52828,29 @@
                   "cut": 17.569491443354895,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -52682,6 +53216,11 @@
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 0+050.000 sol. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 0+050.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -64498,7 +65037,29 @@
                   "cut": 0.0,
                   "fill": 20.05895427049283
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
@@ -68731,7 +69292,29 @@
                   "cut": 0.0,
                   "fill": 20.05895427049283
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -71055,6 +71638,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      -25.0,
+                      25.0
+                    ]
+                  ],
                   "axis": 102.0,
                   "left": {
                     "kind": "open",
@@ -71130,6 +71719,12 @@
                       "offset": 25.0,
                       "gap": true
                     }
+                  ],
+                  "missing": [
+                    [
+                      0.0,
+                      25.0
+                    ]
                   ],
                   "axis": 101.95990184670912,
                   "left": {
@@ -71237,6 +71832,12 @@
                       "offset": 25.0,
                       "gap": true
                     }
+                  ],
+                  "missing": [
+                    [
+                      16.87293849810272,
+                      25.0
+                    ]
                   ],
                   "axis": 101.93831154644297,
                   "left": {
@@ -74670,12 +75271,39 @@
                   "cut": 141.76567607775553,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 1+000.000 sol, km 1+000.000 sağ, km 1+013.633 sağ. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 1+000.000, km 1+013.633. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]
@@ -78699,7 +79327,29 @@
                   "cut": 22.756324536038758,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": []
           },
@@ -81004,6 +81654,12 @@
                       "gap": true
                     }
                   ],
+                  "missing": [
+                    [
+                      -25.0,
+                      25.0
+                    ]
+                  ],
                   "axis": 102.0,
                   "left": {
                     "kind": "open",
@@ -82408,12 +83064,39 @@
                   "cut": 141.76567607775553,
                   "fill": 0.0
                 }
-              ]
+              ],
+              "sources": {
+                "set": {
+                  "id": "k-1",
+                  "revision": 1
+                },
+                "alignment": {
+                  "id": "g-1",
+                  "revision": 1
+                },
+                "profile": {
+                  "id": "b-1",
+                  "revision": 1
+                },
+                "template": {
+                  "id": "tk-1",
+                  "revision": 1
+                },
+                "surface": {
+                  "id": "t-1",
+                  "digest": "2751c2db7b4e538926373b98ae4dcc47aad4ffa31200e5b13dcc033c0af93d98"
+                }
+              }
             },
             "warnings": [
               {
                 "code": "section_open",
                 "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: km 1+000.000 sol, km 1+000.000 sağ. Şeridi genişletin.",
+                "path": "set"
+              },
+              {
+                "code": "section_ground_missing",
+                "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): km 1+000.000. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
                 "path": "set"
               }
             ]

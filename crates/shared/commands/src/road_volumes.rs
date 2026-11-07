@@ -229,6 +229,15 @@ pub struct VolumeReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub curve: Option<VolumeCurve>,
+    /// What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<VolumeBasis>,
+    /// What it is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): only in `road.volumes.query`'s
+    /// answer, where it computes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<crate::VolumeSources>,
 }
 
 /// A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0975 §2).
@@ -276,8 +285,45 @@ pub struct VolumeRowChange {
     pub fill: Option<f64>,
 }
 
+/// A source of an approved volume (docs/adr/1041): the corridor, its alignment, profile, a template, the
+/// superelevation schedule, the terrain surface, or the method's algorithm.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeSourceKind {
+    Corridor,
+    Alignment,
+    Profile,
+    Template,
+    Superelevation,
+    Surface,
+    Algorithm,
+}
+
+/// A source that is not as the approval had it (docs/adr/1041): which, its id (the algorithm's name), and what it was
+/// then and is now: a revision as decimal text, the surface's digest, the algorithm's version. None then: it was no
+/// source of the approved figures; none now: it is none of today's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeSourceMove {
+    pub source: VolumeSourceKind,
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub then: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub now: Option<String>,
+}
+
 /// An approved volume against today's: the approval as written, whether the figures changed, today's totals less the
-/// approved ones and the stretches that changed.
+/// approved ones and the stretches that changed; the sources that moved since (docs/adr/1041), in the order of
+/// `VolumeSourceKind` (empty where the approval does not keep its sources: one made before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -286,6 +332,9 @@ pub struct VolumeRowChange {
 pub struct VolumeApprovalReport {
     pub approved: crate::VolumeApprovalDef,
     pub changed: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeSourceMove>>", optional))]
+    pub moved: Vec<VolumeSourceMove>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub cut_change: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
@@ -371,6 +420,74 @@ pub struct VolumesQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub volume: Option<String>,
+}
+
+/// The version of the rules' meaning (docs/adr/1037): a rule's lines, sides and states as `VolumeBasis` says them.
+pub const VOLUME_RULE_VERSION: &str = "kentos.volume-rule/1";
+
+/// A line a volume is measured between (docs/adr/1037): the road's top (finished grade), the formation under its
+/// pavement, the ground, or the ground under its stripped topsoil.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeLine {
+    Road,
+    Formation,
+    Ground,
+    Topsoil,
+}
+
+/// Where a volume's sides are (docs/adr/1037): each section's daylight points (the end area and prismoidal methods),
+/// or the corridor's top surface's edge (the surfaces and grid methods).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeSides {
+    Daylights,
+    Corridor,
+}
+
+/// A material's state as a volume measures it (docs/adr/1037).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum MaterialState {
+    /// In place (yerinde): the cut before it is dug.
+    InPlace,
+    /// Compacted (sıkışmış): the fill's body.
+    Compacted,
+}
+
+/// What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
+/// the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
+/// version, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is
+/// computed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,
+/// `kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeBasis {
+    pub name: String,
+    pub given: bool,
+    pub version: String,
+    pub top: VolumeLine,
+    pub bottom: VolumeLine,
+    pub sides: VolumeSides,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub cut: MaterialState,
+    pub fill: MaterialState,
+    pub algorithm: String,
 }
 
 /// Output of `road.volumes.query` v1.
@@ -508,7 +625,9 @@ pub const ROAD_VOLUMES_PROGRESS_VERSION: u32 = 1;
 ///
 /// Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
 /// `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
-/// survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+/// survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),
+/// `unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).
+/// `assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -520,6 +639,9 @@ pub struct VolumesProgress {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub previous: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub assume_heights: bool,
 }
 
 /// The cut's and the fill's work against the design (bank, m³): done, left, and over (dug below the design in cut,

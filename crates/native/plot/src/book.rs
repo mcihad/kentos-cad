@@ -149,6 +149,8 @@ type ScaledKey = (
     Vec<kentos_commands::OptionChoice>,
     // The map's content turn (docs/adr/0982: a road's texts read left to right on it).
     kentos_sheet::units::Mdeg,
+    // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
+    Option<(u64, u64, i32, i32)>,
 );
 
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
@@ -259,6 +261,7 @@ impl<'a> MapDrawer<'a> {
             m.options.to_vec(),
             // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
             m.view.rotation,
+            self.axes.then(|| (center.x.to_bits(), center.y.to_bits(), m.clip.width, m.clip.height)),
         );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_with(doc, at, m.wall_detail);
@@ -277,7 +280,14 @@ impl<'a> MapDrawer<'a> {
                     }
                     let kept = copy.reading_copy();
                     let turn = f64::from(m.view.rotation) / 1000.0;
-                    kentos_native_application::road_plan_axes::with_axes_on(copy, annotation, turn).unwrap_or(kept)
+                    let room = kentos_native_application::road_plan_axes::Room::of_map(
+                        [center.x, center.y],
+                        m.clip.width,
+                        m.clip.height,
+                        at,
+                    );
+                    kentos_native_application::road_plan_axes::with_axes_on(copy, annotation, turn, Some(room))
+                        .unwrap_or(kept)
                 });
             let window = self.window;
             let main = self.spatial;

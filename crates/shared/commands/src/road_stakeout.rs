@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::{RoadSource, RoadSurfaceSource};
+
 pub const ROAD_STAKEOUT_QUERY: &str = "road.stakeout.query";
 pub const ROAD_STAKEOUT_QUERY_VERSION: u32 = 1;
 
@@ -107,6 +109,43 @@ pub struct StakeRow {
     pub ground_offset: Option<f64>,
 }
 
+/// An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StakeoutVolume {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub approved: bool,
+}
+
+/// What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and
+/// profile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's
+/// earthwork volumes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StakeoutSources {
+    pub corridor: RoadSource,
+    pub alignment: RoadSource,
+    pub profile: RoadSource,
+    pub templates: Vec<RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface: Option<RoadSurfaceSource>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StakeoutVolume>>", optional))]
+    pub volumes: Vec<StakeoutVolume>,
+}
+
 /// Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in
 /// station order (a station shared by two regions once for each), left to right.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -123,6 +162,8 @@ pub struct StakeoutQueried {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stations: u32,
     pub rows: Vec<StakeRow>,
+    /// What it was computed from (docs/adr/1038).
+    pub sources: StakeoutSources,
 }
 
 pub const ROAD_STAKEOUT_SEND: &str = "road.stakeout.send";
@@ -155,8 +196,10 @@ pub enum StakeoutSendFormat {
 /// Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid
 /// `path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without
 /// `overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot
-/// carry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),
-/// `export_losses` (points the format cannot carry; strings of one point).
+/// carry, a first number not in [1, 99 999 999]), `field_heights_unknown` (docs/adr/1031: the project does not say its
+/// heights' system; after the first number and the stamp). Warnings: the query's, `stakeout_code_dropped` (codes left
+/// off), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's
+/// systems in its `CoordinateSystem`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

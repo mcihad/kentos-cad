@@ -92,6 +92,16 @@ pub struct WAlignment {
     pub elements: Vec<WElement>,
     pub equations: Vec<WEquation>,
     pub profiles: Vec<WProfile>,
+    /// Its design speeds over stations, km/h (docs/adr/0988): `Roadways/Roadway/Speeds/DesignSpeed`.
+    pub speeds: Vec<WSpeed>,
+}
+
+/// A design speed from `sta_start` to `sta_end` (stations), km/h.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WSpeed {
+    pub sta_start: f64,
+    pub sta_end: f64,
+    pub speed: f64,
 }
 
 /// A feature line (`PlanFeatures/PlanFeature`, a string of a string road): its name and its places (x, y, z).
@@ -99,6 +109,21 @@ pub struct WAlignment {
 pub struct WFeature {
     pub name: String,
     pub points: Vec<[f64; 3]>,
+}
+
+/// The file's `CoordinateSystem` (docs/adr/1031): the horizontal system by its EPSG name and code (`name`,
+/// `epsgCode`, `horizontalDatum`) or a system of the project's own by its name (`horizontalCoordinateSystemName`, as
+/// buildingSMART's LandXML 1.2 profile writes a local one), the heights' system (`verticalCoordinateSystemName`,
+/// `verticalDatum`) and in words what the heights are (`desc`). Each attribute only when known.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct WCoordinateSystem {
+    pub name: Option<String>,
+    pub epsg_code: Option<u32>,
+    pub horizontal_datum: Option<String>,
+    pub horizontal_name: Option<String>,
+    pub vertical_datum: Option<String>,
+    pub vertical_name: Option<String>,
+    pub desc: Option<String>,
 }
 
 /// What a file holds, and when and by what it is written.
@@ -115,6 +140,8 @@ pub struct WLandXml {
     /// The feature lines, under one `PlanFeatures` named `features_name`.
     pub features: Vec<WFeature>,
     pub features_name: String,
+    /// Absent: the file says no system (as before docs/adr/1031).
+    pub coordinate_system: Option<WCoordinateSystem>,
 }
 
 fn escape(t: &str) -> String {
@@ -163,10 +190,30 @@ pub fn write(file: &WLandXml) -> String {
         escape(&file.date),
         escape(&file.time)
     ));
-    o.push_str(
+    // The velocity's unit only where speeds are written (docs/adr/0988): a file without them stays as it was.
+    let velocity = if file.alignments.iter().any(|a| !a.speeds.is_empty()) { " velocityUnit=\"kilometersPerHour\"" } else { "" };
+    o.push_str(&format!(
         "  <Units>\n    <Metric areaUnit=\"squareMeter\" linearUnit=\"meter\" volumeUnit=\"cubicMeter\" temperatureUnit=\"celsius\" \
-         pressureUnit=\"milliBars\" angularUnit=\"decimal degrees\" directionUnit=\"decimal degrees\"/>\n  </Units>\n",
-    );
+         pressureUnit=\"milliBars\" angularUnit=\"decimal degrees\" directionUnit=\"decimal degrees\"{velocity}/>\n  </Units>\n",
+    ));
+    if let Some(c) = &file.coordinate_system {
+        let epsg = c.epsg_code.map(|e| e.to_string());
+        o.push_str("  <CoordinateSystem");
+        for (key, value) in [
+            ("name", c.name.as_ref()),
+            ("epsgCode", epsg.as_ref()),
+            ("horizontalDatum", c.horizontal_datum.as_ref()),
+            ("horizontalCoordinateSystemName", c.horizontal_name.as_ref()),
+            ("verticalDatum", c.vertical_datum.as_ref()),
+            ("verticalCoordinateSystemName", c.vertical_name.as_ref()),
+            ("desc", c.desc.as_ref()),
+        ] {
+            if let Some(v) = value {
+                o.push_str(&format!(" {key}=\"{}\"", escape(v)));
+            }
+        }
+        o.push_str("/>\n");
+    }
     o.push_str(&format!("  <Project name=\"{}\"/>\n", escape(&file.project)));
     o.push_str(&format!(
         "  <Application name=\"{}\" manufacturer=\"KentOS\" version=\"{}\"/>\n",
@@ -273,6 +320,26 @@ pub fn write(file: &WLandXml) -> String {
             o.push_str("    </Alignment>\n");
         }
         o.push_str("  </Alignments>\n");
+    }
+    // Docs/adr/0988: each alignment's design speeds as a roadway's (LandXML 1.2, FHWA IHSDM), named after it.
+    if file.alignments.iter().any(|a| !a.speeds.is_empty()) {
+        o.push_str("  <Roadways>\n");
+        for a in file.alignments.iter().filter(|a| !a.speeds.is_empty()) {
+            o.push_str(&format!(
+                "    <Roadway name=\"{0}\" alignmentRefs=\"{0}\">\n      <Speeds>\n",
+                escape(&a.name)
+            ));
+            for s in &a.speeds {
+                o.push_str(&format!(
+                    "        <DesignSpeed staStart=\"{}\" staEnd=\"{}\" speed=\"{}\"/>\n",
+                    n(s.sta_start),
+                    n(s.sta_end),
+                    n(s.speed)
+                ));
+            }
+            o.push_str("      </Speeds>\n    </Roadway>\n");
+        }
+        o.push_str("  </Roadways>\n");
     }
     if !file.features.is_empty() {
         o.push_str(&format!("  <PlanFeatures name=\"{}\">\n", escape(&file.features_name)));

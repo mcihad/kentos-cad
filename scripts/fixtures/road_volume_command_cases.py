@@ -484,6 +484,14 @@ def compute(v, corridors=CORRIDORS):
         report["curve"] = {"cut": dc, "fill": df, "plain": past}
     if v.get("approved"):
         approval = compare(v["approved"], report)
+        a = v["approved"]
+        if "sources" in a:
+            # Docs/adr/1041: the sources that moved since the approval, against today's.
+            road = road_of([v], corridors)
+            now = ccmd.corridor_sources(next(c for c in corridors if c["id"] == v["corridor"]), road)
+            ms = moved(a["sources"], now, a.get("algorithm"), algorithm_of(v, report))
+            if ms:
+                approval["moved"] = ms
         if approval["changed"]:
             warnings.append(warn("volume_changed", f"“{v['name']}” kübajı {v['approved']['at']} günü onaylanan hâlinden "
                                                    f"farklı: {len(approval['rows'])} aralık değişti; fark raporda."))
@@ -523,7 +531,9 @@ def next_number(v):
     return max([a.get("number", 0) for a in approvals] + [len(approvals)]) + 1
 
 
-def approval_of(v, now, at, note=None):
+def approval_of(v, now, at, note=None, corridors=None):
+    """The approval of `v` computed as `now`; with `corridors`, as `road.volumes.approve` writes it since docs/adr/1041:
+    with its corridor's chain as the road has it and its method's algorithm."""
     out = {"revision": v.get("revision", 0), "at": at, "number": next_number(v), "cut": now["cut"], "fill": now["fill"],
            "factoredCut": now["factoredCut"], "factoredFill": now["factoredFill"],
            "rows": [[r["from"], r["to"], r["cut"], r["fill"]] for r in now["rows"] if "cut" in r]}
@@ -532,13 +542,19 @@ def approval_of(v, now, at, note=None):
     for k in ("strip", "bench"):
         if k in now:
             out[k] = now[k]
+    if corridors is not None:
+        out["sources"] = ccmd.corridor_sources(next(c for c in corridors if c["id"] == v["corridor"]),
+                                               road_of([v], corridors))
+        if algorithm_of(v, now):
+            out["algorithm"] = algorithm_of(v, now)
     return out
 
 
-def approved(v, at="2026-11-03", note=None, corridors=CORRIDORS):
+def approved(v, at="2026-11-03", note=None, corridors=CORRIDORS, signed=False):
     """The volume approved as it computes with `corridors`; an approval it had goes to its history, ended by this one
-    (docs/adr/0950)."""
-    out = {**v, "approved": approval_of(v, compute(v, corridors)[0], at, note)}
+    (docs/adr/0950). `signed`: as `road.volumes.approve` writes it since docs/adr/1041, with what it is computed from
+    and by which algorithm; else as an approval made before."""
+    out = {**v, "approved": approval_of(v, compute(v, corridors)[0], at, note, corridors if signed else None)}
     if v.get("approved"):
         out["history"] = list(v.get("history", [])) + [{**v["approved"], "ended": {"at": at}}]
     return out
@@ -767,17 +783,81 @@ def edit_cases():
 
 # ── road.volumes.query ─────────────────────────────────────────────────────────────────────────────────────────────
 
+RULE_WORDS = {"roadGround": "Yol–Zemin", "formationGround": "Formasyon–Zemin", "roadTopsoil": "Yol–Bitkisel Toprak",
+              "formationTopsoil": "Formasyon–Bitkisel Toprak"}
+
+
+# Docs/adr/1040: the methods' algorithms by name and version; the end area corrected on curves is its own.
+ALGORITHMS = {"endArea": "kentos.end-area/1", "prismoidal": "kentos.prismoidal/1",
+              "surfaces": "kentos.tin-overlay/1", "grid": "kentos.grid-midpoint/1"}
+
+
+def algorithm_of(v, r):
+    """Docs/adr/1040: the method's algorithm of `v` as its report `r` computed it; none without a row."""
+    if not r.get("rows"):
+        return None
+    return "kentos.end-area-curved/1" if v["method"] == "endArea" and "curve" in r else ALGORITHMS[v["method"]]
+
+
+def moved(then, now, algorithm_then, algorithm_now):
+    """Docs/adr/1041: the sources that moved since an approval, kind by kind: each of the approval's against today's by
+    its id (a template no longer named: no `now`; one named anew: no `then`), the surface by its digest, the algorithm
+    by its version under its name; values as text."""
+    out = []
+
+    def pair(kind, a, b):
+        bd = dict(b)
+        for i, val in a:
+            if bd.get(i) != val:
+                out.append({"source": kind, "id": i, "then": val, **({"now": bd[i]} if i in bd else {})})
+        ad = dict(a)
+        out.extend({"source": kind, "id": i, "now": w} for i, w in b if i not in ad)
+
+    def rev(r):
+        return (r["id"], str(r["revision"]))
+    pair("corridor", [rev(then["corridor"])], [rev(now["corridor"])])
+    pair("alignment", [rev(then["alignment"])], [rev(now["alignment"])])
+    pair("profile", [rev(then["profile"])], [rev(now["profile"])])
+    pair("template", [rev(t) for t in then["templates"]], [rev(t) for t in now["templates"]])
+    pair("superelevation", [rev(x) for x in [then.get("superelevation")] if x], [rev(x) for x in [now.get("superelevation")] if x])
+    pair("surface", [(x["id"], x["digest"]) for x in [then["surface"]] if "digest" in x],
+         [(x["id"], x["digest"]) for x in [now["surface"]] if "digest" in x])
+    pair("algorithm", [tuple(t.split("/", 1)) for t in [algorithm_then] if t], [tuple(t.split("/", 1)) for t in [algorithm_now] if t])
+    return out
+
+
+def with_basis(v, r, road, doc=None):
+    """Docs/adr/1037: what the volume measures. Its rule, or the default: the road's top against the ground, against
+    the stripped ground where it strips; the lines by the rule's name; the sides by the method; the stations of its
+    rows; the cut in place, the fill compacted; its method's algorithm (docs/adr/1040). Docs/adr/1040: what it is
+    computed from, its corridor's chain as `road` has it now (scripts/fixtures/road_corridor_command_cases.py's)."""
+    c = next(x for x in road["corridors"] if x["id"] == v["corridor"])
+    r = {**r, "sources": ccmd.corridor_sources(c, road, doc)}
+    if not r.get("rows"):
+        return r
+    rule = v.get("rule") or ("roadTopsoil" if v.get("strip") else "roadGround")
+    algorithm = algorithm_of(v, r)
+    basis = {"name": RULE_WORDS[rule], "given": v.get("rule") is not None, "version": "kentos.volume-rule/1",
+             "top": "formation" if rule.startswith("formation") else "road",
+             "bottom": "topsoil" if rule.endswith("Topsoil") else "ground",
+             "sides": "daylights" if v["method"] in ("endArea", "prismoidal") else "corridor",
+             "from": r["rows"][0]["from"], "to": r["rows"][-1]["to"], "cut": "inPlace", "fill": "compacted",
+             "algorithm": algorithm}
+    return {**r, "basis": basis}
+
+
 def query_cases():
     cases = []
 
     def q(name, input_, volumes=START, corridors=CORRIDORS, op="execute"):
         one = input_.get("volume")
+        road = road_of(volumes, corridors)
         if one is None:
             reports, warns = [], []
             for v in volumes:
                 try:
                     r, w = compute(v, corridors)
-                    reports.append(r)
+                    reports.append(with_basis(v, r, road))
                     warns += w
                 except Refused as e:
                     reports.append(broken(v, e.result["error"]["message"]))
@@ -785,7 +865,7 @@ def query_cases():
         else:
             v = next(x for x in volumes if x["id"] == one or x["name"].lower() == one.lower())
             r, warns = compute(v, corridors)
-            out = {"volumes": [r]}
+            out = {"volumes": [with_basis(v, r, road)]}
         result = completed(None, warns) if op == "validate" else completed(out, warns)
         default = volumes is START and corridors is CORRIDORS and ccmd.TEMPLATES == [scmd.TK1, scmd.TK2]
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(volumes, corridors)})],
@@ -847,6 +927,22 @@ def query_cases():
     q("Onaydan sonra koridor sıklaştı: fark", {"volume": "v-1"}, [approved(V1), V2], [c_dense, ccmd.C2])
     c_short = {**ccmd.C1, "regions": [{"from": 0.0, "to": 300.0, "template": "tk-1"}]}
     q("Onaydan sonra bölge kısaldı: kalkan aralıklar", {"volume": "v-1"}, [approved(V1), V2], [c_short, ccmd.C2])
+    # Docs/adr/1041: an approval that keeps its sources says which moved since: the corridor written again (its
+    # revision up, the same geometry: the figures the same); the corridor made denser and written again (both); the
+    # ground the approval read (the drawing before its first ground point) against today's; an older algorithm.
+    signed = approved(V1, signed=True)
+    q("Onaydan sonra koridor yeniden yazıldı: kaynak değişti, rakam aynı", {"volume": "v-1"}, [signed, V2],
+      [{**ccmd.C1, "revision": ccmd.C1.get("revision", 0) + 1}, ccmd.C2])
+    q("Onaydan sonra koridor sıklaştı: kaynak ve rakam değişti", {"volume": "v-1"}, [signed, V2],
+      [{**c_dense, "revision": c_dense.get("revision", 0) + 1}, ccmd.C2])
+    doc = setup([signed, V2])
+    before = {**doc, "entities": doc["entities"][1:], "uids": doc["uids"][1:]}
+    ground = copy.deepcopy(signed)
+    ground["approved"]["sources"]["surface"]["digest"] = pcmd.surface_source(doc["settings"]["road"], "t-1", before)["digest"]
+    q("Onaydan sonra arazi değişti: özeti", {"volume": "v-1"}, [ground, V2])
+    older = copy.deepcopy(signed)
+    older["approved"]["algorithm"] = "kentos.end-area/0"
+    q("Onaylayan algoritmanın eski sürümü", {"volume": "v-1"}, [older, V2])
     # Rules and pavement layers (docs/adr/0975 §2), on templates with a pavement.
     with paved_templates():
         q("Üstyapılı tip kesitler: tabaka hacimleri, Yol–Zemin", {"volume": "v-1"})
@@ -879,6 +975,20 @@ def query_cases():
     q("Kurp düzeltmesi, sıyırmayla", {"volume": "v-1"},
       [{**V1, "curve": True, "strip": [{"from": 0.0, "to": 600.0, "depth": 0.3}], "rule": "roadTopsoil"}, V2])
     q("Kurp düzeltmesi, diş kazısıyla", {"volume": "v-1"}, [{**V1, "curve": True, "bench": {"slope": 12.0, "height": 0.5}}, V2])
+    # Docs/adr/1040: the ground accepted from today's drawing says the same digest twice; accepted before a point was
+    # added (the drawing without its first ground point), it says the one it was accepted from beside today's.
+    doc = setup()
+    assert doc["entities"][0]["layerId"] == "zemin" and doc["entities"][0].get("z") is not None
+    before = {**doc, "entities": doc["entities"][1:], "uids": doc["uids"][1:]}
+    for name_, of in (("Kabul edilmiş arazinin özeti", doc), ("Kabulden sonra değişen arazinin özeti", before)):
+        accepted = copy.deepcopy(doc)
+        accepted["settings"]["road"]["surfaces"][0]["built"] = pcmd.surface_source(
+            accepted["settings"]["road"], "t-1", of)["digest"]
+        road = accepted["settings"]["road"]
+        r, warns = compute(V1)
+        out = {"volumes": [with_basis(V1, r, road)]}
+        cases.append(case(name_, [step("execute", {"volume": "v-1"}, completed(out, warns), {**UNCHANGED, "road": road})],
+                          accepted))
     return file("road.volumes.query", "Kübajı sorgula", setup(), cases)
 
 
@@ -918,36 +1028,36 @@ def approve_cases():
                           setup_ or (None if default else setup(start, corridors))))
 
     day = "2026-11-03"
-    ok("Kübaj onaylanır", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1")
+    ok("Kübaj onaylanır", {"volume": "v-1", "at": day}, [approved(V1, day, signed=True), V2], "v-1")
     ok("Notla, adıyla", {"volume": "ANA kübaj", "at": day, "note": "Uygulama projesi"},
-       [approved(V1, day, "Uygulama projesi"), V2], "v-1")
-    ok("Yüzeyler arası kübaj onaylanır", {"volume": "v-2", "at": "2026-10-30"}, [V1, approved(V2, "2026-10-30")], "v-2")
+       [approved(V1, day, "Uygulama projesi", signed=True), V2], "v-1")
+    ok("Yüzeyler arası kübaj onaylanır", {"volume": "v-2", "at": "2026-10-30"}, [V1, approved(V2, "2026-10-30", signed=True)], "v-2")
     vs = {**V1, "strip": [{"from": 0.0, "to": 600.0, "depth": 0.3}], "bench": {"slope": 3.0, "height": 0.5}}
-    ok("Sıyırma ve diş kazısıyla onay", {"volume": "v-1", "at": day}, [approved(vs, day), V2], "v-1", start=[vs, V2])
+    ok("Sıyırma ve diş kazısıyla onay", {"volume": "v-1", "at": day}, [approved(vs, day, signed=True), V2], "v-1", start=[vs, V2])
     a1 = approved(V1, day)
     ok("Onay kaldırılır, geçmişe yazılır", {"volume": "v-1", "revoke": True}, [revoked(a1), V2], "v-1", start=[a1, V2])
     ok("Kaldırma günü ve nedeniyle", {"volume": "v-1", "revoke": True, "at": "2026-11-06", "note": "Zemin raporu değişti"},
        [revoked(a1, "2026-11-06", "Zemin raporu değişti"), V2], "v-1", start=[a1, V2])
     ok("Yeniden onay eskisinin yerine geçer, eskisi geçmişte", {"volume": "v-1", "at": "2026-11-04"},
-       [approved(a1, "2026-11-04"), V2], "v-1", start=[a1, V2])
+       [approved(a1, "2026-11-04", signed=True), V2], "v-1", start=[a1, V2])
     r1 = revoked(a1, "2026-11-06")
     ok("Kaldırılmış onaydan sonra ikinci onay", {"volume": "v-1", "at": "2026-11-07", "note": "2. hakediş"},
-       [approved(r1, "2026-11-07", "2. hakediş"), V2], "v-1", start=[r1, V2])
+       [approved(r1, "2026-11-07", "2. hakediş", signed=True), V2], "v-1", start=[r1, V2])
     a3 = approved(approved(a1, "2026-11-04"), "2026-11-05")
-    ok("Üçüncü onay: geçmiş sırayla", {"volume": "v-1", "at": "2026-11-08"}, [approved(a3, "2026-11-08"), V2], "v-1",
+    ok("Üçüncü onay: geçmiş sırayla", {"volume": "v-1", "at": "2026-11-08"}, [approved(a3, "2026-11-08", signed=True), V2], "v-1",
        start=[a3, V2])
     legacy = {**a1, "approved": {k: val for k, val in a1["approved"].items() if k != "number"}}
     ok("Numarasız eski onayın yerine gelen ikinci olur", {"volume": "v-1", "at": "2026-11-04"},
-       [approved(legacy, "2026-11-04"), V2], "v-1", start=[legacy, V2])
-    ok("Onay tek geri alma adımı", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", undo=True)
+       [approved(legacy, "2026-11-04", signed=True), V2], "v-1", start=[legacy, V2])
+    ok("Onay tek geri alma adımı", {"volume": "v-1", "at": day}, [approved(V1, day, signed=True), V2], "v-1", undo=True)
     ok("Onaylı kübajın kaynağı değişince yeni onay farkı sıfırlar", {"volume": "v-1", "at": "2026-11-05"},
-       [approved(a1, "2026-11-05", corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2]), V2], "v-1",
+       [approved(a1, "2026-11-05", corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2], signed=True), V2], "v-1",
        start=[a1, V2], corridors=[{**ccmd.C1, "tangent": 20.0}, ccmd.C2])
     a2 = approved(V2, "2026-10-30")
     ok("Yüzeyler arası kübajın onayı kaldırılır", {"volume": "Yan kübaj", "revoke": True}, [V1, revoked(a2)], "v-2",
        start=[V1, a2])
-    ok("Plan yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", op="plan")
-    ok("Doğrulama yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day), V2], "v-1", op="validate")
+    ok("Plan yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day, signed=True), V2], "v-1", op="plan")
+    ok("Doğrulama yazmaz", {"volume": "v-1", "at": day}, [approved(V1, day, signed=True), V2], "v-1", op="validate")
 
     no("Yol projesi değil", {"volume": "v-1", "at": day}, NOT_ROAD, setup_=setup(work="map"))
     no("Olmayan kübaj", {"volume": "yok", "at": day},

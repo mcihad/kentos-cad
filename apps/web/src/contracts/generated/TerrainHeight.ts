@@ -12,4 +12,17 @@ slope?: number,
 /**
  * The azimuth it falls towards, radians clockwise from north; none on a flat triangle.
  */
-aspect?: number, };
+aspect?: number, 
+/**
+ * The triangle the height is read on (docs/adr/1033), inside one triangle only: its corners (x, y, z) ordered by
+ * x, then y.
+ */
+corners?: [[number, number, number], [number, number, number], [number, number, number]], 
+/**
+ * That triangle's longest plan edge: how far apart the points the height rests on are (ADR 0920's estimate).
+ */
+longest?: number, 
+/**
+ * The plan distance from the place to the nearest of those corners.
+ */
+corner?: number, };

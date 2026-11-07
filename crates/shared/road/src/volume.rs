@@ -7,6 +7,20 @@
 //! `A·(d₀ + d₁ + d₂)/3` (exact for a linear `d`) goes to the fill when `d ≥ 0`, the cut otherwise. The design's area
 //! the ground does not cover is reported, not counted as nothing (ROAD-VOL-08). Rounding is left to the report.
 
+/// The methods' algorithms by name and version (docs/adr/1040; ROAD-VOL-01), as a volume's report says it was
+/// computed: the version goes up when a method gives other figures for the same sources. A total is part of its
+/// algorithm: the rows are summed in station order, region by region, by binary64 addition (not compensated).
+pub const END_AREA: &str = "kentos.end-area/1";
+/// The average end area of the sections' effective areas on a curve (docs/adr/0934); a stretch whose section reaches
+/// past the curve's centre is counted without the correction.
+pub const END_AREA_CURVED: &str = "kentos.end-area-curved/1";
+/// The prismoidal formula with a middle section.
+pub const PRISMOIDAL: &str = "kentos.prismoidal/1";
+/// The integral of the height difference over the two triangulations laid over each other (§ above).
+pub const SURFACES: &str = "kentos.tin-overlay/1";
+/// The height difference at the grid's cell centres, a centre counted once (docs/adr/0974).
+pub const GRID: &str = "kentos.grid-midpoint/1";
+
 /// A section's place and areas: its station, its cut and fill areas (m²); none where it is not solved.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SectionAreas {

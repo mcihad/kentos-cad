@@ -26,7 +26,21 @@ bands?: ProfileBands,
 /**
  * With `bands: kgm`, the superelevation schedule the views' Dever band draws (its id or name).
  */
-superelevation?: string, scale?: number, overlap?: number, source?: SheetTemplateSource, 
+superelevation?: string, 
+/**
+ * With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
+ */
+corridor?: string, 
+/**
+ * Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+ * middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
+ * sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
+ */
+matchLines?: boolean, 
+/**
+ * With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
+ */
+haul?: string, scale?: number, overlap?: number, source?: SheetTemplateSource, 
 /**
  * The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
  */

@@ -39,10 +39,61 @@ UNCHANGED = ccmd.UNCHANGED
 pcmd = ccmd.pcmd
 
 
-def setup(work="road"):
+# Docs/adr/1031: the project says its heights' system, TUDKA99's orthometric heights (Antalya height) by TG-20.
+HEIGHTS = {"kind": "orthometric", "verticalSrid": 5775, "geoid": {"name": "TG-20"}}
+REGISTRY = ROOT / "fixtures/crs/v1/registry.json"
+
+
+def setup(work="road", heights=HEIGHTS):
     base = ccmd.setup([], work=work)
     base["name"] = "Yol alışverişi"
+    if work == "road" and heights is not None:
+        base["settings"]["heights"] = copy.deepcopy(heights)
     return base
+
+
+def heights_title(h):
+    """What the heights are, in the words of the project's settings (docs/adr/0519)."""
+    if h["kind"] == "ellipsoidal":
+        return "elipsoit yüksekliği"
+    if h["kind"] != "orthometric":
+        return "bilinmiyor"
+    from pyproj import CRS
+    t = "ortometrik"
+    t += (f", {CRS.from_epsg(h['verticalSrid']).name} (EPSG:{h['verticalSrid']})" if h.get("verticalSrid")
+          else ", düşey sistemi belirtilmemiş")
+    if h.get("geoid"):
+        t += f", geoit {h['geoid']['name']}"
+    return t
+
+
+def coordinate_system(settings):
+    """The `CoordinateSystem` a file for the field says (docs/adr/1031), its attributes: the horizontal system's name
+    and datum as PROJ's database and the registry name them, the vertical system's as PROJ's database does."""
+    from pyproj import CRS
+    out = {}
+    srid = settings.get("srid", 0)
+    if srid:
+        out["name"] = CRS.from_epsg(srid).name
+        out["epsgCode"] = str(srid)
+        reg = json.loads(REGISTRY.read_text(encoding="utf-8"))
+        out["horizontalDatum"] = next(x["datum"] for x in reg["systems"] if x["srid"] == srid)
+    h = settings.get("heights")
+    if h and h["kind"] == "orthometric" and h.get("verticalSrid"):
+        v = CRS.from_epsg(h["verticalSrid"])
+        out["verticalDatum"] = v.datum.name
+        out["verticalCoordinateSystemName"] = v.name
+    elif h and h["kind"] == "ellipsoidal":
+        out["verticalCoordinateSystemName"] = "ellipsoidal height"
+    if h and h["kind"] != "unknown":
+        out["desc"] = "Kotlar: " + heights_title(h)
+    return out
+
+
+def unsaid(what, why="projenin kotlarının düşey sistemi söylenmemiş"):
+    return (f"{what} kotları bir düşey sisteme bağlı olmalı: {why}. Proje ayarları › Kotlar'da sistemi seçin (BÖHHBÜY: "
+            "TUDKA99'a dayalı Helmert ortometrik yükseklik, Antalya height EPSG:5775). Kotlar bir varsayımla sahaya "
+            "gönderilmez.")
 
 
 SETUP = setup()
@@ -198,6 +249,58 @@ def cases():
            failed("invalid_landxml", "Yazılacak bir şey yok: seçilen yüzey ya da aks yok.")),
         no("Seçilen yüzey kurulamıyor", {"path": tmp(), "surfaces": ["Kurulamaz"]},
            failed("invalid_landxml", surface_unbuilt("Kurulamaz"), "surfaces")),
+    ] + machine_cases(tmp)
+
+
+def machine_cases(tmp):
+    """Docs/adr/1031: a design for machine control rests on the project's heights, said; a plain file needs it not."""
+    mc = {"stamp": STAMP, "machineControl": True}
+    what = "Makine kontrolü dosyasının"
+
+    def clouded(vertical, turned=None):
+        s = setup()
+        record = {"layer": "zemin", "clouds": ["0192f5a0-7c3e-7d4a-9b1e-000000000001"], "classes": [2],
+                  "returns": "all", "cell": 1.0, "read": 120, "kept": 120, "coverage": 1.0, "density": 1.0}
+        if vertical is not None:
+            record["vertical"] = vertical
+        if turned is not None:
+            # Docs/adr/1032: the cloud's heights as the call said them, written in the project's.
+            record["heights"] = {"from": turned, "to": HEIGHTS}
+        next(t for t in s["settings"]["road"]["surfaces"] if t["id"] == "t-1")["clouds"] = [record]
+        return s
+
+    def done(input_):
+        result, warnings = answer(input_)
+        result["warnings"] = warnings
+        return result
+
+    ground = {"surfaces": ["Mevcut zemin"], "alignments": []}
+    on_project = {**mc, "path": tmp(), **ground}
+    cloud_ok = case("Makine kontrolü: bulut zemini projenin sisteminde",
+                    [step("execute", on_project, done(on_project), UNCHANGED)], clouded("EPSG:5775"))
+    turned_in = {**mc, "path": tmp(), **ground}
+    turned_ok = case("Makine kontrolü: projenin kotlarına çevrilmiş bulut zemini",
+                     [step("execute", turned_in, done(turned_in), UNCHANGED)], clouded(None, {"kind": "ellipsoidal"}))
+    plain = {"path": tmp(), "stamp": STAMP}
+    return [
+        ok("Makine kontrolü için: projenin kotları söylenmiş", {**mc, "path": tmp()}),
+        case("Kotları söylenmemiş proje: makine kontrolü olmadan yazılır", [step("execute", plain, done(plain), UNCHANGED)],
+             setup(heights=None)),
+        no("Makine kontrolü: projenin kotları söylenmemiş", {**mc, "path": tmp()},
+           failed("field_heights_unknown", unsaid(what)), setup(heights=None)),
+        no("Makine kontrolü: ortometrik ama düşey sistemi yok", {**mc, "path": tmp()},
+           failed("field_heights_unknown", unsaid(what, "projenin kotları ortometrik ama düşey sistemi belirtilmemiş")),
+           setup(heights={"kind": "orthometric"})),
+        cloud_ok,
+        turned_ok,
+        no("Makine kontrolü: bulut zemininin sistemi bilinmiyor", {**mc, "path": tmp(), **ground},
+           failed("unproven_heights", "“Mevcut zemin” yüzeyinin “zemin” katmanındaki bulut noktaları: dosyası düşey "
+                  "sistemini söylemiyor ya da alındığında kaydedilmedi. Kotları projenin sisteminde gösterilmeyen yüzey "
+                  "makine kontrolüne gönderilmez.", "surfaces"), clouded(None)),
+        no("Makine kontrolü: bulut zemini başka sistemde", {**mc, "path": tmp(), **ground},
+           failed("unproven_heights", "“Mevcut zemin” yüzeyinin “zemin” katmanındaki bulut noktaları: EGM2008 height "
+                  "(EPSG:3855), projenin kotları Antalya height (EPSG:5775). Kotları projenin sisteminde gösterilmeyen "
+                  "yüzey makine kontrolüne gönderilmez.", "surfaces"), clouded("EGM2008 height")),
     ]
 
 
@@ -224,6 +327,9 @@ def check_written():
     root = ET.parse(WRITTEN).getroot()
     metric = root.find(f"{NS}Units/{NS}Metric")
     assert metric.get("linearUnit") == "meter" and metric.get("directionUnit") == "decimal degrees"
+    # Docs/adr/1031: the systems, as PROJ's database names them.
+    cs = root.find(f"{NS}CoordinateSystem")
+    assert cs is not None and dict(cs.attrib) == coordinate_system(SETUP["settings"]), cs.attrib if cs is not None else None
     # The surface: the same points, and the same triangles as Triangle's Delaunay.
     surfs = root.findall(f"{NS}Surfaces/{NS}Surface")
     assert [s.get("name") for s in surfs] == ["Mevcut zemin"], [s.get("name") for s in surfs]
@@ -314,6 +420,7 @@ def check_written():
 
 IMPORT_OUT = ROOT / "fixtures/commands/v1/road.alignments.import.json"
 AKS = HERE / "aks.xml"
+AKS_HIZ = HERE / "aks-hiz.xml"
 STEPPED = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
 
 
@@ -410,6 +517,24 @@ def aks_xml():
             + "".join(parts) + "</Alignments></LandXML>\n")
 
 
+def aks_hiz_xml():
+    """Docs/adr/0988: Ana aks with a roadway's design speeds, 80 km/h but 50 over its curve's middle, and one of
+    250 km/h that is left."""
+    g1 = pcmd.ALIGNED["g-1"]
+    st = [float(x) for x in g1.reports[0]["stations"]]
+    mid = (st[1] + st[2]) / 2
+    assert 250 < mid < 350, mid
+    speeds = ('<DesignSpeed staStart="1000" staEnd="1250" speed="80"/><DesignSpeed staStart="1250" staEnd="1350" speed="50"/>'
+              f'<DesignSpeed staStart="1350" staEnd="{fmt(1000 + float(g1.length))}" speed="80"/>'
+              '<DesignSpeed staStart="1000" staEnd="1010" speed="250"/>')
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n<LandXML xmlns="http://www.landxml.org/schema/LandXML-1.2" '
+            'date="2026-11-06" time="09:00:00" version="1.2"><Units><Metric areaUnit="squareMeter" linearUnit="meter" '
+            'volumeUnit="cubicMeter" temperatureUnit="celsius" pressureUnit="milliBars" velocityUnit="kilometersPerHour"/>'
+            '</Units><Alignments>' + alignment_xml("Ana aks", g1, 1000) + '</Alignments>'
+            '<Roadways><Roadway name="Ana aks" alignmentRefs="Ana aks"><Speeds>' + speeds
+            + '</Speeds></Roadway></Roadways></LandXML>\n')
+
+
 def import_setup(with_alignments=False, work="road"):
     base = ccmd.setup([], work=work)
     base["name"] = "Yol alışverişi"
@@ -499,6 +624,15 @@ def import_cases():
     ok("KentOS'un yazdığı LandXML'in bütün aksları boykesitleriyle", {"path": yol}, ["Ana aks", "Yan aks", "Dar kurp"],
        table=OURS)
 
+    # Docs/adr/0988: a roadway's design speeds: the alignment's the longest stretch's (80), p1's the 50 over its middle;
+    # the 250 is left and said.
+    hiz = f"$fixture:road/v1/landxml/{AKS_HIZ.name}"
+    fast = [{**p, "speed": 50.0} if p["id"] == "p1" else p for p in defined("g-1")]
+    ok("Yolun proje hızları: aksın 80, kurbun 50", {"path": hiz}, ["Ana aks"], table={"Ana aks": (fast, 5, [])})
+    cases[-1]["steps"][0]["result"]["warnings"].insert(0, {
+        "code": "landxml_left", "path": "alignments",
+        "message": "“Ana aks” aksının 250 km/sa'lik proje hızı alınmadı: 0'dan büyük, en çok 200 km/sa olmalı."})
+
     def no(name, input_, result, setup_=None):
         cases.append(case(name, [step("execute", input_, result, UNCHANGED)], setup_))
 
@@ -541,13 +675,15 @@ def main():
     data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:
-        if OUT.read_text(encoding="utf-8") != text or AKS.read_text(encoding="utf-8") != aks_xml():
+        if (OUT.read_text(encoding="utf-8") != text or AKS.read_text(encoding="utf-8") != aks_xml()
+                or not AKS_HIZ.exists() or AKS_HIZ.read_text(encoding="utf-8") != aks_hiz_xml()):
             raise SystemExit(f"{OUT} ya da {AKS} güncel değil: python3 {Path(__file__).name}")
         print(f"{OUT.name}: {len(data['cases'])} durum güncel")
         return
     OUT.write_text(text, encoding="utf-8")
     print(f"{OUT.name}: {len(data['cases'])} durum")
     AKS.write_text(aks_xml(), encoding="utf-8")
+    AKS_HIZ.write_text(aks_hiz_xml(), encoding="utf-8")
     data = {"format": "kentos.command-cases", "version": 1, "command": "road.alignments.import", "commandVersion": 1,
             "title": "LandXML'den aks al",
             "note": "scripts/fixtures/road_landxml_cases.py yazar; aks.xml'i başvurunun 40 basamaklı elemanlarından KentOS "

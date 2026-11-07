@@ -96,6 +96,8 @@ type ScaledKey = (
     Vec<kentos_commands::OptionChoice>,
     // The map's content turn (docs/adr/0982: a road's texts read left to right on it).
     kentos_sheet::units::Mdeg,
+    // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
+    Option<(u64, u64, i32, i32)>,
 );
 
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
@@ -156,6 +158,8 @@ impl SheetMaps {
         &self,
         drawing: &Document,
         view: &kentos_sheet::display::MapViewPrim,
+        // The map's content rectangle (paper micrometres): a road's curve data stays inside it (docs/adr/0984).
+        clip: Option<(i32, i32)>,
         level: Option<&kentos_sheet::kinds::MapLevel>,
         detail: Option<kentos_commands::WallDetail>,
         options: &[kentos_commands::OptionChoice],
@@ -174,6 +178,13 @@ impl SheetMaps {
                     ));
         let scale = view.scale;
         let annotation = view.annotation_denominator();
+        let axes = kentos_native_application::road_plan_axes::has_axes(&drawing.model);
+        let room = match (axes, view.center, clip) {
+            (true, Some(c), Some((w, h))) => {
+                Some(kentos_native_application::road_plan_axes::Room::of_map([c.x, c.y], w, h, scale))
+            }
+            _ => None,
+        };
         let key = (
             drawing.session,
             drawing.model.generation(),
@@ -191,6 +202,7 @@ impl SheetMaps {
             options.to_vec(),
             // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
             view.rotation,
+            room.map(|r| (r.center[0].to_bits(), r.center[1].to_bits(), clip.map_or(0, |c| c.0), clip.map_or(0, |c| c.1))),
         );
         let upper = key.6.is_some().then_some(level).flatten();
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
@@ -198,7 +210,6 @@ impl SheetMaps {
             let at = scale.max(1e-6);
             // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
             let walls = Spatial::walls_differ_with(&drawing.model, at, detail);
-            let axes = kentos_native_application::road_plan_axes::has_axes(&drawing.model);
             let view = drawing
                 .model
                 .has_annotative()
@@ -215,7 +226,8 @@ impl SheetMaps {
                     }
                     let turn = f64::from(view.rotation) / 1000.0;
                     let kept = model.reading_copy();
-                    kentos_native_application::road_plan_axes::with_axes_on(model, annotation, turn).unwrap_or(kept)
+                    kentos_native_application::road_plan_axes::with_axes_on(model, annotation, turn, room)
+                        .unwrap_or(kept)
                 })
                 .map(|model| {
                     let mut spatial = Spatial::new();
@@ -829,7 +841,10 @@ impl SheetPainter<'_> {
         let options = r.primitive.map_or(&[][..], |m| &m.options[..]);
         *keep = self
             .drawing
-            .and_then(|d| self.maps.scaled(d, r.view, level, detail, options, self.spatial));
+            .and_then(|d| {
+                let clip = r.primitive.map(|m| (m.clip.width, m.clip.height));
+                self.maps.scaled(d, r.view, clip, level, detail, options, self.spatial)
+            });
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -2176,13 +2191,13 @@ mod tests {
             serde_json::from_value(serde_json::json!({"scale":100.,"rotation":0})).unwrap();
         let maps = SheetMaps::default();
         let copied = maps
-            .scaled(doc, &view, None, None, &[], &main)
+            .scaled(doc, &view, None, None, None, &[], &main)
             .expect("separate paper index despite equal project scale");
         let (_, paper) = copied.view.as_ref().unwrap();
         assert_eq!(paper.store().wall_view().detail, Detail::Schematic);
         assert_eq!(paper.store().wall_view().scale, 100.);
         main.set_screen_wall_scale(&doc.model, Some(10.));
-        let again = maps.scaled(doc, &view, None, None, &[], &main).unwrap();
+        let again = maps.scaled(doc, &view, None, None, None, &[], &main).unwrap();
         assert!(
             Rc::ptr_eq(&copied, &again),
             "camera motion does not rebuild the paper cache"
@@ -2190,7 +2205,7 @@ mod tests {
         assert_eq!(doc.model.to_snapshot_v2(), before);
         main.set_screen_wall_scale(&doc.model, None);
         assert!(
-            maps.scaled(doc, &view, None, None, &[], &main).is_none(),
+            maps.scaled(doc, &view, None, None, None, &[], &main).is_none(),
             "matching ordinary paper index may still be shared"
         );
     }
@@ -2236,7 +2251,7 @@ mod tests {
                 .expect("a view");
         let maps = SheetMaps::default();
         let copy = maps
-            .scaled(&doc, &view, None, None, &[], &main)
+            .scaled(&doc, &view, None, None, None, &[], &main)
             .expect("a copy at 1:200");
         let (_, spatial) = copy.view.as_ref().expect("its drawing");
         assert_eq!(spatial.ghost_total(), 1);

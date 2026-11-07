@@ -34,6 +34,10 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsCreate) -> Result<Chec
         pis: input.pis.clone(),
         offset_of: input.offset_of.clone(),
         stationing: input.stationing.clone().filter(|s| !s.is_empty()),
+        design_speed: input.design_speed,
+        // Docs/adr/1028: trimmed; empty is none.
+        start_place: input.start_place.as_deref().map(str::trim).filter(|n| !n.is_empty()).map(str::to_owned),
+        end_place: input.end_place.as_deref().map(str::trim).filter(|n| !n.is_empty()).map(str::to_owned),
     };
     let mut list = own.to_vec();
     list.push(def);

@@ -784,6 +784,9 @@ codes! {
     /// (docs/adr/0934 §2).
     VOLUME_CURVE_PAST_CENTRE = "volume_curve_past_centre", Warning, false, "Kübajın bir kesiti kurbun merkezini geçiyor; o aralıklar kurp düzeltmesiz sayıldı.";
     /// A warning: a side's slope meets the terrain nowhere on the swath (docs/adr/0903 §4).
+    /// A warning: sections whose design lies over ground the surface does not give; no cut or fill is counted there
+    /// (docs/adr/1034).
+    SECTION_GROUND_MISSING = "section_ground_missing", Warning, false, "Bazı kesitlerde tasarımın altında arazi yok; oradaki kazı ve dolgu alana katılmadı.";
     SECTION_OPEN = "section_open", Warning, false, "Bir yanın şevi şerit genişliği içinde araziyle buluşmuyor; şeridi genişletin.";
     /// No superelevation schedule of the id or name.
     UNKNOWN_SUPERELEVATION = "unknown_superelevation", Failed, false, "Bu kimlikte ya da adda dever çizelgesi yok.";
@@ -847,6 +850,17 @@ codes! {
     /// A progress asked that is not right: a survey that is the original ground or the same as the previous, or that does
     /// not build (docs/adr/0942).
     INVALID_VOLUME_PROGRESS = "invalid_volume_progress", Failed, false, "Dönem metrajı sorusu geçerli değil; ileti nedenini söyler.";
+    /// Surfaces compared whose heights are not shown to rest on one vertical system: a cloud's naming none, or two
+    /// naming different ones, or the drawing's points of a project naming none against a cloud's (docs/adr/1029).
+    UNPROVEN_HEIGHTS = "unproven_heights", Failed, false, "Karşılaştırılan yüzeylerin kotlarının aynı düşey sistemde olduğu gösterilemiyor; ileti hangi kaynağın sistemini bilmediğini söyler.";
+    /// A warning: the surfaces' heights were taken as one vertical system as the call asked; the result is a draft
+    /// (docs/adr/1029).
+    HEIGHTS_ASSUMED = "heights_assumed", Warning, false, "Kotların aynı düşey sistemde olduğu varsayıldı; sonuç taslaktır.";
+    /// A file for the field (a stakeout file, a design for machine control) from a project that does not say its
+    /// heights' vertical system (docs/adr/1031).
+    FIELD_HEIGHTS_UNKNOWN = "field_heights_unknown", Failed, false, "Sahaya giden kotların düşey sistemi bilinmiyor: projenin kotlarını Proje ayarları › Kotlar'da söyleyin.";
+    /// A cloud's ground in another vertical system than the project's or than another source's (docs/adr/1029).
+    CLOUD_HEIGHTS_DIFFER = "cloud_heights_differ", Failed, false, "Bulutun kotları projeninkinden ya da öbür kaynaklarınkinden başka bir düşey sistemde.";
     /// A warning: a survey leaves part of the design uncovered that the original ground covers (docs/adr/0942).
     VOLUME_PROGRESS_UNCOVERED = "volume_progress_uncovered", Warning, false, "Ara ölçü tasarımın bir kısmını örtmüyor; orada yapılan iş sayılmadı.";
     /// A warning: less work is done by the survey than by the previous one (docs/adr/0942).

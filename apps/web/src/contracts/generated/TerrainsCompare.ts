@@ -12,6 +12,8 @@ import type { CompareMethod } from "./CompareMethod";
  * Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
  * increasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over
  * 0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
- * `compare_uncovered` (part of the comparison is off the base and left out).
+ * `compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:
+ * the two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the
+ * difference is a draft (`heights_assumed`).
  */
-export type TerrainsCompare = { base: string, comparison: string, ranges?: Array<number>, method?: CompareMethod, cell?: number, cutFactor?: number, fillFactor?: number, };
+export type TerrainsCompare = { base: string, comparison: string, ranges?: Array<number>, method?: CompareMethod, cell?: number, cutFactor?: number, fillFactor?: number, assumeHeights?: boolean, };

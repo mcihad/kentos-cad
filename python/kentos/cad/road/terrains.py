@@ -15,6 +15,7 @@ from ..types import (  # noqa: F401
     CloudReturnsName,
     CompareMethod,
     CompareMethodName,
+    HeightReference,
     SurfaceSources,
     TerrainCheckpointsAsk,
     TerrainSpikesAsk,
@@ -235,11 +236,22 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
     okunan ve kalan nokta, alanın (ya da hücre kutusunun) kapsaması ve yoğunluğu, atılan
     noktaların kalan noktaların yüzeyine düşey farkı (en büyük ve karesel ortalama).
     Değerler kullanıcının: KentOS sınıf, hücre ya da tolerans vermez. Köprü tabliyesi
-    (17) ve üst yapı (19) zemine katılmaz. Uyarılar: layer_hidden,
+    (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem
+    (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar
+    ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret
+    (cloud_heights_differ; ADR 1029). heights bulutun kotlarını söyler (dosya
+    söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların kotları cad.crs.transform
+    gibi geoit modelleriyle projenin kotlarına çevrilir (H = h − N; ADR 1032) ve kayda
+    heights (from, to) yazılır; projenin kotları bilinmiyorsa heights_unknown, geoit
+    özeti ya da ızgarası yoksa geoid_required ya da geoid_missing, iki ayrı datumda
+    geoit yoksa vertical_unsupported, nokta ızgaranın dışındaysa invalid_cloud_terrain;
+    dosya başka sistem söylüyorsa cloud_heights_differ. Uyarılar: layer_hidden,
     cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project,
     not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain,
-    katmanın retleri, too_many_cloud_points, cloud_ground_empty, invalid_terrain,
-    terrain_unbuildable, invalid_revision, revision_conflict.
+    katmanın retleri, invalid_heights, heights_unknown, geoid_required, geoid_missing,
+    vertical_unsupported, cloud_heights_differ, too_many_cloud_points,
+    cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision,
+    revision_conflict.
     """
     __slots__ = ()
     id = "road.terrains.cloud"
@@ -264,6 +276,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -285,11 +298,23 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         Yüzeyin tanımına bulut kaydı yazılır: okunan ve kalan nokta, alanın (ya da hücre
         kutusunun) kapsaması ve yoğunluğu, atılan noktaların kalan noktaların yüzeyine düşey
         farkı (en büyük ve karesel ortalama). Değerler kullanıcının: KentOS sınıf, hücre ya
-        da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Uyarılar:
-        layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler:
-        not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground,
-        unknown_terrain, katmanın retleri, too_many_cloud_points, cloud_ground_empty,
-        invalid_terrain, terrain_unbuildable, invalid_revision, revision_conflict.
+        da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut
+        dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda
+        vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka
+        bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). heights bulutun
+        kotlarını söyler (dosya söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların
+        kotları cad.crs.transform gibi geoit modelleriyle projenin kotlarına çevrilir (H = h
+        − N; ADR 1032) ve kayda heights (from, to) yazılır; projenin kotları bilinmiyorsa
+        heights_unknown, geoit özeti ya da ızgarası yoksa geoid_required ya da
+        geoid_missing, iki ayrı datumda geoit yoksa vertical_unsupported, nokta ızgaranın
+        dışındaysa invalid_cloud_terrain; dosya başka sistem söylüyorsa
+        cloud_heights_differ. Uyarılar: layer_hidden, cloud_class_above_ground,
+        cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud,
+        invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri,
+        invalid_heights, heights_unknown, geoid_required, geoid_missing,
+        vertical_unsupported, cloud_heights_differ, too_many_cloud_points,
+        cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -302,6 +327,8 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines: A new surface's breaklines.
             drawing: The open drawing's file, a relative source's folder (the host gives it).
             expected_revision:
+            heights: The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them
+                turned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them.
             name: A new surface's name.
             near: Unit: length.
             returns:
@@ -329,6 +356,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -350,6 +378,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -369,6 +398,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -390,6 +420,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -409,6 +440,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -430,6 +462,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         breaklines: SurfaceSources | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         near: float | None | Unset = UNSET,
         returns: CloudReturns | CloudReturnsName = CloudReturns.ALL,
@@ -454,6 +487,7 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
             breaklines=breaklines,
             drawing=drawing,
             expected_revision=expected_revision,
+            heights=heights,
             name=name,
             near=near,
             returns=returns,
@@ -473,9 +507,13 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
     yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı
     (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki
     yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve
-    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Uyarılar:
-    compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain,
-    terrain_unbuildable.
+    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Kotlar (ADR
+    1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey
+    sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
+    gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç
+    taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
+    heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
+    unknown_terrain, unproven_heights, terrain_unbuildable.
     """
     __slots__ = ()
     id = "road.terrains.compare"
@@ -493,6 +531,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
@@ -507,13 +546,19 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında)
         ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın
         dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın
-        aralıklarının plan alanı ve aralık dışı. Uyarılar: compare_uncovered. Retler:
-        not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable.
+        aralıklarının plan alanı ve aralık dışı. Kotlar (ADR 1029): iki yüzeyin kaynakları
+        (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin
+        dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret,
+        assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen
+        iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered.
+        Retler: not_a_road_project, invalid_analysis, unknown_terrain, unproven_heights,
+        terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
             base:
             comparison:
+            assume_heights:
             cell: Unit: m.
             cut_factor: Unit: 1.
             fill_factor: Unit: 1.
@@ -534,6 +579,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.execute_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
@@ -548,6 +594,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
@@ -560,6 +607,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.plan_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
@@ -574,6 +622,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
@@ -586,6 +635,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.validate_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
@@ -600,6 +650,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         *,
         base: str,
         comparison: str,
+        assume_heights: bool | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
@@ -617,6 +668,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         return self.answer_input(doc, TerrainsCompare(
             base=base,
             comparison=comparison,
+            assume_heights=assume_heights,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
@@ -1744,8 +1796,12 @@ class _RoadTerrainsQuery(LocalCommand[TerrainsQuery, TerrainsQueried, TerrainsQu
     (inside, outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya
     da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her
     yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin
-    dışında kalıp kalmadığı (gap). Retler: not_a_road_project, unknown_terrain,
-    no_terrain, invalid_places.
+    dışında kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur
+    (interpolation: linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin
+    köşelerini (corners: x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest)
+    ve en yakın köşeye plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem
+    buluşur, verilmez. Kaynak sürümü yüzeyin özetidir (digest). Retler:
+    not_a_road_project, unknown_terrain, no_terrain, invalid_places.
     """
     __slots__ = ()
     id = "road.terrains.query"
@@ -1777,8 +1833,12 @@ class _RoadTerrainsQuery(LocalCommand[TerrainsQuery, TerrainsQueried, TerrainsQu
         outside, void; dışarıda ve boşlukta kot yok, dışa uzatılmaz), along iki ya da daha
         çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer,
         başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında
-        kalıp kalmadığı (gap). Retler: not_a_road_project, unknown_terrain, no_terrain,
-        invalid_places.
+        kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur (interpolation:
+        linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin köşelerini (corners:
+        x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest) ve en yakın köşeye
+        plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem buluşur, verilmez.
+        Kaynak sürümü yüzeyin özetidir (digest). Retler: not_a_road_project,
+        unknown_terrain, no_terrain, invalid_places.
 
         Args:
             doc: The drawing it works on.

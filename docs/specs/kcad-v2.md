@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `199`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-200.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `204`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-205.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -841,6 +841,40 @@ bir öğenin dosyası `relative` taşıyınca seçer; 192 ve öncesi alanı `unk
 **Şema 192** (ADR 0979; ROAD-ALIGN-15): aks noktasının `ove`'si (mantıksal; yalnız `true` yazılır): o noktanın kurbu bir
 sonraki noktanın kurbuna bir ove klotoidiyle bağlanır, A PI'lardan çözülür. Yazıcı 192'yi bir aks noktası `ove` taşıyınca
 seçer; 191 ve öncesi alanı `unknown_field` sayar (`broken/road-ove-in-schema-191.kcad`). Örnek `road-ove.json/.kcad`.
+
+Bu beş şema dalda 193–197 olarak yazıldı; main'le birleşirken 193–199 Harita işlerine verilmişti, 200–204 oldu.
+
+**Şema 200** (ADR 0985; ROAD-SEC-11): aksın `designSpeed`'i ve aks noktasının `speed`'i (km/sa, 0'dan büyük, en çok 200;
+paralel aksın kendisininki olmaz, kaynağınınkini kullanır). Noktanın hızı yalnız kendi kurbu içindir, yoksa aksınki
+geçerlidir; plandaki some bilgisinin `V`'si budur. Yazıcı 200'ü bir aks ya da nokta hız taşıyınca seçer; 199 ve öncesi
+alanları `unknown_field` sayar (`broken/road-speed-in-schema-199.kcad`). Örnek `road-speed.json/.kcad`.
+
+**Şema 201** (ADR 1028; ROAD-SEC-11): aksın `startPlace` ve `endPlace`'i, yolun başının ve sonunun ötesinde gittiği
+yerler (metin; kenarında boşluk olmayan, boş olmayan, en çok 80 harf, denetim karakteri yok; paralel aksın kendisininki
+olmaz). Plan paftasının uçlarındaki yön oklarının adıdır (KGM 2024: "← KAMAN"). Yazıcı 201'i bir aks yer taşıyınca
+seçer; 200 ve öncesi alanları `unknown_field` sayar (`broken/road-places-in-schema-200.kcad`). Örnek
+`road-places.json/.kcad`.
+
+**Şema 202** (ADR 1029; ROAD-NUM-04): yüzeyin bulut kaydının `vertical`'ı, bulut dosyalarının söylediği düşey sistem
+(WKT'nin `VERT_CS`/`VERTCRS` adı ya da GeoTIFF anahtarından `EPSG:n`; boş olmayan, kenarında boşluk olmayan, en çok 200
+harf, denetim karakteri yok). Yoksa sistem bilinmiyor demektir. Yazıcı 202'yi bir bulut kaydı düşey sistem taşıyınca
+seçer; 201 ve öncesi alanı `unknown_field` sayar (`broken/road-cloud-heights-in-schema-201.kcad`). Örnek
+`road-cloud-heights.json/.kcad`.
+
+**Şema 203** (ADR 1032; ROAD-NUM-03): yüzeyin bulut kaydının `heights`'ı, çağrının söylediği bulut kotları (`from`)
+ve noktaların yazıldığı projenin kotları (`to`); ikisi de projenin `heights`'ı gibi bir yükseklik tanımıdır (§ şema 85),
+türü bilinen. İkisi ayrıysa kotlar geoit modelleriyle birinden öbürüne çevrilmiştir. Yazıcı 203'ü bir bulut kaydı
+`heights` taşıyınca seçer; 202 ve öncesi alanı `unknown_field` sayar
+(`broken/road-cloud-turned-in-schema-202.kcad`). Örnek `road-cloud-turned.json/.kcad`.
+
+**Şema 204** (ADR 1041; ROAD-VOL-01): kübajın onayının (`approved` ve `history`'deki her biri) `sources`'u ve
+`algorithm`'ı, onaylanan rakamların hesaplandığı kaynaklar ve yöntemin algoritması. `sources` bir haritadır: `corridor`,
+`alignment`, `profile` (`id`, `revision`), `templates` (aynı biçimde liste, en çok 256: koridorun bölge sınırı), isteğe bağlı
+`superelevation`, `surface` (`id`, isteğe bağlı `digest` ve `built`: 64 küçük onaltılık rakam). Kimlik boş olmayan,
+en çok 64 harflik bir sözcük, sürüm 32 bitlik doğal sayıdır. `algorithm` `ad/sürüm` biçiminde (`kentos.end-area/1`;
+küçük harf, rakam, nokta ve tire, en çok 64 harf). İkisi de isteğe bağlıdır; şema 204'ten önce yapılan onayda yoktur.
+Yazıcı 204'ü bir onay bunlardan birini taşıyınca seçer; 203 ve öncesi alanları `unknown_field` sayar
+(`broken/road-approval-sources-in-schema-203.kcad`). Örnek `road-approval-sources.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

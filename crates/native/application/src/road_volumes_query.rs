@@ -16,8 +16,11 @@ fn answer(doc: &kentos_domain::Document, input: &VolumesQuery) -> Result<(Volume
         let mut volumes = Vec::new();
         for v in own {
             match common::compute(doc, v) {
-                Ok((r, w)) => {
+                Ok((mut r, w)) => {
                     warnings.extend(w);
+                    // Docs/adr/1037, 1040: what it measures, how and from what.
+                    r.basis = common::basis_of(&r);
+                    r.sources = common::sources_of(doc, v);
                     volumes.push(r);
                 }
                 Err(stop) => volumes.push(common::broken(v, words(stop))),
@@ -26,7 +29,9 @@ fn answer(doc: &kentos_domain::Document, input: &VolumesQuery) -> Result<(Volume
         return Ok((VolumesQueried { volumes }, warnings));
     };
     let (_, def) = common::find(own, name, "volume")?;
-    let (r, w) = common::compute(doc, def)?;
+    let (mut r, w) = common::compute(doc, def)?;
+    r.basis = common::basis_of(&r);
+    r.sources = common::sources_of(doc, def);
     Ok((VolumesQueried { volumes: vec![r] }, w))
 }
 

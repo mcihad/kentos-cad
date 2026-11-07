@@ -125,12 +125,13 @@ fn a_missing_value_says_what_to_type_and_the_values_are_kept() {
     let mut app = app();
     made(&mut app);
     send(&mut app, W::OpenLengths);
-    let why = window(&app).result.clone().expect("read").expect_err("no speed");
-    assert!(why.contains("Proje hızı"), "{why}");
-    lengths(&mut app, L::Field(0, "80".into()));
     let why = window(&app).result.clone().expect("read").expect_err("no criterion");
     assert!(why.contains("ölçüt"), "{why}");
+    // An empty speed is the alignment's (docs/adr/0986); this one has none, so the command asks for it.
     lengths(&mut app, L::Field(9, "0,5".into()));
+    let why = window(&app).result.clone().expect("read").expect_err("no speed anywhere");
+    assert!(why.contains("proje hızını (speed) verin ya da aksa proje hızı yazın"), "{why}");
+    lengths(&mut app, L::Field(0, "80".into()));
     let out = window(&app).result.clone().expect("read").expect("the bisector alone");
     assert!(out.curves.iter().all(|c| c.governing.as_deref() == Some("bisector")));
     // Geri keeps the typed values; the window opens again with them.

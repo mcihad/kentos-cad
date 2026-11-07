@@ -84,7 +84,8 @@ impl Lengths {
     /// The query from the typed fields; why not, in words.
     pub(crate) fn input(&self, profile: &str) -> Result<RoadProfilesLengths, String> {
         let read = |k: usize| number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]));
-        let speed = read(0)?.ok_or_else(|| format!("{} yazın.", FIELDS[0]))?;
+        // Empty: the alignment's design speed (docs/adr/0986); the command says so when it has none.
+        let speed = read(0)?;
         Ok(RoadProfilesLengths {
             profile: profile.to_owned(),
             speed,

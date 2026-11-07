@@ -535,6 +535,27 @@ def create_cases():
     egg2 = ove_pis(500, 200, 250, 0.6, 1.1, 80, 60, at=(X0, Y0 + 4000), right=True, opening=True)
     ok("Ove: açılan, sağa, klotoidli", {"name": "Açılan ove", "pis": egg2},
        {"id": "g-2", "name": "Açılan ove", "revision": 1, "pis": egg2})
+    # Docs/adr/0985: the road's design speed and a curve's own; KGM's 2019 sample writes V=110 and, at a junction, V=50.
+    fast = [sym[0], {**sym[1], "speed": 50.0}, sym[2]]
+    ok("Proje hızı 80, kavşak kurbu 50 km/sa", {"name": "Hızlı yol", "pis": fast, "designSpeed": 80.0},
+       {"id": "g-2", "name": "Hızlı yol", "revision": 1, "pis": fast, "designSpeed": 80.0})
+    no("Proje hızı 0: ret", {"name": "Hızsız", "pis": sym, "designSpeed": 0.0},
+       rule("proje hızı 0'dan büyük, en çok 200 km/sa olmalı", "designSpeed"))
+    no("Kurbun hızı 250 km/sa: ret", {"name": "Çok hızlı", "pis": [sym[0], {**sym[1], "speed": 250.0}, sym[2]]},
+       rule("proje hızı 0'dan büyük, en çok 200 km/sa olmalı", "pis[1].speed"))
+    no("Paralel aksın kendi hızı: ret",
+       {"name": "Hızlı kenar", "offsetOf": {"alignment": "g-1", "offset": 7.5}, "designSpeed": 80.0},
+       rule("paralel aksın proje hızı kaynağınındır", "designSpeed"))
+    # Docs/adr/1028: where the road leads beyond its ends, named on the plan's arrows (KGM 2024: "← KAMAN"); trimmed.
+    ok("Başında ve sonunda gidilen yerler", {"name": "Bağlantı yolu", "pis": sym, "startPlace": "  Kaman ",
+                                            "endPlace": "Ankara–Niğde Otoyolu"},
+       {"id": "g-2", "name": "Bağlantı yolu", "revision": 1, "pis": sym, "startPlace": "Kaman",
+        "endPlace": "Ankara–Niğde Otoyolu"})
+    no("Seksen harften uzun yer adı: ret", {"name": "Uzun ad", "pis": sym, "endPlace": "A" * 81},
+       rule("yer adı boş olmayan, kenarında boşluk olmayan, en çok 80 harf olmalı", "endPlace"))
+    no("Paralel aksın gittiği yer: ret",
+       {"name": "Yerli kenar", "offsetOf": {"alignment": "g-1", "offset": 7.5}, "startPlace": "Kaman"},
+       rule("paralel aksın gittiği yerler kaynağınındır", "startPlace"))
     ok("Paralel aks, sağda 7,5 m", {"name": "Sağ kenar", "offsetOf": {"alignment": "g-1", "offset": 7.5}},
        {"id": "g-2", "name": "Sağ kenar", "revision": 1, "offsetOf": {"alignment": "g-1", "offset": 7.5}})
     ok("Paralel aks, solda 12 m, kaynağın adıyla değil kimliğiyle",
@@ -658,6 +679,23 @@ def edit_cases():
     cleared["revision"] = 2
     ok("Boş km başlangıcı sıfırlar", {"alignment": "g-1", "operation": "set", "stationing": {}}, put(0, cleared), "g-1",
        mapping(main_b, build(put(0, cleared), cleared)))
+    # Docs/adr/0985: a design speed is not the geometry: the revision stays, the elements stay.
+    fast = {**MAIN, "designSpeed": 90.0}
+    ok("Proje hızı yazılır: revizyon artmaz", {"alignment": "g-1", "operation": "set", "designSpeed": 90.0}, put(0, fast),
+       "g-1", mapping(main_b, build(put(0, fast), fast)))
+    curve = {**MAIN, "pis": [MAIN_PIS[0], {**MAIN_PIS[1], "speed": 60.0}, MAIN_PIS[2]]}
+    ok("Kurbun kendi hızı: revizyon artmaz", {"alignment": "g-1", "operation": "set", "pis": curve["pis"]},
+       put(0, curve), "g-1", mapping(main_b, build(put(0, curve), curve)))
+    ok("Proje hızı 0 ile kalkar", {"alignment": "g-1", "operation": "set", "designSpeed": 0.0}, start, "g-1",
+       mapping(main_b, main_b), setup_=setup(put(0, fast)), before=put(0, fast))
+    # Docs/adr/1028: the places beyond the ends are not the geometry either; "" takes one off.
+    placed = {**MAIN, "startPlace": "Kaman", "endPlace": "Kırşehir"}
+    ok("Gidilen yerler yazılır: revizyon artmaz", {"alignment": "g-1", "operation": "set", "startPlace": "Kaman",
+                                                   "endPlace": "Kırşehir"}, put(0, placed), "g-1",
+       mapping(main_b, build(put(0, placed), placed)))
+    ok("Boş yer adı kaldırır", {"alignment": "g-1", "operation": "set", "endPlace": ""},
+       put(0, {**MAIN, "startPlace": "Kaman"}), "g-1", mapping(main_b, main_b), setup_=setup(put(0, placed)),
+       before=put(0, placed))
     off = {**LEFT, "revision": 2, "offsetOf": {"alignment": "g-1", "offset": -10.0}}
     ok("Paralel aksın ötelemesi değişir", {"alignment": "g-2", "operation": "set", "offset": -10.0}, put(1, off),
        "g-2", [])
@@ -810,7 +848,8 @@ def edit_cases():
     no("Olmayan aks", {"alignment": "g-9", "operation": "remove"},
        failed("unknown_alignment", "“g-9” kimlikli ya da adlı aks projede yok.", "alignment"))
     no("Değiştirilecek bir şey yok", {"alignment": "g-1", "operation": "set"},
-       failed("invalid_alignment", "Değiştirilecek bir şey yok: name, pis, stationing ya da offset verin."))
+       failed("invalid_alignment",
+              "Değiştirilecek bir şey yok: name, pis, stationing, offset, designSpeed, startPlace ya da endPlace verin."))
     no("Paralel aksın PI'ı olmaz", {"alignment": "g-2", "operation": "set", "pis": MAIN_PIS},
        failed("invalid_alignment", "Paralel aksın PI'ı olmaz: kaynağını izler; kaynağı düzenleyin.", "pis"))
     no("Öteleme yalnız paralel aksın", {"alignment": "g-1", "operation": "set", "offset": 3.0},

@@ -249,6 +249,7 @@ pub(crate) fn table(
             method,
             stations: crosses.len() as u32,
             rows,
+            sources: sources_of(doc, def),
         },
         warnings,
         made.sampler.alignment,
@@ -279,6 +280,55 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: StakeoutQuery) -> CommandRe
 /// The table for a window: the answer or why there is none.
 pub fn preview(doc: &Document, input: &StakeoutQuery) -> Result<(StakeoutQueried, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(words)
+}
+
+/// What the corridor's stakeout is computed from, each as it is now (docs/adr/1038, 1040): the corridor's chain and its
+/// earthwork volumes.
+fn sources_of(doc: &Document, def: &kentos_commands::CorridorDef) -> kentos_commands::StakeoutSources {
+    let chain = crate::road_sources::corridor(doc, def);
+    kentos_commands::StakeoutSources {
+        corridor: chain.corridor,
+        alignment: chain.alignment,
+        profile: chain.profile,
+        templates: chain.templates,
+        superelevation: chain.superelevation,
+        surface: Some(chain.surface),
+        volumes: doc
+            .road_volumes()
+            .iter()
+            .filter(|v| v.corridor == def.id)
+            .map(|v| kentos_commands::StakeoutVolume { id: v.id.clone(), revision: v.revision, approved: v.approved.is_some() })
+            .collect(),
+    }
+}
+
+/// The stakeout's sources and when the table was written, as a sheet beside it (docs/adr/1038): a row a source.
+pub fn sources_sheet(table: &StakeoutQueried, written: &str) -> kentos_commands::WorkbookSheet {
+    use kentos_commands::{CellKind, WorkbookColumn};
+    let column = |name: &str| WorkbookColumn { name: name.into(), kind: CellKind::Text, decimals: None };
+    let s = &table.sources;
+    let row = |what: &str, id: &str, revision: String| vec![what.to_owned(), id.to_owned(), revision];
+    let mut rows = vec![
+        row("Üretildi", written, String::new()),
+        row("Koridor", &s.corridor.id, s.corridor.revision.to_string()),
+        row("Aks", &s.alignment.id, s.alignment.revision.to_string()),
+        row("Boykesit", &s.profile.id, s.profile.revision.to_string()),
+    ];
+    rows.extend(s.templates.iter().map(|t| row("Tip kesit", &t.id, t.revision.to_string())));
+    if let Some(d) = &s.superelevation {
+        rows.push(row("Dever", &d.id, d.revision.to_string()));
+    }
+    if let Some(g) = &s.surface {
+        rows.push(row("Arazi", &g.id, crate::road_sources::surface_words(g)));
+    }
+    rows.extend(s.volumes.iter().map(|v| {
+        row("Kübaj", &v.id, format!("{}{}", v.revision, if v.approved { " (onaylı)" } else { "" }))
+    }));
+    kentos_commands::WorkbookSheet {
+        name: "Kaynaklar".into(),
+        columns: vec![column("Kaynak"), column("Kimlik"), column("Sürüm")],
+        rows,
+    }
 }
 
 /// The stakeout table as a workbook's sheet (docs/adr/0223's writer): km, region, code, side, offset (and its ground

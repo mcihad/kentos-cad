@@ -48,11 +48,15 @@ class _RoadVolumesApprove(LocalCommand[VolumesApprove, VolumesWritten, VolumesWr
     """``road.volumes.approve`` v1. Kübajı onayla: Yol projesinin kübaj hesabını (volume:
     kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit
     arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not
-    (note) kübajın tanımına yazılır. Onaylı kübajın tanımı değişmez ve silinmez;
-    kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü
-    hacmi onaylı hâliyle karşılaştırır. revoke onayı kaldırır. Tek geri alma adımı
-    “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved,
-    invalid_volume, invalid_revision, revision_conflict.
+    (note) kübajın tanımına yazılır; onay hesabın kaynaklarını (sources: koridor, aks,
+    boykesit, tip kesitler, dever sürümleri, arazinin o anki özeti ve son kabul özeti)
+    ve yöntemin algoritmasını (algorithm, ör. kentos.end-area/1) da saklar (ADR 1041,
+    KCAD şema 197). Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor,
+    aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle
+    karşılaştırır ve onaydan beri değişen kaynakları approval.moved'da sayar (source,
+    id, then, now). revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler:
+    not_a_road_project, unknown_volume, volume_not_approved, invalid_volume,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.volumes.approve"
@@ -79,11 +83,15 @@ class _RoadVolumesApprove(LocalCommand[VolumesApprove, VolumesWritten, VolumesWr
         """Kübajı onayla: Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün
         hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve
         dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına
-        yazılır. Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks,
-        boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle
-        karşılaştırır. revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler:
-        not_a_road_project, unknown_volume, volume_not_approved, invalid_volume,
-        invalid_revision, revision_conflict.
+        yazılır; onay hesabın kaynaklarını (sources: koridor, aks, boykesit, tip kesitler,
+        dever sürümleri, arazinin o anki özeti ve son kabul özeti) ve yöntemin algoritmasını
+        (algorithm, ör. kentos.end-area/1) da saklar (ADR 1041, KCAD şema 197). Onaylı
+        kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi)
+        değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır ve onaydan
+        beri değişen kaynakları approval.moved'da sayar (source, id, then, now). revoke
+        onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project,
+        unknown_volume, volume_not_approved, invalid_volume, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -821,10 +829,16 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
     işi (şimdiki eksi önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak
     özetleri (digest), yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın
     kendi işi ile örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma
-    katsayısı uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin
-    örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi).
-    Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da
-    kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.
+    katsayısı uygulanmaz). Kotlar (ADR 1029): karşılaştırılan yüzeylerin kaynakları
+    (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin
+    dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret,
+    assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen
+    iki ayrı sistem her durumda ret, sıfır ayrım ya da geoit tahmini yapılmaz. Uyarılar:
+    heights_assumed (kotlar varsayımla aynı sayıldı), volume_progress_uncovered (ölçü
+    ilk arazinin örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan
+    iş eksi). Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı,
+    ya da kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain,
+    unproven_heights (kotların düşey sistemi gösterilemiyor), invalid_volume.
     """
     __slots__ = ()
     id = "road.volumes.progress"
@@ -842,6 +856,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -858,15 +873,22 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         önceki: hakedişin kümülatif farkı) de verilir. Yüzeylerin kaynak özetleri (digest),
         yapılan payı (yüzde), örtülen ve örtülmeyen alan ve her aralığın kendi işi ile
         örtülmeyen alanı raporlanır. Hacimler yerindedir (kabarma ve sıkışma katsayısı
-        uygulanmaz). Uyarılar: volume_progress_uncovered (ölçü ilk arazinin örttüğü bir yeri
-        örtmüyor), volume_progress_backward (dönemde yapılan iş eksi). Retler:
-        invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da
-        kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, invalid_volume.
+        uygulanmaz). Kotlar (ADR 1029): karşılaştırılan yüzeylerin kaynakları (çizimin kendi
+        kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının
+        söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights:
+        true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem
+        her durumda ret, sıfır ayrım ya da geoit tahmini yapılmaz. Uyarılar: heights_assumed
+        (kotlar varsayımla aynı sayıldı), volume_progress_uncovered (ölçü ilk arazinin
+        örttüğü bir yeri örtmüyor), volume_progress_backward (dönemde yapılan iş eksi).
+        Retler: invalid_volume_progress (ölçü ilk arazi ya da önceki ölçüyle aynı, ya da
+        kurulamıyor), not_a_road_project, unknown_volume, unknown_terrain, unproven_heights
+        (kotların düşey sistemi gösterilemiyor), invalid_volume.
 
         Args:
             doc: The drawing it works on.
             volume:
             survey:
+            assume_heights:
             previous:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -883,6 +905,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.execute_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ), request_id=request_id, expected=expected)
 
@@ -893,6 +916,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
     ) -> VolumeProgressReport:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -901,6 +925,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.plan_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ))
 
@@ -911,6 +936,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -919,6 +945,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.validate_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ))
 
@@ -929,6 +956,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         *,
         volume: str,
         survey: str,
+        assume_heights: bool | Unset = UNSET,
         previous: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -942,6 +970,7 @@ class _RoadVolumesProgress(LocalCommand[VolumesProgress, VolumeProgressReport, V
         return self.answer_input(doc, VolumesProgress(
             volume=volume,
             survey=survey,
+            assume_heights=assume_heights,
             previous=previous,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -952,7 +981,22 @@ progress = _RoadVolumesProgress()
 
 class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQueried]):
     """``road.volumes.query`` v1. Kübajı sorgula: Yol projesinin kübaj hesaplarını bugün
-    hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı
+    hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü
+    basis'te söyler (ADR 1037): Netpro'nun adıyla kuralı (kuralsızda yol üstü ile zemin,
+    sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü
+    (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar
+    (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km
+    aralığı, kazının yerinde ve dolgunun sıkışmış olduğu ve yöntemin algoritması adı ve
+    sürümüyle (ADR 1040: kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1,
+    kentos.prismoidal/1, kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar
+    satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden
+    hesaplandığını sources'ta söyler (ADR 1040): koridorun, aksının, boykesitinin,
+    bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin
+    bugünkü kaynak özeti (digest) ve son kabul özeti (built). Onaylı kübajın approval'ı,
+    onay kaynaklarını saklıyorsa onaydan beri değişenleri moved'da sayar (ADR 1041): her
+    biri türü (corridor, alignment, profile, template, superelevation, surface,
+    algorithm), kimliği (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti)
+    ile; onaydan önce saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı
     ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit
     yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
     satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen
@@ -987,20 +1031,35 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         expected: Expected | None = None,
     ) -> VolumesQueried:
         """Kübajı sorgula: Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini
-        verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş
-        olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan
-        aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki
-        kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın
-        ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli
-        toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces
-        yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan
-        aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri
-        (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka
-        hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa
-        nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar,
-        bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar:
-        corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored,
-        volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.
+        verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler (ADR 1037):
+        Netpro'nun adıyla kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin)
+        ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt
+        çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları,
+        yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun
+        sıkışmış olduğu ve yöntemin algoritması adı ve sürümüyle (ADR 1040:
+        kentos.end-area/1, kurp düzeltmeli kentos.end-area-curved/1, kentos.prismoidal/1,
+        kentos.tin-overlay/1, kentos.grid-midpoint/1; toplamlar satırların km sırasıyla
+        binary64 toplamıdır). Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler
+        (ADR 1040): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
+        çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul
+        özeti (built). Onaylı kübajın approval'ı, onay kaynaklarını saklıyorsa onaydan beri
+        değişenleri moved'da sayar (ADR 1041): her biri türü (corridor, alignment, profile,
+        template, superelevation, surface, algorithm), kimliği (algoritmada adı), onaydaki
+        ve bugünkü sürümü (arazide özeti) ile; onaydan önce saklanmayan kaynaklarda liste
+        yoktur. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve
+        düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler
+        (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır:
+        km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının
+        katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları
+        ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve
+        dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve
+        diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda);
+        kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad,
+        malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile
+        yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların
+        farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale,
+        volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed.
+        Retler: not_a_road_project, unknown_volume, invalid_volume.
 
         Args:
             doc: The drawing it works on.

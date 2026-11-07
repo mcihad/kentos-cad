@@ -795,6 +795,13 @@ impl App {
         )
         .placeholder("Tip kesit");
         let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &w.check[k]).on_input(move |t| msg(Event::Check(k, t)));
+        // Empty, each curve is read at its own design speed (docs/adr/0986): say so when the alignment has one.
+        let own_speed = self.document.as_ref().is_some_and(|d| {
+            let list = d.model.road_alignments();
+            let a = list.iter().find(|a| a.id == r.alignment);
+            let source = a.and_then(|a| a.offset_of.as_ref().map_or(Some(a), |o| list.iter().find(|s| s.id == o.alignment)));
+            source.is_some_and(|s| s.design_speed.is_some() || s.pis.iter().any(|p| p.speed.is_some()))
+        });
         Form::new()
             .label_width(130.0)
             .section("Tanım")
@@ -818,7 +825,7 @@ impl App {
             .section("Denetim")
             .field("Tip kesit", on_template)
             .help("Göreli eğim bu tip kesitin şerit kenarında okunur.")
-            .field(SPEED, field(0, ""))
+            .field(SPEED, field(0, if own_speed { "kurpların kendi hızı" } else { "" }))
             .field(FRICTION, field(1, "yok"))
             .field(RELATIVE, field(2, "yok"))
             .help("Örneğin 200, 1:200 demektir. Sınırlar standardındır; KentOS sayı vermez.")

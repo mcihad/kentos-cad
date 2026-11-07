@@ -524,6 +524,30 @@ pub struct SurfaceCloudDef {
     #[cfg_attr(feature = "ts", ts(type = "number", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub outside: u64,
+    /// The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
+    /// name or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a
+    /// record made before the rule).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub vertical: Option<String>,
+    /// The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);
+    /// absent: the call said none, the points' heights are the files'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub heights: Option<CloudHeights>,
+}
+
+/// What the ground taken from clouds rests on when the call says the clouds' heights (docs/adr/1032): `from`, the
+/// clouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to
+/// the other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CloudHeights {
+    pub from: crate::HeightReference,
+    pub to: crate::HeightReference,
 }
 
 fn is_zero_u64(v: &u64) -> bool {
@@ -532,6 +556,8 @@ fn is_zero_u64(v: &u64) -> bool {
 
 /// The most cloud records a surface keeps, and the most clouds and classes one names.
 pub const MAX_SURFACE_CLOUDS: usize = 64;
+/// The most characters of a cloud record's vertical system as its file names it (docs/adr/1029).
+pub const MAX_CLOUD_VERTICAL_CHARS: usize = 200;
 
 /// What is wrong with a surface's cloud records (docs/adr/0928 §2): a record names its layer once and at least one
 /// cloud and class; the thinning's values are positive; the counts agree and the shares are shares.
@@ -564,6 +590,21 @@ fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
             || [c.error_max, c.error_rms].iter().flatten().any(|v| !(v.is_finite() && *v >= 0.0))
         {
             return Some(at("sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)"));
+        }
+        if let Some((side, why)) = c.heights.as_ref().and_then(|h| {
+            [("from", &h.from), ("to", &h.to)].into_iter().find_map(|(side, r)| {
+                if r.kind == crate::HeightKind::Unknown {
+                    return Some((side, "bilinen bir yükseklik olmalı".to_owned()));
+                }
+                r.problem().map(|(_, why)| (side, why))
+            })
+        }) {
+            return Some(at(&format!("kotlarının {side} tarafı: {why}")));
+        }
+        if c.vertical.as_deref().is_some_and(|v| {
+            v.is_empty() || v.trim() != v || v.chars().count() > MAX_CLOUD_VERTICAL_CHARS || v.chars().any(char::is_control)
+        }) {
+            return Some(at("düşey sistemi boş olmayan, kenarında boşluk olmayan, en çok 200 harf olmalı"));
         }
     }
     None
@@ -619,6 +660,12 @@ pub struct AlignmentPi {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub ove: bool,
+    /// The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):
+    /// KGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub speed: Option<f64>,
 }
 
 /// A parallel axis's source (docs/adr/0901 §8): the alignment and how far right of it (left negative).
@@ -702,6 +749,32 @@ pub struct AlignmentDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub stationing: Option<AlignmentStationing>,
+    /// The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for
+    /// and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
+    /// seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
+    /// has its source's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub design_speed: Option<f64>,
+    /// Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
+    /// on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start_place: Option<String>,
+    /// Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end_place: Option<String>,
+}
+
+/// The longest place name an alignment's end takes (docs/adr/1028): a sheet's arrow label, not a description.
+pub const MAX_PLACE_CHARS: usize = 80;
+
+/// Whether `name` is a place name an alignment's end takes: trimmed, not empty, at most [`MAX_PLACE_CHARS`] characters,
+/// no control character.
+pub fn place_ok(name: &str) -> bool {
+    name == name.trim() && !name.is_empty() && name.chars().count() <= MAX_PLACE_CHARS && !name.chars().any(char::is_control)
 }
 
 /// A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
@@ -1381,6 +1454,57 @@ pub struct VolumeBenchDef {
     pub height: f64,
 }
 
+/// A source a road answer was computed from, as it is now (docs/adr/1038, 1039, 1040): its id and revision (0 where
+/// the project has no such source).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSource {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+}
+
+/// The terrain surface a road answer was computed on (docs/adr/1038, 1039, 1040): its id, the digest of what it is
+/// made of now (the drawing's points and lines it was triangulated from, with its method; absent where the project
+/// has no such surface) and the digest it was last accepted from (absent: never accepted). The two differ when the
+/// drawing changed after the surface was accepted: the answer is the drawing's of now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadSurfaceSource {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub built: Option<String>,
+}
+
+/// What an earthwork volume is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): its corridor, the
+/// corridor's alignment and profile, its regions' templates in order and once each, its superelevation schedule and
+/// its terrain surface (the original ground; the design is the corridor's).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeSources {
+    pub corridor: RoadSource,
+    pub alignment: RoadSource,
+    pub profile: RoadSource,
+    pub templates: Vec<RoadSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<RoadSource>,
+    pub surface: RoadSurfaceSource,
+}
+
 /// An approved earthwork volume's figures (docs/adr/0906 §5): when and by which revision of its definition, a note,
 /// the totals and each stretch's cut and fill (from, to, cut, fill; the stretches with volume) as they were.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1424,6 +1548,16 @@ pub struct VolumeApprovalDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ended: Option<VolumeApprovalEnd>,
+    /// What the figures were computed from when approved, each as it was then (docs/adr/1041; schema 197): none on an
+    /// approval made before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<VolumeSources>,
+    /// The method's algorithm by name and version they were computed by (docs/adr/1040, 1041; schema 197): none on an
+    /// approval made before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub algorithm: Option<String>,
 }
 
 /// How an approval ended (docs/adr/0950): the day (YYYY-MM-DD; none where it was not given), whether it was revoked
@@ -3412,6 +3546,18 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
                     return fail(path, "onayın bitiş notu en çok 500 karakter olur");
                 }
             }
+            // Docs/adr/1041: what it was computed from and by which algorithm.
+            if let Some(s) = &a.sources
+                && let Some(words) = volume_sources_problem(s)
+            {
+                return fail(format!("{path}.sources"), &words);
+            }
+            if a.algorithm.as_deref().is_some_and(|t| !algorithm_ok(t)) {
+                return fail(
+                    format!("{path}.algorithm"),
+                    "algoritma ad/sürüm biçiminde olmalı (küçük harf, rakam, nokta ve tire; en çok 64 harf)",
+                );
+            }
             None
         };
         if let Some(a) = &v.approved {
@@ -3652,6 +3798,12 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
                 if a.stationing.is_some() {
                     return fail(at("stationing"), "paralel aksın km'si kaynağınındır");
                 }
+                if a.design_speed.is_some() {
+                    return fail(at("designSpeed"), "paralel aksın proje hızı kaynağınındır");
+                }
+                if a.start_place.is_some() || a.end_place.is_some() {
+                    return fail(at("startPlace"), "paralel aksın gittiği yerler kaynağınındır");
+                }
                 let source = list.iter().find(|b| b.id == o.alignment);
                 match source {
                     None => return fail(at("offsetOf.alignment"), "kaynak aks projede yok"),
@@ -3683,9 +3835,20 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
                     if p.radius < 0.0 || p.spiral_in < 0.0 || p.spiral_out < 0.0 {
                         return fail(pat("radius"), "yarıçap ve klotoid boyları eksi olamaz");
                     }
+                    if p.speed.is_some_and(|v| !speed_ok(v)) {
+                        return fail(pat("speed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
+                    }
                 }
             }
             _ => return fail(at("pis"), "aks ya PI'larıyla ya bir aksa paralel kurulur, ikisi birden değil"),
+        }
+        if a.design_speed.is_some_and(|v| !speed_ok(v)) {
+            return fail(at("designSpeed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
+        }
+        for (field, place) in [("startPlace", &a.start_place), ("endPlace", &a.end_place)] {
+            if place.as_deref().is_some_and(|n| !place_ok(n)) {
+                return fail(at(field), &format!("yer adı boş olmayan, kenarında boşluk olmayan, en çok {MAX_PLACE_CHARS} harf olmalı"));
+            }
         }
         if let Some(st) = &a.stationing {
             if !st.start.is_finite() {
@@ -3702,8 +3865,48 @@ fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
     None
 }
 
+/// The highest design speed a road takes (km/h, docs/adr/0985): a bound of sense, not a standard's. Design speed
+/// tables end at 130 km/h (AASHTO Green Book, RAA); Türkiye's highest legal limit is 140 km/h on toll motorways.
+pub const MAX_DESIGN_SPEED: f64 = 200.0;
+
+fn speed_ok(v: f64) -> bool {
+    v.is_finite() && v > 0.0 && v <= MAX_DESIGN_SPEED
+}
+
 fn word_ok(s: &str) -> bool {
     !s.is_empty() && s.chars().count() <= 64 && !s.chars().any(char::is_whitespace)
+}
+
+/// A digest as the road project writes it: 64 lower-case hex digits.
+fn digest_ok(d: &str) -> bool {
+    d.len() == 64 && d.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// An algorithm by name and version (docs/adr/1040): `kentos.end-area/1`; lower-case letters, digits, dots and dashes,
+/// a slash and the version's digits, at most 64 characters.
+fn algorithm_ok(t: &str) -> bool {
+    let Some((name, version)) = t.split_once('/') else { return false };
+    t.len() <= 64
+        && !name.is_empty()
+        && name.bytes().all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'-'))
+        && !version.is_empty()
+        && version.bytes().all(|b| b.is_ascii_digit())
+}
+
+/// What is wrong with a volume's sources as an approval keeps them (docs/adr/1041): ids are words, the templates at
+/// most a corridor's regions, the surface's digests 64 lower-case hex digits.
+fn volume_sources_problem(s: &VolumeSources) -> Option<String> {
+    let named = [&s.corridor, &s.alignment, &s.profile].into_iter().chain(&s.templates).chain(&s.superelevation);
+    if named.into_iter().any(|r| !word_ok(&r.id)) || !word_ok(&s.surface.id) {
+        return Some("kaynağın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı".into());
+    }
+    if s.templates.len() > MAX_CORRIDOR_REGIONS {
+        return Some(format!("en çok {MAX_CORRIDOR_REGIONS} tip kesit olur"));
+    }
+    if [&s.surface.digest, &s.surface.built].into_iter().flatten().any(|d| !digest_ok(d)) {
+        return Some("arazinin özeti 64 küçük onaltılık rakam olmalı".into());
+    }
+    None
 }
 
 fn list_problem(list: &[String]) -> Option<String> {
@@ -3725,6 +3928,38 @@ fn list_problem(list: &[String]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Docs/adr/1041: an approval's sources and algorithm as a file keeps them: ids are words, the templates at most a
+    /// corridor's regions, digests 64 lower-case hex digits, the algorithm `name/version`.
+    #[test]
+    fn an_approvals_sources_and_algorithm_are_judged() {
+        for good in ["kentos.end-area/1", "kentos.tin-overlay/12"] {
+            assert!(algorithm_ok(good), "{good}");
+        }
+        let long = format!("{}/1", "a".repeat(63));
+        for bad in ["", "kentos.end-area", "kentos.end-area/", "/1", "Kentos.end-area/1", "kentos.end area/1", "kentos.end-area/1a", &long] {
+            assert!(!algorithm_ok(bad), "{bad}");
+        }
+        let source = |id: &str| RoadSource { id: id.into(), revision: 1 };
+        let ok = VolumeSources {
+            corridor: source("c-1"),
+            alignment: source("g-1"),
+            profile: source("b-1"),
+            templates: vec![source("tk-1")],
+            superelevation: None,
+            surface: RoadSurfaceSource { id: "t-1".into(), digest: Some("a".repeat(64)), built: None },
+        };
+        assert_eq!(volume_sources_problem(&ok), None);
+        let mut spaced = ok.clone();
+        spaced.templates.push(source("iki sözcük"));
+        assert!(volume_sources_problem(&spaced).is_some());
+        let mut upper = ok.clone();
+        upper.surface.built = Some("A".repeat(64));
+        assert!(volume_sources_problem(&upper).is_some());
+        let mut many = ok.clone();
+        many.templates = vec![source("tk"); MAX_CORRIDOR_REGIONS + 1];
+        assert!(volume_sources_problem(&many).is_some());
+    }
 
     fn surface() -> TerrainSurfaceDef {
         TerrainSurfaceDef {
@@ -3827,11 +4062,14 @@ mod tests {
             name: "Ana aks".into(),
             revision: 1,
             pis: vec![
-                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
-                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
+                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None },
+                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None },
             ],
             offset_of: None,
             stationing: None,
+            design_speed: None,
+            start_place: None,
+            end_place: None,
         };
         let side = AlignmentDef {
             id: "g-2".into(),

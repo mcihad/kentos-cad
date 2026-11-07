@@ -166,6 +166,7 @@ pub(crate) fn alignment_written(
         written.profiles.push(p.name.clone());
         written_profiles.push(WProfile { name: p.name.clone(), pvis });
     }
+    let speeds = speeds_written(def, b, sta_start);
     (WAlignment {
         name: def.name.clone(),
         sta_start,
@@ -173,7 +174,40 @@ pub(crate) fn alignment_written(
         elements,
         equations: eqs,
         profiles: written_profiles,
+        speeds,
     }, written)
+}
+
+/// An alignment's design speeds over stations (docs/adr/0988): each curve with a speed of its own over its TS–ST, the
+/// alignment's in the rest; none for a parallel axis (its source's are written with the source).
+fn speeds_written(def: &AlignmentDef, b: &Built, sta_start: f64) -> Vec<kentos_formats::landxml_write::WSpeed> {
+    use kentos_formats::landxml_write::WSpeed;
+    if def.offset_of.is_some() {
+        return Vec::new();
+    }
+    let mut own: Vec<(f64, f64, f64)> = b
+        .core
+        .curves
+        .iter()
+        .filter_map(|c| {
+            let v = def.pis.iter().find(|p| p.id == c.pi)?.speed?;
+            (Some(v) != def.design_speed).then_some((c.stations[0], c.stations[3], v))
+        })
+        .collect();
+    own.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut out = Vec::new();
+    let mut at = 0.0;
+    for (a, z, v) in own {
+        if let Some(d) = def.design_speed.filter(|_| a > at + 1e-9) {
+            out.push(WSpeed { sta_start: sta_start + at, sta_end: sta_start + a, speed: d });
+        }
+        out.push(WSpeed { sta_start: sta_start + a, sta_end: sta_start + z, speed: v });
+        at = z;
+    }
+    if let Some(d) = def.design_speed.filter(|_| b.core.length > at + 1e-9) {
+        out.push(WSpeed { sta_start: sta_start + at, sta_end: sta_start + b.core.length, speed: d });
+    }
+    out
 }
 
 struct Planned {
@@ -247,12 +281,20 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
             bad("stamp", format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."))
         })?,
     };
+    // Docs/adr/1031: a design for machine control rests on the project's heights, said.
+    if input.machine_control {
+        crate::road_field::heights_said(doc, "Makine kontrolü dosyasının")?;
+        for (i, _) in &picked {
+            crate::road_field::surface_on_project(doc, &own[*i], "surfaces")?;
+        }
+    }
     let mut file = WLandXml {
         date,
         time,
         application: "KentOS Yol".into(),
         version: env!("CARGO_PKG_VERSION").into(),
         project: doc.name().to_owned(),
+        coordinate_system: crate::road_field::coordinate_system(doc),
         ..WLandXml::default()
     };
     let mut out = LandxmlExported { path: path.display().to_string(), surfaces: Vec::new(), alignments: Vec::new(), bytes: 0, sha256: String::new() };

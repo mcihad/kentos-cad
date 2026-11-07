@@ -441,12 +441,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         request_id: str | None = None,
@@ -482,12 +485,24 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             bands: The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
                 Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
                 Geometri, Düşey Geometri and Dever.
+            corridor: The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+                profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+                SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
             datum: Unit: elevation.
             every: Unit: m.
             exaggeration: Unit: 1.
             expected_revision:
             from_: Unit: m.
+            haul: The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
+                (docs/adr/0995; KGM 2019: "Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur"; the
+                2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
+                waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
             height: Unit: paper-mm.
+            span: The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
+                sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
+                split on whole metres of station where the lines would leave it, each part with its own datum (a grid step under
+                its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
+                datum, the frame as high as the lines. Unit: m.
             superelevation: The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
                 absent: the band says none was given.
             to: Unit: m.
@@ -508,12 +523,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ), request_id=request_id, expected=expected)
@@ -527,12 +545,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> ProfilesDrawn:
@@ -544,12 +565,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ))
@@ -563,12 +587,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -580,12 +607,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ))
@@ -599,12 +629,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         layer_id: str,
         at: Sequence[float],
         bands: ProfileBands | ProfileBandsName | None | Unset = UNSET,
+        corridor: str | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         every: float | None | Unset = UNSET,
         exaggeration: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         from_: float | None | Unset = UNSET,
+        haul: str | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        span: float | None | Unset = UNSET,
         superelevation: str | None | Unset = UNSET,
         to: float | None | Unset = UNSET,
         op: str = "execute",
@@ -621,12 +654,15 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
             layer_id=layer_id,
             at=list(at),
             bands=bands,
+            corridor=corridor,
             datum=datum,
             every=every,
             exaggeration=exaggeration,
             expected_revision=expected_revision,
             from_=from_,
+            haul=haul,
             height=height,
+            span=span,
             superelevation=superelevation,
             to=to,
         ), op=op, request_id=request_id, expected=expected)
@@ -1144,18 +1180,18 @@ impact = _RoadProfilesImpact()
 class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths, RoadProfileLengths]):
     """``road.profiles.lengths`` v1. Düşey kurp boyu öner: Bir boykesitin her düşey kurbu
     için verilen ölçütlerin istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz.
-    Durma görüş mesafesi v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel;
-    grades ile yaklaşma eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L
-    = A·S²/(200(√h₁ + √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme
-    görüşü (nesne göz yüksekliğinde). Çukur far (headlight, beam derece): L =
-    A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan β)/A; konfor (accel):
-    A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü kendi verirse 0.
-    Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez. Cevap: düz
-    yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki boyu (dairenin
-    aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen ölçüt, gereken ve
-    step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı. Uyarılar: profile_stale,
-    vertical_curve_short. Retler: invalid_profile_lengths, not_a_road_project,
-    unknown_road_profile.
+    speed verilmezse boykesitin aksının proje hızıdır (ADR 0986). Durma görüş mesafesi
+    v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma
+    eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ +
+    √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz
+    yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya
+    da 2S − 200(h + S·tan β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external):
+    800·E/A. Eğimler görüşü kendi verirse 0. Değerlerin hepsi standardın ya da
+    kullanıcının; KentOS sayı vermez. Cevap: düz yoldaki durma mesafesi; her kurbun tepe
+    ya da çukur oluşu, A, şimdiki boyu (dairenin aynı K'li parabol boyu R·|A|/100),
+    ölçütlerin boyları, belirleyen ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen
+    boy, kısa olup olmadığı. Uyarılar: profile_stale, vertical_curve_short. Retler:
+    invalid_profile_lengths, not_a_road_project, unknown_road_profile.
     """
     __slots__ = ()
     id = "road.profiles.lengths"
@@ -1172,7 +1208,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         /,
         *,
         profile: str,
-        speed: float,
         accel: float | None | Unset = UNSET,
         beam: float | None | Unset = UNSET,
         decel: float | None | Unset = UNSET,
@@ -1182,29 +1217,30 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         headlight: float | None | Unset = UNSET,
         object: float | None | Unset = UNSET,
         passing: float | None | Unset = UNSET,
+        speed: float | None | Unset = UNSET,
         step: float | None | Unset = UNSET,
         time: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadProfileLengths:
         """Düşey kurp boyu öner: Bir boykesitin her düşey kurbu için verilen ölçütlerin
-        istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. Durma görüş mesafesi v·t
-        + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma
-        eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ +
-        √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz
-        yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya
-        da 2S − 200(h + S·tan β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external):
-        800·E/A. Eğimler görüşü kendi verirse 0. Değerlerin hepsi standardın ya da
-        kullanıcının; KentOS sayı vermez. Cevap: düz yoldaki durma mesafesi; her kurbun tepe
-        ya da çukur oluşu, A, şimdiki boyu (dairenin aynı K'li parabol boyu R·|A|/100),
-        ölçütlerin boyları, belirleyen ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen
-        boy, kısa olup olmadığı. Uyarılar: profile_stale, vertical_curve_short. Retler:
-        invalid_profile_lengths, not_a_road_project, unknown_road_profile.
+        istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. speed verilmezse
+        boykesitin aksının proje hızıdır (ADR 0986). Durma görüş mesafesi v·t + v²/(2(a +
+        g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki
+        yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için
+        2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur
+        far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan
+        β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü
+        kendi verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez.
+        Cevap: düz yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki
+        boyu (dairenin aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen
+        ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı.
+        Uyarılar: profile_stale, vertical_curve_short. Retler: invalid_profile_lengths,
+        not_a_road_project, unknown_road_profile.
 
         Args:
             doc: The drawing it works on.
             profile:
-            speed: Unit: km/h.
             accel: Unit: m/s2.
             beam: Unit: deg.
             decel: Unit: m/s2.
@@ -1214,6 +1250,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
             headlight: Unit: m.
             object: Unit: m.
             passing: Unit: m.
+            speed: The design speed; absent: the profile's alignment's (docs/adr/0986). Unit: km/h.
             step: Unit: m.
             time: Unit: s.
             request_id: Names this write: sent again with the same call it is answered as
@@ -1230,7 +1267,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         """
         return self.execute_input(doc, RoadProfilesLengths(
             profile=profile,
-            speed=speed,
             accel=accel,
             beam=beam,
             decel=decel,
@@ -1240,6 +1276,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
             headlight=headlight,
             object=object,
             passing=passing,
+            speed=speed,
             step=step,
             time=time,
         ), request_id=request_id, expected=expected)
@@ -1250,7 +1287,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         /,
         *,
         profile: str,
-        speed: float,
         accel: float | None | Unset = UNSET,
         beam: float | None | Unset = UNSET,
         decel: float | None | Unset = UNSET,
@@ -1260,6 +1296,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         headlight: float | None | Unset = UNSET,
         object: float | None | Unset = UNSET,
         passing: float | None | Unset = UNSET,
+        speed: float | None | Unset = UNSET,
         step: float | None | Unset = UNSET,
         time: float | None | Unset = UNSET,
     ) -> RoadProfileLengths:
@@ -1268,7 +1305,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         """
         return self.plan_input(doc, RoadProfilesLengths(
             profile=profile,
-            speed=speed,
             accel=accel,
             beam=beam,
             decel=decel,
@@ -1278,6 +1314,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
             headlight=headlight,
             object=object,
             passing=passing,
+            speed=speed,
             step=step,
             time=time,
         ))
@@ -1288,7 +1325,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         /,
         *,
         profile: str,
-        speed: float,
         accel: float | None | Unset = UNSET,
         beam: float | None | Unset = UNSET,
         decel: float | None | Unset = UNSET,
@@ -1298,6 +1334,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         headlight: float | None | Unset = UNSET,
         object: float | None | Unset = UNSET,
         passing: float | None | Unset = UNSET,
+        speed: float | None | Unset = UNSET,
         step: float | None | Unset = UNSET,
         time: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -1306,7 +1343,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         """
         return self.validate_input(doc, RoadProfilesLengths(
             profile=profile,
-            speed=speed,
             accel=accel,
             beam=beam,
             decel=decel,
@@ -1316,6 +1352,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
             headlight=headlight,
             object=object,
             passing=passing,
+            speed=speed,
             step=step,
             time=time,
         ))
@@ -1326,7 +1363,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         /,
         *,
         profile: str,
-        speed: float,
         accel: float | None | Unset = UNSET,
         beam: float | None | Unset = UNSET,
         decel: float | None | Unset = UNSET,
@@ -1336,6 +1372,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         headlight: float | None | Unset = UNSET,
         object: float | None | Unset = UNSET,
         passing: float | None | Unset = UNSET,
+        speed: float | None | Unset = UNSET,
         step: float | None | Unset = UNSET,
         time: float | None | Unset = UNSET,
         op: str = "execute",
@@ -1349,7 +1386,6 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
         """
         return self.answer_input(doc, RoadProfilesLengths(
             profile=profile,
-            speed=speed,
             accel=accel,
             beam=beam,
             decel=decel,
@@ -1359,6 +1395,7 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
             headlight=headlight,
             object=object,
             passing=passing,
+            speed=speed,
             step=step,
             time=time,
         ), op=op, request_id=request_id, expected=expected)

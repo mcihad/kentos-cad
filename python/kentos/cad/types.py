@@ -269,7 +269,7 @@ AlignmentFitMethodName = Literal["elements", "bestFit"]
 class AlignmentsEditOperation(_StrEnum):
     """What `road.alignments.edit` does.
 
-    - ``set``: The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.
+    - ``set``: The given fields (`name`, `pis`, `stationing`, `offset`, `designSpeed`) replace the alignment's.
     - ``reverse``: The alignment runs the other way: its PIs in reverse order, each PI's clothoids swapped; its start km is kept and
     - ``remove``: The alignment goes; refused while a parallel axis follows it (`alignment_in_use`).
     """
@@ -3881,6 +3881,20 @@ class MaterialQuantity(_StrEnum):
 
 MaterialQuantityName = Literal["area", "volume"]
 """The names of :class:`MaterialQuantity`, for a plain string."""
+
+
+class MaterialState(_StrEnum):
+    """A material's state as a volume measures it (docs/adr/1037).
+
+    - ``inPlace``: In place (yerinde): the cut before it is dug.
+    - ``compacted``: Compacted (sıkışmış): the fill's body.
+    """
+    IN_PLACE = "inPlace"
+    COMPACTED = "compacted"
+
+
+MaterialStateName = Literal["inPlace", "compacted"]
+"""The names of :class:`MaterialState`, for a plain string."""
 
 
 class MergeDuplicates(_StrEnum):
@@ -7495,6 +7509,18 @@ TenantKindName = Literal["organization", "personal"]
 """The names of :class:`TenantKind`, for a plain string."""
 
 
+class TerrainInterpolation(_StrEnum):
+    """How a height between a surface's points is read (docs/adr/1033).
+
+    - ``linear``: On the plane through the corners of the triangle the place is in; nothing outside the surface or in a void,
+    """
+    LINEAR = "linear"
+
+
+TerrainInterpolationName = Literal["linear"]
+"""The names of :class:`TerrainInterpolation`, for a plain string."""
+
+
 class TerrainPlace(_StrEnum):
     """Where a place is on a surface."""
     INSIDE = "inside"
@@ -7924,6 +7950,20 @@ ViewMarkFormName = Literal["section", "elevation", "detail"]
 """The names of :class:`ViewMarkForm`, for a plain string."""
 
 
+class VolumeLine(_StrEnum):
+    """A line a volume is measured between (docs/adr/1037): the road's top (finished grade), the formation under its
+    pavement, the ground, or the ground under its stripped topsoil.
+    """
+    ROAD = "road"
+    FORMATION = "formation"
+    GROUND = "ground"
+    TOPSOIL = "topsoil"
+
+
+VolumeLineName = Literal["road", "formation", "ground", "topsoil"]
+"""The names of :class:`VolumeLine`, for a plain string."""
+
+
 class VolumeMethod(_StrEnum):
     """How an earthwork volume is computed (docs/adr/0906 §2–§3).
 
@@ -7960,6 +8000,35 @@ class VolumeRule(_StrEnum):
 
 VolumeRuleName = Literal["roadGround", "formationGround", "roadTopsoil", "formationTopsoil"]
 """The names of :class:`VolumeRule`, for a plain string."""
+
+
+class VolumeSides(_StrEnum):
+    """Where a volume's sides are (docs/adr/1037): each section's daylight points (the end area and prismoidal methods),
+    or the corridor's top surface's edge (the surfaces and grid methods).
+    """
+    DAYLIGHTS = "daylights"
+    CORRIDOR = "corridor"
+
+
+VolumeSidesName = Literal["daylights", "corridor"]
+"""The names of :class:`VolumeSides`, for a plain string."""
+
+
+class VolumeSourceKind(_StrEnum):
+    """A source of an approved volume (docs/adr/1041): the corridor, its alignment, profile, a template, the
+    superelevation schedule, the terrain surface, or the method's algorithm.
+    """
+    CORRIDOR = "corridor"
+    ALIGNMENT = "alignment"
+    PROFILE = "profile"
+    TEMPLATE = "template"
+    SUPERELEVATION = "superelevation"
+    SURFACE = "surface"
+    ALGORITHM = "algorithm"
+
+
+VolumeSourceKindName = Literal["corridor", "alignment", "profile", "template", "superelevation", "surface", "algorithm"]
+"""The names of :class:`VolumeSourceKind`, for a plain string."""
 
 
 class WallAnchor(_StrEnum):
@@ -13189,28 +13258,44 @@ class AlignmentDef(_Model):
     Attributes:
         id: Unique in the project; what a profile, a corridor or a parallel axis names.
         name: Its name (“Ana aks”), unique in the project.
+        design_speed: The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for
+            and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
+            seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
+            has its source's. Unit: km/h.
+        end_place: Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
         offset_of: A parallel axis's source; absent for an alignment of its own.
         pis: Its start, PIs and end; empty for a parallel axis.
         revision: Grows by one with every change of its geometry or km; absent: 0. Unit: version.
+        start_place: Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
+            on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
         stationing: Its km; absent: from 0 with no equation. A parallel axis has its source's.
     """
     id: str
     name: str
+    design_speed: float | None | Unset = UNSET
+    end_place: str | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
     pis: list[AlignmentPi] | Unset = UNSET
     revision: int | Unset = UNSET
+    start_place: str | None | Unset = UNSET
     stationing: AlignmentStationing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
+        if self.design_speed is not UNSET:
+            out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
+        if self.end_place is not UNSET:
+            out["endPlace"] = self.end_place
         if self.offset_of is not UNSET:
             out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
         if self.pis is not UNSET:
             out["pis"] = [e0.to_json() for e0 in self.pis]
         if self.revision is not UNSET:
             out["revision"] = self.revision
+        if self.start_place is not UNSET:
+            out["startPlace"] = self.start_place
         if self.stationing is not UNSET:
             out["stationing"] = None if self.stationing is None else self.stationing.to_json()
         return out
@@ -13220,9 +13305,12 @@ class AlignmentDef(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
+            design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
+            end_place=data.get("endPlace", UNSET),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
             pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
             revision=data.get("revision", UNSET),
+            start_place=data.get("startPlace", UNSET),
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
         )
 
@@ -13637,6 +13725,8 @@ class AlignmentPi(_Model):
         ove: The curve runs into the next PI's through an ove clothoid whose A is solved on the PIs (docs/adr/0979; KCAD
             schema 192): both curves turn the same way, of different radii, with no clothoid on the side they share.
         radius: The curve's radius; absent or 0: no curve (a kink). Unit: m.
+        speed: The design speed at this PI's curve (km/h), when it is not the alignment's (docs/adr/0985; KCAD schema 193):
+            KGM's 2019 sample sheets write V=110 for one curve and V=50 for a junction's on the same road. Unit: km/h.
         spiral_in: The entry clothoid's length; absent or 0: none. Unit: m.
         spiral_out: The exit clothoid's length; absent or 0: none. Unit: m.
     """
@@ -13645,6 +13735,7 @@ class AlignmentPi(_Model):
     y: float
     ove: bool | Unset = UNSET
     radius: float | Unset = UNSET
+    speed: float | None | Unset = UNSET
     spiral_in: float | Unset = UNSET
     spiral_out: float | Unset = UNSET
 
@@ -13657,6 +13748,8 @@ class AlignmentPi(_Model):
             out["ove"] = self.ove
         if self.radius is not UNSET:
             out["radius"] = float(self.radius)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
         if self.spiral_in is not UNSET:
             out["spiralIn"] = float(self.spiral_in)
         if self.spiral_out is not UNSET:
@@ -13671,6 +13764,7 @@ class AlignmentPi(_Model):
             y=float(data["y"]),
             ove=data.get("ove", UNSET),
             radius=float(data["radius"]) if "radius" in data else UNSET,
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
             spiral_in=float(data["spiralIn"]) if "spiralIn" in data else UNSET,
             spiral_out=float(data["spiralOut"]) if "spiralOut" in data else UNSET,
         )
@@ -14044,17 +14138,27 @@ class AlignmentsCreate(_Model):
     curves' tangent lengths pass each other; the message names both PIs and by how much), `invalid_stationing` (an
     equation's back km is not after the one before it on the alignment), `offset_cusp` (the parallel axis folds where
     a curve's radius is smaller than the offset, or crosses itself), `invalid_revision`, `revision_conflict`.
+    Attributes:
+        design_speed: The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve. Unit: km/h.
+        start_place: Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
     """
     name: str
+    design_speed: float | None | Unset = UNSET
+    end_place: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     id: str | None | Unset = UNSET
     offset_of: AlignmentOffset | None | Unset = UNSET
     pis: list[AlignmentPi] | Unset = UNSET
+    start_place: str | None | Unset = UNSET
     stationing: AlignmentStationing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
+        if self.design_speed is not UNSET:
+            out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
+        if self.end_place is not UNSET:
+            out["endPlace"] = self.end_place
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.id is not UNSET:
@@ -14063,6 +14167,8 @@ class AlignmentsCreate(_Model):
             out["offsetOf"] = None if self.offset_of is None else self.offset_of.to_json()
         if self.pis is not UNSET:
             out["pis"] = [e0.to_json() for e0 in self.pis]
+        if self.start_place is not UNSET:
+            out["startPlace"] = self.start_place
         if self.stationing is not UNSET:
             out["stationing"] = None if self.stationing is None else self.stationing.to_json()
         return out
@@ -14071,10 +14177,13 @@ class AlignmentsCreate(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> AlignmentsCreate:
         return cls(
             name=data["name"],
+            design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
+            end_place=data.get("endPlace", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             id=data.get("id", UNSET),
             offset_of=UNSET if "offsetOf" not in data else None if data["offsetOf"] is None else AlignmentOffset.from_json(data["offsetOf"]),
             pis=[AlignmentPi.from_json(e0) for e0 in data["pis"]] if "pis" in data else UNSET,
+            start_place=data.get("startPlace", UNSET),
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
         )
 
@@ -14089,21 +14198,31 @@ class AlignmentsEdit(_Model):
     (the edited alignment or a parallel axis following it folds), `alignment_in_use` (remove while a parallel axis
     follows it), `invalid_revision`, `revision_conflict`.
     Attributes:
+        design_speed: The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays. Unit: km/h.
         offset: A parallel axis's offset, m, right positive. Unit: m.
+        start_place: Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
+            revision stays.
         stationing: The km; an empty one (no start, no equation) clears it.
     """
     alignment: str
     operation: AlignmentsEditOperation | AlignmentsEditOperationName
+    design_speed: float | None | Unset = UNSET
+    end_place: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     pis: list[AlignmentPi] | None | Unset = UNSET
+    start_place: str | None | Unset = UNSET
     stationing: AlignmentStationing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["alignment"] = self.alignment
         out["operation"] = _enum_out(self.operation)
+        if self.design_speed is not UNSET:
+            out["designSpeed"] = None if self.design_speed is None else float(self.design_speed)
+        if self.end_place is not UNSET:
+            out["endPlace"] = self.end_place
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.name is not UNSET:
@@ -14112,6 +14231,8 @@ class AlignmentsEdit(_Model):
             out["offset"] = None if self.offset is None else float(self.offset)
         if self.pis is not UNSET:
             out["pis"] = None if self.pis is None else [e0.to_json() for e0 in self.pis]
+        if self.start_place is not UNSET:
+            out["startPlace"] = self.start_place
         if self.stationing is not UNSET:
             out["stationing"] = None if self.stationing is None else self.stationing.to_json()
         return out
@@ -14121,10 +14242,13 @@ class AlignmentsEdit(_Model):
         return cls(
             alignment=data["alignment"],
             operation=_enum_in(AlignmentsEditOperation, data["operation"]),
+            design_speed=UNSET if "designSpeed" not in data else None if data["designSpeed"] is None else float(data["designSpeed"]),
+            end_place=data.get("endPlace", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             name=data.get("name", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             pis=UNSET if "pis" not in data else None if data["pis"] is None else [AlignmentPi.from_json(e0) for e0 in data["pis"]],
+            start_place=data.get("startPlace", UNSET),
             stationing=UNSET if "stationing" not in data else None if data["stationing"] is None else AlignmentStationing.from_json(data["stationing"]),
         )
 
@@ -21454,6 +21578,29 @@ class CloudExtra(_Model):
             name=data["name"],
             kind=data["kind"],
             size=data["size"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudHeights(_Model):
+    """What the ground taken from clouds rests on when the call says the clouds' heights (docs/adr/1032): `from`, the
+    clouds' as said; `to`, the project's the points were written in. Where the two differ the heights went from one to
+    the other by the geoid models (H = h − N), as `cad.crs.transform` turns them; where they are one, unchanged.
+    """
+    from_: HeightReference
+    to: HeightReference
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_.to_json()
+        out["to"] = self.to.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudHeights:
+        return cls(
+            from_=HeightReference.from_json(data["from"]),
+            to=HeightReference.from_json(data["to"]),
         )
 
 
@@ -34898,10 +35045,15 @@ class ExportLandxml(_Model):
     there), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that
     does not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`
     (a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose
-    alignment is not written).
+    alignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with
+    `machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.
+    Attributes:
+        machine_control: For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each
+            surface's cloud ground in it (`unproven_heights`).
     """
     path: str
     alignments: list[str] | None | Unset = UNSET
+    machine_control: bool | Unset = UNSET
     overwrite: bool | Unset = UNSET
     stamp: str | None | Unset = UNSET
     surfaces: list[str] | None | Unset = UNSET
@@ -34912,6 +35064,8 @@ class ExportLandxml(_Model):
         out["path"] = self.path
         if self.alignments is not UNSET:
             out["alignments"] = None if self.alignments is None else list(self.alignments)
+        if self.machine_control is not UNSET:
+            out["machineControl"] = self.machine_control
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
         if self.stamp is not UNSET:
@@ -34927,6 +35081,7 @@ class ExportLandxml(_Model):
         return cls(
             path=data["path"],
             alignments=UNSET if "alignments" not in data else None if data["alignments"] is None else list(data["alignments"]),
+            machine_control=data.get("machineControl", UNSET),
             overwrite=data.get("overwrite", UNSET),
             stamp=data.get("stamp", UNSET),
             surfaces=UNSET if "surfaces" not in data else None if data["surfaces"] is None else list(data["surfaces"]),
@@ -68837,6 +68992,38 @@ class ProfileReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileSplit(_Model):
+    """A part of a profile view split to a fixed span of elevation (docs/adr/0990): its stations and its datum and top.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+        datum: Unit: elevation.
+        top: Unit: elevation.
+    """
+    from_: float
+    to: float
+    datum: float
+    top: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["datum"] = float(self.datum)
+        out["top"] = float(self.top)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileSplit:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            datum=float(data["datum"]),
+            top=float(data["top"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesApplied(_Model):
     """Output (and plan) of `cad.profiles.apply` v1.
     Attributes:
@@ -69032,7 +69219,7 @@ class ProfilesDraw(_Model):
 
     Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or
     `exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the
-    lowest elevation), the layer's
+    lowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's
     (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
     the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
     Attributes:
@@ -69040,11 +69227,23 @@ class ProfilesDraw(_Model):
         bands: The bands under the frame (docs/adr/0980): absent or `kentos` KentOS's rows (Km, Siyah kot, Kırmızı kot, Fark,
             Eğim); `kgm` the order KGM's 2019 technical specification asks for: Kırmızı Kot, Siyah Kot, Kilometre, Yatay
             Geometri, Düşey Geometri and Dever.
+        corridor: The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+            profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+            SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
         datum: Unit: elevation.
         every: Unit: m.
         exaggeration: Unit: 1.
         from_: Unit: m.
+        haul: The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
+            (docs/adr/0995; KGM 2019: "Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur"; the
+            2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
+            waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
         height: Unit: paper-mm.
+        span: The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
+            sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
+            split on whole metres of station where the lines would leave it, each part with its own datum (a grid step under
+            its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
+            datum, the frame as high as the lines. Unit: m.
         superelevation: The superelevation schedule drawn in the `kgm` bands' Dever band (its id or name, on the profile's alignment);
             absent: the band says none was given.
         to: Unit: m.
@@ -69053,12 +69252,15 @@ class ProfilesDraw(_Model):
     layer_id: str
     at: list[float]
     bands: ProfileBands | ProfileBandsName | None | Unset = UNSET
+    corridor: str | None | Unset = UNSET
     datum: float | None | Unset = UNSET
     every: float | None | Unset = UNSET
     exaggeration: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     from_: float | None | Unset = UNSET
+    haul: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    span: float | None | Unset = UNSET
     superelevation: str | None | Unset = UNSET
     to: float | None | Unset = UNSET
 
@@ -69069,6 +69271,8 @@ class ProfilesDraw(_Model):
         out["at"] = [float(e0) for e0 in self.at]
         if self.bands is not UNSET:
             out["bands"] = None if self.bands is None else _enum_out(self.bands)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
         if self.datum is not UNSET:
             out["datum"] = None if self.datum is None else float(self.datum)
         if self.every is not UNSET:
@@ -69079,8 +69283,12 @@ class ProfilesDraw(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.from_ is not UNSET:
             out["from"] = None if self.from_ is None else float(self.from_)
+        if self.haul is not UNSET:
+            out["haul"] = self.haul
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.span is not UNSET:
+            out["span"] = None if self.span is None else float(self.span)
         if self.superelevation is not UNSET:
             out["superelevation"] = self.superelevation
         if self.to is not UNSET:
@@ -69094,12 +69302,15 @@ class ProfilesDraw(_Model):
             layer_id=data["layerId"],
             at=[float(e0) for e0 in data["at"]],
             bands=UNSET if "bands" not in data else None if data["bands"] is None else _enum_in(ProfileBands, data["bands"]),
+            corridor=data.get("corridor", UNSET),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             every=UNSET if "every" not in data else None if data["every"] is None else float(data["every"]),
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
             expected_revision=data.get("expectedRevision", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            haul=data.get("haul", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            span=UNSET if "span" not in data else None if data["span"] is None else float(data["span"]),
             superelevation=data.get("superelevation", UNSET),
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
         )
@@ -69116,6 +69327,7 @@ class ProfilesDrawn(_Model):
         top: Unit: elevation.
         exaggeration: Unit: 1.
         grid: Unit: m.
+        splits: With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.
     """
     profile: str
     frame: list[list[float]]
@@ -69126,6 +69338,7 @@ class ProfilesDrawn(_Model):
     columns: list[ProfileAt]
     uids: list[str]
     revision: str
+    splits: list[ProfileSplit] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69138,6 +69351,8 @@ class ProfilesDrawn(_Model):
         out["columns"] = [e0.to_json() for e0 in self.columns]
         out["uids"] = list(self.uids)
         out["revision"] = self.revision
+        if self.splits is not UNSET:
+            out["splits"] = [e0.to_json() for e0 in self.splits]
         return out
 
     @classmethod
@@ -69152,6 +69367,7 @@ class ProfilesDrawn(_Model):
             columns=[ProfileAt.from_json(e0) for e0 in data["columns"]],
             uids=list(data["uids"]),
             revision=data["revision"],
+            splits=[ProfileSplit.from_json(e0) for e0 in data["splits"]] if "splits" in data else UNSET,
         )
 
 
@@ -77687,7 +77903,6 @@ class RoadProfilesLengths(_Model):
     stopping sight's time and deceleration), `not_a_road_project`, `unknown_road_profile`. Warnings:
     `vertical_curve_short` (a curve shorter than its least length), `profile_stale`.
     Attributes:
-        speed: Unit: km/h.
         accel: Unit: m/s2.
         beam: Unit: deg.
         decel: Unit: m/s2.
@@ -77696,11 +77911,11 @@ class RoadProfilesLengths(_Model):
         headlight: Unit: m.
         object: Unit: m.
         passing: Unit: m.
+        speed: The design speed; absent: the profile's alignment's (docs/adr/0986). Unit: km/h.
         step: Unit: m.
         time: Unit: s.
     """
     profile: str
-    speed: float
     accel: float | None | Unset = UNSET
     beam: float | None | Unset = UNSET
     decel: float | None | Unset = UNSET
@@ -77710,13 +77925,13 @@ class RoadProfilesLengths(_Model):
     headlight: float | None | Unset = UNSET
     object: float | None | Unset = UNSET
     passing: float | None | Unset = UNSET
+    speed: float | None | Unset = UNSET
     step: float | None | Unset = UNSET
     time: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["profile"] = self.profile
-        out["speed"] = float(self.speed)
         if self.accel is not UNSET:
             out["accel"] = None if self.accel is None else float(self.accel)
         if self.beam is not UNSET:
@@ -77735,6 +77950,8 @@ class RoadProfilesLengths(_Model):
             out["object"] = None if self.object is None else float(self.object)
         if self.passing is not UNSET:
             out["passing"] = None if self.passing is None else float(self.passing)
+        if self.speed is not UNSET:
+            out["speed"] = None if self.speed is None else float(self.speed)
         if self.step is not UNSET:
             out["step"] = None if self.step is None else float(self.step)
         if self.time is not UNSET:
@@ -77745,7 +77962,6 @@ class RoadProfilesLengths(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProfilesLengths:
         return cls(
             profile=data["profile"],
-            speed=float(data["speed"]),
             accel=UNSET if "accel" not in data else None if data["accel"] is None else float(data["accel"]),
             beam=UNSET if "beam" not in data else None if data["beam"] is None else float(data["beam"]),
             decel=UNSET if "decel" not in data else None if data["decel"] is None else float(data["decel"]),
@@ -77755,6 +77971,7 @@ class RoadProfilesLengths(_Model):
             headlight=UNSET if "headlight" not in data else None if data["headlight"] is None else float(data["headlight"]),
             object=UNSET if "object" not in data else None if data["object"] is None else float(data["object"]),
             passing=UNSET if "passing" not in data else None if data["passing"] is None else float(data["passing"]),
+            speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
             time=UNSET if "time" not in data else None if data["time"] is None else float(data["time"]),
         )
@@ -78267,8 +78484,13 @@ class RoadSheetsPlan(_Model):
     Attributes:
         at: Unit: length.
         bands: The profile views' bands (docs/adr/0980): absent or `kentos` KentOS's, `kgm` KGM's 2019 order.
+        corridor: With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
         exaggeration: Unit: 1.
         from_: Unit: m.
+        haul: With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
+        match_lines: Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+            middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
+            sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
         options: The template's paper and answers, every sheet's alike (cad.sheets.create's options but the name, centre and scale).
         overlap: Unit: m.
         scale: Unit: scale.
@@ -78278,11 +78500,14 @@ class RoadSheetsPlan(_Model):
     alignment: str
     at: list[float] | None | Unset = UNSET
     bands: ProfileBands | ProfileBandsName | None | Unset = UNSET
+    corridor: str | None | Unset = UNSET
     exaggeration: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     first: str | None | Unset = UNSET
     from_: float | None | Unset = UNSET
+    haul: str | None | Unset = UNSET
     layer_id: str | None | Unset = UNSET
+    match_lines: bool | None | Unset = UNSET
     name: str | None | Unset = UNSET
     options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
     overlap: float | None | Unset = UNSET
@@ -78299,6 +78524,8 @@ class RoadSheetsPlan(_Model):
             out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
         if self.bands is not UNSET:
             out["bands"] = None if self.bands is None else _enum_out(self.bands)
+        if self.corridor is not UNSET:
+            out["corridor"] = self.corridor
         if self.exaggeration is not UNSET:
             out["exaggeration"] = None if self.exaggeration is None else float(self.exaggeration)
         if self.expected_revision is not UNSET:
@@ -78307,8 +78534,12 @@ class RoadSheetsPlan(_Model):
             out["first"] = self.first
         if self.from_ is not UNSET:
             out["from"] = None if self.from_ is None else float(self.from_)
+        if self.haul is not UNSET:
+            out["haul"] = self.haul
         if self.layer_id is not UNSET:
             out["layerId"] = self.layer_id
+        if self.match_lines is not UNSET:
+            out["matchLines"] = self.match_lines
         if self.name is not UNSET:
             out["name"] = self.name
         out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
@@ -78332,11 +78563,14 @@ class RoadSheetsPlan(_Model):
             alignment=data["alignment"],
             at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
             bands=UNSET if "bands" not in data else None if data["bands"] is None else _enum_in(ProfileBands, data["bands"]),
+            corridor=data.get("corridor", UNSET),
             exaggeration=UNSET if "exaggeration" not in data else None if data["exaggeration"] is None else float(data["exaggeration"]),
             expected_revision=data.get("expectedRevision", UNSET),
             first=data.get("first", UNSET),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
+            haul=data.get("haul", UNSET),
             layer_id=data.get("layerId", UNSET),
+            match_lines=data.get("matchLines", UNSET),
             name=data.get("name", UNSET),
             options=data["options"] if "options" in data else dict(),
             overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
@@ -78423,6 +78657,59 @@ class RoadSheetsSections(_Model):
             scale=data.get("scale", UNSET),
             source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
             stations=[float(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadSource(_Model):
+    """A source a road answer was computed from, as it is now (docs/adr/1038, 1039, 1040): its id and revision (0 where
+    the project has no such source).
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadSource:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadSurfaceSource(_Model):
+    """The terrain surface a road answer was computed on (docs/adr/1038, 1039, 1040): its id, the digest of what it is
+    made of now (the drawing's points and lines it was triangulated from, with its method; absent where the project
+    has no such surface) and the digest it was last accepted from (absent: never accepted). The two differ when the
+    drawing changed after the surface was accepted: the answer is the drawing's of now.
+    """
+    id: str
+    built: str | None | Unset = UNSET
+    digest: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.built is not UNSET:
+            out["built"] = self.built
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadSurfaceSource:
+        return cls(
+            id=data["id"],
+            built=data.get("built", UNSET),
+            digest=data.get("digest", UNSET),
         )
 
 
@@ -79845,6 +80132,8 @@ class SectionRow(_Model):
         axis: The axis' design elevation; absent without a profile or outside it. Unit: elevation.
         cut: Unit: area.
         fill: Unit: area.
+        missing: The offset ranges of the swath off the surface (outside it or in a void), left to right (docs/adr/1034): no
+            height there, and no cut or fill counted under the design there. Unit: m.
         pavement: The template's pavement on the section, where it has one and it builds (docs/adr/0975 §2).
     """
     station: float
@@ -79856,6 +80145,7 @@ class SectionRow(_Model):
     cut: float | None | Unset = UNSET
     fill: float | None | Unset = UNSET
     left: SectionSide | None | Unset = UNSET
+    missing: list[list[float]] | Unset = UNSET
     pavement: SectionPavement | None | Unset = UNSET
     right: SectionSide | None | Unset = UNSET
 
@@ -79874,6 +80164,8 @@ class SectionRow(_Model):
             out["fill"] = None if self.fill is None else float(self.fill)
         if self.left is not UNSET:
             out["left"] = None if self.left is None else self.left.to_json()
+        if self.missing is not UNSET:
+            out["missing"] = [[float(e1) for e1 in e0] for e0 in self.missing]
         if self.pavement is not UNSET:
             out["pavement"] = None if self.pavement is None else self.pavement.to_json()
         if self.right is not UNSET:
@@ -79892,6 +80184,7 @@ class SectionRow(_Model):
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
             left=UNSET if "left" not in data else None if data["left"] is None else SectionSide.from_json(data["left"]),
+            missing=[[float(e1) for e1 in e0] for e0 in data["missing"]] if "missing" in data else UNSET,
             pavement=UNSET if "pavement" not in data else None if data["pavement"] is None else SectionPavement.from_json(data["pavement"]),
             right=UNSET if "right" not in data else None if data["right"] is None else SectionSide.from_json(data["right"]),
         )
@@ -80061,6 +80354,45 @@ class SectionSide(_Model):
             hinge=[float(e0) for e0 in data["hinge"]],
             points=[[float(e1) for e1 in e0] for e0 in data["points"]],
             daylight=UNSET if "daylight" not in data else None if data["daylight"] is None else [float(e0) for e0 in data["daylight"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SectionSources(_Model):
+    """What a set's sections are computed from, each as it is now (docs/adr/1039; ROAD-SEC-04): the set, its alignment,
+    its profile, template and superelevation schedule where it names them, and its terrain surface with the digest it
+    was last accepted from.
+    """
+    set: RoadSource
+    alignment: RoadSource
+    profile: RoadSource | None | Unset = UNSET
+    superelevation: RoadSource | None | Unset = UNSET
+    surface: RoadSurfaceSource | None | Unset = UNSET
+    template: RoadSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set.to_json()
+        out["alignment"] = self.alignment.to_json()
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        if self.template is not UNSET:
+            out["template"] = None if self.template is None else self.template.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SectionSources:
+        return cls(
+            set=RoadSource.from_json(data["set"]),
+            alignment=RoadSource.from_json(data["alignment"]),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else RoadSource.from_json(data["profile"]),
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else RoadSource.from_json(data["superelevation"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else RoadSurfaceSource.from_json(data["surface"]),
+            template=UNSET if "template" not in data else None if data["template"] is None else RoadSource.from_json(data["template"]),
         )
 
 
@@ -80301,14 +80633,20 @@ class SectionsEdit(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SectionsQueried(_Model):
-    """Output of `road.sections.query` v1."""
+    """Output of `road.sections.query` v1.
+    Attributes:
+        sources: With a set asked, what its sections are computed from, each as it is now (docs/adr/1039).
+    """
     sets: list[SectionSetReport]
     sections: list[SectionRow]
+    sources: SectionSources | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["sets"] = [e0.to_json() for e0 in self.sets]
         out["sections"] = [e0.to_json() for e0 in self.sections]
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else self.sources.to_json()
         return out
 
     @classmethod
@@ -80316,6 +80654,7 @@ class SectionsQueried(_Model):
         return cls(
             sets=[SectionSetReport.from_json(e0) for e0 in data["sets"]],
             sections=[SectionRow.from_json(e0) for e0 in data["sections"]],
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else SectionSources.from_json(data["sources"]),
         )
 
 
@@ -87154,6 +87493,7 @@ class StakeoutQueried(_Model):
     Attributes:
         method: How the offsets are given, in words.
         stations: Unit: count.
+        sources: What it was computed from (docs/adr/1038).
     """
     corridor: str
     name: str
@@ -87161,6 +87501,7 @@ class StakeoutQueried(_Model):
     method: str
     stations: int
     rows: list[StakeRow]
+    sources: StakeoutSources
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -87170,6 +87511,7 @@ class StakeoutQueried(_Model):
         out["method"] = self.method
         out["stations"] = self.stations
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["sources"] = self.sources.to_json()
         return out
 
     @classmethod
@@ -87181,6 +87523,7 @@ class StakeoutQueried(_Model):
             method=data["method"],
             stations=data["stations"],
             rows=[StakeRow.from_json(e0) for e0 in data["rows"]],
+            sources=StakeoutSources.from_json(data["sources"]),
         )
 
 
@@ -87246,8 +87589,10 @@ class StakeoutSend(_Model):
     Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid
     `path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without
     `overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot
-    carry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),
-    `export_losses` (points the format cannot carry; strings of one point).
+    carry, a first number not in [1, 99 999 999]), `field_heights_unknown` (docs/adr/1031: the project does not say its
+    heights' system; after the first number and the stamp). Warnings: the query's, `stakeout_code_dropped` (codes left
+    off), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's
+    systems in its `CoordinateSystem`.
     Attributes:
         first: Unit: count.
         from_: Unit: m.
@@ -87367,6 +87712,73 @@ class StakeoutSent(_Model):
             sha256=data["sha256"],
             alignment=data.get("alignment", UNSET),
             profile=data.get("profile", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutSources(_Model):
+    """What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and
+    profile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's
+    earthwork volumes.
+    """
+    corridor: RoadSource
+    alignment: RoadSource
+    profile: RoadSource
+    templates: list[RoadSource]
+    superelevation: RoadSource | None | Unset = UNSET
+    surface: RoadSurfaceSource | None | Unset = UNSET
+    volumes: list[StakeoutVolume] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor.to_json()
+        out["alignment"] = self.alignment.to_json()
+        out["profile"] = self.profile.to_json()
+        out["templates"] = [e0.to_json() for e0 in self.templates]
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        if self.volumes is not UNSET:
+            out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSources:
+        return cls(
+            corridor=RoadSource.from_json(data["corridor"]),
+            alignment=RoadSource.from_json(data["alignment"]),
+            profile=RoadSource.from_json(data["profile"]),
+            templates=[RoadSource.from_json(e0) for e0 in data["templates"]],
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else RoadSource.from_json(data["superelevation"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else RoadSurfaceSource.from_json(data["surface"]),
+            volumes=[StakeoutVolume.from_json(e0) for e0 in data["volumes"]] if "volumes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutVolume(_Model):
+    """An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    revision: int
+    approved: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        out["approved"] = self.approved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutVolume:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+            approved=data["approved"],
         )
 
 
@@ -90282,8 +90694,13 @@ class SurfaceCloudDef(_Model):
         density: Unit: 1.
         error_max: Unit: m.
         error_rms: Unit: m.
+        heights: The clouds' heights as the call said them and the project's they were written in (docs/adr/1032; schema 196);
+            absent: the call said none, the points' heights are the files'.
         near: Unit: m.
         outside: Unit: count.
+        vertical: The clouds' vertical system as their files name it (docs/adr/1029; schema 195): a WKT's `VERT_CS`/`VERTCRS`
+            name or `EPSG:n` (a GeoTIFF key); absent: not known (a file naming none, sources naming different ones, or a
+            record made before the rule).
         z_tolerance: Unit: m.
     """
     layer: str
@@ -90297,9 +90714,11 @@ class SurfaceCloudDef(_Model):
     area: str | None | Unset = UNSET
     error_max: float | None | Unset = UNSET
     error_rms: float | None | Unset = UNSET
+    heights: CloudHeights | None | Unset = UNSET
     near: float | None | Unset = UNSET
     outside: int | Unset = UNSET
     returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
+    vertical: str | None | Unset = UNSET
     z_tolerance: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -90318,11 +90737,15 @@ class SurfaceCloudDef(_Model):
             out["errorMax"] = None if self.error_max is None else float(self.error_max)
         if self.error_rms is not UNSET:
             out["errorRms"] = None if self.error_rms is None else float(self.error_rms)
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.near is not UNSET:
             out["near"] = None if self.near is None else float(self.near)
         if self.outside is not UNSET:
             out["outside"] = self.outside
         out["returns"] = _enum_out(self.returns)
+        if self.vertical is not UNSET:
+            out["vertical"] = self.vertical
         if self.z_tolerance is not UNSET:
             out["zTolerance"] = None if self.z_tolerance is None else float(self.z_tolerance)
         return out
@@ -90341,9 +90764,11 @@ class SurfaceCloudDef(_Model):
             area=data.get("area", UNSET),
             error_max=UNSET if "errorMax" not in data else None if data["errorMax"] is None else float(data["errorMax"]),
             error_rms=UNSET if "errorRms" not in data else None if data["errorRms"] is None else float(data["errorRms"]),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else CloudHeights.from_json(data["heights"]),
             near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
             outside=data.get("outside", UNSET),
             returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
+            vertical=data.get("vertical", UNSET),
             z_tolerance=UNSET if "zTolerance" not in data else None if data["zTolerance"] is None else float(data["zTolerance"]),
         )
 
@@ -94716,6 +95141,10 @@ class TerrainHeight(_Model):
         x: Unit: length.
         y: Unit: length.
         aspect: The azimuth it falls towards, radians clockwise from north; none on a flat triangle. Unit: rad.
+        corner: The plan distance from the place to the nearest of those corners. Unit: length.
+        corners: The triangle the height is read on (docs/adr/1033), inside one triangle only: its corners (x, y, z) ordered by
+            x, then y. Unit: length.
+        longest: That triangle's longest plan edge: how far apart the points the height rests on are (ADR 0920's estimate). Unit: length.
         slope: The plane's rise over run, inside one triangle only (on an edge or a corner two planes meet). Unit: grade.
         z: Unit: elevation.
     """
@@ -94723,6 +95152,9 @@ class TerrainHeight(_Model):
     y: float
     place: TerrainPlace | TerrainPlaceName
     aspect: float | None | Unset = UNSET
+    corner: float | None | Unset = UNSET
+    corners: list[list[float]] | None | Unset = UNSET
+    longest: float | None | Unset = UNSET
     slope: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
@@ -94733,6 +95165,12 @@ class TerrainHeight(_Model):
         out["place"] = _enum_out(self.place)
         if self.aspect is not UNSET:
             out["aspect"] = None if self.aspect is None else float(self.aspect)
+        if self.corner is not UNSET:
+            out["corner"] = None if self.corner is None else float(self.corner)
+        if self.corners is not UNSET:
+            out["corners"] = None if self.corners is None else [[float(e1) for e1 in e0] for e0 in self.corners]
+        if self.longest is not UNSET:
+            out["longest"] = None if self.longest is None else float(self.longest)
         if self.slope is not UNSET:
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.z is not UNSET:
@@ -94746,6 +95184,9 @@ class TerrainHeight(_Model):
             y=float(data["y"]),
             place=_enum_in(TerrainPlace, data["place"]),
             aspect=UNSET if "aspect" not in data else None if data["aspect"] is None else float(data["aspect"]),
+            corner=UNSET if "corner" not in data else None if data["corner"] is None else float(data["corner"]),
+            corners=UNSET if "corners" not in data else None if data["corners"] is None else [[float(e1) for e1 in e0] for e0 in data["corners"]],
+            longest=UNSET if "longest" not in data else None if data["longest"] is None else float(data["longest"]),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
@@ -94844,12 +95285,15 @@ class TerrainReport(_Model):
     """A surface as its sources give it now.
     Attributes:
         digest: The sources' digest now.
+        algorithm: The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's
+            constrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).
         built: The digest it was last accepted from.
     """
     id: str
     name: str
     state: TerrainState | TerrainStateName
     digest: str
+    algorithm: str | None | Unset = UNSET
     built: str | None | Unset = UNSET
     figures: TerrainFigures | None | Unset = UNSET
     left: list[TerrainLeft] | Unset = UNSET
@@ -94861,6 +95305,8 @@ class TerrainReport(_Model):
         out["name"] = self.name
         out["state"] = _enum_out(self.state)
         out["digest"] = self.digest
+        if self.algorithm is not UNSET:
+            out["algorithm"] = self.algorithm
         if self.built is not UNSET:
             out["built"] = self.built
         if self.figures is not UNSET:
@@ -94878,6 +95324,7 @@ class TerrainReport(_Model):
             name=data["name"],
             state=_enum_in(TerrainState, data["state"]),
             digest=data["digest"],
+            algorithm=data.get("algorithm", UNSET),
             built=data.get("built", UNSET),
             figures=UNSET if "figures" not in data else None if data["figures"] is None else TerrainFigures.from_json(data["figures"]),
             left=[TerrainLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
@@ -95250,7 +95697,9 @@ class TerrainsCompare(_Model):
     Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
     increasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over
     0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
-    `compare_uncovered` (part of the comparison is off the base and left out).
+    `compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:
+    the two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the
+    difference is a draft (`heights_assumed`).
     Attributes:
         cell: Unit: m.
         cut_factor: Unit: 1.
@@ -95259,6 +95708,7 @@ class TerrainsCompare(_Model):
     """
     base: str
     comparison: str
+    assume_heights: bool | Unset = UNSET
     cell: float | None | Unset = UNSET
     cut_factor: float | None | Unset = UNSET
     fill_factor: float | None | Unset = UNSET
@@ -95269,6 +95719,8 @@ class TerrainsCompare(_Model):
         out: dict[str, Any] = {}
         out["base"] = self.base
         out["comparison"] = self.comparison
+        if self.assume_heights is not UNSET:
+            out["assumeHeights"] = self.assume_heights
         if self.cell is not UNSET:
             out["cell"] = None if self.cell is None else float(self.cell)
         if self.cut_factor is not UNSET:
@@ -95286,6 +95738,7 @@ class TerrainsCompare(_Model):
         return cls(
             base=data["base"],
             comparison=data["comparison"],
+            assume_heights=data.get("assumeHeights", UNSET),
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
@@ -95872,6 +96325,9 @@ class TerrainsFromCloud(_Model):
     points than [`MOST_CLOUD_TERRAIN_POINTS`]), `cloud_class_not_ground` (a bridge deck, 17, or an overhead structure,
     19: they are not the ground and are not merged into it), `unknown_terrain`, the layer's, `too_many_cloud_points`,
     `cloud_ground_empty` (no point is of the classes and returns in the area), `invalid_terrain`, `terrain_unbuildable`,
+    with `heights` (docs/adr/1032, before the clouds are read) `invalid_heights`, `heights_unknown` (the project's are
+    not said), `geoid_required`, `geoid_missing`, `vertical_unsupported` (as `cad.crs.transform`), `invalid_cloud_terrain`
+    (a kept point the geoid's grid does not reach), and `cloud_heights_differ` (a file naming another system),
     `invalid_revision`,
     `revision_conflict`.
     Attributes:
@@ -95880,6 +96336,8 @@ class TerrainsFromCloud(_Model):
         boundary: A new surface's boundary: a closed polyline's or an area's id.
         breaklines: A new surface's breaklines.
         drawing: The open drawing's file, a relative source's folder (the host gives it).
+        heights: The clouds' heights as the caller knows them (docs/adr/1032), when their files do not say them or to have them
+            turned: the kept points go into the project's heights by the geoid models, as `cad.crs.transform` turns them.
         name: A new surface's name.
         near: Unit: length.
         surface: A project's surface by its id or name.
@@ -95894,6 +96352,7 @@ class TerrainsFromCloud(_Model):
     breaklines: SurfaceSources | Unset = UNSET
     drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    heights: HeightReference | None | Unset = UNSET
     name: str | None | Unset = UNSET
     near: float | None | Unset = UNSET
     returns: CloudReturns | CloudReturnsName = CloudReturns.ALL
@@ -95916,6 +96375,8 @@ class TerrainsFromCloud(_Model):
             out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.name is not UNSET:
             out["name"] = self.name
         if self.near is not UNSET:
@@ -95939,6 +96400,7 @@ class TerrainsFromCloud(_Model):
             breaklines=SurfaceSources.from_json(data["breaklines"]) if "breaklines" in data else UNSET,
             drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             name=data.get("name", UNSET),
             near=UNSET if "near" not in data else None if data["near"] is None else float(data["near"]),
             returns=_enum_in(CloudReturns, data["returns"]) if "returns" in data else CloudReturns.ALL,
@@ -96106,9 +96568,12 @@ class TerrainsQualityRead(_Model):
 class TerrainsQueried(_Model):
     """Output of `road.terrains.query` v1: the surfaces' reports (one when `surface` is given), and that one's heights
     and section.
+    Attributes:
+        interpolation: How the heights and the section were read, when either was asked (docs/adr/1033).
     """
     surfaces: list[TerrainReport]
     heights: list[TerrainHeight] | Unset = UNSET
+    interpolation: TerrainInterpolation | TerrainInterpolationName | None | Unset = UNSET
     section: list[TerrainSectionPoint] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -96116,6 +96581,8 @@ class TerrainsQueried(_Model):
         out["surfaces"] = [e0.to_json() for e0 in self.surfaces]
         if self.heights is not UNSET:
             out["heights"] = [e0.to_json() for e0 in self.heights]
+        if self.interpolation is not UNSET:
+            out["interpolation"] = None if self.interpolation is None else _enum_out(self.interpolation)
         if self.section is not UNSET:
             out["section"] = [e0.to_json() for e0 in self.section]
         return out
@@ -96125,6 +96592,7 @@ class TerrainsQueried(_Model):
         return cls(
             surfaces=[TerrainReport.from_json(e0) for e0 in data["surfaces"]],
             heights=[TerrainHeight.from_json(e0) for e0 in data["heights"]] if "heights" in data else UNSET,
+            interpolation=UNSET if "interpolation" not in data else None if data["interpolation"] is None else _enum_in(TerrainInterpolation, data["interpolation"]),
             section=[TerrainSectionPoint.from_json(e0) for e0 in data["section"]] if "section" in data else UNSET,
         )
 
@@ -96132,7 +96600,8 @@ class TerrainsQueried(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainsQuery(_Model):
     """Input of `road.terrains.query` v1: every surface's state and figures, or one's (`surface`: its id or name) with its
-    heights at places (`at`) and its section along a line (`along`, two places or more).
+    heights at places (`at`) and its section along a line (`along`, two places or more). A height says the triangle it
+    is read on, its longest edge and the nearest corner's distance, inside one triangle only (docs/adr/1033).
 
     Refusals: `not_a_road_project`, `unknown_terrain`, `no_terrain` (`at` or `along` without `surface`),
     `invalid_places` (a place not finite, a line of one place, more than 100 000 places).
@@ -100018,10 +100487,14 @@ class VolumeApprovalDef(_Model):
         factored_cut: Unit: volume.
         factored_fill: Unit: volume.
         rows: Unit: volume.
+        algorithm: The method's algorithm by name and version they were computed by (docs/adr/1040, 1041; schema 197): none on an
+            approval made before.
         bench: Unit: volume.
         ended: How it ended, in the volume's history (docs/adr/0950; schema 173): none while it stands.
         number: Its number among the volume's approvals, from 1 (docs/adr/0950; schema 173); 0: approved before approvals were
             numbered. Unit: count.
+        sources: What the figures were computed from when approved, each as it was then (docs/adr/1041; schema 197): none on an
+            approval made before.
         strip: Unit: volume.
     """
     revision: int
@@ -100031,10 +100504,12 @@ class VolumeApprovalDef(_Model):
     factored_cut: float
     factored_fill: float
     rows: list[list[float]]
+    algorithm: str | None | Unset = UNSET
     bench: float | None | Unset = UNSET
     ended: VolumeApprovalEnd | None | Unset = UNSET
     note: str | None | Unset = UNSET
     number: int | Unset = UNSET
+    sources: VolumeSources | None | Unset = UNSET
     strip: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -100046,6 +100521,8 @@ class VolumeApprovalDef(_Model):
         out["factoredCut"] = float(self.factored_cut)
         out["factoredFill"] = float(self.factored_fill)
         out["rows"] = [[float(e1) for e1 in e0] for e0 in self.rows]
+        if self.algorithm is not UNSET:
+            out["algorithm"] = self.algorithm
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
         if self.ended is not UNSET:
@@ -100054,6 +100531,8 @@ class VolumeApprovalDef(_Model):
             out["note"] = self.note
         if self.number is not UNSET:
             out["number"] = self.number
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else self.sources.to_json()
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else float(self.strip)
         return out
@@ -100068,10 +100547,12 @@ class VolumeApprovalDef(_Model):
             factored_cut=float(data["factoredCut"]),
             factored_fill=float(data["factoredFill"]),
             rows=[[float(e1) for e1 in e0] for e0 in data["rows"]],
+            algorithm=data.get("algorithm", UNSET),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             ended=UNSET if "ended" not in data else None if data["ended"] is None else VolumeApprovalEnd.from_json(data["ended"]),
             note=data.get("note", UNSET),
             number=data.get("number", UNSET),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else VolumeSources.from_json(data["sources"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
         )
 
@@ -100107,7 +100588,8 @@ class VolumeApprovalEnd(_Model):
 @dataclass(kw_only=True, slots=True)
 class VolumeApprovalReport(_Model):
     """An approved volume against today's: the approval as written, whether the figures changed, today's totals less the
-    approved ones and the stretches that changed.
+    approved ones and the stretches that changed; the sources that moved since (docs/adr/1041), in the order of
+    `VolumeSourceKind` (empty where the approval does not keep its sources: one made before).
     Attributes:
         cut_change: Unit: volume.
         fill_change: Unit: volume.
@@ -100121,6 +100603,7 @@ class VolumeApprovalReport(_Model):
     factored_cut_change: float
     factored_fill_change: float
     rows: list[VolumeRowChange]
+    moved: list[VolumeSourceMove] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -100131,6 +100614,8 @@ class VolumeApprovalReport(_Model):
         out["factoredCutChange"] = float(self.factored_cut_change)
         out["factoredFillChange"] = float(self.factored_fill_change)
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.moved is not UNSET:
+            out["moved"] = [e0.to_json() for e0 in self.moved]
         return out
 
     @classmethod
@@ -100143,6 +100628,62 @@ class VolumeApprovalReport(_Model):
             factored_cut_change=float(data["factoredCutChange"]),
             factored_fill_change=float(data["factoredFillChange"]),
             rows=[VolumeRowChange.from_json(e0) for e0 in data["rows"]],
+            moved=[VolumeSourceMove.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeBasis(_Model):
+    """What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
+    the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
+    version, the two lines, the sides, the stations it covers and the states its cut and fill are in; and how it is
+    computed (docs/adr/1040): its method's algorithm by name and version (`kentos.end-area/1`,
+    `kentos.end-area-curved/1`, `kentos.prismoidal/1`, `kentos.tin-overlay/1`, `kentos.grid-midpoint/1`).
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    name: str
+    given: bool
+    version: str
+    top: VolumeLine | VolumeLineName
+    bottom: VolumeLine | VolumeLineName
+    sides: VolumeSides | VolumeSidesName
+    from_: float
+    to: float
+    cut: MaterialState | MaterialStateName
+    fill: MaterialState | MaterialStateName
+    algorithm: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["given"] = self.given
+        out["version"] = self.version
+        out["top"] = _enum_out(self.top)
+        out["bottom"] = _enum_out(self.bottom)
+        out["sides"] = _enum_out(self.sides)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["cut"] = _enum_out(self.cut)
+        out["fill"] = _enum_out(self.fill)
+        out["algorithm"] = self.algorithm
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeBasis:
+        return cls(
+            name=data["name"],
+            given=data["given"],
+            version=data["version"],
+            top=_enum_in(VolumeLine, data["top"]),
+            bottom=_enum_in(VolumeLine, data["bottom"]),
+            sides=_enum_in(VolumeSides, data["sides"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            cut=_enum_in(MaterialState, data["cut"]),
+            fill=_enum_in(MaterialState, data["fill"]),
+            algorithm=data["algorithm"],
         )
 
 
@@ -100652,6 +101193,7 @@ class VolumeReport(_Model):
         factored_fill: Unit: volume.
         gaps: Unit: m.
         approval: The approval against today's figures, where approved.
+        basis: What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
         bench: The benches cut in all (m³), where the volume benches. Unit: volume.
         curve: With the curve correction (docs/adr/0934): how much it changed the cut and the fill (m³; the cut and fill above
             are the corrected ones).
@@ -100660,6 +101202,8 @@ class VolumeReport(_Model):
         layers: The pavement layers its templates have, by name in the order met, with their volumes in all (m³). Empty without a
             pavement.
         rule: Its rule, where it has one (docs/adr/0975 §2).
+        sources: What it is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): only in `road.volumes.query`'s
+            answer, where it computes.
         step: The sampling step it used (docs/adr/0974): the grid's cell, else the largest interval between two consecutive
             sections (m); absent where there is no interval. Unit: m.
         strip: The topsoil stripped in all (m³), where the volume strips. Unit: volume.
@@ -100678,6 +101222,7 @@ class VolumeReport(_Model):
     factored_fill: float
     gaps: list[list[float]]
     approval: VolumeApprovalReport | None | Unset = UNSET
+    basis: VolumeBasis | None | Unset = UNSET
     bench: float | None | Unset = UNSET
     curve: VolumeCurve | None | Unset = UNSET
     cut_area: float | None | Unset = UNSET
@@ -100685,6 +101230,7 @@ class VolumeReport(_Model):
     layers: list[VolumeLayer] | Unset = UNSET
     problem: str | None | Unset = UNSET
     rule: VolumeRule | VolumeRuleName | None | Unset = UNSET
+    sources: VolumeSources | None | Unset = UNSET
     step: float | None | Unset = UNSET
     strip: float | None | Unset = UNSET
     uncovered: float | None | Unset = UNSET
@@ -100705,6 +101251,8 @@ class VolumeReport(_Model):
         out["gaps"] = [[float(e1) for e1 in e0] for e0 in self.gaps]
         if self.approval is not UNSET:
             out["approval"] = None if self.approval is None else self.approval.to_json()
+        if self.basis is not UNSET:
+            out["basis"] = None if self.basis is None else self.basis.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
         if self.curve is not UNSET:
@@ -100719,6 +101267,8 @@ class VolumeReport(_Model):
             out["problem"] = self.problem
         if self.rule is not UNSET:
             out["rule"] = None if self.rule is None else _enum_out(self.rule)
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else self.sources.to_json()
         if self.step is not UNSET:
             out["step"] = None if self.step is None else float(self.step)
         if self.strip is not UNSET:
@@ -100743,6 +101293,7 @@ class VolumeReport(_Model):
             factored_fill=float(data["factoredFill"]),
             gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
             approval=UNSET if "approval" not in data else None if data["approval"] is None else VolumeApprovalReport.from_json(data["approval"]),
+            basis=UNSET if "basis" not in data else None if data["basis"] is None else VolumeBasis.from_json(data["basis"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             curve=UNSET if "curve" not in data else None if data["curve"] is None else VolumeCurve.from_json(data["curve"]),
             cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
@@ -100750,6 +101301,7 @@ class VolumeReport(_Model):
             layers=[VolumeLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             problem=data.get("problem", UNSET),
             rule=UNSET if "rule" not in data else None if data["rule"] is None else _enum_in(VolumeRule, data["rule"]),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else VolumeSources.from_json(data["sources"]),
             step=UNSET if "step" not in data else None if data["step"] is None else float(data["step"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
             uncovered=UNSET if "uncovered" not in data else None if data["uncovered"] is None else float(data["uncovered"]),
@@ -100876,6 +101428,73 @@ class VolumeRowChange(_Model):
             approved_fill=UNSET if "approvedFill" not in data else None if data["approvedFill"] is None else float(data["approvedFill"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeSourceMove(_Model):
+    """A source that is not as the approval had it (docs/adr/1041): which, its id (the algorithm's name), and what it was
+    then and is now: a revision as decimal text, the surface's digest, the algorithm's version. None then: it was no
+    source of the approved figures; none now: it is none of today's.
+    """
+    source: VolumeSourceKind | VolumeSourceKindName
+    id: str
+    now: str | None | Unset = UNSET
+    then: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = _enum_out(self.source)
+        out["id"] = self.id
+        if self.now is not UNSET:
+            out["now"] = self.now
+        if self.then is not UNSET:
+            out["then"] = self.then
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeSourceMove:
+        return cls(
+            source=_enum_in(VolumeSourceKind, data["source"]),
+            id=data["id"],
+            now=data.get("now", UNSET),
+            then=data.get("then", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeSources(_Model):
+    """What an earthwork volume is computed from, each as it is now (docs/adr/1040; ROAD-VOL-01): its corridor, the
+    corridor's alignment and profile, its regions' templates in order and once each, its superelevation schedule and
+    its terrain surface (the original ground; the design is the corridor's).
+    """
+    corridor: RoadSource
+    alignment: RoadSource
+    profile: RoadSource
+    templates: list[RoadSource]
+    surface: RoadSurfaceSource
+    superelevation: RoadSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor.to_json()
+        out["alignment"] = self.alignment.to_json()
+        out["profile"] = self.profile.to_json()
+        out["templates"] = [e0.to_json() for e0 in self.templates]
+        out["surface"] = self.surface.to_json()
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeSources:
+        return cls(
+            corridor=RoadSource.from_json(data["corridor"]),
+            alignment=RoadSource.from_json(data["alignment"]),
+            profile=RoadSource.from_json(data["profile"]),
+            templates=[RoadSource.from_json(e0) for e0 in data["templates"]],
+            surface=RoadSurfaceSource.from_json(data["surface"]),
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else RoadSource.from_json(data["superelevation"]),
         )
 
 
@@ -101457,16 +102076,21 @@ class VolumesProgress(_Model):
 
     Refusals: `not_a_road_project`, `unknown_volume`, `unknown_terrain` (a survey not in the project),
     `invalid_volume_progress` (a survey that is the original ground, the previous survey the same as the survey, a
-    survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build).
+    survey that does not build), and the volume's own (`invalid_volume`: its corridor or surface does not build),
+    `unproven_heights` (docs/adr/1029: the surfaces' heights are not shown to rest on one vertical system).
+    `assumeHeights` takes them as one: the report is then a draft (`heights_assumed`).
     """
     volume: str
     survey: str
+    assume_heights: bool | Unset = UNSET
     previous: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["volume"] = self.volume
         out["survey"] = self.survey
+        if self.assume_heights is not UNSET:
+            out["assumeHeights"] = self.assume_heights
         if self.previous is not UNSET:
             out["previous"] = self.previous
         return out
@@ -101476,6 +102100,7 @@ class VolumesProgress(_Model):
         return cls(
             volume=data["volume"],
             survey=data["survey"],
+            assume_heights=data.get("assumeHeights", UNSET),
             previous=data.get("previous", UNSET),
         )
 
@@ -125206,6 +125831,7 @@ __all__ = [
     "CloudExtra",
     "CloudFormat",
     "CloudFormatName",
+    "CloudHeights",
     "CloudMismatch",
     "CloudPoint",
     "CloudRange",
@@ -126519,6 +127145,8 @@ __all__ = [
     "MaterialQuantityName",
     "MaterialReport",
     "MaterialRow",
+    "MaterialState",
+    "MaterialStateName",
     "MaterialTarget",
     "MaterialsEdit",
     "MaterialsEdited",
@@ -127249,6 +127877,7 @@ __all__ = [
     "ProfileReport",
     "ProfileSource",
     "ProfileSourceName",
+    "ProfileSplit",
     "ProfileStore",
     "ProfileStoreName",
     "ProfilesApplied",
@@ -127652,8 +128281,10 @@ __all__ = [
     "RoadSheetsLaid",
     "RoadSheetsPlan",
     "RoadSheetsSections",
+    "RoadSource",
     "RoadSourceKind",
     "RoadSourceKindName",
+    "RoadSurfaceSource",
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",
@@ -127729,6 +128360,7 @@ __all__ = [
     "SectionSetDef",
     "SectionSetReport",
     "SectionSide",
+    "SectionSources",
     "SectionStations",
     "SectionView",
     "SectionsDraw",
@@ -128031,6 +128663,8 @@ __all__ = [
     "StakeoutSendFormat",
     "StakeoutSendFormatName",
     "StakeoutSent",
+    "StakeoutSources",
+    "StakeoutVolume",
     "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",
@@ -128292,6 +128926,8 @@ __all__ = [
     "TerrainGaps",
     "TerrainGridSlope",
     "TerrainHeight",
+    "TerrainInterpolation",
+    "TerrainInterpolationName",
     "TerrainLeft",
     "TerrainNearPair",
     "TerrainPlace",
@@ -128535,6 +129171,7 @@ __all__ = [
     "VolumeApprovalDef",
     "VolumeApprovalEnd",
     "VolumeApprovalReport",
+    "VolumeBasis",
     "VolumeBenchDef",
     "VolumeChange",
     "VolumeCurve",
@@ -128545,6 +129182,8 @@ __all__ = [
     "VolumeHistoryRead",
     "VolumeLayer",
     "VolumeLedgerRead",
+    "VolumeLine",
+    "VolumeLineName",
     "VolumeListed",
     "VolumeMethod",
     "VolumeMethodName",
@@ -128554,6 +129193,12 @@ __all__ = [
     "VolumeRowChange",
     "VolumeRule",
     "VolumeRuleName",
+    "VolumeSides",
+    "VolumeSidesName",
+    "VolumeSourceKind",
+    "VolumeSourceKindName",
+    "VolumeSourceMove",
+    "VolumeSources",
     "VolumeSpread",
     "VolumeStateRow",
     "VolumeStatesRead",

@@ -30,4 +30,20 @@ offsetOf?: AlignmentOffset,
 /**
  * Its km; absent: from 0 with no equation. A parallel axis has its source's.
  */
-stationing?: AlignmentStationing, };
+stationing?: AlignmentStationing, 
+/**
+ * The road's design speed (proje hızı, km/h; docs/adr/0985, KCAD schema 193): what its curves are designed for
+ * and the V of a curve's data on the plan (KGM 2019 şartname s. 5: “Yatay kurblar proje hızına göre
+ * seçilmelidir”; the 2024 sample sheets write `V = 80`). A PI's own `speed` stands for its curve. A parallel axis
+ * has its source's.
+ */
+designSpeed?: number, 
+/**
+ * Where the road leads beyond its start (docs/adr/1028, KCAD schema 194): the place KGM's 2024 sample sheets name
+ * on a red arrow at the plan's end toward it ("← KAMAN"). At most 80 characters. A parallel axis has its source's.
+ */
+startPlace?: string, 
+/**
+ * Where the road leads beyond its end ("ANKARA-NİĞDE OTOYOLU →"); as `start_place`.
+ */
+endPlace?: string, };

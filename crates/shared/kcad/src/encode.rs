@@ -2270,6 +2270,26 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 204 (docs/adr/1041): a volume approval's sources and algorithm.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_approval_sources) {
+        return crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES;
+    }
+    // Schema 203 (docs/adr/1032): a cloud record's heights as the call said them.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_conversions) {
+        return crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS;
+    }
+    // Schema 202 (docs/adr/1029): a cloud record's vertical system.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_heights) {
+        return crate::SCHEMA_WITH_ROAD_CLOUD_HEIGHTS;
+    }
+    // Schema 201 (docs/adr/1028): an alignment's places beyond its ends.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_places) {
+        return crate::SCHEMA_WITH_ROAD_PLACES;
+    }
+    // Schema 200 (docs/adr/0985): an alignment's design speed or a PI's own.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_speed) {
+        return crate::SCHEMA_WITH_ROAD_SPEED;
+    }
     // Schema 199 (docs/adr/1740): a GNSS archive's baselines, known points, network adjustments and network points.
     if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_network) {
         return crate::SCHEMA_WITH_GNSS_NETWORK;

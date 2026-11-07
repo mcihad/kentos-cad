@@ -352,6 +352,11 @@ pub(crate) fn surface_of(doc: &Document, def: &SectionSetDef) -> Option<Result<S
     Some(terrains::make(doc, sdef).surface.map_err(|_| gone(format!("“{}” kurulamıyor", sdef.name))))
 }
 
+/// The swath's offset ranges off the surface (docs/adr/1034): each stretch from a place to the next one flagged a gap.
+pub(crate) fn missing_of(g: &[kentos_road::section::GroundPoint]) -> Vec<[f64; 2]> {
+    g.windows(2).filter(|w| w[1].gap).map(|w| [w[0].offset, w[1].offset]).collect()
+}
+
 /// A section as a row: its station and km, its sample line's ends, the axis's elevation, the terrain along it, and
 /// the platform's sides and areas where it builds.
 pub(crate) fn row_of(
@@ -370,6 +375,7 @@ pub(crate) fn row_of(
         ends,
         axis,
         ground: g.iter().map(|p| SectionGround { offset: p.offset, z: p.z, gap: p.gap }).collect(),
+        missing: missing_of(g),
         left: section.map(|x| side_row(&x.left)),
         right: section.map(|x| side_row(&x.right)),
         cut: section.map(|x| x.cut),
@@ -510,6 +516,7 @@ fn sections_with(
         None => None,
     };
     let mut open: Vec<String> = Vec::new();
+    let mut under: Vec<String> = Vec::new();
     let mut rows = Vec::new();
     let (widths, crossing) = widths_of(def, built, stations);
     if let Some(w) = crossing_warning(def, stations, &crossing) {
@@ -550,6 +557,13 @@ fn sections_with(
                     open.push(format!("km {} {word}", km_text(km, 3)));
                 }
             }
+            // Docs/adr/1034: the design's span, outermost left to outermost right, over ground the surface does not give.
+            let ends = (sec.left.points.last().map(|p| p[0]), sec.right.points.last().map(|p| p[0]));
+            if let (Some(lo), Some(hi)) = ends
+                && missing_of(&g).iter().any(|m| m[0] < hi && m[1] > lo)
+            {
+                under.push(format!("km {}", km_text(km, 3)));
+            }
         }
         rows.push(row_of(s, km, line.ends, axis, &g, built_section.as_ref(), paved));
     }
@@ -569,6 +583,16 @@ fn sections_with(
             message: format!(
                 "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: {}. Şeridi genişletin.",
                 open.join(", ")
+            ),
+            path: Some("set".into()),
+        });
+    }
+    if !under.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::SECTION_GROUND_MISSING.into(),
+            message: format!(
+                "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): {}. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da boşluğu doldurun.",
+                under.join(", ")
             ),
             path: Some("set".into()),
         });

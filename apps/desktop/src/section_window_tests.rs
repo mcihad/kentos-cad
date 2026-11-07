@@ -505,3 +505,126 @@ fn screens_benches() {
     }
     kentos_ui::widget::sizable::sizes::forget(crate::section_window::TITLE);
 }
+
+/// Yer left empty (docs/adr/0997): the sections, drawn and laid on sheets, go under everything drawn; nothing written
+/// reaches into the drawing's box (the km over the first row's frames included).
+#[test]
+fn an_empty_place_puts_the_sections_under_the_drawing() {
+    for sheets in [false, true] {
+        let mut app = app(true);
+        let _ = app.update(Message::Run("section.editor"));
+        assert!(app.section_window.as_ref().is_some_and(|w| w.place.is_empty()), "Yer starts empty");
+        send(&mut app, W::Choose(Chosen::Set(0)));
+        send(&mut app, W::DrawLayer("0".into()));
+        let before_ids: std::collections::HashSet<u32> = model(&mut app).entities().map(|e| e.base().id).collect();
+        let doc = &app.document.as_ref().expect("doc").model;
+        app.spatial.sync(doc);
+        let before = app.spatial.extent().expect("a drawing");
+        if sheets {
+            send(&mut app, W::SheetScale("500".into()));
+            send(&mut app, W::Sheets);
+        } else {
+            send(&mut app, W::Draw);
+        }
+        let doc = &app.document.as_ref().expect("doc").model;
+        let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
+        assert!(!new.is_empty(), "the sections are drawn (sheets: {sheets})");
+        app.spatial.sync(doc);
+        let drawn = app.spatial.store().extent(Some(&new)).expect("their box");
+        assert!(drawn.max_y < before.min_y, "sheets {sheets}: the sections ({}) stay under the drawing ({})", drawn.max_y, before.min_y);
+    }
+}
+
+/// Y91's picture (docs/adr/0997): the sections drawn with Yer left empty, the model after; `.run/gui-evidence/yol-y91/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib section_window_tests::screens_place_under -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_place_under() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y91");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = app(true);
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    send(&mut app, W::DrawLayer("0".into()));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("y91-pencere.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+    send(&mut app, W::Draw);
+    send(&mut app, W::Cancel);
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("y91-model.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+}
+
+/// ROAD-SEC-08 (docs/adr/1034): a set whose design lies over ground the surface does not give says so in Enkesit, as
+/// the query's warning; its sections give the swath's stretches off the surface.
+#[test]
+fn the_window_says_where_the_design_has_no_ground() {
+    let mut app = app(true);
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(1)));
+    let w = app.section_window.as_ref().expect("open");
+    let missing = w.preview.missing.clone().expect("the warning");
+    assert!(missing.contains("km 0+050.000") && missing.contains("alana katılmadı"), "{missing}");
+    assert!(w.preview.rows.iter().any(|r| !r.missing.is_empty()), "a section gives its stretches off the surface");
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    assert!(app.section_window.as_ref().expect("open").preview.missing.is_none(), "the main set has ground under its design");
+}
+
+/// Enkesit on the side set, its first section over a stretch off the surface, light and dark; `.run/gui-evidence/yol-y99/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib section_window_tests::screens_missing -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_missing() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y99");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 760.0), "koyu")] {
+        let mut app = app(true);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("section.editor"));
+        send(&mut app, W::Choose(Chosen::Set(1)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y99-enkesit-arazisiz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// ROAD-SEC-04 (docs/adr/1039): Enkesit says what a set's sections are computed from, as the query does.
+#[test]
+fn the_window_says_what_the_sections_are_computed_from() {
+    let mut app = app(true);
+    let _ = app.update(Message::Run("section.editor"));
+    send(&mut app, W::Choose(Chosen::Set(0)));
+    let said = app.section_window.as_ref().expect("open").preview.sources.clone().expect("the sources");
+    assert!(said.starts_with("Kaynaklar: takım k-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"), "{said}");
+    // Docs/adr/1040: the ground by its digest of now, to eight digits, and its acceptance.
+    let ground = said.split(", arazi t-1 (").nth(1).expect("the ground");
+    assert!(ground.len() > 8 && ground[..8].bytes().all(|b| b.is_ascii_hexdigit()), "{said}");
+    assert!(ground.ends_with("…, kabul edilmedi)"), "{said}");
+}

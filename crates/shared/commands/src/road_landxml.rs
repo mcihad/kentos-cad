@@ -23,7 +23,8 @@ pub const FILE_EXPORT_LANDXML_VERSION: u32 = 1;
 /// there), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that
 /// does not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`
 /// (a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose
-/// alignment is not written).
+/// alignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with
+/// `machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -46,6 +47,11 @@ pub struct ExportLandxml {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub overwrite: bool,
+    /// For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each
+    /// surface's cloud ground in it (`unproven_heights`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub machine_control: bool,
 }
 
 /// A written surface: its name and its points and triangles.

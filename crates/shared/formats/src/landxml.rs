@@ -110,6 +110,17 @@ pub struct LxAlignment {
     pub equations: Vec<LxEquation>,
     pub profiles: Vec<LxProfile>,
     pub left: Vec<String>,
+    /// Its design speeds (docs/adr/0988): the `DesignSpeed`s of the `Roadway`s that name it in `alignmentRefs`.
+    pub speeds: Vec<LxSpeed>,
+}
+
+/// A design speed over stations (LandXML 1.2 `Roadways/Roadway/Speeds/DesignSpeed`, FHWA IHSDM's elements;
+/// docs/adr/0988): from `sta_start` to `sta_end` (the file's stations in metres; none: the alignment's end), km/h.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LxSpeed {
+    pub sta_start: Option<f64>,
+    pub sta_end: Option<f64>,
+    pub speed: f64,
 }
 
 /// What a LandXML file says of its surfaces and its alignments.
@@ -204,6 +215,31 @@ pub fn read(bytes: &[u8]) -> Result<LandXml, LxError> {
     for alignments in named(root, "Alignments") {
         for a in named(alignments, "Alignment") {
             out.alignments.push(alignment(a, k)?);
+        }
+    }
+    // Docs/adr/0988: a roadway's design speeds, km/h (the schema's `speed`: kilometers per hour in Metric, miles per
+    // hour in Imperial; 1 mi = 1.609344 km by definition).
+    let units = first(root, "Units").and_then(|u| u.children().find(|c| c.is_element()));
+    let kmh = match units.map(|m| (m.tag_name().name(), m.attribute("velocityUnit").unwrap_or(""))) {
+        Some((_, "metersPerSecond")) => 3.6,
+        Some((_, "feetPerSecond")) => 0.3048 * 3.6,
+        Some(("Imperial", _)) => 1.609344,
+        _ => 1.0,
+    };
+    for roadways in named(root, "Roadways") {
+        for r in named(roadways, "Roadway") {
+            let refs = r.attribute("alignmentRefs").unwrap_or("");
+            let mut speeds = Vec::new();
+            for s in named(r, "Speeds").flat_map(|s| named(s, "DesignSpeed").collect::<Vec<_>>()) {
+                let Some(v) = attr(s, "speed", kmh)? else { continue };
+                speeds.push(LxSpeed { sta_start: attr(s, "staStart", k)?, sta_end: attr(s, "staEnd", k)?, speed: v });
+            }
+            // The refs are names split on spaces; a name with spaces in it matches the whole text.
+            for a in &mut out.alignments {
+                if refs.trim() == a.name || refs.split_whitespace().any(|w| w == a.name) {
+                    a.speeds.extend(speeds.iter().cloned());
+                }
+            }
         }
     }
     Ok(out)
@@ -415,5 +451,32 @@ mod tests {
         assert_eq!(s.boundaries[0].points.len(), 3, "a closed ring's last place goes");
         assert_eq!(read(b"<a/>"), Err(LxError::NotLandXml));
         assert_eq!(read(b"<LandXML><Surfaces><Surface><Definition><Pnts><P id=\"1\">x 1 2</P></Pnts></Definition></Surface></Surfaces></LandXML>"), Err(LxError::BadNumber));
+    }
+
+    /// Docs/adr/0988: a roadway's design speeds reach the alignments its `alignmentRefs` names (a name with spaces
+    /// as the whole text), in km/h: miles per hour in Imperial (1 mi = 1.609344 km), metres per second times 3.6.
+    #[test]
+    fn a_roadways_design_speeds_reach_its_alignments() {
+        let file = |units: &str| {
+            format!(
+                r#"<LandXML version="1.2"><Units>{units}</Units>
+  <Alignments><Alignment name="Ana aks" staStart="1000" length="600"><CoordGeom/></Alignment>
+    <Alignment name="B" staStart="0" length="100"><CoordGeom/></Alignment></Alignments>
+  <Roadways><Roadway name="Ana" alignmentRefs="Ana aks"><Speeds>
+    <DesignSpeed staStart="1000" staEnd="1300" speed="80"/><DesignSpeed staStart="1300" staEnd="1600" speed="50"/>
+  </Speeds></Roadway>
+  <Roadway name="İkisi" alignmentRefs="B C"><Speeds><DesignSpeed speed="60"/></Speeds></Roadway></Roadways></LandXML>"#
+            )
+        };
+        let x = read(file(r#"<Metric linearUnit="meter"/>"#).as_bytes()).expect("reads");
+        let main = &x.alignments[0].speeds;
+        assert_eq!(main.len(), 2);
+        assert_eq!((main[0].sta_start, main[0].sta_end, main[0].speed), (Some(1000.0), Some(1300.0), 80.0));
+        assert_eq!(x.alignments[1].speeds, vec![LxSpeed { sta_start: None, sta_end: None, speed: 60.0 }]);
+        let imperial = read(file(r#"<Imperial linearUnit="foot"/>"#).as_bytes()).expect("reads");
+        assert!((imperial.alignments[0].speeds[0].speed - 80.0 * 1.609344).abs() < 1e-9);
+        assert!((imperial.alignments[0].speeds[0].sta_start.unwrap() - 1000.0 * 0.3048).abs() < 1e-9);
+        let ms = read(file(r#"<Metric linearUnit="meter" velocityUnit="metersPerSecond"/>"#).as_bytes()).expect("reads");
+        assert!((ms.alignments[1].speeds[0].speed - 216.0).abs() < 1e-9);
     }
 }

@@ -2607,6 +2607,22 @@ def document(d):
     if any(p.get("ove") for a in road.get("alignments", []) for p in a.get("pis", [])):
         # An alignment PI's ove (docs/adr/0979).
         schema = max(schema, 192)
+    if any("designSpeed" in a or any("speed" in p for p in a.get("pis", [])) for a in road.get("alignments", [])):
+        # An alignment's design speed or a PI's own (docs/adr/0985).
+        schema = max(schema, 200)
+    if any("startPlace" in a or "endPlace" in a for a in road.get("alignments", [])):
+        # An alignment's places beyond its ends (docs/adr/1028).
+        schema = max(schema, 201)
+    if any("vertical" in c for s in road.get("surfaces", []) for c in s.get("clouds", [])):
+        # A cloud record's vertical system (docs/adr/1029).
+        schema = max(schema, 202)
+    if any("heights" in c for s in road.get("surfaces", []) for c in s.get("clouds", [])):
+        # A cloud record's heights as the call said them (docs/adr/1032).
+        schema = max(schema, 203)
+    if any("sources" in a or "algorithm" in a for v in road.get("volumes", [])
+           for a in ([v["approved"]] if "approved" in v else []) + v.get("history", [])):
+        # A volume approval's sources and algorithm (docs/adr/1041).
+        schema = max(schema, 204)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3482,7 +3498,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-200.kcad"] = container(root(cmap(parts), version=uint(200)))
+    files["schema-version-205.kcad"] = container(root(cmap(parts), version=uint(205)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6170,6 +6186,36 @@ def build():
     assert od.count(b"\x67version\x18\xc0") == 1, "an ove is schema 192"
     out["road-ove.kcad"] = container(od)
     out["broken/road-ove-in-schema-191.kcad"] = container(od.replace(b"\x67version\x18\xc0", b"\x67version\x18\xbf"))
+    # Schema 200 (docs/adr/0985): an alignment's design speed and a PI's own; schema 199 refuses them as unknown.
+    sped = load("road-speed.json")
+    sd = document(sped)
+    assert sd.count(b"\x67version\x18\xc8") == 1, "a design speed is schema 200"
+    out["road-speed.kcad"] = container(sd)
+    out["broken/road-speed-in-schema-199.kcad"] = container(sd.replace(b"\x67version\x18\xc8", b"\x67version\x18\xc7"))
+    # Schema 201 (docs/adr/1028): an alignment's places beyond its ends; schema 200 refuses them as unknown.
+    placed = load("road-places.json")
+    pd = document(placed)
+    assert pd.count(b"\x67version\x18\xc9") == 1, "a place is schema 201"
+    out["road-places.kcad"] = container(pd)
+    out["broken/road-places-in-schema-200.kcad"] = container(pd.replace(b"\x67version\x18\xc9", b"\x67version\x18\xc8"))
+    # Schema 202 (docs/adr/1029): a cloud record's vertical system; schema 201 refuses it as unknown.
+    heighted = load("road-cloud-heights.json")
+    hd = document(heighted)
+    assert hd.count(b"\x67version\x18\xca") == 1, "a cloud's vertical system is schema 202"
+    out["road-cloud-heights.kcad"] = container(hd)
+    out["broken/road-cloud-heights-in-schema-201.kcad"] = container(hd.replace(b"\x67version\x18\xca", b"\x67version\x18\xc9"))
+    # Schema 203 (docs/adr/1032): a cloud record's heights as the call said them; schema 202 refuses them as unknown.
+    turned = load("road-cloud-turned.json")
+    td = document(turned)
+    assert td.count(b"\x67version\x18\xcb") == 1, "a cloud's turned heights are schema 203"
+    out["road-cloud-turned.kcad"] = container(td)
+    out["broken/road-cloud-turned-in-schema-202.kcad"] = container(td.replace(b"\x67version\x18\xcb", b"\x67version\x18\xca"))
+    # Schema 204 (docs/adr/1041): a volume approval's sources and algorithm; schema 203 refuses them as unknown.
+    sourced = load("road-approval-sources.json")
+    ad = document(sourced)
+    assert ad.count(b"\x67version\x18\xcc") == 1, "an approval's sources are schema 204"
+    out["road-approval-sources.kcad"] = container(ad)
+    out["broken/road-approval-sources-in-schema-203.kcad"] = container(ad.replace(b"\x67version\x18\xcc", b"\x67version\x18\xcb"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

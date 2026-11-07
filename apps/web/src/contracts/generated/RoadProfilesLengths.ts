@@ -16,4 +16,8 @@
  * stopping sight's time and deceleration), `not_a_road_project`, `unknown_road_profile`. Warnings:
  * `vertical_curve_short` (a curve shorter than its least length), `profile_stale`.
  */
-export type RoadProfilesLengths = { profile: string, speed: number, time?: number, decel?: number, grades?: boolean, eye?: number, object?: number, passing?: number, headlight?: number, beam?: number, accel?: number, external?: number, step?: number, };
+export type RoadProfilesLengths = { profile: string, 
+/**
+ * The design speed; absent: the profile's alignment's (docs/adr/0986).
+ */
+speed?: number, time?: number, decel?: number, grades?: boolean, eye?: number, object?: number, passing?: number, headlight?: number, beam?: number, accel?: number, external?: number, step?: number, };

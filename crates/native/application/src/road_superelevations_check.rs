@@ -27,9 +27,6 @@ pub(crate) fn answer(doc: &Document, input: &SuperelevationsCheck) -> Result<(Su
     if !positive(input.most_friction) || input.most_friction.is_some_and(|f| f >= 1.0) {
         return Err(bad("mostFriction", "En büyük yanal sürtünme 0 ile 1 arası olmalı."));
     }
-    if input.most_friction.is_some() && input.speed.is_none() {
-        return Err(bad("speed", "Yanal sürtünme bir hızda okunur: proje hızını (speed) verin."));
-    }
     if !positive(input.most_relative) || input.most_relative.is_some_and(|g| g >= 1.0) {
         return Err(bad("mostRelative", "En büyük göreli eğim 0 ile 1 arası olmalı (oran; 0,005 = 1:200)."));
     }
@@ -87,12 +84,31 @@ fn check_def(
         .into_iter()
         .map(|g| RelativeGradient { from: g.from, to: g.to, left: g.left, right: g.right })
         .collect();
-    let curves: Vec<CurveFrictionRow> = input.speed.map_or_else(Vec::new, |v| {
-        phys::curve_friction(&built.core, &schedule, normal, v, step)
-            .into_iter()
-            .map(|c| CurveFrictionRow { pi: c.pi, from: c.from, to: c.to, friction: c.most, at: c.at, radius: c.radius, e: c.e })
-            .collect()
-    });
+    // Each curve at the speed given, else at its own design speed (docs/adr/0986): its PI's, else its alignment's.
+    let own = crate::road_alignments::curve_speeds(doc, &def.alignment);
+    if input.most_friction.is_some() && input.speed.is_none() && own.is_empty() {
+        return Err(bad(
+            "speed",
+            "Yanal sürtünme bir hızda okunur: proje hızını (speed) verin ya da aksa proje hızı yazın.",
+        ));
+    }
+    let speed_of = |pi: &str| input.speed.or_else(|| own.get(pi).copied());
+    let mut speeds: Vec<f64> = match input.speed {
+        Some(v) => vec![v],
+        None => own.values().copied().collect(),
+    };
+    speeds.sort_by(f64::total_cmp);
+    speeds.dedup();
+    let mut curves: Vec<CurveFrictionRow> = speeds
+        .iter()
+        .flat_map(|&v| {
+            phys::curve_friction(&built.core, &schedule, normal, v, step)
+                .into_iter()
+                .filter(move |c| speed_of(&c.pi) == Some(v))
+                .map(|c| CurveFrictionRow { pi: c.pi, from: c.from, to: c.to, friction: c.most, at: c.at, radius: c.radius, e: c.e })
+        })
+        .collect();
+    curves.sort_by(|a, b| a.from.total_cmp(&b.from));
     let mut findings = Vec::new();
     if let Some(limit) = input.most_relative {
         for g in &gradients {
@@ -128,7 +144,7 @@ fn check_def(
                     message: format!(
                         "{} kurbu {:.0} km/sa'te yanal sürtünme {:.3} ister (km {:.2}, R {:.1} m, dever %{:.2}), en çok {:.3}.",
                         c.pi,
-                        input.speed.unwrap_or(0.0),
+                        speed_of(&c.pi).unwrap_or(0.0),
                         c.friction,
                         c.at,
                         c.radius,

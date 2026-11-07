@@ -5762,7 +5762,7 @@
         {
          "drawing": "cz-1",
          "command": "road.profiles.draw",
-         "removed": 112,
+         "removed": 134,
          "uids": "$any"
         }
        ],
@@ -5820,7 +5820,7 @@
          "state": "current",
          "parent": 3,
          "command": "road.profiles.draw",
-         "objects": 112
+         "objects": 134
         },
         {
          "kind": "profile",

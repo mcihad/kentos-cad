@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import field_write_cases as fw  # noqa: E402
 import road_corridor_command_cases as ccmd  # noqa: E402
 import road_grades  # noqa: E402
+import road_landxml_cases as lx  # noqa: E402
 import road_stakeout_cases as sref  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +40,14 @@ MOST_FIRST = 99_999_999
 FORMATS = {"landxml": ("xml", "LandXML"), "gsi16": ("gsi", "Leica GSI-16"), "gsi8": ("gsi", "Leica GSI-8"),
            "gts7": ("xyz", "Topcon GTS-7"), "jobxml": ("jxl", "Trimble JobXML"), "nikon": ("raw", "Nikon RAW"),
            "csv": ("csv", "CSV")}
+
+
+def setup(work="road", heights=lx.HEIGHTS):
+    """The stakeout's drawing; a road project says its heights' system (docs/adr/1031), as a file for the field needs."""
+    s = sref.setup(work=work)
+    if work == "road" and heights is not None:
+        s["settings"]["heights"] = copy.deepcopy(heights)
+    return s
 
 
 def bad(path, message):
@@ -244,6 +253,27 @@ def cases():
         no("Nikon RAW: ASCII olmayan iş adı", {**base, "format": "nikon", "path": tmp("raw"), "job": "Şantiye"}),
         no("Trimble JobXML: iş adında denetim karakteri", {**base, "format": "jobxml", "path": tmp("jxl"),
                                                           "job": "Ana\nyol"}),
+    ] + heights_cases(base, tmp)
+
+
+def heights_cases(base, tmp):
+    """Docs/adr/1031: the heights set out rest on the project's system, said; ellipsoidal heights are a system too."""
+    what = "Aplikasyon dosyasının"
+    csv = {**base, "format": "csv", "path": tmp("csv")}
+    result, warnings = answer(csv)
+    result["warnings"] = warnings
+    s = step("execute", csv, result, UNCHANGED)
+    s["within"] = 1e-6
+    return [
+        case("Projenin kotları söylenmemiş: ret", [step("execute", {**base, "format": "landxml", "path": tmp("xml")},
+                                                        failed("field_heights_unknown", lx.unsaid(what)), UNCHANGED)],
+             setup(heights=None)),
+        case("Ortometrik ama düşey sistemi yok: ret",
+             [step("execute", {**base, "format": "gsi16", "path": tmp("gsi")},
+                   failed("field_heights_unknown",
+                          lx.unsaid(what, "projenin kotları ortometrik ama düşey sistemi belirtilmemiş")), UNCHANGED)],
+             setup(heights={"kind": "orthometric"})),
+        case("Elipsoit yükseklikleriyle gönderilir", [s], setup(heights={"kind": "ellipsoidal"})),
     ]
 
 
@@ -253,6 +283,9 @@ def cases():
 def check_written():
     subprocess.run(["xmllint", "--noout", "--schema", str(XSD), str(WRITTEN)], check=True)
     root = ET.parse(WRITTEN).getroot()
+    # Docs/adr/1031: the systems, as PROJ's database names them.
+    cs = root.find(f"{NS}CoordinateSystem")
+    assert cs is not None and dict(cs.attrib) == lx.coordinate_system(setup()["settings"]), cs
     q = {"corridor": "Ana koridor", "from": 100.0, "to": 200.0, "step": 20.0}
     table, _ = sref.table(sref.by("Ana koridor"), q)
     want, _ = strings(table["rows"])
@@ -287,7 +320,7 @@ def main():
                     "başvurusundan, alet dosyaları field_write_cases.py'nin yazıcılarıyla (metin, boy ve SHA-256), "
                     "string yolun dizileri ADR 0908 §9'un kuralıyla; KentOS kodu yok. String yolun içeriği "
                     "--written ile xmllint ve başvuruyla denetlenir.",
-            "setup": sref.setup(), "cases": cases()}
+            "setup": setup(), "cases": cases()}
     data = road_grades.fixture(data)
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv:

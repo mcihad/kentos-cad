@@ -238,7 +238,7 @@ fn extras(cloud: &Cloud) -> Vec<CloudExtra> {
 }
 
 /// The vertical system the file names: a WKT's `VERT_CS`/`VERTCRS` name, else a GeoTIFF key 4096's `EPSG:n`.
-fn vertical(cloud: &Cloud) -> Option<String> {
+pub(crate) fn vertical(cloud: &Cloud) -> Option<String> {
     if let Some(w) = &cloud.crs.wkt {
         for tag in ["VERT_CS[\"", "VERTCRS[\"", "VERTICALCRS[\""] {
             if let Some(i) = w.find(tag) {

@@ -668,6 +668,34 @@ pub(crate) fn road_has_pavement(road: &kentos_contracts::RoadSettings) -> bool {
     road.templates.iter().any(|t| t.pavement.is_some()) || road.volumes.iter().any(|v| v.rule.is_some())
 }
 
+/// Whether road settings carry schema 204's fields: a volume approval's sources or algorithm (docs/adr/1041).
+pub(crate) fn road_has_approval_sources(road: &kentos_contracts::RoadSettings) -> bool {
+    road.volumes
+        .iter()
+        .flat_map(|v| v.approved.iter().chain(&v.history))
+        .any(|a| a.sources.is_some() || a.algorithm.is_some())
+}
+
+/// Whether road settings carry schema 203's fields: a cloud record's heights as the call said them (docs/adr/1032).
+pub(crate) fn road_has_cloud_conversions(road: &kentos_contracts::RoadSettings) -> bool {
+    road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.heights.is_some()))
+}
+
+/// Whether road settings carry schema 202's fields: a cloud record's vertical system (docs/adr/1029).
+pub(crate) fn road_has_cloud_heights(road: &kentos_contracts::RoadSettings) -> bool {
+    road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.vertical.is_some()))
+}
+
+/// Whether road settings carry schema 201's fields: an alignment's places beyond its ends (docs/adr/1028).
+pub(crate) fn road_has_places(road: &kentos_contracts::RoadSettings) -> bool {
+    road.alignments.iter().any(|a| a.start_place.is_some() || a.end_place.is_some())
+}
+
+/// Whether road settings carry schema 200's fields: an alignment's design speed or a PI's own (docs/adr/0985).
+pub(crate) fn road_has_speed(road: &kentos_contracts::RoadSettings) -> bool {
+    road.alignments.iter().any(|a| a.design_speed.is_some() || a.pis.iter().any(|p| p.speed.is_some()))
+}
+
 /// Whether road settings carry schema 192's field: an alignment PI's ove (docs/adr/0979).
 pub(crate) fn road_has_ove(road: &kentos_contracts::RoadSettings) -> bool {
     road.alignments.iter().any(|a| a.pis.iter().any(|p| p.ove))
@@ -1527,6 +1555,21 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 if !has.road_ove && road_has_ove(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "aks noktasının ovesi şema 192 ister"));
+                }
+                if !has.road_speed && road_has_speed(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "aksın proje hızı şema 193 ister"));
+                }
+                if !has.road_approval_sources && road_has_approval_sources(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "kübaj onayının kaynakları ve algoritması şema 197 ister"));
+                }
+                if !has.road_cloud_conversions && road_has_cloud_conversions(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının çevrilen kotları şema 196 ister"));
+                }
+                if !has.road_cloud_heights && road_has_cloud_heights(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "bulut kaydının düşey sistemi şema 195 ister"));
+                }
+                if !has.road_places && road_has_places(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "aksın uçlarında gidilen yerler şema 194 ister"));
                 }
                 if !has.road_pivot && road_has_pivot(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "deverin dönme ekseni şema 167 ister"));

@@ -211,16 +211,96 @@ fn screens_kgm() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens_axes() {
+    shoot_kgm_sheet("yol-y76", "y76", "2026-11-06");
+}
+
+/// The PI data with the superelevation (docs/adr/0983): S, Lr, Lt, La and Gn from the sample's schedule, and KGM's
+/// simple-curve T and L. The same sheet as [`screens_axes`]; `.run/gui-evidence/yol-y77/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_pi_data -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_pi_data() {
+    shoot_kgm_sheet("yol-y77", "y77", "2026-11-06");
+}
+
+/// The plan map as KGM's June 2024 sample sheets draw it (docs/adr/0984): the PI data box with D, Se and the
+/// clothoid curve's S-D, S-X, S-Y, the main points `TS1=…`, the PI's triangle and the ends' coordinates;
+/// `.run/gui-evidence/yol-y78/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_kgm_2024 -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_kgm_2024() {
+    shoot_kgm_sheet("yol-y78", "y78", "2026-11-06");
+}
+
+/// The PI box with V (docs/adr/0985): the sample's main alignment at a design speed of 80 km/h;
+/// `.run/gui-evidence/yol-y79/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_design_speed -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_design_speed() {
+    shoot_kgm_sheet_with("yol-y79", "y79", "2026-11-06", |app| {
+        let doc = app.document.as_mut().expect("a drawing");
+        let edit = kentos_commands::AlignmentsEdit {
+            alignment: "g-1".into(),
+            operation: kentos_commands::AlignmentsEditOperation::Set,
+            name: None,
+            pis: None,
+            stationing: None,
+            offset: None,
+            design_speed: Some(80.0),
+            start_place: None,
+            end_place: None,
+            expected_revision: None,
+        };
+        let done = kentos_native_application::road_alignments_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            edit,
+        );
+        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    });
+}
+
+/// The profile's ends (docs/adr/0987): PROJE BAŞI and PROJE SONU with their km and elevation on the design line;
+/// `.run/gui-evidence/yol-y81/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_profile_ends -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_profile_ends() {
+    shoot_kgm_sheet("yol-y81", "y81", "2026-11-06");
+}
+
+/// KGM's A1 plan–profile sheet of the sample at 1:2000 with its schedule, light and dark, and its PDF, into
+/// `.run/gui-evidence/<folder>/<prefix>-pafta-*`.
+fn shoot_kgm_sheet(folder: &str, prefix: &str, date: &str) {
+    shoot_kgm_sheet_with(folder, prefix, date, |_| {});
+}
+
+/// [`shoot_kgm_sheet`] with the drawing first changed by `prepare`.
+fn shoot_kgm_sheet_with(folder: &str, prefix: &str, date: &str, prepare: impl Fn(&mut App)) {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y76");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence").join(folder);
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = kgm_app();
+        prepare(&mut app);
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -235,13 +315,380 @@ fn screens_axes() {
         send(&mut app, W::Dever(Some("d-1".into())));
         send(&mut app, W::Make);
         snapshot.settle(&mut app, App::view, &mut update);
-        let file = out.join(format!("y76-pafta-{name}.png"));
+        let file = out.join(format!("{prefix}-pafta-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        if theme == "light" {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", date).expect("the book's PDF");
+            let file = out.join(format!("{prefix}-pafta.pdf"));
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// KGM's slope and platform rows over the profile (docs/adr/0989): the corridor cases' drawing, its corridor c-1 and
+/// profile b-1 on KGM's A1 sheet at 1:2000; light and dark, and the PDF; `.run/gui-evidence/yol-y83/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_sheets_window_tests::screens_corridor_rows -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_corridor_rows() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y83");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let (mut app, _) = App::boot(None);
+        let bands: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/road/v1/corridor-bands.json")).expect("json");
+        let mut setup = bands["setup"].clone();
+        // The paved Tip 1, so ÜST YAPI KAL. has a value (the reference's second case).
+        if let Some(paved) = bands["cases"].as_array().and_then(|c| c.iter().find(|c| !c["setup"].is_null())) {
+            setup = paved["setup"].clone();
+        }
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Alignment("g-1".into()));
+        send(&mut app, W::Field(1, "2000".into()));
+        send(&mut app, W::Profile(Some("b-1".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Corridor(Some("c-1".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y83-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Make);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y83-pafta-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
         if theme == "light" {
             let doc = &app.document.as_ref().expect("a drawing").model;
             let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
-            let file = out.join("y76-pafta.pdf");
+            let file = out.join("y83-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// Y84's pictures (docs/adr/0990): KGM's kot taşıma. The corridor cases' road on KGM's A1 sheet at 1:2000 with 40
+/// times exaggeration: the profile is taller than the sheet's profile map, so each view is split to the metres of
+/// elevation the map holds, a line with both parts' heights at each split.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_profile_splits -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_profile_splits() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y84");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let (mut app, _) = App::boot(None);
+        let bands: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/road/v1/corridor-bands.json")).expect("json");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(bands["setup"].clone()).expect("the drawing reads");
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Alignment("g-1".into()));
+        send(&mut app, W::Field(1, "2000".into()));
+        send(&mut app, W::Field(2, "40".into()));
+        send(&mut app, W::Profile(Some("b-1".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Corridor(Some("c-1".into())));
+        send(&mut app, W::Make);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y84-pafta-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        if theme == "light" {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
+            let file = out.join("y84-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// Yer left empty (docs/adr/0991): the profile views go under everything drawn, the highest one's top 20 paper mm
+/// under the drawing's box at 1:1000; nothing the sheets write reaches into that box.
+#[test]
+fn an_empty_place_puts_the_views_under_the_drawing() {
+    let mut app = kgm_app();
+    let _ = app.update(Message::Run("road.sheets"));
+    let w = app.road_sheets_window.as_ref().expect("open");
+    assert!(w.fields[0].is_empty(), "Yer starts empty");
+    send(&mut app, W::Field(1, "1000".into()));
+    send(&mut app, W::Profile(Some("b-1".into())));
+    let before_ids: std::collections::HashSet<u32> =
+        app.document.as_ref().expect("doc").model.entities().map(|e| e.base().id).collect();
+    let doc = &app.document.as_ref().expect("doc").model;
+    app.spatial.sync(doc);
+    let before = app.spatial.extent().expect("a drawing");
+    let laid = app.road_sheets_window.as_ref().and_then(|w| w.preview.laid.clone()).expect("the preview lays them");
+    let top = laid.sheets.iter().filter_map(|s| s.view).map(|v| v[1][1]).fold(f64::NEG_INFINITY, f64::max);
+    assert!((top - (before.min_y - 20.0)).abs() < 1e-6, "the highest view's top {top} is 20 m under {}", before.min_y);
+    send(&mut app, W::Make);
+    let doc = &app.document.as_ref().expect("doc").model;
+    let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
+    assert!(!new.is_empty(), "the views are drawn");
+    app.spatial.sync(doc);
+    let drawn = app.spatial.store().extent(Some(&new)).expect("their box");
+    assert!(drawn.max_y < before.min_y, "the views ({}) stay under the drawing ({})", drawn.max_y, before.min_y);
+}
+
+/// Y85's pictures (docs/adr/0991): Yer left empty on KGM's A1 sheet at 1:2000 and 40 times exaggeration, the views
+/// as tall as the profile map; the model after, the plan above and the views under it, and the sheet.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_place_under -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_place_under() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y85");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let (mut app, _) = App::boot(None);
+        let bands: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/road/v1/corridor-bands.json")).expect("json");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(bands["setup"].clone()).expect("the drawing reads");
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Alignment("g-1".into()));
+        send(&mut app, W::Field(1, "2000".into()));
+        send(&mut app, W::Field(2, "40".into()));
+        send(&mut app, W::Profile(Some("b-1".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Corridor(Some("c-1".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y85-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Make);
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y85-model-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        if theme == "light" {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-06").expect("the book's PDF");
+            let file = out.join("y85-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// Y89's pictures (docs/adr/0995): KGM's earthwork rows under the profile, Yan aks's mass haul diagram with its waste
+/// site (four balance sections, DN at each balance point) on KGM's A1 sheet at 1:1000; the window and the sheet.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_earthwork_rows -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_earthwork_rows() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y89");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let (mut app, _) = App::boot(None);
+        let bands: serde_json::Value =
+            serde_json::from_str(include_str!("../../../fixtures/road/v1/earthwork-bands.json")).expect("json");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(bands["setup"].clone()).expect("the drawing reads");
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("road.sheets"));
+        send(&mut app, W::Alignment("g-2".into()));
+        send(&mut app, W::Field(1, "1000".into()));
+        send(&mut app, W::Profile(Some("b-2".into())));
+        send(&mut app, W::Kgm(true));
+        send(&mut app, W::Haul(Some("h-2".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y89-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        send(&mut app, W::Make);
+        if theme == "light" {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+            let file = out.join("y89-pafta.pdf");
+            std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// Y90's picture (docs/adr/0996): the DKY row, Ana Brükner with 40 % of its cut unsuitable from 100 to 250 and 30 %
+/// from 450, on KGM's A1 sheet at 1:1000.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_dky_row -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_dky_row() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y90");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let (mut app, _) = App::boot(None);
+    let bands: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/road/v1/earthwork-bands.json")).expect("json");
+    let case = bands["cases"].as_array().and_then(|c| c.iter().find(|c| !c["setup"].is_null())).expect("the DKY case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Run("road.sheets"));
+    send(&mut app, W::Alignment("g-1".into()));
+    send(&mut app, W::Field(1, "1000".into()));
+    send(&mut app, W::Profile(Some("b-1".into())));
+    send(&mut app, W::Kgm(true));
+    send(&mut app, W::Haul(Some("h-1".into())));
+    send(&mut app, W::Make);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+    let file = out.join("y90-pafta.pdf");
+    std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+    println!("{}", file.display());
+}
+
+/// Y92's picture (docs/adr/0998): match lines between the sheets, Ana aks at 1:1000 with 20 m of overlap; the window and
+/// the book's PDF.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_match_lines -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_match_lines() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y92");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = kgm_app();
+    let mut snapshot = Snapshot::new(Size::new(1100.0, 650.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let _ = app.update(Message::Run("road.sheets"));
+    send(&mut app, W::Field(1, "1000".into()));
+    send(&mut app, W::Field(3, "20".into()));
+    send(&mut app, W::Profile(Some("b-1".into())));
+    send(&mut app, W::MatchLines(true));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("y92-pencere.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+    send(&mut app, W::Make);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+    let file = out.join("y92-pafta.pdf");
+    std::fs::write(&file, pdf.bytes).expect("writes the PDF");
+    println!("{}", file.display());
+}
+
+/// Y94's pictures (docs/adr/1028): the places beyond the road's ends typed in Güzergâh, then the plan sheets with KGM's
+/// arrows at their ends; the window wide and narrow, and the book's PDF.
+///
+/// ```sh
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop screens_place_arrows -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_place_arrows() {
+    use crate::alignment_window::Event as A;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y94");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (size, name) in [(Size::new(1440.0, 900.0), "genis"), (Size::new(1100.0, 650.0), "dar")] {
+        let mut app = kgm_app();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::Run("alignment.editor"));
+        let _ = app.update(Message::Alignments(A::Choose(0)));
+        let _ = app.update(Message::Alignments(A::Place(0, "KAMAN".into())));
+        let _ = app.update(Message::Alignments(A::Place(1, "ANKARA-NİĞDE OTOYOLU".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y94-guzergah-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::Alignments(A::Save));
+        if name == "genis" {
+            let _ = app.update(Message::Run("road.sheets"));
+            send(&mut app, W::Field(1, "1000".into()));
+            send(&mut app, W::Make);
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-07").expect("the book's PDF");
+            let file = out.join("y94-pafta.pdf");
             std::fs::write(&file, pdf.bytes).expect("writes the PDF");
             println!("{}", file.display());
         }

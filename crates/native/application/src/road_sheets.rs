@@ -119,9 +119,13 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
     }
     let (from, to) = (from.clamp(0.0, length), to.clamp(0.0, length));
     if let Some(p) = &input.layer_id
-        && profile.is_some()
+        && (profile.is_some() || input.match_lines == Some(true))
     {
         checks::layer(doc, p)?;
+    }
+    // Docs/adr/0998: match lines are drawn objects; they need a layer.
+    if input.match_lines == Some(true) && input.layer_id.is_none() {
+        return Err(bad("layerId", "Eşleşme çizgileri bir katmana çizilir; layerId verin.".into()));
     }
     let template = template_of(input.source.as_ref(), input.bands == Some(kentos_commands::ProfileBands::Kgm))?;
     let options: template::InstanceOptions = serde_json::from_value(input.options.clone()).map_err(|e| {
@@ -192,7 +196,14 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
     } else {
         road_profiles_draw::bands_depth(doc, 2.5)
     };
+    // Docs/adr/0995: KGM's earthwork rows go between the frame and the bands.
+    let dky = input.haul.as_ref().is_some_and(|n| {
+        crate::road_hauls::find(doc.road_hauls(), n, "haul").is_ok_and(|(_, h)| !h.unsuitable.is_empty())
+    });
+    let depth = depth + if input.haul.is_some() { road_profiles_draw::earthwork_rows_height(doc, 2.5, dky) } else { 0.0 };
     let gap = 0.4 * depth;
+    // Docs/adr/0989: KGM's slope and platform rows stand over each view's frame.
+    let rise = if input.corridor.is_some() { road_profiles_draw::corridor_rows_height(doc, 2.5) } else { 0.0 };
     let mut frames = Vec::new();
     let mut laid = Vec::new();
     let mut objects = Vec::new();
@@ -232,12 +243,28 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                     to: Some(vb),
                     bands: input.bands,
                     superelevation: input.superelevation.clone(),
+                    corridor: input.corridor.clone(),
+                    span: None,
+                    haul: input.haul.clone(),
                     expected_revision: None,
                 };
                 let (_, sized, _) = road_profiles_draw::view(doc, &asked)?;
-                let h = sized.frame[1][1] - sized.frame[0][1];
+                let mut h = sized.frame[1][1] - sized.frame[0][1];
+                // Docs/adr/0990, KGM's kot taşıma: a view taller than the map is split to the whole metres of
+                // elevation the map holds over its rows and bands; one that cannot be stays whole and outside.
+                if let Some(ph) = profile_height.filter(|ph| h + rise + depth > ph + 1e-6) {
+                    let ex = sized.exaggeration;
+                    let room = ((ph - rise - depth) / ex).floor();
+                    if room > 0.0 {
+                        let split = ProfilesDraw { span: Some(room), ..asked.clone() };
+                        if let Ok((_, tried, _)) = road_profiles_draw::view(doc, &split) {
+                            asked = split;
+                            h = tried.frame[1][1] - tried.frame[0][1];
+                        }
+                    }
+                }
                 // The first view's lower left is `at`; each next one's top is a gap under the bands before it.
-                let y = next_y.map_or(at[1], |n| n - h);
+                let y = next_y.map_or(at[1], |n| n - h - rise);
                 asked.at = [at[0], y];
                 let (made, drawn, said) = road_profiles_draw::view(doc, &asked)?;
                 for w in said {
@@ -247,8 +274,8 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
                 }
                 objects.extend(made);
                 next_y = Some(y - depth - gap);
-                profile_center = Some(GroundPoint { x: at[0] + 0.5 * (vb - va), y: y + 0.5 * (h - depth) });
-                if profile_height.is_some_and(|ph| h + depth > ph + 1e-6) {
+                profile_center = Some(GroundPoint { x: at[0] + 0.5 * (vb - va), y: y + 0.5 * (h + rise - depth) });
+                if profile_height.is_some_and(|ph| h + rise + depth > ph + 1e-6) {
                     off = true;
                 }
                 view = Some(drawn.frame);
@@ -309,6 +336,17 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         l.sheet = m.sheet.clone();
         l.number = m.number.clone();
     }
+    // Docs/adr/0998: a match line between each two sheets, at the middle of their overlap.
+    if input.match_lines == Some(true) {
+        let h = 2.5 * f64::from(scale) / 1000.0;
+        for w in laid.windows(2) {
+            let s = 0.5 * (w[0].to + w[1].from);
+            let Some(p) = core.at(s) else { continue };
+            let (t, n) = ([p.direction.cos(), p.direction.sin()], [-p.direction.sin(), p.direction.cos()]);
+            let reach = 0.45 * height;
+            out_lines(&mut objects, [p.x, p.y], t, n, reach, h, w[0].rotation, &km_text(built.km(s), 2), [&w[1].number, &w[0].number]);
+        }
+    }
     let edit = SheetsEdit {
         ops: made.ops.iter().map(|op| serde_json::to_value(op).unwrap_or_default()).collect(),
         pictures: made
@@ -354,7 +392,38 @@ fn prepare(doc: &Document, input: &RoadSheetsPlan) -> Result<Laid, Stop> {
         uids: Vec::new(),
         revision: doc.revision().to_string(),
     };
-    Ok(Laid { set, edit, objects, layer: profile.map(|p| p.1), out, warnings })
+    let layer = profile.map(|p| p.1).or_else(|| input.layer_id.clone().filter(|_| input.match_lines == Some(true)));
+    Ok(Laid { set, edit, objects, layer, out, warnings })
+}
+
+/// A match line at `p` (docs/adr/0998): across the alignment (`n`, its normal; `t`, its tangent) `reach` each way, and
+/// along it on each side "EŞLEŞME ÇİZGİSİ KM : km · PAFTA …", the side before naming the sheet after and the side after
+/// the sheet before, `h` high, masked, readable on a map turned `turn` degrees.
+#[allow(clippy::too_many_arguments)]
+fn out_lines(
+    out: &mut Vec<NewObject>,
+    p: [f64; 2],
+    t: [f64; 2],
+    n: [f64; 2],
+    reach: f64,
+    h: f64,
+    turn: f64,
+    km: &str,
+    numbers: [&str; 2],
+) {
+    use kentos_commands::TextAlign;
+    let at = |a: f64, b: f64| [p[0] + n[0] * a + t[0] * b, p[1] + n[1] * a + t[1] * b];
+    out.push(road_profiles_draw::line(at(-reach, 0.0), at(reach, 0.0), None, Some(0.5)));
+    let degrees = n[1].atan2(n[0]).to_degrees();
+    let (on_paper, _) = crate::road_plan_axes::readable(degrees - turn, TextAlign::MiddleCenter);
+    // Turned to read, the words' foot faces one side of the line or the other: each sits off its own side.
+    let flipped = (on_paper + turn - degrees).rem_euclid(360.0) > 90.0 && (on_paper + turn - degrees).rem_euclid(360.0) < 270.0;
+    for (side, number) in [(-1.0, numbers[0]), (1.0, numbers[1])] {
+        let foot = if (side < 0.0) != flipped { TextAlign::BottomCenter } else { TextAlign::TopCenter };
+        let q = at(0.5 * reach, side * 0.4 * h);
+        let words = format!("EŞLEŞME ÇİZGİSİ KM : {km} · PAFTA {number}");
+        out.push(road_profiles_draw::masked(road_profiles_draw::turned(q, words, h, foot, None, on_paper + turn)));
+    }
 }
 
 pub(crate) fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<RoadSheetsLaid> {

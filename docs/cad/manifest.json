@@ -4520,6 +4520,22 @@
    "tests": 0
   },
   {
+   "id": "landxml.machine",
+   "kind": "command",
+   "title": "Makine kontrolüne ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.landxml"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.landxml",
+   "mcp": "file.export.landxml",
+   "note": "Makine kontrolüne ver dosyanın yerini sorar ve file.export.landxml'i machineControl ile çağırır: projenin kotlarının düşey sistemi söylenmemişse yazmaz; çizim değişmez (plan/road.md Y96, ADR 1031).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.crs",
    "kind": "command",
    "title": "Sistem ata…",
@@ -5124,6 +5140,22 @@
    "tests": 0
   },
   {
+   "id": "map.featuresReconcile",
+   "kind": "command",
+   "title": "Adayları uzlaştır…",
+   "level": "semantic",
+   "via": [
+    "map.features.reconcile"
+   ],
+   "operation": null,
+   "python": "Connection: map.features.reconcile",
+   "mcp": "map.features.reconcile",
+   "note": "Pencerenin önizlemesi map.features.reconcile'ın planı; kararlar ve Uzlaştır aynı komutun execute'u (ADR 1760).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.parcelReport",
    "kind": "command",
    "title": "Parsel alan çizelgesi",
@@ -5178,6 +5210,23 @@
    "python": "Connection: map.survey.edit, Connection: map.survey.query",
    "mcp": "map.survey.edit, map.survey.query",
    "note": "Panelin satırları map.survey.query'nin cevabı; arazi ölçümü ekleme, dışlama, dışlamayı kaldırma, alıcı çözümü, kabul ve yeniden üretme map.survey.edit'e gider (ADR 1340 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "map.survey.adjustment",
+   "kind": "command",
+   "title": "Arşivden ağ dengelemesi…",
+   "level": "semantic",
+   "via": [
+    "map.survey.network",
+    "map.survey.edit"
+   ],
+   "operation": null,
+   "python": "Connection: map.survey.network, Connection: map.survey.edit",
+   "mcp": "map.survey.network, map.survey.edit",
+   "note": "Pencerenin cevabı map.survey.network'ün; baz içe aktarma, bilinen nokta, dışlama ve Kabul et map.survey.edit'e gider (ADR 1740).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -8130,6 +8179,22 @@
    "python": "kentos.cad.entities.create, kentos.cad.rasters.reproject",
    "mcp": "cad.entities.create, cad.rasters.reproject",
    "note": "Başka sistemdeki dosyayı Projenin sistemine çevir ve ekle cad.rasters.reproject ile çevirip ekler (ADR 0644 §3).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "raster.compare",
+   "kind": "command",
+   "title": "Ortofoto karşılaştır…",
+   "level": "query",
+   "via": [
+    "cad.orthophoto.compare"
+   ],
+   "operation": null,
+   "python": "kentos.cad.orthophoto.compare",
+   "mcp": "cad.orthophoto.compare",
+   "note": "Pencere iki rasteri cad.orthophoto.compare ile karşılaştırır (salt okunur); CSV kaydet noktaların kaymalarını yazar (ADR 1780).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

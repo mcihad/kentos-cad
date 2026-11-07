@@ -14,6 +14,8 @@
 //!   curve's chord height step and the stations added until the join is within tolerances (docs/adr/0939).
 //! - [`superelevation`]: the cross slope of each side along an alignment from its curves or from rows, and the
 //!   curves' widening (docs/adr/0904).
+//! - [`superelevation_pi`]: a curve's S, Lr, Lt, La and Gn as KGM's PI data writes them, read from a schedule
+//!   (docs/adr/0983).
 //! - [`volume`]: earthwork volumes, by sections (average end area, prismoidal) and between two surfaces (the
 //!   triangulations laid over each other, split where the difference changes sign) (docs/adr/0906).
 //! - [`haul`]: the mass haul (Brückner) diagram read as layers: balance points, loops, haul moments, free haul and
@@ -55,6 +57,7 @@ pub mod section;
 pub mod sources;
 pub mod superelevation;
 pub mod superelevation_physics;
+pub mod superelevation_pi;
 pub mod superelevation_transition;
 pub mod swept;
 pub mod surface;

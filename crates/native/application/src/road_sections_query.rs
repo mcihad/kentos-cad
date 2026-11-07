@@ -22,7 +22,7 @@ fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(Secti
             ));
         }
         let warnings = own.iter().filter_map(|d| common::stale_warning(doc, d)).collect();
-        return Ok((SectionsQueried { sets: common::reports(doc, own), sections: vec![] }, warnings));
+        return Ok((SectionsQueried { sets: common::reports(doc, own), sections: vec![], sources: None }, warnings));
     };
     let (_, def) = common::find_set(own, name, "set")?;
     let built = common::alignment_of(doc, def)?;
@@ -48,7 +48,34 @@ fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(Secti
     let mut warnings: Vec<CommandWarning> = common::stale_warning(doc, def).into_iter().collect();
     let (rows, more) = common::sections(doc, def, &built, &asked);
     warnings.extend(more);
-    Ok((SectionsQueried { sets: vec![common::report(doc, def, stations)], sections: rows }, warnings))
+    Ok((
+        SectionsQueried { sets: vec![common::report(doc, def, stations)], sections: rows, sources: Some(sources_of(doc, def)) },
+        warnings,
+    ))
+}
+
+/// What a set's sections are computed from, each as it is now (docs/adr/1039): an id the project does not have reads
+/// revision 0.
+pub fn sources_of(doc: &kentos_domain::Document, def: &kentos_commands::SectionSetDef) -> kentos_commands::SectionSources {
+    use kentos_commands::RoadSource;
+    let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+    kentos_commands::SectionSources {
+        set: RoadSource { id: def.id.clone(), revision: def.revision },
+        alignment: RoadSource { id: def.alignment.clone(), revision: alignment },
+        profile: def.profile.as_ref().map(|id| RoadSource {
+            id: id.clone(),
+            revision: doc.road_profiles().iter().find(|p| p.id == *id).map_or(0, |p| p.revision),
+        }),
+        template: def.template.as_ref().map(|id| RoadSource {
+            id: id.clone(),
+            revision: doc.road_templates().iter().find(|t| t.id == *id).map_or(0, |t| t.revision),
+        }),
+        superelevation: def.superelevation.as_ref().map(|id| RoadSource {
+            id: id.clone(),
+            revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
+        }),
+        surface: def.surface.as_ref().map(|id| crate::road_sources::surface(doc, id)),
+    }
 }
 
 /// Checks `input` against the document.

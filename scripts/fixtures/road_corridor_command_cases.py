@@ -91,6 +91,26 @@ def setup(corridors=START, work="road", supers=SUPERS, layers=None, volumes=(), 
     return base
 
 
+
+def corridor_sources(c, road, doc=None):
+    """Docs/adr/1038, 1040: what corridor `c`'s results are computed from, each as `road` has it now: the corridor,
+    its alignment and profile, its regions' templates in order and once each, its superelevation schedule and its
+    terrain surface (scripts/fixtures/road_profile_command_cases.py's `surface_source`); an id the project does not have
+    reads revision 0."""
+    def rev(kind, id_):
+        return next((x.get("revision", 0) for x in road.get(kind, []) if x["id"] == id_), 0)
+    templates = []
+    for r in c["regions"]:
+        if r["template"] not in [t["id"] for t in templates]:
+            templates.append({"id": r["template"], "revision": rev("templates", r["template"])})
+    out = {"corridor": {"id": c["id"], "revision": c.get("revision", 0)},
+           "alignment": {"id": c["alignment"], "revision": rev("alignments", c["alignment"])},
+           "profile": {"id": c["profile"], "revision": rev("profiles", c["profile"])}, "templates": templates}
+    if c.get("superelevation"):
+        out["superelevation"] = {"id": c["superelevation"], "revision": rev("superelevations", c["superelevation"])}
+    out["surface"] = pcmd.surface_source(road, c["surface"], doc)
+    return out
+
 def num(v):
     """A number as Rust's Display writes an f64."""
     return str(int(v)) if float(v).is_integer() else repr(float(v))

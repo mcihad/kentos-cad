@@ -79,6 +79,40 @@ ALIGNMENTS = [{"id": "g-1", "name": "Ana aks", "revision": 1, "pis": MAIN_PIS, "
               {"id": "g-3", "name": "Sağ kenar", "revision": 1, "offsetOf": {"alignment": "g-1", "offset": 5.0}}]
 
 
+
+def surface_source(road, sid, doc=None):
+    """Docs/adr/1040: terrain surface `sid` of `road` as a road answer names it: its id, the digest of what it is made
+    of now and the digest it was last accepted from. The digest is scripts/fixtures/road_terrain_command_cases.py's
+    over the drawing's points with an elevation on its points layers (and their sublayers) or named by uid, in the
+    drawing's order; `doc` is the drawing (none: this file's). None where `road` has no such surface; a surface made of
+    anything but points is not this helper's."""
+    import road_terrain_command_cases as tcmd  # noqa: PLC0415 (the terrain reference's digest)
+    s = next((x for x in (road or {}).get("surfaces", []) if x["id"] == sid), None)
+    if s is None:
+        return {"id": sid}
+    assert set(s) <= {"id", "name", "points", "built", "tolerance", "maxEdge"}, s
+    assert set(s.get("points", {})) <= {"layers", "uids"}, s
+    tree = doc["layers"] if doc else LAYERS
+    entities = doc["entities"] if doc else ENTITIES
+    uids = doc["uids"] if doc else UIDS
+    layers = set()
+
+    def under(nodes, inside):
+        for n in nodes:
+            hit = inside or n["id"] in s["points"].get("layers", [])
+            if hit:
+                layers.add(n["id"])
+            under(n.get("children", []), hit)
+    under(tree, False)
+    named = set(s["points"].get("uids", []))
+    points = [(e["p"]["x"], e["p"]["y"], e["z"], u) for e, u in zip(entities, uids)
+              if (u in named or e["layerId"] in layers) and e["kind"] == "point" and e.get("z") is not None]
+    out = {"id": sid, "digest": tcmd.digest({"points": points, "breaklines": [], "voids": [], "boundary": None,
+                                             "tolerance": s.get("tolerance"), "maxEdge": s.get("maxEdge")})}
+    if s.get("built"):
+        out["built"] = s["built"]
+    return out
+
 def pv(id_, s, z, **curve):
     out = {"id": id_, "station": float(s), "elevation": float(z)}
     out.update({k: float(v) for k, v in curve.items()})
@@ -689,9 +723,57 @@ DRAW_LAYERS = LAYERS + [{**node("kilitli", "Kilitli"), "locked": True}, {**node(
                         {**node("grup", "Yol"), "type": "group", "children": [node("yol-boykesit", "Yol boykesit")]}]
 
 
-def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, to=None, bands=None, dever=None):
+def grid_of(height):
+    return next((g for g in (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000) if height / g <= 10), 1000)
+
+
+def split_parts(ev, all_bounds, extremes, points, s0, s1, span):
+    """Docs/adr/0990, KGM's kot taşıma: from each part's start the farthest whole metre (scanned one by one) up to which
+    the design line (its exact elevations) and the terrain's points with their straight line at the ends keep a metre
+    inside a frame `span` high whose datum is a grid step under the lowest less a metre. None: the first metre does not
+    fit."""
+    g = grid_of(span)
+
+    def terrain_at(q):
+        hit = [z for sq, z in points if abs(sq - q) <= 1e-9 and z is not None]
+        if hit:
+            return hit[0]
+        for (sa, za), (sb, zb) in zip(points, points[1:]):
+            if sa < q < sb:
+                return None if za is None or zb is None else za + (zb - za) * (q - sa) / (sb - sa)
+        return None
+
+    def fits(a, b):
+        zs = [ev(q)[0] for q in all_bounds if a - 1e-9 < q < b + 1e-9] + [ev(a)[0], ev(b)[0]]
+        zs += [z for q, z in extremes if a - 1e-9 < q < b + 1e-9]
+        zs += [z for q, z in points if z is not None and a - 1e-9 < q < b + 1e-9]
+        zs += [z for z in (terrain_at(a), terrain_at(b)) if z is not None]
+        base = math.floor((min(zs) - 1.0) / g) * g
+        return base if max(zs) + 1.0 <= base + span + 1e-9 else None
+
+    parts, a = [], s0
+    while True:
+        base = fits(a, s1)
+        if base is not None:
+            parts.append((a, s1, base))
+            return parts
+        best, m = None, math.floor(a) + 1.0
+        while m < s1 - 1e-9:
+            got = fits(a, m)
+            if got is None:
+                break
+            best = (m, got)
+            m += 1.0
+        if best is None:
+            return None, a, min(math.floor(a) + 1.0, s1)
+        parts.append((a, best[0], best[1]))
+        a = best[0]
+
+
+def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, to=None, bands=None, dever=None,
+            span=None):
     """What the drawing says (frame, datum, top, grid, columns) and how many objects it writes; `frm` and `to` a view of
-    the stations between them only (docs/adr/0908 §10)."""
+    the stations between them only (docs/adr/0908 §10); `span` a frame that high, split (docs/adr/0990)."""
     b = ALIGNED[d["alignment"]]
     pvis = d["pvis"]
     s0, s1 = pvis[0]["station"], pvis[-1]["station"]
@@ -724,7 +806,23 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, 
     lo, hi = min(zs), max(zs)
     base = math.floor(lo) - 1.0 if datum is None else datum
     top = math.ceil(hi) + 1.0
-    grid = next((g for g in (1, 2, 5, 10, 20, 50, 100, 200, 500, 1000) if (top - base) / g <= 10), 1000)
+    parts = None
+    if span is not None:
+        all_bounds = set()
+        for i, p in enumerate(pvis):
+            c = curves.get(i)
+            if c is None:
+                all_bounds.add(float(S[i]))
+            else:
+                all_bounds |= {float(c[0]), float(c[1])}
+                if "lengthIn" in p:
+                    all_bounds.add(float(S[i]))
+        extremes = [tuple(r["extreme"]) for r in rows if r["extreme"] is not None]
+        parts = split_parts(ev, all_bounds, extremes, points, s0, s1, span)
+        if parts[0] is None:
+            return parts, None, lo
+        base, top = float(parts[0][2]), float(parts[0][2] + span)
+    grid = grid_of(top - base)
     stations = [s for s in ticks(b, every) if s0 - 1e-9 <= s <= s1 + 1e-9]
     stations = [min(max(s, s0), s1) for s in stations]
     for end in (s0, s1):
@@ -733,17 +831,25 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, 
     cols = [at(d, s, on) for s in sorted(stations)]
     # The objects: the frame; the grid's inner lines and every height's text; the terrain's runs; the design line;
     # each curve's text; the bands' lines and names; each column's line, km, black, red and difference; the grades.
-    heights = [k * grid for k in range(math.ceil(base / grid), math.floor(top / grid + 1e-9) + 1)]
+    def heights_of(base_):
+        out_, k = [], math.ceil(base_ / grid)
+        while k * grid <= base_ + (top - base) + 1e-9:
+            out_.append(k * grid)
+            k += 1
+        return out_
+    heights = heights_of(base)
     inner_lines = [v for v in heights if base + 1e-9 < v < top - 1e-9]
-    runs = 0
+    spans = []
     drawn = False
     for (sa, za), (sb, zb) in zip(points, points[1:]):
         if za is not None and zb is not None and black_at(b, (sa + sb) / 2) is not None:
             if not drawn:
-                runs += 1
+                spans.append([sa, sb])
+            spans[-1][1] = sb
             drawn = True
         else:
             drawn = False
+    runs = len(spans)
     shown_curves = [r for r in rows if r["start"][0] < s1 - 1e-9 and r["end"][0] > s0 + 1e-9]
     grades = [1 for p, q in zip(pvis, pvis[1:]) if q["station"] > s0 + 1e-9 and p["station"] < s1 - 1e-9]
     if bands == "kgm":
@@ -765,8 +871,24 @@ def drawing(d, at_, every=50.0, datum=None, ex=10.0, surface_ok=True, frm=None, 
     else:
         n = (1 + len(inner_lines) + len(heights) + runs + 1 + len(shown_curves) + 10
              + sum(3 + ("black" in c) + ("difference" in c) for c in cols) + len(grades))
+    # Docs/adr/0987, 0999: each end of the design line in the view, its leader, its flag and its two words (PROJE
+    # BAŞI/SONU, KM :), and the point's KM = and KOT =.
+    n += 6 * sum(1 for e in (pvis[0], pvis[-1]) if s0 - 1e-9 <= e["station"] <= s1 + 1e-9)
+    # Docs/adr/0993: the last part's heights on the frame's right edge too.
+    n += len(heights) if parts is None else len(heights_of(parts[-1][2]))
+    if parts is not None:
+        # Docs/adr/0990: each part its own grid's lines and heights; at each split a line and the part before's heights
+        # again; the terrain's runs and the design line once in each part they cross (counted once above).
+        own = [heights_of(p[2]) for p in parts]
+        lines_ = [[v for v in hs if p[2] + 1e-9 < v < p[2] + (top - base) - 1e-9] for p, hs in zip(parts, own)]
+        pieces = sum(1 for ra, rb in spans for a_, b_, _ in parts if min(rb, b_) - max(ra, a_) > 1e-9)
+        n += (sum(len(x) for x in own) + sum(len(x) for x in lines_) - len(heights) - len(inner_lines)
+              + sum(1 + len(own[i - 1]) for i in range(1, len(parts))) + pieces - runs + len(parts) - 1)
     out = {"profile": d["id"], "frame": [list(at_), [at_[0] + (s1 - s0), at_[1] + (top - base) * ex]],
            "datum": base, "top": top, "exaggeration": ex, "grid": float(grid), "columns": cols}
+    if parts is not None:
+        out["splits"] = [{"from": float(a_), "to": float(b_), "datum": float(p_), "top": float(p_ + (top - base))}
+                         for a_, b_, p_ in parts]
     return out, n, lo
 
 
@@ -778,6 +900,7 @@ def draw_cases():
 
     def ok(name, input_, d, op="execute", warns=(), undo=False, setup_=None, before=start, supers=None, **kw):
         out, n, _ = drawing(d, input_["at"], bands=input_.get("bands"), **kw)
+        assert n is not None, name
         out = {**out, "uids": "$any" if op == "execute" else [], "revision": "$current"}
         if op == "validate":
             result, expect = completed(None, warns), {**UNCHANGED, "road": road_of(before, supers=supers)}
@@ -839,6 +962,18 @@ def draw_cases():
                                    "superelevation": "d-1", "from": 100.0, "to": 300.0}, MAIN, setup_=with_dever,
        supers=[DEVER], dever=DEVER, frm=100.0, to=300.0)
     ok("KentOS bantları açıkça", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0], "bands": "kentos"}, MAIN)
+    # Docs/adr/0990: KGM's kot taşıma, the frame a fixed span of elevation high, split where the lines would leave it.
+    ok("Kot taşıma: 12 m'lik çerçevede dört parça", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0],
+                                                    "span": 12.0}, MAIN, span=12.0)
+    ok("Kot taşıma: 15 m, iki parça, KGM bantlarıyla", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0],
+                                                       "span": 15.0, "bands": "kgm"}, MAIN, span=15.0)
+    ok("Sığan boykesit: tek parça, 20 m'lik çerçeve", {"profile": "b-1", "layerId": "0", "at": [0.0, -200.0],
+                                                      "span": 20.0}, MAIN, span=20.0)
+    ok("Yüzeysiz kısmi boykesit: 5 m'de iki parça", {"profile": "b-3", "layerId": "0", "at": [0.0, -200.0],
+                                                    "span": 5.0}, PART, span=5.0)
+    ok("Km 100–500 görünümü, 8 m: üç parça", {"profile": "b-1", "layerId": "0", "at": [0.0, -300.0], "from": 100.0,
+                                   "to": 500.0, "span": 8.0, "exaggeration": 5.0}, MAIN, frm=100.0, to=500.0,
+       span=8.0, ex=5.0)
 
     _, _, lowest = drawing(MAIN, [0.0, 0.0])
     no("Yol projesi değil", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0]}, NOT_ROAD,
@@ -853,6 +988,16 @@ def draw_cases():
        failed("invalid_label", "Düşey abartma (exaggeration) 0'dan büyük olmalı.", "exaggeration"))
     no("Kıyas kotu en alçak kottan yüksek", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "datum": 105.0},
        failed("invalid_label", f"Kıyas kotu (datum) en alçak kottan ({lowest:.2f}) yüksek olamaz.", "datum"))
+    no("Sıfır kot aralığı", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "span": 0.0},
+       failed("invalid_label", "Kot aralığı (span) 0'dan büyük olmalı.", "span"))
+    no("Kot aralığıyla kıyas kotu", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "span": 20.0, "datum": 90.0},
+       failed("invalid_label", "Kot aralığıyla (span) kıyas kotu (datum) verilmez: her parçanın kıyas kotunu KentOS seçer.",
+              "datum"))
+    short, _, _ = drawing(MAIN, [0.0, 0.0], span=6.0)
+    km_of = lambda q: acmd.km_text(aref.km_of(ALIGNED[MAIN["alignment"]].regions, mp.mpf(q)), 2)
+    no("Kot aralığı arazinin sıçramasına yetmiyor", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "span": 6.0},
+       failed("invalid_label", f"Kot aralığı (span) 6 m, {km_of(short[1])} ile {km_of(short[2])} arasındaki kot farkına "
+              "yetmiyor; büyütün.", "span"))
     no("Çok sık sütun", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "every": 0.001},
        failed("invalid_label", "Bu aralıkla 100000'den çok sütun çıkar; every'yi büyütün.", "every"))
     no("Olmayan katman", {"profile": "b-1", "layerId": "yok", "at": [0.0, 0.0]},
@@ -886,6 +1031,22 @@ def draw_cases():
        setup_=two, supers=[DEVER, side_dever])
     no("Geçersiz beklenen sürüm", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "on"}, BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", {"profile": "b-1", "layerId": "0", "at": [0.0, 0.0], "expectedRevision": "41"}, CONFLICT)
+    # Docs/adr/0989: KGM's slope and platform rows over the frame, on the corridor cases' drawing (imported here, not
+    # at the top: that module imports this one).
+    import road_corridor_band_cases as bands
+    corridor_setup, extra = bands.cases()
+    for c in extra:
+        c.pop("rows", None)
+        c.setdefault("setup", corridor_setup)
+    cases.extend(extra)
+    # Docs/adr/0995: KGM's earthwork rows under the frame, on the mass haul cases' drawing (imported here likewise).
+    import road_earthwork_band_cases as earth
+    haul_setup, extra = earth.cases()
+    for c in extra:
+        for k in ("earthwork", "profile", "view"):
+            c.pop(k, None)
+        c.setdefault("setup", haul_setup)
+    cases.extend(extra)
     return file("road.profiles.draw", "Boykesit çiz", base_setup, cases)
 
 

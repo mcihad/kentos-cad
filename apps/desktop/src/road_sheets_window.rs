@@ -53,6 +53,12 @@ pub struct Window {
     /// The profile views' bands: KGM's 2019 order when set, and the schedule its Dever band draws (docs/adr/0980).
     pub(crate) kgm: bool,
     pub(crate) dever: Option<String>,
+    /// The corridor whose slopes and platform KGM's rows over the views say (docs/adr/0989).
+    pub(crate) corridor: Option<String>,
+    /// The mass haul diagram whose earthwork rows go under the views (docs/adr/0995).
+    pub(crate) haul: Option<String>,
+    /// Match lines between the sheets (docs/adr/0998).
+    pub(crate) match_lines: bool,
     pub(crate) preview: Preview,
 }
 
@@ -68,6 +74,12 @@ pub enum Event {
     Kgm(bool),
     /// The schedule KGM's Dever band draws (its id); none: no schedule.
     Dever(Option<String>),
+    /// The corridor KGM's slope and platform rows read (its id); none: no rows (docs/adr/0989).
+    Corridor(Option<String>),
+    /// The mass haul diagram KGM's earthwork rows read (its id); none: no rows (docs/adr/0995).
+    Haul(Option<String>),
+    /// Match lines between the sheets or none (docs/adr/0998).
+    MatchLines(bool),
     Make,
     Close,
 }
@@ -87,8 +99,15 @@ fn number(text: &str) -> Result<Option<f64>, String> {
 impl Window {
     /// The command's input as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<RoadSheetsPlan, String> {
+        self.input_with(None)
+    }
+
+    /// The input with the views at `auto` when Yer is left empty (docs/adr/0991).
+    pub(crate) fn input_with(&self, auto: Option<[f64; 2]>) -> Result<RoadSheetsPlan, String> {
         let alignment = self.alignment.clone().ok_or("Bir aks seçin.")?;
-        let at = if self.profile.is_some() {
+        let at = if self.profile.is_some() && self.fields[0].trim().is_empty() && auto.is_some() {
+            auto
+        } else if self.profile.is_some() {
             let parts: Vec<Option<f64>> =
                 self.fields[0].split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
             match parts[..] {
@@ -114,6 +133,9 @@ impl Window {
             exaggeration: number(&self.fields[2])?,
             bands: (self.profile.is_some() && self.kgm).then_some(kentos_commands::ProfileBands::Kgm),
             superelevation: if self.profile.is_some() && self.kgm { self.dever.clone() } else { None },
+            corridor: if self.profile.is_some() && self.kgm { self.corridor.clone() } else { None },
+            haul: if self.profile.is_some() && self.kgm { self.haul.clone() } else { None },
+            match_lines: (self.profile.is_some() && self.match_lines).then_some(true),
             scale,
             overlap: number(&self.fields[3])?,
             source: None,
@@ -146,9 +168,13 @@ impl App {
             alignment: Some(alignment),
             profile,
             layer,
-            fields: ["0; -500".into(), "1000".into(), "5".into(), String::new(), String::new(), String::new()],
+            // Docs/adr/0991: Yer empty, the views go under the drawing.
+            fields: [String::new(), "1000".into(), "5".into(), String::new(), String::new(), String::new()],
             kgm: false,
             dever: None,
+            corridor: None,
+            haul: None,
+            match_lines: false,
             preview: Preview::default(),
         }));
         self.dialog = Some(Dialog::RoadSheets);
@@ -156,6 +182,7 @@ impl App {
     }
 
     fn refresh_road_sheets(&mut self) {
+        let input = self.road_sheets_input();
         let Some(doc) = &self.document else { return };
         let Some(w) = self.road_sheets_window.as_mut() else { return };
         let line = w
@@ -168,7 +195,7 @@ impl App {
                 (0..=n).filter_map(|i| b.core.at(b.core.length * i as f64 / n as f64)).map(|p| [p.x, p.y]).collect()
             })
             .unwrap_or_default();
-        w.preview = match w.input().and_then(|q| road_sheets::preview(&doc.model, &q)) {
+        w.preview = match input.and_then(|q| road_sheets::preview(&doc.model, &q)) {
             Err(why) => Preview { why: Some(why), line, ..Preview::default() },
             Ok((laid, warnings)) => Preview { laid: Some(laid), warnings, why: None, line },
         };
@@ -180,12 +207,17 @@ impl App {
             Event::Alignment(id) => {
                 w.profile = None;
                 w.dever = None;
+                w.corridor = None;
+                w.haul = None;
                 w.alignment = Some(id);
             }
             Event::Profile(p) => w.profile = p,
             Event::Layer(l) => w.layer = Some(l),
             Event::Kgm(on) => w.kgm = on,
             Event::Dever(id) => w.dever = id,
+            Event::Corridor(id) => w.corridor = id,
+            Event::Haul(id) => w.haul = id,
+            Event::MatchLines(on) => w.match_lines = on,
             Event::Field(k, t) => w.fields[k.min(5)] = t,
             Event::Make => return self.make_road_sheets(),
             Event::Close => {
@@ -198,10 +230,37 @@ impl App {
         Task::none()
     }
 
+    /// The window's input; with Yer left empty the views go under the drawing (docs/adr/0991): laid at the origin first
+    /// (nothing written), then moved down by how far the highest reaches over its lower left, KGM's rows over it too.
+    fn road_sheets_input(&mut self) -> Result<RoadSheetsPlan, String> {
+        let Some(w) = self.road_sheets_window.as_ref() else { return Err(String::new()) };
+        if w.profile.is_none() || !w.fields[0].trim().is_empty() {
+            return w.input();
+        }
+        let probe = w.input_with(Some([0.0, 0.0]))?;
+        let up = match &self.document {
+            Some(doc) => {
+                let rows = if probe.corridor.is_some() {
+                    kentos_native_application::road_profiles_draw::corridor_rows_height(&doc.model, 2.5)
+                } else {
+                    0.0
+                };
+                road_sheets::preview(&doc.model, &probe)
+                    .map(|(laid, _)| laid.sheets.iter().filter_map(|s| s.view).map(|v| v[1][1]).fold(0.0, f64::max) + rows)
+                    .unwrap_or(0.0)
+            }
+            None => 0.0,
+        };
+        let at = self.under_drawing(up);
+        self.road_sheets_window.as_ref().map_or(Err(String::new()), |w| w.input_with(Some(at)))
+    }
+
     /// Paftaları oluştur: `road.sheets.plan`, one undo step; the sheets shown.
     fn make_road_sheets(&mut self) -> Task<Message> {
-        let Some(w) = self.road_sheets_window.as_ref() else { return Task::none() };
-        let input = match w.input() {
+        if self.road_sheets_window.is_none() {
+            return Task::none();
+        }
+        let input = match self.road_sheets_input() {
             Ok(i) => i,
             Err(why) => {
                 self.warn(format!("Paftalar oluşturulamaz: {why}"));
@@ -275,7 +334,7 @@ impl App {
         if w.profile.is_some() {
             top = top
                 .push(words::field("Katman", container(on_layer).width(150), None))
-                .push(words::field("Yer (Y; X)", field("Y; X", 0, 130.0), None))
+                .push(words::field("Yer (Y; X)", field("Çizimin altı", 0, 130.0), None))
                 .push(words::field("Abartma", field("10", 2, 70.0), None));
         }
         top = top
@@ -289,7 +348,15 @@ impl App {
             let bands = Select::new(["KentOS", "KGM 2019"].into_iter().map(Choice::new), Some(usize::from(w.kgm)), |i| {
                 msg(Event::Kgm(i == 1))
             });
-            let mut second = row![words::field("Bantlar", container(bands).width(130), None)].spacing(10);
+            // Docs/adr/0998: Civil 3D's match lines; KGM's sheets have none.
+            let lines = Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(w.match_lines)), |i| {
+                msg(Event::MatchLines(i == 1))
+            });
+            let mut second = row![
+                words::field("Eşleşme çizgisi", container(lines).width(110), None),
+                words::field("Bantlar", container(bands).width(130), None),
+            ]
+            .spacing(10);
             if w.kgm {
                 let schedules: Vec<(String, String)> = self
                     .document
@@ -311,6 +378,37 @@ impl App {
                     move |i| msg(Event::Dever(ids[i].clone())),
                 );
                 second = second.push(words::field("Dever bandı", container(dever).width(170), None));
+                // Docs/adr/0989: the corridor KGM's slope and platform rows read.
+                let corridors: Vec<(String, String)> = self
+                    .document
+                    .as_ref()
+                    .map(|d| {
+                        d.model
+                            .road_corridors()
+                            .iter()
+                            .filter(|c| Some(&c.alignment) == w.alignment.as_ref())
+                            .map(|c| (c.id.clone(), c.name.clone()))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let chosen = w.corridor.as_ref().and_then(|id| corridors.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None).chain(corridors.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let corridor = Select::new(
+                    std::iter::once("Satır yok".to_owned()).chain(corridors.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    Some(chosen),
+                    move |i| msg(Event::Corridor(ids[i].clone())),
+                );
+                second = second.push(words::field("Şev ve platform", container(corridor).width(170), None));
+                // Docs/adr/0995: the mass haul diagram KGM's earthwork rows read.
+                let hauls = crate::road_place::hauls_on(self.document.as_ref().map(|d| &d.model), w.alignment.as_deref());
+                let chosen = w.haul.as_ref().and_then(|id| hauls.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None).chain(hauls.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let haul = Select::new(
+                    std::iter::once("Satır yok".to_owned()).chain(hauls.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    Some(chosen),
+                    move |i| msg(Event::Haul(ids[i].clone())),
+                );
+                second = second.push(words::field("Hafriyat", container(haul).width(170), None));
             }
             body = body.push(second.align_y(iced::alignment::Vertical::Bottom));
         }

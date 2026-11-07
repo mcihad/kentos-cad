@@ -137,6 +137,8 @@ fn widen_def(
         _ => 0.0,
     };
     let al = &built.core;
+    // A curve's speed term at the speed given, else at its own design speed (docs/adr/0986).
+    let own = crate::road_alignments::curve_speeds(doc, &def.alignment);
     let mut curves = Vec::new();
     let mut unturnable = Vec::new();
     for c in &al.curves {
@@ -144,7 +146,8 @@ fn widen_def(
             continue;
         }
         let (from, to) = (c.stations[0], c.stations[3]);
-        let w = match wid::widening(c.radius, &vehicle, &road) {
+        let at_speed = WideningRoad { speed: input.speed.or_else(|| own.get(&c.pi).copied()), ..road };
+        let w = match wid::widening(c.radius, &vehicle, &at_speed) {
             Ok(w) => w,
             Err(WideningError::Unturnable) => {
                 unturnable.push(c.pi.clone());

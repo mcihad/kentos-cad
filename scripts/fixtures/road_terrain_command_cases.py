@@ -456,6 +456,13 @@ def height(s, q):
             out["slope"] = slope
             if aspect is not None:
                 out["aspect"] = aspect
+            # Docs/adr/1033: the triangle the height is read on, its corners by x then y; its longest plan edge; the
+            # plan distance to its nearest corner.
+            import math
+            c = sorted([[s["xy"][i][0], s["xy"][i][1], s["z"][i]] for i in t], key=lambda v: (v[0], v[1]))
+            out["corners"] = c
+            out["longest"] = max(math.hypot(c[k][0] - c[(k + 1) % 3][0], c[k][1] - c[(k + 1) % 3][1]) for k in range(3))
+            out["corner"] = min(math.hypot(v[0] - q[0], v[1] - q[1]) for v in c)
         return out
     place = "void" if any(inside_ring(v, q) for v in s["voids"]) else "outside"
     return {"x": float(q[0]), "y": float(q[1]), "place": place}
@@ -571,6 +578,8 @@ def report(d):
         out["problem"] = {"code": s.code, "message": PROBLEM[s.code], **({"at": s.at} if s.at else {})}
     else:
         out["figures"] = figures(s)
+        # Docs/adr/1036: the algorithm that made the triangles.
+        out["algorithm"] = "kentos.cdt/1"
     return out
 
 
@@ -852,6 +861,9 @@ def query_cases():
     s_open = build(gather(open_)[0])
 
     def q(name, input_, out, note=None):
+        # Docs/adr/1033: how heights and sections were read, said when the surface gave either.
+        if ("at" in input_ or "along" in input_) and ("heights" in out or "section" in out):
+            out = {**out, "interpolation": "linear"}
         cases.append({"name": name, **({"note": note} if note else {}),
                       "steps": [step("execute", input_, completed(out), {**UNCHANGED, "road": road_of(start)}, W)]})
 
@@ -893,7 +905,8 @@ def query_cases():
     cases.append({"name": "Düzenlenmiş yüzeyde kot: eklenen nokta, silinen üçgen",
                   "setup": setup(start + [edited]),
                   "steps": [step("execute", {"surface": "t-7", "at": eplaces},
-                                 completed({"surfaces": [report(edited)], "heights": [height(s_edit, p) for p in eplaces]}),
+                                 completed({"surfaces": [report(edited)], "heights": [height(s_edit, p) for p in eplaces],
+                                            "interpolation": "linear"}),
                                  {**UNCHANGED, "road": road_of(start + [edited])}, W)]})
     q("Kurulamayan yüzeyde kot yok", {"surface": "t-5", "at": [[10.0, 10.0]]}, {"surfaces": [report(weak)]})
     q("Kesit: sınırın ve boşluğun kenarı boyunca", {"surface": "t-2", "along": [[2.0, 2.0], [38.0, 2.0], [38.0, 28.0]]},
@@ -1197,7 +1210,7 @@ def landxml_cases():
               note=None):
         r = lx_import(sf, metres)
         terrain = {"id": "t-2", "name": kentos_name or sf["name"], "state": "current", "digest": "$any", "built": "$any",
-                   "figures": r["figures"]}
+                   "figures": r["figures"], "algorithm": "kentos.cdt/1"}
         out = {"surface": sf["name"], "unit": unit, "points": r["points"], "breaklines": r["breaklines"],
                "boundary": r["boundary"], "voids": r["voids"], "faces": r["faces"], "ignored": r["ignored"],
                "terrain": terrain, "revision": "$current"}

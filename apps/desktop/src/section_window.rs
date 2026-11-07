@@ -415,6 +415,11 @@ pub struct Preview {
     pub(crate) open: Option<String>,
     /// The lines meeting on a curve's inside, as the query's warning says them (docs/adr/0933 §3).
     pub(crate) crossing: Option<String>,
+    /// The sections whose design lies over ground the surface does not give, as the query's warning says them
+    /// (docs/adr/1034).
+    pub(crate) missing: Option<String>,
+    /// What the sections are computed from, as the query says it (docs/adr/1039).
+    pub(crate) sources: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -433,7 +438,7 @@ pub struct Window {
     pub(crate) preview: Preview,
     /// Çizime yaz: the layer, the sheet's upper left as typed (“Y; X”), the views in a row.
     layer: Option<String>,
-    place: String,
+    pub(crate) place: String,
     /// Paftalara diz's scale (1:N), as typed; empty: the template's.
     pub(crate) sheet_scale: String,
     columns: String,
@@ -539,13 +544,8 @@ impl App {
         }
         let kept_sets = doc.model.road_sections().to_vec();
         let kept_templates = doc.model.road_templates().to_vec();
-        // The sheet goes under the alignments, where nothing is drawn yet.
-        let (mut x0, mut y0) = (f64::INFINITY, f64::INFINITY);
-        for p in doc.model.road_alignments().iter().flat_map(|a| a.pis.iter()) {
-            x0 = x0.min(p.x);
-            y0 = y0.min(p.y);
-        }
-        let place = if x0.is_finite() { format!("{}; {}", trimmed(x0), trimmed(y0 - 600.0)) } else { "0; 0".into() };
+        // Docs/adr/0997: Yer empty, the sections go under everything drawn when they are drawn.
+        let place = String::new();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let chosen = if !kept_sets.is_empty() {
             Some(Chosen::Set(0))
@@ -603,10 +603,12 @@ impl App {
                     typed => match road_sections::preview(&doc.model, &def, typed.and_then(Result::ok).as_ref()) {
                         Err(e) => Preview { why: Some(e), ..Preview::default() },
                         Ok((rows, warnings)) => Preview {
+                            sources: Some(sources_words(&kentos_native_application::road_sections_query::sources_of(&doc.model, &def))),
                             rows,
                             why: warnings.iter().find(|w| w.code == "section_surface_gone").map(|w| w.message.clone()),
                             open: warnings.iter().find(|w| w.code == "section_open").map(|w| w.message.clone()),
                             crossing: warnings.iter().find(|w| w.code == "section_lines_cross").map(|w| w.message.clone()),
+                            missing: warnings.iter().find(|w| w.code == "section_ground_missing").map(|w| w.message.clone()),
                         },
                     },
                 }
@@ -992,16 +994,47 @@ impl App {
         self.refresh_sections();
     }
 
+    /// The sections' upper left: as typed, or with Yer left empty under the drawing (docs/adr/0997): the views laid at
+    /// the origin first (nothing written), then moved down by how far the highest reaches over it, its km row too.
+    fn section_place(&mut self, def: &kentos_commands::SectionSetDef) -> Option<[f64; 2]> {
+        let w = self.section_window.as_ref()?;
+        if !w.place.trim().is_empty() {
+            let parts: Vec<Option<f64>> =
+                w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+            return match parts[..] {
+                [Some(x), Some(y)] => Some([x, y]),
+                _ => None,
+            };
+        }
+        let probe = SectionsDraw {
+            set: def.id.clone(),
+            layer_id: w.layer.clone().unwrap_or_default(),
+            at: [0.0, 0.0],
+            stations: Vec::new(),
+            columns: number(&w.columns).ok().flatten().filter(|v| *v >= 1.0).map(|v| v as u32),
+            exaggeration: number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0),
+            height: None,
+            expected_revision: None,
+        };
+        let doc = self.document.as_mut()?;
+        let row = 2.4 * 2.5 * doc.model.settings().plot_scale / 1000.0;
+        let up = match road_sections_draw::plan(&ExecutionContext::new(&mut doc.model), &probe) {
+            kentos_commands::CommandResult::Completed { output, .. } => {
+                output.views.iter().map(|v| v.frame[1][1].max(v.frame[0][1])).fold(0.0, f64::max) + row
+            }
+            _ => row,
+        };
+        Some(self.under_drawing(up))
+    }
+
     /// Çizime yaz: the chosen saved set's sections drawn on the chosen layer from the typed place, one undo step.
     fn draw_sections(&mut self) -> Task<Message> {
         let Some(def) = self.chosen_saved_set("çizilir") else { return Task::none() };
-        let Some(w) = &self.section_window else { return Task::none() };
-        let parts: Vec<Option<f64>> =
-            w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
-        let [Some(x), Some(y)] = parts[..] else {
-            self.warn("Yeri “Y; X” olarak yazın.".to_owned());
+        let Some([x, y]) = self.section_place(&def) else {
+            self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
             return Task::none();
         };
+        let Some(w) = &self.section_window else { return Task::none() };
         let input = SectionsDraw {
             set: def.id.clone(),
             layer_id: w.layer.clone().unwrap_or_default(),
@@ -1034,13 +1067,11 @@ impl App {
     /// (`road.sheets.sections`), one undo step; the sheets shown.
     fn section_sheets(&mut self) -> Task<Message> {
         let Some(def) = self.chosen_saved_set("paftalara dizilir") else { return Task::none() };
-        let Some(w) = &self.section_window else { return Task::none() };
-        let parts: Vec<Option<f64>> =
-            w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
-        let [Some(x), Some(y)] = parts[..] else {
-            self.warn("Yeri “Y; X” olarak yazın.".to_owned());
+        let Some([x, y]) = self.section_place(&def) else {
+            self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
             return Task::none();
         };
+        let Some(w) = &self.section_window else { return Task::none() };
         let scale = match number(&w.sheet_scale) {
             Ok(None) => None,
             Ok(Some(v)) if v >= 1.0 && v.fract() == 0.0 && v <= 1e6 => Some(v as u32),
@@ -1289,7 +1320,7 @@ impl App {
         row![
             label::strong("Çizime"),
             words::field("Katman", container(layer).width(220), None),
-            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Y; X", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
+            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Çizimin altı", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
             words::field("Satırda", kentos_ui::widget::text_field("5", &w.columns).on_input(|t| msg(Event::Columns(t))).width(60), None),
             words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
             words::field("Pafta 1:", kentos_ui::widget::text_field("500", &w.sheet_scale).on_input(|t| msg(Event::SheetScale(t))).width(70), None),
@@ -1450,6 +1481,12 @@ impl App {
         if let Some(open) = &w.preview.open {
             col = col.push(label::caption(open.clone()).style(warn));
         }
+        if let Some(missing) = &w.preview.missing {
+            col = col.push(label::caption(missing.clone()).style(warn));
+        }
+        if let Some(sources) = &w.preview.sources {
+            col = col.push(label::caption(sources.clone()).style(muted));
+        }
         if stale {
             col = col.push(label::caption("Aks değişti: km'leri denetleyip aksa yeniden bağlayın.").style(warn));
         }
@@ -1508,6 +1545,20 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// The sources a set's sections are computed from in a line (docs/adr/1039).
+fn sources_words(s: &kentos_commands::SectionSources) -> String {
+    let mut words = format!("Kaynaklar: takım {} ({}), aks {} ({})", s.set.id, s.set.revision, s.alignment.id, s.alignment.revision);
+    for (what, src) in [("boykesit", &s.profile), ("tip kesit", &s.template), ("dever", &s.superelevation)] {
+        if let Some(x) = src {
+            words.push_str(&format!(", {what} {} ({})", x.id, x.revision));
+        }
+    }
+    if let Some(g) = &s.surface {
+        words.push_str(&format!(", {}", crate::road_dialog::surface_source_words(g)));
+    }
+    words
 }
 
 /// A sloping ground for a template's look, 16 m either side of the axis (from 40 m before docs/adr/0975 §3: the layers
@@ -1879,6 +1930,18 @@ impl canvas::Program<Message> for Chart<'_> {
                 &Path::line(Point::new(x(0.0), plot.y), Point::new(x(0.0), plot.y + plot.height)),
                 Stroke { line_dash: LineDash { segments: &[5.0, 4.0], offset: 0 }, ..thin(t.accent) },
             );
+        }
+        // Docs/adr/1034: the swath's stretches off the surface, faint, so a design over them shows it has no ground.
+        if let Some(r) = self.row {
+            for m in &r.missing {
+                let (a, b) = (x(m[0].max(o0)), x(m[1].min(o1)));
+                if b > a + 0.5 {
+                    frame.fill_rectangle(Point::new(a, plot.y), iced::Size::new(b - a, plot.height), t.warning.scale_alpha(0.12));
+                    if b - a > 60.0 {
+                        word(&mut frame, "arazi yok".into(), Point::new(a + 6.0, plot.y + 4.0), t.warning, false);
+                    }
+                }
+            }
         }
         let terrain = Path::new(|b| {
             let mut open = false;

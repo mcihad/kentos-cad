@@ -617,3 +617,114 @@ fn screens_ove() {
     }
 }
 
+
+/// The design speed (docs/adr/0985): Proje hızı and a curve's own V are typed and saved; neither is the geometry, so the
+/// alignment's revision stays and nothing on it goes stale. An empty field clears it.
+#[test]
+fn the_design_speed_is_typed_saved_and_cleared_without_a_new_revision() {
+    let mut app = app(serde_json::json!([]));
+    made(&mut app);
+    let before = alignments(&app)[0].revision;
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Speed("80".into()));
+    send(&mut app, W::Pi(1, 5, "50".into()));
+    send(&mut app, W::Save);
+    let a = &alignments(&app)[0];
+    assert_eq!((a.design_speed, a.pis[1].speed, a.revision), (Some(80.0), Some(50.0), before));
+    let _ = app.update(Message::Run("alignment.editor"));
+    send(&mut app, W::Choose(0));
+    send(&mut app, W::Speed(String::new()));
+    send(&mut app, W::Save);
+    assert_eq!(alignments(&app)[0].design_speed, None);
+    assert_eq!(alignments(&app)[0].pis[1].speed, Some(50.0), "the curve's own speed stays");
+}
+
+/// Güzergâh with Proje hızı and the PIs' V column (docs/adr/0985), light and dark; `.run/gui-evidence/yol-y79/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib alignment_window_tests::screens_speed -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_speed() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y79");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(serde_json::json!([]));
+        made(&mut app);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::Speed("80".into()));
+        send(&mut app, W::Pi(1, 5, "50".into()));
+        send(&mut app, W::PiChoose(1));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y79-hiz-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Güzergâh after a LandXML file's roadway speeds came in (docs/adr/0988): Proje hızı 80, p1's V 50;
+/// `.run/gui-evidence/yol-y82/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib alignment_window_tests::screens_landxml_speeds -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_landxml_speeds() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y82");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/road/v1/landxml/aks-hiz.xml");
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        let mut app = app(serde_json::json!([]));
+        let input = kentos_commands::AlignmentsImport {
+            path: file.display().to_string(),
+            alignments: None,
+            without_profiles: true,
+            expected_revision: None,
+        };
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let done = kentos_native_application::road_alignments_import::execute(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            input,
+        );
+        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+        let a = &alignments(&app)[0];
+        assert_eq!((a.design_speed, a.pis[1].speed), (Some(80.0), Some(50.0)));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::RibbonTab("alignment"));
+        let _ = app.update(Message::Run("alignment.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::PiChoose(1));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y82-landxml-hiz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

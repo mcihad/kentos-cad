@@ -1903,11 +1903,18 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
     kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si
     + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste
     hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa
-    şimdi, UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün
-    yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan
-    yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler:
-    not_a_road_project, invalid_file_path, file_exists, unknown_terrain,
-    unknown_alignment, invalid_landxml.
+    şimdi, UTC). Aksın proje hızı ve kurplarının kendi hızları
+    Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı
+    TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks
+    LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına
+    yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi
+    değiştirmez ve geri alma adımı değildir. Dosya projenin sistemlerini
+    CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu; ADR
+    1031). machineControl: true makine kontrolü içindir: projenin kotlarının düşey
+    sistemi söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini
+    o sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project,
+    invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml,
+    field_heights_unknown, unproven_heights.
     """
     __slots__ = ()
     id = "file.export.landxml"
@@ -1925,6 +1932,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         *,
         path: str,
         alignments: Sequence[str] | None | Unset = UNSET,
+        machine_control: bool | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         surfaces: Sequence[str] | None | Unset = UNSET,
@@ -1940,15 +1948,25 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık).
         surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri);
         withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi,
-        UTC). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya
-        da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan
-        söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project,
-        invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml.
+        UTC). Aksın proje hızı ve kurplarının kendi hızları
+        Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı
+        TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks
+        LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına
+        yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi
+        değiştirmez ve geri alma adımı değildir. Dosya projenin sistemlerini
+        CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu; ADR
+        1031). machineControl: true makine kontrolü içindir: projenin kotlarının düşey
+        sistemi söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini
+        o sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project,
+        invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml,
+        field_heights_unknown, unproven_heights.
 
         Args:
             doc: The drawing it works on.
             path:
             alignments:
+            machine_control: For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each
+                surface's cloud ground in it (`unproven_heights`).
             overwrite:
             stamp:
             surfaces:
@@ -1968,6 +1986,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         return self.execute_input(doc, ExportLandxml(
             path=path,
             alignments=_opt(alignments, lambda x: list(x)),
+            machine_control=machine_control,
             overwrite=overwrite,
             stamp=stamp,
             surfaces=_opt(surfaces, lambda x: list(x)),
@@ -1981,6 +2000,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         *,
         path: str,
         alignments: Sequence[str] | None | Unset = UNSET,
+        machine_control: bool | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         surfaces: Sequence[str] | None | Unset = UNSET,
@@ -1992,6 +2012,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         return self.plan_input(doc, ExportLandxml(
             path=path,
             alignments=_opt(alignments, lambda x: list(x)),
+            machine_control=machine_control,
             overwrite=overwrite,
             stamp=stamp,
             surfaces=_opt(surfaces, lambda x: list(x)),
@@ -2005,6 +2026,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         *,
         path: str,
         alignments: Sequence[str] | None | Unset = UNSET,
+        machine_control: bool | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         surfaces: Sequence[str] | None | Unset = UNSET,
@@ -2016,6 +2038,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         return self.validate_input(doc, ExportLandxml(
             path=path,
             alignments=_opt(alignments, lambda x: list(x)),
+            machine_control=machine_control,
             overwrite=overwrite,
             stamp=stamp,
             surfaces=_opt(surfaces, lambda x: list(x)),
@@ -2029,6 +2052,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         *,
         path: str,
         alignments: Sequence[str] | None | Unset = UNSET,
+        machine_control: bool | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         surfaces: Sequence[str] | None | Unset = UNSET,
@@ -2045,6 +2069,7 @@ class _FileExportLandxml(LocalCommand[ExportLandxml, LandxmlExported, LandxmlExp
         return self.answer_input(doc, ExportLandxml(
             path=path,
             alignments=_opt(alignments, lambda x: list(x)),
+            machine_control=machine_control,
             overwrite=overwrite,
             stamp=stamp,
             surfaces=_opt(surfaces, lambda x: list(x)),

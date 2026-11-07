@@ -637,7 +637,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -830,7 +831,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -1022,7 +1024,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -1226,7 +1229,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -1442,7 +1446,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -1658,7 +1663,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.5
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -1869,7 +1875,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.10882352941177
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -2085,7 +2092,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -2313,7 +2321,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.12142857142857
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -2532,7 +2541,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -2751,7 +2761,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -2970,7 +2981,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -3189,7 +3201,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -3413,7 +3426,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -3652,7 +3666,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -3875,7 +3890,8 @@
                   "removed": 1,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -4088,7 +4104,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -4317,7 +4334,8 @@
                   "removed": 1,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -4574,7 +4592,8 @@
                   "removed": 1,
                   "minZ": 100.16,
                   "maxZ": 103.5
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -4794,7 +4813,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -4973,7 +4993,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -5146,7 +5167,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [
@@ -5429,7 +5451,8 @@
                   "trimmed": 0,
                   "minZ": 100.16,
                   "maxZ": 103.1343137254902
-                }
+                },
+                "algorithm": "kentos.cdt/1"
               }
             },
             "warnings": [

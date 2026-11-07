@@ -100,8 +100,10 @@ Kabul görmüş, standart:
 
 ## Açık
 
-- **Some bilgisinde S, Gn, Lt, La:** dever ve genişleme çizelgelerinden okunmuyor; V (hız) de yazılmıyor.
-- **Klotoid kutuları** (KGM'nin `S1/1`, `S1/2` A, Ls, Y, X kutuları).
+- ~~**Some bilgisinde S, Gn, Lt, La:**~~ Y77'de, ADR 0983: aksın dever çizelgesinden. Aynı işte `T=` ve `L=` KGM'nin
+  basit kurbuna, `Lr=` klotoid boyundan rampa boyuna döndü. V (hız) yazılmıyor: projede tasarım hızı yok.
+- **Klotoid kutuları** (KGM 2019 EK-13'ün A, Ls, Y, X kutusu; Y, X'in hangi nokta olduğu taramadan çıkmadı). Y78'de
+  ana kutu klotoidli kurbun dairesel kısmını ve `S-D`, `S-X`, `S-Y`'yi yazıyor (ADR 0984).
 - **Km eşitliğinin kesir yazısı** (İLERİ/GERİ).
 - **Kuzey oku** (paftada ayrı bir öğe olarak var) ve aksın noktalı-çizgili gösterimi: KGM'de okunamadı.
 - **Harita katman listesi:** yalnız seçili katmanları gösteren bir haritada `yol-aks-pafta` listede yoksa aks

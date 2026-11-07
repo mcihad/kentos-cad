@@ -15,4 +15,9 @@ digest: string,
 /**
  * The digest it was last accepted from.
  */
-built?: string, left?: Array<TerrainLeft>, figures?: TerrainFigures, problem?: TerrainProblem, };
+built?: string, left?: Array<TerrainLeft>, figures?: TerrainFigures, problem?: TerrainProblem, 
+/**
+ * The algorithm that made the triangles and its version, when the surface builds (docs/adr/1036): KentOS's
+ * constrained Delaunay triangulation, `kentos.cdt/1` (with no constraint, the Delaunay triangulation).
+ */
+algorithm?: string, };

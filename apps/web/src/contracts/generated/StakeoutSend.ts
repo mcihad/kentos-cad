@@ -11,7 +11,9 @@ import type { StakeoutSendFormat } from "./StakeoutSendFormat";
  * Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid
  * `path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without
  * `overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot
- * carry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),
- * `export_losses` (points the format cannot carry; strings of one point).
+ * carry, a first number not in [1, 99 999 999]), `field_heights_unknown` (docs/adr/1031: the project does not say its
+ * heights' system; after the first number and the stamp). Warnings: the query's, `stakeout_code_dropped` (codes left
+ * off), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's
+ * systems in its `CoordinateSystem`.
  */
 export type StakeoutSend = { corridor: string, from?: number, to?: number, step?: number, codes?: Array<string>, format: StakeoutSendFormat, path: string, overwrite?: boolean, first?: number, job?: string, stamp?: string, };

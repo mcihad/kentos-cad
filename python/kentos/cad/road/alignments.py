@@ -237,7 +237,10 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
     true bir PI'nın kurbunu sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne
     dönen, yarıçapları farklı, aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür,
     ortadaki aliyman klotoidin başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A,
-    boy, başladığı km ve iki dairenin arası. offsetOf {alignment, offset} bir aksın
+    boy, başladığı km ve iki dairenin arası. designSpeed yolun proje hızıdır (km/sa,
+    0'dan büyük, en çok 200; ADR 0985); bir PI'nın speed'i yalnız kendi kurbu içindir
+    (KGM aynı yolda bir kurba V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin
+    V'si budur; paralel aksın hızı kaynağınındır. offsetOf {alignment, offset} bir aksın
     paralelini kurar (sağa artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını
     izler, km'si kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini
     keserse offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back:
@@ -266,10 +269,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         /,
         *,
         name: str,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -283,27 +289,33 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         sonraki PI'nın kurbuna ove klotoidiyle bağlar (aynı yöne dönen, yarıçapları farklı,
         aradaki yanda klotoidsiz iki kurp; A PI'lardan çözülür, ortadaki aliyman klotoidin
         başlangıç teğetidir; ADR 0979); cevapta bağın ove'si A, boy, başladığı km ve iki
-        dairenin arası. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa artı,
-        sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si kaynağınındır; bir
-        kurpun yarıçapı ötelemeden küçükse ya da kendini keserse offset_cusp. stationing
-        başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin olduğu yerin önceki
-        km'si, ahead: sonraki km, increasing: km sonra artar mı). Elemanların kimlikleri
-        PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp, p3/cikis, p3/ove). Cevap aksın
-        raporudur: boy (projenin düzleminde), zemin boyu (ölçek ve yükseklik çarpanıyla,
-        sistem ve ortalama elipsoit yüksekliği varsa), km'ler, elemanlar, kurplar (sapma,
-        teğet boyları, TS–SC–CS–ST km'leri), ters ve bileşik kurplar ve integralin PI
-        geometrisine artığı. Tek geri alma adımı “Aks oluştur”. id verilmezse g-1, g-2 … ilk
-        boş olanıdır. Retler: not_a_road_project, invalid_alignment, alignment_spirals_long,
-        alignment_curves_overlap, invalid_stationing, offset_cusp, invalid_revision,
-        revision_conflict.
+        dairenin arası. designSpeed yolun proje hızıdır (km/sa, 0'dan büyük, en çok 200; ADR
+        0985); bir PI'nın speed'i yalnız kendi kurbu içindir (KGM aynı yolda bir kurba
+        V=110, kavşaktakine V=50 yazar); paftadaki some bilgisinin V'si budur; paralel aksın
+        hızı kaynağınındır. offsetOf {alignment, offset} bir aksın paralelini kurar (sağa
+        artı, sola eksi, m): kendi geometrisi saklanmaz, kaynağını izler, km'si
+        kaynağınındır; bir kurpun yarıçapı ötelemeden küçükse ya da kendini keserse
+        offset_cusp. stationing başlangıç km'si (start) ve km eşitlikleri (back: eşitliğin
+        olduğu yerin önceki km'si, ahead: sonraki km, increasing: km sonra artar mı).
+        Elemanların kimlikleri PI'larınkinden türer (p3/aliyman, p3/giris, p3/kurp,
+        p3/cikis, p3/ove). Cevap aksın raporudur: boy (projenin düzleminde), zemin boyu
+        (ölçek ve yükseklik çarpanıyla, sistem ve ortalama elipsoit yüksekliği varsa),
+        km'ler, elemanlar, kurplar (sapma, teğet boyları, TS–SC–CS–ST km'leri), ters ve
+        bileşik kurplar ve integralin PI geometrisine artığı. Tek geri alma adımı “Aks
+        oluştur”. id verilmezse g-1, g-2 … ilk boş olanıdır. Retler: not_a_road_project,
+        invalid_alignment, alignment_spirals_long, alignment_curves_overlap,
+        invalid_stationing, offset_cusp, invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.
             name:
+            design_speed: The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve. Unit: km/h.
+            end_place:
             expected_revision:
             id:
             offset_of:
             pis:
+            start_place: Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
             stationing:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -319,10 +331,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         """
         return self.execute_input(doc, AlignmentsCreate(
             name=name,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), request_id=request_id, expected=expected)
 
@@ -332,10 +347,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         /,
         *,
         name: str,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> AlignmentsWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -343,10 +361,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         """
         return self.plan_input(doc, AlignmentsCreate(
             name=name,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -356,10 +377,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         /,
         *,
         name: str,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -367,10 +391,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         """
         return self.validate_input(doc, AlignmentsCreate(
             name=name,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -380,10 +407,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         /,
         *,
         name: str,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         id: str | None | Unset = UNSET,
         offset_of: AlignmentOffset | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -396,10 +426,13 @@ class _RoadAlignmentsCreate(LocalCommand[AlignmentsCreate, AlignmentsWritten, Al
         """
         return self.answer_input(doc, AlignmentsCreate(
             name=name,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             id=id,
             offset_of=offset_of,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -411,18 +444,20 @@ create = _RoadAlignmentsCreate()
 class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, AlignmentsWritten]):
     """``road.alignments.edit`` v1. Aksı düzenle: Yol projesinin bir aksını (alignment:
     kimliği ya da adı) düzenler. set: verilen alanlar (name, pis, stationing, paralel
-    aksta offset) aksınkinin yerini alır; boş stationing km'yi sıfırlar. reverse: aks
-    ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve çıkış klotoidi yer
-    değiştirir; başlangıç km'si kalır, eşitlikler gider: equations_dropped). remove: aks
-    kalkar, onu izleyen paralel aks varken alignment_in_use. Cevabın mapping'i
-    düzenlemenin km'lere ne yaptığıdır: her eleman kimliğiyle kept (aynı yerde aynı),
-    moved (aynı ama km'si kaydı), changed (geometrisi değişti), added, removed ya da
-    reversed; önceki ve sonraki km aralığıyla. dependents aksı izleyen paralel
-    akslardır; düzenleme onlardan birini kıvırırsa offset_cusp ile reddedilir. Aksın
-    revizyonu her değişiklikte bir artar. Tek geri alma adımı “Aksı düzenle”. Retler:
-    not_a_road_project, unknown_alignment, invalid_alignment, alignment_spirals_long,
-    alignment_curves_overlap, invalid_stationing, offset_cusp, alignment_in_use,
-    invalid_revision, revision_conflict.
+    aksta offset, designSpeed) aksınkinin yerini alır; boş stationing km'yi sıfırlar,
+    designSpeed 0 proje hızını kaldırır; proje hızı ve PI'ların speed'i geometri
+    değildir, aksın revizyonu artmaz (ADR 0985). reverse: aks ters çevrilir (PI'lar ters
+    sırada, her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır,
+    eşitlikler gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks
+    varken alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her
+    eleman kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed
+    (geometrisi değişti), added, removed ya da reversed; önceki ve sonraki km
+    aralığıyla. dependents aksı izleyen paralel akslardır; düzenleme onlardan birini
+    kıvırırsa offset_cusp ile reddedilir. Aksın revizyonu her değişiklikte bir artar.
+    Tek geri alma adımı “Aksı düzenle”. Retler: not_a_road_project, unknown_alignment,
+    invalid_alignment, alignment_spirals_long, alignment_curves_overlap,
+    invalid_stationing, offset_cusp, alignment_in_use, invalid_revision,
+    revision_conflict.
     """
     __slots__ = ()
     id = "road.alignments.edit"
@@ -440,19 +475,24 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         *,
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> AlignmentsWritten:
         """Aksı düzenle: Yol projesinin bir aksını (alignment: kimliği ya da adı) düzenler.
-        set: verilen alanlar (name, pis, stationing, paralel aksta offset) aksınkinin yerini
-        alır; boş stationing km'yi sıfırlar. reverse: aks ters çevrilir (PI'lar ters sırada,
-        her PI'nın giriş ve çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler
-        gider: equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken
+        set: verilen alanlar (name, pis, stationing, paralel aksta offset, designSpeed)
+        aksınkinin yerini alır; boş stationing km'yi sıfırlar, designSpeed 0 proje hızını
+        kaldırır; proje hızı ve PI'ların speed'i geometri değildir, aksın revizyonu artmaz
+        (ADR 0985). reverse: aks ters çevrilir (PI'lar ters sırada, her PI'nın giriş ve
+        çıkış klotoidi yer değiştirir; başlangıç km'si kalır, eşitlikler gider:
+        equations_dropped). remove: aks kalkar, onu izleyen paralel aks varken
         alignment_in_use. Cevabın mapping'i düzenlemenin km'lere ne yaptığıdır: her eleman
         kimliğiyle kept (aynı yerde aynı), moved (aynı ama km'si kaydı), changed (geometrisi
         değişti), added, removed ya da reversed; önceki ve sonraki km aralığıyla. dependents
@@ -466,10 +506,14 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
             doc: The drawing it works on.
             alignment:
             operation:
+            design_speed: The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays. Unit: km/h.
+            end_place:
             expected_revision:
             name:
             offset: A parallel axis's offset, m, right positive. Unit: m.
             pis:
+            start_place: Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
+                revision stays.
             stationing: The km; an empty one (no start, no equation) clears it.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -486,10 +530,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         return self.execute_input(doc, AlignmentsEdit(
             alignment=alignment,
             operation=operation,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), request_id=request_id, expected=expected)
 
@@ -500,10 +547,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         *,
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> AlignmentsWritten:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -512,10 +562,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         return self.plan_input(doc, AlignmentsEdit(
             alignment=alignment,
             operation=operation,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -526,10 +579,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         *,
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -538,10 +594,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         return self.validate_input(doc, AlignmentsEdit(
             alignment=alignment,
             operation=operation,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ))
 
@@ -552,10 +611,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         *,
         alignment: str,
         operation: AlignmentsEditOperation | AlignmentsEditOperationName,
+        design_speed: float | None | Unset = UNSET,
+        end_place: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
         offset: float | None | Unset = UNSET,
         pis: Sequence[AlignmentPi] | None | Unset = UNSET,
+        start_place: str | None | Unset = UNSET,
         stationing: AlignmentStationing | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -569,10 +631,13 @@ class _RoadAlignmentsEdit(LocalCommand[AlignmentsEdit, AlignmentsWritten, Alignm
         return self.answer_input(doc, AlignmentsEdit(
             alignment=alignment,
             operation=operation,
+            design_speed=design_speed,
+            end_place=end_place,
             expected_revision=expected_revision,
             name=name,
             offset=offset,
             pis=_opt(pis, lambda x: list(x)),
+            start_place=start_place,
             stationing=stationing,
         ), op=op, request_id=request_id, expected=expected)
 
@@ -925,14 +990,18 @@ class _RoadAlignmentsImport(LocalCommand[AlignmentsImport, AlignmentsImported, A
     KentOS aksı olarak alır: PI'lar elemanlardan bulunur (her aliymanlar arası kurp
     grubu bir PI: giriş ve çıkış teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı,
     klotoidlerin boyu; açıyla buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks
-    dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km
-    denklemleri ve withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol,
-    asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir.
-    alignments dosyanın akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan
-    bileşik ya da ters kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi
-    ve zincir alınmaz, landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”.
-    Retler: not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment,
-    invalid_alignment, invalid_revision, revision_conflict.
+    dosyanın elemanlarıyla uç uca karşılaştırılır (en çok 1 mm; cevabın deviation'ı).
+    Aksı adıyla anan Roadway'in DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond
+    3,6 ile km/sa'e çevrilir) en uzun aralığınki aksın proje hızı, dairesel kısmının
+    ortası başka hızlı aralığa düşen kurbun kendi hızı olur; 0'dan büyük, en çok 200
+    km/sa olmayan landxml_left ile alınmaz (ADR 0988). Km denklemleri ve withoutProfiles
+    verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler
+    iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın akslarını adla seçer
+    (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid,
+    klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile
+    söylenir. Tek geri alma adımı “LandXML aks al”. Retler: not_a_road_project,
+    file_not_found, import_unreadable, landxml_no_alignment, invalid_alignment,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.alignments.import"
@@ -959,14 +1028,18 @@ class _RoadAlignmentsImport(LocalCommand[AlignmentsImport, AlignmentsImported, A
         elemanlardan bulunur (her aliymanlar arası kurp grubu bir PI: giriş ve çıkış
         teğetlerinin buluştuğu yer, daire eğrisinin yarıçapı, klotoidlerin boyu; açıyla
         buluşan iki aliyman kurpsuz PI), PI'lardan kurulan aks dosyanın elemanlarıyla uç uca
-        karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Km denklemleri ve
-        withoutProfiles verilmezse boykesitleri (PVI'lar ve parabol, asimetrik parabol,
-        daire eğrisi; km'ler iç km'den aksın boyuna çevrilir) de gelir. alignments dosyanın
-        akslarını adla seçer (yoksa hepsi). Aralarında aliyman olmayan bileşik ya da ters
-        kurp, ove klotoid, klotoid olmayan geçiş eğrisi, düzensiz çizgi ve zincir alınmaz,
-        landxml_left ile söylenir. Tek geri alma adımı “LandXML aks al”. Retler:
-        not_a_road_project, file_not_found, import_unreadable, landxml_no_alignment,
-        invalid_alignment, invalid_revision, revision_conflict.
+        karşılaştırılır (en çok 1 mm; cevabın deviation'ı). Aksı adıyla anan Roadway'in
+        DesignSpeed'leri (Imperial'da mil/saat, metersPerSecond 3,6 ile km/sa'e çevrilir) en
+        uzun aralığınki aksın proje hızı, dairesel kısmının ortası başka hızlı aralığa düşen
+        kurbun kendi hızı olur; 0'dan büyük, en çok 200 km/sa olmayan landxml_left ile
+        alınmaz (ADR 0988). Km denklemleri ve withoutProfiles verilmezse boykesitleri
+        (PVI'lar ve parabol, asimetrik parabol, daire eğrisi; km'ler iç km'den aksın boyuna
+        çevrilir) de gelir. alignments dosyanın akslarını adla seçer (yoksa hepsi).
+        Aralarında aliyman olmayan bileşik ya da ters kurp, ove klotoid, klotoid olmayan
+        geçiş eğrisi, düzensiz çizgi ve zincir alınmaz, landxml_left ile söylenir. Tek geri
+        alma adımı “LandXML aks al”. Retler: not_a_road_project, file_not_found,
+        import_unreadable, landxml_no_alignment, invalid_alignment, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.

@@ -358,7 +358,7 @@ def sections(d, at, templates, extra_supers=()):
                          "message": f"“{d['name']}” kesit takımının dever çizelgesi kurulamıyor (“p9” PI'sinde kurp yok); "
                                     "şeritler tip kesitin eğimiyle verildi.", "path": "set"})
         sup = None
-    rows, open_, unpaved = [], [], []
+    rows, open_, unpaved, under = [], [], [], []
     widths, found = widths_of(d, at)
     w = crossing_warning(d, at, found)
     if w:
@@ -379,6 +379,10 @@ def sections(d, at, templates, extra_supers=()):
                 g["offset"] -= left
             row["ground"] = [{"offset": g["offset"], **({"z": g["z"]} if g["z"] is not None else {}), "gap": g["gap"]}
                              for g in ground]
+            # Docs/adr/1034: the swath's stretches off the surface, each from a place to the next one flagged a gap.
+            missing = [[ground[k - 1]["offset"], ground[k]["offset"]] for k in range(1, len(ground)) if ground[k]["gap"]]
+            if missing:
+                row["missing"] = missing
         red = ev(s) if ev else None
         if red is not None:
             row["axis"] = red[0]
@@ -410,6 +414,9 @@ def sections(d, at, templates, extra_supers=()):
             for side, word in ((lside, "sol"), (rside, "sağ")):
                 if side["kind"] == "open":
                     open_.append(f"km {row['kmText']} {word}")
+            lo, hi = float(lside["points"][-1][0]), float(rside["points"][-1][0])
+            if any(m[0] < hi and m[1] > lo for m in row.get("missing", [])):
+                under.append(f"km {row['kmText']}")
         rows.append(row)
     if unpaved:
         warnings.append({"code": "pavement_unbuilt",
@@ -419,6 +426,11 @@ def sections(d, at, templates, extra_supers=()):
         warnings.append({"code": "section_open",
                          "message": "Şu yanların şevi şerit genişliği içinde araziyle buluşmuyor: "
                                     f"{', '.join(open_)}. Şeridi genişletin.", "path": "set"})
+    if under:
+        warnings.append({"code": "section_ground_missing",
+                         "message": "Şu kesitlerde tasarımın altında arazi yok (yüzeyin dışı ya da boşluğu): "
+                                    f"{', '.join(under)}. Oradaki kazı ve dolgu alana katılmadı; yüzeyi genişletin ya da "
+                                    "boşluğu doldurun.", "path": "set"})
     return rows, warnings
 
 
@@ -751,13 +763,33 @@ def sections_cases():
 
 # ── road.sections.query ────────────────────────────────────────────────────────────────────────────────────────────
 
+def sources_of(asked, road, doc=None):
+    """Docs/adr/1039: what the asked set's sections are computed from, each as `road` has it now; an id the project
+    does not have reads revision 0; the surface with its digest of now (docs/adr/1040) in `doc` (none: the default
+    drawing)."""
+    d = next(x for x in road["sections"] if x["id"] == asked or x["name"].lower() == asked.lower())
+
+    def rev(kind, id_):
+        return next((x.get("revision", 0) for x in road.get(kind, []) if x["id"] == id_), 0)
+    out = {"set": {"id": d["id"], "revision": d.get("revision", 0)},
+           "alignment": {"id": d["alignment"], "revision": rev("alignments", d["alignment"])}}
+    for key, kind in (("profile", "profiles"), ("template", "templates"), ("superelevation", "superelevations")):
+        if d.get(key):
+            out[key] = {"id": d[key], "revision": rev(kind, d[key])}
+    if d.get("surface"):
+        out["surface"] = pcmd.surface_source(road, d["surface"], doc)
+    return out
+
+
 def query_cases():
     templates, start = [TK1, TK2], [S1, S2]
     cases = []
 
     def q(name, input_, out, warns=(), setup_=None, sets=start, op="execute", supers=None):
-        result = completed(None, warns) if op == "validate" else completed(out, warns)
         road = road_of(templates, sets, supers=supers)
+        if out is not None and input_.get("set") and "sections" in out:
+            out = {**out, "sources": sources_of(input_["set"], road, setup_)}
+        result = completed(None, warns) if op == "validate" else completed(out, warns)
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road})], setup_))
 
     def no(name, input_, result, setup_=None, sets=start):
@@ -828,8 +860,10 @@ def query_cases():
         at = stations_of(d) if stations_ is None or sup_ else stations_
         rows_, warns_ = sections(d, at, tpls)
         input_ = {"set": "k-1", **({"stations": stations_} if stations_ and not sup_ else {})}
-        cases.append(case(name, [step("execute", input_, completed({"sets": [report(d)], "sections": rows_}, warns_),
-                                      {**UNCHANGED, "road": road_of(tpls, [d, S2], supers=SUPERS if sup_ else None)})],
+        road_ = road_of(tpls, [d, S2], supers=SUPERS if sup_ else None)
+        cases.append(case(name, [step("execute", input_, completed({"sets": [report(d)], "sections": rows_,
+                                                                     "sources": sources_of("k-1", road_)}, warns_),
+                                      {**UNCHANGED, "road": road_})],
                           setup(templates=tpls, sets=[d, S2], supers=SUPERS if sup_ else None)))
     out, warns = one(S1, [200.0])
     q("Plan cevabı verir", {"set": "k-1", "stations": [200.0]}, out, warns, op="plan")
@@ -949,7 +983,7 @@ def draw_cases():
                           setup_ or (None if sets is start else setup(sets=sets, layers=layers))))
 
     def opens(d, at):
-        return [w for w in sections(d, at, templates)[1] if w["code"] == "section_open"]
+        return [w for w in sections(d, at, templates)[1] if w["code"] in ("section_open", "section_ground_missing")]
 
     hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
     base = {"set": "k-1", "layerId": "0", "at": [0.0, -100.0]}

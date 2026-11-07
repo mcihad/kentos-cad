@@ -4,6 +4,7 @@
 
 mod blocks_find;
 mod review_take;
+mod design_speeds;
 mod superelevation_reverse;
 mod ifc_files;
 mod gltf_files;
@@ -75,6 +76,7 @@ mod python_calls;
 mod reassociate;
 mod reconcile;
 mod road_plan_axes;
+mod road_view_scales;
 mod source_relations;
 mod sources;
 mod sensors_timing;

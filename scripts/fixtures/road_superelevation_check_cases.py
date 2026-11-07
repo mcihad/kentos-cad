@@ -133,14 +133,21 @@ def cases():
     out = []
     tk1, tk2 = scmd.TK1, scmd.TK2
 
-    def q(name, input_, d, t, supers=(D1, D2), templates=None, **kw):
+    def q(name, input_, d, t, supers=(D1, D2), templates=None, speeds=None, **kw):
         result, warns = answer(d, t, **kw)
         base = sup.setup(supers=supers)
         if templates:
             base["settings"]["road"]["templates"] = copy.deepcopy(templates)
+        if speeds:
+            # Docs/adr/0986: g-1's design speed and p1's own (docs/adr/0985).
+            g1 = next(a for a in base["settings"]["road"]["alignments"] if a["id"] == "g-1")
+            if "design" in speeds:
+                g1["designSpeed"] = speeds["design"]
+            if "p1" in speeds:
+                next(p for p in g1["pis"] if p["id"] == "p1")["speed"] = speeds["p1"]
         out.append(case(name, [step("execute", input_, completed(result, warns),
                                     {**UNCHANGED, "road": base["settings"]["road"]})],
-                        None if (supers == (D1, D2) and not templates) else base))
+                        None if (supers == (D1, D2) and not templates and not speeds) else base))
 
     def no(name, input_, result, base=None):
         b = base or sup.setup()
@@ -176,7 +183,15 @@ def cases():
        failed("unknown_road_template", "“yok” kimlikli ya da adlı tip kesit projede yok.", "template"))
     no("Sıfır hız", {"superelevation": "d-1", "template": "tk-1", "speed": 0.0}, bad("speed", "Proje hızı 0'dan büyük olmalı (km/sa)."))
     no("Hızsız sürtünme", {"superelevation": "d-1", "template": "tk-1", "mostFriction": 0.14},
-       bad("speed", "Yanal sürtünme bir hızda okunur: proje hızını (speed) verin."))
+       bad("speed", "Yanal sürtünme bir hızda okunur: proje hızını (speed) verin ya da aksa proje hızı yazın."))
+    # Docs/adr/0986: without `speed` each curve is read at its own design speed, its PI's else its alignment's; a
+    # `speed` given stands for every curve.
+    q("Hız verilmez: kurp aksın proje hızıyla", {"superelevation": "d-1", "template": "tk-1", "mostFriction": 0.06},
+      D1, tk1, speeds={"design": 70.0}, speed=70.0, most_friction=0.06)
+    q("Kurbun kendi hızı aksınkini geçer", {"superelevation": "d-1", "template": "tk-1", "mostFriction": 0.06},
+      D1, tk1, speeds={"design": 90.0, "p1": 50.0}, speed=50.0, most_friction=0.06)
+    q("Verilen hız kurbunkini geçer", {"superelevation": "d-1", "template": "tk-1", "speed": 80.0, "mostFriction": 0.06},
+      D1, tk1, speeds={"p1": 50.0}, speed=80.0, most_friction=0.06)
     no("Bir ya da büyük sürtünme", {"superelevation": "d-1", "template": "tk-1", "speed": 60.0, "mostFriction": 1.0},
        bad("mostFriction", "En büyük yanal sürtünme 0 ile 1 arası olmalı."))
     no("Sıfır göreli eğim", {"superelevation": "d-1", "template": "tk-1", "mostRelative": 0.0},

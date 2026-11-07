@@ -49,6 +49,12 @@ pub enum ContourError {
 impl Surface {
     /// The slope and aspect at (x, y): none outside, in a void, or on an edge or a corner (two planes meet there).
     pub fn slope_at(&self, x: f64, y: f64) -> Option<Slope> {
+        self.strictly_in(x, y).and_then(|t| self.slope_of(t))
+    }
+
+    /// The kept triangle (x, y) lies strictly inside (exact signs): none outside, in a void, or on an edge or a corner,
+    /// where two planes meet.
+    pub fn strictly_in(&self, x: f64, y: f64) -> Option<u32> {
         let t = self.height(x, y).triangle?;
         let [a, b, c] = self.triangles[t as usize].map(|i| {
             let v = self.vertices[i as usize];
@@ -57,7 +63,7 @@ impl Surface {
         let q = kentos_geometry_core::Vec2::new(x, y);
         let orient = kentos_geometry_core::predicates::orient2d;
         let inside = [orient(a, b, q), orient(b, c, q), orient(c, a, q)].iter().all(|s| *s > 0.0);
-        inside.then(|| self.slope_of(t)).flatten()
+        inside.then_some(t)
     }
 
     /// The slope and aspect of a kept triangle (its index in [`Surface::triangles`]).

@@ -444,6 +444,7 @@
     "route.finder",
     "junction.editor",
     "landxml.export",
+    "landxml.machine",
     "landxml.importAlignments",
     "ifc.export",
     "gltf.export",

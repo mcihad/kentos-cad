@@ -20,4 +20,13 @@ stationing?: AlignmentStationing,
 /**
  * A parallel axis's offset, m, right positive.
  */
-offset?: number, expectedRevision?: string, };
+offset?: number, 
+/**
+ * The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays.
+ */
+designSpeed?: number, 
+/**
+ * Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
+ * revision stays.
+ */
+startPlace?: string, endPlace?: string, expectedRevision?: string, };

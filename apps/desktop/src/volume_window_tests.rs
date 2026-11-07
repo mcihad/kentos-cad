@@ -134,6 +134,12 @@ fn an_approved_volume_stays_and_says_how_it_changed() {
     let approval = w.preview.report.as_ref().and_then(|r| r.approval.as_ref()).expect("an approval");
     assert!(approval.changed && !approval.rows.is_empty(), "{approval:?}");
     assert!(w.preview.warnings.iter().any(|x| x.code == "volume_changed"));
+    // Docs/adr/1041: the approval kept what it was computed from; the corridor written again moved since.
+    assert_eq!(approval.approved.algorithm.as_deref(), Some("kentos.end-area/1"));
+    assert_eq!(approval.approved.sources.as_ref().map(|s| s.corridor.revision), Some(1));
+    let moved: Vec<_> = approval.moved.iter().map(|m| (m.source, m.id.as_str(), m.then.as_deref(), m.now.as_deref())).collect();
+    assert_eq!(moved, vec![(kentos_commands::VolumeSourceKind::Corridor, "c-1", Some("1"), Some("2"))]);
+    assert_eq!(crate::volume_window::approval_sources_words(approval), " Onaydan beri değişen: koridor c-1 (1 → 2).");
     // Approved, its definition does not change.
     send(&mut app, W::Name("Başka".into()));
     send(&mut app, W::Save);
@@ -964,6 +970,44 @@ fn screens_states() {
 
 /// The grid method in the window (docs/adr/0974): without a cell it says so; with 2 m it computes on the grid and says
 /// the method and the cell; saved, the cell is kept.
+/// ROAD-VOL-01 (docs/adr/1040): the window says what the volume is computed from and by which algorithm, as
+/// `road.volumes.query` does; the ground's acceptance follows the drawing: accepted, then a ground point deleted.
+#[test]
+fn the_window_says_what_the_volume_is_computed_from() {
+    use kentos_native_application::ExecutionContext;
+    let mut app = app();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let said = |app: &App| {
+        let rep = app.volume_window.as_ref().and_then(|w| w.preview.report.clone()).expect("computes");
+        (crate::volume_window::method_words(&rep), crate::road_dialog::volume_sources_words(rep.sources.as_ref().expect("sources")))
+    };
+    let (method, sources) = said(&app);
+    assert!(method.starts_with("Yöntem: Ortalama alan (kentos.end-area/1), "), "{method}");
+    assert!(sources.starts_with("Kaynaklar: koridor c-1 (1), aks g-1 (1), boykesit b-1 (1), tip kesit tk-1 (1)"), "{sources}");
+    assert!(sources.ends_with("…, kabul edilmedi)"), "{sources}");
+    let accepted = kentos_native_application::road_terrains_edit::execute(
+        &mut ExecutionContext::new(model(&mut app)),
+        kentos_commands::TerrainsEdit {
+            operation: kentos_commands::TerrainsEditOperation::Accept,
+            surface: None,
+            id: Some("t-1".into()),
+            expected_revision: None,
+        },
+    );
+    assert!(matches!(accepted, kentos_commands::CommandResult::Completed { .. }), "{accepted:?}");
+    send(&mut app, W::Choose(0));
+    assert!(said(&app).1.ends_with("…, kabul edildi)"), "{}", said(&app).1);
+    let first = model(&mut app).entities_with_uids().next().map(|(uid, _)| uid.to_string()).expect("a point");
+    let gone = kentos_native_application::delete::execute(
+        &mut ExecutionContext::new(model(&mut app)),
+        serde_json::from_value(serde_json::json!({ "uids": [first] })).expect("the input"),
+    );
+    assert!(matches!(gone, kentos_commands::CommandResult::Completed { .. }), "{gone:?}");
+    send(&mut app, W::Choose(0));
+    assert!(said(&app).1.ends_with("…, kabulden sonra değişti)"), "{}", said(&app).1);
+}
+
 #[test]
 fn the_window_computes_on_a_grid() {
     let mut app = app();
@@ -977,7 +1021,7 @@ fn the_window_computes_on_a_grid() {
     let rep = w.preview.report.as_ref().unwrap_or_else(|| panic!("computes: {:?}", w.preview.why));
     assert_eq!(rep.step, Some(2.0));
     assert!(rep.cut > 1000.0 && rep.cut_area.is_some(), "{rep:?}");
-    assert_eq!(crate::volume_window::method_words(rep), "Yöntem: Izgara, hücre 2 m.");
+    assert_eq!(crate::volume_window::method_words(rep), "Yöntem: Izgara (kentos.grid-midpoint/1), hücre 2 m.");
     send(&mut app, W::Save);
     assert_eq!(model(&mut app).road_volumes()[2].cell, Some(2.0));
 }
@@ -1010,6 +1054,272 @@ fn screens_grid() {
         send(&mut app, W::Cell("2".into()));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y69-izgara-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// `road.volumes.progress`'s drawing as a case of it sets it (docs/adr/1029: the September survey a cloud's ground).
+fn surveyed_as(case: &str) -> (App, serde_json::Value) {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.volumes.progress.json")).expect("cases");
+    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == case).expect("the case").clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    (app, case)
+}
+
+/// ROAD-NUM-04 (docs/adr/1029): a survey whose heights are not shown to rest on the project's vertical system gives no
+/// progress in Kübaj, it says why; Kotlar › Aynı say reads it as the shared case's draft does, with its warning.
+#[test]
+fn the_window_reads_no_progress_on_heights_not_shown_one() {
+    let (mut app, _) = surveyed_as("Ölçünün düşey sistemi bilinmiyor: ret");
+    let (_, draft) = surveyed_as("Varsayımla taslak dönem metrajı");
+    let want = &draft["steps"][0]["result"]["output"];
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let pick = |app: &App, field, name| app.volume_control(crate::traces::Control::Pick(field, name)).expect("a control").expect("a message");
+    let m = pick(&app, crate::volume_window::SURVEY, "Eylül ölçüsü");
+    let _ = app.update(m);
+    let why = app.volume_window.as_ref().unwrap().progress.clone().expect("asked").expect_err("not shown one system");
+    assert!(why.contains("gösterilemiyor") && why.contains("bulut noktaları"), "{why}");
+    let m = pick(&app, crate::volume_window::HEIGHTS, "Aynı say (taslak)");
+    let _ = app.update(m);
+    let (p, warnings) = app.volume_window.as_ref().unwrap().progress.clone().expect("asked").expect("a draft");
+    assert!((p.now.cut_done - want["now"]["cutDone"].as_f64().unwrap()).abs() < 1e-6, "{p:?}");
+    assert_eq!(warnings.first().map(|w| w.code.as_str()), Some("heights_assumed"));
+}
+
+/// The progress refused and as a draft, light and dark; `.run/gui-evidence/yol-num04/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_heights -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_heights() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-num04");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 800.0), "koyu")] {
+        for (assume, step) in [(false, "ret"), (true, "taslak")] {
+            let (mut app, _) = surveyed_as("Ölçünün düşey sistemi bilinmiyor: ret");
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("corridor"));
+            let _ = app.update(Message::Run("volume.editor"));
+            send(&mut app, W::Choose(0));
+            send(&mut app, W::Survey(Some("t-3".into())));
+            send(&mut app, W::AssumeHeights(assume));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("num04-donem-{step}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
+    }
+}
+
+/// ROAD-VOL-19 (docs/adr/1037): Kübaj says what a volume measures as the query's basis does: the rule's lines and sides
+/// under the diagram, the cut in place and the fill compacted on their figures.
+#[test]
+fn the_window_says_what_a_volume_measures() {
+    let mut app = surveyed();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let rep = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    let basis = kentos_native_application::road_volumes::basis_of(&rep).expect("a basis");
+    assert_eq!((basis.name.as_str(), basis.given), ("Yol–Zemin", false));
+    assert_eq!(basis.sides, kentos_commands::VolumeSides::Daylights);
+    send(&mut app, W::Choose(1));
+    let rep = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    assert_eq!(kentos_native_application::road_volumes::basis_of(&rep).expect("a basis").sides, kentos_commands::VolumeSides::Corridor);
+}
+
+/// Kübaj on a section method's volume and a surfaces method's, light; `.run/gui-evidence/yol-y102/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_basis -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_basis() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y102");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (k, step) in [(0, "kesitler"), (1, "yuzeyler")] {
+        let mut app = surveyed();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(k));
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y102-kubaj-{step}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Kübaj saying what it is computed from (docs/adr/1040): the ground never accepted, light at 1440 px; accepted,
+/// light; a ground point deleted after it was accepted, dark at 1100 px; `.run/gui-evidence/yol-y105/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_sources -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_sources() {
+    use iced::Size;
+    use kentos_native_application::ExecutionContext;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y105");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = app();
+    let _ = app.update(Message::RibbonTab("corridor"));
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    for (step, theme, size) in [
+        ("kabul-edilmedi", "light", Size::new(1440.0, 900.0)),
+        ("kabul-edildi", "light", Size::new(1440.0, 900.0)),
+        ("kabulden-sonra-degisti-koyu", "dark", Size::new(1100.0, 760.0)),
+    ] {
+        match step {
+            "kabul-edildi" => {
+                let _ = kentos_native_application::road_terrains_edit::execute(
+                    &mut ExecutionContext::new(model(&mut app)),
+                    kentos_commands::TerrainsEdit {
+                        operation: kentos_commands::TerrainsEditOperation::Accept,
+                        surface: None,
+                        id: Some("t-1".into()),
+                        expected_revision: None,
+                    },
+                );
+            }
+            "kabulden-sonra-degisti-koyu" => {
+                let first = model(&mut app).entities_with_uids().next().map(|(uid, _)| uid.to_string()).expect("a point");
+                let _ = kentos_native_application::delete::execute(
+                    &mut ExecutionContext::new(model(&mut app)),
+                    serde_json::from_value(serde_json::json!({ "uids": [first] })).expect("the input"),
+                );
+            }
+            _ => {}
+        }
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        send(&mut app, W::Choose(0));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y105-kubaj-kaynaklar-{step}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Docs/adr/1041: an approval made before approvals kept their sources says so; one that keeps them says what moved,
+/// the ground by its digest's first digits and a template the corridor no longer names as gone.
+#[test]
+fn the_approval_note_says_what_moved_since() {
+    use kentos_commands::{VolumeApprovalDef, VolumeApprovalReport, VolumeSourceKind as K, VolumeSourceMove};
+    let approved = VolumeApprovalDef {
+        revision: 1,
+        at: "2026-11-03".into(),
+        note: None,
+        cut: 1.0,
+        fill: 1.0,
+        factored_cut: 1.0,
+        factored_fill: 1.0,
+        strip: None,
+        bench: None,
+        rows: vec![],
+        number: 1,
+        ended: None,
+        sources: None,
+        algorithm: None,
+    };
+    let mut report = VolumeApprovalReport {
+        approved,
+        changed: false,
+        moved: vec![],
+        cut_change: 0.0,
+        fill_change: 0.0,
+        factored_cut_change: 0.0,
+        factored_fill_change: 0.0,
+        rows: vec![],
+    };
+    let words = crate::volume_window::approval_sources_words;
+    assert_eq!(words(&report), " Bu onay hesaplandığı kaynakları saklamıyor (eski onay).");
+    let source = |id: &str| kentos_commands::RoadSource { id: id.into(), revision: 1 };
+    report.approved.sources = Some(kentos_commands::VolumeSources {
+        corridor: source("c-1"),
+        alignment: source("g-1"),
+        profile: source("b-1"),
+        templates: vec![source("tk-1"), source("tk-2")],
+        superelevation: None,
+        surface: kentos_commands::RoadSurfaceSource { id: "t-1".into(), digest: Some("d".repeat(64)), built: None },
+    });
+    assert_eq!(words(&report), "");
+    let step = |source, id: &str, then: Option<&str>, now: Option<&str>| VolumeSourceMove {
+        source,
+        id: id.into(),
+        then: then.map(str::to_owned),
+        now: now.map(str::to_owned),
+    };
+    report.moved = vec![
+        step(K::Template, "tk-2", Some("1"), None),
+        step(K::Surface, "t-1", Some(&"d".repeat(64)), Some(&"e".repeat(64))),
+    ];
+    assert_eq!(words(&report), " Onaydan beri değişen: tip kesit tk-2 (1 → yok), arazi t-1 (dddddddd… → eeeeeeee…).");
+}
+
+/// Kübaj approved, then its corridor written again (sampled more densely): the approval's note says how today's figures
+/// differ and which source moved since (docs/adr/1041); light at 1440 px, dark at 1100 px; `.run/gui-evidence/yol-y106/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_approval_sources -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_approval_sources() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y106");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (name, theme, size) in [("acik", "light", Size::new(1440.0, 900.0)), ("koyu", "dark", Size::new(1100.0, 760.0))] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::ApprovalNote("1. hakediş".into()));
+        send(&mut app, W::Approve(true));
+        send(&mut app, W::Cancel);
+        densify(&mut app);
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y106-kubaj-onaydan-beri-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

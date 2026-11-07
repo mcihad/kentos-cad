@@ -211,7 +211,15 @@ impl App {
                     return Task::none();
                 };
                 let name = format!("{} aplikasyon cetveli", table.name);
-                return crate::table_write::save(vec![road_stakeout::sheet(table)], w.format, name);
+                // Docs/adr/1038: the sources it was computed from and when it was written, as a sheet beside it.
+                let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+                let written = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), crate::cloud::local_time::Zone::system())
+                    .replace('T', " ");
+                return crate::table_write::save(
+                    vec![road_stakeout::sheet(table), road_stakeout::sources_sheet(table, &written)],
+                    w.format,
+                    name,
+                );
             }
             Event::SendFormat(f) => {
                 w.send = f;
@@ -334,6 +342,20 @@ impl App {
                     t.stations,
                     grouped(t.rows.len() as f64, 0)
                 )));
+                // Docs/adr/1038: what the table is computed from, each as it is now.
+                let src = &t.sources;
+                let mut said = crate::road_dialog::chain_words(
+                    &src.corridor,
+                    &src.alignment,
+                    &src.profile,
+                    &src.templates,
+                    src.superelevation.as_ref(),
+                    src.surface.as_ref(),
+                );
+                for v in &src.volumes {
+                    said.push_str(&format!(", kübaj {} ({}{})", v.id, v.revision, if v.approved { ", onaylı" } else { "" }));
+                }
+                body = body.push(label::caption(said).style(muted));
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
@@ -376,10 +398,25 @@ impl App {
             line = line.push(words::field("İlk no", send_field("1", 0, 80.0), None));
             line = line.push(words::field("İş adı", send_field("koridorun adı", 1, 140.0), None));
         }
+        // Docs/adr/1031: what the heights sent are; a project that does not say it sends none.
+        let heights = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.settings().heights.as_ref())
+            .filter(|h| match h.kind {
+                kentos_commands::HeightKind::Unknown => false,
+                kentos_commands::HeightKind::Orthometric => h.vertical().is_some(),
+                kentos_commands::HeightKind::Ellipsoidal => true,
+            })
+            .map(|h| h.title());
+        let said = match heights {
+            Some(t) => label::caption(format!("Kotlar: {t}.")).style(muted),
+            None => label::caption("Projenin kotlarının düşey sistemi söylenmemiş: gönderilmez (Proje ayarları › Kotlar).").style(warn),
+        };
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer =
             line.push(words::primary(SEND, w.preview.table.as_ref().map(|_| msg(Event::Send))))
-                .push(container(label::caption(what).style(muted)).width(Fill))
+                .push(container(iced::widget::column![label::caption(what).style(muted), said].spacing(2)).width(Fill))
                 .push(words::secondary(CLOSE, Some(msg(Event::Close))))
                 .align_y(iced::alignment::Vertical::Bottom);
         Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))

@@ -368,7 +368,7 @@ pub const ROAD_PROFILES_DRAW_VERSION: u32 = 1;
 ///
 /// Refusals, in this order: `not_a_road_project`, `unknown_road_profile`, `invalid_label` (`every`, `height` or
 /// `exaggeration` not above 0, a range off the profile, backwards or empty, more than 100 000 ticks, a datum over the
-/// lowest elevation), the layer's
+/// lowest elevation, `span` not above 0, given with `datum` or too short for the lines between two whole metres), the layer's
 /// (`layer_not_found`, `not_a_layer`, `service_layer`, `layer_locked`), `invalid_revision`, `revision_conflict`, and
 /// the geometry's when the profile no longer builds. Warnings: `layer_hidden`, `profile_stale`, `profile_surface_gone`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -416,10 +416,49 @@ pub struct ProfilesDraw {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
+    /// The corridor whose slopes and platform KGM's rows above the frame say (docs/adr/0989; its id or name, on the
+    /// profile's alignment, only with the `kgm` bands): SOL DOL.ŞEVİ, SOL YAR.ŞEVİ, PLATFORM GEN., ÜST YAPI KAL.,
+    /// SAĞ DOL.ŞEVİ, SAĞ YAR.ŞEVİ. Absent: no rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub corridor: Option<String>,
+    /// The metres of elevation the frame holds (docs/adr/0990; KGM 2019: "Profillerin paftalarda ayrılan genişliğe
+    /// sığmaması durumunda kot taşıma çizgisi yapılacaktır"): the frame is `span` × `exaggeration` high and the view is
+    /// split on whole metres of station where the lines would leave it, each part with its own datum (a grid step under
+    /// its lowest elevation less a metre) and a line with both parts' heights at the split. Not with `datum`. Absent: one
+    /// datum, the frame as high as the lines.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub span: Option<f64>,
+    /// The mass haul diagram (its id or name) whose balance sections KGM's earthwork rows under the frame say
+    /// (docs/adr/0995; KGM 2019: "Denge kesimlerinin … kazı, dolgu, faktörlü kazı … paftada yazılması zorunludur"; the
+    /// 2024 sample sheets' HAFİR, HAFİRLİ FAK., İMLA, ARİYET, DEPO): each section's cut, factored cut, fill, borrow and
+    /// waste in m³, DN at its balance points. Only with the `kgm` bands, on the profile's alignment. Absent: no rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub haul: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// A part of a profile view split to a fixed span of elevation (docs/adr/0990): its stations and its datum and top.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileSplit {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub datum: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub top: f64,
 }
 
 /// Which bands a profile drawing has under its frame (docs/adr/0980).
@@ -456,6 +495,10 @@ pub struct ProfilesDrawn {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub grid: f64,
     pub columns: Vec<ProfileAt>,
+    /// With `span`, the view's parts in station order (docs/adr/0990); `datum` and `top` are the first's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProfileSplit>>", optional))]
+    pub splits: Vec<ProfileSplit>,
     pub uids: Vec<String>,
     pub revision: String,
 }

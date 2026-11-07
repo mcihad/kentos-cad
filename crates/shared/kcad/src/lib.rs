@@ -838,11 +838,21 @@ pub const SCHEMA_WITH_MAP_DRAWINGS: u32 = 198;
 /// Schema 199 (docs/adr/1740): a GNSS archive's baselines, known points and network adjustments, and its points made by
 /// a network (`settings.mapSurvey`).
 pub const SCHEMA_WITH_GNSS_NETWORK: u32 = 199;
+/// Schema 200 (docs/adr/0985): an alignment's `designSpeed` and a PI's own `speed`, km/h.
+pub const SCHEMA_WITH_ROAD_SPEED: u32 = 200;
+/// Schema 201 (docs/adr/1028): an alignment's `startPlace` and `endPlace`, the places it leads to beyond its ends.
+pub const SCHEMA_WITH_ROAD_PLACES: u32 = 201;
+/// Schema 202 (docs/adr/1029): a cloud record's `vertical`, the vertical system its files name.
+pub const SCHEMA_WITH_ROAD_CLOUD_HEIGHTS: u32 = 202;
+/// Schema 203 (docs/adr/1032): a cloud record's `heights`, the clouds' as the call said them and the project's.
+pub const SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS: u32 = 203;
+/// Schema 204 (docs/adr/1041): a volume approval's `sources` and `algorithm`, what its figures were computed from.
+pub const SCHEMA_WITH_ROAD_APPROVAL_SOURCES: u32 = 204;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 197] = [
+pub const SCHEMAS: [u32; 202] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1040,6 +1050,11 @@ pub const SCHEMAS: [u32; 197] = [
     SCHEMA_WITH_MAP_PLATFORMS,
     SCHEMA_WITH_MAP_DRAWINGS,
     SCHEMA_WITH_GNSS_NETWORK,
+    SCHEMA_WITH_ROAD_SPEED,
+    SCHEMA_WITH_ROAD_PLACES,
+    SCHEMA_WITH_ROAD_CLOUD_HEIGHTS,
+    SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS,
+    SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
 ];
 
 /// The file a drawing is saved as.

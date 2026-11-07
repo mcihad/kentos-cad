@@ -661,6 +661,8 @@ pub const PORTED: &[&str] = &[
     "junction.editor",
     // plan/road.md Y10.2: LandXML ver (road_exchange.rs).
     "landxml.export",
+    // docs/adr/1031: Makine kontrolüne ver (road_exchange.rs).
+    "landxml.machine",
     "landxml.importAlignments",
     "ifc.export",
     // plan/road.md Y12.3: glTF ver (road_exchange.rs) and 3B görünüm (scene3d_window.rs).

@@ -84,6 +84,9 @@ const GROUPINGS: [&str; 3] = ["Km dilimleri", "Bölgeler", "Katsayı satırları
 const DECIMALS: [&str; 4] = ["Tam sayı", "1 basamak", "2 basamak", "3 basamak"];
 /// The previous survey's “none”.
 const NO_PREVIOUS: &str = "Yok (ilk araziden bu yana)";
+/// The surveys' heights taken as one vertical system (docs/adr/1029) and its choices.
+pub(crate) const HEIGHTS: &str = "Kotlar";
+const HEIGHTS_CHOICES: [&str; 2] = ["Aynı sistemde gösterilmeli", "Aynı say (taslak)"];
 
 /// The curve correction's switch (docs/adr/0934 §3).
 pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
@@ -147,6 +150,11 @@ const METHODS: [(VolumeMethod, &str); 4] = [
 /// between two sections.
 pub(crate) fn method_words(rep: &VolumeReport) -> String {
     let name = METHODS.iter().find(|m| m.0 == rep.method).map_or("", |m| m.1);
+    // Docs/adr/1040: the method's algorithm by name and version, where it computed.
+    let name = match road_volumes::basis_of(rep) {
+        Some(b) => format!("{name} ({})", b.algorithm),
+        None => name.to_owned(),
+    };
     let comma = |v: f64| trimmed(v).replace('.', ",");
     match (rep.method, rep.step) {
         (VolumeMethod::Grid, Some(c)) => format!("Yöntem: {name}, hücre {} m.", comma(c)),
@@ -344,6 +352,8 @@ pub struct Window {
     /// The survey now and the one before it (docs/adr/0942): terrain surfaces' ids; the window's, not the volume's.
     pub(crate) survey: Option<String>,
     pub(crate) previous: Option<String>,
+    /// The heights taken as one vertical system when not shown to be (docs/adr/1029): the progress is a draft.
+    pub(crate) assume_heights: bool,
     /// The progress read on the volume as typed, when a survey is chosen.
     pub(crate) progress: Option<Result<(kentos_commands::VolumeProgressReport, Vec<CommandWarning>), String>>,
     /// The saved volumes compared with the chosen one (docs/adr/0943), and the comparison with each one's alignment
@@ -388,6 +398,7 @@ pub enum Event {
     Survey(Option<String>),
     /// The survey before it; none: since the original ground.
     Previous(Option<String>),
+    AssumeHeights(bool),
     /// A saved volume compared with the chosen one, or not (docs/adr/0943).
     Alternative(String, bool),
     /// The ledger's step, grouping and decimals (docs/adr/0949).
@@ -454,6 +465,7 @@ impl App {
             budget: None,
             survey: None,
             previous: None,
+            assume_heights: false,
             progress: None,
             alternatives: Vec::new(),
             comparison: None,
@@ -492,7 +504,13 @@ impl App {
             return;
         };
         let def = r.def();
-        w.preview = match def.clone().and_then(|d| road_volumes::preview(&doc.model, &d)) {
+        w.preview = match def.clone().and_then(|d| {
+            road_volumes::preview(&doc.model, &d).map(|(mut report, warnings)| {
+                // Docs/adr/1040: what it is computed from, as the query says it.
+                report.sources = road_volumes::sources_of(&doc.model, &d);
+                (report, warnings)
+            })
+        }) {
             Err(e) => Preview { why: Some(e), ..Preview::default() },
             Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
         };
@@ -518,8 +536,16 @@ impl App {
                     volume: def.id.clone(),
                     survey: survey.clone(),
                     previous: w.previous.clone(),
+                    assume_heights: w.assume_heights,
                 };
-                Some(kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input))
+                let words = |t: &str| crate::road_dialog::heights_words(t, "“Kotlar › Aynı say”");
+                Some(match kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input) {
+                    Ok((p, warnings)) => Ok((
+                        p,
+                        warnings.into_iter().map(|w| CommandWarning { message: words(&w.message), ..w }).collect(),
+                    )),
+                    Err(why) => Err(words(&why)),
+                })
             }
             _ => None,
         };
@@ -736,6 +762,7 @@ impl App {
                 w.survey = id;
             }
             Event::Previous(id) => w.previous = id,
+            Event::AssumeHeights(b) => w.assume_heights = b,
             Event::LedgerStep(t) => {
                 w.ledger_step = t;
                 w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
@@ -979,8 +1006,9 @@ impl App {
                     d = d
                         // The rule, the method and its step on the one line under the picture (docs/adr/0974).
                         .legend(format!("{} · {}", rule_words(rep), method_words(rep)))
-                        .figure("Kazı", format!("{} m³", grouped(rep.cut, 1)))
-                        .figure("Dolgu", format!("{} m³", grouped(rep.fill, 1)))
+                        // Docs/adr/1037: the cut in place, the fill compacted.
+                        .figure("Kazı (yerinde)", format!("{} m³", grouped(rep.cut, 1)))
+                        .figure("Dolgu (sıkışmış)", format!("{} m³", grouped(rep.fill, 1)))
                         .figure("Düzeltilmiş fark", format!("{} m³", grouped(rep.factored_cut - rep.factored_fill, 1)))
                         .figure(
                             if rep.layers.is_empty() { "Bitkisel toprak" } else { "Üstyapı" },
@@ -1000,16 +1028,21 @@ impl App {
                     }
                     if let Some(a) = rep.approval.as_ref() {
                         let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+                        // Docs/adr/1041: what moved since, where the approval keeps its sources.
+                        let since = approval_sources_words(a);
                         d = d.note(if a.changed {
                             Banner::warning(format!(
-                                "Onaylı ({}{note}) hâline göre kazı {} m³, dolgu {} m³; {} aralık değişti.",
+                                "Onaylı ({}{note}) hâline göre kazı {} m³, dolgu {} m³; {} aralık değişti.{since}",
                                 a.approved.at,
                                 signed(a.cut_change),
                                 signed(a.fill_change),
                                 a.rows.len()
                             ))
                         } else {
-                            Banner::info(format!("Onaylı: {}{note}; bugün de aynı hacmi veriyor. Değiştirmek için önce onayı kaldırın.", a.approved.at))
+                            Banner::info(format!(
+                                "Onaylı: {}{note}; bugün de aynı hacmi veriyor.{since} Değiştirmek için önce onayı kaldırın.",
+                                a.approved.at
+                            ))
                         });
                     }
                     for wn in &w.preview.warnings {
@@ -1175,8 +1208,14 @@ impl App {
             .label_width(110.0)
             .section("Tanım")
             .field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))))
-            .field("Koridor", on_corridor)
-            .field("Yöntem", on_method);
+            .field("Koridor", on_corridor);
+        // Docs/adr/1040: what the volume is computed from, each as it is now, under its corridor: in the form's column,
+        // which scrolls by itself, not under the picture, whose room full screen is the sheet's and the diagram's
+        // (picture_tests, full screen at 1920 × 1080: 453 px, 428 with the line there, under its least of 440).
+        if let Some(s) = w.preview.report.as_ref().and_then(|rep| rep.sources.as_ref()) {
+            form = form.help(road_dialog::volume_sources_words(s));
+        }
+        let mut form = form.field("Yöntem", on_method);
         if r.method == VolumeMethod::Grid {
             form = form
                 .field("Hücre (m)", kentos_ui::widget::text_field("", &r.cell).on_input(|t| msg(Event::Cell(t))))
@@ -1262,6 +1301,13 @@ impl App {
                 .help("Şantiyenin bugünkü yüzeyi. İlk arazi koridorun yüzeyidir; ölçü onunla ve tasarımla karşılaştırılır.")
                 .field(PREVIOUS, on_previous)
                 .help("Bir önceki hakedişin ölçüsü: dönemin işi iki ölçünün birikmiş işlerinin farkıdır.")
+                .field(
+                    HEIGHTS,
+                    Select::new(HEIGHTS_CHOICES.map(Choice::new), Some(usize::from(w.assume_heights)), |i| {
+                        msg(Event::AssumeHeights(i == 1))
+                    }),
+                )
+                .help("Buluttan alınan ölçünün kotları projeninkiyle aynı düşey sistemde gösterilemiyorsa metraj verilmez. Aynı say: sonuç bu varsayıma dayanan bir taslaktır.")
         };
         // The note of the next approval or revocation (docs/adr/0950).
         form = form
@@ -1352,6 +1398,10 @@ impl App {
             }
             Control::Pick(SURVEY, name) => Some(msg(Event::Survey(self.volume_surface_named(name)?))),
             Control::Pick(PREVIOUS, name) => Some(msg(Event::Previous(self.volume_surface_named(name)?))),
+            Control::Pick(HEIGHTS, words) => {
+                let at = HEIGHTS_CHOICES.iter().position(|c| *c == words).ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
+                Some(msg(Event::AssumeHeights(at == 1)))
+            }
             Control::Fill(name, text) if UNCERTAINTY.contains(&name) => {
                 Some(msg(Event::Uncertainty(UNCERTAINTY.iter().position(|f| *f == name).unwrap_or(0), text.to_owned())))
             }
@@ -1369,19 +1419,63 @@ impl App {
     }
 }
 
+/// What moved since an approval, as a sentence after the approval's (docs/adr/1041): " Onaydan beri değişen: aks g-1
+/// (1 → 2), arazi t-1 (df9eb6e9… → 2751c2db…)."; nothing where none moved; that the approval does not keep its sources
+/// where it was made before it could.
+pub(crate) fn approval_sources_words(a: &kentos_commands::VolumeApprovalReport) -> String {
+    use kentos_commands::VolumeSourceKind as K;
+    if a.approved.sources.is_none() {
+        return " Bu onay hesaplandığı kaynakları saklamıyor (eski onay).".to_owned();
+    }
+    if a.moved.is_empty() {
+        return String::new();
+    }
+    let value = |m: &kentos_commands::VolumeSourceMove, v: &Option<String>| match v {
+        None => "yok".to_owned(),
+        Some(d) if m.source == K::Surface => format!("{}…", &d[..d.len().min(8)]),
+        Some(v) => v.clone(),
+    };
+    let words: Vec<String> = a
+        .moved
+        .iter()
+        .map(|m| {
+            let what = match m.source {
+                K::Corridor => "koridor",
+                K::Alignment => "aks",
+                K::Profile => "boykesit",
+                K::Template => "tip kesit",
+                K::Superelevation => "dever",
+                K::Surface => "arazi",
+                K::Algorithm => "algoritma",
+            };
+            format!("{what} {} ({} → {})", m.id, value(m, &m.then), value(m, &m.now))
+        })
+        .collect();
+    format!(" Onaydan beri değişen: {}.", words.join(", "))
+}
+
 /// The road project's volumes as saved.
 fn doc_volumes(app: &App) -> Vec<VolumeDef> {
     app.document.as_ref().map_or_else(Vec::new, |d| d.model.road_volumes().to_vec())
 }
 
-/// The line under the mass diagram (the diagram has its own legend): the rule the volume measures by.
+/// The line under the mass diagram (the diagram has its own legend): the rule the volume measures by and, as the
+/// query's basis says it (docs/adr/1037), between which lines and sides.
 fn rule_words(rep: &VolumeReport) -> String {
-    let rule = match rep.rule {
-        Some(r) => r.words().to_owned(),
-        None if rep.strip.is_some() => "Yol–Bitkisel Toprak (kuralsız)".to_owned(),
-        None => "Yol–Zemin (kuralsız)".to_owned(),
+    use kentos_commands::{VolumeLine, VolumeSides};
+    let Some(b) = kentos_native_application::road_volumes::basis_of(rep) else { return "Kural: —".to_owned() };
+    let line = |l: VolumeLine| match l {
+        VolumeLine::Road => "yol üstü",
+        VolumeLine::Formation => "formasyon",
+        VolumeLine::Ground => "zemin",
+        VolumeLine::Topsoil => "sıyrılmış zemin",
     };
-    format!("Kural: {rule}")
+    let sides = match b.sides {
+        VolumeSides::Daylights => "şev uçları arası",
+        VolumeSides::Corridor => "koridor yüzeyi",
+    };
+    let given = if b.given { "" } else { " (kuralsız)" };
+    format!("Kural: {}{given}: {}–{}, {sides}", b.name, line(b.top), line(b.bottom))
 }
 
 /// The pavement layers' volumes (docs/adr/0975 §2): each layer's name, material and volume in all.

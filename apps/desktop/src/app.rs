@@ -815,6 +815,8 @@ pub enum Message {
     Scene3d(crate::scene3d_window::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
+    /// Makine kontrolüne ver's file, or none (road_exchange.rs, docs/adr/1031).
+    LandxmlMachine(Option<std::path::PathBuf>),
     /// LandXML'den aks al's file, or none (road_exchange.rs, plan/road.md Y10.2).
     LandxmlAlignments(Option<std::path::PathBuf>),
     /// IFC ver's file, or none (road_exchange.rs, plan/road.md Y10.3).
@@ -2735,6 +2737,7 @@ impl App {
             Message::Junctions(event) => return self.junction_event(event),
             Message::Scene3d(event) => return self.scene3d_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
+            Message::LandxmlMachine(path) => return self.landxml_machine_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
             Message::GltfExport(path) => return self.gltf_chosen(path),
@@ -3885,6 +3888,7 @@ impl App {
             "scene3d.view" => self.open_scene3d(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
+            "landxml.machine" => return self.export_landxml_machine(),
             "landxml.importAlignments" => return self.import_landxml_alignments(),
             "ifc.export" => return self.export_ifc(),
             "gltf.export" => return self.export_gltf(),

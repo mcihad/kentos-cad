@@ -30,8 +30,11 @@ struct Checked {
     warnings: Vec<CommandWarning>,
 }
 
+/// Whether the alignment changed as its dependents see it: its name, geometry or km. A design speed is not (docs/adr/0985):
+/// a profile or a schedule on it does not go stale for it.
 fn changed(a: &AlignmentDef, b: &AlignmentDef) -> bool {
-    a.name != b.name || a.pis != b.pis || a.offset_of != b.offset_of || a.stationing != b.stationing
+    let geometry = |d: &AlignmentDef| d.pis.iter().map(|p| kentos_commands::AlignmentPi { speed: None, ..p.clone() }).collect::<Vec<_>>();
+    a.name != b.name || geometry(a) != geometry(b) || a.offset_of != b.offset_of || a.stationing != b.stationing
 }
 
 fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checked, Stop> {
@@ -46,10 +49,18 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
     let mut profiles = None;
     let target = match input.operation {
         AlignmentsEditOperation::Set => {
-            if input.name.is_none() && input.pis.is_none() && input.stationing.is_none() && input.offset.is_none() {
+            if input.name.is_none()
+                && input.pis.is_none()
+                && input.stationing.is_none()
+                && input.offset.is_none()
+                && input.design_speed.is_none()
+                && input.start_place.is_none()
+                && input.end_place.is_none()
+            {
                 return Err(fail(
                     codes::INVALID_ALIGNMENT,
-                    "Değiştirilecek bir şey yok: name, pis, stationing ya da offset verin.".into(),
+                    "Değiştirilecek bir şey yok: name, pis, stationing, offset, designSpeed, startPlace ya da endPlace verin."
+                        .into(),
                     "",
                 ));
             }
@@ -69,6 +80,16 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
             }
             if let Some(st) = &input.stationing {
                 def.stationing = Some(st.clone()).filter(|s| !s.is_empty());
+            }
+            if let Some(v) = input.design_speed {
+                def.design_speed = (v != 0.0).then_some(v);
+            }
+            // Docs/adr/1028: trimmed; "" clears it.
+            if let Some(n) = &input.start_place {
+                def.start_place = Some(n.trim().to_owned()).filter(|n| !n.is_empty());
+            }
+            if let Some(n) = &input.end_place {
+                def.end_place = Some(n.trim().to_owned()).filter(|n| !n.is_empty());
             }
             if let Some(d) = input.offset {
                 match &mut def.offset_of {

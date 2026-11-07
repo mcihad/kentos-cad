@@ -754,6 +754,10 @@
         "size": "large"
        },
        {
+        "command": "landxml.machine",
+        "size": "large"
+       },
+       {
         "command": "ifc.export",
         "size": "large"
        }

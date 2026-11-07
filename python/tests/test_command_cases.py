@@ -12,6 +12,7 @@ reaches the command (`InvalidInput`, `not_finite`), and nothing is written.
 
 from __future__ import annotations
 
+import collections
 import json
 import keyword
 import os
@@ -666,7 +667,10 @@ class CommandCases(unittest.TestCase):
                 elif fixture['command']=='file.preflight.sheets':
                     from preflight_cases import run_fixture
                 else:
-                    self.fail(f"Dosya komutunun bağımsız Python koşucusu yok: {fixture['command']}")
+                    # Recorded, not failed at once: a failure here stopped the loop and every file after this one in
+                    # order went unchecked (the road.* files, behind file.package, for a while).
+                    problems.append(f"{path.name}: Dosya komutunun bağımsız Python koşucusu yok: {fixture['command']}")
+                    continue
                 cases += run_fixture(fixture)
                 continue
             wrapper = cad.command(fixture["command"])
@@ -680,7 +684,10 @@ class CommandCases(unittest.TestCase):
                     problems.append(f"{at}: {type(e).__name__}: {e}")
         if not ONLY:
             self.assertGreaterEqual(cases, 300)
-        self.assertEqual(problems, [], f"{len(problems)} of {cases} cases failed:\n" + "\n".join(problems[:40]))
+        # Each file's count first: the first 40 alone hid which later files failed.
+        per_file = collections.Counter(p.split(" › ")[0].split(":")[0] for p in problems)
+        files = "\n".join(f"  {n} {name}" for name, n in sorted(per_file.items()))
+        self.assertEqual(problems, [], f"{len(problems)} of {cases} cases failed, by file:\n{files}\n" + "\n".join(problems[:40]))
 
 
 if __name__ == "__main__":

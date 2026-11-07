@@ -172,7 +172,9 @@ pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 /// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
 /// increasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over
 /// 0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
-/// `compare_uncovered` (part of the comparison is off the base and left out).
+/// `compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:
+/// the two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the
+/// difference is a draft (`heights_assumed`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -200,6 +202,9 @@ pub struct TerrainsCompare {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub fill_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub assume_heights: bool,
 }
 
 /// How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells.

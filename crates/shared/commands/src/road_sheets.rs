@@ -74,6 +74,20 @@ pub struct RoadSheetsPlan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub superelevation: Option<String>,
+    /// With `bands: kgm`, the corridor whose slopes and platform the rows over each view say (docs/adr/0989).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub corridor: Option<String>,
+    /// Match lines (docs/adr/0998; Civil 3D's plan production): where one sheet's plan hands over to the next, at the
+    /// middle of their overlap, a line across the alignment and on each side "EŞLEŞME ÇİZGİSİ KM : …" with the other
+    /// sheet's number. Drawn on the profile's layer or `layerId`. Absent or false: none (KGM's sheets have none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub match_lines: Option<bool>,
+    /// With `bands: kgm`, the mass haul diagram whose earthwork rows go under each view (docs/adr/0995).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub haul: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]

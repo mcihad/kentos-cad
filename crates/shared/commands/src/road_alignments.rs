@@ -53,6 +53,18 @@ pub struct AlignmentsCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub stationing: Option<AlignmentStationing>,
+    /// The road's design speed, km/h (docs/adr/0985); a PI's `speed` stands for its own curve.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub design_speed: Option<f64>,
+    /// Where the road leads beyond its start and beyond its end (docs/adr/1028): the places named on the plan's arrows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start_place: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end_place: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -66,7 +78,7 @@ pub struct AlignmentsCreate {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum AlignmentsEditOperation {
-    /// The given fields (`name`, `pis`, `stationing`, `offset`) replace the alignment's.
+    /// The given fields (`name`, `pis`, `stationing`, `offset`, `designSpeed`) replace the alignment's.
     Set,
     /// The alignment runs the other way: its PIs in reverse order, each PI's clothoids swapped; its start km is kept and
     /// its equations go (the warning `equations_dropped`).
@@ -105,6 +117,19 @@ pub struct AlignmentsEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub offset: Option<f64>,
+    /// The road's design speed, km/h (docs/adr/0985); 0 clears it. Not the geometry: the revision stays.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
+    pub design_speed: Option<f64>,
+    /// Where the road leads beyond its start, beyond its end (docs/adr/1028); "" clears one. Not the geometry: the
+    /// revision stays.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub start_place: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub end_place: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

@@ -3,6 +3,7 @@
   <Units>
     <Metric areaUnit="squareMeter" linearUnit="meter" volumeUnit="cubicMeter" temperatureUnit="celsius" pressureUnit="milliBars" angularUnit="decimal degrees" directionUnit="decimal degrees"/>
   </Units>
+  <CoordinateSystem name="TUREF / TM30" epsgCode="5254" horizontalDatum="TUREF" verticalDatum="Antalya" verticalCoordinateSystemName="Antalya height" desc="Kotlar: ortometrik, Antalya height (EPSG:5775), geoit TG-20"/>
   <Project name="Yol alışverişi"/>
   <Application name="KentOS Yol" manufacturer="KentOS" version="0.1.0"/>
   <Surfaces>
@@ -364,23 +365,23 @@
           <End>56.94959065982754 214.58853847517113</End>
         </Line>
         <Spiral rot="ccw" spiType="clothoid" radiusStart="INF" radiusEnd="150" staStart="1194.712598760949" length="40" dirStart="87.95459151111277" dirEnd="80.3151542427018">
-          <Start>56.94959065982754 214.58853847517116</Start>
-          <PI>57.90225262609872 241.26307353076422</PI>
-          <End>60.149106196933 254.42867423059005</End>
+          <Start>56.94959065982754 214.5885384751711</Start>
+          <PI>57.90225262609872 241.26307353076416</PI>
+          <End>60.149106196933 254.42867423059</End>
         </Spiral>
         <Curve rot="ccw" crvType="arc" radius="150" staStart="1234.712598760949" length="83.15097732551219" dirStart="80.3151542427018" dirEnd="48.5538204884361">
-          <Start>60.149106196933 254.42867423059005</Start>
-          <Center>208.0113059880748 229.19437469752484</Center>
-          <End>95.57463315020459 328.48180895357626</End>
-          <PI>67.32808075063988 296.49439388192485</PI>
+          <Start>60.149106196933 254.42867423059</Start>
+          <Center>208.0113059880748 229.19437469752478</Center>
+          <End>95.57463315020459 328.4818089535762</End>
+          <PI>67.32808075063988 296.4943938819248</PI>
         </Curve>
         <Spiral rot="ccw" spiType="clothoid" radiusStart="150" radiusEnd="INF" staStart="1317.8635760864613" length="40" dirStart="48.5538204884361" dirEnd="40.91438322002513">
-          <Start>95.57463315020459 328.48180895357626</Start>
-          <PI>104.41515301107373 338.4931326095973</PI>
-          <End>124.58565949159143 355.97423822604594</End>
+          <Start>95.57463315020459 328.4818089535762</Start>
+          <PI>104.41515301107356 338.493132609597</PI>
+          <End>124.58565949159141 355.9742382260458</End>
         </Spiral>
         <Line staStart="1357.8635760864613" length="311.5227490640952" dir="40.91438322002512">
-          <Start>124.58565949159143 355.97423822604594</Start>
+          <Start>124.58565949159143 355.9742382260459</Start>
           <End>360 560</End>
         </Line>
       </CoordGeom>

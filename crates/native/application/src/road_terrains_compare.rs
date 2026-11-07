@@ -61,6 +61,9 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
     }
     let def = |id: &str| terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled);
     let (b, c) = (def(&base)?, def(&comparison)?);
+    // Docs/adr/1029: the two grounds' heights on one vertical system, or taken as one by the call.
+    let mut warnings = Vec::new();
+    crate::road_heights::proven(doc, &[(&b.name, Some(&b)), (&c.name, Some(&c))], input.assume_heights, "comparison", &mut warnings)?;
     let (made_b, made_c) = (terrains::make(doc, &b), terrains::make(doc, &c));
     let (sb, sc) = (made_b.built()?, made_c.built()?);
     let breaks = input.ranges.clone().unwrap_or_default();
@@ -87,7 +90,6 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
         _ => None,
     };
     let v = measured.as_ref().unwrap_or(&d.volumes);
-    let mut warnings = Vec::new();
     if v.uncovered > 0.0 {
         warnings.push(CommandWarning {
             code: codes::COMPARE_UNCOVERED.into(),
