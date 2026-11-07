@@ -244,13 +244,21 @@ impl App {
         } else {
             self.shown_tab()
         };
-        if architecture_tab(shown) && self.window_size.width < typography::scaled(1200.0) {
+        // A narrow window fits its tabs to the strip, whatever tab is open: the tabs that do not fit go into a ⋯ menu,
+        // the open, contextual and the program's own tab stay in sight (docs/adr/3005). Only an architecture tab did,
+        // so kentos-cad's fourteen tabs ran off the window at 1100 px with the selection's Duvar out of sight.
+        if self.window_size.width < typography::scaled(1200.0) {
             ribbon = ribbon.scrolling_tabs(typography::scaled(160.0));
         }
+        let own_tab = self.program.and_then(program_tab);
         let mut tab_tips = Vec::new();
         for tab in self.ribbon_tabs() {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
-            ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
+            ribbon = if own_tab == Some(tab.id) {
+                ribbon.pinned_tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id))
+            } else {
+                ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id))
+            };
         }
         // The selection's tab, by its objects' kind, with the count (docs/adr/0622 §4).
         if let Some(tab) = self.selection_tab() {
@@ -2553,9 +2561,10 @@ pub(crate) fn hex_color(text: &str) -> Color {
 
 /// The architecture tabs: their tab row scrolls in a narrow window. Every tab, these as the others, keeps its buttons'
 /// names at every width (DESIGN.md §7.3.1, 7 November 2026).
-fn architecture_tab(tab: &str) -> bool {
-    matches!(
-        tab,
-        "arch" | "ctx.wall" | "ctx.opening" | "ctx.space" | "ctx.arch"
-    )
+/// A module program's own ribbon tab, kept in sight on a narrow strip (docs/adr/3005): KentOS Mimari's Mimari.
+fn program_tab(module: kentos_launch::Module) -> Option<&'static str> {
+    match module {
+        kentos_launch::Module::Architecture => Some("arch"),
+        _ => None,
+    }
 }

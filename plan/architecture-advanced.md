@@ -590,7 +590,16 @@ tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S
 - Terim ve harf tutarlılık testi katalogdan üretilir.
 - Python ve MCP aynı sonucu verir.
 
-#### ADV-09 — Mimari şerit, bağlam ve düzenleyici pencereler [ ]
+#### ADV-09 — Mimari şerit, bağlam ve düzenleyici pencereler [~]
+
+_Durum (7 Kasım 2026):_ Sekme satırı ve Öznitelikler yapıldı (M6, [ADR 3005](../docs/adr/3005-narrow-tabs-and-building-first.md)).
+- Dar pencerede sığmayan sekmeler ⋯ menüsüne giriyor. Açık sekme, bağlam sekmesi ve programın kendi sekmesi görünür kalıyor.
+- Yapı elemanının kendi bölümü Öznitelikler'de en üstte, ana satırları başında.
+- Kalanlar:
+  - modalsız düzenleyiciler (M7);
+  - şeridin yeniden düzeni (M8);
+  - sağ tık menüsü ve üzerine gelme kartı;
+  - alt panel.
 
 **Kullanıcı sonucu:** Ana araçlar ilk bakışta bulunur. Sık iş tek tık, seyrek iş bir menü uzağındadır. Düzenleyici
 pencereler iş kaybettirmez. Dayanak S3, S6, S15, S17, S18.
@@ -991,7 +1000,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari **(M3, ADR 3002: yapıldı; tek tuş kısayolu sahibin kararına kaldı)** |
 | M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz **(M4, ADR 3003: yapıldı)** |
 | M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet **(M5, ADR 3004: yapıldı)** |
-| M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür |
+| M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür **(M6, ADR 3005: yapıldı)** |
 | M7 | Modalsız mimari düzenleyiciler | ADV-09 | Kaydedilmemiş değişiklik sorusu; Çizimden seç |
 
 ### Faz 1 — Çizim mimari görünsün

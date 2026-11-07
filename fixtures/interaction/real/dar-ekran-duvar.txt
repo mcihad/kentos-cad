@@ -1,0 +1,23 @@
+# M6: 1100×650 ekranda Mimari şeridi, seçili duvarın bağlam sekmesi ve Öznitelikler'in sırası (plan S17, S18).
+# Oynatma: KENTOS_REAL_SIZE=1100x650 scripts/usage/real/session.sh fixtures/interaction/real/dar-ekran-duvar.txt .run/gui-evidence/mimari-m6/once --modul mimari
+fit KentOS Mimari
+wait 1500
+click 183 218   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+shot m6-1-mimari
+click 300 602   # komut satırı
+type dd
+key Return      # araç: Dikdörtgen duvar
+wait 400
+click 200 250
+wait 200
+click 450 420
+wait 600
+key Escape
+key Escape
+wait 300
+click 200 335   # duvarı seç
+wait 900
+shot m6-2-duvar-secili

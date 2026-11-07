@@ -442,13 +442,13 @@ mod tests {
                         found: moved.clone(),
                     }),
                 );
-                if width == 1100. {
-                    let (at, viewport) = moved.lock().unwrap().expect("manually scrolled context");
-                    assert!(
-                        at.x + at.width > viewport.x + viewport.width,
-                        "manual scroll really moved {kind} out of view: {at:?}/{viewport:?}"
-                    );
-                }
+                // The narrow strip fits its tabs, a ⋯ menu holding those that do not (docs/adr/3005): nothing
+                // scrolls, so no scroll takes the context out of view.
+                let (at, viewport) = moved.lock().unwrap().expect("the context after a scroll");
+                assert!(
+                    at.x >= viewport.x && at.x + at.width <= viewport.x + viewport.width,
+                    "{kind}/{width}: a scroll moved the context out of view: {at:?}/{viewport:?}"
+                );
                 app.selection.clear();
                 app.ribbon_context = false;
                 app.tab = "arch";

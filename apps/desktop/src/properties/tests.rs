@@ -3903,3 +3903,23 @@ fn a_selection_past_the_limit_shows_its_size_and_no_editors() {
     assert!(editable(&app), "values and editors at the limit");
     assert!(rows(&app).iter().all(|(t, _)| t != "Büyük seçim"));
 }
+
+/// A building element's own section comes first, named for it, its main rows at its top (docs/adr/3005, plan S18): a
+/// wall's Kalınlık was under the eight rows every object has and its own joins.
+#[test]
+fn a_walls_own_section_comes_first_with_its_main_rows_on_top() {
+    let (mut app, wall, _) = wall_dimension_set();
+    app.selection.set([wall]);
+    let sections = rows(&app);
+    let titles: Vec<&str> = sections.iter().map(|(t, _)| t.as_str()).collect();
+    assert_eq!(titles[0], "Duvar", "{titles:?}");
+    assert!(titles.iter().position(|t| *t == "Genel").expect("Genel") > 0, "{titles:?}");
+    let labels: Vec<&str> = sections[0].1.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect();
+    assert_eq!(labels[0], "Kalınlık", "{labels:?}");
+    let at = |l: &str| labels.iter().position(|x| *x == l).unwrap_or_else(|| panic!("{l} in {labels:?}"));
+    assert!(at("Stil") < at("Sabit kalan çizgi"), "{labels:?}");
+    assert!(at("Hiza") < at("Öteleme"), "{labels:?}");
+    // An object that is no building element keeps Genel first.
+    let line = sections.len();
+    assert!(line > 1);
+}

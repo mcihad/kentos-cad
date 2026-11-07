@@ -30,6 +30,7 @@
 
 mod control;
 mod layout;
+mod tab_fit;
 mod tabs;
 
 pub use control::{AppButton, Button};
@@ -135,6 +136,8 @@ struct Tab<'a, Message> {
     on_press: Message,
     /// Bağlamsal sekmenin sayısı (ör. seçili nesneler); varsa sekme bağlamsaldır.
     count: Option<String>,
+    /// A narrow strip keeps it in sight, open or not: a module program's own tab (docs/adr/3005).
+    pinned: bool,
 }
 
 enum Panel<'a, Message> {
@@ -264,6 +267,20 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             selected,
             on_press,
             count: None,
+            pinned: false,
+        });
+        self
+    }
+
+    /// A tab a narrow strip keeps in sight even when another is open, as the open and contextual tabs are: a module
+    /// program's own tab (Mimari's Mimari), never put into the ⋯ menu (docs/adr/3005).
+    pub fn pinned_tab(mut self, label: impl IntoFragment<'a>, selected: bool, on_press: Message) -> Self {
+        self.tabs.push(Tab {
+            label: label.into_fragment(),
+            selected,
+            on_press,
+            count: None,
+            pinned: true,
         });
         self
     }
@@ -283,6 +300,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             selected,
             on_press,
             count: Some(count.into()),
+            pinned: false,
         });
         self
     }
@@ -404,52 +422,33 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             .get(selected)
             .map(|t| t.label.to_string())
             .unwrap_or_default();
-        let mut tab_strip = iced::widget::Row::new().height(tab_height());
-        for (i, tab) in tabs.into_iter().enumerate() {
-            let tab_tip = tab_tips.get(i).cloned().flatten();
-            let contextual = tab.count.is_some();
-            // Daraltılmış şeritte hiçbir sekme açık görünmez (web'in `data-collapsed`'i).
-            let open = tab.selected && !collapsed;
-            let face = tab_face(tab.label, open, tab.count);
-            let tab_button = if open {
-                selected_tab(face)
-            } else {
-                underlined(
-                    button(container(face).height(Fill).align_y(iced::Center))
-                        .on_press(tab.on_press)
-                        .height(tab_height())
-                        .padding([0, 11])
-                        .style(style::button::tab),
-                    Length::Shrink,
-                )
-            };
-            // The tab's key tip under its middle (the web's KeyTips).
-            let tab_button = key_tip(tab_button, tab_tip, Place::Under);
-            // A contextual tab stands a little apart, a thin accent line over it (web).
-            tab_strip = tab_strip.push(if contextual {
-                // The contextual tab's line stays over it, open or not (web).
-                underlined(
-                    row![
-                        space::horizontal().width(4),
-                        iced::widget::stack![
-                            tab_button,
-                            container(space::horizontal())
-                                .width(Fill)
-                                .height(TAB_ACCENT)
-                                .style(style::container::accent),
-                        ]
-                    ],
-                    Length::Shrink,
-                )
-            } else {
-                tab_button
-            });
-        }
-
+        // Each tab as data: a narrow strip is built for the width it gets (docs/adr/3005).
+        let specs: Vec<TabSpec<Message>> = tabs
+            .into_iter()
+            .enumerate()
+            .map(|(i, tab)| TabSpec {
+                label: tab.label.to_string(),
+                selected: tab.selected,
+                on_press: tab.on_press,
+                count: tab.count,
+                pinned: tab.pinned,
+                tip: tab_tips.get(i).cloned().flatten(),
+            })
+            .collect();
         if tab_viewport.is_some() {
-            strip = strip.push(tabs::active_tabs(tab_strip.into(), selected, selected_name));
+            strip = strip.push(
+                responsive(move |size| fitted_tabs(&specs, collapsed, size.width, selected, &selected_name))
+                    .width(Fill)
+                    .height(tab_height()),
+            );
         } else {
-            strip = strip.push(tab_strip);
+            strip = strip.push(
+                specs
+                    .iter()
+                    .fold(iced::widget::Row::new().height(tab_height()), |row, spec| {
+                        row.push(tab_element(spec, collapsed))
+                    }),
+            );
         }
 
         let trailing = container(trailing.unwrap_or_else(|| space::horizontal().into()))
@@ -700,6 +699,124 @@ fn tab_face<'a, Message: 'a>(
     .spacing(6)
     .align_y(iced::Center)
     .into()
+}
+
+/// A tab of the strip as data, so a narrow strip can be built again for its width (docs/adr/3005).
+struct TabSpec<Message> {
+    label: String,
+    selected: bool,
+    on_press: Message,
+    count: Option<String>,
+    pinned: bool,
+    tip: Option<KeyTip>,
+}
+
+/// The ⋯ button's width: its glyph and padding.
+const MORE_TAB: f32 = 34.0;
+
+impl<Message> TabSpec<Message> {
+    /// Its width as drawn: the name, its padding, a contextual tab's gap and count.
+    fn width(&self) -> f32 {
+        let name = typography::measured_width(&self.label, typography::body(), self.selected);
+        let count = self.count.as_ref().map_or(0.0, |c| {
+            4.0 + 6.0 + 10.0 + typography::measured_font_width(c, typography::caption() - 1.0, typography::mono())
+        });
+        name + 22.0 + count
+    }
+}
+
+/// A tab: its face, open or not, a contextual one's accent line and its key tip.
+fn tab_element<'a, Message: Clone + 'a>(spec: &TabSpec<Message>, collapsed: bool) -> Element<'a, Message> {
+    let contextual = spec.count.is_some();
+    // Daraltılmış şeritte hiçbir sekme açık görünmez (web'in `data-collapsed`'i).
+    let open = spec.selected && !collapsed;
+    let face = tab_face(Fragment::from(spec.label.clone()), open, spec.count.clone());
+    let tab_button = if open {
+        selected_tab(face)
+    } else {
+        underlined(
+            button(container(face).height(Fill).align_y(iced::Center))
+                .on_press(spec.on_press.clone())
+                .height(tab_height())
+                .padding([0, 11])
+                .style(style::button::tab),
+            Length::Shrink,
+        )
+    };
+    // The tab's key tip under its middle (the web's KeyTips).
+    let tab_button = key_tip(tab_button, spec.tip.clone(), Place::Under);
+    if !contextual {
+        return tab_button;
+    }
+    // A contextual tab stands a little apart, a thin accent line over it, open or not (web).
+    underlined(
+        row![
+            space::horizontal().width(4),
+            iced::widget::stack![
+                tab_button,
+                container(space::horizontal())
+                    .width(Fill)
+                    .height(TAB_ACCENT)
+                    .style(style::container::accent),
+            ]
+        ],
+        Length::Shrink,
+    )
+}
+
+/// The strip for `width`: every tab when they fit; else the open and contextual tabs, the leading others that fit and
+/// a ⋯ menu of the rest before the contextual tabs; a strip narrower still scrolls to its open tab (docs/adr/3005).
+fn fitted_tabs<'a, Message: Clone + 'a>(
+    specs: &[TabSpec<Message>],
+    collapsed: bool,
+    width: f32,
+    selected: usize,
+    selected_name: &str,
+) -> Element<'a, Message> {
+    let widths: Vec<f32> = specs.iter().map(TabSpec::width).collect();
+    let keep: Vec<bool> = specs.iter().map(|s| s.selected || s.pinned || s.count.is_some()).collect();
+    let all = || {
+        specs
+            .iter()
+            .fold(iced::widget::Row::new().height(tab_height()), |row, spec| row.push(tab_element(spec, collapsed)))
+    };
+    let shown = match tab_fit::plan(&widths, &keep, MORE_TAB, width) {
+        None => return tabs::active_tabs(all().into(), selected, selected_name.to_owned()),
+        Some(shown) if shown.iter().all(|s| *s) => return all().into(),
+        Some(shown) => shown,
+    };
+    let hidden: Vec<(String, Message)> = specs
+        .iter()
+        .zip(&shown)
+        .filter(|(_, s)| !**s)
+        .map(|(spec, _)| (spec.label.clone(), spec.on_press.clone()))
+        .collect();
+    let names = hidden.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>().join(", ");
+    let more = move || {
+        let hidden = hidden.clone();
+        let menu = MenuButton::new(
+            container(icon(Icon::More).size(14.0)).padding([0, 10]).height(tab_height()).align_y(iced::Center),
+            move || hidden.iter().fold(Menu::new(), |menu, (name, on_press)| menu.item(name.clone(), on_press.clone())),
+        );
+        underlined(
+            tip(menu, Tip::new("Diğer sekmeler").body(names.clone()), tooltip::Position::Bottom),
+            Length::Shrink,
+        )
+    };
+    let first_contextual = specs.iter().position(|s| s.count.is_some()).unwrap_or(specs.len());
+    let mut row = iced::widget::Row::new().height(tab_height());
+    for (i, spec) in specs.iter().enumerate() {
+        if i == first_contextual {
+            row = row.push(more());
+        }
+        if shown[i] {
+            row = row.push(tab_element(spec, collapsed));
+        }
+    }
+    if first_contextual == specs.len() {
+        row = row.push(more());
+    }
+    row.into()
 }
 
 /// Açık sekme (web'in `.ribbon__tab[aria-selected]`'ı): yazı ana renkte ve

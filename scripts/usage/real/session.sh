@@ -10,7 +10,8 @@ HERE=$ROOT/scripts/usage/real
 SCENARIO=$(realpath "$1"); OUT=$(realpath -m "$2"); shift 2
 mkdir -p "$OUT"
 SCREEN=${KENTOS_REAL_DISPLAY:-:91}
-Xvfb "$SCREEN" -screen 0 1440x900x24 -nolisten tcp > "$OUT/xvfb.log" 2>&1 &
+# KENTOS_REAL_SIZE: the screen, 1440x900 unless given (1100x650 for the narrow acceptance, plan §6).
+Xvfb "$SCREEN" -screen 0 "${KENTOS_REAL_SIZE:-1440x900}x24" -nolisten tcp > "$OUT/xvfb.log" 2>&1 &
 XVFB=$!
 sleep 1
 export DISPLAY=$SCREEN

@@ -953,6 +953,45 @@ fn origin_rows(parts: &[kentos_native_application::appearance_origin::Explained]
 }
 
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
+/// The rows a building element's own section starts with, in this order (docs/adr/3005, plan ADV-09): what makes it
+/// the element it is, then where it stands.
+const BUILDING_MAIN: [&str; 10] = ["Numara", "Ad", "Tür", "Kalınlık", "Genişlik", "Stil", "Yükseklik", "Hiza", "Kat", "Evre"];
+
+/// A building element's own section comes first, named for it, its main rows at its top. A wall's Kalınlık, Stil,
+/// Yükseklik, Hiza, Kat and Evre were under the eight rows every object has (Tür, Katman, Renk, Çizgi kalınlığı …) and
+/// further down their own section, below the joins: at 1100 × 650 and 18 px only Tür showed (plan S18). The general
+/// rows follow, as they were.
+fn building_first(e: &Entity, sections: &mut Vec<Section>) {
+    if !matches!(
+        e,
+        Entity::Wall(_)
+            | Entity::Opening(_)
+            | Entity::Space(_)
+            | Entity::Slab(_)
+            | Entity::Stair(_)
+            | Entity::Ramp(_)
+            | Entity::Column(_)
+            | Entity::Grid(_)
+    ) {
+        return;
+    }
+    let Some(i) = sections.iter().position(|s| s.id == "geometry") else { return };
+    let mut own = sections.remove(i);
+    own.title = kind_title(e.kind()).into();
+    // Each row with the notes under it, so a note keeps its row.
+    let mut groups: Vec<Vec<Row>> = Vec::new();
+    for row in std::mem::take(&mut own.rows) {
+        match groups.last_mut() {
+            Some(group) if row.note => group.push(row),
+            _ => groups.push(vec![row]),
+        }
+    }
+    let rank = |g: &Vec<Row>| BUILDING_MAIN.iter().position(|m| g[0].label == *m).unwrap_or(BUILDING_MAIN.len());
+    groups.sort_by_key(rank);
+    own.rows = groups.into_iter().flatten().collect();
+    sections.insert(0, own);
+}
+
 fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     let base = e.base();
     let slot = Slot(base.id);
@@ -2789,6 +2828,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .collect(),
         });
     }
+    building_first(e, &mut sections);
     sections
 }
 
