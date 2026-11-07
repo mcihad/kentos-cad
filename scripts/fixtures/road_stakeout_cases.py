@@ -123,7 +123,31 @@ def ground_offset(a, p, offset, height):
     return offset / (k * hf)
 
 
-def table(c, input_, height=None):
+def sources(c, road):
+    """Docs/adr/1038: what the corridor's stakeout is computed from, each as `road` has it now: the corridor, its
+    alignment and profile, its regions' templates in order and once each, its superelevation schedule, its surface and
+    the digest it was last accepted from, and its earthwork volumes."""
+    def rev(kind, id_):
+        return next((x.get("revision", 0) for x in road.get(kind, []) if x["id"] == id_), 0)
+    templates = []
+    for r in c["regions"]:
+        if r["template"] not in [t["id"] for t in templates]:
+            templates.append({"id": r["template"], "revision": rev("templates", r["template"])})
+    out = {"corridor": {"id": c["id"], "revision": c.get("revision", 0)},
+           "alignment": {"id": c["alignment"], "revision": rev("alignments", c["alignment"])},
+           "profile": {"id": c["profile"], "revision": rev("profiles", c["profile"])}, "templates": templates}
+    if c.get("superelevation"):
+        out["superelevation"] = {"id": c["superelevation"], "revision": rev("superelevations", c["superelevation"])}
+    sf = next((x for x in road.get("surfaces", []) if x["id"] == c["surface"]), None)
+    out["surface"] = {"id": c["surface"], **({"built": sf["built"]} if sf and sf.get("built") else {})}
+    volumes = [{"id": v["id"], "revision": v.get("revision", 0), "approved": "approved" in v}
+               for v in road.get("volumes", []) if v["corridor"] == c["id"]]
+    if volumes:
+        out["volumes"] = volumes
+    return out
+
+
+def table(c, input_, height=None, road=None):
     """The answer and the warnings, or Refused."""
     _report, warnings, _tri, regs = ccmd.make(c)
     first = min(r["from"] for r in c["regions"])
@@ -204,7 +228,8 @@ def table(c, input_, height=None):
     else:
         method = "Ötelemeler plan (ızgara) boyu."
     out = {"corridor": c["id"], "name": c["name"], "distances": input_.get("distances", "grid"), "method": method,
-           "stations": len(crosses), "rows": rows}
+           "stations": len(crosses), "rows": rows,
+           "sources": sources(c, road if road is not None else setup()["settings"]["road"])}
     return out, warnings
 
 
@@ -230,8 +255,22 @@ def no(name, input_, height=None, setup_=None):
     raise AssertionError(f"{name}: refuses")
 
 
+def with_volume():
+    """Docs/adr/1038: the drawing with an earthwork volume of the main corridor at its second revision."""
+    d = setup()
+    d["settings"]["road"]["volumes"] = [{"id": "v-1", "name": "Ana kübaj", "corridor": "c-1", "method": "endArea",
+                                         "revision": 2}]
+    return d
+
+
 def cases():
-    out = [
+    vol = with_volume()
+    q = {"corridor": "c-1", "from": 100.0, "to": 120.0}
+    out_v, warns_v = table(by("c-1"), q, road=vol["settings"]["road"])
+    res_v = completed(out_v)
+    res_v["warnings"] = warns_v
+    out = [case("Kaynakları: koridorun kübajı ikinci sürümünde", [step("execute", q, res_v, UNCHANGED)], vol),
+
         ok("Ana koridorun km 100–160'ı, koridorun kendi km'leri, bütün kodlar",
            {"corridor": "Ana koridor", "from": 100.0, "to": 160.0}),
         ok("Kimlikle ve yalnız doğrulama", {"corridor": "c-1", "from": 100.0, "to": 120.0}, op="validate"),

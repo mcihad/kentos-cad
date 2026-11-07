@@ -211,7 +211,15 @@ impl App {
                     return Task::none();
                 };
                 let name = format!("{} aplikasyon cetveli", table.name);
-                return crate::table_write::save(vec![road_stakeout::sheet(table)], w.format, name);
+                // Docs/adr/1038: the sources it was computed from and when it was written, as a sheet beside it.
+                let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+                let written = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), crate::cloud::local_time::Zone::system())
+                    .replace('T', " ");
+                return crate::table_write::save(
+                    vec![road_stakeout::sheet(table), road_stakeout::sources_sheet(table, &written)],
+                    w.format,
+                    name,
+                );
             }
             Event::SendFormat(f) => {
                 w.send = f;
@@ -334,6 +342,29 @@ impl App {
                     t.stations,
                     grouped(t.rows.len() as f64, 0)
                 )));
+                // Docs/adr/1038: what the table is computed from, each as it is now.
+                let src = &t.sources;
+                let mut said = format!(
+                    "Kaynaklar: koridor {} ({}), aks {} ({}), boykesit {} ({}), tip kesit {}",
+                    src.corridor.id,
+                    src.corridor.revision,
+                    src.alignment.id,
+                    src.alignment.revision,
+                    src.profile.id,
+                    src.profile.revision,
+                    src.templates.iter().map(|x| format!("{} ({})", x.id, x.revision)).collect::<Vec<_>>().join(", ")
+                );
+                if let Some(d) = &src.superelevation {
+                    said.push_str(&format!(", dever {} ({})", d.id, d.revision));
+                }
+                if let Some(g) = &src.surface {
+                    let built = g.built.as_ref().map_or("kabul edilmedi".to_owned(), |b| format!("kabul {}…", &b[..b.len().min(8)]));
+                    said.push_str(&format!(", arazi {} ({built})", g.id));
+                }
+                for v in &src.volumes {
+                    said.push_str(&format!(", kübaj {} ({}{})", v.id, v.revision, if v.approved { ", onaylı" } else { "" }));
+                }
+                body = body.push(label::caption(said).style(muted));
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }

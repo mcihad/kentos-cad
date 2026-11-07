@@ -180,3 +180,19 @@ fn screens() {
         send(&mut app, W::Close);
     }
 }
+
+/// ROAD-IO-12 (docs/adr/1038): the table says what it is computed from, and the sheet written beside it says the
+/// same with the time it was written.
+#[test]
+fn the_table_says_its_sources_and_when_it_was_written() {
+    let mut app = app();
+    let _ = app.update(Message::Run("stakeout.table"));
+    send(&mut app, W::Field(2, "20".into()));
+    let table = app.stakeout_window.as_ref().and_then(|w| w.preview.table.clone()).expect("reads");
+    assert_eq!((table.sources.corridor.id.as_str(), table.sources.alignment.id.as_str()), ("c-1", "g-1"));
+    let sheet = kentos_native_application::road_stakeout::sources_sheet(&table, "2026-11-07 10:00:00");
+    assert_eq!(sheet.name, "Kaynaklar");
+    assert_eq!(sheet.rows[0], vec!["Üretildi".to_owned(), "2026-11-07 10:00:00".to_owned(), String::new()]);
+    assert!(sheet.rows.iter().any(|r| r[0] == "Tip kesit" && r[1] == "tk-2" && r[2] == "2"), "{:?}", sheet.rows);
+    assert!(sheet.rows.iter().any(|r| r[0] == "Arazi" && r[2] == "kabul edilmedi"), "{:?}", sheet.rows);
+}

@@ -107,6 +107,69 @@ pub struct StakeRow {
     pub ground_offset: Option<f64>,
 }
 
+/// A source a stakeout was computed from, as it is now (docs/adr/1038): its id and revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StakeoutSource {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+}
+
+/// The terrain surface a stakeout was computed on (docs/adr/1038): its id and the digest of the sources it was last
+/// accepted from (absent: never accepted).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StakeoutSurface {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub built: Option<String>,
+}
+
+/// An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StakeoutVolume {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub revision: u32,
+    pub approved: bool,
+}
+
+/// What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and
+/// profile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's
+/// earthwork volumes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct StakeoutSources {
+    pub corridor: StakeoutSource,
+    pub alignment: StakeoutSource,
+    pub profile: StakeoutSource,
+    pub templates: Vec<StakeoutSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub superelevation: Option<StakeoutSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface: Option<StakeoutSurface>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StakeoutVolume>>", optional))]
+    pub volumes: Vec<StakeoutVolume>,
+}
+
 /// Output of `road.stakeout.query` v1: the corridor, how the offsets are given, the stations read and the points in
 /// station order (a station shared by two regions once for each), left to right.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -123,6 +186,8 @@ pub struct StakeoutQueried {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stations: u32,
     pub rows: Vec<StakeRow>,
+    /// What it was computed from (docs/adr/1038).
+    pub sources: StakeoutSources,
 }
 
 pub const ROAD_STAKEOUT_SEND: &str = "road.stakeout.send";

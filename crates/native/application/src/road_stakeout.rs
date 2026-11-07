@@ -249,6 +249,7 @@ pub(crate) fn table(
             method,
             stations: crosses.len() as u32,
             rows,
+            sources: sources_of(doc, def),
         },
         warnings,
         made.sampler.alignment,
@@ -283,6 +284,69 @@ pub fn preview(doc: &Document, input: &StakeoutQuery) -> Result<(StakeoutQueried
 
 /// The stakeout table as a workbook's sheet (docs/adr/0223's writer): km, region, code, side, offset (and its ground
 /// length where the table has it), Y (east), X (north) and Z, in the table's order.
+/// What the corridor's stakeout is computed from, each as it is now (docs/adr/1038).
+fn sources_of(doc: &Document, def: &kentos_commands::CorridorDef) -> kentos_commands::StakeoutSources {
+    use kentos_commands::{StakeoutSource, StakeoutSurface, StakeoutVolume};
+    let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+    let profile = doc.road_profiles().iter().find(|p| p.id == def.profile).map_or(0, |p| p.revision);
+    let mut templates: Vec<StakeoutSource> = Vec::new();
+    for r in &def.regions {
+        if !templates.iter().any(|t| t.id == r.template) {
+            let revision = doc.road_templates().iter().find(|t| t.id == r.template).map_or(0, |t| t.revision);
+            templates.push(StakeoutSource { id: r.template.clone(), revision });
+        }
+    }
+    kentos_commands::StakeoutSources {
+        corridor: StakeoutSource { id: def.id.clone(), revision: def.revision },
+        alignment: StakeoutSource { id: def.alignment.clone(), revision: alignment },
+        profile: StakeoutSource { id: def.profile.clone(), revision: profile },
+        templates,
+        superelevation: def.superelevation.as_ref().map(|id| StakeoutSource {
+            id: id.clone(),
+            revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
+        }),
+        surface: Some(StakeoutSurface {
+            id: def.surface.clone(),
+            built: crate::road_terrains::surfaces(doc).iter().find(|s| s.id == def.surface).and_then(|s| s.built.clone()),
+        }),
+        volumes: doc
+            .road_volumes()
+            .iter()
+            .filter(|v| v.corridor == def.id)
+            .map(|v| StakeoutVolume { id: v.id.clone(), revision: v.revision, approved: v.approved.is_some() })
+            .collect(),
+    }
+}
+
+/// The stakeout's sources and when the table was written, as a sheet beside it (docs/adr/1038): a row a source.
+pub fn sources_sheet(table: &StakeoutQueried, written: &str) -> kentos_commands::WorkbookSheet {
+    use kentos_commands::{CellKind, WorkbookColumn};
+    let column = |name: &str| WorkbookColumn { name: name.into(), kind: CellKind::Text, decimals: None };
+    let s = &table.sources;
+    let row = |what: &str, id: &str, revision: String| vec![what.to_owned(), id.to_owned(), revision];
+    let mut rows = vec![
+        row("Üretildi", written, String::new()),
+        row("Koridor", &s.corridor.id, s.corridor.revision.to_string()),
+        row("Aks", &s.alignment.id, s.alignment.revision.to_string()),
+        row("Boykesit", &s.profile.id, s.profile.revision.to_string()),
+    ];
+    rows.extend(s.templates.iter().map(|t| row("Tip kesit", &t.id, t.revision.to_string())));
+    if let Some(d) = &s.superelevation {
+        rows.push(row("Dever", &d.id, d.revision.to_string()));
+    }
+    if let Some(g) = &s.surface {
+        rows.push(row("Arazi", &g.id, g.built.clone().unwrap_or_else(|| "kabul edilmedi".into())));
+    }
+    rows.extend(s.volumes.iter().map(|v| {
+        row("Kübaj", &v.id, format!("{}{}", v.revision, if v.approved { " (onaylı)" } else { "" }))
+    }));
+    kentos_commands::WorkbookSheet {
+        name: "Kaynaklar".into(),
+        columns: vec![column("Kaynak"), column("Kimlik"), column("Sürüm")],
+        rows,
+    }
+}
+
 pub fn sheet(table: &StakeoutQueried) -> kentos_commands::WorkbookSheet {
     use kentos_commands::{CellKind, WorkbookColumn};
     let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };

@@ -83424,6 +83424,7 @@ class StakeoutQueried(_Model):
     Attributes:
         method: How the offsets are given, in words.
         stations: Unit: count.
+        sources: What it was computed from (docs/adr/1038).
     """
     corridor: str
     name: str
@@ -83431,6 +83432,7 @@ class StakeoutQueried(_Model):
     method: str
     stations: int
     rows: list[StakeRow]
+    sources: StakeoutSources
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83440,6 +83442,7 @@ class StakeoutQueried(_Model):
         out["method"] = self.method
         out["stations"] = self.stations
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["sources"] = self.sources.to_json()
         return out
 
     @classmethod
@@ -83451,6 +83454,7 @@ class StakeoutQueried(_Model):
             method=data["method"],
             stations=data["stations"],
             rows=[StakeRow.from_json(e0) for e0 in data["rows"]],
+            sources=StakeoutSources.from_json(data["sources"]),
         )
 
 
@@ -83639,6 +83643,119 @@ class StakeoutSent(_Model):
             sha256=data["sha256"],
             alignment=data.get("alignment", UNSET),
             profile=data.get("profile", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutSource(_Model):
+    """A source a stakeout was computed from, as it is now (docs/adr/1038): its id and revision.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    revision: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSource:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutSources(_Model):
+    """What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and
+    profile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's
+    earthwork volumes.
+    """
+    corridor: StakeoutSource
+    alignment: StakeoutSource
+    profile: StakeoutSource
+    templates: list[StakeoutSource]
+    superelevation: StakeoutSource | None | Unset = UNSET
+    surface: StakeoutSurface | None | Unset = UNSET
+    volumes: list[StakeoutVolume] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corridor"] = self.corridor.to_json()
+        out["alignment"] = self.alignment.to_json()
+        out["profile"] = self.profile.to_json()
+        out["templates"] = [e0.to_json() for e0 in self.templates]
+        if self.superelevation is not UNSET:
+            out["superelevation"] = None if self.superelevation is None else self.superelevation.to_json()
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else self.surface.to_json()
+        if self.volumes is not UNSET:
+            out["volumes"] = [e0.to_json() for e0 in self.volumes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSources:
+        return cls(
+            corridor=StakeoutSource.from_json(data["corridor"]),
+            alignment=StakeoutSource.from_json(data["alignment"]),
+            profile=StakeoutSource.from_json(data["profile"]),
+            templates=[StakeoutSource.from_json(e0) for e0 in data["templates"]],
+            superelevation=UNSET if "superelevation" not in data else None if data["superelevation"] is None else StakeoutSource.from_json(data["superelevation"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else StakeoutSurface.from_json(data["surface"]),
+            volumes=[StakeoutVolume.from_json(e0) for e0 in data["volumes"]] if "volumes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutSurface(_Model):
+    """The terrain surface a stakeout was computed on (docs/adr/1038): its id and the digest of the sources it was last
+    accepted from (absent: never accepted).
+    """
+    id: str
+    built: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.built is not UNSET:
+            out["built"] = self.built
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutSurface:
+        return cls(
+            id=data["id"],
+            built=data.get("built", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StakeoutVolume(_Model):
+    """An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.
+    Attributes:
+        revision: Unit: version.
+    """
+    id: str
+    revision: int
+    approved: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["revision"] = self.revision
+        out["approved"] = self.approved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StakeoutVolume:
+        return cls(
+            id=data["id"],
+            revision=data["revision"],
+            approved=data["approved"],
         )
 
 
@@ -121522,6 +121639,10 @@ __all__ = [
     "StakeoutSendFormat",
     "StakeoutSendFormatName",
     "StakeoutSent",
+    "StakeoutSource",
+    "StakeoutSources",
+    "StakeoutSurface",
+    "StakeoutVolume",
     "StandardBlockReference",
     "StandardConflict",
     "StandardDimensionStyle",

@@ -55595,7 +55595,7 @@
       "id": "road.stakeout.query",
       "version": 1,
       "title": "Aplikasyon cetveli",
-      "summary": "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.",
+      "summary": "Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey yazmaz. Cevap neyden hesaplandığını sources'ta söyler (ADR 1038): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin son kabul edildiği kaynak özeti ve koridorun kübaj hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.",
       "aliases": [
         "aplikasyoncetveli",
         "yolaplikasyon"
@@ -55684,6 +55684,10 @@
             },
             "type": "array"
           },
+          "sources": {
+            "$ref": "#/$defs/StakeoutSources",
+            "description": "What it was computed from (docs/adr/1038)."
+          },
           "stations": {
             "format": "uint32",
             "minimum": 0,
@@ -55697,7 +55701,8 @@
           "distances",
           "method",
           "stations",
-          "rows"
+          "rows",
+          "sources"
         ],
         "title": "StakeoutQueried",
         "type": "object"
@@ -55725,6 +55730,10 @@
             },
             "type": "array"
           },
+          "sources": {
+            "$ref": "#/$defs/StakeoutSources",
+            "description": "What it was computed from (docs/adr/1038)."
+          },
           "stations": {
             "format": "uint32",
             "minimum": 0,
@@ -55738,7 +55747,8 @@
           "distances",
           "method",
           "stations",
-          "rows"
+          "rows",
+          "sources"
         ],
         "title": "StakeoutQueried",
         "type": "object"
@@ -175855,6 +175865,119 @@
         "csv"
       ],
       "type": "string"
+    },
+    "StakeoutSource": {
+      "description": "A source a stakeout was computed from, as it is now (docs/adr/1038): its id and revision.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "StakeoutSources": {
+      "description": "What a stakeout was computed from, each as it is now (docs/adr/1038; ROAD-IO-12): the corridor, its alignment and\nprofile, its regions' templates in order, its superelevation schedule, its terrain surface, and its corridor's\nearthwork volumes.",
+      "properties": {
+        "alignment": {
+          "$ref": "#/$defs/StakeoutSource"
+        },
+        "corridor": {
+          "$ref": "#/$defs/StakeoutSource"
+        },
+        "profile": {
+          "$ref": "#/$defs/StakeoutSource"
+        },
+        "superelevation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StakeoutSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "surface": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StakeoutSurface"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templates": {
+          "items": {
+            "$ref": "#/$defs/StakeoutSource"
+          },
+          "type": "array"
+        },
+        "volumes": {
+          "items": {
+            "$ref": "#/$defs/StakeoutVolume"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "corridor",
+        "alignment",
+        "profile",
+        "templates"
+      ],
+      "type": "object"
+    },
+    "StakeoutSurface": {
+      "description": "The terrain surface a stakeout was computed on (docs/adr/1038): its id and the digest of the sources it was last\naccepted from (absent: never accepted).",
+      "properties": {
+        "built": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "StakeoutVolume": {
+      "description": "An earthwork volume of the stakeout's corridor (docs/adr/1038): its id, revision and whether approved.",
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "approved"
+      ],
+      "type": "object"
     },
     "StandardBlockReference": {
       "additionalProperties": false,

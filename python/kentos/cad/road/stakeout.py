@@ -27,12 +27,16 @@ if TYPE_CHECKING:
 
 class _RoadStakeoutQuery(LocalCommand[StakeoutQuery, StakeoutQueried, StakeoutQueried]):
     """``road.stakeout.query`` v1. Aplikasyon cetveli: Koridorun kodlu kesit noktalarını
-    km'leriyle verir; hiçbir şey yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis,
-    left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right),
-    eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa
-    bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın uçları,
-    her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya
-    da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground:
+    km'leriyle verir; hiçbir şey yazmaz. Cevap neyden hesaplandığını sources'ta söyler
+    (ADR 1038): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
+    çizelgesinin bugünkü sürümleri, arazinin son kabul edildiği kaynak özeti ve
+    koridorun kübaj hesapları (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve
+    yazıldığı zamanı Kaynaklar sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod
+    (axis, left.c1 … left.cN, ditchToe, ditchBottom, hinge, daylight), yan (left, axis,
+    right), eksenden öteleme (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı
+    (yoksa bölgelerin uçları); step ile her step metrede (step'in katları ve aralığın
+    uçları, her bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam
+    kod ya da her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground:
     öteleme ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin
     ortalama elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar:
     koridorun kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved.
@@ -62,15 +66,19 @@ class _RoadStakeoutQuery(LocalCommand[StakeoutQuery, StakeoutQueried, StakeoutQu
         expected: Expected | None = None,
     ) -> StakeoutQueried:
         """Aplikasyon cetveli: Koridorun kodlu kesit noktalarını km'leriyle verir; hiçbir şey
-        yazmaz. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN, ditchToe,
-        ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme (sağa artı,
-        plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin uçları); step ile
-        her step metrede (step'in katları ve aralığın uçları, her bölgede), yoksa koridorun
-        kendi km'leri; codes ile yalnız o kodlar (tam kod ya da her iki yan için kodun
-        sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme ayrıca zemin boyu olarak
-        (eksenden noktaya çizginin ölçeği ve projenin ortalama elipsoit yüksekliğinin
-        çarpanına bölünür); method bunu söyler. Uyarılar: koridorun kendi uyarıları
-        (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler:
+        yazmaz. Cevap neyden hesaplandığını sources'ta söyler (ADR 1038): koridorun,
+        aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü
+        sürümleri, arazinin son kabul edildiği kaynak özeti ve koridorun kübaj hesapları
+        (sürüm, onaylı mı); masaüstü cetvelin yanına bunları ve yazıldığı zamanı Kaynaklar
+        sayfasına yazar. Her nokta: km ve km yazısı, bölge, kod (axis, left.c1 … left.cN,
+        ditchToe, ditchBottom, hinge, daylight), yan (left, axis, right), eksenden öteleme
+        (sağa artı, plan boyu), x, y, z. from ve to ile km aralığı (yoksa bölgelerin
+        uçları); step ile her step metrede (step'in katları ve aralığın uçları, her
+        bölgede), yoksa koridorun kendi km'leri; codes ile yalnız o kodlar (tam kod ya da
+        her iki yan için kodun sözcüğü). distances: grid (öntanımlı) ya da ground: öteleme
+        ayrıca zemin boyu olarak (eksenden noktaya çizginin ölçeği ve projenin ortalama
+        elipsoit yüksekliğinin çarpanına bölünür); method bunu söyler. Uyarılar: koridorun
+        kendi uyarıları (corridor_stale, corridor_unsolved …), stakeout_unsolved. Retler:
         not_a_road_project, unknown_corridor, invalid_stakeout, stakeout_no_ground.
 
         Args:
