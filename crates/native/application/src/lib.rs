@@ -297,6 +297,7 @@ pub mod road_corridors_protected;
 pub mod road_corridors_water;
 pub(crate) mod road_drawings;
 pub(crate) mod road_project;
+pub use road_project::outdated_drawings;
 pub mod road_project_query;
 pub mod road_project_rebuild;
 pub mod road_project_edit;

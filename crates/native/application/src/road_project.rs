@@ -65,6 +65,29 @@ fn kind_named(kind: K) -> &'static str {
     }
 }
 
+/// The project's drawings that are not up to date (docs/adr/1720; MAP-20: “güncel olmayan çıktı başarıyla teslim
+/// edilmesin”): stale (a source changed since), missing (an object gone), edited (changed by hand) or gone (its main
+/// source gone); each with its kept record, its state's word and why. A road or map project's; none elsewhere.
+pub fn outdated_drawings(doc: &Document) -> Vec<(RoadDrawingDef, &'static str, Vec<String>)> {
+    if road_project(doc).is_err() {
+        return Vec::new();
+    }
+    doc.road_drawings()
+        .iter()
+        .filter_map(|d| {
+            let (state, why, _) = drawing_state(doc, d);
+            let word = match state {
+                S::Stale => "güncel değil",
+                S::Missing => "nesnesi eksik",
+                S::Edited => "elle değişti",
+                S::Gone => "kaynağı yok",
+                _ => return None,
+            };
+            Some((d.clone(), word, why))
+        })
+        .collect()
+}
+
 /// How a drawing stands now: its state, why, and how many of its objects the drawing holds.
 pub(crate) fn drawing_state(doc: &Document, d: &RoadDrawingDef) -> (S, Vec<String>, usize) {
     let mut why = Vec::new();

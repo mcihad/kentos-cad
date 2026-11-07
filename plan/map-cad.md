@@ -1107,8 +1107,9 @@ Kapsam: **Harita + Yol**. Kanıtlanan: `.kcad` şema 198 (Harita'nın çizim kay
 sıfır hattı çizimi her projede) Harita'da planda platform çizildikten sonra kaydedilemeyen projeyi düzeltir; sıfır hattı
 iki yüzeyinin damgasıyla tutulur; `road.project.query/rebuild/edit` Harita'yı kabul eder: bir yüzey kotu değişince
 sıfır hattı “güncel değil” görünür, yeniden üretilir ya da açıksa aynı adımda kendiliğinden üretilir; masaüstünde
-“Proje ağacı” paneli. Açık: eskimiş çizimi gösteren paftanın teslimi durdurması, profil/hacim/pafta zincirinin tek
-görünüşü, iş grafiği, iptal ve GUI/Python/MCP eşdeğerliği.
+“Proje ağacı” paneli; eskimiş çizimi gösteren paftanın haritası baskı öncesi denetimde `outdated_drawing` hatası alır,
+yayın ve kitabın PDF'i yeniden üretilene dek durur. Açık: atlas sayfaları, profil/hacim/pafta zincirinin tek görünüşü,
+iş grafiği, iptal ve GUI/Python/MCP eşdeğerliği.
 
 ## Uygulama sırası ve sahiplik
 

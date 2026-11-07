@@ -47,6 +47,14 @@ taslak.
    - Eskiyen satır “Güncel değil” rozetiyle, nedeni ipucunda gösterilir. ↻ ve “Hepsini yeniden üret” vardır.
    - Kendiliğinden yeniden üret seçeneği de buradadır.
 
+5. **Teslim kapısı** (aynı gün, ikinci adım; `outdated_drawing`, hata):
+   - Paftanın sabit görünüşlü bir haritası, güncel olmayan bir çizimin nesnelerini zemin kapsamında gösteriyorsa
+     baskı öncesi denetim hata verir. Güncel olmayan: eskidi, nesnesi eksik, elle değişti ya da kaynağı yok
+     (`kentos_native_application::outdated_drawings`).
+   - Yayın `publish_blocked` ile durur. Kitabın PDF'i de eskimiş tablo ve yazı alanlarında olduğu gibi reddedilir.
+   - Çözüm cümlesi: Proje ağacından yeniden üret ya da haritayı uzaklaştır.
+   - Atlas haritası her sayfada başka bir zemin gösterir; onun kendi denetimine kalır.
+
 ## Kanıt
 
 - **.kcad:**
@@ -66,10 +74,16 @@ taslak.
   Proje ağacı Harita'dadır. Sıfır hattı eskir, Hepsini yeniden üret günceller, proje `.kcad` olarak yazılır.
   Resimler `.run/gui-evidence/harita-proje-agaci-1720/` altındadır.
 
+- **Teslim kapısı** (`kentos-plot`, `outdated_drawings::a_stale_zero_line_on_a_sheet_stops_its_delivery_until_drawn_again`):
+  - sıfır hattını gösteren harita, Tümsek'in kotu değişince `outdated_drawing` hatası alır;
+  - aynı paftadaki uzak harita almaz;
+  - kitabın PDF'i reddedilir;
+  - yeniden üretimden sonra pafta temizdir ve PDF yazılır.
+- **Takımlar:** `kentos-plot` (90), `kentos-headless` (97) geçer.
+
 ## Sonra
 
-- **Teslim kapısı:** eskimiş çizimi gösteren paftanın baskı öncesi denetimde hata vermesi (“güncel olmayan çıktı
-  başarıyla teslim edilmesin”).
+- **Atlas:** atlas sayfalarının ve paftanın tablolarının aynı kapıdan geçmesi.
 - **Bağımlılık zinciri:** profil, hacim, kübaj ve paftanın tek görünüşte; pafta yayın durumu (ADR 1320) ile birleşmesi.
 - **İş grafiği** (MAP-20'nin kalanı):
   - girdi özeti, işlem sürümü ve parametrelerle yeniden üretilebilir işlem kaydı;

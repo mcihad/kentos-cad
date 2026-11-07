@@ -21,6 +21,54 @@ fn finding(item: &str, code: &str, message: String, fix: &str, severity: Severit
         placeholder: false,
     }
 }
+/// A sheet's fixed-view maps that show objects of a drawing that is not up to date (docs/adr/1720; plan/map-cad.md
+/// MAP-20: “güncel olmayan çıktı başarıyla teslim edilmesin”): a road or map project's drawing (a zero line, contours, a
+/// pad in plan, a profile …) stale since a source changed, with an object gone, changed by hand or its source gone,
+/// whose objects lie within the map's ground. An error: the sheet is not delivered until the drawing is drawn again
+/// (Proje ağacı › Hepsini yeniden üret) or the map is moved off it. An atlas map shows another ground on each page and
+/// is left to the atlas's own checks.
+pub(crate) fn outdated_on_maps(doc: &Document, scene: &kentos_sheet::scene::Scene) -> Vec<Finding> {
+    let outdated = kentos_native_application::outdated_drawings(doc);
+    if outdated.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    for (item, _) in scene.all() {
+        let Some(corners) = kentos_sheet::display::fixed_corners(item) else { continue };
+        let (lo, hi) = corners.iter().fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), c| {
+            ([lo[0].min(c[0]), lo[1].min(c[1])], [hi[0].max(c[0]), hi[1].max(c[1])])
+        });
+        for (d, word, why) in &outdated {
+            let inside = d.uids.iter().any(|u| {
+                kentos_domain::Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+                    .is_some_and(|e| {
+                        let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
+                        b.max_x >= lo[0] && b.min_x <= hi[0] && b.max_y >= lo[1] && b.min_y <= hi[1]
+                    })
+            });
+            if !inside {
+                continue;
+            }
+            out.push(finding(
+                &item.id,
+                "outdated_drawing",
+                format!(
+                    "“{}” haritası {} çizimini gösteriyor ve çizim {word}: {}",
+                    item.name,
+                    d.id,
+                    why.join(" ")
+                ),
+                "Proje ağacından çizimi yeniden üretin (Hepsini yeniden üret) ya da haritayı ondan uzaklaştırın; güncel olmayan çizim teslim edilmez.",
+                Severity::Error,
+            ));
+        }
+    }
+    out
+}
+
 /// The datum families a sheet's text may name, each with the words that name it and the registry's datum id.
 const DATUMS: [(&str, &[&str]); 3] = [
     ("TUREF", &["TUREF", "ITRF96", "ITRF 96", "ITRF-96"]),
@@ -130,6 +178,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     let scene = kentos_sheet::scene::Scene::new(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     out.extend(crs_texts(doc.settings(), &scene));
+    out.extend(outdated_on_maps(doc, &scene));
     let library = crate::book::library_of(doc);
     let mut line_type_drawer = crate::book::MapDrawer::new(doc, &spatial, &library, None);
     for prim in &list.prims {

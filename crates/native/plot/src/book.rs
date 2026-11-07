@@ -568,6 +568,8 @@ pub(crate) fn prepare_captured(
                     | "block_field_unverified" | "block_text_field_stale" | "block_text_field_unverified" | "block_text_layout_unsupported"
                     | "block_table_field_stale" | "block_table_field_unverified"
                     | "block_table_field_source_stale" | "block_table_field_source_unverified"
+                    // A drawing not up to date on a map (docs/adr/1720): not delivered until drawn again.
+                    | "outdated_drawing"
             )
         }) {
             return Err(PlotError::new(&f.code, &f.message));
