@@ -470,7 +470,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -615,7 +615,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -784,7 +784,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 500,
        "gsd": 0.1,
        "gsdLimit": 0.05,
@@ -930,7 +930,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 2000,
        "gsd": 0.1,
        "gsdLimit": 0.2,
@@ -1076,7 +1076,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 5000,
        "gsd": 0.1,
        "gsdLimit": 0.3,
@@ -1222,7 +1222,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1500,
        "gsd": 0.1,
        "points": [
@@ -1363,7 +1363,7 @@
       "observed": "okuma",
       "rules": {
        "id": "deneme-sabit-5cm",
-       "release": 1,
+       "release": 2,
        "jurisdiction": "Türkiye: Büyük Ölçekli Harita ve Harita Bilgileri Üretim Yönetmeliği",
        "source": "Deneme paketi (sentetik): sabit 5 cm",
        "effective": "2018-06-26",
@@ -1374,7 +1374,8 @@
        ],
        "zFactor": 1.0,
        "gsd": [],
-       "gsdTolerance": 0.1
+       "gsdTolerance": 0.1,
+       "mosaic": 2.0
       }
      },
      "result": {
@@ -1525,7 +1526,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -2120,7 +2121,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -2715,7 +2716,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.15,
        "gsdLimit": 0.1,
@@ -3310,7 +3311,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.11,
        "gsdLimit": 0.1,
@@ -3905,7 +3906,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -4430,7 +4431,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -5026,7 +5027,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -5621,7 +5622,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -6246,7 +6247,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -6309,7 +6310,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -6616,7 +6617,7 @@
       "status": "completed",
       "output": {
        "rules": "bohhbuy-2018-m91",
-       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
        "scale": 1000,
        "gsd": 0.1,
        "gsdLimit": 0.1,
@@ -7806,7 +7807,7 @@
       "observed": "okuma",
       "rules": {
        "id": "bohhbuy-2018-m91",
-       "release": 1,
+       "release": 2,
        "jurisdiction": "Türkiye: Büyük Ölçekli Harita ve Harita Bilgileri Üretim Yönetmeliği",
        "source": " ",
        "effective": "2018-06-26",
@@ -7834,7 +7835,8 @@
          "gsd": 0.3
         }
        ],
-       "gsdTolerance": 0.1
+       "gsdTolerance": 0.1,
+       "mosaic": 2.0
       }
      },
      "result": {

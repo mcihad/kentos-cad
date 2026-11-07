@@ -21,7 +21,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// A layer's named points in the drawing's order (the first of a name): name, east, north, height.
-fn named_points(doc: &Document, layer: &str, field: &str) -> Vec<(String, f64, f64, Option<f64>)> {
+pub(crate) fn named_points(doc: &Document, layer: &str, field: &str) -> Vec<(String, f64, f64, Option<f64>)> {
     let mut out: Vec<(String, f64, f64, Option<f64>)> = Vec::new();
     for e in doc.entities().filter(|e| e.base().layer_id == layer) {
         let Entity::Point(p) = e else { continue };
@@ -33,7 +33,7 @@ fn named_points(doc: &Document, layer: &str, field: &str) -> Vec<(String, f64, f
     out
 }
 
-fn stats(points: &[&OrthoPoint]) -> OrthoStats {
+pub(crate) fn stats(points: &[&OrthoPoint]) -> OrthoStats {
     let n = points.len();
     if n == 0 {
         return OrthoStats { n: 0, rmse_x: 0.0, rmse_y: 0.0, koh_xy: 0.0, rmse_r: 0.0, mean_x: 0.0, mean_y: 0.0, max_d: 0.0, n_z: 0, koh_z: None };
@@ -56,7 +56,7 @@ fn stats(points: &[&OrthoPoint]) -> OrthoStats {
     }
 }
 
-fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoChecked, Stop> {
+pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoChecked, Stop> {
     let uid = input.raster.trim();
     if !checks::is_uid_text(uid) {
         return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), "raster"));

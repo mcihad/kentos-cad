@@ -84,6 +84,9 @@
 - **Ortofoto doğruluk denetimi (6 Kasım 2026; MAP-12, [ADR 1480](../../docs/adr/1480-orthophoto-accuracy-check.md)).**
   `cad.orthophoto.check` (raster sekmesi, salt okunur): bağımsız denetim noktaları, BÖHHBÜY m. 91(2)/54 kural paketi
   `catalog/v1/rules/ortofoto-bohhbuy-2018.json`.
+- **İki ortofotonun karşılaştırılması (7 Kasım 2026; MAP-12, [ADR 1780](../../docs/adr/1780-two-orthophotos-compared.md)).**
+  `cad.orthophoto.compare` (raster sekmesi › Karşılaştır, salt okunur): aynı noktaların kayması, sistematik kayma; sınır
+  paketin `mosaic`'i × iri YÖA (m. 67(6), paket sürüm 2); arazi noktalarıyla her görüntünün kendi denetimi.
 - **Düzenleme dağıtım taslağı (6 Kasım 2026; MAP-11, [ADR 1460](../../docs/adr/1460-readjustment-distribution-draft.md)).**
   `cad.readjustment.distribute` (Harita + CBS, salt okunur, hep taslak): oranlar kural paketinin verisi, sayılar kesin.
 - **Alternatif etkisi (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).**

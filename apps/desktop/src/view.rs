@@ -2104,6 +2104,7 @@ impl App {
             Asking::Impact => self.impact_view(),
             Asking::Readjustment => self.readjustment_view(),
             Asking::Ortho => self.ortho_view(),
+            Asking::OrthoCompare => self.ortho_compare_view(),
             Asking::Overlap => self.overlap_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),

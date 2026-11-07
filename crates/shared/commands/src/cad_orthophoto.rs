@@ -30,7 +30,9 @@ pub struct OrthoGsd {
 
 /// A rule package: who issues it, the document, when it holds, its release; KOH_X,Y's limit in centimetres as
 /// `xy[0]·S² + xy[1]·S + xy[2]` (S the scale's denominator), KOH_Z's as `zFactor` × that, the largest ground sampling
-/// distance by scale and the share it may vary by.
+/// distance by scale and the share it may vary by; and the largest shift of a point between two orthophotos as a
+/// multiple of the ground sampling distance (`mosaic`, BÖHHBÜY Article 67(6); none: the package gives no such limit and
+/// `cad.orthophoto.compare` refuses it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -50,9 +52,13 @@ pub struct OrthoRules {
     pub gsd: Vec<OrthoGsd>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
     pub gsd_tolerance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
+    pub mosaic: Option<f64>,
 }
 
-/// KentOS's default package: BÖHHBÜY 2018's Articles 54 and 91.
+/// KentOS's default package: BÖHHBÜY 2018's Articles 54, 67(6) and 91.
 pub fn ortho_rules_default() -> Option<OrthoRules> {
     serde_json::from_str(include_str!("../../../../catalog/v1/rules/ortofoto-bohhbuy-2018.json")).ok()
 }
@@ -181,5 +187,93 @@ pub struct OrthophotoChecked {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub passed_z: Option<bool>,
     pub below_pixel: bool,
+    pub notes: Vec<String>,
+}
+
+pub const CAD_ORTHOPHOTO_COMPARE: &str = "cad.orthophoto.compare";
+pub const CAD_ORTHOPHOTO_COMPARE_VERSION: u32 = 1;
+
+/// Input of `cad.orthophoto.compare` v1 (plan/map-cad.md MAP-12, docs/adr/1780): two orthophotos (rasters' persistent
+/// ids; the first the older, or the one the mosaic's neighbour is set against), the layers of the same points read on
+/// each, and the layer of those points measured on the ground (none: the images are compared with each other only);
+/// the attribute that names a point (none: `Ad`), the scale's denominator (none: the project's plot scale) and the rule
+/// package (none: KentOS's BÖHHBÜY 2018).
+///
+/// Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster` (`first`, `second`), `crs_mismatch` (a raster's
+/// coordinate system is not the project's), `invalid_input` (one raster twice; `scale` 0; `rules`: empty id or source,
+/// no positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthophotoCompare {
+    pub first: String,
+    pub second: String,
+    pub first_points: String,
+    pub second_points: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub known: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub field: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub scale: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<OrthoRules>,
+}
+
+/// A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,
+/// and whether it is over the limit.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthoPair {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub dx: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub dy: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub d: f64,
+    pub over: bool,
+}
+
+/// Output of `cad.orthophoto.compare` v1: the package (id, source), the two images' ground sampling distances, the
+/// limit of a point's shift (the package's `mosaic` × the coarser image's GSD, metres: BÖHHBÜY Article 67(6)'s ±2·GSD
+/// between a mosaic's orthophotos, read by KentOS for two images of different pixels), the
+/// points read on both, the names on one side only, the shift's statistics (its means are the systematic shift),
+/// whether every point holds to the limit (none without points), each image's own check against the ground's points
+/// (`cad.orthophoto.check`'s answer, when `known` is given), and notes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthophotoCompared {
+    pub rules: String,
+    pub source: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub gsd: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub limit: f64,
+    pub pairs: Vec<OrthoPair>,
+    pub unmatched: Vec<String>,
+    pub shift: OrthoStats,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub passed: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub first_check: Option<OrthophotoChecked>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub second_check: Option<OrthophotoChecked>,
     pub notes: Vec<String>,
 }

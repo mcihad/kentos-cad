@@ -6072,6 +6072,10 @@
        "size": "small"
       },
       {
+       "command": "raster.compare",
+       "size": "small"
+      },
+      {
        "command": "processing.run.raster.cog",
        "size": "small"
       },

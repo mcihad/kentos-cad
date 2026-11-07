@@ -1,0 +1,442 @@
+//! Ortofoto karşılaştırması (docs/adr/1780; `raster.compare`): two orthophotos of the drawing compared by the same
+//! points read on each, by `cad.orthophoto.compare`, read only. The rasters and their reading layers on two lines (the
+//! selection's rasters in the drawing's order, a layer named with a raster's year goes with it), the ground's points
+//! (none: the images against each other only) and the scale on the third, the name attribute on the fourth. The
+//! summary says the largest shift against the limit (2·GSD of the coarser image, BÖHHBÜY 67(6)), the systematic shift
+//! and each image's own check; the table lists every point's shift and, with the ground's points, each image's error
+//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts.
+
+use std::path::PathBuf;
+
+use iced::widget::{Column, container, row};
+use iced::{Center, Element, Task};
+use kentos_commands::{CommandResult, Entity, OrthophotoChecked, OrthophotoCompare, OrthophotoCompared, RasterFields};
+use kentos_interaction::Level;
+use kentos_native_application::{ExecutionContext, orthophoto_compare};
+use kentos_ui::label;
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput};
+
+use crate::app::{App, Dialog, Message};
+use crate::exchange::words::{self, Kind};
+use crate::road_dialog::{col, num, sheet};
+use crate::style::fields;
+use crate::traces::Control;
+
+pub const TITLE: &str = "Ortofoto karşılaştırması";
+const CLOSE: &str = "Kapat";
+const SAVE: &str = "CSV kaydet…";
+const SWAP: &str = "Yer değiştir";
+/// The ground's layer left out: the images are compared with each other only.
+const NONE: &str = "— yok —";
+
+#[derive(Clone, Debug, Default)]
+pub struct State {
+    /// The drawing's rasters: persistent id and name.
+    pub rasters: Vec<(String, String)>,
+    pub first: String,
+    pub second: String,
+    /// The drawing's layers: id and name.
+    pub layers: Vec<(String, String)>,
+    pub first_points: String,
+    pub second_points: String,
+    /// The ground's points; empty: none.
+    pub known: String,
+    pub field: String,
+    pub scale: f64,
+    pub answer: Option<Result<OrthophotoCompared, String>>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Event {
+    First(String),
+    Second(String),
+    FirstPoints(String),
+    SecondPoints(String),
+    Known(String),
+    Field(String),
+    Scale(f64),
+    Swap,
+    Save,
+    Saved(Option<PathBuf>),
+    Close,
+}
+
+fn msg(e: Event) -> Message {
+    Message::OrthoCompare(e)
+}
+
+fn cm(v: f64) -> String {
+    format!("{:.1}", v * 100.0)
+}
+
+/// A raster's name: its file's, else its asset's or address.
+fn raster_name(r: &RasterFields) -> String {
+    let a = r.affine;
+    let gsd = (a[1] * a[5] - a[2] * a[4]).abs().sqrt();
+    let source = r
+        .file
+        .as_deref()
+        .map(|f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned())
+        .or_else(|| r.asset.clone())
+        .or_else(|| r.url.clone())
+        .unwrap_or_else(|| "Raster".to_owned());
+    format!("{source} · {} cm", cm(gsd))
+}
+
+/// The first year (four digits, 19xx or 20xx, not part of a longer number) in a name.
+fn year(text: &str) -> Option<&str> {
+    let b = text.as_bytes();
+    (0..b.len().saturating_sub(3)).find_map(|i| {
+        let digits = b[i..i + 4].iter().all(u8::is_ascii_digit);
+        let alone = (i == 0 || !b[i - 1].is_ascii_digit()) && (i + 4 == b.len() || !b[i + 4].is_ascii_digit());
+        (digits && alone && (b[i..].starts_with(b"19") || b[i..].starts_with(b"20"))).then(|| &text[i..i + 4])
+    })
+}
+
+/// An image's own error at a point (its check's horizontal error), when the ground's points were given.
+fn error_at(check: Option<&OrthophotoChecked>, name: &str) -> String {
+    check.and_then(|c| c.points.iter().find(|p| p.name == name)).map(|p| cm(p.d)).unwrap_or_default()
+}
+
+/// The shifts as CSV (metres as computed).
+pub fn csv(r: &OrthophotoCompared) -> String {
+    let mut out = format!(
+        "Kural paketi;{};Sınır (m);{};YÖA birinci (m);{};YÖA ikinci (m);{}\n\nNokta;dx (m);dy (m);Kayma (m);Sınırı aşar\n",
+        r.rules, r.limit, r.gsd[0], r.gsd[1]
+    );
+    for p in &r.pairs {
+        out.push_str(&format!("{};{};{};{};{}\n", p.name, p.dx, p.dy, p.d, if p.over { "Evet" } else { "Hayır" }));
+    }
+    out
+}
+
+impl App {
+    fn ortho_compare_run(&mut self) {
+        let s = &self.ortho_compare;
+        let input = OrthophotoCompare {
+            first: s.first.clone(),
+            second: s.second.clone(),
+            first_points: s.first_points.clone(),
+            second_points: s.second_points.clone(),
+            known: (!s.known.is_empty()).then(|| s.known.clone()),
+            field: Some(s.field.clone()),
+            scale: Some(s.scale.max(1.0) as u32),
+            rules: None,
+        };
+        let Some(doc) = self.document.as_mut() else { return };
+        self.ortho_compare.answer = Some(match orthophoto_compare::plan(&ExecutionContext::new(&mut doc.model), &input) {
+            CommandResult::Completed { output, .. } => Ok(output),
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                Err(error.message)
+            }
+            _ => Err("Karşılaştırılamadı.".to_owned()),
+        });
+    }
+
+    /// Ortofoto karşılaştırması (`raster.compare`): the drawing's rasters, the selected two first (in the drawing's
+    /// order); the ground's layer guessed from its name (GNSS), each image's reading layer by the year in its file's
+    /// name, else the other point layers in order.
+    pub(crate) fn open_ortho_compare(&mut self) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            self.output("Açık çizim yok.");
+            return Task::none();
+        };
+        let rasters: Vec<(String, String)> = doc
+            .model
+            .entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                Entity::Raster(r) => Some((u.to_string(), raster_name(&r.raster))),
+                _ => None,
+            })
+            .collect();
+        if rasters.len() < 2 {
+            self.warn("Ortofoto karşılaştırması: çizimde karşılaştırılacak iki ortofoto (raster) yok; ikincisini ekleyin.");
+            return Task::none();
+        }
+        let selected: Vec<String> = self.selection.ids().iter().filter_map(|s| doc.model.uid(*s).map(|u| u.to_string())).collect();
+        let mut picked: Vec<String> = rasters.iter().filter(|(u, _)| selected.contains(u)).map(|(u, _)| u.clone()).collect();
+        for (u, _) in &rasters {
+            if picked.len() >= 2 {
+                break;
+            }
+            if !picked.contains(u) {
+                picked.push(u.clone());
+            }
+        }
+        let (first, second) = (picked[0].clone(), picked[1].clone());
+        let layers: Vec<(String, String)> =
+            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let with_points: Vec<&(String, String)> = layers
+            .iter()
+            .filter(|(id, _)| doc.model.entities().any(|e| e.base().layer_id == *id && matches!(e, Entity::Point(_))))
+            .collect();
+        let known = with_points
+            .iter()
+            .find(|(_, n)| ["gnss", "arazi", "denetim"].iter().any(|w| n.to_lowercase().contains(w)))
+            .map(|(id, _)| id.clone())
+            .unwrap_or_default();
+        let readings: Vec<&String> = with_points.iter().map(|(id, _)| id).filter(|id| **id != known).collect();
+        let name_of = |uid: &str| rasters.iter().find(|(u, _)| u == uid).map(|(_, n)| n.clone()).unwrap_or_default();
+        let reading_for = |raster: &str, taken: &str| -> String {
+            let free: Vec<&String> = readings.iter().copied().filter(|id| id.as_str() != taken).collect();
+            let by_year = year(&name_of(raster)).and_then(|y| {
+                free.iter().copied().find(|id| {
+                    id.contains(y) || layers.iter().any(|(l, n)| l.as_str() == id.as_str() && n.contains(y))
+                })
+            });
+            by_year.or_else(|| free.first().copied()).cloned().unwrap_or_default()
+        };
+        let first_points = reading_for(&first, "");
+        let second_points = reading_for(&second, &first_points);
+        self.ortho_compare = State {
+            rasters,
+            first,
+            second,
+            layers,
+            first_points,
+            second_points,
+            known,
+            field: "Ad".into(),
+            scale: doc.model.settings().plot_scale.round().max(1.0),
+            answer: None,
+        };
+        self.ortho_compare_run();
+        self.dialog = Some(Dialog::OrthoCompare);
+        Task::none()
+    }
+
+    /// The shifts written to `path` as CSV (a test or a trace gives it here, the picker in the app).
+    pub(crate) fn ortho_compare_save(&mut self, path: PathBuf) {
+        let Some(Ok(r)) = &self.ortho_compare.answer else { return };
+        match std::fs::write(&path, csv(r)) {
+            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.pairs.len(), path.display())),
+            Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
+        }
+    }
+
+    pub(crate) fn ortho_compare_event(&mut self, event: Event) -> Task<Message> {
+        let s = &mut self.ortho_compare;
+        match event {
+            Event::First(v) => s.first = v,
+            Event::Second(v) => s.second = v,
+            Event::FirstPoints(v) => s.first_points = v,
+            Event::SecondPoints(v) => s.second_points = v,
+            Event::Known(v) => s.known = if v == NONE { String::new() } else { v },
+            Event::Field(v) => s.field = v,
+            Event::Scale(v) => s.scale = v,
+            Event::Swap => {
+                std::mem::swap(&mut s.first, &mut s.second);
+                std::mem::swap(&mut s.first_points, &mut s.second_points);
+            }
+            Event::Save => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .set_title(TITLE)
+                            .set_file_name("ortofoto-karsilastirmasi.csv")
+                            .add_filter("CSV", &["csv"])
+                            .save_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    |p| msg(Event::Saved(p)),
+                );
+            }
+            Event::Saved(Some(path)) => {
+                self.ortho_compare_save(path);
+                return Task::none();
+            }
+            Event::Saved(None) => return Task::none(),
+            Event::Close => {
+                self.ortho_compare = State::default();
+                self.dialog = None;
+                return Task::none();
+            }
+        }
+        self.ortho_compare_run();
+        Task::none()
+    }
+
+    fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
+        let mut lines = Vec::new();
+        let mut rows = Vec::new();
+        let Some(answer) = &self.ortho_compare.answer else { return (lines, rows) };
+        let r = match answer {
+            Ok(r) => r,
+            Err(why) => {
+                lines.push(words::text_line(Kind::Error, why.clone()));
+                return (lines, rows);
+            }
+        };
+        let coarse = r.gsd[0].max(r.gsd[1]);
+        let times = if coarse > 0.0 { format!("{}", (r.limit / coarse * 10.0).round() / 10.0) } else { "?".into() };
+        let over = r.pairs.iter().filter(|p| p.over).count();
+        lines.push(match r.passed {
+            Some(true) => words::text_line(
+                Kind::Ok,
+                format!(
+                    "{} ortak nokta: en büyük kayma {} cm, sınır {} cm ({times}·YÖA, iri olanınki {} cm; BÖHHBÜY m. 67(6)): sınırın içinde.",
+                    r.pairs.len(),
+                    cm(r.shift.max_d),
+                    cm(r.limit),
+                    cm(coarse)
+                ),
+            ),
+            Some(false) => words::text_line(
+                Kind::Error,
+                format!(
+                    "{} ortak nokta: {over} nokta sınırı ({} cm, {times}·YÖA; BÖHHBÜY m. 67(6)) aşıyor; en büyük kayma {} cm.",
+                    r.pairs.len(),
+                    cm(r.limit),
+                    cm(r.shift.max_d)
+                ),
+            ),
+            None => words::text_line(Kind::Warn, "Eşleşen nokta yok: iki görüntüde aynı adla okunmuş nokta bulunamadı."),
+        });
+        if !r.pairs.is_empty() {
+            lines.push(words::text_line(
+                Kind::Info,
+                format!(
+                    "Ortalama kayma doğu {} cm, kuzey {} cm (görüntüler arasındaki sistematik fark); kaymaların KOH_X,Y'si {} cm.",
+                    cm(r.shift.mean_x),
+                    cm(r.shift.mean_y),
+                    cm(r.shift.koh_xy)
+                ),
+            ));
+        }
+        lines.push(words::text_line(
+            Kind::Info,
+            format!("Yer örnekleme aralığı: birinci {} cm, ikinci {} cm.", cm(r.gsd[0]), cm(r.gsd[1])),
+        ));
+        for (which, check) in [("Birinci", &r.first_check), ("İkinci", &r.second_check)] {
+            let Some(c) = check else { continue };
+            lines.push(match c.passed_xy {
+                Some(ok) => words::text_line(
+                    if ok { Kind::Ok } else { Kind::Error },
+                    format!(
+                        "{which} görüntü arazi noktalarıyla: KOH_X,Y {} cm, sınır {} cm (BÖHHBÜY m. 91, 1/{}): {}.",
+                        cm(c.check.koh_xy),
+                        cm(c.limit_xy),
+                        c.scale,
+                        if ok { "sınırın içinde" } else { "sınırın dışında" }
+                    ),
+                ),
+                None => words::text_line(Kind::Warn, format!("{which} görüntü: bağımsız denetim noktası yok, doğruluğu söylenemez.")),
+            });
+        }
+        if r.first_check.is_none() {
+            lines.push(words::text_line(Kind::Info, "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi."));
+        }
+        if !r.unmatched.is_empty() {
+            lines.push(words::text_line(Kind::Warn, format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", "))));
+        }
+        lines.push(words::text_line(
+            Kind::Info,
+            "İki zamanın farkı kendiliğinden deformasyon değildir; görüntülerin kendi doğruluğuyla birlikte okunur.",
+        ));
+        for p in &r.pairs {
+            rows.push(vec![
+                p.name.clone(),
+                cm(p.dx),
+                cm(p.dy),
+                cm(p.d),
+                error_at(r.first_check.as_ref(), &p.name),
+                error_at(r.second_check.as_ref(), &p.name),
+                if p.over { "Sınırı aşar".to_owned() } else { "İçinde".to_owned() },
+            ]);
+        }
+        (lines, rows)
+    }
+
+    pub(crate) fn ortho_compare_view(&self) -> Element<'_, Message> {
+        let s = &self.ortho_compare;
+        let caption = |text: &'static str| container(label::caption(text)).width(120);
+        let mut grounds = vec![(NONE.to_owned(), NONE.to_owned())];
+        grounds.extend(s.layers.iter().cloned());
+        let known = if s.known.is_empty() { NONE } else { s.known.as_str() };
+        let form = Form::new()
+            .label_width(130.0)
+            .field(
+                "Birinci ortofoto",
+                row![
+                    container(fields::select_owned(s.rasters.clone(), &s.first, |v| msg(Event::First(v)))).width(260),
+                    caption("Okunan noktalar"),
+                    container(fields::select_owned(s.layers.clone(), &s.first_points, |v| msg(Event::FirstPoints(v)))).width(220)
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .field(
+                "İkinci ortofoto",
+                row![
+                    container(fields::select_owned(s.rasters.clone(), &s.second, |v| msg(Event::Second(v)))).width(260),
+                    caption("Okunan noktalar"),
+                    container(fields::select_owned(s.layers.clone(), &s.second_points, |v| msg(Event::SecondPoints(v)))).width(220)
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .field(
+                "Arazi noktaları",
+                row![
+                    container(fields::select_owned(grounds, known, |v| msg(Event::Known(v)))).width(260),
+                    caption("Ölçek 1/"),
+                    container(NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(500.0).decimals(0)).width(220)
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .field(
+                "Nokta adı alanı",
+                container(fields::input(None, "Ad", &s.field, false, false).on_input(|v| msg(Event::Field(v)))).width(260),
+            );
+        let (lines, rows) = self.ortho_compare_lines();
+        let table = sheet(
+            vec![
+                col("Nokta", 90.0),
+                num("dx (cm)", 80.0),
+                num("dy (cm)", 80.0),
+                num("Kayma (cm)", 95.0),
+                num("1. hata (cm)", 95.0),
+                num("2. hata (cm)", 95.0),
+                col("Durum", 110.0),
+            ],
+            rows,
+            "Eşleşen nokta yok.",
+            240.0,
+        );
+        let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+        let ready = matches!(&s.answer, Some(Ok(r)) if !r.pairs.is_empty());
+        Frame::new(TITLE)
+            .push(body)
+            .aside(words::secondary(SWAP, Some(msg(Event::Swap))))
+            .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(860.0)
+            .modal(msg(Event::Close))
+    }
+
+    pub(crate) fn ortho_compare_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+        Ok(match control {
+            Control::Press(CLOSE) => Some(msg(Event::Close)),
+            Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(SWAP) => Some(msg(Event::Swap)),
+            other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::year;
+
+    #[test]
+    fn a_year_is_four_digits_alone() {
+        assert_eq!(year("ortofoto-2024.tif"), Some("2024"));
+        assert_eq!(year("okuma-2026"), Some("2026"));
+        assert_eq!(year("pafta-120245"), None);
+        assert_eq!(year("1/1000"), None);
+        assert_eq!(year("1999"), Some("1999"));
+        assert_eq!(year(""), None);
+    }
+}

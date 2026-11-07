@@ -771,6 +771,24 @@ sınırları ve m. 54 YÖA kural paketiyle (veri), yarım piksel altı uyarısı
 27 ortak durum). Açık: iki zamanlı ortofoto karşılaştırması ve mozaik kayıklığı, otomatik eşleme, kalite raporu
 aktarımı, türeyen nesnenin izi, DSM/DTM.
 
+**7 Kasım 2026 — MAP-12.2: iki ortofotonun karşılaştırılması ([ADR 1780](../docs/adr/1780-two-orthophotos-compared.md)).**
+Kapsam: **CAD + CBS** (raster bağlam sekmesi); komut Python ve MCP'de. Araştırma:
+- BÖHHBÜY m. 67(6): mozaikteki ortofotolar arasındaki kayıklık ±2·YÖA;
+- ASPRS 2014 ve 2024: dikiş hattı uyumsuzluğu sınıf RMSE'sinin iki katı (ikincil kaynak);
+- ArcGIS Pro'nun denetim noktası sapması ve Metashape'in iki dönemi ortak işaretle hizalaması; ikisi de iki zamanı
+  noktalarla karşılaştırmaz.
+
+Kanıtlanan alt maddeler:
+- `cad.orthophoto.compare` iki görüntüde okunan aynı noktaların kaymasını, sistematik kaymayı ve kaymaların KOH'unu verir.
+- Nokta başına sınır kural paketinin verisidir (`mosaic` × iri YÖA); paket `mosaic` vermiyorsa ret.
+- Arazi noktalarıyla her görüntü ayrıca denetlenir; yanlış CRS reddedilir.
+- İki zamanın farkı deformasyon diye sunulmaz.
+- Kabulden kanıtlanan: zamanları farklı iki ortofoto bağımsız kontrol noktalarıyla karşılaştırıldı.
+- 29 bağımsız durum (`orthophoto_compare_cases.py`); masaüstü Raster sekmesi › Karşılaştır.
+
+**Açık:** düşey veri (DSM/DTM) ve erişilemeyen kaynak durumları, görüntüden türeyen nesnenin kaynağa izi, otomatik
+eşleme, dikiş hattının kendiliğinden ölçülmesi, kalite raporu aktarımı. Madde `[ ]` kalır.
+
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

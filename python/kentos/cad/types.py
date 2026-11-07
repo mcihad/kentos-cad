@@ -59894,6 +59894,41 @@ class OrthoGsd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoPair(_Model):
+    """A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,
+    and whether it is over the limit.
+    Attributes:
+        dx: Unit: length.
+        dy: Unit: length.
+        d: Unit: length.
+    """
+    name: str
+    dx: float
+    dy: float
+    d: float
+    over: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["d"] = float(self.d)
+        out["over"] = self.over
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoPair:
+        return cls(
+            name=data["name"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            d=float(data["d"]),
+            over=data["over"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OrthoPoint(_Model):
     """A point: its name, its role (`check`: independent; `fit`: one the image's georeference was fitted to), its error
     image − ground in east, north and (when both have one) height, and its horizontal error (metres).
@@ -59937,12 +59972,15 @@ class OrthoPoint(_Model):
 class OrthoRules(_Model):
     """A rule package: who issues it, the document, when it holds, its release; KOH_X,Y's limit in centimetres as
     `xy[0]·S² + xy[1]·S + xy[2]` (S the scale's denominator), KOH_Z's as `zFactor` × that, the largest ground sampling
-    distance by scale and the share it may vary by.
+    distance by scale and the share it may vary by; and the largest shift of a point between two orthophotos as a
+    multiple of the ground sampling distance (`mosaic`, BÖHHBÜY Article 67(6); none: the package gives no such limit and
+    `cad.orthophoto.compare` refuses it).
     Attributes:
         release: Unit: count.
         xy: Unit: measure.
         z_factor: Unit: measure.
         gsd_tolerance: Unit: measure.
+        mosaic: Unit: measure.
     """
     id: str
     release: int
@@ -59953,6 +59991,7 @@ class OrthoRules(_Model):
     z_factor: float
     gsd: list[OrthoGsd]
     gsd_tolerance: float
+    mosaic: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -59965,6 +60004,8 @@ class OrthoRules(_Model):
         out["zFactor"] = float(self.z_factor)
         out["gsd"] = [e0.to_json() for e0 in self.gsd]
         out["gsdTolerance"] = float(self.gsd_tolerance)
+        if self.mosaic is not UNSET:
+            out["mosaic"] = None if self.mosaic is None else float(self.mosaic)
         return out
 
     @classmethod
@@ -59979,6 +60020,7 @@ class OrthoRules(_Model):
             z_factor=float(data["zFactor"]),
             gsd=[OrthoGsd.from_json(e0) for e0 in data["gsd"]],
             gsd_tolerance=float(data["gsdTolerance"]),
+            mosaic=UNSET if "mosaic" not in data else None if data["mosaic"] is None else float(data["mosaic"]),
         )
 
 
@@ -60160,6 +60202,118 @@ class OrthophotoChecked(_Model):
             gsd_ok=data.get("gsdOk", UNSET),
             passed_xy=data.get("passedXy", UNSET),
             passed_z=data.get("passedZ", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoCompare(_Model):
+    """Input of `cad.orthophoto.compare` v1 (plan/map-cad.md MAP-12, docs/adr/1780): two orthophotos (rasters' persistent
+    ids; the first the older, or the one the mosaic's neighbour is set against), the layers of the same points read on
+    each, and the layer of those points measured on the ground (none: the images are compared with each other only);
+    the attribute that names a point (none: `Ad`), the scale's denominator (none: the project's plot scale) and the rule
+    package (none: KentOS's BÖHHBÜY 2018).
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster` (`first`, `second`), `crs_mismatch` (a raster's
+    coordinate system is not the project's), `invalid_input` (one raster twice; `scale` 0; `rules`: empty id or source,
+    no positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`).
+    Attributes:
+        scale: Unit: count.
+    """
+    first: str
+    second: str
+    first_points: str
+    second_points: str
+    field: str | None | Unset = UNSET
+    known: str | None | Unset = UNSET
+    rules: OrthoRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["first"] = self.first
+        out["second"] = self.second
+        out["firstPoints"] = self.first_points
+        out["secondPoints"] = self.second_points
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.known is not UNSET:
+            out["known"] = self.known
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoCompare:
+        return cls(
+            first=data["first"],
+            second=data["second"],
+            first_points=data["firstPoints"],
+            second_points=data["secondPoints"],
+            field=data.get("field", UNSET),
+            known=data.get("known", UNSET),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else OrthoRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthophotoCompared(_Model):
+    """Output of `cad.orthophoto.compare` v1: the package (id, source), the two images' ground sampling distances, the
+    limit of a point's shift (the package's `mosaic` × the coarser image's GSD, metres: BÖHHBÜY Article 67(6)'s ±2·GSD
+    between a mosaic's orthophotos, read by KentOS for two images of different pixels), the
+    points read on both, the names on one side only, the shift's statistics (its means are the systematic shift),
+    whether every point holds to the limit (none without points), each image's own check against the ground's points
+    (`cad.orthophoto.check`'s answer, when `known` is given), and notes.
+    Attributes:
+        gsd: Unit: length.
+        limit: Unit: length.
+    """
+    rules: str
+    source: str
+    gsd: list[float]
+    limit: float
+    pairs: list[OrthoPair]
+    unmatched: list[str]
+    shift: OrthoStats
+    notes: list[str]
+    first_check: OrthophotoChecked | None | Unset = UNSET
+    passed: bool | None | Unset = UNSET
+    second_check: OrthophotoChecked | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules
+        out["source"] = self.source
+        out["gsd"] = [float(e0) for e0 in self.gsd]
+        out["limit"] = float(self.limit)
+        out["pairs"] = [e0.to_json() for e0 in self.pairs]
+        out["unmatched"] = list(self.unmatched)
+        out["shift"] = self.shift.to_json()
+        out["notes"] = list(self.notes)
+        if self.first_check is not UNSET:
+            out["firstCheck"] = None if self.first_check is None else self.first_check.to_json()
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        if self.second_check is not UNSET:
+            out["secondCheck"] = None if self.second_check is None else self.second_check.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthophotoCompared:
+        return cls(
+            rules=data["rules"],
+            source=data["source"],
+            gsd=[float(e0) for e0 in data["gsd"]],
+            limit=float(data["limit"]),
+            pairs=[OrthoPair.from_json(e0) for e0 in data["pairs"]],
+            unmatched=list(data["unmatched"]),
+            shift=OrthoStats.from_json(data["shift"]),
+            notes=list(data["notes"]),
+            first_check=UNSET if "firstCheck" not in data else None if data["firstCheck"] is None else OrthophotoChecked.from_json(data["firstCheck"]),
+            passed=data.get("passed", UNSET),
+            second_check=UNSET if "secondCheck" not in data else None if data["secondCheck"] is None else OrthophotoChecked.from_json(data["secondCheck"]),
         )
 
 
@@ -126652,11 +126806,14 @@ __all__ = [
     "OriginHatchEdit",
     "OriginUcsTo",
     "OrthoGsd",
+    "OrthoPair",
     "OrthoPoint",
     "OrthoRules",
     "OrthoStats",
     "OrthophotoCheck",
     "OrthophotoChecked",
+    "OrthophotoCompare",
+    "OrthophotoCompared",
     "OverlapCell",
     "OverlapControl",
     "OverlapControlStats",

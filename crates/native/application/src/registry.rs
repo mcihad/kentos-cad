@@ -64,6 +64,7 @@ use crate::zoning_check;
 use crate::scenarios_impact;
 use crate::readjustment;
 use crate::orthophoto_check;
+use crate::orthophoto_compare;
 use crate::pointcloud_overlap;
 use crate::addresses_compare;
 use crate::addresses_normalize;
@@ -560,6 +561,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_ORTHOPHOTO_CHECK => {
                 $then!(orthophoto_check, kentos_commands::OrthophotoCheck)
+            }
+            kentos_commands::CAD_ORTHOPHOTO_COMPARE => {
+                $then!(orthophoto_compare, kentos_commands::OrthophotoCompare)
             }
             kentos_commands::CAD_POINTCLOUDS_OVERLAP => {
                 $then!(pointcloud_overlap, kentos_commands::PointCloudsOverlap)

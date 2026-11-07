@@ -9410,6 +9410,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // İki ortofotonun karşılaştırılması (plan/map-cad.md MAP-12, docs/adr/1780).
+        CommandDescriptor {
+            id: crate::CAD_ORTHOPHOTO_COMPARE.into(),
+            version: crate::CAD_ORTHOPHOTO_COMPARE_VERSION,
+            title: "Ortofoto karşılaştırması".into(),
+            summary: "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. \
+                      Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. \
+                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz)."
+                .into(),
+            aliases: vec!["ortofotokarsilastir".into(), "mozaikkayiklik".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OrthophotoCompare>(),
+            output: schema::<crate::OrthophotoCompared>(),
+            plan: Some(schema::<crate::OrthophotoCompared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "2024 ve 2026 ortofotoları, GNSS denetim noktalarıyla".into(),
+                input: json!({ "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "firstPoints": "okuma-2024", "secondPoints": "okuma-2026", "known": "gnss" }),
+                output: None,
+            }],
+        },
         // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
         CommandDescriptor {
             id: crate::CAD_READJUSTMENT_DISTRIBUTE.into(),
@@ -16192,6 +16219,7 @@ mod tests {
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetwork>(e.input.clone()).map(|_| ()),
@@ -17149,6 +17177,7 @@ mod tests {
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetworked>(output.clone()).map(|_| ()),

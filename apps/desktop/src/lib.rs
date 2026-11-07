@@ -76,6 +76,7 @@ mod features_reconcile_window;
 mod zoning_window;
 mod impact_window;
 mod readjustment_window;
+mod ortho_compare_window;
 mod ortho_window;
 mod overlap_window;
 mod xrefs_review_view;
@@ -357,6 +358,8 @@ mod zoning_window_tests;
 mod impact_window_tests;
 #[cfg(test)]
 mod readjustment_window_tests;
+#[cfg(test)]
+mod ortho_compare_window_tests;
 #[cfg(test)]
 mod ortho_window_tests;
 #[cfg(test)]

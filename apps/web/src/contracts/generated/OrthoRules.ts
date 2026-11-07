@@ -4,6 +4,8 @@ import type { OrthoGsd } from "./OrthoGsd";
 /**
  * A rule package: who issues it, the document, when it holds, its release; KOH_X,Y's limit in centimetres as
  * `xy[0]·S² + xy[1]·S + xy[2]` (S the scale's denominator), KOH_Z's as `zFactor` × that, the largest ground sampling
- * distance by scale and the share it may vary by.
+ * distance by scale and the share it may vary by; and the largest shift of a point between two orthophotos as a
+ * multiple of the ground sampling distance (`mosaic`, BÖHHBÜY Article 67(6); none: the package gives no such limit and
+ * `cad.orthophoto.compare` refuses it).
  */
-export type OrthoRules = { id: string, release: number, jurisdiction: string, source: string, effective: string, xy: [number, number, number], zFactor: number, gsd: Array<OrthoGsd>, gsdTolerance: number, };
+export type OrthoRules = { id: string, release: number, jurisdiction: string, source: string, effective: string, xy: [number, number, number], zFactor: number, gsd: Array<OrthoGsd>, gsdTolerance: number, mosaic?: number, };
