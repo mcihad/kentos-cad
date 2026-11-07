@@ -201,7 +201,10 @@ geographiclib-rs = { path = "crates/shared/geographiclib-rs", version = "=0.2.7"
 # would bring a package of its own (`sha1_smol`).
 sha1 = { version = "=0.10.7", default-features = false }
 sha2 = { version = "=0.10.9", default-features = false }
-ts-rs = { version = "=12.0.1", features = ["serde-json-impl"] }
+# `no-serde-warnings`: ts-rs reads the serde attributes it knows and warned at every build about the rest
+# (`deny_unknown_fields`, which has no TypeScript form, and the custom `serialize_with`/`deserialize_with` fields, whose
+# TypeScript type each states with `#[ts(as = ...)]`); the generated types do not change.
+ts-rs = { version = "=12.0.1", features = ["serde-json-impl", "no-serde-warnings"] }
 # JSON Schema of the contract types, for the product command catalog (docs/adr/0013):
 # the schemas are derived from the same serde types, so type and schema cannot drift.
 schemars = { version = "=1.2.2", default-features = false, features = ["derive", "std"] }
