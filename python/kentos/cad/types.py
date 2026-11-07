@@ -33752,10 +33752,15 @@ class ExportLandxml(_Model):
     there), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that
     does not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`
     (a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose
-    alignment is not written).
+    alignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with
+    `machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.
+    Attributes:
+        machine_control: For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each
+            surface's cloud ground in it (`unproven_heights`).
     """
     path: str
     alignments: list[str] | None | Unset = UNSET
+    machine_control: bool | Unset = UNSET
     overwrite: bool | Unset = UNSET
     stamp: str | None | Unset = UNSET
     surfaces: list[str] | None | Unset = UNSET
@@ -33766,6 +33771,8 @@ class ExportLandxml(_Model):
         out["path"] = self.path
         if self.alignments is not UNSET:
             out["alignments"] = None if self.alignments is None else list(self.alignments)
+        if self.machine_control is not UNSET:
+            out["machineControl"] = self.machine_control
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
         if self.stamp is not UNSET:
@@ -33781,6 +33788,7 @@ class ExportLandxml(_Model):
         return cls(
             path=data["path"],
             alignments=UNSET if "alignments" not in data else None if data["alignments"] is None else list(data["alignments"]),
+            machine_control=data.get("machineControl", UNSET),
             overwrite=data.get("overwrite", UNSET),
             stamp=data.get("stamp", UNSET),
             surfaces=UNSET if "surfaces" not in data else None if data["surfaces"] is None else list(data["surfaces"]),
@@ -83427,8 +83435,10 @@ class StakeoutSend(_Model):
     Refusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid
     `path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without
     `overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot
-    carry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),
-    `export_losses` (points the format cannot carry; strings of one point).
+    carry, a first number not in [1, 99 999 999]), `field_heights_unknown` (docs/adr/1031: the project does not say its
+    heights' system; after the first number and the stamp). Warnings: the query's, `stakeout_code_dropped` (codes left
+    off), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's
+    systems in its `CoordinateSystem`.
     Attributes:
         first: Unit: count.
         from_: Unit: m.

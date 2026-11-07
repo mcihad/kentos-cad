@@ -281,12 +281,20 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
             bad("stamp", format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."))
         })?,
     };
+    // Docs/adr/1031: a design for machine control rests on the project's heights, said.
+    if input.machine_control {
+        crate::road_field::heights_said(doc, "Makine kontrolü dosyasının")?;
+        for (i, _) in &picked {
+            crate::road_field::surface_on_project(doc, &own[*i], "surfaces")?;
+        }
+    }
     let mut file = WLandXml {
         date,
         time,
         application: "KentOS Yol".into(),
         version: env!("CARGO_PKG_VERSION").into(),
         project: doc.name().to_owned(),
+        coordinate_system: crate::road_field::coordinate_system(doc),
         ..WLandXml::default()
     };
     let mut out = LandxmlExported { path: path.display().to_string(), surfaces: Vec::new(), alignments: Vec::new(), bytes: 0, sha256: String::new() };

@@ -347,6 +347,7 @@ pub mod road_platforms_draw;
 pub mod road_platforms_edit;
 pub mod road_terrain_cloud;
 pub(crate) mod road_heights;
+pub(crate) mod road_field;
 pub mod road_drainage;
 pub mod road_drainage_draw;
 pub mod road_swept;

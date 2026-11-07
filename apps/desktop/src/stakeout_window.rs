@@ -376,10 +376,25 @@ impl App {
             line = line.push(words::field("İlk no", send_field("1", 0, 80.0), None));
             line = line.push(words::field("İş adı", send_field("koridorun adı", 1, 140.0), None));
         }
+        // Docs/adr/1031: what the heights sent are; a project that does not say it sends none.
+        let heights = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.settings().heights.as_ref())
+            .filter(|h| match h.kind {
+                kentos_commands::HeightKind::Unknown => false,
+                kentos_commands::HeightKind::Orthometric => h.vertical().is_some(),
+                kentos_commands::HeightKind::Ellipsoidal => true,
+            })
+            .map(|h| h.title());
+        let said = match heights {
+            Some(t) => label::caption(format!("Kotlar: {t}.")).style(muted),
+            None => label::caption("Projenin kotlarının düşey sistemi söylenmemiş: gönderilmez (Proje ayarları › Kotlar).").style(warn),
+        };
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer =
             line.push(words::primary(SEND, w.preview.table.as_ref().map(|_| msg(Event::Send))))
-                .push(container(label::caption(what).style(muted)).width(Fill))
+                .push(container(iced::widget::column![label::caption(what).style(muted), said].spacing(2)).width(Fill))
                 .push(words::secondary(CLOSE, Some(msg(Event::Close))))
                 .align_y(iced::alignment::Vertical::Bottom);
         Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))

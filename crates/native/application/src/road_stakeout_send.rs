@@ -159,6 +159,8 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
         None => now(),
         Some(s) => stamp_of(s).ok_or_else(|| bad("stamp", format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın.")))?,
     };
+    // Docs/adr/1031: the heights set out rest on the project's system, said.
+    crate::road_field::heights_said(doc, "Aplikasyon dosyasının")?;
     if table.rows.is_empty() {
         return Err(bad("", "Gönderilecek nokta yok: aralıkta ya da kodlarda kesit noktası çıkmadı.".into()));
     }
@@ -211,6 +213,7 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
                 alignments: vec![a],
                 features,
                 features_name: table.name.clone(),
+                coordinate_system: crate::road_field::coordinate_system(doc),
                 ..WLandXml::default()
             };
             kentos_formats::landxml_write::write(&file)

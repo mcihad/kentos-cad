@@ -39,10 +39,61 @@ UNCHANGED = ccmd.UNCHANGED
 pcmd = ccmd.pcmd
 
 
-def setup(work="road"):
+# Docs/adr/1031: the project says its heights' system, TUDKA99's orthometric heights (Antalya height) by TG-20.
+HEIGHTS = {"kind": "orthometric", "verticalSrid": 5775, "geoid": {"name": "TG-20"}}
+REGISTRY = ROOT / "fixtures/crs/v1/registry.json"
+
+
+def setup(work="road", heights=HEIGHTS):
     base = ccmd.setup([], work=work)
     base["name"] = "Yol alışverişi"
+    if work == "road" and heights is not None:
+        base["settings"]["heights"] = copy.deepcopy(heights)
     return base
+
+
+def heights_title(h):
+    """What the heights are, in the words of the project's settings (docs/adr/0519)."""
+    if h["kind"] == "ellipsoidal":
+        return "elipsoit yüksekliği"
+    if h["kind"] != "orthometric":
+        return "bilinmiyor"
+    from pyproj import CRS
+    t = "ortometrik"
+    t += (f", {CRS.from_epsg(h['verticalSrid']).name} (EPSG:{h['verticalSrid']})" if h.get("verticalSrid")
+          else ", düşey sistemi belirtilmemiş")
+    if h.get("geoid"):
+        t += f", geoit {h['geoid']['name']}"
+    return t
+
+
+def coordinate_system(settings):
+    """The `CoordinateSystem` a file for the field says (docs/adr/1031), its attributes: the horizontal system's name
+    and datum as PROJ's database and the registry name them, the vertical system's as PROJ's database does."""
+    from pyproj import CRS
+    out = {}
+    srid = settings.get("srid", 0)
+    if srid:
+        out["name"] = CRS.from_epsg(srid).name
+        out["epsgCode"] = str(srid)
+        reg = json.loads(REGISTRY.read_text(encoding="utf-8"))
+        out["horizontalDatum"] = next(x["datum"] for x in reg["systems"] if x["srid"] == srid)
+    h = settings.get("heights")
+    if h and h["kind"] == "orthometric" and h.get("verticalSrid"):
+        v = CRS.from_epsg(h["verticalSrid"])
+        out["verticalDatum"] = v.datum.name
+        out["verticalCoordinateSystemName"] = v.name
+    elif h and h["kind"] == "ellipsoidal":
+        out["verticalCoordinateSystemName"] = "ellipsoidal height"
+    if h and h["kind"] != "unknown":
+        out["desc"] = "Kotlar: " + heights_title(h)
+    return out
+
+
+def unsaid(what, why="projenin kotlarının düşey sistemi söylenmemiş"):
+    return (f"{what} kotları bir düşey sisteme bağlı olmalı: {why}. Proje ayarları › Kotlar'da sistemi seçin (BÖHHBÜY: "
+            "TUDKA99'a dayalı Helmert ortometrik yükseklik, Antalya height EPSG:5775). Kotlar bir varsayımla sahaya "
+            "gönderilmez.")
 
 
 SETUP = setup()
@@ -198,6 +249,51 @@ def cases():
            failed("invalid_landxml", "Yazılacak bir şey yok: seçilen yüzey ya da aks yok.")),
         no("Seçilen yüzey kurulamıyor", {"path": tmp(), "surfaces": ["Kurulamaz"]},
            failed("invalid_landxml", surface_unbuilt("Kurulamaz"), "surfaces")),
+    ] + machine_cases(tmp)
+
+
+def machine_cases(tmp):
+    """Docs/adr/1031: a design for machine control rests on the project's heights, said; a plain file needs it not."""
+    mc = {"stamp": STAMP, "machineControl": True}
+    what = "Makine kontrolü dosyasının"
+
+    def clouded(vertical):
+        s = setup()
+        record = {"layer": "zemin", "clouds": ["0192f5a0-7c3e-7d4a-9b1e-000000000001"], "classes": [2],
+                  "returns": "all", "cell": 1.0, "read": 120, "kept": 120, "coverage": 1.0, "density": 1.0}
+        if vertical is not None:
+            record["vertical"] = vertical
+        next(t for t in s["settings"]["road"]["surfaces"] if t["id"] == "t-1")["clouds"] = [record]
+        return s
+
+    def done(input_):
+        result, warnings = answer(input_)
+        result["warnings"] = warnings
+        return result
+
+    ground = {"surfaces": ["Mevcut zemin"], "alignments": []}
+    on_project = {**mc, "path": tmp(), **ground}
+    cloud_ok = case("Makine kontrolü: bulut zemini projenin sisteminde",
+                    [step("execute", on_project, done(on_project), UNCHANGED)], clouded("EPSG:5775"))
+    plain = {"path": tmp(), "stamp": STAMP}
+    return [
+        ok("Makine kontrolü için: projenin kotları söylenmiş", {**mc, "path": tmp()}),
+        case("Kotları söylenmemiş proje: makine kontrolü olmadan yazılır", [step("execute", plain, done(plain), UNCHANGED)],
+             setup(heights=None)),
+        no("Makine kontrolü: projenin kotları söylenmemiş", {**mc, "path": tmp()},
+           failed("field_heights_unknown", unsaid(what)), setup(heights=None)),
+        no("Makine kontrolü: ortometrik ama düşey sistemi yok", {**mc, "path": tmp()},
+           failed("field_heights_unknown", unsaid(what, "projenin kotları ortometrik ama düşey sistemi belirtilmemiş")),
+           setup(heights={"kind": "orthometric"})),
+        cloud_ok,
+        no("Makine kontrolü: bulut zemininin sistemi bilinmiyor", {**mc, "path": tmp(), **ground},
+           failed("unproven_heights", "“Mevcut zemin” yüzeyinin “zemin” katmanındaki bulut noktaları: dosyası düşey "
+                  "sistemini söylemiyor ya da alındığında kaydedilmedi. Kotları projenin sisteminde gösterilmeyen yüzey "
+                  "makine kontrolüne gönderilmez.", "surfaces"), clouded(None)),
+        no("Makine kontrolü: bulut zemini başka sistemde", {**mc, "path": tmp(), **ground},
+           failed("unproven_heights", "“Mevcut zemin” yüzeyinin “zemin” katmanındaki bulut noktaları: EGM2008 height "
+                  "(EPSG:3855), projenin kotları Antalya height (EPSG:5775). Kotları projenin sisteminde gösterilmeyen "
+                  "yüzey makine kontrolüne gönderilmez.", "surfaces"), clouded("EGM2008 height")),
     ]
 
 
@@ -224,6 +320,9 @@ def check_written():
     root = ET.parse(WRITTEN).getroot()
     metric = root.find(f"{NS}Units/{NS}Metric")
     assert metric.get("linearUnit") == "meter" and metric.get("directionUnit") == "decimal degrees"
+    # Docs/adr/1031: the systems, as PROJ's database names them.
+    cs = root.find(f"{NS}CoordinateSystem")
+    assert cs is not None and dict(cs.attrib) == coordinate_system(SETUP["settings"]), cs.attrib if cs is not None else None
     # The surface: the same points, and the same triangles as Triangle's Delaunay.
     surfs = root.findall(f"{NS}Surfaces/{NS}Surface")
     assert [s.get("name") for s in surfs] == ["Mevcut zemin"], [s.get("name") for s in surfs]

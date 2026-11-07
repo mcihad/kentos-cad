@@ -809,6 +809,9 @@ codes! {
     /// A warning: the surfaces' heights were taken as one vertical system as the call asked; the result is a draft
     /// (docs/adr/1029).
     HEIGHTS_ASSUMED = "heights_assumed", Warning, false, "Kotların aynı düşey sistemde olduğu varsayıldı; sonuç taslaktır.";
+    /// A file for the field (a stakeout file, a design for machine control) from a project that does not say its
+    /// heights' vertical system (docs/adr/1031).
+    FIELD_HEIGHTS_UNKNOWN = "field_heights_unknown", Failed, false, "Sahaya giden kotların düşey sistemi bilinmiyor: projenin kotlarını Proje ayarları › Kotlar'da söyleyin.";
     /// A cloud's ground in another vertical system than the project's or than another source's (docs/adr/1029).
     CLOUD_HEIGHTS_DIFFER = "cloud_heights_differ", Failed, false, "Bulutun kotları projeninkinden ya da öbür kaynaklarınkinden başka bir düşey sistemde.";
     /// A warning: a survey leaves part of the design uncovered that the original ground covers (docs/adr/0942).

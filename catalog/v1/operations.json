@@ -2971,6 +2971,13 @@
       ],
       "note": "LandXML ver dosyanın yerini sorar ve file.export.landxml ile yazar; çizim değişmez (plan/road.md Y10.2, ADR 0908)."
     },
+    "landxml.machine": {
+      "level": "semantic",
+      "via": [
+        "file.export.landxml"
+      ],
+      "note": "Makine kontrolüne ver dosyanın yerini sorar ve file.export.landxml'i machineControl ile çağırır: projenin kotlarının düşey sistemi söylenmemişse yazmaz; çizim değişmez (plan/road.md Y96, ADR 1031)."
+    },
     "road.sheets": {
       "level": "semantic",
       "via": [

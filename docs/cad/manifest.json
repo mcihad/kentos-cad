@@ -4474,6 +4474,22 @@
    "tests": 0
   },
   {
+   "id": "landxml.machine",
+   "kind": "command",
+   "title": "Makine kontrolüne ver…",
+   "level": "semantic",
+   "via": [
+    "file.export.landxml"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.export.landxml",
+   "mcp": "file.export.landxml",
+   "note": "Makine kontrolüne ver dosyanın yerini sorar ve file.export.landxml'i machineControl ile çağırır: projenin kotlarının düşey sistemi söylenmemişse yazmaz; çizim değişmez (plan/road.md Y96, ADR 1031).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "layer.crs",
    "kind": "command",
    "title": "Sistem ata…",

@@ -2412,6 +2412,8 @@ const ENTRIES: &[Entry] = &[
             "unknown_terrain",
             "unknown_alignment",
             "invalid_landxml",
+            "field_heights_unknown",
+            "unproven_heights",
         ]],
         warnings: &["export_losses"],
         targets: none,
@@ -2466,6 +2468,7 @@ const ENTRIES: &[Entry] = &[
             "invalid_file_path",
             "file_exists",
             "invalid_stakeout_send",
+            "field_heights_unknown",
         ]],
         warnings: &[
             "corridor_stale",

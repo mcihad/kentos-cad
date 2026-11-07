@@ -195,8 +195,11 @@ class _RoadStakeoutSend(LocalCommand[StakeoutSend, StakeoutSent, StakeoutSent]):
     sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped),
     noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve
     Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da
-    hiç; çizimi değiştirmez. Retler: not_a_road_project, unknown_corridor,
-    invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send.
+    hiç; çizimi değiştirmez. Sahaya giden kotlar projenin söylediği düşey sisteme
+    bağlıdır: söylenmemişse ret (field_heights_unknown; ADR 1031, BÖHHBÜY: TUDKA99'a
+    dayalı Helmert ortometrik yükseklik); LandXML dosyası sistemleri CoordinateSystem'de
+    söyler. Retler: not_a_road_project, unknown_corridor, invalid_stakeout,
+    invalid_file_path, file_exists, invalid_stakeout_send, field_heights_unknown.
     """
     __slots__ = ()
     id = "road.stakeout.send"
@@ -235,9 +238,12 @@ class _RoadStakeoutSend(LocalCommand[StakeoutSend, StakeoutSent, StakeoutSent]):
         alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan
         noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz
         (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun
-        adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Retler:
+        adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Sahaya giden
+        kotlar projenin söylediği düşey sisteme bağlıdır: söylenmemişse ret
+        (field_heights_unknown; ADR 1031, BÖHHBÜY: TUDKA99'a dayalı Helmert ortometrik
+        yükseklik); LandXML dosyası sistemleri CoordinateSystem'de söyler. Retler:
         not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path,
-        file_exists, invalid_stakeout_send.
+        file_exists, invalid_stakeout_send, field_heights_unknown.
 
         Args:
             doc: The drawing it works on.

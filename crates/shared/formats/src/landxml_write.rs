@@ -111,6 +111,21 @@ pub struct WFeature {
     pub points: Vec<[f64; 3]>,
 }
 
+/// The file's `CoordinateSystem` (docs/adr/1031): the horizontal system by its EPSG name and code (`name`,
+/// `epsgCode`, `horizontalDatum`) or a system of the project's own by its name (`horizontalCoordinateSystemName`, as
+/// buildingSMART's LandXML 1.2 profile writes a local one), the heights' system (`verticalCoordinateSystemName`,
+/// `verticalDatum`) and in words what the heights are (`desc`). Each attribute only when known.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct WCoordinateSystem {
+    pub name: Option<String>,
+    pub epsg_code: Option<u32>,
+    pub horizontal_datum: Option<String>,
+    pub horizontal_name: Option<String>,
+    pub vertical_datum: Option<String>,
+    pub vertical_name: Option<String>,
+    pub desc: Option<String>,
+}
+
 /// What a file holds, and when and by what it is written.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct WLandXml {
@@ -125,6 +140,8 @@ pub struct WLandXml {
     /// The feature lines, under one `PlanFeatures` named `features_name`.
     pub features: Vec<WFeature>,
     pub features_name: String,
+    /// Absent: the file says no system (as before docs/adr/1031).
+    pub coordinate_system: Option<WCoordinateSystem>,
 }
 
 fn escape(t: &str) -> String {
@@ -179,6 +196,24 @@ pub fn write(file: &WLandXml) -> String {
         "  <Units>\n    <Metric areaUnit=\"squareMeter\" linearUnit=\"meter\" volumeUnit=\"cubicMeter\" temperatureUnit=\"celsius\" \
          pressureUnit=\"milliBars\" angularUnit=\"decimal degrees\" directionUnit=\"decimal degrees\"{velocity}/>\n  </Units>\n",
     ));
+    if let Some(c) = &file.coordinate_system {
+        let epsg = c.epsg_code.map(|e| e.to_string());
+        o.push_str("  <CoordinateSystem");
+        for (key, value) in [
+            ("name", c.name.as_ref()),
+            ("epsgCode", epsg.as_ref()),
+            ("horizontalDatum", c.horizontal_datum.as_ref()),
+            ("horizontalCoordinateSystemName", c.horizontal_name.as_ref()),
+            ("verticalDatum", c.vertical_datum.as_ref()),
+            ("verticalCoordinateSystemName", c.vertical_name.as_ref()),
+            ("desc", c.desc.as_ref()),
+        ] {
+            if let Some(v) = value {
+                o.push_str(&format!(" {key}=\"{}\"", escape(v)));
+            }
+        }
+        o.push_str("/>\n");
+    }
     o.push_str(&format!("  <Project name=\"{}\"/>\n", escape(&file.project)));
     o.push_str(&format!(
         "  <Application name=\"{}\" manufacturer=\"KentOS\" version=\"{}\"/>\n",

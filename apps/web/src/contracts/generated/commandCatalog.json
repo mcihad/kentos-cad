@@ -54900,7 +54900,7 @@
       "id": "file.export.landxml",
       "version": 1,
       "title": "LandXML dışa aktar",
-      "summary": "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Aksın proje hızı ve kurplarının kendi hızları Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml.",
+      "summary": "Yol projesinin arazi yüzeylerini (TIN: noktalar ve üçgenler), akslarını (doğru, daire eğrisi ve klotoid; km denklemleri) ve akslarının boykesitlerini (PVI'lar; simetrik ve asimetrik parabol, daire eğrisi) LandXML 1.2 dosyasına yazar; Civil 3D, OpenRoads ve Netcad okur. Yer kuzey doğu sırasıyla, uzunluk metre, doğrultu ve açı ondalık derece (doğrultu kuzeyden saat yönünde); elemanların ve PVI'ların km'leri iç km'dir (başlangıç km'si + aks boyunca uzaklık). surfaces ve alignments id ya da adla (yoksa hepsi, boş liste hiçbiri); withoutProfiles boykesitleri yazmaz; stamp dosyanın tarihi ve saati (yoksa şimdi, UTC). Aksın proje hızı ve kurplarının kendi hızları Roadways/Roadway/Speeds/DesignSpeed olarak km aralıklarıyla yazılır (kurbun hızı TS–ST, aksınki kalanı; km/sa, velocityUnit kilometersPerHour; ADR 0988). Paralel aks LandXML'de olmadığından yazılmaz (export_losses). Bütün yazılır ya da hiç: yanına yazılır, okuyucuyla geri okunur, sonra yerine konur; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Dosya projenin sistemlerini CoordinateSystem'de söyler (EPSG adı ve kodu, düşey sistemin adı ve datumu; ADR 1031). machineControl: true makine kontrolü içindir: projenin kotlarının düşey sistemi söylenmiş olmalı (field_heights_unknown), her yüzeyin buluttan alınan zemini o sistemde gösterilmiş olmalı (unproven_heights). Retler: not_a_road_project, invalid_file_path, file_exists, unknown_terrain, unknown_alignment, invalid_landxml, field_heights_unknown, unproven_heights.",
       "aliases": [
         "landxmlver",
         "landxmlout"
@@ -54918,7 +54918,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id\nor name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the\nfile's date and time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path` (empty, relative, not `.xml`, its folder not\nthere), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that\ndoes not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`\n(a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose\nalignment is not written).",
+        "description": "Input of `file.export.landxml` v1: the file's path (absolute, ending `.xml`); the surfaces and the alignments by id\nor name (absent: every one; an empty list: none); `withoutProfiles` leaves the alignments' profiles out; `stamp` the\nfile's date and time (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC).\n\nRefusals, in this order: `not_a_road_project`, `invalid_file_path` (empty, relative, not `.xml`, its folder not\nthere), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that\ndoes not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`\n(a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose\nalignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with\n`machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.",
         "properties": {
           "alignments": {
             "items": {
@@ -54928,6 +54928,10 @@
               "array",
               "null"
             ]
+          },
+          "machineControl": {
+            "description": "For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each\nsurface's cloud ground in it (`unproven_heights`).",
+            "type": "boolean"
           },
           "overwrite": {
             "type": "boolean"
@@ -55045,7 +55049,9 @@
           "file_exists",
           "unknown_terrain",
           "unknown_alignment",
-          "invalid_landxml"
+          "invalid_landxml",
+          "field_heights_unknown",
+          "unproven_heights"
         ],
         "warnings": [
           "export_losses"
@@ -55731,7 +55737,7 @@
       "id": "road.stakeout.send",
       "version": 1,
       "title": "Aplikasyonu alete gönder",
-      "summary": "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send.",
+      "summary": "Aplikasyon cetvelinin noktalarını (road.stakeout.query'nin corridor, from, to, step ve codes'u; yerler plan koordinatı) alete dosya olarak yazar. format: landxml (LandXML 1.2 string yol: koridorun aksı, yalnız kendi boykesiti ve her kodun noktaları km sırasıyla PlanFeature olarak; bir km'de kodu olmayan dize orada kesilir, tek noktalı dize yazılmaz; Trimble Access, Leica Captivate ve Topcon MAGNET okur), gsi16, gsi8, gts7, jobxml, nikon, csv (ADR 0169'un alet yazıcıları). Noktalar first'ten (yoksa 1) sırayla numaralanır, kodu taşınamayan noktanın kodu düşer (stakeout_code_dropped), noktası taşınamayan nokta yazılmaz (left, export_losses). job JobXML'in iş adı ve Nikon RAW'ın notu (yoksa koridorun adı); stamp tarih ve saat. Bütün yazılır ya da hiç; çizimi değiştirmez. Sahaya giden kotlar projenin söylediği düşey sisteme bağlıdır: söylenmemişse ret (field_heights_unknown; ADR 1031, BÖHHBÜY: TUDKA99'a dayalı Helmert ortometrik yükseklik); LandXML dosyası sistemleri CoordinateSystem'de söyler. Retler: not_a_road_project, unknown_corridor, invalid_stakeout, invalid_file_path, file_exists, invalid_stakeout_send, field_heights_unknown.",
       "aliases": [
         "aplikasyongonder",
         "aletegonder"
@@ -55749,7 +55755,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.stakeout.send` v1: the stakeout table's points (`road.stakeout.query`'s corridor, range, step and\ncodes; places on the grid) written to `path` as `format` (`.xml` for LandXML, `.gsi`, `.xyz`, `.jxl`, `.raw`,\n`.csv` for the instrument files). The points are named by number from `first` (1 without it); a code the format\ncannot carry is left off the point (said). `job` is JobXML's job and Nikon RAW's comment (the corridor's name\nwithout it); `stamp` (`YYYY-MM-DDThh:mm:ss`) the file's time (now without it).\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid\n`path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without\n`overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot\ncarry, a first number not in [1, 99 999 999]). Warnings: the query's, `stakeout_code_dropped` (codes left off),\n`export_losses` (points the format cannot carry; strings of one point).",
+        "description": "Input of `road.stakeout.send` v1: the stakeout table's points (`road.stakeout.query`'s corridor, range, step and\ncodes; places on the grid) written to `path` as `format` (`.xml` for LandXML, `.gsi`, `.xyz`, `.jxl`, `.raw`,\n`.csv` for the instrument files). The points are named by number from `first` (1 without it); a code the format\ncannot carry is left off the point (said). `job` is JobXML's job and Nikon RAW's comment (the corridor's name\nwithout it); `stamp` (`YYYY-MM-DDThh:mm:ss`) the file's time (now without it).\n\nRefusals, in this order: `not_a_road_project`, `unknown_corridor`, `invalid_stakeout` (as the query), an invalid\n`path` (`invalid_file_path`: empty, relative, not the format's extension, no folder), `file_exists` (without\n`overwrite`), `invalid_stakeout_send` (no point to send, a stamp that does not read, a job the format cannot\ncarry, a first number not in [1, 99 999 999]), `field_heights_unknown` (docs/adr/1031: the project does not say its\nheights' system; after the first number and the stamp). Warnings: the query's, `stakeout_code_dropped` (codes left\noff), `export_losses` (points the format cannot carry; strings of one point). A LandXML file says the project's\nsystems in its `CoordinateSystem`.",
         "properties": {
           "codes": {
             "items": {
@@ -56001,7 +56007,8 @@
           "invalid_stakeout",
           "invalid_file_path",
           "file_exists",
-          "invalid_stakeout_send"
+          "invalid_stakeout_send",
+          "field_heights_unknown"
         ],
         "warnings": [
           "corridor_stale",
@@ -94112,6 +94119,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Kotların aynı düşey sistemde olduğu varsayıldı; sonuç taslaktır."
+    },
+    {
+      "code": "field_heights_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sahaya giden kotların düşey sistemi bilinmiyor: projenin kotlarını Proje ayarları › Kotlar'da söyleyin."
     },
     {
       "code": "cloud_heights_differ",

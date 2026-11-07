@@ -29,12 +29,16 @@ fn a_road_project_goes_out_as_landxml() {
         without_profiles: false,
         stamp: Some("2026-11-03T08:30:00".into()),
         overwrite: true,
+        // Docs/adr/1031: the drawing says its heights' system, so it goes out for machine control too.
+        machine_control: true,
     };
     let out = match road_landxml::execute(&mut ExecutionContext::new(&mut doc), input) {
         CommandResult::Completed { output, .. } => output,
         other => panic!("writes: {other:?}"),
     };
     assert_eq!(out.alignments.len(), 3);
+    let text = std::fs::read_to_string(&path).unwrap();
+    assert!(text.contains("<CoordinateSystem ") && text.contains("verticalCoordinateSystemName="), "the systems said");
     let read = kentos_formats::landxml::read(&std::fs::read(&path).unwrap()).expect("reads back");
     assert_eq!(read.surfaces[0].points.len(), 120);
     assert_eq!(read.metres, 1.0);
@@ -72,6 +76,7 @@ fn design_speeds_go_out_as_a_roadways_and_come_back() {
         without_profiles: true,
         stamp: Some("2026-11-06T10:00:00".into()),
         overwrite: true,
+        machine_control: false,
     };
     match road_landxml::execute(&mut ExecutionContext::new(&mut doc), input) {
         CommandResult::Completed { .. } => {}

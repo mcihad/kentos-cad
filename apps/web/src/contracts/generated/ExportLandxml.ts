@@ -9,6 +9,12 @@
  * there), `file_exists` (without `overwrite`), `unknown_terrain`, `unknown_alignment`, `invalid_landxml` (a stamp that
  * does not read, nothing to write, a surface or an alignment chosen that does not build). Warnings: `export_losses`
  * (a parallel axis, an alignment or a surface that does not build when every one is written, a profile whose
- * alignment is not written).
+ * alignment is not written). The file says the project's systems in its `CoordinateSystem` (docs/adr/1031); with
+ * `machineControl`, after the stamp: `field_heights_unknown`, `unproven_heights`.
  */
-export type ExportLandxml = { path: string, surfaces?: Array<string>, alignments?: Array<string>, withoutProfiles?: boolean, stamp?: string, overwrite?: boolean, };
+export type ExportLandxml = { path: string, surfaces?: Array<string>, alignments?: Array<string>, withoutProfiles?: boolean, stamp?: string, overwrite?: boolean, 
+/**
+ * For machine control (docs/adr/1031): the project's heights' system said (`field_heights_unknown`) and each
+ * surface's cloud ground in it (`unproven_heights`).
+ */
+machineControl?: boolean, };
