@@ -434,7 +434,6 @@ impl App {
         }) {
             let mut group = self
                 .builtin_group(name, panel)?
-                .labels(architecture_tab(tab))
                 .flash_more(flash_more)
                 .flash_folded(flash_here)
                 .menu_ids(more_id(panel.label), folded_id(panel.label))
@@ -452,7 +451,6 @@ impl App {
             return Some(group);
         }
         let mut group = Group::new(panel.label)
-            .labels(architecture_tab(tab))
             .icon(panel.icon)
             .keep(panel.keep)
             .flash_more(flash_more)
@@ -2542,7 +2540,8 @@ pub(crate) fn hex_color(text: &str) -> Color {
     Color::from_rgb8(0x9a, 0xa0, 0xa6)
 }
 
-/// Architecture keeps names at every width; other tabs retain their established layout.
+/// The architecture tabs: their tab row scrolls in a narrow window. Every tab, these as the others, keeps its buttons'
+/// names at every width (DESIGN.md §7.3.1, 7 November 2026).
 fn architecture_tab(tab: &str) -> bool {
     matches!(
         tab,

@@ -69,6 +69,28 @@ fn every_tab_fits_1100_pixels_without_scrolling() {
     }
 }
 
+/// No ribbon button is an icon alone (DESIGN.md §7.3.1, the owner's rule of 7 November 2026: “Sadece ikon olmasın
+/// ribon üzerinde, muhakkak başlık da gözüksün”): every panel of every tab, in every project type, is as wide at the
+/// icon-only level as with its labels, so the fit skips that level and folds a panel that does not fit into its named
+/// button instead.
+#[test]
+fn no_ribbon_button_is_an_icon_alone() {
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    typography::set(Typography::DEFAULT);
+    typography::load();
+    for mode in ["workspace.cad", "workspace.gis"] {
+        let mut app = app_with_drawing();
+        let _ = app.update(Message::Run(mode));
+        let tabs: Vec<&'static str> = app.ribbon_tabs().chain(app.contextual_tabs()).map(|t| t.id).collect();
+        for tab in tabs {
+            for group in groups(&app, tab) {
+                let w = group.widths();
+                assert!((w[2] - w[1]).abs() < 0.01, "{mode} {tab}: a panel steps down to icons ({w:?})");
+            }
+        }
+    }
+}
+
 #[test]
 fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
@@ -87,13 +109,16 @@ fn panels_step_down_from_the_right_and_giris_keeps_its_drawing_tools() {
     let last = levels.len() - 1;
     assert!(levels[last] > 0, "{levels:?}");
     assert!(levels[..last].iter().all(|&l| l == 0), "{levels:?}");
-    // Narrow: the kept panels are the last to lose their large buttons.
+    // Narrow: the kept panels are the last to lose their large buttons: the others are small and named, or folded
+    // into their named button, first (no icon-only step, DESIGN.md §7.3.1).
     let (levels, _) = ribbon::fit(&widths, &keep, 1100.0);
     for (i, &kept) in keep.iter().enumerate() {
         if kept && levels[i] > 0 {
+            // A panel whose design is as narrow as its small step is small already.
+            let small = |j: usize| levels[j] >= 1 || (widths[j][0] - widths[j][1]).abs() < 0.5;
             assert!(
-                levels.iter().zip(&keep).all(|(&l, &k)| k || l >= 2),
-                "a kept panel shrank before the others showed icons: {levels:?}"
+                (0..levels.len()).all(|j| keep[j] || small(j)),
+                "a kept panel shrank before the others went small: {levels:?}"
             );
         }
     }
@@ -276,6 +301,46 @@ fn screens() {
                 width,
                 height,
             );
+        }
+    }
+}
+
+/// The ribbon at 1100 px with every button's name (DESIGN.md §7.3.1, 7 November 2026), in
+/// `.run/gui-evidence/serit-basliklar/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop ribbon_tests::label_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn label_screens() {
+    use kentos_ui::snapshot::Snapshot;
+
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    typography::set(Typography::DEFAULT);
+    typography::load();
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/serit-basliklar");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, tabs) in [("workspace.cad", &["home", "survey", "terrain", "annotate"][..]), ("workspace.gis", &["analysis", "data"][..])] {
+        let mut app = app_with_drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("dark"))]);
+        app.apply_settings();
+        let _ = app.update(Message::Run(mode));
+        for tab in tabs {
+            if app.ribbon_tabs().all(|t| t.id != *tab) {
+                continue;
+            }
+            app.tab = tab;
+            for width in [1100.0, 1280.0] {
+                let mut snapshot = Snapshot::new(Size::new(width, 260.0)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("{}-{tab}-{width}.png", if mode == "workspace.cad" { "cad" } else { "cbs" }));
+                snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+                println!("{}", file.display());
+            }
         }
     }
 }

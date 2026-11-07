@@ -15,10 +15,11 @@
 //! - **Seçim** (the contextual Seçim tab): how many objects are selected and
 //!   of which kinds; Seçime yakınlaştır, Seçimi kaldır, Seçimi ters çevir.
 //!
-//! Each steps down with the window as the web's does: the fields shorten, the
-//! buttons keep only their icons (Özellikler's fields their icons in their
-//! names' place), then the panel folds into one button whose menu holds the
-//! same choices. The colour goes into the tools' draft
+//! Each steps down with the window: the fields shorten, then the panel folds
+//! into one button with its name whose menu holds the same choices. The
+//! buttons keep their names at every step (DESIGN.md §7.3.1, the owner's rule
+//! of 7 November 2026: no ribbon button is an icon alone); the kit's group
+//! draws its icon-only level as the labelled one. The colour goes into the tools' draft
 //! (`Draft::color`) and so is explicit in every drawing command's input
 //! (CMD-07); the line type and weight are kept for the session, which no tool
 //! reads yet, on the web either.

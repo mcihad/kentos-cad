@@ -52,15 +52,15 @@ fn giris_has_the_webs_katmanlar_sablonlar_and_ozellikler_which_step_down_to_one_
             .ribbon_group(tab, panel_in(Workspace::Cad, tab, label))
             .unwrap_or_else(|| panic!("{label} on the desktop"));
         let w = group.widths();
-        // The fields shorten and the buttons lose their labels before the panel folds.
-        assert!(w[0] >= w[1] && w[1] > w[2] && w[2] > w[3], "{label}: {w:?}");
+        // The fields shorten, the buttons keep their names (no icon-only step, DESIGN.md §7.3.1), then the panel folds.
+        assert!(w[0] >= w[1] && (w[1] - w[2]).abs() < 0.01 && w[2] > w[3], "{label}: {w:?}");
     }
     // Seçim is the contextual tab's panel.
     let group = app
         .ribbon_group("selection", panel("selection", "Seçim"))
         .expect("Seçim");
     let w = group.widths();
-    assert!(w[0] > w[2] && w[2] > w[3], "Seçim: {w:?}");
+    assert!(w[0] >= w[2] && (w[1] - w[2]).abs() < 0.01 && w[2] > w[3], "Seçim: {w:?}");
 }
 
 /// Şablonlar's field lists the templates drawn with last, then every

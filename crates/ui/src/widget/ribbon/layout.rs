@@ -22,9 +22,12 @@ use crate::widget::{Tip, tip};
 ///
 /// Düğmelerle ([`Group::tool`]) kurulan ya da kendi görünüşünü veren
 /// ([`Group::custom`]) grup şeride sığmak için küçülür: panel önce bütün
-/// düğmelerini küçük etiketliye, sonra yalnız ikona indirir, en sonda
-/// adını taşıyan tek düğmeye katlanır (DESIGN.md §7.3.1). [`Group::push`] ile
-/// verilen öğeler (alanlar, galeriler) olduğu gibi kalır.
+/// düğmelerini küçük etiketliye indirir, sığmazsa adını taşıyan tek düğmeye
+/// katlanır (DESIGN.md §7.3.1). Şeritte hiçbir düğme yalnız ikonla kalmaz:
+/// başlık her zaman görünür (sahibin kuralı, 7 Kasım 2026); yalnız ikon
+/// seviyesi (2) etiketli seviyeyle (1) aynı çizilir ve genişlik kazandırmadığı
+/// için sığdırmada atlanır. [`Group::push`] ile verilen öğeler (alanlar,
+/// galeriler) olduğu gibi kalır.
 pub struct Group<'a, Message> {
     title: Fragment<'a>,
     icon: Icon,
@@ -70,7 +73,8 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             icon: Icon::More,
             content: Content::Tools(Vec::new()),
             keep: false,
-            labels: false,
+            // Başlıklar her zaman görünür (DESIGN.md §7.3.1): yalnız ikon seviyesi yok.
+            labels: true,
             more: None,
             launcher: None,
             flash_more: false,
@@ -150,8 +154,9 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         self
     }
 
-    /// Keep command names while shrinking: skip the icon-only presentation.
-    /// A narrow group can still fold into its named menu; other groups keep their policy.
+    /// Whether command names are kept while shrinking (the default, the owner's rule of 7 November 2026): the
+    /// icon-only presentation is skipped and a narrow group folds into its named menu. `false` gives the icon-only
+    /// step back (a test of the fit; no panel of the app).
     pub fn labels(mut self, keep: bool) -> Self {
         self.labels = keep;
         self
