@@ -311,6 +311,7 @@ pub mod map_features;
 pub mod survey_baselines;
 pub mod entities_grade;
 pub mod topology_clean;
+pub mod parcels_boundaries;
 pub mod parcels_check;
 pub mod pipes_check;
 pub mod pipes_profile;
@@ -1466,6 +1467,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_ENTITIES_GRADE, kentos_commands::CAD_ENTITIES_GRADE_VERSION),
     (kentos_commands::CAD_TOPOLOGY_CLEAN, kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION),
     (kentos_commands::CAD_PARCELS_CHECK, kentos_commands::CAD_PARCELS_CHECK_VERSION),
+    (kentos_commands::CAD_PARCELS_BOUNDARIES, kentos_commands::CAD_PARCELS_BOUNDARIES_VERSION),
     (kentos_commands::CAD_PIPES_CHECK, kentos_commands::CAD_PIPES_CHECK_VERSION),
     (kentos_commands::CAD_PIPES_PROFILE, kentos_commands::CAD_PIPES_PROFILE_VERSION),
     (kentos_commands::CAD_ASBUILT_CHECK, kentos_commands::CAD_ASBUILT_CHECK_VERSION),

@@ -2,7 +2,8 @@
 //! difference and the tolerance of the 2022 regulation's Article 8(2), by `cad.parcels.check`, read only. The scope
 //! is the selection's areas, else every area on the parcel layer. A choice above the table shows all, the ones
 //! outside, the ones without a readable record, or the ones whose identity (İl/İlçe/Mahalle/Ada/Parsel) is held
-//! twice; Dışındakileri seç selects the parcels outside the tolerance; CSV kaydet writes the table.
+//! twice; Dışındakileri seç selects the parcels outside the tolerance; CSV kaydet writes the table; Sınır grafiği…
+//! opens the same parcels' boundary graph (docs/adr/2000).
 
 use std::path::PathBuf;
 
@@ -279,6 +280,11 @@ impl App {
             .push(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .aside(words::secondary(SELECT, (outside > 0).then(|| msg(Event::Select))))
+            // Sınır grafiği (docs/adr/2000): the same parcels' boundaries as a graph.
+            .aside(words::secondary(
+                crate::parcel_boundaries_window::OPEN,
+                Some(Message::ParcelBoundaries(crate::parcel_boundaries_window::Event::Open)),
+            ))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(780.0)
             .modal(msg(Event::Close))

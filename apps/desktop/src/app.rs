@@ -414,6 +414,8 @@ pub enum Dialog {
     CleanReport,
     /// Parsel alan denetimi (parcels_check_window.rs, docs/adr/1400); its state is `App::parcels_check`.
     ParcelsCheck,
+    /// Sınır grafiği (parcel_boundaries_window.rs, docs/adr/2000); its state is `App::parcel_boundaries`.
+    ParcelBoundaries,
     /// Boru hattı denetimi (pipes_check_window.rs, docs/adr/1640); its state is `App::pipes_check`.
     PipesCheck,
     /// Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660); its state is `App::exchange_check`.
@@ -863,6 +865,7 @@ pub enum Message {
     Grade(crate::grade_window::Event),
     CleanReport(crate::clean_report_window::Event),
     ParcelsCheck(crate::parcels_check_window::Event),
+    ParcelBoundaries(crate::parcel_boundaries_window::Event),
     PipesCheck(crate::pipes_check_window::Event),
     ExchangeCheck(crate::exchange_check_window::Event),
     Asbuilt(crate::asbuilt_window::Event),
@@ -1534,6 +1537,7 @@ pub struct App {
     pub(crate) grade: crate::grade_window::State,
     pub(crate) clean_report: crate::clean_report_window::State,
     pub(crate) parcels_check: crate::parcels_check_window::State,
+    pub(crate) parcel_boundaries: crate::parcel_boundaries_window::State,
     pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) asbuilt: crate::asbuilt_window::State,
@@ -1998,6 +2002,7 @@ impl App {
             grade: Default::default(),
             clean_report: Default::default(),
             parcels_check: Default::default(),
+            parcel_boundaries: Default::default(),
             pipes_check: Default::default(),
             exchange_check: Default::default(),
             asbuilt: Default::default(),
@@ -2789,6 +2794,7 @@ impl App {
             Message::Grade(event) => return self.grade_event(event),
             Message::CleanReport(event) => return self.clean_report_event(event),
             Message::ParcelsCheck(event) => return self.parcels_check_event(event),
+            Message::ParcelBoundaries(event) => return self.parcel_boundaries_event(event),
             Message::PipesCheck(event) => return self.pipes_check_event(event),
             Message::ExchangeCheck(event) => return self.exchange_check_event(event),
             Message::Asbuilt(event) => return self.asbuilt_event(event),

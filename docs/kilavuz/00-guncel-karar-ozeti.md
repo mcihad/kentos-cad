@@ -49,6 +49,9 @@
 - **Harita'da proje ağacı (7 Kasım 2026; MAP-20, [ADR 1720](../../docs/adr/1720-map-project-tree-and-rebuild.md)).**
   `.kcad` şema 198 (Harita'nın `road.drawings`/`autoRebuild`, sıfır hattı çizimi); `road.project.*` Harita'yı kabul
   eder; sıfır hattı iki yüzeyin damgasıyla tutulur.
+- **Sınır grafiği (7 Kasım 2026; MAP-08, [ADR 2000](../../docs/adr/2000-parcel-boundary-graph.md)).** `cad.parcels.boundaries`
+  salt okunur: köşeler, sınırlar (iki yanındaki parsel), komşuluk; sorunlar `missingVertex`, `splitCorner`, `overlap`;
+  kimlikler geometriden türetilir, kalıcı kayıt değil; Parsel alan denetimi › Sınır grafiği….
 - **Topoloji denetimi İşlem araç kutusunda (7 Kasım 2026; MAP-07, [ADR 1980](../../docs/adr/1980-topology-check-in-processing.md)).**
   İşlem aracı `topology.check` (Topolojiyi kurallarla denetle) `cad.topology.check`'in denetimini
   (`topology_check::check_on`) salt okunur çalıştırır: bulgular tabloda, nesneler seçili; komutu

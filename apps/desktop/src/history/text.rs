@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 449] = [
+pub(crate) const TITLES: [(&str, &str); 450] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -283,6 +283,7 @@ pub(crate) const TITLES: [(&str, &str); 449] = [
     ("cad.pipes.check", "Boru hattı denetimi"),
     ("cad.pipes.profile", "Hat profili"),
     ("cad.parcels.check", "Parsel alan denetimi"),
+    ("cad.parcels.boundaries", "Sınır grafiği"),
     ("cad.topology.clean", "Topolojik temizlik (taşınma raporu)"),
     ("cad.survey.baselines", "GNSS baz ağı dengelemesi"),
     ("map.features.code", "Kodla çiz"),

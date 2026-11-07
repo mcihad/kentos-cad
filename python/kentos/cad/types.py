@@ -19705,6 +19705,32 @@ class BlocksReplaced(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class BoundaryProblem(_Model):
+    """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner` or `overlap`; where; the parcels.
+    Attributes:
+        at: Unit: length.
+    """
+    kind: str
+    at: list[float]
+    parcels: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["at"] = [float(e0) for e0 in self.at]
+        out["parcels"] = list(self.parcels)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoundaryProblem:
+        return cls(
+            kind=data["kind"],
+            at=[float(e0) for e0 in data["at"]],
+            parcels=list(data["parcels"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Bounds(_Model):
     min_x: float
     min_y: float
@@ -63933,6 +63959,74 @@ class ParcelAreaCheck(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelBoundary(_Model):
+    """A boundary: its id, its corners (from the lower id to the higher), its bulge that way (0: straight), its length,
+    and the parcel on its left and on its right going from `from` to `to` (none: no parcel on that side).
+    Attributes:
+        bulge: Unit: 1.
+        length: Unit: m.
+    """
+    id: str
+    from_: str
+    to: str
+    bulge: float
+    length: float
+    left: str | None | Unset = UNSET
+    right: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["bulge"] = float(self.bulge)
+        out["length"] = float(self.length)
+        if self.left is not UNSET:
+            out["left"] = self.left
+        if self.right is not UNSET:
+            out["right"] = self.right
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelBoundary:
+        return cls(
+            id=data["id"],
+            from_=data["from"],
+            to=data["to"],
+            bulge=float(data["bulge"]),
+            length=float(data["length"]),
+            left=data.get("left", UNSET),
+            right=data.get("right", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelCorner(_Model):
+    """A corner: its id, place and the parcels with a vertex there (in the drawing's order).
+    Attributes:
+        at: Unit: length.
+    """
+    id: str
+    at: list[float]
+    parcels: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["at"] = [float(e0) for e0 in self.at]
+        out["parcels"] = list(self.parcels)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelCorner:
+        return cls(
+            id=data["id"],
+            at=[float(e0) for e0 in data["at"]],
+            parcels=list(data["parcels"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelCreated(_Model):
     """`cad.parcels.create`'s output: the parcel written, its number and whether the parcel layer was opened for it.
     Attributes:
@@ -63965,6 +64059,39 @@ class ParcelCreated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelInGraph(_Model):
+    """A parcel in the graph: its id, its identity as written (İl/İlçe/Mahalle/Ada/Parsel, the empty ones left out), its
+    geometric area, its boundaries in ring order (the outer ring's, then its holes' and parts'), its neighbours.
+    Attributes:
+        area: Unit: m2.
+    """
+    uid: str
+    name: str
+    area: float
+    boundaries: list[str]
+    neighbours: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["name"] = self.name
+        out["area"] = float(self.area)
+        out["boundaries"] = list(self.boundaries)
+        out["neighbours"] = list(self.neighbours)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelInGraph:
+        return cls(
+            uid=data["uid"],
+            name=data["name"],
+            area=float(data["area"]),
+            boundaries=list(data["boundaries"]),
+            neighbours=list(data["neighbours"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelPlan(_Model):
     """`cad.parcels.create`'s plan: the parcel as it would be stored (id 0), its number and whether the layer would be
     opened.
@@ -63989,6 +64116,64 @@ class ParcelPlan(_Model):
             number=data["number"],
             opened=data["opened"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsBoundaries(_Model):
+    """Input of `cad.parcels.boundaries` v1: the parcels (none: every area on the parcel layer `parsel`).
+
+    Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area).
+    """
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsBoundaries:
+        return cls(
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsBounded(_Model):
+    """Output of `cad.parcels.boundaries` v1: the corners, the boundaries, the parcels, the problems; how many boundaries
+    two parcels share and how many have a parcel on one side only.
+    Attributes:
+        shared: Unit: count.
+        outer: Unit: count.
+    """
+    corners: list[ParcelCorner]
+    boundaries: list[ParcelBoundary]
+    parcels: list[ParcelInGraph]
+    problems: list[BoundaryProblem]
+    shared: int
+    outer: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["corners"] = [e0.to_json() for e0 in self.corners]
+        out["boundaries"] = [e0.to_json() for e0 in self.boundaries]
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        out["problems"] = [e0.to_json() for e0 in self.problems]
+        out["shared"] = self.shared
+        out["outer"] = self.outer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsBounded:
+        return cls(
+            corners=[ParcelCorner.from_json(e0) for e0 in data["corners"]],
+            boundaries=[ParcelBoundary.from_json(e0) for e0 in data["boundaries"]],
+            parcels=[ParcelInGraph.from_json(e0) for e0 in data["parcels"]],
+            problems=[BoundaryProblem.from_json(e0) for e0 in data["problems"]],
+            shared=data["shared"],
+            outer=data["outer"],
         )
 
 
@@ -127394,6 +127579,7 @@ __all__ = [
     "BoundChange",
     "BoundaryForm",
     "BoundaryFormName",
+    "BoundaryProblem",
     "Bounds",
     "BoxCorner",
     "BoxCornerName",
@@ -129350,8 +129536,13 @@ __all__ = [
     "ParametersOperation",
     "ParametersOperationName",
     "ParcelAreaCheck",
+    "ParcelBoundary",
+    "ParcelCorner",
     "ParcelCreated",
+    "ParcelInGraph",
     "ParcelPlan",
+    "ParcelsBoundaries",
+    "ParcelsBounded",
     "ParcelsCheck",
     "ParcelsChecked",
     "ParcelsCreate",

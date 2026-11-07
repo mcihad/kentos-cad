@@ -59607,6 +59607,163 @@
       ]
     },
     {
+      "id": "cad.parcels.boundaries",
+      "version": 1,
+      "title": "Sınır grafiği",
+      "summary": "Parsellerin sınırlarını bir grafik olarak okur; ortak sınır iki parselin tesadüfen çakışan koordinatları değil, iki parselin bir sınırıdır. Köşeler (K1…: bir halkanın köşesinin olduğu yer, koordinatlar saklandığı gibi aynı; doğu sonra kuzey sırasıyla), sınırlar (S1…: iki köşe arasındaki kenar, aynı kabarıklıkla bir kez; sol ve sağındaki parsel, kenarın kendi halkasının yönünden; boy), parseller (kimlik İl/İlçe/Mahalle/Ada/Parsel, geometrik alan, sınırları halka sırasıyla, komşuları) ve sorunlar: missingVertex (bir köşe başka bir düz sınırın içinde 1 µm'de, o sınırın orada köşesi yok: sınır yalnız kısmen ortak), splitCorner (1 µm'den yakın iki ayrı köşe: tesadüfen çakışan koordinat), overlap (üç ya da daha çok parselin, ya da bir yanda iki parselin kenarı). Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel (uids[i]).",
+      "aliases": [
+        "sinirgrafigi",
+        "parselsinir",
+        "ortaksinir"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.boundaries` v1: the parcels (none: every area on the parcel layer `parsel`).\n\nRefusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area).",
+        "properties": {
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ParcelsBoundaries",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.boundaries` v1: the corners, the boundaries, the parcels, the problems; how many boundaries\ntwo parcels share and how many have a parcel on one side only.",
+        "properties": {
+          "boundaries": {
+            "items": {
+              "$ref": "#/$defs/ParcelBoundary"
+            },
+            "type": "array"
+          },
+          "corners": {
+            "items": {
+              "$ref": "#/$defs/ParcelCorner"
+            },
+            "type": "array"
+          },
+          "outer": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ParcelInGraph"
+            },
+            "type": "array"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/$defs/BoundaryProblem"
+            },
+            "type": "array"
+          },
+          "shared": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "corners",
+          "boundaries",
+          "parcels",
+          "problems",
+          "shared",
+          "outer"
+        ],
+        "title": "ParcelsBounded",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.boundaries` v1: the corners, the boundaries, the parcels, the problems; how many boundaries\ntwo parcels share and how many have a parcel on one side only.",
+        "properties": {
+          "boundaries": {
+            "items": {
+              "$ref": "#/$defs/ParcelBoundary"
+            },
+            "type": "array"
+          },
+          "corners": {
+            "items": {
+              "$ref": "#/$defs/ParcelCorner"
+            },
+            "type": "array"
+          },
+          "outer": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/ParcelInGraph"
+            },
+            "type": "array"
+          },
+          "problems": {
+            "items": {
+              "$ref": "#/$defs/BoundaryProblem"
+            },
+            "type": "array"
+          },
+          "shared": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "corners",
+          "boundaries",
+          "parcels",
+          "problems",
+          "shared",
+          "outer"
+        ],
+        "title": "ParcelsBounded",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_parcel"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının sınır grafiği",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.topology.clean",
       "version": 1,
       "title": "Topolojik temizlik (taşınma raporu)",
@@ -115766,6 +115923,36 @@
         }
       ]
     },
+    "BoundaryProblem": {
+      "description": "What keeps the geometry from a clean graph: `missingVertex`, `splitCorner` or `overlap`; where; the parcels.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "parcels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "at",
+        "parcels"
+      ],
+      "type": "object"
+    },
     "Bounds": {
       "properties": {
         "maxX": {
@@ -166938,6 +167125,116 @@
         "area",
         "tolerance",
         "status"
+      ],
+      "type": "object"
+    },
+    "ParcelBoundary": {
+      "description": "A boundary: its id, its corners (from the lower id to the higher), its bulge that way (0: straight), its length,\nand the parcel on its left and on its right going from `from` to `to` (none: no parcel on that side).",
+      "properties": {
+        "bulge": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "from": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "left": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "right": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "to",
+        "bulge",
+        "length"
+      ],
+      "type": "object"
+    },
+    "ParcelCorner": {
+      "description": "A corner: its id, place and the parcels with a vertex there (in the drawing's order).",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "id": {
+          "type": "string"
+        },
+        "parcels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "at",
+        "parcels"
+      ],
+      "type": "object"
+    },
+    "ParcelInGraph": {
+      "description": "A parcel in the graph: its id, its identity as written (İl/İlçe/Mahalle/Ada/Parsel, the empty ones left out), its\ngeometric area, its boundaries in ring order (the outer ring's, then its holes' and parts'), its neighbours.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m2"
+        },
+        "boundaries": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "neighbours": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "area",
+        "boundaries",
+        "neighbours"
       ],
       "type": "object"
     },

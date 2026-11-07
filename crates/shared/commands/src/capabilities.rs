@@ -2565,6 +2565,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Sınır grafiği (plan/map-cad.md MAP-08, docs/adr/2000).
+    Entry {
+        id: "cad.parcels.boundaries",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_parcel"]],
+        warnings: &[],
+        targets: none,
+    },
     // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
     Entry {
         id: "cad.topology.clean",

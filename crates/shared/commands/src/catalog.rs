@@ -9765,6 +9765,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Sınır grafiği (plan/map-cad.md MAP-08, docs/adr/2000).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_BOUNDARIES.into(),
+            version: crate::CAD_PARCELS_BOUNDARIES_VERSION,
+            title: "Sınır grafiği".into(),
+            summary: "Parsellerin sınırlarını bir grafik olarak okur; ortak sınır iki parselin tesadüfen çakışan koordinatları değil, iki parselin bir sınırıdır. Köşeler (K1…: bir halkanın köşesinin olduğu yer, koordinatlar saklandığı gibi aynı; doğu sonra kuzey sırasıyla), sınırlar (S1…: iki köşe arasındaki kenar, aynı kabarıklıkla bir kez; sol ve sağındaki parsel, kenarın kendi halkasının yönünden; boy), parseller (kimlik İl/İlçe/Mahalle/Ada/Parsel, geometrik alan, sınırları halka sırasıyla, komşuları) ve sorunlar: missingVertex (bir köşe başka bir düz sınırın içinde 1 µm'de, o sınırın orada köşesi yok: sınır yalnız kısmen ortak), splitCorner (1 µm'den yakın iki ayrı köşe: tesadüfen çakışan koordinat), overlap (üç ya da daha çok parselin, ya da bir yanda iki parselin kenarı). \
+                      Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. \
+                      Retler: invalid_uid, entity_not_found, not_a_parcel (uids[i])."
+                .into(),
+            aliases: vec!["sinirgrafigi".into(), "parselsinir".into(), "ortaksinir".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsBoundaries>(),
+            output: schema::<crate::ParcelsBounded>(),
+            plan: Some(schema::<crate::ParcelsBounded>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel katmanının sınır grafiği".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
         // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CLEAN.into(),
@@ -16420,6 +16447,7 @@ mod tests {
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBoundaries>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfile>(e.input.clone()).map(|_| ()),
                     crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
@@ -17390,6 +17418,7 @@ mod tests {
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBounded>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),
                         crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),

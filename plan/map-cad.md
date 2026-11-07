@@ -625,6 +625,15 @@ parsel (21 ortak durum). K19 düzeltildi: `cad.parcels.create` yinelenen numaray
 Açık: kalıcı parsel kaydı (belge, geçerlilik, tarihçe), mantıksal ortak sınır, erişim denetimli hak/pay, geçici
 koordinatlı yöntem.
 
+**7 Kasım 2026, ikinci tur — Sınır grafiği ([ADR 2000](../docs/adr/2000-parcel-boundary-graph.md)).** Kapsam: **Harita +
+CBS** (parsel katmanı olan her proje). Araştırma: ArcGIS parsel ağının parsel, sınır ve köşeyi ayrı öğe tutması.
+Kanıtlanan: `cad.parcels.boundaries` parsellerin sınırlarını grafik olarak okur: köşeler (K…), sınırlar (S…: iki
+yanındaki parsel, boy, yay), parsellerin sınırları ve komşuları; ortak sınırın yalnız koordinat çakışması olduğu yerler
+sorun olarak: komşuda eksik köşe (T birleşimi), 1 µm'den yakın ayrık köşe, bir yanda iki parsel; kimlikler geometriden
+türetilir (kalıcı kayıt değil); 24 bağımsız durum (Rust, Python); Parsel alan denetiminden açılan Sınır grafiği
+penceresi. Açık: kalıcı parsel kaydı ve sınır kimliği, erişim denetimli hak/pay, sahnede gösterim, yaylı sınırda eksik
+köşe.
+
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 
 **Öncelik:** P1. **Kod dayanağı:** [K20], [K19], [K33].

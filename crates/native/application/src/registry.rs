@@ -57,6 +57,7 @@ use crate::map_features;
 use crate::survey_baselines;
 use crate::entities_grade;
 use crate::topology_clean;
+use crate::parcels_boundaries;
 use crate::parcels_check;
 use crate::pipes_check;
 use crate::pipes_profile;
@@ -555,6 +556,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_PARCELS_CHECK => {
                 $then!(parcels_check, kentos_commands::ParcelsCheck)
+            }
+            kentos_commands::CAD_PARCELS_BOUNDARIES => {
+                $then!(parcels_boundaries, kentos_commands::ParcelsBoundaries)
             }
             kentos_commands::CAD_PIPES_CHECK => {
                 $then!(pipes_check, kentos_commands::PipesCheck)

@@ -1,0 +1,237 @@
+//! Sınır grafiği (docs/adr/2000; `cad.parcels.boundaries`): the parcels' boundaries as a graph, read only, opened from
+//! Parsel alan denetimi on the same parcels (its scope: the selected areas, else the parcel layer's). The summary
+//! counts the corners and the boundaries, shared and outer, and the problems by kind; a choice shows the boundaries
+//! (their corners, length, the parcel on each side), the corners (their place and parcels) or the problems (where and
+//! which parcels); Sorunluları seç selects the parcels a problem names. Nothing is written.
+
+use iced::{Element, Task};
+use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
+use kentos_domain::{Slot, Uuid};
+use kentos_interaction::Level;
+use kentos_native_application::parcels_boundaries;
+use kentos_ui::widget::grow::Grows;
+use kentos_ui::widget::{Dialog as Frame, Segmented};
+
+use crate::app::{App, Dialog, Message};
+use crate::exchange::words::{self, Kind};
+use crate::road_dialog::{col, num, sheet};
+use crate::traces::Control;
+
+pub const TITLE: &str = "Sınır grafiği";
+/// Parsel alan denetimi's button that opens it.
+pub const OPEN: &str = "Sınır grafiği…";
+const CLOSE: &str = "Kapat";
+const SELECT: &str = "Sorunluları seç";
+
+/// Which rows the table shows.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Show {
+    #[default]
+    Boundaries,
+    Corners,
+    Problems,
+}
+
+impl std::fmt::Display for Show {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Show::Boundaries => "Sınırlar",
+            Show::Corners => "Köşeler",
+            Show::Problems => "Sorunlar",
+        })
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct State {
+    pub uids: Option<Vec<String>>,
+    pub show: Show,
+    pub answer: Option<Result<ParcelsBounded, String>>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Event {
+    Open,
+    Show(Show),
+    Select,
+    Close,
+}
+
+fn msg(e: Event) -> Message {
+    Message::ParcelBoundaries(e)
+}
+
+/// A problem's kind in words.
+pub fn problem_word(kind: &str) -> &'static str {
+    match kind {
+        "missingVertex" => "Komşuda eksik köşe",
+        "splitCorner" => "Ayrık köşe (1 µm'den yakın)",
+        "overlap" => "Çakışan kenar",
+        _ => "Sorun",
+    }
+}
+
+/// A parcel by its identity, else the first characters of its id.
+fn named(g: &ParcelsBounded, uid: &str) -> String {
+    g.parcels
+        .iter()
+        .find(|p| p.uid == uid)
+        .map(|p| if p.name.is_empty() { format!("#{}", &uid[uid.len().saturating_sub(4)..]) } else { p.name.clone() })
+        .unwrap_or_else(|| uid.to_owned())
+}
+
+/// The table's rows for `show`.
+pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> Vec<Vec<String>> {
+    let names = |list: &[String]| list.iter().map(|u| named(g, u)).collect::<Vec<_>>().join(", ");
+    match show {
+        Show::Boundaries => g
+            .boundaries
+            .iter()
+            .map(|b| {
+                vec![
+                    b.id.clone(),
+                    b.from.clone(),
+                    b.to.clone(),
+                    f.length(b.length),
+                    if b.bulge == 0.0 { "doğru".into() } else { "yay".into() },
+                    b.left.as_deref().map_or_else(|| "—".to_owned(), |u| named(g, u)),
+                    b.right.as_deref().map_or_else(|| "—".to_owned(), |u| named(g, u)),
+                ]
+            })
+            .collect(),
+        Show::Corners => {
+            g.corners.iter().map(|c| vec![c.id.clone(), f.coord(c.at[0]), f.coord(c.at[1]), names(&c.parcels)]).collect()
+        }
+        Show::Problems => g
+            .problems
+            .iter()
+            .map(|p| vec![problem_word(&p.kind).to_owned(), f.coord(p.at[0]), f.coord(p.at[1]), names(&p.parcels)])
+            .collect(),
+    }
+}
+
+impl App {
+    fn parcel_boundaries_run(&mut self) {
+        let input = ParcelsBoundaries { uids: self.parcel_boundaries.uids.clone() };
+        let Some(doc) = self.document.as_ref() else { return };
+        self.parcel_boundaries.answer = Some(parcels_boundaries::preview(&doc.model, &input));
+    }
+
+    /// Sınır grafiği from Parsel alan denetimi: its parcels.
+    pub(crate) fn open_parcel_boundaries(&mut self) -> Task<Message> {
+        if self.document.is_none() {
+            self.output("Açık çizim yok.");
+            return Task::none();
+        }
+        self.parcel_boundaries = State { uids: self.parcels_check.uids.clone(), ..State::default() };
+        self.parcel_boundaries_run();
+        self.dialog = Some(Dialog::ParcelBoundaries);
+        Task::none()
+    }
+
+    pub(crate) fn parcel_boundaries_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::Open => return self.open_parcel_boundaries(),
+            Event::Show(v) => self.parcel_boundaries.show = v,
+            Event::Select => {
+                let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let mut slots: Vec<Slot> = Vec::new();
+                for u in g.problems.iter().flat_map(|p| p.parcels.iter()) {
+                    if let Some(s) = Uuid::parse_str(u).ok().and_then(|u| doc.model.slot_of(u))
+                        && !slots.contains(&s)
+                    {
+                        slots.push(s);
+                    }
+                }
+                let n = slots.len();
+                self.selection.set(slots);
+                self.parcel_boundaries = State::default();
+                self.dialog = None;
+                self.say(Level::Info, format!("{TITLE}: sorunlu {n} parsel seçildi."));
+            }
+            Event::Close => {
+                self.parcel_boundaries = State::default();
+                self.dialog = None;
+            }
+        }
+        Task::none()
+    }
+
+    pub(crate) fn parcel_boundaries_view(&self) -> Element<'_, Message> {
+        let s = &self.parcel_boundaries;
+        let f = self.format();
+        let mut lines = Vec::new();
+        let mut table_rows = Vec::new();
+        let mut problems = 0;
+        match &s.answer {
+            Some(Ok(g)) => {
+                problems = g.problems.len();
+                lines.push(words::text_line(
+                    if problems == 0 { Kind::Ok } else { Kind::Warn },
+                    format!(
+                        "{} parsel, {} köşe, {} sınır: {} ortak, {} dış.",
+                        g.parcels.len(),
+                        g.corners.len(),
+                        g.boundaries.len(),
+                        g.shared,
+                        g.outer
+                    ),
+                ));
+                if problems > 0 {
+                    let by = |k: &str| g.problems.iter().filter(|p| p.kind == k).count();
+                    lines.push(words::text_line(
+                        Kind::Error,
+                        format!(
+                            "{problems} sorun: {} komşuda eksik köşe, {} ayrık köşe, {} çakışan kenar. Ortak sınır yalnız koordinatların çakışmasıyla değil, iki parselin aynı sınırıyla kurulur.",
+                            by("missingVertex"),
+                            by("splitCorner"),
+                            by("overlap")
+                        ),
+                    ));
+                }
+                lines.push(words::text_line(
+                    Kind::Info,
+                    "Kimlikler geometriden türetilir (K doğu sonra kuzey sırasıyla, S köşelerine göre); aynı geometri aynı kimlikleri verir. Çizime bir şey yazılmaz.",
+                ));
+                table_rows = rows(g, s.show, &f);
+            }
+            Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
+            None => {}
+        }
+        let cols = match s.show {
+            Show::Boundaries => vec![
+                col("Sınır", 60.0),
+                col("Başı", 60.0),
+                col("Sonu", 60.0),
+                num("Boy", 90.0),
+                col("Biçim", 60.0),
+                col("Solda", 220.0),
+                col("Sağda", 220.0),
+            ],
+            Show::Corners => vec![col("Köşe", 60.0), num("Y", 130.0), num("X", 130.0), col("Parseller", 420.0)],
+            Show::Problems => vec![col("Sorun", 220.0), num("Y", 130.0), num("X", 130.0), col("Parseller", 300.0)],
+        };
+        let table = sheet(cols, table_rows, "Gösterilecek satır yok.", 300.0);
+        let body = Grows::new()
+            .spacing(12.0)
+            .width(iced::Fill)
+            .push(words::summary(lines))
+            .push(Segmented::new([Show::Boundaries, Show::Corners, Show::Problems], s.show, |v| msg(Event::Show(v))))
+            .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
+        Frame::new(TITLE)
+            .scroll(body)
+            .aside(words::secondary(SELECT, (problems > 0).then(|| msg(Event::Select))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(1000.0)
+            .modal(msg(Event::Close))
+    }
+
+    pub(crate) fn parcel_boundaries_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+        Ok(match control {
+            Control::Press(CLOSE) => Some(msg(Event::Close)),
+            Control::Press(SELECT) => Some(msg(Event::Select)),
+            other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
+        })
+    }
+}
