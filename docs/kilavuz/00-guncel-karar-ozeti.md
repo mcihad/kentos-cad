@@ -49,6 +49,10 @@
       `kentos_interaction::arch_layer`). Katman ilk nesneyle, aynı geri alma adımında açılır.
     - KentOS Mimari anahtarı açık başlatır; araç panelinin Katman satırı Etkin katman'a çevirir.
     - DXF'te EK-4 katmanındaki taramalar "-T" katmanına gider (4.14.5).
+  - **Kalem hiyerarşisi (M10, [ADR 3009](../adr/3009-pen-hierarchy-of-parts.md)):**
+    - Açıklık parçaları rollüdür (`opening::Part`); parça mutlak kalınlık değil nesne kaleminin payını taşır
+      (`PieceStroke::weight_scale`).
+    - Kasa ve kanat bütün kalem; yay, cam, denizlik ve duvarın malzeme sınırları yarısı (ISO 128-23 ince = kalın / 2).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

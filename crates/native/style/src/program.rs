@@ -449,6 +449,8 @@ pub fn layer_call(
                 // Its line type, scale and transparency (docs/adr/0312 §4): its own, else a part that follows its
                 // layer that layer's (the piece's style), else the insert's own, else the insert's layer's.
                 let own_stroke = x.strokes.get(i).cloned().unwrap_or_default();
+                // Its share of the object's pen (docs/adr/3009): a door's swing, a wall's boundary the narrow line.
+                let weight = weight * own_stroke.weight_scale.unwrap_or(1.0);
                 let insert_stroke = Stroke::of(&base.look);
                 let piece_stroke = Stroke {
                     line_type: own_stroke

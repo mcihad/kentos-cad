@@ -239,6 +239,10 @@ pub struct PieceStroke {
     pub pattern: Option<String>,
     pub scale: Option<f64>,
     pub transparency: Option<f64>,
+    /// The line's share of its object's pen (docs/adr/3009): ISO 128-23's narrow line is half its wide one, so a door's
+    /// swing, a window's glass and a wall's boundaries between materials are drawn at 0.5 of the object's weight,
+    /// whatever gives that weight (its layer, its own, a view's pen). None: the whole pen.
+    pub weight_scale: Option<f64>,
 }
 
 impl PieceStroke {
@@ -250,6 +254,7 @@ impl PieceStroke {
             pattern: text_field(rest, "linePattern"),
             scale: number_field(rest, "lineTypeScale"),
             transparency: number_field(rest, "transparency"),
+            weight_scale: None,
         }
     }
 }
@@ -1363,6 +1368,7 @@ fn flat_of(
                                 .then_some(own_stroke.transparency)
                                 .flatten()
                         }),
+                        weight_scale: piece.stroke.weight_scale,
                     },
                     attribute: None,
                     annotation_origin: piece.annotation_origin.clone(),

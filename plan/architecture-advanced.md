@@ -727,8 +727,12 @@ _Durum (7 Kasım 2026):_ Katman anahtarı yapıldı (M9, [ADR 3008](../docs/adr/
 - Katman ilk nesneyle, aynı geri alma adımında açılıyor. Araç panelinin Katman satırı hedefi söylüyor ve anahtarı
   kapatabiliyor.
 - 2+1 gerçek pencerede 54 nesneyi 9 katmana dağıttı. DXF'te taramalar "-T" katmanında.
+- Kalem hiyerarşisi (M10, [ADR 3009](../docs/adr/3009-pen-hierarchy-of-parts.md)):
+  - açıklık parçaları rollü (kasa, kanat, yay, cam, denizlik …);
+  - yay, cam ve malzeme sınırları ISO 128-23'ün ince çizgisiyle, nesnenin kaleminin yarısıyla çiziliyor;
+  - 1:50 PDF'te 0,5 / 0,25 / 0,125 mm ölçüldü.
 - Kalanlar:
-  - kalem hiyerarşisi (M10);
+  - ölçeğe göre çizgi grubu (M11–M12) ve kesme düzleminin önündeki çizgiler (M13);
   - ofis ve proje profili;
   - var olan nesneleri dağıtan komut;
   - donatı ve blok katmanları (M24);
@@ -1034,7 +1038,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 |---|---|---|---|
 | M8 | Mimari başlangıç ve varsayılan duvar stilleri | ADV-13 | İlk duvar poşeli ve Zemin katta; şablon m ve 1:100 **(M8, ADR 3007: yapıldı; Mimari sekmesiyle açılış M15'ten alındı; malzeme bağı ve örnek proje kaldı)** |
 | M9 | Katman anahtarı (EK-4) | ADV-14 | 2+1 örneği türlerine göre katmanlarda; DXF'te aynısı **(M9, ADR 3008: yapıldı; 54 nesne 9 EK-4 katmanında; profil ve blok katmanı kaldı)** |
-| M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı |
+| M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı **(M10, ADR 3009: yapıldı; yay, cam ve malzeme sınırı yarım kalem; 1:50 PDF'te ölçüldü; ölçeğe göre çizgi grubu M11–M12'ye)** |
 | M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı |
 | M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte |
 | M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler |

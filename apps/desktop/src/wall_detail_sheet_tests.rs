@@ -312,8 +312,10 @@ fn each_maps_walls_are_drawn_at_its_own_scales_detail_on_paper() {
     print(&mut app, &detailed);
     let got = details(&detailed);
     // At 1:20 and 1:50 the five lines print apart. At 1:100 and 1:200 a plaster's side stands within a line's width
-    // of its face (2 and 3 cm: 0.2 and 0.3 mm at 1:100) and prints on it: no more runs than Uygulama's three lines but
-    // more ink along the wall, still no body.
+    // of its face (2 and 3 cm: 0.2 and 0.3 mm at 1:100). Since docs/adr/3009 a boundary between materials is the narrow
+    // line, half the face's, so at 1:100 the 3 cm plaster's side can print as a thin run beside its face: at most one
+    // run more than Uygulama's three lines, more ink along the wall (thin: 23 against 20 at 1:200; the old wide sides
+    // gave 4 more), still no body.
     assert_eq!(
         [got[0].0, got[1].0],
         ["detailed"; 2],
@@ -324,7 +326,7 @@ fn each_maps_walls_are_drawn_at_its_own_scales_detail_on_paper() {
         let ((_, a), (_, s)) = (&got[page], &three[page]);
         let ink = |x: &Across| x.lines.iter().sum::<usize>();
         assert!(
-            a.lines.len() <= s.lines.len() && a.ink.len() == a.lines.len() && ink(a) >= ink(s) + 4,
+            a.lines.len() <= s.lines.len() + 1 && a.ink.len() == a.lines.len() && ink(a) > ink(s),
             "Ayrıntılı, page {}: {a:?} against Uygulama's {s:?}",
             page + 1
         );

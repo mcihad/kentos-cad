@@ -768,8 +768,10 @@ impl Store {
                     line_weight: None,
                     by_layer: Vec::new(),
                     gates: Vec::new(),
+                    // Its share of the opening's pen (docs/adr/3009): a swing, glass or sill the narrow line.
                     stroke: crate::block::PieceStroke {
                         line_type: m.dashed.then(|| "dashed".to_owned()),
+                        weight_scale: Some(m.part.pen()).filter(|s| *s != 1.0),
                         ..Default::default()
                     },
                     attribute: None,

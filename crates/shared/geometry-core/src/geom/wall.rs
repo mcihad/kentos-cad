@@ -612,6 +612,16 @@ fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> P
     }
 }
 
+/// A boundary between two materials (docs/adr/3009): ISO 128-23's narrow line (01.1.1), half the wall's pen, unless its
+/// component's edge gives a weight of its own.
+fn boundary(shape: Shape, edge: Option<&ComponentEdge>) -> Piece {
+    let mut p = piece(shape, None, edge);
+    if p.line_weight.is_none() {
+        p.stroke.weight_scale = Some(0.5);
+    }
+    p
+}
+
 /// A piece of one of the wall's lines: an open stretch, or the whole line of a closed wall.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Stroke {
@@ -751,14 +761,14 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
     }
     for (c, line) in &d.closures {
         if comps.get(*c).is_some_and(shown) {
-            out.push(piece(line.shape(false), None, comps[*c].edge.as_ref()));
+            out.push(boundary(line.shape(false), comps[*c].edge.as_ref()));
         }
     }
     for k in 1..comps.len() {
         if shown(&comps[k - 1]) && shown(&comps[k]) {
             let edge = comps[k - 1].edge.as_ref().or(comps[k].edge.as_ref());
             for st in &d.lines[k] {
-                out.push(piece(st.line.shape(st.closed), None, edge));
+                out.push(boundary(st.line.shape(st.closed), edge));
             }
         }
     }
@@ -913,6 +923,60 @@ mod tests {
             panic!()
         };
         assert_eq!((*a, *b), (v(4.0, 0.1), v(4.0, -0.1)));
+    }
+
+    #[test]
+    fn the_faces_take_the_whole_pen_and_the_boundaries_between_materials_half() {
+        // docs/adr/3009: ISO 128-23 draws the outline of what is cut wide (01.2.1) and a boundary between materials
+        // narrow (01.1.1), half the wide (Table 2).
+        let p = [v(0.0, 0.0), v(5.0, 0.0)];
+        let got = pieces(
+            &p,
+            None,
+            &layered(),
+            View {
+                detail: Detail::Detailed,
+                scale: 20.0,
+            },
+        )
+        .unwrap();
+        let lines: Vec<&Piece> = got
+            .iter()
+            .filter(|x| !matches!(x.shape, Shape::Hatch { .. }))
+            .collect();
+        let whole = lines
+            .iter()
+            .filter(|x| x.stroke.weight_scale.is_none())
+            .count();
+        let half = lines
+            .iter()
+            .filter(|x| x.stroke.weight_scale == Some(0.5))
+            .count();
+        assert_eq!(
+            (whole, half),
+            (4, 3),
+            "two faces and two caps whole, three boundaries half"
+        );
+        // A component's edge with a weight of its own keeps it.
+        let mut own = layered();
+        own.components[1].edge = Some(ComponentEdge {
+            line_weight: Some(0.35),
+            ..ComponentEdge::default()
+        });
+        let got = pieces(
+            &p,
+            None,
+            &own,
+            View {
+                detail: Detail::Detailed,
+                scale: 20.0,
+            },
+        )
+        .unwrap();
+        assert!(
+            got.iter()
+                .any(|x| x.line_weight == Some(0.35) && x.stroke.weight_scale.is_none())
+        );
     }
 
     #[test]

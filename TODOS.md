@@ -79,6 +79,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   web'in Mimari şablonu penceresi paketin m / 1:100'ünü paketten okusun.
 - M9 / ADR 3008: web'in mimari araçları nesneyi türünün EK-4 katmanına yazsın (`arch_layer`'ın tablosu), araç
   panelinde Katman satırı olsun; web'in DXF yazıcısı EK-4 katmanındaki taramaları "-T" katmanına koysun.
+- M10 / ADR 3009: web'in çizimi parçanın `weightScale`'ini (açıklığın yayı, camı; duvarın malzeme sınırları 0,5) nesnenin
+  kalınlığıyla çarpsın.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

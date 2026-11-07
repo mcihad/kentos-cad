@@ -413,3 +413,64 @@ fn same_piece_in(name: &str, got: &opening::Mark, want: &Value) {
         (kind, got) => panic!("{name}: başvuru {kind}, çekirdek {got:?}"),
     }
 }
+
+/// What each piece of an opening is (docs/adr/3009): in every door and window of the reference's cases a swing is an
+/// arc at half the pen (ISO 128-23's narrow line), only the frame and the leaves take the whole pen, and a flue's cross
+/// and a recess's outline the narrow line.
+#[test]
+fn an_openings_pieces_say_what_they_are_and_their_pen() {
+    use opening::Part;
+    let (mut swings, mut whole) = (0, 0);
+    for text in [CASES, SPECIAL, MULTI] {
+        let cases: Value = serde_json::from_str(text).unwrap();
+        for c in cases["cases"].as_array().unwrap() {
+            let walls: Vec<(Vec<Vec2>, Spec)> = c["walls"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|w| {
+                    let pts = w["pts"].as_array().unwrap().iter().map(pt).collect();
+                    (
+                        pts,
+                        Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap(),
+                    )
+                })
+                .collect();
+            for o in c["openings"].as_array().unwrap() {
+                let (pts, wall) = &walls[o["wall"].as_u64().unwrap() as usize];
+                let spec = OpeningSpec::read_flat(&Json::parse(&o.to_string()).unwrap()).unwrap();
+                let (at, width) = (o["at"].as_f64().unwrap(), o["width"].as_f64().unwrap());
+                let (s0, s1) = opening::span(at, spec.anchor, width);
+                let path = opening::wall_path(pts, None, wall.closed).unwrap();
+                let Some(j) = opening::jambs(&path, wall, s0, s1) else {
+                    continue;
+                };
+                for m in opening::pieces(&j, &spec) {
+                    match m.part {
+                        Part::Swing => {
+                            assert!(matches!(m.shape, Shape::Arc { .. }), "{m:?}");
+                            swings += 1;
+                        }
+                        Part::Frame | Part::Leaf => whole += 1,
+                        _ => {}
+                    }
+                    let want = if matches!(m.part, Part::Frame | Part::Leaf) {
+                        1.0
+                    } else {
+                        0.5
+                    };
+                    assert_eq!(m.part.pen(), want, "{m:?}");
+                    if matches!(m.shape, Shape::Arc { .. })
+                        && matches!(spec.form, opening::Form::Door)
+                    {
+                        assert_ne!(m.part, Part::Leaf, "a door's arc is its swing: {m:?}");
+                    }
+                }
+            }
+        }
+    }
+    assert!(
+        swings > 10 && whole > 20,
+        "{swings} swings, {whole} frame and leaf pieces"
+    );
+}
