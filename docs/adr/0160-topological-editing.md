@@ -83,6 +83,10 @@ Düzenleme `cad.entities.edit`'in var olan işlemleriyle (`grip`, `vertexRemove`
     Taşımalar birlikte, hepsi eski yerlere göre yapılır (Esnet'in köşeleri zincirlenmez); öbürleri sırayla.
   - **Sonuç:** değişen komşuların biçimleri; kilitli ve geçersiz kalacak komşuların sayıları.
   - **Hesap yok:** köşeler değişikliklerin noktalarını, kenarlar kabarıklıklarını kopyalar; iki platform aynı bitleri verir.
+- **Değişiklik (7 Kasım 2026, [ADR 1960](1960-parallel-shift-shared-boundary.md)):** düzenlemenin değişiklikleri
+  çıkarılırken kabarıklığı değişen her kenar, uçları taşınmış olsa da bir `bulge` değişimidir ve düzenleme sonrası
+  uçlarıyla adlandırılır (önce taşımalar uygulanır). Paralel kaydırılan yayı paylaşan komşu böylece hem köşeleri hem
+  yayı alır.
 - **Bağımsız başvuru:** `scripts/fixtures/topology_edit_cases.py`, kesin kesirlerle. Durumlar:
   - iki ve üç parselin ortak köşesi;
   - ortak kenara köşe ekleme (iki yönde);

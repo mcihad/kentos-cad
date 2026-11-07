@@ -49,6 +49,10 @@
 - **Harita'da proje ağacı (7 Kasım 2026; MAP-20, [ADR 1720](../../docs/adr/1720-map-project-tree-and-rebuild.md)).**
   `.kcad` şema 198 (Harita'nın `road.drawings`/`autoRebuild`, sıfır hattı çizimi); `road.project.*` Harita'yı kabul
   eder; sıfır hattı iki yüzeyin damgasıyla tutulur.
+- **Paralel kaydırmada ortak sınır (7 Kasım 2026; MAP-06, [ADR 1960](../../docs/adr/1960-parallel-shift-shared-boundary.md)).**
+  `cad.shapes.edit` › `edgeShift` + `topology`: komşu parsel ve çizgi uçları aynı adımda kayar, toplam alan korunur,
+  `neighbours` boyları söyler; kilitli komşu `neighbour_locked` / `shared_boundary_locked`; çekirdek kuralı: kabarıklığı
+  değişen kenar düzenleme sonrası uçlarıyla adlandırılır (yaylı ortak kenar).
 - **İş grafiği (7 Kasım 2026; MAP-20, [ADR 1940](../../docs/adr/1940-project-graph.md)).** `road.project.graph` salt
   okunur: katman → yüzey → çizim → pafta kenarları, çizimin tarifi (komut, sürüm, girdi, kaynak damgaları o zaman/şimdi);
   güncel olmayan çizimi gösteren pafta teslim edilemez; pafta zemini baskı denetimiyle ortak (`map_ground`,

@@ -83,7 +83,10 @@ pub enum ShapeWork {
     },
     /// Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward
     /// normal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours
-    /// lengthen or shorten to meet it.
+    /// lengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects
+    /// sharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what
+    /// the edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with
+    /// `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too.
     EdgeShift {
         id: String,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -96,6 +99,9 @@ pub enum ShapeWork {
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
         area: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        topology: Option<crate::StretchTopology>,
     },
     /// Sadeleştir: the paths' vertices within `tolerance` of their outline dropped.
     Simplify {
@@ -179,6 +185,25 @@ pub struct ShapesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub created: Vec<String>,
+    /// Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,
+    /// each with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ShapeNeighbour>>"))]
+    pub neighbours: Vec<ShapeNeighbour>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// A neighbour that moved with Paralel kaydır's edge (docs/adr/1960): its id and its size before and after.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ShapeNeighbour {
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub before: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub after: f64,
 }

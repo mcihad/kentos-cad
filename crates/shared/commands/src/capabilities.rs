@@ -380,10 +380,12 @@ const ENTRIES: &[Entry] = &[
                 "invalid_distance",
                 "too_many_points",
                 "layer_locked",
+                // Paralel kaydır's shared boundary (docs/adr/1960).
+                "shared_boundary_locked",
             ],
             REVISION,
         ],
-        warnings: &[],
+        warnings: &["neighbour_locked", "neighbour_invalid"],
         targets: none,
     },
     // Yatay ağ and Kot ağı dengelemesi (docs/adr/0203 §8, 0622 §9).

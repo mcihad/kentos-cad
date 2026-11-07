@@ -13841,7 +13841,10 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                       değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), \
                       Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, \
                       köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da \
-                      area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı), \
+                      area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı; topology ile \
+                      ortak köşeleri ve kenarları paylaşan görünen nesneler aynı adımda birlikte kayar, komşu parsel \
+                      edinilen alanı verir, neighbours her komşunun önceki ve sonraki boyunu söyler; kilitli komşu ayrılır \
+                      ve neighbour_locked ile söylenir ya da stopOnLocked ile shared_boundary_locked reddi gelir, ADR 1960), \
                       Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve \
                       Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık \
                       çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; \

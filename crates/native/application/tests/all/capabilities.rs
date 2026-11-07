@@ -856,6 +856,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "beklenmez: en az değişikliğin Gauss–Newton'u kısıtların tuttuğu bir çözüme ya ulaşır ya çelişki ya da tekillik bulur; 64 adımı aşan bir durum kararlı yazılamaz (ADR 0334 §4)",
     ),
     (
+        "cad.shapes.edit",
+        "neighbour_invalid",
+        "beklenmez: Paralel kaydır köşeleri yalnız taşır, komşunun köşe sayısı değişmez; uyarı çekirdeğin kuralı değişirse diye yazılır (ADR 1960)",
+    ),
+    (
         "cad.entities.stretch",
         "neighbour_invalid",
         "beklenmez: Esnet köşeleri yalnız taşır, komşunun köşe sayısı değişmez; uyarı çekirdeğin kuralı değişirse diye yazılır (ADR 0254 §2)",

@@ -440,7 +440,9 @@ pub fn apply(neighbours: &[Neighbour], changes: &[Change], points: bool) -> Answ
 /// The changes an edit made, from the edited object before and after it
 /// (docs/adr/0160 §7), path by path in the elevations' order: with as many
 /// vertices, every vertex that changed place is a move and every edge whose
-/// ends stayed and whose bulge changed a bulge; with one vertex more, the
+/// bulge changed a bulge, named by its ends after the edit (the moves come
+/// first: an arc shifted parallel moves its ends and turns its bulge, and a
+/// neighbour sharing it takes both, docs/adr/1960); with one vertex more, the
 /// first that differs is an insert on the edge it splits; with one fewer, a
 /// remove with its two path neighbours (neither at an open path's end). The
 /// moves come first. A point is a corner of its own (Noktalar da): moved, it
@@ -473,11 +475,10 @@ pub fn changes(before: &Shape, after: &Shape) -> Vec<Change> {
             }
             let count = if b.closed { n } else { n.saturating_sub(1) };
             for e in 0..count {
-                let (u, w) = (b.pts[e], b.pts[(e + 1) % n]);
-                if u == a.pts[e] && w == a.pts[(e + 1) % n] && b.bulges[e] != a.bulges[e] {
+                if b.bulges[e] != a.bulges[e] {
                     others.push(Change::Bulge {
-                        a: u,
-                        b: w,
+                        a: a.pts[e],
+                        b: a.pts[(e + 1) % n],
                         from: b.bulges[e],
                         to: a.bulges[e],
                     });

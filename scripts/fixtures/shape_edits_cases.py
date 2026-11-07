@@ -1,8 +1,8 @@
 """The shared cases of cad.shapes.edit (docs/adr/0622 §9): Biçim değiştir, Sürdür, Paralel kaydır, Sadeleştir, Kot ver
 and Okunur yap.
 
-    python3 scripts/fixtures/shape_edits_cases.py           # writes the file
-    python3 scripts/fixtures/shape_edits_cases.py --check   # writes nothing; compares
+    uv run --no-project --with mpmath python3 scripts/fixtures/shape_edits_cases.py           # writes the file
+    uv run --no-project --with mpmath python3 scripts/fixtures/shape_edits_cases.py --check   # compares
 
 Writes fixtures/commands/v1/cad.shapes.edit.json, without KentOS code. The shapes are straight edges on whole metres,
 so the reference needs no rounding:
@@ -13,7 +13,12 @@ so the reference needs no rounding:
 - Sürdür (§4): the path's points with the drawn ones after its end (or before its start), its own elevations kept
   and the new vertices' none;
 - Paralel kaydır (docs/adr/0191): the edge nearest the point moved along its normal (an area's outward, a polyline's
-  right of its walking direction), its neighbours' lines met; a target area's distance the one that gives it;
+  right of its walking direction), its neighbours' lines met; a target area's distance the one that gives it; with
+  Topolojik düzenleme (docs/adr/0160, 1960) the shown objects with a corner at a moved corner take the same place (a
+  neighbour parcel gives up what the edited one takes: the two areas' sum stays; a line's end, a point only with
+  Noktalar da), a locked one stays and is said, or with Kilitli komşuda durdur nothing is written; a shared arc's
+  shift is edge_shift_cases.py's (50 digits), the neighbour's arc the same with its bulge's sign turned (it runs the
+  other way), its area at 50 digits from the stored values;
 - Sadeleştir: a vertex on the straight line of its neighbours dropped, its deviation 0;
 - Kot ver (docs/adr/0142): Sabit every vertex, Artır only the vertices that have one, Sıfırla none; a point, a line,
   a polyline and an area take them;
@@ -64,6 +69,19 @@ ENTITIES = [
     {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Sınır"}, "a": W((20, 20)), "b": W((30, 20))},
     {"kind": "polyline", "id": 11, "layerId": "yapi", "attrs": {}, "pts": [W(p) for p in [(110, 0), (120, 0)]],
      "parts": [{"pts": [W(p) for p in [(110, 5), (120, 5)]]}]},
+    # Paralel kaydır's shared boundary (docs/adr/1960): two parcels sharing the edge x = 210, a kerb ending at its
+    # north corner, a point at its south corner; a parcel whose neighbour lies on the locked layer.
+    {"kind": "polygon", "id": 12, "layerId": "yapi", "attrs": {"Parsel": "12"}, "pts": [W(p) for p in rect(200, 0, 210, 10)]},
+    {"kind": "polygon", "id": 13, "layerId": "yapi", "attrs": {"Parsel": "13"}, "pts": [W(p) for p in rect(210, 0, 220, 10)]},
+    {"kind": "line", "id": 14, "layerId": "yapi", "attrs": {}, "a": W((210, 10)), "b": W((210, 20))},
+    {"kind": "point", "id": 15, "layerId": "yapi", "attrs": {}, "p": W((210, 0))},
+    {"kind": "polygon", "id": 16, "layerId": "yapi", "attrs": {}, "pts": [W(p) for p in rect(250, 0, 260, 10)]},
+    {"kind": "polygon", "id": 17, "layerId": "kilitli", "attrs": {}, "pts": [W(p) for p in rect(260, 0, 270, 10)]},
+    # A shared arc (docs/adr/1960): parcel 18's east edge bulges east into parcel 19, which runs it the other way.
+    {"kind": "polygon", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [W(p) for p in rect(300, 0, 310, 10)],
+     "bulges": [0, -0.25, 0, 0]},
+    {"kind": "polygon", "id": 19, "layerId": "yapi", "attrs": {}, "pts": [W(p) for p in rect(310, 0, 320, 10)],
+     "bulges": [0, 0, 0, 0.25]},
 ]
 ENTITIES += pieces.ENTITIES  # Parçala's objects, ids from 101
 SETUP = {**{k: v for k, v in POLYGON["setup"].items() if k != "entities"}, "entities": ENTITIES}
@@ -85,18 +103,25 @@ def edit(work):
     return {"work": work}
 
 
-def out(changed=(), before=0, after=0, objects=1, skipped=0, count=0, distance=0):
-    return {"changed": [U(i) for i in changed], "before": before, "after": after, "objects": objects,
-            "skipped": skipped, "count": count, "distance": distance, "revision": "$current"}
+def out(changed=(), before=0, after=0, objects=1, skipped=0, count=0, distance=0, neighbours=()):
+    o = {"changed": [U(i) for i in changed], "before": before, "after": after, "objects": objects,
+         "skipped": skipped, "count": count, "distance": distance, "revision": "$current"}
+    if neighbours:
+        o["neighbours"] = [{"uid": U(i), "before": b, "after": a} for i, b, a in neighbours]
+    return o
 
 
-def done(name, work, output, undo, shapes=None, fields=None):
-    step = {"op": "execute", "input": edit(work), "result": {"status": "completed", "output": output, "warnings": []},
+def done(name, work, output, undo, shapes=None, fields=None, warnings=(), within=None):
+    step = {"op": "execute", "input": edit(work),
+            "result": {"status": "completed", "output": output, "warnings": list(warnings)},
             "expect": {"ids": IDS, "canUndo": True, "dirty": True}}
     if shapes:
         step["expect"]["shapes"] = shapes
     if fields:
         step["expect"]["fields"] = fields
+    if within is not None:
+        # A kerb's slanted length is irrational: its last bit is the platform's square root's.
+        step["within"] = within
     back = {"op": "undo", "returns": undo, "expect": {"ids": IDS, "canUndo": False, "canRedo": True}}
     return {"name": name, "steps": [step, back]}
 
@@ -221,6 +246,94 @@ def edge_shift_cases():
         refused("Paralel kaydır: çoklu çizgide hedef alan",
                 {"kind": "edgeShift", "id": U(3), "at": W((45, 0)), "area": 50}, "edge_shift_refused",
                 "Hedef alan yalnız alanlarda yazılır.", "work.area"),
+    ] + shared_boundary_cases()
+
+
+def arc_area(pts, bulges):
+    """A ring's area at 50 digits from stored (f64) values: the shoelace plus each arc's segment r²/2·(θ − sin θ)."""
+    import mpmath as mp
+    mp.mp.dps = 50
+    P = [(mp.mpf(x), mp.mpf(y)) for x, y in pts]
+    n = len(P)
+    a = sum(P[k][0] * P[(k + 1) % n][1] - P[(k + 1) % n][0] * P[k][1] for k in range(n)) / 2
+    for k, b in enumerate(bulges):
+        if b == 0:
+            continue
+        p, q = P[k], P[(k + 1) % n]
+        chord = mp.sqrt((q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2)
+        sw = 4 * mp.atan(mp.mpf(b))
+        r = chord / (2 * abs(mp.sin(sw / 2)))
+        a += r * r / 2 * (sw - mp.sin(sw))
+    return abs(a)
+
+
+def shared_arc_case():
+    """Parcel 18's arc shifted 1 m out (edge_shift_cases.py's rule): its corners and its bulge are 19's too."""
+    import edge_shift_cases as es
+    e18, e19 = next(e for e in ENTITIES if e["id"] == 18), next(e for e in ENTITIES if e["id"] == 19)
+    before18 = arc_area([(p["x"], p["y"]) for p in e18["pts"]], e18["bulges"])
+    before19 = arc_area([(p["x"], p["y"]) for p in e19["pts"]], e19["bulges"])
+    got = es.written(es.polygon([(p["x"], p["y"]) for p in e18["pts"]], bulges=e18["bulges"]), 0, 1, 1.0)
+    pts18, b18 = got["pts"], got["bulges"]
+    pts19 = [pts18[1], [X + 320, Y + 0], [X + 320, Y + 10], pts18[2]]
+    b19 = [0, 0, 0, -b18[1]]
+    after19 = arc_area(pts19, b19)
+    # The two areas' sum stays: what 18 takes, 19 gives up.
+    assert abs((before18 + before19) - (mp_float(got["area"]) + after19)) < 1e-9
+    xy = lambda ps: [{"x": x, "y": y} for x, y in ps]  # noqa: E731
+    sag = 1.25  # the arc's middle: half the chord times the bulge, east of the chord
+    return done("Paralel kaydır, ortak sınır: yaylı ortak kenar, komşunun yayı aynı çemberde",
+                {"kind": "edgeShift", "id": U(18), "at": W((310 + sag, 5)), "distance": 1, "topology": {}},
+                out(changed=[18, 19], before=float(before18), after=got["area"], objects=2, distance=1,
+                    neighbours=[(19, float(before19), float(after19))]), "Paralel kaydır",
+                fields={"18": {"pts": xy(pts18), "bulges": b18}, "19": {"pts": xy(pts19), "bulges": b19}}, within=1e-9)
+
+
+def mp_float(v):
+    import mpmath as mp
+    return mp.mpf(v)
+
+
+def shared_boundary_cases():
+    """Paralel kaydır with Topolojik düzenleme (docs/adr/1960): the corners (210, 0) and (210, 10) move to the shifted
+    edge; whatever has a corner there takes the same place (by hand: a copy of the moved corner)."""
+    kerb = lambda x: math.hypot(x - 210, 10)  # noqa: E731  the kerb from (x, 10) to (210, 20)
+    locked = {"code": "neighbour_locked", "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı.",
+              "path": "work.topology"}
+    return [
+        done("Paralel kaydır, ortak sınır: komşu parsel ve bordür birlikte, iki alanın toplamı korunur",
+             {"kind": "edgeShift", "id": U(12), "at": W((210, 5)), "distance": 2, "topology": {}},
+             out(changed=[12, 13, 14], before=100, after=120, objects=3, distance=2,
+                 neighbours=[(13, 100, 80), (14, 10, kerb(212))]), "Paralel kaydır",
+             shapes={"12": shape(cellwork.cells(rect(200, 0, 212, 10))), "13": shape(cellwork.cells(rect(212, 0, 220, 10)))},
+             fields={"14": {"a": W((212, 10)), "b": W((210, 20))}, "15": {"p": W((210, 0))}}, within=1e-9),
+        done("Paralel kaydır, ortak sınır: hedef alan 130 m², komşu 70 m²",
+             {"kind": "edgeShift", "id": U(12), "at": W((210, 5)), "area": 130, "topology": {}},
+             out(changed=[12, 13, 14], before=100, after=130, objects=3, distance=3,
+                 neighbours=[(13, 100, 70), (14, 10, kerb(213))]), "Paralel kaydır",
+             shapes={"12": shape(cellwork.cells(rect(200, 0, 213, 10))), "13": shape(cellwork.cells(rect(213, 0, 220, 10)))},
+             within=1e-9),
+        done("Paralel kaydır, ortak sınır: Noktalar da, köşedeki nokta birlikte",
+             {"kind": "edgeShift", "id": U(12), "at": W((210, 5)), "distance": 2, "topology": {"points": True}},
+             out(changed=[12, 13, 14, 15], before=100, after=120, objects=4, distance=2,
+                 neighbours=[(13, 100, 80), (14, 10, kerb(212)), (15, 0, 0)]), "Paralel kaydır",
+             fields={"15": {"p": W((212, 0))}}, within=1e-9),
+        done("Paralel kaydır, ortak sınır: kilitli komşu yerinde kalır, sınırın ayrıldığı söylenir",
+             {"kind": "edgeShift", "id": U(16), "at": W((260, 5)), "distance": 2, "topology": {}},
+             out(changed=[16], before=100, after=120, objects=1, distance=2), "Paralel kaydır",
+             shapes={"16": shape(cellwork.cells(rect(250, 0, 262, 10))), "17": shape(cellwork.cells(rect(260, 0, 270, 10)))},
+             warnings=[locked]),
+        refused("Paralel kaydır, ortak sınır: kilitli komşuda durdur, hiçbir şey yazılmaz",
+                {"kind": "edgeShift", "id": U(16), "at": W((260, 5)), "distance": 2, "topology": {"stopOnLocked": True}},
+                "shared_boundary_locked",
+                "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da "
+                "Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.", "work.topology"),
+        done("Paralel kaydır, Topolojik düzenleme kapalı: komşu yerinde kalır",
+             {"kind": "edgeShift", "id": U(12), "at": W((210, 5)), "distance": 2},
+             out(changed=[12], before=100, after=120, distance=2), "Paralel kaydır",
+             shapes={"12": shape(cellwork.cells(rect(200, 0, 212, 10))), "13": shape(cellwork.cells(rect(210, 0, 220, 10)))},
+             fields={"14": {"a": W((210, 10)), "b": W((210, 20))}}),
+        shared_arc_case(),
     ]
 
 

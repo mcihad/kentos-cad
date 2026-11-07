@@ -7,9 +7,12 @@
 //! snaps on), the distance and an area's new size beside it. A click there,
 //! a typed distance, or Alan (A) and a target size writes it through
 //! `cad.entities.edit` (step “Paralel kaydır”) and the tool waits for the
-//! next edge. Esc and Ctrl+Z let the edge go; Esc with none leaves.
+//! next edge. Esc and Ctrl+Z let the edge go; Esc with none leaves. While
+//! Topolojik düzenleme is on (docs/adr/0160, 1960) the objects sharing the
+//! edge's corners move with it: the preview draws them and a neighbour
+//! area's new size, the command writes them in the same step.
 
-use kentos_commands::{Entity, ShapeWork};
+use kentos_commands::{Entity, ShapeWork, StretchTopology};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::edge_shift::{self as rules, Picked};
@@ -40,11 +43,14 @@ struct Picking {
     area: Option<f64>,
 }
 
+/// Where the cursor moves the edge: the place, the distance, the shape moved there (or why not) and, while
+/// Topolojik düzenleme is on, the neighbours moved with it (their shapes, each area's size before and after).
+type At = (Vec2, f64, Result<Shape, String>, Vec<(Shape, Option<(f64, f64)>)>);
+
 pub struct EdgeShift {
     edge: Option<Picking>,
     asking: bool,
-    /// The cursor's distance and the shape moved there, or why not.
-    at: Option<(Vec2, f64, Result<Shape, String>)>,
+    at: Option<At>,
     format: Format,
 }
 
@@ -120,10 +126,20 @@ impl EdgeShift {
             at: points::wire(k.mid),
             distance: Some(d),
             area: None,
+            topology: cx.draft.topology.then_some(StretchTopology {
+                points: cx.draft.topology_points,
+                stop_on_locked: cx.draft.topology_stop_on_locked,
+            }),
         };
         let Some(out) = points::write_shape(work, cx) else {
             return false;
         };
+        if !out.neighbours.is_empty() {
+            cx.say(
+                Level::Info,
+                format!("Topolojik düzenleme: {} komşu nesne de değişti.", out.neighbours.len()),
+            );
+        }
         let moved_area = picking.area.map(|_| out.after);
         let format = cx.format();
         let said = match moved_area {
@@ -206,11 +222,37 @@ impl Tool for EdgeShift {
             edge::hover(p, cx, editable);
             return;
         };
-        let moved = self.edge.as_ref().map(|picking| {
-            let k = &picking.picked;
-            rules::shifted(&picking.shape, k.ring, k.edge, d)
-        });
-        self.at = moved.map(|moved| (p.world, d, moved));
+        let Some(picking) = self.edge.as_ref() else {
+            return;
+        };
+        let k = &picking.picked;
+        let moved = rules::shifted(&picking.shape, k.ring, k.edge, d);
+        // The neighbours that go with it while Topolojik düzenleme is on (the command's own rule).
+        let around = match &moved {
+            Ok(after) => crate::neighbours::neighbours_of(cx, &[(picking.slot, picking.shape.clone(), after.clone())])
+                .map(|n| {
+                    n.changes
+                        .iter()
+                        .zip(n.shapes)
+                        .map(|(change, now)| {
+                            let then = match change {
+                                kentos_commands::EntityEdit::Update { uid, .. } => uid
+                                    .parse::<kentos_domain::Uuid>()
+                                    .ok()
+                                    .and_then(|u| cx.doc.slot_of(u))
+                                    .and_then(|s| cx.doc.get(s))
+                                    .map(shape),
+                                _ => None,
+                            };
+                            let sizes = then.and_then(|t| Some((rules::area_of(&t)?, rules::area_of(&now)?)));
+                            (now, sizes)
+                        })
+                        .collect()
+                })
+                .unwrap_or_default(),
+            Err(_) => Vec::new(),
+        };
+        self.at = Some((p.world, d, moved, around));
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -314,7 +356,7 @@ impl Tool for EdgeShift {
             std::f64::consts::PI / 90.0,
         );
         out.strokes.push(Stroke::solid(edge_pts, false).width(2.0).tone(Tone::Snap));
-        let Some((at, d, moved)) = &self.at else {
+        let Some((at, d, moved, around)) = &self.at else {
             return out;
         };
         let mut lines = vec![format.length(*d)];
@@ -328,6 +370,17 @@ impl Tool for EdgeShift {
                         format.area(after),
                         signed(format.area_bare(after - before), after - before)
                     ));
+                }
+                // The neighbours moved with it, and a neighbour area's new size (docs/adr/1960).
+                for (now, sizes) in around {
+                    out.strokes.extend(Outline::of(now, Some([3.0, 3.0]), 1.0, Tone::Snap).strokes);
+                    if let Some((before, after)) = sizes {
+                        lines.push(format!(
+                            "komşu {} ({})",
+                            format.area(*after),
+                            signed(format.area_bare(after - before), after - before)
+                        ));
+                    }
                 }
             }
             Err(why) => {

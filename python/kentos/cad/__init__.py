@@ -3234,6 +3234,7 @@ __all__ = [
     "SettingsChanged",
     "SettingsSet",
     "ShapeElevation",
+    "ShapeNeighbour",
     "ShapePaperItemKind",
     "ShapeWork",
     "ShapesEdit",

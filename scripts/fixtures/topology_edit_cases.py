@@ -29,8 +29,10 @@ The rules (docs/adr/0160 §2–§3):
 
 5. The changes an edit made, from the edited object before and after it
    (path by path, in the elevations' order): with as many vertices, every
-   vertex that changed place is a move and every edge whose ends stayed
-   and whose bulge changed is a bulge; with one vertex more, the first that
+   vertex that changed place is a move and every edge whose bulge changed is
+   a bulge, named by its ends after the edit (docs/adr/1960: an arc shifted
+   parallel moves its ends and turns its bulge; the moves come first, so a
+   neighbour's shared arc is found at its new ends); with one vertex more, the first that
    differs is an insert on the edge it splits (not at an open path's end);
    with one fewer, the first that differs is a remove with its two path
    neighbours (not an open path's end). The moves come first.
@@ -238,9 +240,8 @@ def diff(before, after):
                 if bp[k] != ap[k]:
                     moves.append({"kind": "move", "at": bp[k], "to": ap[k]})
             for e in range(n if closed else n - 1):
-                u, w = bp[e], bp[(e + 1) % n]
-                if u == ap[e] and w == ap[(e + 1) % n] and bb[e] != ab[e]:
-                    others.append({"kind": "bulge", "a": u, "b": w, "from": bb[e], "to": ab[e]})
+                if bb[e] != ab[e]:
+                    others.append({"kind": "bulge", "a": ap[e], "b": ap[(e + 1) % n], "from": bb[e], "to": ab[e]})
         elif m == n + 1:
             j = next((k for k in range(n) if bp[k] != ap[k]), n)
             if closed:
@@ -263,6 +264,9 @@ def diffs():
         ("Kenar ortasından yeni köşe (kapanış kenarı)", sq, {**sq, "pts": [P(0.0, 0.0), P(10.0, 0.0), P(10.0, 10.0), P(0.0, 10.0), P(-0.5, 5.0)], "bulges": [0.0] * 5}),
         ("Çizgiye köşe: çoklu çizgi olur", {"kind": "line", "a": P(0.0, 0.0), "b": P(10.0, 0.0)}, {"kind": "polyline", "pts": [P(0.0, 0.0), P(5.0, 0.5), P(10.0, 0.0)], "bulges": [0.0, 0.0]}),
         ("Yaylı kenarın ortası: kabarıklık değişir", {**sq, "bulges": [0.0, 0.3, 0.0, 0.0]}, {**sq, "bulges": [0.0, 0.5, 0.0, 0.0]}),
+        ("Yaylı kenar paralel kayar: iki ucu taşınır, kabarıklığı yeni uçlarıyla değişir",
+         {**sq, "bulges": [0.0, -0.25, 0.0, 0.0]},
+         {**sq, "pts": [P(0.0, 0.0), P(11.25, 0.0), P(11.25, 10.0), P(0.0, 10.0)], "bulges": [0.0, -0.3125, 0.0, 0.0]}),
         ("Köşe sil", {"kind": "polygon", "pts": [P(0.0, 0.0), P(10.0, 0.0), P(10.0, 5.0), P(10.0, 10.0), P(0.0, 10.0)]}, {"kind": "polygon", "pts": [P(0.0, 0.0), P(10.0, 0.0), P(10.0, 10.0), P(0.0, 10.0)], "bulges": [0.0] * 4}),
         ("Esnet: iki köşe birlikte", sq, {**sq, "pts": [P(0.0, 0.0), P(12.0, 0.0), P(12.0, 10.0), P(0.0, 10.0)]}),
         ("Açık yolun ucuna köşe: kenar ekleme değil", {"kind": "polyline", "pts": [P(0.0, 0.0), P(10.0, 0.0)]}, {"kind": "polyline", "pts": [P(0.0, 0.0), P(10.0, 0.0), P(15.0, 0.0)]}),
@@ -401,6 +405,22 @@ def cases():
                 {"shape": {"kind": "polygon", "pts": [P(10.0, 0.0), P(12.0, 5.0), P(10.0, 10.0)]}},
             ],
             [{"kind": "remove", "at": P(12.0, 5.0), "prev": P(10.0, 0.0), "next": P(10.0, 10.0)}],
+            False,
+        )
+    )
+    out.append(
+        (
+            "Yaylı ortak kenar paralel kayar: komşu iki köşeyi ve ters yönde kabarıklığı birlikte alır",
+            [
+                n({"kind": "polygon", "pts": [P(10.0, 0.0), P(20.0, 0.0), P(20.0, 10.0), P(10.0, 10.0)],
+                   "bulges": [0.0, 0.0, 0.0, 0.25]}),
+                n({"kind": "line", "a": P(10.0, 10.0), "b": P(10.0, 20.0)}),
+            ],
+            [
+                {"kind": "move", "at": P(10.0, 0.0), "to": P(11.25, 0.0)},
+                {"kind": "move", "at": P(10.0, 10.0), "to": P(11.25, 10.0)},
+                {"kind": "bulge", "a": P(11.25, 0.0), "b": P(11.25, 10.0), "from": -0.25, "to": -0.3125},
+            ],
             False,
         )
     )

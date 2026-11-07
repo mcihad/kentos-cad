@@ -5,8 +5,9 @@
 //! (`scripts/fixtures/shape_edits_cases.py`).
 
 use kentos_commands::{
-    CommandResult, EditOperation, EntitiesEdit, EntitiesEditPlan, Entity, EntityEdit,
-    EntityGeometry, ShapeElevation, ShapeWork, ShapesEdit, ShapesEdited, TextEntity, Vec2 as Wire,
+    CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan, Entity, EntityEdit,
+    EntityGeometry, ShapeElevation, ShapeNeighbour, ShapeWork, ShapesEdit, ShapesEdited, StretchTopology, TextEntity,
+    Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{
@@ -96,6 +97,9 @@ struct Prepared {
     distance: f64,
     /// Parçala: the edit makes new objects, said in `created`.
     creates: bool,
+    /// Paralel kaydır with Topolojik düzenleme: the neighbours that moved with the edge, and what is said of them.
+    neighbours: Vec<ShapeNeighbour>,
+    warnings: Vec<CommandWarning>,
 }
 
 impl Prepared {
@@ -110,6 +114,8 @@ impl Prepared {
             count: 0,
             distance: 0.0,
             creates: false,
+            neighbours: Vec::new(),
+            warnings: Vec::new(),
         }
     }
 }
@@ -304,8 +310,9 @@ fn edge_shift_of(
     at: Wire,
     distance: Option<f64>,
     area: Option<f64>,
+    topology: Option<StretchTopology>,
 ) -> Result<Prepared, Stop> {
-    let (_, e) = object(doc, id, "work.id")?;
+    let (slot, e) = object(doc, id, "work.id")?;
     checks::point(at, "Kenarın noktasının", "work.at")?;
     let refused = |text: String, path: &str| refuse(codes::EDGE_SHIFT_REFUSED, text, path);
     if !matches!(e, Entity::Polygon(_) | Entity::Polyline(_)) {
@@ -344,7 +351,57 @@ fn edge_shift_of(
     p.before = rules::area_of(&s).unwrap_or_else(|| size(&s, false));
     p.after = rules::area_of(&moved).unwrap_or_else(|| size(&moved, is_area));
     p.distance = d;
+    if let Some(t) = topology {
+        follow(doc, &mut p, t, (slot, s, moved))?;
+    }
     Ok(p)
+}
+
+/// The size a neighbour is said by: an area's net area, a path's length, a point's 0.
+fn neighbour_size(s: &Shape) -> f64 {
+    rules::area_of(s).unwrap_or_else(|| size(s, false))
+}
+
+/// Topolojik düzenleme (docs/adr/0160, 1960): the shown objects sharing the edge's moved corners and edges put right
+/// with it (`topology_follow`, Esnet's and the grips' rule), written in the same step; a locked one stays, the boundary
+/// split and said, or with `stopOnLocked` nothing is written.
+fn follow(doc: &Document, p: &mut Prepared, t: StretchTopology, (slot, before, after): (Slot, Shape, Shape)) -> Result<(), Stop> {
+    let store = crate::geometry_store::store_of(doc);
+    let Some(n) = crate::topology_follow::neighbours(doc, &store, t.points, &[(slot, before, after)]) else {
+        return Ok(());
+    };
+    if t.stop_on_locked && n.locked > 0 {
+        return Err(refuse(codes::SHARED_BOUNDARY_LOCKED, &crate::stretch::shared_locked(n.locked), "work.topology"));
+    }
+    for (change, now) in n.changes.iter().zip(&n.shapes) {
+        let EntityEdit::Update { uid, .. } = change else { continue };
+        let then = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)).map(shape);
+        p.neighbours.push(ShapeNeighbour {
+            uid: uid.clone(),
+            before: then.as_ref().map_or(0.0, neighbour_size),
+            after: neighbour_size(now),
+        });
+    }
+    p.changes.extend(n.changes);
+    p.objects = p.changes.len();
+    if n.locked > 0 {
+        p.warnings.push(CommandWarning {
+            code: codes::NEIGHBOUR_LOCKED.into(),
+            message: format!("Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı.", n.locked),
+            path: Some("work.topology".into()),
+        });
+    }
+    if n.invalid > 0 {
+        p.warnings.push(CommandWarning {
+            code: codes::NEIGHBOUR_INVALID.into(),
+            message: format!(
+                "{} komşu nesne geçersiz kalacağı için değişmedi (açık yolda 2'den, halkada 3'ten az köşe).",
+                n.invalid
+            ),
+            path: Some("work.topology".into()),
+        });
+    }
+    Ok(())
 }
 
 fn simplify_of(doc: &Document, ids: &[String], tolerance: f64) -> Result<Prepared, Stop> {
@@ -565,7 +622,8 @@ fn prepare(doc: &Document, input: &ShapesEdit) -> Result<Prepared, Stop> {
             at,
             distance,
             area,
-        } => edge_shift_of(doc, id, *at, *distance, *area),
+            topology,
+        } => edge_shift_of(doc, id, *at, *distance, *area, *topology),
         ShapeWork::Simplify { ids, tolerance } => simplify_of(doc, ids, *tolerance),
         ShapeWork::Elevation { ids, elevation } => elevation_of(doc, ids, *elevation),
         ShapeWork::Readable { ids } => readable_of(doc, ids),
@@ -687,6 +745,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         count: count(p.count),
         distance: p.distance,
         created: if p.creates { created } else { Vec::new() },
+        neighbours: p.neighbours.clone(),
         revision,
     };
     // Okunur yap with every text readable already: nothing to write, nothing refused.
@@ -702,7 +761,8 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
             warnings,
         } => CommandResult::Completed {
             output: output(o.changed, o.created, o.revision),
-            warnings,
+            // What the neighbours did first, then the edit's own (docs/adr/1960).
+            warnings: p.warnings.iter().cloned().chain(warnings).collect(),
         },
         other => crate::trim::relay(other),
     }

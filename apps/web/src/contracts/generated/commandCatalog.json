@@ -86920,7 +86920,7 @@
       "id": "cad.shapes.edit",
       "version": 1,
       "title": "Biçim işlemleri",
-      "summary": "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı, aracın adıyla.",
+      "summary": "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı; topology ile ortak köşeleri ve kenarları paylaşan görünen nesneler aynı adımda birlikte kayar, komşu parsel edinilen alanı verir, neighbours her komşunun önceki ve sonraki boyunu söyler; kilitli komşu ayrılır ve neighbour_locked ile söylenir ya da stopOnLocked ile shared_boundary_locked reddi gelir, ADR 1960), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı, aracın adıyla.",
       "aliases": [
         "bicim-islemleri",
         "shapes"
@@ -86999,6 +86999,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "neighbours": {
+            "description": "Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,\neach with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).",
+            "items": {
+              "$ref": "#/$defs/ShapeNeighbour"
+            },
+            "type": "array"
           },
           "objects": {
             "description": "How many objects were edited, and how many the edit left as they were (a kind it does not take, nothing to\nchange).",
@@ -87094,8 +87101,13 @@
           "invalid_distance",
           "too_many_points",
           "layer_locked",
+          "shared_boundary_locked",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "neighbour_locked",
+          "neighbour_invalid"
         ]
       },
       "examples": [
@@ -182061,6 +182073,30 @@
         }
       ]
     },
+    "ShapeNeighbour": {
+      "description": "A neighbour that moved with Paralel kaydır's edge (docs/adr/1960): its id and its size before and after.",
+      "properties": {
+        "after": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
     "ShapeWork": {
       "description": "The edit, with what it works on.",
       "oneOf": [
@@ -182130,7 +182166,7 @@
           "type": "object"
         },
         {
-          "description": "Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward\nnormal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours\nlengthen or shorten to meet it.",
+          "description": "Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward\nnormal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours\nlengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects\nsharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what\nthe edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with\n`stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too.",
           "properties": {
             "area": {
               "format": "double",
@@ -182158,6 +182194,16 @@
             "kind": {
               "const": "edgeShift",
               "type": "string"
+            },
+            "topology": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StretchTopology"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [

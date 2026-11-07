@@ -504,6 +504,15 @@ iki köşe arasına bitiş kotu ya da eğimle, yaylı kenarda yay boyunca kot ve
 sekmesinde. Formlar sahibin isteğiyle tek etiket sütunlu düzene geçti. Açık: köşeleri sahneden seçmek, kalıcı ilişkiyi
 kurmak, ortak sınır, çok parçalı nesne.
 
+**7 Kasım 2026, ikinci tur — Paralel kaydırmada ortak sınır ([ADR 1960](../docs/adr/1960-parallel-shift-shared-boundary.md)).**
+Kapsam: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Araştırma: Netcad'in Dokunan seçeneği, QGIS
+Topological editing, ArcGIS Pro Map Topology (ADR 0160'ın kaydı). Kanıtlanan: `cad.shapes.edit` › `edgeShift` Topolojik
+düzenleme açıkken (`topology`) ortak köşe ve kenarı paylaşan komşuları aynı adımda kaydırır; komşu parsel verdiğini
+söyler (`neighbours`), iki alanın toplamı korunur; kilitli komşu ayrılır ve söylenir ya da Kilitli komşuda durdur ile
+hiçbir şey yazılmaz; harita koordinatında yaylı ortak kenar dahil (50 basamaklı yay başvurusu). Bulunan çekirdek kusuru
+(uçları kayan yayın kabarıklığı komşuya gitmiyordu) düzeltildi. Araç önizlemede komşuları ve komşu alanın yeni boyunu
+gösterir. Açık: kalıcı ilişki, çok parçalı nesne, köşeyi sahneden seçmek.
+
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 
 **Öncelik:** P0. **Kod dayanağı:** [K17], [K18], [K19].

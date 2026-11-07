@@ -83005,6 +83005,33 @@ class SettingsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ShapeNeighbour(_Model):
+    """A neighbour that moved with Paralel kaydır's edge (docs/adr/1960): its id and its size before and after.
+    Attributes:
+        before: Unit: 1.
+        after: Unit: 1.
+    """
+    uid: str
+    before: float
+    after: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShapeNeighbour:
+        return cls(
+            uid=data["uid"],
+            before=float(data["before"]),
+            after=float(data["after"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ShapesEdit(_Model):
     """`cad.shapes.edit`'s input.
 
@@ -83043,6 +83070,8 @@ class ShapesEdited(_Model):
         count: Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces. Unit: count.
         distance: Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit. Unit: length.
         created: Parçala: the new objects, the pieces after each object's first, in order.
+        neighbours: Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,
+            each with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).
     """
     changed: list[str]
     before: float
@@ -83053,6 +83082,7 @@ class ShapesEdited(_Model):
     distance: float
     revision: str
     created: list[str] | Unset = UNSET
+    neighbours: list[ShapeNeighbour] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83066,6 +83096,8 @@ class ShapesEdited(_Model):
         out["revision"] = self.revision
         if self.created is not UNSET:
             out["created"] = list(self.created)
+        if self.neighbours is not UNSET:
+            out["neighbours"] = [e0.to_json() for e0 in self.neighbours]
         return out
 
     @classmethod
@@ -83080,6 +83112,7 @@ class ShapesEdited(_Model):
             distance=float(data["distance"]),
             revision=data["revision"],
             created=list(data["created"]) if "created" in data else UNSET,
+            neighbours=[ShapeNeighbour.from_json(e0) for e0 in data["neighbours"]] if "neighbours" in data else UNSET,
         )
 
 
@@ -122706,7 +122739,10 @@ class ContinueShapeWork(ShapeWork):
 class EdgeShiftShapeWork(ShapeWork):
     """Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward
     normal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours
-    lengthen or shorten to meet it.
+    lengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects
+    sharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what
+    the edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with
+    `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too.
     Attributes:
         at: Unit: length.
         area: Unit: 1.
@@ -122717,6 +122753,7 @@ class EdgeShiftShapeWork(ShapeWork):
     at: Vec2
     area: float | None | Unset = UNSET
     distance: float | None | Unset = UNSET
+    topology: StretchTopology | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "edgeShift"}
@@ -122726,6 +122763,8 @@ class EdgeShiftShapeWork(ShapeWork):
             out["area"] = None if self.area is None else float(self.area)
         if self.distance is not UNSET:
             out["distance"] = None if self.distance is None else float(self.distance)
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else self.topology.to_json()
         return out
 
     @classmethod
@@ -122735,6 +122774,7 @@ class EdgeShiftShapeWork(ShapeWork):
             at=Vec2.from_json(data["at"]),
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
         )
 
 
@@ -130111,6 +130151,7 @@ __all__ = [
     "SettingsChanged",
     "SettingsSet",
     "ShapeElevation",
+    "ShapeNeighbour",
     "ShapePaperItemKind",
     "ShapeWork",
     "ShapesEdit",
