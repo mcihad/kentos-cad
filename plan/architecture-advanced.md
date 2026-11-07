@@ -1,71 +1,117 @@
 # KentOS Mimari — ileri 2B tasarım ve üretim planı
 
-İnceleme: **30 Ekim 2026**. Kod tabanı: `dc7b16d6c`.
-Plan dalı: `codex/architecture-advanced-plugin-plans`.
+İnceleme: **7 Kasım 2026** (ikinci tur; ilki 30 Ekim, `dc7b16d6c`). Kod tabanı: `e40e6dae0` (main). Dal: `arch-adv-ileri`.
 
-Amaç, bir ev planını kolayca kurmak, tasarım değişikliklerini güvenle yapmak ve
-aynı bilgiden okunabilir uygulama belgeleri üretmektir. Yeni düğme sayısı başarı
-ölçüsü değildir. Kullanıcı bir odayı büyüttüğünde duvarları, açıklıkları, donatıyı,
-mahalleri, ölçüleri ve paftaları elle onarmak zorunda kalmamalıdır.
+Sahibin hedefi (7 Kasım 2026): bir mimari çizim **çok pratik** yapılabilsin, **aynı zamanda AutoCAD kadar ayrıntılı**
+yapılabilsin. Yeni düğme sayısı başarı ölçüsü değildir. Kullanıcı bir odayı büyüttüğünde duvarları, açıklıkları,
+donatıyı, mahalleri, ölçüleri ve paftaları elle onarmak zorunda kalmamalı. Çizim ilk duvardan itibaren bir mimari pafta
+gibi görünmeli. Türkiye'de ruhsat ve uygulama projesinin istediği çizimler aynı modelden çıkmalı.
 
-Bu teslim **araştırma ve plandır**; uygulama kodu, `CLAUDE.md`, mevcut
-[architecture.md](architecture.md) ve tamamlandı işaretleri değiştirilmemiştir.
-Aşağıdaki yedi iş paketi uygulanmış sayılmaz. Kaynak incelemesi, geçmiş kabul
-kayıtları ve bu oturumdaki sınırlı GUI gözlemi ayrı değerlendirilmiştir.
+Bu tur **araştırma ve plandır**; uygulama kodu değişmedi. ADV-01…07'nin durumu kodla yeniden sınandı (§3). Yeni paketler
+(ADV-08…ADV-26, §4) ve iş sırası (M1…M51, §5) eklendi. Uygulama, plan sahiple görüşüldükten sonra başlar. Her madde §6'daki
+talimatla yapılır.
 
-## 1. Mevcut sistemin gerçekten geldiği yer
+## 0. Bu turun yöntemi
 
-[Önceki planın](architecture.md) başlangıç envanteri 24 Ekim'i anlatıyor;
-sonraki ADR ekleri aynı başlıkları önemli ölçüde genişletiyor. İlk paragraftaki
-bir “açık” notu, sonraki kabul kaydından bağımsız okunmamalı.
+- **Kod:** üç okuma denetimi yapıldı:
+  - araçlar ve arayüz (A1),
+  - çizimdeki öğeler (A2),
+  - plan maddelerinin gerçek durumu (A3).
+- **Uygulama:** güncel ikiliyle beş kabul senaryosu oynatıldı (`kentos-cad kullan acceptance-flat|house|change|renovation|curved`,
+  hepsinde "beklentilerin hepsi tuttu"). Mimari sekmesi ve araç ayarları `kentos-cad snapshot` ile çekildi (M0).
+- **İnternet:** dört konu araştırıldı:
+  - AutoCAD ve DWG uyumlu alternatifleri (W1),
+  - BIM ve mimari yazılımlar (W2),
+  - pratik plan uygulamaları ve hız desenleri (W3),
+  - Türkiye mevzuatı ve çizim standartları (W4).
 
-| Alan | Korunacak mevcut temel | İleri ihtiyaç |
-| --- | --- | --- |
-| Ölçülü çizim/düzenleme | Dikdörtgen duvar, düz/yaylı ölçülü bölme; duvar, kolon ve açıklık için geçici ölçü, referans değiştirme, sabit uç | Komşu odaları birlikte düzenleme ve isteğe bağlı kalıcı tasarım ilişkileri |
-| Duvar birleşimi | Bileşen öncelikleri, köşe/T/çapraz birleşim, uç kipleri, teşhis ve düzeltme | Düğümde bileşen kararını anlaşılır düzenleme; açıklık dönüşleri ve bağlı yapı sınırları |
-| Açıklıklar | Host ilişkisi, yerleştirme/çoğaltma, hazır tipler, yön, numara ve çizelge | Kullanıcı/ofis tipleri, tip-örnek ilişkisi ve gerçek net geçiş bilgisi |
-| Mahal/ölçü/veri | Mahal bulma, kaynak izleme, kimlik/etiket, otomatik ilişkili ölçüler; farklı pafta ölçekleri | Tasarım programı, bağımsız bölüm ve bütün planın değişiklik etkisi |
-| Donatı/eleman | Gerçek boylu blok kitaplığı; L/U mutfak ve cihazlar; döşeme, şaft, korkuluk; gelişmiş merdiven/rampa/aks | İlişkileri koruyan oda/daire modülleri, tip yönetimi ve kullanım boşlukları |
-| Belgeleme | Canlı çizelgeler, kaynak hücre düzenleme, metraj, tablo dışa aktarma, kat paftaları, işaretler | Mimari görünüş tarifleri, proje gezgini, koordineli yayın ve gerçek türetilmiş görünüşler |
-| Denetim | Mimari denetim, kalıcı istisna, etki önizlemesi ve toplu düzeltme | Net geçiş, kapı/donatı kullanım alanı ve tasarım hedefleri için açıklanabilir geri bildirim |
+  Yalnız üreticilerin ve kurumların resmî sayfaları kullanıldı.
+- **Notlar:** raporların tamamı [docs/research/2026-11-07-mimari/](../docs/research/2026-11-07-mimari/) altındadır. Kaynak
+  adresleri ve başka uygulamaların ekran görüntüsü adresleri oradadır. Plana giren kritik iddialar ayrıca kodda ya da
+  resmî metinde doğrulandı; aşağıda ✓ ile işaretlidir.
+- **Resimler:** `.run/shots/kullanim/masaustu-acceptance-*` ve `.run/gui-evidence/mimari-durum/` altındadır; Git'e girmez.
 
-Bu temellerin kodda bulunması, bütün örneklerin kusursuz olduğunu veya bu
-oturumda tekrar kabul edildiğini göstermez. Özellikle `ARCH-BASE-01`,
-`ARCH-PERF-01` ve `ARCH-DOC-04` gibi açık kabul kapsamları yeni planla kapanmaz.
+## 1. Bugünkü durum (7 Kasım 2026)
 
-### Kod incelemesinin belirleyici kanıtları
+### 1.1 Güçlü taban
 
-Satır numaraları yukarıdaki commit'e aittir; dosya değişirse yeniden doğrulanır.
+- **Nesneler:**
+  - duvar (düz, yaylı, en çok 16 bileşen, düğüm kararı);
+  - kapı ve pencere (6 işleyiş, tip/örnek, net geçiş); boşluk, niş, baca;
+  - mahal (net/eksen/brüt, şaft), döşeme/balkon/teras;
+  - aks, kolon, merdiven (düz, L, U, döner), rampa, mutfak dizisi;
+  - etiket, görünüm işaretleri, çizelge ve metraj.
+- **Bağlantılı işler:** bağlar, oda/daire modülleri, tasarım seçenekleri, bina programı ve bağımsız bölümler, görünüş
+  tarifleri, proje gezgini.
+- **Komutlar:** katalogda 63 mimari komut var; Python ve MCP katalogdan üretiliyor. Mimari ortak durumlar: 136 dosya,
+  4 789 durum.
+- **Çekirdek CAD'de olanlar:** kenetleme ve izleme, imleç yanı değer girişi, tutamaçlar, tarama, ölçü/yazı/tablo stilleri, blok
+  ve dinamik blok, dış başvuru, pafta ve görünüm penceresi, kalem tabloları, yayın.
+- **Değişim:** DWG kısmen var; mimari IFC yok.
 
-| Kanıt | Kaynak ve gözlenen sınır |
-| --- | --- |
-| A1 — Bölme bir oluşturma işlemidir | [walls_partition.rs](../crates/native/application/src/walls_partition.rs), 159–175 ve 229–234: mesafe/kaynak hesaplanıp normal duvar yazılır; bu oluşturma tarifi kalıcı mimari mesafe bağına dönüşmez. |
-| A2 — Kısıt motoru zaten vardır | [constraints sözleşmesi](../crates/shared/contracts/src/constraints.rs) ve [çözücü modeli](../crates/shared/geometry-core/src/ops/constraints/model.rs), 74–100, 127–158: temel geometrik türler var; duvar yüzü/çekirdeği/açıklık için mimari değişken adaptörü ayrı iştir. |
-| A3 — Açıklık tipi ile bağlı tip farklıdır | [opening.rs](../crates/shared/contracts/src/opening.rs), 587–617, 710–733: hazır tip aranır ve değerleri örneğe kopyalanır. Bu yol kullanıcı tip tablosu ve bütün örneklere canlı tip güncellemesi sağlamaz. |
-| A4 — Birleşim yeniden yazılmayacak | [wall_join.rs](../crates/shared/geometry-core/src/geom/wall_join.rs), 1–23 ve 116–156; [walls_joins.rs](../crates/native/application/src/walls_joins.rs), 53–129: mevcut çözüm ve kontrollü retler ileri editörün tabanıdır. |
-| A5 — Döşeme sınırının kaynağı saklanmıyor | [slabs_create.rs](../crates/native/application/src/slabs_create.rs), 128–143; [slab.rs](../crates/shared/contracts/src/slab.rs), 159–186: kaynak sınır kontura çevrilir. [slab_follow.rs](../crates/native/domain/src/slab_follow.rs), 1–5, 141–150 serbest korkuluk/parapet kenarlarını yeniler; döşeme çevresini duvara bağlı olarak büyütmez. |
-| A6 — Bina organizasyonu sınırlı | [arch.rs](../crates/shared/contracts/src/arch.rs), 450–463, 997–1007: kat/evre/durum/disiplin; [space.rs](../crates/shared/contracts/src/space.rs), 188–239: mahal. Bağımsız bölüm/bina/kanat hiyerarşisi bu alanlarda yok. |
-| A7 — Normal blok semantik daire modülü değildir | [blocks_define.rs](../crates/native/application/src/blocks_define.rs), 171–191, 257–267; [space_follow.rs](../crates/native/domain/src/space_follow.rs), 237–255: ölçü sahipliği ve mahal kaynağı için özel sınırlar var; blok içi içerik yeni ilişki grafiğinin yerine geçirilemez. |
-| A8 — Kamera kaydı ile mimari görünüş farklı | [cad_views.rs](../crates/shared/contracts/src/cad_views.rs), 30–58: ad/kimlik, merkez, boy ve açı. Kat, evre, temsil ve anotasyon kapsamını birlikte saklayan görünüş tarifi değildir. |
-| A9 — Kesit işareti kesit üretimi değildir | [viewmark.rs](../crates/shared/contracts/src/viewmark.rs), 154–196; [işaret geometrisi](../crates/shared/geometry-core/src/geom/viewmark.rs), 1–13: ok/işaret/hedef üretir. Gerçek cephe veya kesit geometrisi üretildiği sonucu çıkarılamaz. |
-| A10 — UI ve denetim tabanı kullanılacak | [architecture_settings.rs](../apps/desktop/src/architecture_settings.rs), 29–133; [ribbon.json](../catalog/v1/ribbon.json); [arch_audit.rs](../crates/native/application/src/arch_audit.rs), 39–90: görünür araç ayarları, bağlamsal şerit ve çok sayıda denetim mevcut. |
+### 1.2 Ana sorunlar
 
-### Bu oturumdaki arayüz gözlemi ve sınırı
+Önem: K kritik, Y yüksek, O orta. Kanıt sütununda ✓ bu turda kodda ya da resimde ayrıca doğrulananlar.
 
-- Yerelde bulunan **KentOS Architecture Live 3 QA** paketi açıldı. Duvar
-  seçildiğinde Duvar bağlamsal sekmesi ve özellikleri; Dikdörtgen duvar etkinken
-  görünür araç ayarları gerçekten görüldü. Eski `house-architecture-audit.kcad`
-  örneği açıldı, Home ile sığdırıldı, araç etkinleştirilip Escape ile bırakıldı.
-  Çizime geometri yazılmadı ve kaynak dosya kaydedilmedi.
-- Bu paket **27 Ekim tarihli dondurulmuş test derlemesidir**. `target/debug`
-  programının zamanı da güncel 30 Ekim kaynak tabanını doğrulamıyor. Dolayısıyla
-  bu gözlem güncel modül ayrımının veya 28–30 Ekim araçlarının GUI kabulü değildir.
-  Eski görüntüden bugünkü uygulamaya yeni kusur atfedilmemiştir.
-- Ekran görüntüleri bu oturumda görsel olarak incelendi; repoya eklenmedi.
-  Uygulamaya geçerken ilk iş, güncel commit'ten derlenmiş KentOS Mimari ile
-  aşağıdaki konut senaryosunu yeniden kaydetmektir. Bu kapı şu an **bekliyor**.
+| # | Sorun | Kanıt | Önem | Paket |
+|---|---|---|---|---|
+| S1 | Duvar zinciri ancak Enter'da yazılıyor; Esc çizilen parçaları sessizce atıyor | `apps/desktop/src/input.rs:472-489` ✓ | K | ADV-08 |
+| S2 | "pencere" yazınca Pencere yakınlaştır başlıyor: `PENCERE` takma adı yakınlaştırmanın, pencere aracınınki `PENCEREKOY`; ad aramasında takma ad başlıktan önce eşleşiyor | `apps/desktop/src/typed_names.rs:35-44`, `catalog/v1/additions.json` ✓ | K | ADV-08 |
+| S3 | 12 mimari pencere modal; karartılmış zemine tık kaydedilmemiş düzenlemeyi sormadan atıyor; seçimle çalışan pencereler açıkken seçim değişmiyor | A1 S3 | K/Y | ADV-09 |
+| S4 | Plan mimari pafta gibi görünmüyor: aracın duvar stili varsayılanı "Yok", poşe yok, kesilen/görünen kalem ayrımı yok; ölçeğe göre ayrıntı yalnız duvarda; plan kesme yüksekliği sabit 1,10 m | M0 resimleri ✓, `contracts/src/arch.rs:94-125` ✓, `contracts/src/opening.rs:21` ✓ | Y | ADV-13, 14, 15 |
+| S5 | Bütün mimari nesneler etkin katmana yazılıyor: 2+1 örneğinde 54 nesnenin hepsi "Çizim" katmanında. DXF'te mahalin adı ve alanı yazılmıyor | M0 ✓, `formats/src/dxf/writer/mod.rs:752-774` ✓ | Y | ADV-14, 25 |
+| S6 | Mimari şerit 46 komutla kabul edildi, bugün 78 komut taşıyor; 42'si ▾ arkasında. Büyük ana araç yok, sık işler (Duvarı kaydır, Uzat, Buda, Hepsini etiketle) menüde | A1 §1.1, M0 resmi ✓ | Y | ADV-09 |
+| S7 | 78 mimari komutun hiçbirinde kısayol yok, en kısa takma ad 3 harf, F1 listesinde mimari yok | A1 S4 | Y | ADV-08 |
+| S8 | Seçenek harfleri araçtan araca değişiyor; aracın seçeneği olmayan harf genel kısayolu başlatıyor | A1 S5 | Y | ADV-08 |
+| S9 | Terim çakışmaları: duvar kalınlığı istemde "Genişlik", panelde "Kalınlık"; "Döşeme" hem döşeme hem kaplama deseni; "Boşluk" hem açıklık hem şaft; "Duvar birleşimi" ile "Duvarları birleştir" ayrı araçlar | A1 S6 | Y | ADV-08 |
+| S10 | Duvar çizerken imleç etiketi CAD projesinde de "Semt" yazıyor | `crates/native/interaction/src/path.rs:2447` ✓ | Y | ADV-08 |
+| S11 | Seçenekler komut satırına odaklanıp harfle giriliyor (`E` Enter `0.25`): 2+1 izinde 15 odak değişimi. İmleç yanı değer kutusu var ama aracın seçeneklerini taşımıyor | `fixtures/interaction/v1/acceptance-flat.json` ✓ | Y | ADV-11 |
+| S12 | Başlangıç zayıf: Mimari, Giriş sekmesiyle açılıyor; yeni projede kat yok; şablon cm ve 1:50, proje başlangıcı m ve 1:100 (ADR 0626); örnek proje yok | `catalog/v1/templates/mimari.json:7-8` ✓, A1 S10 | Y | ADV-13 |
+| S13 | Tek adımda "oda" (duvar + mahal + etiket) yok. Odayı sürükleyerek büyütme menüde. Mobilya ve vitrifiye Mimari sekmesinde yok; "lavabo" araması sonuç vermiyor | A1 §4.1 | Y | ADV-11, 12 |
+| S14 | Komut geçmişi ham parametre döküyor; Türkçe-İngilizce karışık ve kimlikli ("adopt: evet · frame: corners · wall 01a1b609-…") | M0 resimleri ✓ | O | ADV-08 |
+| S15 | Sağ tık menüsü ve üzerine gelme kartı mimariye özgü değil (kart parsel bilgisi gösteriyor) | A1 S11 | O | ADV-09 |
+| S16 | İkonlar: üç duvar aracı bir ikonu, beş mahal aracı bir ikonu, Etiket ile Mahal numarala bir ikonu paylaşıyor; üç araç genel CAD ikonu ödünç alıyor; ikon turunda Mimari yok | ikon tablosu ✓ (A1 §5) | O | ADV-10 |
+| S17 | 1100 px genişlikte sekme satırı taşıyor; etkin bağlam sekmesi (Duvar) ekranda görünmüyor | M0 resmi ✓ | O | ADV-09 |
+| S18 | Duvar seçiliyken Öznitelikler'de önce genel CAD alanları geliyor; duvarın kalınlığı, stili ve yüksekliği kaydırmadan görünmüyor | M0 resmi ✓ | O | ADV-09 |
+| S19 | Etiketler duvar çizgisine, geçici ölçüler mahal etiketine biniyor; ölçü yalnız alttaki dış zincir | M0 resimleri ✓ | O | ADV-16 |
+| S20 | Düşey model yok: çatı, kiriş, lento ve tavan nesnesi yok. Bina kesiti ve cephe türetilmiyor; yalnız oda iç görünüşü var (ADR 0799) | A2 §1, §3 | Y | ADV-18, 19, 20 |
+| S21 | Tadilat: açıklığın evresi duvarından okunuyor, mevcut duvardaki yeni kapı gösterilemiyor; araçlarda evre seçilemiyor | `contracts/src/entity.rs:1999-2010` ✓, A1 S16 | Y | ADV-17 |
+| S22 | Türk proje takımının büyük parçaları yok: vaziyet planı ve emsal/TAKS, metrekare cetveli, kat irtifakı tablosu, çatı planı, grafik doğrama listesi, Türk anteti ve pafta takımı | A2 §4, W4 §3 | Y | ADV-22, 23, 24 |
+| S23 | Kabul açığı: 27 Ekim'den beri gerçek pencerede mimari kabul yok; 35 ADV ADR'sinin 32'si "elle denenmedi" diyor. Kabul izleri araçları kimlikle başlatıyor, kenetleme ve yardımları kapatıyor; `kullan` modül seçemiyor; `snapshot --sekme arch` "böyle bir şerit sekmesi yok" diyor | A3 §2, `apps/desktop/src/snapshot.rs:72-76` ✓ | Y | ADV-26 |
+| S24 | 200 çizelgeli 100 dairede kare 163 ms (hedef 100 ms); etiket motoru artımlı yerleşmiyor | ADR 0786, A3 §4 | O | ADV-07 |
 
-## 2. Piyasa araştırması: hangi davranışlar değerli?
+### 1.3 Ölçülen başlangıç değerleri
+
+Bu sayılar her fazın sonunda yeniden ölçülür (§7).
+
+| Ölçü | Bugün | Kaynak |
+|---|---|---|
+| 2+1 daire kabul izi | 157 etkileşim: 11 araç, 15 odak, 28 yazma, 48 tuş, 38 tık, 17 hareket | `acceptance-flat.json` ✓ |
+| İki katlı konut izi | 8 araç, 19 odak, 36 yazma, 52 tuş, 15 tık | `acceptance-house.json` ✓ |
+| Mimari şerit | 78 komut; 42'si ▾ arkasında; 0 büyük düğme | A1 §1.1 |
+| Kısayolu olan mimari komut | 0 / 78 | A1 S4 |
+| Aynı ikonu paylaşan komut | duvar 3, mahal 5, etiket 2 | ikon tablosu ✓ |
+| 2+1 örneğinde kullanılan katman | 1 (54 nesne) | M0 ✓ |
+| Ölçeğe göre ayrıntısı olan nesne türü | 1 (duvar) | `arch.rs:94-125` ✓ |
+| 100 daire + 200 çizelgede kare | 163 ms | ADR 0786 |
+
+### 1.4 Planın kendi durumu
+
+- `architecture.md`: 26 maddenin 18'i `[x]`, 8'i `[~]` (BASE-01, PERF-01, DRAW-03, OPEN-01, OPEN-02, SPACE-01, SPACE-02,
+  DOC-04).
+- **ADV-01…07:** hepsi `[~]`.
+- **`[x]` olup kabulü bugünle uyuşmayanlar:**
+  - UX-02: kabul 46 komutlu şeride aitti.
+  - UX-01: 17 aracın panelindeki 56 satır komut satırında yok (ADR 0776 B9).
+  - UX-03: şablon hâlâ cm ve 1:50.
+  - DRAW-02: kalıcı bağ hâlâ bölme aracına bağlanmadı; `walls_partition.rs:229-235` sıradan duvar yazıyor.
+  - DIM-01: ADR 0695'in durum satırı eski.
+- **Bu turda düzeltilen belge tutarsızlıkları:** ADV-04'ün "Açık: bölüm çizelgesi" notu ADR 0795 ile kapanmıştı.
+  `architecture.md`'deki eski KCAD numaraları (104–107 yerine 109–112) aynı commit'te düzeltildi.
+
+## 2. Piyasa araştırması
+
+### 2.1 30 Ekim turu
 
 İncelenenler üreticilerin resmî teknik/kullanım belgeleridir; ticari yazılımlar
 bu bilgisayarda çalıştırılmış sayılmaz. Kaynakların sürümleri bilerek yazılmıştır;
@@ -88,9 +134,94 @@ bir belgede anlatılan yetenek bütün sürümlere veya ücretsiz sürüme genel
 KentOS kararları aşağıdadır; üreticilerin algoritması, veri modeli veya kapalı
 kaynak kodu biliniyormuş gibi bir öneri yapılmamaktadır.
 
-## 3. Yedi odaklı geliştirme paketi
+### 2.2 7 Kasım turu: ayrıntıyı ve pratikliği ne getiriyor?
+
+Kimlikler (R3, A12, B4 …) araştırma notlarındaki kaynak listelerine aittir. Ürün adları, sürümleri ve görüntü adresleri
+orada; ticari ürünler bu bilgisayarda çalıştırılmadı.
+
+**AutoCAD düzeyinde ayrıntı veren mekanizmalar** (W1, W2):
+
+| Mekanizma | Kim nasıl yapıyor | KentOS karşılığı |
+|---|---|---|
+| Görünüm yönüne ve ölçeğe göre gösterim | AutoCAD Architecture: display configuration → set → representation [W1 R3, R4]. Revit: Detail Level [W2 R12]. Archicad: Model View Options ve Partial Structure Display [W2 A5, A6] | Yalnız duvarda üç düzey var → ADV-15 |
+| Bileşen önceliği ve temizleme grupları | AutoCAD Architecture: düşük numara üstün, temizleme grupları [W1 R5, R6]. Archicad ve Vectorworks bileşen birleşimleri [W2 A7, V9] | Var (ADR 0771); kolon–duvar yok → ADV-18 |
+| Mahal sınırları ve alan şemaları | AutoCAD Architecture: base/net/usable/gross [W1 R8]. Revit area schemes [W2 R17]. Allplan DIN 277 [W2 L5] | Net/eksen/brüt var; resmî alan profili yok → ADV-22 |
+| Tadilat | AutoCAD Architecture renovation mode [W1 R7]. Revit phase filters [W2 R9, R10]. Archicad renovation filters [W2 A11]. Vectorworks phasing [W2 V7, V8] | Kısmen; açıklığın kendi evresi yok → ADV-17 |
+| Katman anahtarı ve standart | AutoCAD Architecture layer key styles. AutoCAD 2026.1'de bulut, tablo ve görünüm penceresi kendi katmanına [W1 A6]. CAD Standards [W1 A19]. Archicad layer combinations [W2 A10] | Yok → ADV-14 |
+| Otomatik ölçü | Archicad automatic exterior dimensioning [W2 A12]. Vectorworks exterior walls [W2 V11]. QDIM Advanced ve Smart Dimension [W1 B1, Z1] | Ölçü dizileri var; dört cephe tek komut yok → ADV-16 |
+| Kesit ve görünüş üretimi | BricsCAD BIM generating drawings, eski paftayı kırmızı/turuncu işaretler [W1 B9]. AutoCAD Architecture | Yalnız oda iç görünüşü → ADV-19 |
+| Çift yönlü çizelge | Archicad interactive schedule [W2 A15]. Vectorworks worksheets [W2 V12] | Kaynak hücreden düzenleme var; genişletilir |
+| Revizyon ve yayın | Archicad revision management [W2 A17, A18]. Vectorworks title block manager ve revisions [W2 V13, V14] | Yayın var; pafta başına revizyon açık → ADV-24 |
+
+**Pratikliği getiren desenler** (W3 §2'nin dokuz mekanizması):
+
+- **Aynı nesne, iki giriş yolu:** fareyle kaba çizim ve imleç yanında kesin sayı aynı araçta. Örnekler: SketchUp
+  Measurements, Archicad Tracker, Vectorworks Data bar, AutoCAD Dynamic Input. Hızlı çizilen duvar sonradan
+  ayrıntılandırılan duvarın kendisidir.
+- **Önce yaklaşık çiz, sonra ölçüyle düzelt:** geçici ölçüye tıkla ve değer yaz. Örnekler: Revit [W2 R6], Chief Architect
+  KB-01116, Rayon, SmartDraw. Tek tıkla kalıcı ölçü ya da bağ olur.
+- **Oda önce:**
+  - BricsCAD BIM QuickDraw: oda sürükle → duvar + döşeme; komşu oda; L oda; kat ekle [W1 B4, B5].
+  - Floorplanner ve Archisketch.
+  - Chief Architect'in mekân planlama kutuları.
+- **Duvardan oda:**
+  - Sweet Home 3D: çift tık.
+  - Rayon: tek tık.
+  - Revit: oda ve etiketi birlikte koyar [W2 R16].
+  - Vectorworks: duvarlardan mahal [W2 V6].
+- **Görünür kenetleme:**
+  - Vectorworks SmartCursor ipuçları;
+  - SketchUp çıkarım renkleri ve ok tuşuyla eksen kilidi;
+  - Revit'te nokta türüne göre şekil.
+- **Eylem nesnenin yanında:** BricsCAD Quad imleci, o türde son kullanılan komutlar [W1 B6]. Archicad Pet Palette.
+- **Katalog:**
+  - Sweet Home 3D mobilyayı duvara yaslar, kendiliğinden döndürür.
+  - AutoCAD Smart Blocks Placement önceki yerleşimden konum önerir [W1 A11].
+- **Akıllı varsayılan, bilinçli kaçış:** mıknatıs açık, Alt ile kapalı; kademeli açılan ayar; kişiye göre kısayol kümesi;
+  modelden kendiliğinden pafta, ölçü ve çizelge.
+
+**Türk pazarı — İdeCAD Mimari** (W2 §4):
+
+- TAKS ve KAKS imar durumundan girilir. Emsal harici %30 denetimi varsayılandır. Hesap eskizde canlı gösterilir; sınırı aşan
+  denetim işaretlenir.
+- Arsa poligonu XY koordinat tablosundan yapıştırılır; çekme mesafeleri görsel tanımlanır.
+- Mahal kapalı alana tıklanarak oluşur. Mahal ayarlarında sıva payı, kolon/merdiven/duvar düşümü ve kaplama yazıları var.
+- Mahal listesi kendiliğinden üretilir.
+- Ölçülendirme: iç ölçü ve dış ölçü ayrı.
+- 20 kalem kalınlığı tanımlanır.
+- Mimari plan ile kalıp planı aynı dosyada, iki kip arasında geçilir.
+- "Ruhsat paftaları" hazırdır.
+
+### 2.3 Mevzuat ve standartlar (W4)
+
+Madde numaraları ve sayılar resmî metinden okundu; ayrıntı ve bağlantılar W4 raporundadır. Okuma aracının
+kısalttığı bentler raporda ◐/⚠ ile işaretlidir ve kural tablosuna girmeden önce aynen okunur.
+
+| Kaynak | KentOS için önemli olan |
+|---|---|
+| **Planlı Alanlar İmar Yönetmeliği** (PAİY; RG 03.07.2017/30113, son değişiklik 01.07.2026/33297) | **Md. 4:** net, brüt, genel brüt ve toplam brüt alan; sıva payı 2,5 cm; merdiven altı 1,80 m.<br>**Emsal ve emsal harici:** 5(8) %30; 20(8), 21, 22.<br>**Ölçüler:** bahçe mesafeleri (23); kat ve iç yükseklikleri (28); piyes asgarileri (29); giriş ve rampa (30); merdiven (31: rıht 0,16/0,18, 2a+b = 60–64); ışıklık ve hava bacası (32); asansör (34); korkuluk 1,10 m ve kapılar (38–42).<br>**57(2)(a):** ruhsat eki mimari projenin listesi. **57(10):** ilk pafta bilgi tablosu. **57(27):** ölçek. **57(29):** mahal listesi. |
+| **Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik** (RG 05.08.2026/33331, yürürlük 01.09.2027; geçici Md. 1 ile 2029–2033 arası kademeli) ✓ | **Md. 4:** çizimler PDF/A, model IFC olarak teslim edilir.<br>**Md. 7(1):** katman ve sembol adları, ölçü, yazı ve çizgi tipleri **EK-4**'e göre. **Md. 7(2):** mahal numarası kat + bölüm/fonksiyon + sıra no, **EK-3**'e göre.<br>**Md. 9(1):** CAD çizimleri BIM modelinden üretilir; model ile PDF/A çizimleri uyumlu olur.<br>EK-1…EK-9 (proje kodu, dosya adları, IFC sınıfları ve öznitelikleri, kalite formları) ayrı PDF'te; henüz okunamadı. |
+| **e-PYS Yönetmeliği** (RG 05.08.2026/33331, yürürlük 01.09.2028) | Ruhsat süreci e-PYS'de yürür; yüklemeyi proje müellifi yapar; dosyalar yukarıdaki yönetmeliğe uygun olur. |
+| **Binaların Yangından Korunması Hakkında Yönetmelik** | Yüksek bina eşikleri 21,50 / 30,50 m. Kaçış mesafesi duvardan 40 cm içeriden ölçülür. Ek-5/A kullanıcı yükleri, Ek-5/B ve Ek-14 kaçış uzaklıkları, çıkış genişlikleri; konutta yüksekliğe göre merdiven sayısı (48(5)). |
+| **Otopark Yönetmeliği** | Park yeri 2,40 × 4,90 m; engelli 3,50 m; rampa %15/%20, genişlik ve iç yarıçap 2,75 m; ihtiyaç bağımsız bölüm alanından. |
+| **Sığınak Yönetmeliği** (07.11.2025 değişikliği) | Oda sayısına göre 2/3/4 kişi; kişi başı 1 m²; en az 20 m²; 60 cm beton; 100 m²'yi aşınca iki çıkış. |
+| **Kat Mülkiyeti Kanunu** Md. 2–4, 12 | Bağımsız bölüm, eklenti, ortak yer, arsa payı; kat irtifakı paylaşım tablosu. |
+| **Bina Enerji Performansı Yönetmeliği ve TS 825** (Ekim 2024; 01.04.2025'ten beri zorunlu) | Katmanlı yapı bileşeninin U değeri; ısı yalıtım raporu ruhsat eki. |
+| **Sivas Belediyesi İmar Yönetmeliği** (RG 10.11.2022/32009) | PAİY'den ayrılan yerel değerler: merdiven 1,30 m; asansör 3 kattan itibaren; ticari zemin kat 5,00 m; kar siperliği; kırmızı kiremit. Hava bacasında PAİY ile çelişki: 0,30 m / 0,36 m² ile 0,60 × 0,60 m. Sürümlü ve katmanlı kural motoru gerekir. |
+| **Mimarlar Odası çizim ve sunuş esasları** (İstanbul Büyükkent Şb., 2015) | **Mahal etiketi:** elips içinde no, ad, net m².<br>**Kodlar:** doğrama kodları K/P/GK/CK; aks X harf, Y rakam; ±0,00 ve röper kot sembolü.<br>**Ölçü:** dış ölçü zinciri 3 (ön proje), 4 (uygulama); iç ölçü mahal başına 2+2.<br>**Pafta:** antet sağ altta; pafta kodları; A4 katlama. |
+| **TSE standartları** (ücretli; kapsamla) | TS EN ISO 128 (çizgiler), TS EN ISO 7200 (antet), TS EN ISO 13567 (CAD katmanları), TS EN ISO 4157 (yapı bölümlerinin gösterimi), TS ISO 9836 (alan tanımları), TS 9111 (erişilebilirlik). "TS 3807" diye bir tarama standardı bulunamadı. |
+
+Mevzuat denetimi resmî onay değildir. Kural profili kaynak, madde, Resmî Gazete tarihi ve yürürlük aralığıyla sürümlenir.
+Hangi profilin uygulanacağına kullanıcı karar verir (§8).
+
+## 3. Mevcut paketlerin durumu (ADV-01…07)
+
+Bu paketlerin 30 Ekim–1 Kasım metni korunmuştur. Her birinin başına **7 Kasım** notu eklendi: kodla sınanmış bugünkü
+durum ve kalan işin hangi yeni pakete ya da sıraya (§5) geçtiği.
 
 ### ADV-01 — Bağlantılı odaları net ölçüyle kur ve güvenle değiştir [~]
+
+**7 Kasım:** bağlar, önizleme ve çelişki kartı kodda var. Kalanlar: ölçülü bölme oluştururken kalıcı bağ yazmıyor (`walls_partition.rs:229-235`; ARCH-DRAW-02'nin `[ ]`'i) ve bağların yay kenar, kolon, aks ve döşeme kapsamı (ADR 0770 sınırları) → M49; odayı sürükleyerek büyütme → M23; gerçek pencerede kabul → ADV-26.
 
 _Durum (31 Ekim 2026, [ADR 0770](../docs/adr/0770-linked-rooms-and-architectural-bonds.md), [ADR 0780](../docs/adr/0780-bonds-in-the-way.md), [ADR 0790](../docs/adr/0790-bonds-while-dragging-and-together.md)):_ ortak duvarı benimseyen
 Dikdörtgen duvar, kaydırmanın etkisi (önizleme kartı), Bu ölçüyü koru (kilit karesi), duvar çizgisi ve pervaz bağları
@@ -132,6 +263,8 @@ sınırlıdır; genel otomatik ev tasarımcısı değildir.
 
 ### ADV-02 — Yapı bileşenlerini ve bağlı sınırları uygulama kalitesine getir [~]
 
+**7 Kasım:** Kalanlar: varsayılan duvar stilleri ve poşe → M8; kolon–duvar birleşimi ve kolon malzemesi → M41; IFC → M47; kitaplık kaynağının izlenmesi; gerçek pencerede kabul.
+
 _Durum (31 Ekim 2026, [ADR 0771](../docs/adr/0771-building-parts-and-bound-boundaries.md)):_ düğüm kararı, sabit referans
 ve etkisi, uçta ve sövede dönen katmanlar, kaynağa bağlı döşeme ve kopukluk yapıldı.
 _ADR 0785 (ADV-02b, 31 Ekim 2026):_ malzeme kimliği (proje malzemeleri, bileşen ve döşeme bağı, Metinlerden al ile kayıpsız
@@ -170,6 +303,8 @@ elle verilen düğüm kararını ve kaynak bağlarını geri getirsin.
 
 ### ADV-03 — Gerçek kapı/pencere tipleri, örnek kontrolü ve net kullanım [~]
 
+**7 Kasım:** Kalanlar: kapı ve pencerenin ölçeğe göre temsili → M11; "90/210", doğrama kodları ve odaya göre numara → M28; grafik doğrama listesi → M38; Aynı tiptekileri seç'in bağımsız bölüm kapsamı; dört kanatta eşit olmayan kanat; gerçek pencerede kabul.
+
 _Durum (31 Ekim 2026, [ADR 0772](../docs/adr/0772-door-window-types-instances-clear-width.md)):_ tipler, örnek istisnası,
 dört en, yapı, takip raporu ve Kapılar denetimi yapıldı. Döner, cebe giren ve katlanır kapı, kayar kapının rayı ve bindirmesi
 ([ADR 0777](../docs/adr/0777-revolving-pocket-folding-doors.md)). Döner/katlanır/raylı sürme kapının çarpışma denetimi düzeltmesiyle,
@@ -205,12 +340,14 @@ PDF aynı bilgiyi versin. Kapı önü çakışması çizimde açıklanabilsin.
 
 ### ADV-04 — Mahalleri bina programı ve bağımsız bölüm bağlamında yönet [~]
 
+**7 Kasım:** bölüm çizelgesi ADR 0795 ile yapılmıştı; aşağıdaki durum notu düzeltildi. Kalanlar: Türk alan motoru, emsal/TAKS ve kat irtifakı (resmî alan profili ve arsa payı) → M29–M31; mevzuat denetimi → M33–M35; gerçek pencerede kabul.
+
 _Durum (31 Ekim 2026, [ADR 0773](../docs/adr/0773-building-program-units-and-design-brief.md),
 [ADR 0784](../docs/adr/0784-building-wing-window-and-common-area-shares.md)):_ bölüm/ortak/dış alan üyeliği, tasarım
 hedefi ve gerçek/hedef/fark, net geçiş ve kapı/komşu/donatı denetimleri istisnalarıyla, böl/birleştir kararı ve
 durdurulabilir denetim; bina/kanat penceresi ve katları, ortak alanların bağımsız bölümlere tam payı (`kentos.share/1`:
-eşit, net alana, ağırlığa göre; kanat/bina/program kapsamı, en büyük kalan, paylar havuza tam eşit) yapıldı. Açık:
-bölüm çizelgesi ([ADR 0795](../docs/adr/0795-unit-schedule.md)). Açık: resmî alan profili ve arsa payı, gerçek pencerede elle kabul.
+eşit, net alana, ağırlığa göre; kanat/bina/program kapsamı, en büyük kalan, paylar havuza tam eşit) yapıldı. Bölüm çizelgesi de
+yapıldı ([ADR 0795](../docs/adr/0795-unit-schedule.md)). Açık: resmî alan profili ve arsa payı, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Tasarımcı yalnız oluşan alanı okumakla kalmasın;
 hangi odanın hangi daireye ait olduğunu ve tasarım hedefini karşılayıp
@@ -240,6 +377,8 @@ mahal birleşiminde kimlik/numara kararı açık olsun. Daire toplamları ortak
 alanları iki kez saymasın; GUI/Python/MCP aynı hesap ve bulguları üretsin.
 
 ### ADV-05 — İlişkili oda/daire modülleri ve kontrollü tekrar kullanımı [~]
+
+**7 Kasım:** Kalanlar: modüle kolon, merdiven, rampa, döşeme, mahal ayırıcı ve mutfak dizisi girmiyor, eğri duvar reddediliyor (`arch_modules.rs:224-235`) → M50; seçenekler arası eşleme ve birleştirme; gerçek pencerede kabul.
 
 _Durum (31 Ekim 2026, [ADR 0775](../docs/adr/0775-room-modules-and-controlled-reuse.md), [ADR 0779](../docs/adr/0779-room-modules-members-drift-and-flats.md), [ADR 0788](../docs/adr/0788-design-options.md), [ADR 0796](../docs/adr/0796-multi-storey-modules-and-loose-level-repeat.md), [ADR 0808](../docs/adr/0808-design-option-combinations.md), [ADR 0809](../docs/adr/0809-comparing-option-combinations.md), [ADR 0810](../docs/adr/0810-loose-repeat-skips-what-is-there.md), [ADR 0811](../docs/adr/0811-single-storey-module-instances.md)):_
 tek kat, düz duvarlı oda ve bütün daire modülü; tanım ve örnek ayrı, yerleştirme, planlı kaynak güncelleme, yerel
@@ -277,6 +416,8 @@ Host/mahal/ölçü kimlikleri karışmasın; tek Undo, KCAD yeniden açma ve dı
 aktarmadaki kayıp raporu doğrulansın.
 
 ### ADV-06 — Mimari görünüşler, proje gezgini ve koordineli yayın [~]
+
+**7 Kasım:** Kalanlar: bina kesiti ve görünüşü ile kapı/pencere açılımı ADV-19'a geçti → M42–M43; yayın/revizyon birlikteliği ve Türk pafta takımı ADV-24'e → M37; gerçek pencerede kabul.
 
 _Durum (31 Ekim 2026, [ADR 0774](../docs/adr/0774-architectural-view-recipes.md)):_ adlı görünüm üstünde sürümlü görünüş tarifi
 (kat, alt kat, evre, katman durumu, gizlenen türler, ölçek), bağlı paftanın tarifle çizmesi ve pafta setinin tarife göre etkisi
@@ -320,6 +461,8 @@ Kesit işareti bulunması, gerçek kesit üretimi kabulü yerine geçmesin.
 
 ### ADV-07 — Konut çizimini baştan sona ölçülen bir kalite teslimine dönüştür [~]
 
+**7 Kasım:** beş kabul senaryosu güncel ikiliyle oynatıldı, bütün beklentiler tuttu; ama izler araçları kimlikle başlatıyor ve yardımları kapatıyor, şerit ve kenetleme ölçülmüyor (S23). Ölçüm ADV-26 (M1) ile her fazın kapısı olur. Kalanlar: etiket motorunun artımlı yerleşimi ve 163 ms → M51; araçlarda evre → M39; gerçek ofis DWG'si → M48.
+
 _Durum (31 Ekim 2026, [ADR 0776](../docs/adr/0776-measured-quality-acceptance-of-an-apartment.md)):_ 2+1 daire gerçek
 girdiyle iz ve bölüm ölçüsü, Python/MCP/masaüstü anlamsal eşitliği, büyük koordinat ve ölçek regresyonları, 1/20/100 daire
 ölçümü, dört küçük düzeltme. B6 ve binanın çizelgeleriyle B7 kapandı ([ADR 0782](../docs/adr/0782-design-change-reads-only-what-it-reaches.md));
@@ -357,29 +500,573 @@ güncel binary/commit, gerçek fare/klavye, önce/sonra görüntü, bağımsız 
 kontrolü ve çıktı ile kanıtlansın. Tek otomatik sahne görüntüsü GUI kabulü
 değildir; eski ADR test sayıları yeni test çalıştırılmış gibi kullanılmaz.
 
-## 4. Uygulama sırası ve bitiş koşulu
+## 4. Yeni paketler (ADV-08…ADV-26)
 
-| Sıra | İnce, tamamlanabilir teslim | Bağımlılık / bitiş kanıtı |
-| --- | --- | --- |
-| 0 | Güncel Mimari modülünde 2+1 temel akışını ölç, gerçek sorunları tekrar üret | Eski derleme ile güncel kaynak ayrımı kapanır; `ARCH-BASE-01` ve performans açıkları görünür kalır. |
-| 1 | ADV-01: ortak bölmeyi net ölçüden değiştir, tek isteğe bağlı mesafe bağı | Mevcut araçlar korunur; komşu etkisi, çelişki, Undo ve API eşdeğerliği geçer. |
-| 2 | ADV-02: bağlı döşeme sınırı ve bir bileşen birleşim/kapama örneği | Kaynak/bağımsız ayrımı, duvar değişimi ve 1:20 çıktı geçer. |
-| 3 | ADV-03: kullanıcı kapı tipi, örnek istisnası ve açık ölçü referansı | 20 örnek güncellemesi, net geçiş ve çizelge aynı sonuç verir. |
-| 4 | ADV-04 + ADV-06'nın ilk dilimi | Bağımsız bölüm/alan hedefi ve iki kayıtlı mimari görünüş; mevcut pafta sistemi kullanılır. |
-| 5 | ADV-05, sonra gelişmiş türetilmiş görünüş/alternatif kapsamı | Dar modül kabul edilmeden bütün bina/alternatif sistemi açılmaz. |
-| Her sıra | ADV-07 ve [plugins.md](plugins.md) ortak kapıları | Kullanılabilirlik, performans, veri/API ve gerçek GUI kanıtı olmadan `[x]` yok. |
+Her paket bir kullanıcı sonucu, kapsam, kaynak ve ilk kabul taşır. Kaynak kimlikleri araştırma notlarına aittir. Her dilim
+başlamadan konunun güncel belgeleri yeniden okunur (§6). Paketler yeni olduğu için hepsi `[ ]`; işaret yalnız kanıtlanan
+alt maddeyle ilerler.
 
-Her alt teslimin ürüne geçişinde gerekli KCAD sürümü/uyumu, kilitli katman,
-belge revizyonu, bulut değişiklik paketi ve yetki yeniden kontrol edilir.
-İlgisiz renderer, birim veya etkileşim ailesi topluca yeniden yazılmaz.
-Yeni davranış eski belgede varsayılan olarak yeni bağ/ölçek üretmez.
+### 4.1 Arayüz sağlığı ve hız
 
-Mimari çizim kuralları, kurum/ofis standardı ve mevzuat denetimi ayrı
-profiller olmalıdır. Standart adı/sürümü, kapsam, birim ve yorum kaynakları
-kaydedilmeden “uluslararası standartlara tam uygun” veya “ruhsata uygun”
-iddiası yapılmaz. Yönetmelik profili için uzman/kurum kabulü ayrıca gerekir.
-Bu plan otomatik hukuki/proje onayı tanımlamaz.
+#### ADV-08 — Kritik kullanım hataları: Esc, adlar, terimler ve harfler [ ]
 
-Ham ekran görüntüleri Git'e girmez; yerel ignored kanıt alanında tutulur.
-Repoda kısa sonuç, kaynak commit'i, yeniden üretim adımı ve gerekli küçük
-örnek model bulunur. Bu planın kabulü uygulamanın üretim kabulü değildir.
+**Kullanıcı sonucu:** Çizilen iş Esc'de kaybolmaz. "pencere" yazınca pencere aracı açılır. Aynı şeyin her yerde tek adı ve
+tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S10, S14.
+
+- **Esc:** çok parçalı duvar ve çoklu çizgiyle çalışan mimari araçlar (ölçülü bölme, döşeme, mahal ayırıcı) Esc'de
+  tamamlanmış parçaları yazar ya da tek adımda "Geri getir" sunar, bunu da söyler. AutoCAD'in LINE ve PLINE'ı ile Revit
+  duvar zincirinin Esc davranışı dilim başında resmî belgeden okunur.
+- **Takma adlar ve kısayollar:**
+  - Mimari'de "pencere" pencere aracını açar.
+  - İki harfli Türkçe takma adlar (ör. DU, KA, PE, MA, OD) ve AutoCAD Architecture adları (WALLADD, DOORADD, WINDOWADD,
+    SPACEADD …) birlikte tanınır.
+  - En sık beş araca kısayol verilir; F1 mimari araçları listeler.
+  - Takma ad çakışma testi yazılır.
+- **Terim sözlüğü:** istem, araç ayarı ve Öznitelikler aynı adı kullanır. Ayrılan çiftler:
+  - duvarın "Kalınlık"ı ile çizginin "Çizgi kalınlığı";
+  - "Döşeme" ile "Döşeme kaplaması";
+  - "Boşluk" ile "Şaft";
+  - "Duvar birleşimi" ile "Duvarları birleştir".
+- **Seçenek harfi sözleşmesi:** aynı anlam aynı harfi alır. Çalışan aracın seçeneği olmayan harf aracı bırakmaz, uyarır.
+- **Açı:** duvar çizerken imleç "Semt" değil "Açı" yazar (doğudan saat yönünün tersine).
+- **Komut geçmişi:** ham anahtar ve kimlik yerine Türkçe özet yazar ("Dikdörtgen duvar · 11 × 8 m · iç net · 25 cm ·
+  Zemin kat"); ayrıntı açılınca görünür.
+
+**İlk kabul:**
+- 6 köşeli duvar zinciri + Esc: duvarlar çizimde kalır (ya da tek Ctrl+Z ile geri alınır) ve bildirim çıkar.
+- "pencere", "oda" ve "lavabo" ilk sırada doğru komutu bulur.
+- Terim ve harf tutarlılık testi katalogdan üretilir.
+- Python ve MCP aynı sonucu verir.
+
+#### ADV-09 — Mimari şerit, bağlam ve düzenleyici pencereler [ ]
+
+**Kullanıcı sonucu:** Ana araçlar ilk bakışta bulunur. Sık iş tek tık, seyrek iş bir menü uzağındadır. Düzenleyici
+pencereler iş kaybettirmez. Dayanak S3, S6, S15, S17, S18.
+
+- **Şerit:**
+  - Duvar, Oda, Kapı, Pencere, Mahal ve Donatı büyük düğmedir.
+  - Aileler bölünmüş düğmededir (Duvar ▾: duvar, dikdörtgen, ölçülü bölme, çizgiden).
+  - Görünen düğme ≤ 30, menü başına ≤ 6 öğe.
+  - Katalogdaki `lead`/`keep` kullanılır; panel adları korunur (DESIGN.md §7.3.1).
+- **Açılış:** Mimari modülü Mimari sekmesiyle açılır; şeritte etkin kat ve evre seçicisi bulunur.
+- **Bağlamsal sekmeler:**
+  - Duvar sekmesinde Duvarı kaydır, bağlar ve stil/malzeme bulunur.
+  - Mahal sekmesinin düğme adları düzeltilir.
+  - Sağ tık menüsünün ilk bölümü bağlamın araçlarıdır.
+  - Üzerine gelme kartı mimari alanları gösterir.
+- **Pencereler:** Bina programı, Duvar stilleri, Tipler, Malzemeler, Modüller, Seçenekler ve Metraj yüzer ya da dok
+  paneline geçer. Kaydedilmemiş değişiklik sorulur; "Çizimden seç" bulunur. Düzeltme ortak `kentos_ui` bileşenindedir.
+- **Öznitelikler:** mimari nesnede önce kendi alanları gelir (kalınlık, stil, yükseklik, referans, kat, evre), genel CAD
+  alanları sonra.
+- **Sekme satırı:** 1100 px'te taşmaz; etkin bağlam sekmesi her zaman görünür (ortak bileşende).
+- **Alt panel:** Mimari'de Mahal listesi ve Denetim bulguları bulunur; ilgisiz CBS sekmeleri gizlenir.
+
+**Kaynak:** DESIGN.md §7.3.1, §7.9; BricsCAD Quad [W1 B6]; Archicad Pet Palette (W3 E).
+
+**İlk kabul:**
+- 1440×900 ve 1100×650, 13 ve 18 px, iki temada resimler.
+- Şerit sayım testi.
+- Pencere açıkken seçim değiştirilip modüle eklenebilir; zemine tık veri kaybettirmez.
+
+#### ADV-10 — Mimari ikon seti [ ]
+
+**Kullanıcı sonucu:** Her komutun kendi, anlaşılır ikonu vardır; aileler aynı görsel dili konuşur. Dayanak S16.
+
+- **Paylaşılan ikonlar ayrılır:**
+  - Duvar / Dikdörtgen duvar / Ölçülü bölme;
+  - Mahal / Toplu mahal bul / Mahal ayırıcı / İç nokta seç / Mahal kaynakları;
+  - Etiket / Mahal numarala;
+  - birbirine benzeyen yedi çizelge ikonu.
+- **Ödünç ikonlar:** Duvar ölçüleri, Açıklık dağıt ve Duvarı kaydır'ın ödünç aldığı genel CAD ikonları mimari ikonla
+  değişir.
+- **Yeni araçlar:** Oda, Donatı, Kot, Çatı, Kesit üret vb. aynı ızgarada çizilir (14, 16, 20 px, iki tema; DESIGN.md §6).
+- **İkon turu ve gönderme:** `icon_tour.rs`'e Mimari sahnesi eklenir. Çizilen her ikon sahibine resim olarak gönderilir
+  (sahibin 7 Kasım isteği).
+
+**İlk kabul:**
+- Mimari sekmesinde aynı ikonu taşıyan iki komut yoktur (test).
+- İkon tablosu 16 ve 20 px'te, açık ve koyu temada resimlenir.
+
+#### ADV-11 — Hızlı çizim: imleç yanı seçenekler, tıklanabilir ölçü, kenet ve Oda aracı [ ]
+
+**Kullanıcı sonucu:** "4,20 × 3,60 bir yatak odası, yanına 1,20'lik koridor" fareyle ve birkaç sayıyla çizilir; komut
+satırına odaklanmak gerekmez. Dayanak S11, S13.
+
+- **İmleç yanı seçenekler:** imleç yanındaki değer kutusu aracın seçeneklerini de taşır: uzunluk ve açı, kalınlık, boy
+  referansı. Alanlar arasında Tab ile geçilir; kutuya tıklamadan yazılır. Örnekler (W3 B): SketchUp Measurements, Archicad
+  Tracker, Vectorworks Data bar, AutoCAD Dynamic Input.
+- **Tıklanabilir geçici ölçü:** ölçüye tıklanır, değer yazılır, eleman taşınır. Tek tıkla kalıcı ölçü ya da "Bu ölçüyü
+  koru" bağı olur. Örnekler: Revit [W2 R6], Chief KB-01116; ADV-01 ile birlikte.
+- **Mimari kenet türleri:** duvar yüzü, ekseni ve çekirdeği; açıklık merkezi ve kenarı. Kenetin türü imlecin yanında yazı ve
+  şekille görünür (Vectorworks SmartCursor ipuçları).
+- **Oda aracı:** dikdörtgen ya da çokgen oda → duvarlar + mahal + etiket, tek adımda. Bitişik oda ortak duvarı benimser
+  (bugünkü "Ortak duvar: Benimse"). Duvar stili ve mahal adı listeden seçilir. Örnekler: BricsCAD BIMQUICKDRAW [W1 B4, B5],
+  Floorplanner, Archisketch.
+- **Kendiliğinden mahal:** döngü kapanınca isteğe bağlı mahal oluşur; çift tık da mahal yapar (Sweet Home 3D, Rayon,
+  Cedreo). Sürüklerken canlı alan ve program hedefiyle fark görünür (ADV-04).
+- **Odayı büyütme:** mahalin kenar tutamacı odayı büyütür; Duvarı kaydır'ın planını bağlarla kullanır.
+
+**İlk kabul:**
+- 2+1 kabul izi Oda aracı ve imleç yanı seçeneklerle yeniden yazılır: etkileşim 157 → ≤ 80, odak değişimi 15 → ≤ 3.
+- Esc, Undo, Python ve MCP aynı sonucu verir.
+
+#### ADV-12 — Donatı kataloğu ve akıllı yerleşim [ ]
+
+**Kullanıcı sonucu:** "lavabo" yazıp sürükleyerek banyo donatılır. Donatı duvara yaslanır; kapının önünü kesince bu
+söylenir. Dayanak S13.
+
+- **Yer ve kategoriler:** Mimari › Yerleştir › Donatı ▾. Islak hacim, yatak ve oturma, mutfak, çalışma, dış mekân.
+- **Arama:** Türkçe eş anlamlılarla (lavabo, klozet, duş teknesi, karyola, gardırop).
+- **Yerleştirme:** sürükle-bırak; duvara yaslama ve kendiliğinden döndürme; tipik ölçüler.
+- **Kullanım alanı ve çakışma:** kapı kanadı, klozet önü, tezgâh önü. Bulgular bugünkü mutfak çakışma denetimiyle aynı
+  sistemdedir.
+
+**Kaynak:** Sweet Home 3D; AutoCAD Smart Blocks Placement [W1 A11]; SmartDraw (W3 F).
+
+**İlk kabul:**
+- "lavabo" aramasından duvara hizalı yerleşime ≤ 3 eylem.
+- Banyo örneğinde kullanım alanı çakışması işaretlenir.
+
+#### ADV-13 — Mimari başlangıç, şablon ve varsayılanlar [ ]
+
+**Kullanıcı sonucu:** Boş projede ilk duvar poşesiyle, katıyla ve kendi katmanında çıkar. Dayanak S4, S12.
+
+- **Şablon:** proje başlangıcıyla aynı birim ve ölçekte olur (m, 1:100; ADR 0626). Bugün cm ve 1:50
+  (`catalog/v1/templates/mimari.json:7-8`).
+- **Kat:** Zemin kat ve kat yüksekliği hazır gelir.
+- **Varsayılan duvar stilleri** ("Yok" yerine), malzemeleri ADR 0791 kitaplığından:
+  - dış duvar (tuğla ya da bims + yalıtım + sıva);
+  - iç bölme (10 ve 13,5 cm);
+  - betonarme perde.
+- **Diğer hazırlar:** katman profili (ADV-14), mahal adı listesi, örnek 2+1 projesi, ilk beş dakikanın ipuçları.
+
+**İlk kabul:**
+- Boş projeden ilk duvarın poşesiyle, katıyla ve kendi katmanında yazılması ≤ 3 eylem.
+- Şablonun birimi ve ölçeği proje başlangıcıyla aynı.
+
+### 4.2 Plan grafiği ve AutoCAD düzeyinde ayrıntı
+
+#### ADV-14 — Türe göre katman ve kalem hiyerarşisi [ ]
+
+**Kullanıcı sonucu:** Çizim bir ofis çizimi gibi katmanlıdır. Paftada kesilen duvar kalın, görünen ince, üstteki kesikli
+çizilir. Dayanak S4, S5.
+
+- **Katman anahtarı:** nesne türü ve alt bileşen → katman. Araç ayarında "Katman: Otomatik"; ofis profili değiştirilebilir,
+  proje profili saklanır.
+  - **Temel:** 2026 Dijital Yönetmeliği'nin **EK-4**'ü (Md. 7(1)). EK-4 okunmadan katman adı uydurulmaz.
+  - **EK-4 bir alana ad vermiyorsa:** TS EN ISO 13567'nin alan yapısı ve ÇŞİDB'nin CADD usul ve esasları.
+  - **Örnekler:** AutoCAD Architecture layer key styles; AutoCAD 2026.1'in otomatik katmanları [W1 A6].
+- **Kalem:**
+  - Alt bileşen kalemleri: kasa, kanat, yay, eşik, cam, denizlik, tarama sınırı.
+  - Kesilen, görünen ve üstteki çizgi sınıfları.
+  - Ekranda çizgi kalınlığı gösterimi; siyah-beyaz baskı.
+- **DXF:**
+  - Alt bileşenler (tarama, kapı yayı) kendi katmanında gider.
+  - Mahalin adı ve alanı yazı olarak gider; şaft çaprazı da gider. ADR 0708 §2 ile bugünkü yazıcı arasındaki çelişki
+    böylece kapanır.
+
+**İlk kabul:**
+- 2+1 örneğinde nesneler türlerine göre en az 8 katmanda.
+- DXF dış programda açılınca aynı katmanlar.
+- 1:50 PDF'te kalem sınıfları ölçülür.
+
+#### ADV-15 — Ölçeğe ve görünüşe göre temsil [ ]
+
+**Kullanıcı sonucu:** Aynı plan 1:100'de sade, 1:50'de uygulama, 1:20'de detay ayrıntısıyla çizilir. Dayanak S4.
+
+- **Üç düzey bütün nesnelerde:** duvardaki Şematik/Uygulama/Ayrıntılı düzeyleri (`arch.rs:94-125`) bütün mimari nesnelere
+  yayılır. Kapı ve pencere için:
+  - 1:200: boşluk + kanat;
+  - 1:100: kanat + yay;
+  - 1:50: kasa, kanat, yay, eşik, denizlik;
+  - 1:20: profil.
+
+  Kolon, merdiven, döşeme, mobilya ve taramalar da düzey alır. Görünüş tarifi düzeyi geçersiz kılabilir.
+- **Plan kesme yüksekliği:** ayarlanır (bugün sabit 1,10 m, `opening.rs:21`). Kesilen, görünen ve üstteki (kesikli)
+  çizgiler ayrılır: kiriş izi, üst kat çıkması, asma tavan.
+- **Tarama ve yalıtım:** malzeme tarama kitaplığı ve yalıtım simgesi. Taramanın yoğunluğu ölçeğe göre seçilir.
+- **Ölçeklenen açıklama:** annotative ölçekleme bütün mimari açıklamalarda.
+
+**Kaynak:** AutoCAD Architecture display configurations [W1 R3, R4]; Revit Detail Level [W2 R12]; Archicad MVO ve PSD
+[W2 A5, A6]; Allplan reference scale [W2 L3].
+
+**İlk kabul:**
+- Aynı kat 1:100 ve 1:50 paftada farklı kapı, pencere, kolon ve merdiven çizimiyle basılır.
+- 1:20 detayda yalıtım simgesi görünür.
+- Siyah-beyaz PDF basılır.
+
+#### ADV-16 — Otomatik ölçü, kot ve etiket [ ]
+
+**Kullanıcı sonucu:** Tek komut planın dört cephesini ölçülendirir. Etiketler okunur ve hiçbir çizginin üstüne binmez.
+Dayanak S19.
+
+- **Dış ölçü:** tek komutla dört cephe dış ölçü zinciri; toplam, açıklıklar, duvar yapısı seçenekli; boş zincir üretmez.
+  MO kuralı: ön projede 3, uygulamada 4 zincir. Örnekler: Archicad [W2 A12], Vectorworks [W2 V11], Chief.
+- **İç ölçü:** mahal başına 2+2 zincir.
+- **Kot işareti:** ±0,00 mutlak kotla ve röperle; mahalin döşeme kotu.
+- **Mahal etiketi:** içerik ölçeğe göre değişir (no + ad + net alan; 1:50'de kaplama ve kot da). MO biçimi elips; numara
+  EK-3'e göre kat + fonksiyon + sıra.
+- **Etiket yerleşimi:** çakışmasız; örnekten etiketleme (Revit 2027 Tag by Example [W2 R1]).
+- **Açıklık:** ölçü yazısı "90/210"; doğrama kodları K/P/GK/CK (MO); odaya göre numaralandırma.
+
+**İlk kabul:**
+- 2+1 planında dört cephe zinciri tek komutla çıkar.
+- Etiketler duvar çizgisine binmez (M0'daki çakışmalar yok).
+- Kapı ölçüsünde 90/210 yazar.
+
+#### ADV-17 — Tadilat grafik dili [ ]
+
+**Kullanıcı sonucu:** Mevcut, yıkılacak ve yeni bir bakışta ayrılır; üç evre paftası aynı modelden çıkar. Dayanak S21.
+
+- **Açıklığın kendi evresi:** bugün evre duvardan okunuyor (`entity.rs:1999-2010`). Mevcut duvarda yeni kapı ve kapatılan
+  boşluk (dolgu) gösterilir; parçasal yıkım yapılır.
+- **Araçlarda evre:** yeni nesnenin evresi araçta seçilir (ADR 0776 K6).
+- **Evre görünüşleri:** mevcut durum, yıkım planı, yeni durum. Türkiye'de yerleşik çizgi ve renk dili dilim başında
+  araştırılır; bulunamazsa ofis profili ayarı olur.
+- **DXF:** evre katmanları.
+
+**Kaynak:** AutoCAD Architecture renovation [W1 R7]; Revit phase filters [W2 R9, R10]; Archicad renovation filters
+[W2 A11]; Vectorworks phasing [W2 V7, V8].
+
+**İlk kabul:**
+- Mevcut duvara yeni kapı açılır, bir pencere kapatılır.
+- Üç evre paftası basılır.
+- DXF'te evre katmanları bulunur.
+
+### 4.3 Yapı modeli ve türetilmiş çizimler
+
+#### ADV-18 — Düşey model ve taşıyıcı sistem [ ]
+
+**Kullanıcı sonucu:** Kat yüksekliği değişince duvar tepeleri izler. Kiriş planda kesikli görünür. Kolon ile duvarın
+taraması kesintisiz birleşir. Dayanak S20; Dijital Yönetmelik Md. 9(1) (çizim ile model uyumu).
+
+- **Duvar ve döşeme:**
+  - Duvarın taban/tepe kuralı kata ve üst döşemeye bağlanır.
+  - Döşeme katmanları: kaplama, şap, döşeme, sıva.
+  - Asma tavan ve mahalin döşeme kotu.
+- **Taşıyıcı elemanlar:**
+  - Kiriş, lento ve hatıl; planda kesikli izdüşümle.
+  - Kolon–duvar birleşimi ve kolon malzemesi (ADR 0771 sınırı).
+  - Kolon etiketi "25/50".
+
+**İlk kabul:**
+- İki katlı konutta kat yüksekliği değişince duvar tepeleri izler.
+- Kiriş planda kesikli görünür.
+- Perde + kolon + tuğla düğümünde tarama süreklidir.
+
+#### ADV-19 — Kesit ve görünüş türetimi [ ]
+
+**Kullanıcı sonucu:** En az iki kesit ve dört görünüş (PAİY 57(2)(a)) plandan türer. Plan değişince eskidikleri görünür.
+Dayanak S20, S22.
+
+- **Kesit:** kesit çizgisinden 2,5B. Kesilen kalın ve taranmış, görünen ince çizilir. Döşeme katmanları, merdiven, kotlar ve
+  akslar görünür; kesitlerden biri merdivenden geçer.
+- **Görünüş:** doğramalar ve açılım işaretleri, kaplama. Doğal zemin kesik, yeni zemin sürekli çizilir; kotlar yazılır.
+- **Eskime:** plan değişince "eski" işareti; yeniden üretim aynı çizimi verir. Kalıp ADR 0799; BricsCAD'in kırmızı ve
+  turuncu işareti [W1 B9].
+- **Bilinmeyenler:** modelin bilmediği elemanlar listelenir. Sahte otomatik kesit yapılmaz (ADR 0347 §3).
+
+**İlk kabul:**
+- 1:50 bir kesit ve bir cephe PDF'te basılır.
+- Bir kapı değişince ikisi de "eski" olur.
+- Yeniden üretim aynı çizimi verir.
+
+#### ADV-20 — Çatı ve çatı planı [ ]
+
+**Kullanıcı sonucu:** Çatı planı paftası (PAİY 57(2)(a)) modelden çıkar. Dayanak S20, S22.
+
+- **Çatı türleri:** tek, beşik ve kırma eğimli çatı; düz çatı.
+- **Çatı öğeleri:**
+  - eğim yönü ve yüzdesi;
+  - mahya, dere ve kalkan;
+  - saçak, oluk ve iniş borusu;
+  - baca ve havalandırma çıkışları, çatı penceresi;
+  - kar siperliği (Sivas yerel kuralı).
+- **Kesit:** çatı kesitlerde de çizilir.
+
+**Kaynak:** AutoCAD Architecture slabs and roof slabs [W1 R13]; PAİY 40, 42.
+
+**İlk kabul:**
+- Kırma çatı + baca + çatı penceresi çizilir.
+- Çatı planı paftası basılır.
+- Çatı kesitte görünür.
+
+#### ADV-21 — Merdiven, korkuluk, asansör ve özel elemanlar [ ]
+
+**Kullanıcı sonucu:** Konutta karşılaşılan merdiven ve özel elemanlar hem plan sembolüyle hem denetimle gelir.
+
+- **Merdiven:**
+  - Balansmanlı merdiven ve karışık kollar.
+  - Çok katlı merdiven: kat yüksekliği değişince rıht sayısı güncellenir (ADR 0724 açığı).
+  - Plan etiketi "n × r / b".
+- **Korkuluk:** galeri ve balkon için bağımsız korkuluk.
+- **Asansör:** kuyu, kabin ve kapı sembolü; ölçüleri PAİY 34'te.
+- **Diğer:** otopark yeri (2,40 × 4,90 m), giydirme cephe (2B ızgara), peyzaj kitaplığı.
+
+**İlk kabul:**
+- Balansmanlı L merdiven merdiven denetiminden geçer.
+- Galeri korkuluğu çizilir.
+- Asansör sembolü kapısıyla yerleşir.
+
+### 4.4 Türkiye'ye uygun proje
+
+#### ADV-22 — Alan hesabı, vaziyet planı ve imar tabloları [ ]
+
+**Kullanıcı sonucu:** Metrekare cetveli, emsal/TAKS tablosu, kat irtifakı tablosu ve vaziyet planı aynı modelden çıkar.
+Sınırı aşan değer çizim sırasında görünür. Dayanak S22; W4 §4/1–3, 8–10.
+
+- **Türk alan motoru (PAİY Md. 4):**
+  - Bağımsız bölümün net, brüt, genel brüt ve toplam brüt alanı.
+  - Yapı inşaat alanı ve emsale esas alan.
+  - Kontur kuralları: sıva payı 2,5 cm; kolon, şaft ve galeri düşümü; merdiven altı 1,80 m.
+- **Emsal ve TAKS:** her mahal emsal ve taban durumunu madde koduyla taşır. %30 emsal harici sınırı ve öbür sınırlar
+  denetlenir; aşan kısım emsale aktarılır. İmar durumu girdisinden canlı rozet ve tablo üretilir.
+- **Kat irtifakı:** bağımsız bölüm, eklenti ve ortak yer modeli (KMK 2–4, 12); arsa payı; paylaşım tablosu.
+- **Vaziyet planı:** parsel (Harita işinden ya da koordinat tablosundan); bahçe mesafeleri ve kat adedine göre artış
+  (PAİY 23); bina oturumu, ±0,00 ve röper, kuzey; ağaç hesabı.
+- **Otopark ve sığınak hesapları:** ilgili yönetmeliklerden, çizelge olarak.
+
+**Kaynak:** İdeCAD kat alanı hesabı [W2 I12]; Revit area schemes [W2 R17]; PAİY 4, 5, 20–23, 57; Otopark ve Sığınak
+yönetmelikleri.
+
+**İlk kabul:**
+- Tek parselde iki bağımsız bölümlü bina: metrekare cetveli, emsal/TAKS ve kat irtifakı tabloları bağımsız başvuruyla aynı.
+- Resmî onay iddiası yapılmaz.
+
+#### ADV-23 — Sürümlü mevzuat kural motoru ve denetimler [ ]
+
+**Kullanıcı sonucu:** Mimari denetim, çizimin hangi yönetmelik maddesini karşılamadığını ölçülen yer ve değerle söyler.
+Kuralın kaynağı ve yürürlük tarihi görünür. Dayanak S22; W4 §4/4–7, 10.
+
+- **Kural:** kaynak, madde, RG tarih/sayı, yürürlük başlangıcı/bitişi, kapsam (bina türü, yükseklik, bağımsız bölüm
+  sayısı), ifade ve şiddet taşır. Kural seti ruhsat başvuru tarihine göre seçilir.
+- **Katmanlar:** ulusal (PAİY, yangın, otopark, sığınak) → belediye (Sivas) → parsel plan notu. Çelişki görünür kılınır
+  (ör. hava bacası).
+- **Kurallar, sırasıyla:**
+  1. Piyes asgarileri ve iç yükseklikler (28, 29).
+  2. Koridor ≥ 1,20 m; kapılar 1,50/1,00/0,90 m.
+  3. Işıklık ve hava bacası (32).
+  4. Merdiven (31: rıht, 2a+b, kol genişliği, sahanlık, baş yüksekliği) ve rampa.
+  5. Korkuluk 1,10 m; asansör zorunluluğu ve kabin ölçüleri.
+  6. Yangın kaçışı: 40 cm içeriden rota, uzaklıklar, kullanıcı yükünden çıkış genişliği.
+- **Bulgu:** yeri, ölçülen değeri ve maddeyi gösterir. Mevcut istisna mekanizması kullanılır; ikinci bir denetim sistemi
+  kurulmaz (ADV-03, ADR 0732).
+
+**İlk kabul:**
+- 2+1 örneğinde her kural için bir geçen ve bir kalan durum.
+- Bağımsız başvuru kuralları KentOS kodu olmadan sınar.
+- Sivas ile PAİY arasındaki çelişki raporda görünür.
+
+#### ADV-24 — Türk proje takımı: antet, paftalar ve listeler [ ]
+
+**Kullanıcı sonucu:** "Ruhsat takımı" komutu, PAİY 57(2)(a)'nın istediği paftaları Türk antetiyle tek PDF/A takımı olarak
+basar. Dayanak S22; W4 §3, §4/11–12.
+
+- **Pafta takımları:** proje evresine göre hazır gelir:
+  - ön proje 1/100;
+  - ruhsat 1/100 (belediye isterse "1/50 tekniğinde");
+  - uygulama 1/50;
+  - detay 1/20–1/5.
+
+  Pafta kodları ve A-serisi kâğıt; A4 katlama izleri.
+- **Antet:** sağ altta; müellif, sicil no, ada/parsel, pafta no, ölçek, tarih; üstünde revizyon tablosu (TS EN ISO 7200,
+  MO). İlk pafta bilgi tablosu (57(10)).
+- **Listeler:**
+  - Mahal listesi (57(29)): döşeme, duvar ve tavan kaplaması, süpürgelik, denizlik.
+  - Grafik doğrama listesi: tip görünüşü, kaba ölçü, açılım, adet, U değeri.
+  - Metrekare cetveli ve kat irtifakı tablosu (ADV-22).
+- **Çıktı:** tek tıkla PDF/A takımı, her pafta ayrı dosya (Dijital Yönetmelik Md. 4).
+
+**İlk kabul:** 2+1 örneğinden ruhsat takımı tek komutla basılır. Kesit ve görünüş ADV-19'la, çatı planı ADV-20'yle takıma
+girer.
+
+### 4.5 Değişim ve kabul
+
+#### ADV-25 — Değişim: DWG/DXF, IFC ve eski planı tanıma [ ]
+
+**Kullanıcı sonucu:** Ofisin DWG'si katmanları ve yazılarıyla gider gelir. 2029'dan sonra istenecek IFC modeli aynı
+çizimden üretilir. Dayanak S5; Dijital Yönetmelik Md. 4, 9–12; W4 §4/14.
+
+- **DXF/DWG:** ADV-14'teki katman profiliyle; mahal yazıları ve evre katmanları da gider.
+- **IFC4 mimari dışa aktarma:**
+  - Sınıflar: IfcWall, IfcDoor, IfcWindow, IfcSpace, IfcSlab, IfcStair; EK-5'teki zorunlu sınıflarla eşlenir.
+  - Öznitelikler EK-6 ve EK-7'ye, proje ve dosya kodları EK-1 ve EK-2'ye göre.
+  - Plan ile model arasında tutarlılık denetimi (Md. 9).
+- **Eski DWG planından tanıma:** patlatılmış plandan duvar, açıklık ve donatı tanınır. Örnekler: BricsCAD BIMQUICKDRAW'ın
+  2B plandan duvarı, BLOCKIFY [W1 B7], AutoCAD Smart Blocks Search and Convert [W1 A7].
+
+**İlk kabul:**
+- DXF dış programda aynı katmanlarla açılır.
+- IFC'de duvar, kapı ve mahal sayısı çizimle eşit; bağımsız okuyucu sınar.
+- Gerçek bir ofis DWG'siyle tadilat örneği yapılır.
+
+#### ADV-26 — Kabul ve ölçüm altyapısı [ ]
+
+**Kullanıcı sonucu:** Her dilimin kullanıcıya etkisi sayıyla ve sahibin göreceği resimle kanıtlanır. Dayanak S23.
+
+- **Oynatıcı ve görüntü:** `kentos-cad kullan --modul mimari` izleri Mimari modülünde oynatır. `snapshot --sekme` CAD
+  sekmelerine ulaşır.
+- **Kabul izleri:** aracı şeritten başlatır, kenetleme ve yardımları açık tutar. Bugün araçlar kimlikle başlıyor ve
+  yardımlar kapalı.
+- **Sayaç:** izden etkileşim sayacı raporu üretilir (tık, tuş, yazma, odak, araç, menü).
+- **Elle kabul:** her faz sonunda sahibin gerçek pencerede deneyeceği kısa liste.
+- **Resim matrisi:** 1440 ve 1100 px × 13 ve 18 px × açık ve koyu.
+
+**İlk kabul:** 2+1 izi Mimari modülünde, şeritten ve kenetle oynar; sayaç raporu taban değeri (157) yazar.
+
+## 5. Uygulama sırası (M1…M51)
+
+Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur (§6). Sıra, sahibin önceliğini izler: önce
+çizilen iş kaybolmasın ve ölçülsün; sonra çizim mimari görünsün; sonra hızlı çizilsin; ardından Türkiye'ye uygun proje,
+yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
+
+### Faz 0 — Güvenli ve ölçülebilir
+
+| Sıra | İş | Paket | Görünen sonuç |
+|---|---|---|---|
+| M1 | Ölçüm altyapısı | ADV-26 | `kullan --modul mimari`, CAD sekmelerinin resmi, sayaç raporu; taban 157 |
+| M2 | Esc taslağı korur | ADV-08 | Esc'de duvar zinciri kalır; bildirim |
+| M3 | Takma adlar ve kısayollar | ADV-08 | "pencere" → pencere aracı; iki harfli adlar; F1'de mimari |
+| M4 | Terim sözlüğü, seçenek harfleri, "Açı" | ADV-08 | Tek ad, tek harf; yanlış harf aracı bırakmaz |
+| M5 | Türkçe komut geçmişi | ADV-08 | Kimliksiz, okunur özet |
+| M6 | Öznitelikler önceliği ve sekme taşması | ADV-09 | Duvar alanları üstte; 1100 px'te bağlam sekmesi görünür |
+| M7 | Modalsız mimari düzenleyiciler | ADV-09 | Kaydedilmemiş değişiklik sorusu; Çizimden seç |
+
+### Faz 1 — Çizim mimari görünsün
+
+| Sıra | İş | Paket | Görünen sonuç |
+|---|---|---|---|
+| M8 | Mimari başlangıç ve varsayılan duvar stilleri | ADV-13 | İlk duvar poşeli ve Zemin katta; şablon m ve 1:100 |
+| M9 | Katman anahtarı (EK-4) | ADV-14 | 2+1 örneği türlerine göre katmanlarda; DXF'te aynısı |
+| M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı |
+| M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı |
+| M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte |
+| M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler |
+| M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım |
+| M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme; Mimari sekmesiyle açılış |
+| M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |
+| M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart |
+
+### Faz 2 — Hızlı çizilsin
+
+| Sıra | İş | Paket | Görünen sonuç |
+|---|---|---|---|
+| M18 | İmleç yanında aracın seçenekleri | ADV-11 | Kalınlık, referans ve uzunluk Tab ile |
+| M19 | Tıklanabilir geçici ölçü | ADV-11 | Ölçüye yazılan değer duvarı taşır |
+| M20 | Mimari kenet türleri ve kenet dili | ADV-11 | Yüz, eksen, çekirdek; imleç yanında yazı |
+| M21 | Oda aracı | ADV-11 | Duvar + mahal + etiket tek adımda |
+| M22 | Kendiliğinden mahal ve canlı alan | ADV-11 | Döngü kapanınca mahal; sürüklerken alan |
+| M23 | Odayı sürükleyerek büyütme | ADV-11, ADV-01 | Mahal kenarından |
+| M24 | Donatı galerisi ve akıllı yerleşim | ADV-12 | "lavabo" → duvara yaslı yerleşim |
+| M25 | Kullanım alanları ve çakışma | ADV-12 | Kapı önü ve klozet önü bulguları |
+| M26 | Dört cephe dış ölçü ve iç zincirler | ADV-16 | Tek komut; 3/4 dış, 2+2 iç zincir |
+| M27 | Kot, mahal etiketi, çakışmasız yerleşim | ADV-16 | Elips etiket, EK-3 numarası |
+| M28 | 90/210, doğrama kodları, odaya göre numara | ADV-16, ADV-03 | K01, P01 |
+
+### Faz 3 — Türkiye'ye uygun proje
+
+| Sıra | İş | Paket | Görünen sonuç |
+|---|---|---|---|
+| M29 | Türk alan motoru ve metrekare cetveli | ADV-22 | PAİY 4 alanları çizelgede |
+| M30 | Emsal/TAKS ve emsal harici | ADV-22 | Canlı rozet ve tablo |
+| M31 | Bağımsız bölüm, eklenti, ortak yer, kat irtifakı | ADV-22 | Paylaşım tablosu |
+| M32 | Vaziyet planı | ADV-22 | Parsel, bahçe mesafeleri, oturum, ±0,00 |
+| M33 | Kural motoru; piyes, kat ve kapı denetimi | ADV-23 | Madde ve ölçüyle bulgu |
+| M34 | Merdiven, rampa, korkuluk, ışıklık, asansör denetimi | ADV-23 | Sivas ile PAİY çelişkisi görünür |
+| M35 | Yangın kaçışı | ADV-23 | Kaçış rotası ve çıkış genişliği |
+| M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler |
+| M37 | Türk anteti, pafta takımları, PDF/A | ADV-24 | Ruhsat takımı tek komutla |
+| M38 | Mahal listesi ve grafik doğrama listesi | ADV-24 | 57(29) listesi; tip görünüşleri |
+| M39 | Tadilat grafik dili | ADV-17 | Üç evre paftası |
+
+### Faz 4 — Yapı modeli ve türetilmiş çizimler
+
+| Sıra | İş | Paket | Görünen sonuç |
+|---|---|---|---|
+| M40 | Düşey model | ADV-18 | Duvar tepeleri kata bağlı; döşeme katmanları |
+| M41 | Kiriş, lento, kolon–duvar birleşimi | ADV-18 | Kesikli kiriş; sürekli tarama |
+| M42 | Kesit türetimi | ADV-19 | 1:50 kesit; eskime işareti |
+| M43 | Görünüş türetimi | ADV-19 | Dört cephe |
+| M44 | Çatı ve çatı planı | ADV-20 | Çatı planı paftası |
+| M45 | Merdiven ve özel elemanlar | ADV-21 | Balansman, asansör, korkuluk, otopark yeri |
+
+### Faz 5 — Değişim ve kalanlar
+
+| Sıra | İş | Paket | Görünen sonuç |
+|---|---|---|---|
+| M46 | DWG/DXF katman profili | ADV-25 | Dış programda aynı katmanlar ve yazılar |
+| M47 | IFC4 mimari dışa aktarma | ADV-25 | Bağımsız okuyucuda sayılar eşit |
+| M48 | Eski DWG planından tanıma | ADV-25 | Patlatılmış plandan duvar ve açıklık |
+| M49 | Ölçülü bölmede kalıcı bağ; bağ kapsamı | ADV-01 | Yay kenar, kolon, aks bağı |
+| M50 | Modül kapsamı | ADV-05 | Kolon, merdiven, döşeme, mutfak, eğri duvar modülde |
+| M51 | Büyük projede akıcılık | ADV-07 | 163 → < 100 ms |
+
+## 6. Bir maddeyi baştan sona yapma talimatı (mimari)
+
+Sahibin 7 Kasım 2026 isteğiyle her madde şu sırayla yapılır. Hiçbir adım atlanmaz.
+
+1. **Seç:** §5'te sıradaki ilk açık M satırını al. Atlanan satırın nedeni satıra yazılır.
+2. **Araştır:** konunun güncel resmî belgelerini (üreticiler) ve Türkiye mevzuatını oku. Araştırma notları başlangıçtır,
+   iddiaları yeniden doğrulanır. Değer uydurulmaz.
+3. **Başka uygulamaların resimleri:** aynı işi yapan en az iki uygulamanın resmî belgelerindeki ekran görüntülerini
+   indir. Yer: `.run/gui-evidence/mimari-mNN/referans/`; her biri kendi boş dizinine (güvenilmeyen veri). Kaynak adresiyle
+   sahibe gönder.
+4. **ADR:** mimari blokta sıradaki numara. Mimari ileri planın ADR'leri **3000'den başlar** (Yol 1042'den, Harita 1800'den
+   20'şer ilerliyor; çakışmasın diye). Bölümler: Sorun, Araştırma (kaynaklar ve referans resimler), Karar, Ölçüm.
+5. **Çekirdek ve sözleşme:** hesap `crates/shared/*`'ta, türler `kentos-contracts`'ta. Kalıcı yeni alan yeni KCAD şeması
+   ister. Dalda geçici numara kullanılır (sıradaki 205); kesin numara birleşme sırasıyla verilir (MADDE-TARIFI §14).
+6. **Komut:** araç = komut (kılavuz §9.2); katalog, Python, MCP ve manifest.
+7. **Bağımsız başvuru:** `scripts/fixtures/*_cases.py` beklenen sonucu KentOS kodu olmadan kurar; en az 20 durum. Bir değeri
+   bozup durumun düştüğünü göster.
+8. **Arayüz:**
+   - Düzeltme ortak `kentos_ui` bileşeninde yapılır.
+   - Her araç şu kapılardan geçer: kendi ikonu, kısa takma ad, şeritteki yerin gerekçesi, terim sözlüğü, seçenek harfi
+     sözleşmesi (ADV-08, ADV-10).
+9. **İkon:** yeni ya da değişen her ikon çizilir, 16 ve 20 px'te iki temada resimlenir, sahibe gönderilir.
+10. **Sına:** ilgili ortak durumlar ve masaüstü testleri; şema değiştiyse `kentos-kcad`; clippy. Ağır işler
+    `scripts/dev/svc.sh heavy` altında koşar.
+11. **Resim:**
+    - `kentos-cad kullan` ile Mimari modülünde ve `snapshot` ile çekilir; 1440/1100 × açık/koyu.
+    - Resme bakılır, kusur düzeltilir, yeniden çekilir.
+    - Referans resimlerle yan yana sahibe gönderilir.
+12. **Planı işaretle:** satıra `(MNN, ADR NNNN: …)` yazılır. `[x]` yalnız bütün kabul sağlanınca konur. Ölçü §7'ye yazılır.
+13. **Commit ve gönder:** commit iletisi ortak yazar ve oturum satırlarıyla biter. Dal `arch-adv-ileri` GitHub'a gönderilir.
+    `main` yalnız sahip isteyince birleştirilir.
+14. **Disk:** `df -h /` denetlenir. Doluysa `target/debug/deps`'teki eski test ikilileri silinir; her adın en yenisi kalır.
+
+## 7. Kabul ölçüleri ve faz kapıları
+
+| Ölçü | Bugün | Hedef | Faz |
+|---|---|---|---|
+| Esc'de kaybolan duvar parçası | bütün zincir | 0 | 0 |
+| Kısayolu olan mimari komut | 0 | en sık 5 araç | 0 |
+| İlk poşeli duvara eylem | ölçülecek (M1) | ≤ 3 | 1 |
+| 2+1 örneğinde katman | 1 | türlerine göre (EK-4) | 1 |
+| Aynı ikonu paylaşan komut | 10 | 0 | 1 |
+| Görünen şerit düğmesi | 78 komut, 0 büyük | ≤ 30, ana araçlar büyük | 1 |
+| Ölçeğe göre ayrıntısı olan nesne türü | 1 | ≥ 6 | 1 |
+| 2+1 izinde etkileşim | 157 | ≤ 80 | 2 |
+| 2+1 izinde odak değişimi | 15 | ≤ 3 | 2 |
+| Ruhsat takımı | yok | tek komut, PDF/A | 3 |
+| 100 daire + 200 çizelgede kare | 163 ms | < 100 ms | 5 |
+
+**Faz kapısı:**
+- Kabul izleri Mimari modülünde, şeritten ve kenetle oynar; sayaç raporu önceki fazla karşılaştırılır.
+- Resim matrisi çekilir ve sahibe gönderilir.
+- Sahip kısa listeyi gerçek pencerede dener.
+- Fazın ADR'lerindeki "elle denenmedi" notları kapanır.
+
+## 8. Kurallar
+
+- **Değişikliğin sınırları:**
+  - Her alt teslimin ürüne geçişinde KCAD uyumu, kilitli katman, belge revizyonu, bulut değişiklik paketi ve yetki
+    yeniden kontrol edilir.
+  - İlgisiz renderer, birim ya da etkileşim ailesi topluca yeniden yazılmaz.
+  - Yeni davranış eski belgede varsayılan olarak yeni bağ, ölçek ya da katman üretmez.
+- **Profillerin ayrılığı:** mimari çizim kuralları, kurum ve ofis standardı ve mevzuat denetimi ayrı profillerdir.
+  - Standart adı ve sürümü, kapsam, birim ve yorum kaynakları kaydedilmeden "standarda tam uygun" ya da "ruhsata uygun"
+    iddiası yapılmaz.
+  - Mevzuat profili için uzman ya da kurum kabulü ayrıca gerekir. Bu plan otomatik hukuki ya da proje onayı tanımlamaz.
+- **Belgeler ve resimler:** ham ekran görüntüleri ve indirilen referans resimler Git'e girmez; `.run/gui-evidence/`
+  altında kalır. Repoda kısa sonuç, kaynak commit'i, yeniden üretim adımı ve gerekli küçük örnek model bulunur.
+- **Kabulün anlamı:** bu planın kabulü uygulamanın üretim kabulü değildir.

@@ -17,6 +17,15 @@
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
+  - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.
+  - **Araştırma:** üç kod denetimi, beş kabul senaryosunun güncel ikiliyle oynatılması ve dört internet araştırması
+    yapıldı; notlar [docs/research/2026-11-07-mimari/](../research/2026-11-07-mimari/) altında.
+  - **Plan:** yeni paketler ADV-08…26, iş sırası M1…M51 (§5), madde talimatı (§6).
+  - **Numaralar:** mimari ileri ADR'leri 3000'den başlar.
+  - **Katman ve mahal numarası:** 2026 Dijital Yönetmeliği'nin EK-4 ve EK-3'üne bağlanır (RG 05.08.2026/33331, yürürlük
+    01.09.2027).
+
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
   denetim, teslim; katmanları ve varsa dosyası ile SHA-256 revizyonu) ve türetme kayıtları (nesneler, kaynak öğe,
@@ -1122,7 +1131,7 @@
   Projeyle sıralı ad/kullanım listeleri ve kata bağlı önek; ayrı öneri
   alanları serbest metni korur, kat değişimi taslak numarayı değiştirmez.
   Liste kaydı kaynakları yeniden adlandırmaz/numaralandırmaz; mevcut ayar
-  geçmişi/tek mahal undo korunur. Opt-in KCAD107; eski 1170 dosya baytı aynı.
+  geçmişi/tek mahal undo korunur. Opt-in KCAD 112; eski 1170 dosya baytı aynı.
   DXF'in tercih kaybı yazmadan önce ve ortak raporda uyarılır.
   [Kabul](../../docs/baseline/2026-10-26-architecture-room-choices/README.md):
   385 ortak durum/329 Python/dört MCP/iki desktop; native takımlar,
@@ -1231,7 +1240,7 @@
   Görünür Mahal ayırıcı fiziksel kalınlıksız analitik sınırdır; kat/evre/kaynak
   UUID'si, mahal→etiket→çizelge tek undo'da korunur. Genel destekli edit/kopya
   rolü taşır, desteklenmeyen temsil ve blok içine alma atomik reddir.
-  `cad.spaces.separators`/Python/MCP, opt-in KCAD 106 ve DXF ortaktır.
+  `cad.spaces.separators`/Python/MCP, opt-in KCAD 111 ve DXF ortaktır.
   Her kopuk mahal Metraj/API/CSV'de son sınır uyarısı taşır; geçerli raporun
   eski sütunları korunur. [Kabul](../../docs/baseline/2026-10-25-architecture-space-separators/README.md):
   105 bağımsız durum, 300 Python, 35 GUI kaydı ve 76 ham görüntü.
@@ -1243,7 +1252,7 @@
   kaybı son sınırı/uyarıyı korur. Görünür tek/toplu kaynak tercihi ve mevcut
   mahal listesi önizleme/tek onay/undo yolunu kullanır. Tam kopya grupları
   UUID'lere yeniden bağlanır, kısmi gruplar bağımsız çizilmiş sınıra dönüşür
-  ve uyarılır. Python/MCP, opt-in KCAD 105 ve DXF kimlik eşlemesi ortaktır.
+  ve uyarılır. Python/MCP, opt-in KCAD 110 ve DXF kimlik eşlemesi ortaktır.
   [Kabul](../../docs/baseline/2026-10-25-architecture-space-sources/README.md):
   63 bağımsız ortak durum, 30 GUI kaydı, 53 ham görüntü; yeni TS/TSX kaynağı yok.
   ARCH-SPACE-01 [~]: sanal ayırıcı, uçtan uca performans ve tam matris açık.
@@ -1275,7 +1284,7 @@
 - **Atanmamış mahal kaynakları ve iç nokta (25 Ekim 2026; [ADR 0674](../../docs/adr/0674-unassigned-space-sources.md)).**
   Yeni açık `unassigned` kapsamı yalnız kat atanmamış duvar/kolonları kullanır;
   eski boş Kat/Tüm katlar davranışı aynıdır. Tek/toplu araç, Öznitelikler,
-  follower, Python/MCP ve opt-in KCAD 104 aynı kapsamı korur. Yeni İç nokta seç
+  follower, Python/MCP ve opt-in KCAD 109 aynı kapsamı korur. Yeni İç nokta seç
   görünür önizleme ve tek onayla mevcut rebound komutunu kullanır; duvar gövdesi
   oda değildir. Güvenli olmayan kapsam değişimi atomik ret, kaynak kaybı son
   sınır/uyarı, undo/redo aynı UUID'dir. [Kabul](../../docs/baseline/2026-10-25-architecture-space-scope/README.md):
