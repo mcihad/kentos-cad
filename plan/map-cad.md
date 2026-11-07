@@ -1049,6 +1049,15 @@ varlık, yanlış eşleme, kot farkı ve düşük kaliteli çözümü ayır. Esk
 tasarım revizyonuyla ölçülen kayıt daha sonra yeni tasarıma sessiz
 bağlanmasın. Canlı kabul gerçek cihazla, çevrimdışı kabul kayıtlı veriyle ayrı işaretlensin.
 
+**7 Kasım 2026 — Uygulama kontrolü ([ADR 1700](../docs/adr/1700-asbuilt-check.md)).** Kapsam: **Harita + Yol + CBS**.
+Araştırma: Trimble Business Center'ın Point/String Conformance raporları; Türk mevzuatında aplikasyon kontrolü için
+sayısal sınır bulunamadı, sınırlar kullanıcının. Kanıtlanan: `cad.asbuilt.check` ölçülen noktaları tasarım noktalarına
+(adla; yarıçapla öneri, iki aday belirsiz), tasarım yüzeyine ve tasarım çizgilerine (işaretli dik uzaklık, yalnız çizgi
+noktaları) karşı denetler; ölçülmeyen tasarım noktaları, σ'sı yüksek noktalar ayrı; tasarım özeti eski tasarımla
+ölçülen kaydın yeni tasarıma sessiz bağlanmasını önler; 26 bağımsız durum; Uygulama kontrolü penceresi (Ölçme › Saha).
+Açık: saha paketi, iş türleri (as-built/aplikasyon/deformasyon) ve zaman serisi, yetkili inceleme kaydı, kapsam
+boşlukları, canlı cihaz.
+
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 
 **Öncelik:** P0, diğer 19 maddeye yayılır. **Kod:** [K40]–[K45], [K42].

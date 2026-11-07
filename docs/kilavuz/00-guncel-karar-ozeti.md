@@ -38,6 +38,9 @@
   Veri profilinin sınıflarında `codes`; yerleşik `harita-varliklari` profili; `map.features.code` (Harita + GIS).
 - **GNSS baz ağı dengelemesi (6 Kasım 2026; MAP-05, [ADR 1380](../../docs/adr/1380-gnss-baseline-network-adjustment.md)).**
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
+- **Uygulama kontrolü (7 Kasım 2026; MAP-19, [ADR 1700](../../docs/adr/1700-asbuilt-check.md)).** `cad.asbuilt.check`
+  salt okunur: ölçülen ↔ tasarım noktası/yüzeyi/çizgisi; sınırlar kullanıcının; `designDigest`/`designChanged`; ret
+  `invalid_asbuilt_check`.
 - **Paftada koordinat bilgisi (7 Kasım 2026; MAP-18, [ADR 1680](../../docs/adr/1680-sheet-coordinate-facts.md)).**
   `kentos_project::facts`; pafta `@datum`, `@elipsoit`, `@projeksiyon`, `@kot_sistemi`, `@epok`, `@ikinci_sistem`,
   `@epsg_kodu` (ayrılmış değil); baskı bulgusu `crs_text_mismatch`.

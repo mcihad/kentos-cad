@@ -9481,6 +9481,34 @@ pub fn catalog() -> CommandCatalog {
             capabilities: None,
             examples: vec![CommandExample { title: "Çizimin imar planı".into(), input: json!({}), output: None }],
         },
+        // Uygulama kontrolü (plan/map-cad.md MAP-19, docs/adr/1700).
+        CommandDescriptor {
+            id: crate::CAD_ASBUILT_CHECK.into(),
+            version: crate::CAD_ASBUILT_CHECK_VERSION,
+            title: "Uygulama kontrolü".into(),
+            summary: "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). \
+                      Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. \
+                      Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. \
+                      Retler: invalid_asbuilt_check, layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable."
+                .into(),
+            aliases: vec!["uygulamakontrolu".into(), "asbuilt".into(), "aplikasyonkontrolu".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AsbuiltCheck>(),
+            output: schema::<crate::AsbuiltChecked>(),
+            plan: Some(schema::<crate::AsbuiltChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ölçülen noktalar tasarım noktalarına ve tasarım yüzeyine karşı".into(),
+                input: json!({ "measured": "olcum", "design": "tasarim", "surface": "Tasarım" }),
+                output: None,
+            }],
+        },
         // Boru hattı denetimi (plan/map-cad.md MAP-16, docs/adr/1640).
         CommandDescriptor {
             id: crate::CAD_PIPES_CHECK.into(),
@@ -16098,6 +16126,7 @@ mod tests {
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
@@ -17052,6 +17081,7 @@ mod tests {
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),

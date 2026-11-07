@@ -1980,6 +1980,9 @@ codes! {
     /// Parsel alan denetimi (docs/adr/1400): an object given that is not an area.
     /// A pipe check's question that cannot be asked: an empty attribute's name, a limit not above zero, a least above a
     /// greatest, a catalogue too long or a size not above zero (docs/adr/1640).
+    /// An as-built check's question that cannot be asked: no design, a limit or radius not above zero, an empty
+    /// attribute's name, a quality limit without its attribute, too many points (docs/adr/1700).
+    INVALID_ASBUILT_CHECK = "invalid_asbuilt_check", Failed, false, "Uygulama kontrolünün sorusu geçerli değil; ileti nedenini söyler.";
     INVALID_PIPE_CHECK = "invalid_pipe_check", Failed, false, "Boru hattı denetiminin sorusu geçerli değil; ileti nedenini söyler.";
     /// A pipe check asked of a road network (docs/adr/1640).
     NOT_A_PIPE_NETWORK = "not_a_pipe_network", Failed, false, "Ağ bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.";

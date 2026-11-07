@@ -56302,6 +56302,326 @@
       ]
     },
     {
+      "id": "cad.asbuilt.check",
+      "version": 1,
+      "title": "Uygulama kontrolü",
+      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Retler: invalid_asbuilt_check, layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
+      "aliases": [
+        "uygulamakontrolu",
+        "asbuilt",
+        "aplikasyonkontrolu"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`), `layer_not_found` (`measured`, `design`, `lines`),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "properties": {
+          "design": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedDesign": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "horizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "lines": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "measured": {
+            "type": "string"
+          },
+          "quality": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "qualityField": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "search": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "surface": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "measured"
+        ],
+        "title": "AsbuiltCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.asbuilt.check` v1: the design's digest and whether it differs from the one expected; every measured\npoint in the drawing's order; the design points not measured; the counts by status and of the low-quality points;\nthe root mean square and the greatest of the matched points' horizontal distances and height differences.",
+        "properties": {
+          "ambiguous": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "designChanged": {
+            "type": "boolean"
+          },
+          "designDigest": {
+            "type": "string"
+          },
+          "lowQuality": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "maxHorizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "maxVertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "missing": {
+            "items": {
+              "$ref": "#/$defs/AsbuiltMissing"
+            },
+            "type": "array"
+          },
+          "outside": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/AsbuiltPoint"
+            },
+            "type": "array"
+          },
+          "rmsHorizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "rmsVertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "unmatched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "within": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "designDigest",
+          "points",
+          "missing",
+          "within",
+          "outside",
+          "unmatched",
+          "ambiguous",
+          "lowQuality"
+        ],
+        "title": "AsbuiltChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.asbuilt.check` v1: the design's digest and whether it differs from the one expected; every measured\npoint in the drawing's order; the design points not measured; the counts by status and of the low-quality points;\nthe root mean square and the greatest of the matched points' horizontal distances and height differences.",
+        "properties": {
+          "ambiguous": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "designChanged": {
+            "type": "boolean"
+          },
+          "designDigest": {
+            "type": "string"
+          },
+          "lowQuality": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "maxHorizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "maxVertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "missing": {
+            "items": {
+              "$ref": "#/$defs/AsbuiltMissing"
+            },
+            "type": "array"
+          },
+          "outside": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/AsbuiltPoint"
+            },
+            "type": "array"
+          },
+          "rmsHorizontal": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "rmsVertical": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "unmatched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "within": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "designDigest",
+          "points",
+          "missing",
+          "within",
+          "outside",
+          "unmatched",
+          "ambiguous",
+          "lowQuality"
+        ],
+        "title": "AsbuiltChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_asbuilt_check",
+          "layer_not_found",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ölçülen noktalar tasarım noktalarına ve tasarım yüzeyine karşı",
+          "input": {
+            "design": "tasarim",
+            "measured": "olcum",
+            "surface": "Tasarım"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.pipes.check",
       "version": 1,
       "title": "Boru hattı denetimi",
@@ -101138,6 +101458,12 @@
       "meaning": "Temizlik bir köşeyi kalite profilinin kabul eşiğinden uzağa taşır; hiçbir şey yazılmadı."
     },
     {
+      "code": "invalid_asbuilt_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Uygulama kontrolünün sorusu geçerli değil; ileti nedenini söyler."
+    },
+    {
       "code": "invalid_pipe_check",
       "kind": "failed",
       "retryable": false,
@@ -109479,6 +109805,129 @@
         "source",
         "layout",
         "items"
+      ],
+      "type": "object"
+    },
+    "AsbuiltMissing": {
+      "description": "A design point no measured point matched.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name"
+      ],
+      "type": "object"
+    },
+    "AsbuiltPoint": {
+      "description": "A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or\nnone) with the differences measured − design (east, north, height) and the horizontal distance; the difference to\nthe surface (measured − surface); the signed normal offset to the nearest design line (left of its direction\npositive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:\n`ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked\nagainst it); else `outside` when a limit is broken, `within`.",
+      "properties": {
+        "by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "de": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "designName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "designUid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dh": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "dn": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "flags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "lineUid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "normal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "sigma": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "status": {
+          "type": "string"
+        },
+        "surface": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "status",
+        "flags"
       ],
       "type": "object"
     },

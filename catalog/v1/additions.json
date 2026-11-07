@@ -3,6 +3,21 @@
   "version": 1,
   "commands": [
     {
+      "id": "asbuilt.check",
+      "title": "Uygulama kontrolü…",
+      "short": "Uygulama kontrolü",
+      "icon": "asbuiltCheck",
+      "description": "Sahada ölçülen noktaları tasarımla karşılaştırır (cad.asbuilt.check; ADR 1700): tasarım noktaları (adla, yarıçap verilirse yerle öneri olarak; iki aday belirsiz), tasarım yüzeyi (kot farkı) ve tasarım çizgileri (işaretli dik uzaklık); Δdoğu, Δkuzey, Δkot, KOH, ölçülmeyen tasarım noktaları, σ'sı yüksek noktalar ayrı. Toleranslar kullanıcınındır, KentOS değer vermez. Salt okunur; Dışındakileri seç ve CSV kaydet. Harita, Yol ve CBS'de.",
+      "aliases": [
+        "UYGULAMAKONTROLU",
+        "ASBUILT",
+        "APLIKASYONKONTROLU"
+      ],
+      "shortcuts": [],
+      "category": "Ölçme",
+      "status": "implemented"
+    },
+    {
       "id": "file.exchangeCheck",
       "title": "Dışa aktarma kaybı denetimi…",
       "short": "Aktarma kaybı",
@@ -4741,6 +4756,7 @@
     "surfaceAddPoint": "<path d=\"M2.5 16 8 5l9.5 11z\" stroke-width=\"1.2\"/><path d=\"M14.5 2.5v5M12 5h5\" stroke-width=\"1.6\"/><circle cx=\"10\" cy=\"12.5\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/>",
     "surfaceSetHeight": "<path d=\"M2.5 16.5 9 6l8.5 10.5z\" stroke-width=\"1.2\"/><circle cx=\"9\" cy=\"6\" r=\"1.8\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M15 2.5v6M13.2 4.3 15 2.5l1.8 1.8M13.2 6.7 15 8.5l1.8-1.8\" stroke-width=\"1.2\"/>",
     "surfaceFlipEdge": "<path d=\"M3 10 10 3l7 7-7 7z\" stroke-width=\"1.2\"/><path d=\"M10 3v14\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M3 10h14\" stroke-width=\"1.7\"/>",
+    "asbuiltCheck": "<path d=\"M8 3v10M3 8h10\" stroke-width=\"1.3\"/><circle cx=\"8\" cy=\"8\" r=\"3\" stroke-width=\"1.1\"/><circle cx=\"14.5\" cy=\"13.5\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m9.5 9.5 3.5 3\" stroke-width=\"1\" stroke-dasharray=\"1.2 1\"/>",
     "exchangeCheck": "<path d=\"M5 3h6l3 3v4\" stroke-width=\"1.3\"/><path d=\"M5 3v14h5\" stroke-width=\"1.3\"/><path d=\"M13 13a3.5 3.5 0 1 1 3.5 3.5\" stroke-width=\"1.4\"/><path d=\"m16.5 14.5 0 2.2 2.2 0\" stroke-width=\"1.3\"/>",
     "pipesCheck": "<circle cx=\"4\" cy=\"13\" r=\"2.2\"/><circle cx=\"16\" cy=\"13\" r=\"2.2\"/><path d=\"M6.2 13h7.6\" stroke-width=\"2\"/><path d=\"m11 11 2 2-2 2\" stroke-width=\"1.2\"/><path d=\"M10 2.5v4.5\" stroke-width=\"1.8\"/><circle cx=\"10\" cy=\"9\" r=\".6\" fill=\"currentColor\" stroke=\"none\"/>",
     "surfaceRemoveTriangle": "<path d=\"M2.5 16 7 6l5 10zM7 6h9l-4 10\" stroke-width=\"1.1\"/><path d=\"M7 6l5 10L2.5 16z\" fill=\"currentColor\" fill-opacity=\".25\" stroke=\"none\"/><path d=\"m14.5 2 3.5 3.5M18 2l-3.5 3.5\" stroke-width=\"1.5\"/>",

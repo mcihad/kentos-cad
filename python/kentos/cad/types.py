@@ -16464,6 +16464,253 @@ class ArraysFound(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AsbuiltCheck(_Model):
+    """Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,
+    `surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the
+    names are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in
+    metres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design
+    digest the field record was made against.
+
+    Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
+    attribute's name, `quality` without `qualityField`), `layer_not_found` (`measured`, `design`, `lines`),
+    `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
+    (more than 100 000 measured points).
+    Attributes:
+        horizontal: Unit: length.
+        quality: Unit: length.
+        search: Unit: length.
+        vertical: Unit: length.
+    """
+    measured: str
+    design: str | None | Unset = UNSET
+    expected_design: str | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    lines: str | None | Unset = UNSET
+    quality: float | None | Unset = UNSET
+    quality_field: str | None | Unset = UNSET
+    search: float | None | Unset = UNSET
+    surface: str | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["measured"] = self.measured
+        if self.design is not UNSET:
+            out["design"] = self.design
+        if self.expected_design is not UNSET:
+            out["expectedDesign"] = self.expected_design
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.lines is not UNSET:
+            out["lines"] = self.lines
+        if self.quality is not UNSET:
+            out["quality"] = None if self.quality is None else float(self.quality)
+        if self.quality_field is not UNSET:
+            out["qualityField"] = self.quality_field
+        if self.search is not UNSET:
+            out["search"] = None if self.search is None else float(self.search)
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltCheck:
+        return cls(
+            measured=data["measured"],
+            design=data.get("design", UNSET),
+            expected_design=data.get("expectedDesign", UNSET),
+            field=data.get("field", UNSET),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            lines=data.get("lines", UNSET),
+            quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
+            quality_field=data.get("qualityField", UNSET),
+            search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
+            surface=data.get("surface", UNSET),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltChecked(_Model):
+    """Output of `cad.asbuilt.check` v1: the design's digest and whether it differs from the one expected; every measured
+    point in the drawing's order; the design points not measured; the counts by status and of the low-quality points;
+    the root mean square and the greatest of the matched points' horizontal distances and height differences.
+    Attributes:
+        within: Unit: count.
+        outside: Unit: count.
+        unmatched: Unit: count.
+        ambiguous: Unit: count.
+        low_quality: Unit: count.
+        max_horizontal: Unit: length.
+        max_vertical: Unit: length.
+        rms_horizontal: Unit: length.
+        rms_vertical: Unit: length.
+    """
+    design_digest: str
+    points: list[AsbuiltPoint]
+    missing: list[AsbuiltMissing]
+    within: int
+    outside: int
+    unmatched: int
+    ambiguous: int
+    low_quality: int
+    design_changed: bool | Unset = UNSET
+    max_horizontal: float | None | Unset = UNSET
+    max_vertical: float | None | Unset = UNSET
+    rms_horizontal: float | None | Unset = UNSET
+    rms_vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["designDigest"] = self.design_digest
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["missing"] = [e0.to_json() for e0 in self.missing]
+        out["within"] = self.within
+        out["outside"] = self.outside
+        out["unmatched"] = self.unmatched
+        out["ambiguous"] = self.ambiguous
+        out["lowQuality"] = self.low_quality
+        if self.design_changed is not UNSET:
+            out["designChanged"] = self.design_changed
+        if self.max_horizontal is not UNSET:
+            out["maxHorizontal"] = None if self.max_horizontal is None else float(self.max_horizontal)
+        if self.max_vertical is not UNSET:
+            out["maxVertical"] = None if self.max_vertical is None else float(self.max_vertical)
+        if self.rms_horizontal is not UNSET:
+            out["rmsHorizontal"] = None if self.rms_horizontal is None else float(self.rms_horizontal)
+        if self.rms_vertical is not UNSET:
+            out["rmsVertical"] = None if self.rms_vertical is None else float(self.rms_vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltChecked:
+        return cls(
+            design_digest=data["designDigest"],
+            points=[AsbuiltPoint.from_json(e0) for e0 in data["points"]],
+            missing=[AsbuiltMissing.from_json(e0) for e0 in data["missing"]],
+            within=data["within"],
+            outside=data["outside"],
+            unmatched=data["unmatched"],
+            ambiguous=data["ambiguous"],
+            low_quality=data["lowQuality"],
+            design_changed=data.get("designChanged", UNSET),
+            max_horizontal=UNSET if "maxHorizontal" not in data else None if data["maxHorizontal"] is None else float(data["maxHorizontal"]),
+            max_vertical=UNSET if "maxVertical" not in data else None if data["maxVertical"] is None else float(data["maxVertical"]),
+            rms_horizontal=UNSET if "rmsHorizontal" not in data else None if data["rmsHorizontal"] is None else float(data["rmsHorizontal"]),
+            rms_vertical=UNSET if "rmsVertical" not in data else None if data["rmsVertical"] is None else float(data["rmsVertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltMissing(_Model):
+    """A design point no measured point matched."""
+    uid: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltMissing:
+        return cls(
+            uid=data["uid"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltPoint(_Model):
+    """A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or
+    none) with the differences measured − design (east, north, height) and the horizontal distance; the difference to
+    the surface (measured − surface); the signed normal offset to the nearest design line (left of its direction
+    positive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:
+    `ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked
+    against it); else `outside` when a limit is broken, `within`.
+    Attributes:
+        de: Unit: length.
+        dh: Unit: length.
+        dn: Unit: length.
+        horizontal: Unit: length.
+        normal: Unit: length.
+        sigma: Unit: length.
+        surface: Unit: length.
+    """
+    uid: str
+    name: str
+    status: str
+    flags: list[str]
+    by: str | None | Unset = UNSET
+    de: float | None | Unset = UNSET
+    design_name: str | None | Unset = UNSET
+    design_uid: str | None | Unset = UNSET
+    dh: float | None | Unset = UNSET
+    dn: float | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    line_uid: str | None | Unset = UNSET
+    normal: float | None | Unset = UNSET
+    sigma: float | None | Unset = UNSET
+    surface: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["name"] = self.name
+        out["status"] = self.status
+        out["flags"] = list(self.flags)
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.de is not UNSET:
+            out["de"] = None if self.de is None else float(self.de)
+        if self.design_name is not UNSET:
+            out["designName"] = self.design_name
+        if self.design_uid is not UNSET:
+            out["designUid"] = self.design_uid
+        if self.dh is not UNSET:
+            out["dh"] = None if self.dh is None else float(self.dh)
+        if self.dn is not UNSET:
+            out["dn"] = None if self.dn is None else float(self.dn)
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.line_uid is not UNSET:
+            out["lineUid"] = self.line_uid
+        if self.normal is not UNSET:
+            out["normal"] = None if self.normal is None else float(self.normal)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else float(self.sigma)
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else float(self.surface)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltPoint:
+        return cls(
+            uid=data["uid"],
+            name=data["name"],
+            status=data["status"],
+            flags=list(data["flags"]),
+            by=data.get("by", UNSET),
+            de=UNSET if "de" not in data else None if data["de"] is None else float(data["de"]),
+            design_name=data.get("designName", UNSET),
+            design_uid=data.get("designUid", UNSET),
+            dh=UNSET if "dh" not in data else None if data["dh"] is None else float(data["dh"]),
+            dn=UNSET if "dn" not in data else None if data["dn"] is None else float(data["dn"]),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            line_uid=data.get("lineUid", UNSET),
+            normal=UNSET if "normal" not in data else None if data["normal"] is None else float(data["normal"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else float(data["surface"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AssetCounts(_Model):
     """How many of each state.
     Attributes:
@@ -123286,6 +123533,10 @@ __all__ = [
     "ArraysEdit",
     "ArraysFind",
     "ArraysFound",
+    "AsbuiltCheck",
+    "AsbuiltChecked",
+    "AsbuiltMissing",
+    "AsbuiltPoint",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",

@@ -1051,6 +1051,10 @@
        {
         "command": "field.send",
         "size": "small"
+       },
+       {
+        "command": "asbuilt.check",
+        "size": "small"
        }
       ]
      },
@@ -3963,6 +3967,9 @@
         "command": "survey.baselines",
         "size": "small"
        }
+      ],
+      "overflow": [
+       "asbuilt.check"
       ]
      },
      {

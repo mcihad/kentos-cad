@@ -178,6 +178,13 @@
       ],
       "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420)."
     },
+    "asbuilt.check": {
+      "level": "query",
+      "via": [
+        "cad.asbuilt.check"
+      ],
+      "note": "Pencere cad.asbuilt.check'in cevabını gösterir (salt okunur): ölçülen noktaların tasarım noktalarına, yüzeyine ve çizgilerine göre farkları, durumları ve işaretleri; sınırlar kullanıcınındır; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1700)."
+    },
     "file.exchangeCheck": {
       "level": "query",
       "via": [

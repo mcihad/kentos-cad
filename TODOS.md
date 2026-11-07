@@ -70,6 +70,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 1460: `cad.readjustment.distribute`'in web işleyicisi ve Düzenleme dağıtım taslağı penceresi.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-13 / ADR 1500: `cad.pointclouds.overlap`'in web işleyicisi ve Tarama uyumu penceresi.
+- MAP-19 / ADR 1700: `cad.asbuilt.check`'in web işleyicisi ve Uygulama kontrolü penceresi.
 - MAP-18 / ADR 1680: web'in pafta girdilerinde (`ProjectInfo`) koordinat bilgisi ve baskı denetiminde `crs_text_mismatch`.
 - MAP-17 / ADR 1660: web'de Dışa aktarma kaybı denetimi (web'in dışa/içe aktarmalarıyla gidiş-dönüş) ve penceresi.
 - MAP-16 / ADR 1640: `cad.pipes.check`'in web işleyicisi ve Boru hattı denetimi penceresi.

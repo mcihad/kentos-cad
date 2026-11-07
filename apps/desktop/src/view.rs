@@ -2099,6 +2099,7 @@ impl App {
             Asking::ParcelsCheck => self.parcels_check_view(),
             Asking::PipesCheck => self.pipes_check_view(),
             Asking::ExchangeCheck => self.exchange_check_view(),
+            Asking::Asbuilt => self.asbuilt_view(),
             Asking::Zoning => self.zoning_view(),
             Asking::Impact => self.impact_view(),
             Asking::Readjustment => self.readjustment_view(),

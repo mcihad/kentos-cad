@@ -1,0 +1,415 @@
+//! `cad.asbuilt.check` v1 (plan/map-cad.md MAP-19, docs/adr/1700): Uygulama kontrolü, read only. The measured points
+//! of a layer set against the design's points, surface and lines, as Trimble Business Center's Point and String
+//! Conformance reports set them: by name, else (a radius given) by the one design point within it, a proposal; two
+//! within it ambiguous. Every limit is the user's; a point's own σ beyond its limit is a flag apart from its
+//! differences. The design's digest says whether the design changed since the field record was made. Nothing is
+//! written. The shared cases are `fixtures/commands/v1/cad.asbuilt.check.json`.
+//!
+//! The digest is SHA-256 of the design's points (`p<TAB>name<TAB>x<TAB>y<TAB>z` with six decimals, `-` for no height)
+//! and then its lines (`l<TAB>x,y;x,y…`), each on its own line, in the drawing's order.
+
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
+    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltMissing, AsbuiltPoint, CommandResult, Entity,
+    Vec2,
+};
+use kentos_domain::{Document, Slot};
+
+use crate::ExecutionContext;
+use crate::checks::{Stop, error};
+use crate::codes;
+use crate::road_terrains as terrains;
+
+/// The names' attribute when none is given.
+pub const NAME_FIELD: &str = "Ad";
+
+fn refuse(code: &str, message: String, path: &str) -> Stop {
+    Stop::failed(error(code, message, Some(path.to_owned())))
+}
+
+fn plain(text: &str) -> Option<f64> {
+    let t = text.trim();
+    let body = t.strip_prefix('-').unwrap_or(t);
+    let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    let ok = match body.split_once(['.', ',']) {
+        Some((w, f)) => digits(w) && digits(f),
+        None => digits(body),
+    };
+    ok.then(|| t.replace(',', ".").parse::<f64>().ok()).flatten().filter(|v| v.is_finite())
+}
+
+struct Point {
+    slot: Slot,
+    name: String,
+    p: Vec2,
+    z: Option<f64>,
+    sigma: Option<f64>,
+}
+
+/// The points of a layer (a group: its layers), in the drawing's order.
+fn points(doc: &Document, layer: &str, field: &str, quality: Option<&str>) -> Vec<Point> {
+    let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
+    doc.entities()
+        .filter(|e| ids.contains(&e.base().layer_id))
+        .filter_map(|e| match e {
+            Entity::Point(p) => Some(Point {
+                slot: Slot(e.base().id),
+                name: e.base().attrs.get(field).map(|n| n.trim().to_owned()).unwrap_or_default(),
+                p: p.p,
+                z: p.z,
+                sigma: quality.and_then(|q| e.base().attrs.get(q)).and_then(|v| plain(v)),
+            }),
+            _ => None,
+        })
+        .collect()
+}
+
+/// A design line's vertices and edges' bulges.
+struct Line {
+    slot: Slot,
+    pts: Vec<Vec2>,
+    bulges: Vec<f64>,
+}
+
+fn lines(doc: &Document, layer: &str) -> Vec<Line> {
+    let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
+    doc.entities()
+        .filter(|e| ids.contains(&e.base().layer_id))
+        .filter_map(|e| match e {
+            Entity::Line(l) => Some(Line { slot: Slot(e.base().id), pts: vec![l.a, l.b], bulges: vec![0.0] }),
+            Entity::Polyline(p) if p.pts.len() >= 2 => {
+                let mut pts = p.pts.clone();
+                if p.closed {
+                    pts.push(p.pts[0]);
+                }
+                let n = pts.len() - 1;
+                let bulges = (0..n).map(|i| p.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
+                Some(Line { slot: Slot(e.base().id), pts, bulges })
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The signed distance from `p` to the edge `a`→`b` (left of its direction positive): a straight edge's to its
+/// nearest point; a bulged edge's to its arc where `p`'s ray from the centre crosses it, else to its nearer end.
+fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let side = |d: f64, cross: f64| if cross < 0.0 { -d } else { d };
+    let chord = dx.hypot(dy);
+    if bulge != 0.0 && chord > 0.0 {
+        let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
+        let (ux, uy) = (dx / chord, dy / chord);
+        let c = Vec2 { x: (a.x + b.x) / 2.0 - uy * k, y: (a.y + b.y) / 2.0 + ux * k };
+        let theta = 4.0 * bulge.atan();
+        let r = chord / (2.0 * (theta / 2.0).sin().abs());
+        let start = if bulge > 0.0 { a } else { b };
+        let a0 = (start.y - c.y).atan2(start.x - c.x);
+        let rel = ((p.y - c.y).atan2(p.x - c.x) - a0).rem_euclid(std::f64::consts::TAU);
+        if rel <= theta.abs() {
+            let d = (p.x - c.x).hypot(p.y - c.y);
+            // A counter-clockwise arc has its centre on the left: inside the circle is left.
+            return if bulge > 0.0 { r - d } else { d - r };
+        }
+        let (da, db) = ((p.x - a.x).hypot(p.y - a.y), (p.x - b.x).hypot(p.y - b.y));
+        return side(da.min(db), dx * (p.y - a.y) - dy * (p.x - a.x));
+    }
+    let l2 = dx * dx + dy * dy;
+    let t = if l2 == 0.0 { 0.0 } else { (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0) };
+    let d = (p.x - a.x - t * dx).hypot(p.y - a.y - t * dy);
+    side(d, dx * (p.y - a.y) - dy * (p.x - a.x))
+}
+
+fn digest(design: &[Point], lines: &[Line]) -> String {
+    let mut text = String::new();
+    for p in design {
+        let z = p.z.map_or_else(|| "-".to_owned(), |z| format!("{z:.6}"));
+        text.push_str(&format!("p\t{}\t{:.6}\t{:.6}\t{z}\n", p.name, p.p.x, p.p.y));
+    }
+    for l in lines {
+        let pts: Vec<String> = l.pts.iter().map(|v| format!("{:.6},{:.6}", v.x, v.y)).collect();
+        text.push_str(&format!("l\t{}\n", pts.join(";")));
+    }
+    sha256_hex(text.as_bytes())
+}
+
+fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
+    let bad = |m: &str, path: &str| Err(refuse(codes::INVALID_ASBUILT_CHECK, m.to_owned(), path));
+    if input.design.is_none() && input.surface.is_none() && input.lines.is_none() {
+        return bad("Karşılaştırılacak tasarım yok: tasarım noktalarının katmanını, yüzeyi ya da tasarım çizgilerinin katmanını verin.", "design");
+    }
+    for (v, path, words) in [
+        (input.search, "search", "Arama yarıçapı"),
+        (input.horizontal, "horizontal", "Yatay tolerans"),
+        (input.vertical, "vertical", "Düşey tolerans"),
+        (input.quality, "quality", "Kalite sınırı"),
+    ] {
+        if let Some(v) = v
+            && !(v.is_finite() && v > 0.0)
+        {
+            return Err(refuse(
+                codes::INVALID_ASBUILT_CHECK,
+                format!("{words} 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın."),
+                path,
+            ));
+        }
+    }
+    if input.field.as_deref().is_some_and(|f| f.trim().is_empty()) {
+        return bad("Ad özniteliği boş; özniteliğin adını yazın ya da boş bırakın (Ad).", "field");
+    }
+    if input.quality_field.as_deref().is_some_and(|f| f.trim().is_empty()) {
+        return bad("Kalite özniteliği boş; σ'nın yazıldığı özniteliğin adını yazın.", "qualityField");
+    }
+    if input.quality.is_some() && input.quality_field.is_none() {
+        return bad("Kalite sınırı verildi ama σ'nın özniteliği yok; qualityField'ı da verin.", "qualityField");
+    }
+    Ok(())
+}
+
+fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
+    asked(input)?;
+    let layer = |id: &str, path: &str| {
+        if doc.layers().get(id).is_some() {
+            Ok(())
+        } else {
+            Err(refuse(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), path))
+        }
+    };
+    layer(&input.measured, "measured")?;
+    if let Some(d) = &input.design {
+        layer(d, "design")?;
+    }
+    if let Some(l) = &input.lines {
+        layer(l, "lines")?;
+    }
+    let made;
+    let surface = match &input.surface {
+        Some(name) => {
+            terrains::terrain_project(doc)?;
+            let id = crate::road_profiles::surface_id(doc, name, "surface")?;
+            let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+            made = terrains::make(doc, &def);
+            Some(made.built()?)
+        }
+        None => None,
+    };
+    let field = input.field.as_deref().map(str::trim).unwrap_or(NAME_FIELD);
+    let quality = input.quality_field.as_deref().map(str::trim);
+    let measured = points(doc, &input.measured, field, quality);
+    if measured.len() > ASBUILT_LIMIT {
+        return Err(refuse(
+            codes::INVALID_ASBUILT_CHECK,
+            format!("{} ölçülen nokta var; en çok {ASBUILT_LIMIT} nokta denetlenir. Katmanı bölün.", measured.len()),
+            "measured",
+        ));
+    }
+    let design = input.design.as_deref().map_or_else(Vec::new, |d| points(doc, d, field, None));
+    let design_lines = input.lines.as_deref().map_or_else(Vec::new, |l| lines(doc, l));
+    let design_digest = digest(&design, &design_lines);
+    let uid = |s: Slot| doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
+    // By name: a name one design point has.
+    let by_name = |name: &str| -> Vec<usize> {
+        if name.is_empty() {
+            return Vec::new();
+        }
+        design.iter().enumerate().filter(|(_, d)| d.name == name).map(|(i, _)| i).collect()
+    };
+    let claimed: Vec<bool> = {
+        let mut c = vec![false; design.len()];
+        for m in &measured {
+            if let [i] = by_name(&m.name)[..] {
+                c[i] = true;
+            }
+        }
+        c
+    };
+    let mut used = vec![false; design.len()];
+    let mut out = Vec::new();
+    let (mut sum_h, mut n_h, mut sum_v, mut n_v) = (0.0, 0usize, 0.0, 0usize);
+    let (mut max_h, mut max_v): (Option<f64>, Option<f64>) = (None, None);
+    let mut counts = [0u32; 5];
+    for m in &measured {
+        let mut flags: Vec<&str> = Vec::new();
+        let named = by_name(&m.name);
+        let (matched, by, ambiguous) = match named[..] {
+            [i] => (Some(i), Some("name"), false),
+            [_, _, ..] => (None, None, true),
+            [] => match input.search {
+                Some(r) => {
+                    let near: Vec<usize> = design
+                        .iter()
+                        .enumerate()
+                        .filter(|(i, d)| !claimed[*i] && (d.p.x - m.p.x).hypot(d.p.y - m.p.y) <= r)
+                        .map(|(i, _)| i)
+                        .collect();
+                    match near[..] {
+                        [i] => (Some(i), Some("place"), false),
+                        [] => (None, None, false),
+                        _ => (None, None, true),
+                    }
+                }
+                None => (None, None, false),
+            },
+        };
+        if by == Some("place") {
+            flags.push("proposed");
+        }
+        let mut point = AsbuiltPoint {
+            uid: uid(m.slot),
+            name: m.name.clone(),
+            design_uid: None,
+            design_name: None,
+            by: by.map(str::to_owned),
+            de: None,
+            dn: None,
+            dh: None,
+            horizontal: None,
+            surface: None,
+            normal: None,
+            line_uid: None,
+            sigma: m.sigma,
+            status: String::new(),
+            flags: Vec::new(),
+        };
+        let mut outside = false;
+        if let Some(i) = matched {
+            used[i] = true;
+            let d = &design[i];
+            let (de, dn) = (m.p.x - d.p.x, m.p.y - d.p.y);
+            let h = de.hypot(dn);
+            point.design_uid = Some(uid(d.slot));
+            point.design_name = Some(d.name.clone());
+            point.de = Some(de);
+            point.dn = Some(dn);
+            point.horizontal = Some(h);
+            sum_h += h * h;
+            n_h += 1;
+            max_h = Some(max_h.map_or(h, |x: f64| x.max(h)));
+            if input.horizontal.is_some_and(|t| h > t) {
+                flags.push("outsideHorizontal");
+                outside = true;
+            }
+            if let (Some(mz), Some(dz)) = (m.z, d.z) {
+                let dh = mz - dz;
+                point.dh = Some(dh);
+                sum_v += dh * dh;
+                n_v += 1;
+                max_v = Some(max_v.map_or(dh.abs(), |x: f64| x.max(dh.abs())));
+                if input.vertical.is_some_and(|t| dh.abs() > t) {
+                    flags.push("outsideVertical");
+                    outside = true;
+                }
+            }
+        }
+        if let Some(s) = surface {
+            match s.height(m.p.x, m.p.y).z {
+                Some(g) => {
+                    if let Some(mz) = m.z {
+                        let d = mz - g;
+                        point.surface = Some(d);
+                        if input.vertical.is_some_and(|t| d.abs() > t) {
+                            flags.push("outsideSurface");
+                            outside = true;
+                        }
+                    }
+                }
+                None => flags.push("offSurface"),
+            }
+        }
+        // A line point: one no design point matches (a stake point is checked against its own) and, a radius given,
+        // within it of a line; its normal offset to the nearest line.
+        let mut on_line = false;
+        if !design_lines.is_empty() && matched.is_none() && !ambiguous {
+            let mut best: Option<(f64, Slot)> = None;
+            for l in &design_lines {
+                for (k, w) in l.pts.windows(2).enumerate() {
+                    let d = signed(m.p, w[0], w[1], l.bulges[k]);
+                    if best.is_none_or(|b| d.abs() < b.0.abs()) {
+                        best = Some((d, l.slot));
+                    }
+                }
+            }
+            if let Some((d, slot)) = best
+                && input.search.is_none_or(|r| d.abs() <= r)
+            {
+                on_line = true;
+                point.normal = Some(d);
+                point.line_uid = Some(uid(slot));
+                if input.horizontal.is_some_and(|t| d.abs() > t) {
+                    flags.push("outsideLine");
+                    outside = true;
+                }
+            }
+        }
+        if input.quality.zip(m.sigma).is_some_and(|(q, s)| s > q) {
+            flags.push("lowQuality");
+            counts[4] += 1;
+        }
+        if m.z.is_none() && (surface.is_some() || matched.is_some_and(|i| design[i].z.is_some())) {
+            flags.push("noHeight");
+        }
+        // Matched to a design point or a line point: by its limits; neither, with points or lines to match: unmatched;
+        // with a surface only: by the surface.
+        let only_surface = input.design.is_none() && design_lines.is_empty();
+        point.status = if input.design.is_some() && ambiguous {
+            counts[3] += 1;
+            "ambiguous"
+        } else if matched.is_none() && !on_line && !only_surface {
+            counts[2] += 1;
+            "unmatched"
+        } else if outside {
+            counts[1] += 1;
+            "outside"
+        } else {
+            counts[0] += 1;
+            "within"
+        }
+        .to_owned();
+        flags.sort_by_key(|f| ASBUILT_FLAGS.iter().position(|k| k == f));
+        point.flags = flags.into_iter().map(str::to_owned).collect();
+        out.push(point);
+    }
+    let missing = design
+        .iter()
+        .zip(&used)
+        .filter(|(_, u)| !**u)
+        .map(|(d, _)| AsbuiltMissing { uid: uid(d.slot), name: d.name.clone() })
+        .collect();
+    let rms = |sum: f64, n: usize| (n > 0).then(|| (sum / n as f64).sqrt());
+    Ok(AsbuiltChecked {
+        design_changed: input.expected_design.as_deref().is_some_and(|e| e != design_digest),
+        design_digest,
+        points: out,
+        missing,
+        within: counts[0],
+        outside: counts[1],
+        unmatched: counts[2],
+        ambiguous: counts[3],
+        low_quality: counts[4],
+        rms_horizontal: rms(sum_h, n_h),
+        rms_vertical: rms(sum_v, n_v),
+        max_horizontal: max_h,
+        max_vertical: max_v,
+    })
+}
+
+/// Checks the question, writing nothing.
+pub fn validate(cx: &ExecutionContext<'_>, input: &AsbuiltCheck) -> CommandResult<()> {
+    match run(cx.doc, input) {
+        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Err(stop) => stop.into(),
+    }
+}
+
+/// The check; the same as execute.
+pub fn plan(cx: &ExecutionContext<'_>, input: &AsbuiltCheck) -> CommandResult<AsbuiltChecked> {
+    match run(cx.doc, input) {
+        Ok(out) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Err(stop) => stop.into(),
+    }
+}
+
+/// The check, read only.
+pub fn execute(cx: &mut ExecutionContext<'_>, input: AsbuiltCheck) -> CommandResult<AsbuiltChecked> {
+    plan(cx, &input)
+}

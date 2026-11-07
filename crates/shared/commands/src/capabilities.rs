@@ -2428,6 +2428,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Uygulama kontrolü (plan/map-cad.md MAP-19, docs/adr/1700).
+    Entry {
+        id: "cad.asbuilt.check",
+        refusals: &[&[
+            "invalid_asbuilt_check",
+            "layer_not_found",
+            "not_a_road_project",
+            "unknown_terrain",
+            "terrain_unbuildable",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
     // Boru hattı denetimi (plan/map-cad.md MAP-16, docs/adr/1640).
     Entry {
         id: "cad.pipes.check",
