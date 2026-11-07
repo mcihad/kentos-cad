@@ -767,6 +767,25 @@ def edit_cases():
 
 # ── road.volumes.query ─────────────────────────────────────────────────────────────────────────────────────────────
 
+RULE_WORDS = {"roadGround": "Yol–Zemin", "formationGround": "Formasyon–Zemin", "roadTopsoil": "Yol–Bitkisel Toprak",
+              "formationTopsoil": "Formasyon–Bitkisel Toprak"}
+
+
+def with_basis(v, r):
+    """Docs/adr/1037: what the volume measures. Its rule, or the default: the road's top against the ground, against
+    the stripped ground where it strips; the lines by the rule's name; the sides by the method; the stations of its
+    rows; the cut in place, the fill compacted."""
+    if not r.get("rows"):
+        return r
+    rule = v.get("rule") or ("roadTopsoil" if v.get("strip") else "roadGround")
+    basis = {"name": RULE_WORDS[rule], "given": v.get("rule") is not None, "version": "kentos.volume-rule/1",
+             "top": "formation" if rule.startswith("formation") else "road",
+             "bottom": "topsoil" if rule.endswith("Topsoil") else "ground",
+             "sides": "daylights" if v["method"] in ("endArea", "prismoidal") else "corridor",
+             "from": r["rows"][0]["from"], "to": r["rows"][-1]["to"], "cut": "inPlace", "fill": "compacted"}
+    return {**r, "basis": basis}
+
+
 def query_cases():
     cases = []
 
@@ -777,7 +796,7 @@ def query_cases():
             for v in volumes:
                 try:
                     r, w = compute(v, corridors)
-                    reports.append(r)
+                    reports.append(with_basis(v, r))
                     warns += w
                 except Refused as e:
                     reports.append(broken(v, e.result["error"]["message"]))
@@ -785,7 +804,7 @@ def query_cases():
         else:
             v = next(x for x in volumes if x["id"] == one or x["name"].lower() == one.lower())
             r, warns = compute(v, corridors)
-            out = {"volumes": [r]}
+            out = {"volumes": [with_basis(v, r)]}
         result = completed(None, warns) if op == "validate" else completed(out, warns)
         default = volumes is START and corridors is CORRIDORS and ccmd.TEMPLATES == [scmd.TK1, scmd.TK2]
         cases.append(case(name, [step(op, input_, result, {**UNCHANGED, "road": road_of(volumes, corridors)})],

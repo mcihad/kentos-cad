@@ -3784,6 +3784,20 @@ MaterialQuantityName = Literal["area", "volume"]
 """The names of :class:`MaterialQuantity`, for a plain string."""
 
 
+class MaterialState(_StrEnum):
+    """A material's state as a volume measures it (docs/adr/1037).
+
+    - ``inPlace``: In place (yerinde): the cut before it is dug.
+    - ``compacted``: Compacted (sıkışmış): the fill's body.
+    """
+    IN_PLACE = "inPlace"
+    COMPACTED = "compacted"
+
+
+MaterialStateName = Literal["inPlace", "compacted"]
+"""The names of :class:`MaterialState`, for a plain string."""
+
+
 class MergeDuplicates(_StrEnum):
     """What a key the source gives more than one row does (docs/adr/0439 §4's words).
 
@@ -7748,6 +7762,20 @@ ViewMarkFormName = Literal["section", "elevation", "detail"]
 """The names of :class:`ViewMarkForm`, for a plain string."""
 
 
+class VolumeLine(_StrEnum):
+    """A line a volume is measured between (docs/adr/1037): the road's top (finished grade), the formation under its
+    pavement, the ground, or the ground under its stripped topsoil.
+    """
+    ROAD = "road"
+    FORMATION = "formation"
+    GROUND = "ground"
+    TOPSOIL = "topsoil"
+
+
+VolumeLineName = Literal["road", "formation", "ground", "topsoil"]
+"""The names of :class:`VolumeLine`, for a plain string."""
+
+
 class VolumeMethod(_StrEnum):
     """How an earthwork volume is computed (docs/adr/0906 §2–§3).
 
@@ -7784,6 +7812,18 @@ class VolumeRule(_StrEnum):
 
 VolumeRuleName = Literal["roadGround", "formationGround", "roadTopsoil", "formationTopsoil"]
 """The names of :class:`VolumeRule`, for a plain string."""
+
+
+class VolumeSides(_StrEnum):
+    """Where a volume's sides are (docs/adr/1037): each section's daylight points (the end area and prismoidal methods),
+    or the corridor's top surface's edge (the surfaces and grid methods).
+    """
+    DAYLIGHTS = "daylights"
+    CORRIDOR = "corridor"
+
+
+VolumeSidesName = Literal["daylights", "corridor"]
+"""The names of :class:`VolumeSides`, for a plain string."""
 
 
 class WallAnchor(_StrEnum):
@@ -94662,6 +94702,56 @@ class VolumeApprovalReport(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class VolumeBasis(_Model):
+    """What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
+    the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
+    version, the two lines, the sides, the stations it covers and the states its cut and fill are in.
+    Attributes:
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    name: str
+    given: bool
+    version: str
+    top: VolumeLine | VolumeLineName
+    bottom: VolumeLine | VolumeLineName
+    sides: VolumeSides | VolumeSidesName
+    from_: float
+    to: float
+    cut: MaterialState | MaterialStateName
+    fill: MaterialState | MaterialStateName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["given"] = self.given
+        out["version"] = self.version
+        out["top"] = _enum_out(self.top)
+        out["bottom"] = _enum_out(self.bottom)
+        out["sides"] = _enum_out(self.sides)
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["cut"] = _enum_out(self.cut)
+        out["fill"] = _enum_out(self.fill)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeBasis:
+        return cls(
+            name=data["name"],
+            given=data["given"],
+            version=data["version"],
+            top=_enum_in(VolumeLine, data["top"]),
+            bottom=_enum_in(VolumeLine, data["bottom"]),
+            sides=_enum_in(VolumeSides, data["sides"]),
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            cut=_enum_in(MaterialState, data["cut"]),
+            fill=_enum_in(MaterialState, data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VolumeBenchDef(_Model):
     """The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
     (a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).
@@ -95167,6 +95257,7 @@ class VolumeReport(_Model):
         factored_fill: Unit: volume.
         gaps: Unit: m.
         approval: The approval against today's figures, where approved.
+        basis: What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
         bench: The benches cut in all (m³), where the volume benches. Unit: volume.
         curve: With the curve correction (docs/adr/0934): how much it changed the cut and the fill (m³; the cut and fill above
             are the corrected ones).
@@ -95193,6 +95284,7 @@ class VolumeReport(_Model):
     factored_fill: float
     gaps: list[list[float]]
     approval: VolumeApprovalReport | None | Unset = UNSET
+    basis: VolumeBasis | None | Unset = UNSET
     bench: float | None | Unset = UNSET
     curve: VolumeCurve | None | Unset = UNSET
     cut_area: float | None | Unset = UNSET
@@ -95220,6 +95312,8 @@ class VolumeReport(_Model):
         out["gaps"] = [[float(e1) for e1 in e0] for e0 in self.gaps]
         if self.approval is not UNSET:
             out["approval"] = None if self.approval is None else self.approval.to_json()
+        if self.basis is not UNSET:
+            out["basis"] = None if self.basis is None else self.basis.to_json()
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
         if self.curve is not UNSET:
@@ -95258,6 +95352,7 @@ class VolumeReport(_Model):
             factored_fill=float(data["factoredFill"]),
             gaps=[[float(e1) for e1 in e0] for e0 in data["gaps"]],
             approval=UNSET if "approval" not in data else None if data["approval"] is None else VolumeApprovalReport.from_json(data["approval"]),
+            basis=UNSET if "basis" not in data else None if data["basis"] is None else VolumeBasis.from_json(data["basis"]),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             curve=UNSET if "curve" not in data else None if data["curve"] is None else VolumeCurve.from_json(data["curve"]),
             cut_area=UNSET if "cutArea" not in data else None if data["cutArea"] is None else float(data["cutArea"]),
@@ -119970,6 +120065,8 @@ __all__ = [
     "MaterialQuantityName",
     "MaterialReport",
     "MaterialRow",
+    "MaterialState",
+    "MaterialStateName",
     "MaterialTarget",
     "MaterialsEdit",
     "MaterialsEdited",
@@ -121883,6 +121980,7 @@ __all__ = [
     "VolumeApprovalDef",
     "VolumeApprovalEnd",
     "VolumeApprovalReport",
+    "VolumeBasis",
     "VolumeBenchDef",
     "VolumeChange",
     "VolumeCurve",
@@ -121893,6 +121991,8 @@ __all__ = [
     "VolumeHistoryRead",
     "VolumeLayer",
     "VolumeLedgerRead",
+    "VolumeLine",
+    "VolumeLineName",
     "VolumeListed",
     "VolumeMethod",
     "VolumeMethodName",
@@ -121902,6 +122002,8 @@ __all__ = [
     "VolumeRowChange",
     "VolumeRule",
     "VolumeRuleName",
+    "VolumeSides",
+    "VolumeSidesName",
     "VolumeSpread",
     "VolumeStateRow",
     "VolumeStatesRead",

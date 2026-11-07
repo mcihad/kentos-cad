@@ -995,8 +995,9 @@ impl App {
                     d = d
                         // The rule, the method and its step on the one line under the picture (docs/adr/0974).
                         .legend(format!("{} · {}", rule_words(rep), method_words(rep)))
-                        .figure("Kazı", format!("{} m³", grouped(rep.cut, 1)))
-                        .figure("Dolgu", format!("{} m³", grouped(rep.fill, 1)))
+                        // Docs/adr/1037: the cut in place, the fill compacted.
+                        .figure("Kazı (yerinde)", format!("{} m³", grouped(rep.cut, 1)))
+                        .figure("Dolgu (sıkışmış)", format!("{} m³", grouped(rep.fill, 1)))
                         .figure("Düzeltilmiş fark", format!("{} m³", grouped(rep.factored_cut - rep.factored_fill, 1)))
                         .figure(
                             if rep.layers.is_empty() { "Bitkisel toprak" } else { "Üstyapı" },
@@ -1401,14 +1402,23 @@ fn doc_volumes(app: &App) -> Vec<VolumeDef> {
     app.document.as_ref().map_or_else(Vec::new, |d| d.model.road_volumes().to_vec())
 }
 
-/// The line under the mass diagram (the diagram has its own legend): the rule the volume measures by.
+/// The line under the mass diagram (the diagram has its own legend): the rule the volume measures by and, as the
+/// query's basis says it (docs/adr/1037), between which lines and sides.
 fn rule_words(rep: &VolumeReport) -> String {
-    let rule = match rep.rule {
-        Some(r) => r.words().to_owned(),
-        None if rep.strip.is_some() => "Yol–Bitkisel Toprak (kuralsız)".to_owned(),
-        None => "Yol–Zemin (kuralsız)".to_owned(),
+    use kentos_commands::{VolumeLine, VolumeSides};
+    let Some(b) = kentos_native_application::road_volumes::basis_of(rep) else { return "Kural: —".to_owned() };
+    let line = |l: VolumeLine| match l {
+        VolumeLine::Road => "yol üstü",
+        VolumeLine::Formation => "formasyon",
+        VolumeLine::Ground => "zemin",
+        VolumeLine::Topsoil => "sıyrılmış zemin",
     };
-    format!("Kural: {rule}")
+    let sides = match b.sides {
+        VolumeSides::Daylights => "şev uçları arası",
+        VolumeSides::Corridor => "koridor yüzeyi",
+    };
+    let given = if b.given { "" } else { " (kuralsız)" };
+    format!("Kural: {}{given}: {}–{}, {sides}", b.name, line(b.top), line(b.bottom))
 }
 
 /// The pavement layers' volumes (docs/adr/0975 §2): each layer's name, material and volume in all.

@@ -43514,7 +43514,7 @@
       "id": "road.volumes.query",
       "version": 1,
       "title": "Kübajı sorgula",
-      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
+      "summary": "Yol projesinin kübaj hesaplarını bugün hesaplar ve kübaj cetvelini verir; hiçbir şey yazmaz. Her hesap ne ölçtüğünü basis'te söyler (ADR 1037): Netpro'nun adıyla kuralı (kuralsızda yol üstü ile zemin, sıyırmada sıyrılmış zemin) ve kendisinin mi olduğu, kuralın anlamının sürümü (kentos.volume-rule/1), üst ve alt çizgi (road, formation; ground, topsoil), yanlar (kesit yöntemlerinde şev uçları, yüzey ve ızgara yönteminde koridor yüzeyi), km aralığı, kazının yerinde ve dolgunun sıkışmış olduğu. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve düzeltilmiş; surfaces yönteminde kazı ve dolgu plan alanları ve arazinin örtmediği alan; hacmi olmayan aralıklar; sıyırma ve diş kazısı varsa bitkisel toprak ve diş kazısı hacimleri (satırda ve toplamda); kural (rule) varsa adı; tip kesitlerin üstyapısı varsa tabaka hacimleri (layers: ad, malzeme, toplam; satırda tabaka sırasıyla); hesaplanamıyorsa nedeni. volume ile yalnız biri. Onaylı kübajda onay (approval): onaylı toplamlar, bugünkü toplamların farkı ve değişen, eklenen ya da kalkan aralıklar. Uyarılar: corridor_stale, volume_gap, pavement_unbuilt, volume_uncovered, volume_unfactored, volume_changed. Retler: not_a_road_project, unknown_volume, invalid_volume.",
       "aliases": [
         "kubajsor",
         "kübajsor"
@@ -139498,6 +139498,21 @@
       ],
       "type": "object"
     },
+    "MaterialState": {
+      "description": "A material's state as a volume measures it (docs/adr/1037).",
+      "oneOf": [
+        {
+          "const": "inPlace",
+          "description": "In place (yerinde): the cut before it is dug.",
+          "type": "string"
+        },
+        {
+          "const": "compacted",
+          "description": "Compacted (sıkışmış): the fill's body.",
+          "type": "string"
+        }
+      ]
+    },
     "MaterialTarget": {
       "description": "What a material is bound to: a wall style's component, a wall's component, a slab.",
       "oneOf": [
@@ -187099,6 +187114,58 @@
       ],
       "type": "object"
     },
+    "VolumeBasis": {
+      "description": "What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is\nthe default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's\nversion, the two lines, the sides, the stations it covers and the states its cut and fill are in.",
+      "properties": {
+        "bottom": {
+          "$ref": "#/$defs/VolumeLine"
+        },
+        "cut": {
+          "$ref": "#/$defs/MaterialState"
+        },
+        "fill": {
+          "$ref": "#/$defs/MaterialState"
+        },
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "given": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sides": {
+          "$ref": "#/$defs/VolumeSides"
+        },
+        "to": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "top": {
+          "$ref": "#/$defs/VolumeLine"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "given",
+        "version",
+        "top",
+        "bottom",
+        "sides",
+        "from",
+        "to",
+        "cut",
+        "fill"
+      ],
+      "type": "object"
+    },
     "VolumeBenchDef": {
       "additionalProperties": false,
       "description": "The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`\n(a grade, 0.2 is 20 %; docs/adr/0977) under a fill, steps `height` (m) high; both the project's (its regulation, its soil report).",
@@ -187419,6 +187486,16 @@
       ],
       "type": "object"
     },
+    "VolumeLine": {
+      "description": "A line a volume is measured between (docs/adr/1037): the road's top (finished grade), the formation under its\npavement, the ground, or the ground under its stripped topsoil.",
+      "enum": [
+        "road",
+        "formation",
+        "ground",
+        "topsoil"
+      ],
+      "type": "string"
+    },
     "VolumeListed": {
       "description": "An earthwork volume in a list.",
       "properties": {
@@ -187492,6 +187569,17 @@
             }
           ],
           "description": "The approval against today's figures, where approved."
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VolumeBasis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer."
         },
         "bench": {
           "description": "The benches cut in all (m³), where the volume benches.",
@@ -187840,6 +187928,14 @@
           "type": "string"
         }
       ]
+    },
+    "VolumeSides": {
+      "description": "Where a volume's sides are (docs/adr/1037): each section's daylight points (the end area and prismoidal methods),\nor the corridor's top surface's edge (the surfaces and grid methods).",
+      "enum": [
+        "daylights",
+        "corridor"
+      ],
+      "type": "string"
     },
     "VolumeSpread": {
       "description": "A volume's spread and bound: its value (bank, m³), its standard deviation from the heights' random error, the shift's\neffect, and the 95 % bound `|shift| + 1.96·σ`; whether the bound is within the share accepted (none: not asked).",

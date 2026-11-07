@@ -229,6 +229,10 @@ pub struct VolumeReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub curve: Option<VolumeCurve>,
+    /// What it measures and how (docs/adr/1037; Netpro's rules, ROAD-VOL-19): only in `road.volumes.query`'s answer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<VolumeBasis>,
 }
 
 /// A pavement layer's volume in all: its name, its material code and its volume (m³; docs/adr/0975 §2).
@@ -371,6 +375,71 @@ pub struct VolumesQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub volume: Option<String>,
+}
+
+/// The version of the rules' meaning (docs/adr/1037): a rule's lines, sides and states as `VolumeBasis` says them.
+pub const VOLUME_RULE_VERSION: &str = "kentos.volume-rule/1";
+
+/// A line a volume is measured between (docs/adr/1037): the road's top (finished grade), the formation under its
+/// pavement, the ground, or the ground under its stripped topsoil.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeLine {
+    Road,
+    Formation,
+    Ground,
+    Topsoil,
+}
+
+/// Where a volume's sides are (docs/adr/1037): each section's daylight points (the end area and prismoidal methods),
+/// or the corridor's top surface's edge (the surfaces and grid methods).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeSides {
+    Daylights,
+    Corridor,
+}
+
+/// A material's state as a volume measures it (docs/adr/1037).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum MaterialState {
+    /// In place (yerinde): the cut before it is dug.
+    InPlace,
+    /// Compacted (sıkışmış): the fill's body.
+    Compacted,
+}
+
+/// What a volume measures (docs/adr/1037): its rule by Netpro's name, whether the volume names it (`given`) or it is
+/// the default (the road's top against the ground, against the stripped ground where it strips), the rule's meaning's
+/// version, the two lines, the sides, the stations it covers and the states its cut and fill are in.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeBasis {
+    pub name: String,
+    pub given: bool,
+    pub version: String,
+    pub top: VolumeLine,
+    pub bottom: VolumeLine,
+    pub sides: VolumeSides,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: f64,
+    pub cut: MaterialState,
+    pub fill: MaterialState,
 }
 
 /// Output of `road.volumes.query` v1.

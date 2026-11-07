@@ -520,6 +520,7 @@ pub(crate) fn compute_on(
         bench: def.bench.as_ref().map(|_| benched),
         gaps: joined,
         rule: def.rule,
+        basis: None,
         layers: layer_list,
         approval: None,
         problem: None,
@@ -645,6 +646,30 @@ pub(crate) fn approval_of(def: &VolumeDef, now: &VolumeReport, at: String, note:
 }
 
 /// A report for a volume that does not compute: its sources and why.
+/// What a volume measures (docs/adr/1037), from its report: its rule (the default where it names none: the road's top
+/// against the ground, against the stripped ground where it strips, as before the rules), the method's sides, its rows'
+/// stations; none without a row.
+pub fn basis_of(report: &VolumeReport) -> Option<kentos_commands::VolumeBasis> {
+    use kentos_commands::{MaterialState, VolumeBasis, VolumeLine, VolumeMethod, VolumeRule, VolumeSides};
+    let (first, last) = (report.rows.first()?, report.rows.last()?);
+    let rule = report.rule.unwrap_or(if report.strip.is_some() { VolumeRule::RoadTopsoil } else { VolumeRule::RoadGround });
+    Some(VolumeBasis {
+        name: rule.words().to_owned(),
+        given: report.rule.is_some(),
+        version: kentos_commands::VOLUME_RULE_VERSION.to_owned(),
+        top: if rule.formation() { VolumeLine::Formation } else { VolumeLine::Road },
+        bottom: if rule.topsoil() { VolumeLine::Topsoil } else { VolumeLine::Ground },
+        sides: match report.method {
+            VolumeMethod::EndArea | VolumeMethod::Prismoidal => VolumeSides::Daylights,
+            VolumeMethod::Surfaces | VolumeMethod::Grid => VolumeSides::Corridor,
+        },
+        from: first.from,
+        to: last.to,
+        cut: MaterialState::InPlace,
+        fill: MaterialState::Compacted,
+    })
+}
+
 pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
     VolumeReport {
         id: def.id.clone(),
@@ -666,6 +691,7 @@ pub(crate) fn broken(def: &VolumeDef, why: String) -> VolumeReport {
         bench: None,
         gaps: Vec::new(),
         rule: def.rule,
+        basis: None,
         layers: Vec::new(),
         approval: None,
         problem: Some(why),

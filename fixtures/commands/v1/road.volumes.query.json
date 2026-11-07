@@ -2517,7 +2517,19 @@
          "factoredCut": 31611.668615970284,
          "factoredFill": 3495.464956323876,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         },
         {
          "id": "v-2",
@@ -2613,7 +2625,19 @@
          "cutArea": 4552.665247117608,
          "fillArea": 3018.1736178371866,
          "uncovered": 26.998985395621585,
-         "step": 50.0
+         "step": 50.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 50.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -3599,7 +3623,19 @@
          "factoredCut": 31611.668615970284,
          "factoredFill": 3495.464956323876,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -4198,7 +4234,19 @@
          "cutArea": 4552.665247117608,
          "fillArea": 3018.1736178371866,
          "uncovered": 26.998985395621585,
-         "step": 50.0
+         "step": 50.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 50.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -5179,7 +5227,19 @@
          "factoredCut": 31218.012428859307,
          "factoredFill": 3558.307927757094,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -8188,7 +8248,19 @@
          "cutArea": 8496.620241218454,
          "fillArea": 2761.3426403283133,
          "uncovered": 168.17540813779857,
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -11202,7 +11274,19 @@
          "cutArea": 8412.0,
          "fillArea": 2772.0,
          "uncovered": 172.0,
-         "step": 2.0
+         "step": 2.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -14218,7 +14302,19 @@
          "cutArea": 8492.0,
          "fillArea": 2768.0,
          "uncovered": 169.0,
-         "step": 1.0
+         "step": 1.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -17175,7 +17271,19 @@
          "factoredCut": 25878.14593084839,
          "factoredFill": 3507.380684331716,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -20109,7 +20217,19 @@
          "factoredCut": 26268.318130402942,
          "factoredFill": 3495.464956323876,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -23121,7 +23241,19 @@
          "factoredCut": 28465.960523933234,
          "factoredFill": 3682.7497185483016,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -25916,7 +26048,19 @@
            250.0
           ]
          ],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -28927,7 +29071,19 @@
          "factoredCut": 19431.993544395267,
          "factoredFill": 2379.692776655672,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -31823,7 +31979,19 @@
            450.0
           ]
          ],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 50.0,
+          "to": 450.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -34717,7 +34885,19 @@
          "cutArea": 2045.2919066821064,
          "fillArea": 2635.081194909252,
          "uncovered": 0.0,
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 50.0,
+          "to": 450.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -37386,7 +37566,19 @@
          "cutArea": 2768.0351082769425,
          "fillArea": 341.79710498844,
          "uncovered": 168.17540813779857,
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 0.0,
+          "to": 200.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -40007,7 +40199,19 @@
          "factoredCut": 18074.82799837973,
          "factoredFill": 4066.1042635422773,
          "gaps": [],
-         "step": 50.0
+         "step": 50.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 50.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -43055,7 +43259,19 @@
          "factoredFill": 4138.185446942052,
          "gaps": [],
          "step": 25.0,
-         "strip": 2764.744864655287
+         "strip": 2764.744864655287,
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -46122,7 +46338,19 @@
          "factoredFill": 3495.4649563238695,
          "gaps": [],
          "step": 25.0,
-         "bench": 542.3303355698093
+         "bench": 542.3303355698093,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -49210,7 +49438,19 @@
          "gaps": [],
          "step": 25.0,
          "strip": 1496.4373028625778,
-         "bench": 646.3333606595434
+         "bench": 646.3333606595434,
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -52275,7 +52515,19 @@
          "factoredFill": 3583.4462115772203,
          "gaps": [],
          "step": 25.0,
-         "strip": 414.88762569199525
+         "strip": 414.88762569199525,
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -55307,7 +55559,19 @@
          "factoredCut": 31605.70453511444,
          "factoredFill": 3495.3834931354895,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -58327,7 +58591,19 @@
          "factoredCut": 31212.75982163939,
          "factoredFill": 3558.1320447029025,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -61423,7 +61699,19 @@
          "gaps": [],
          "step": 25.0,
          "strip": 3390.023829393843,
-         "bench": 582.3604183276592
+         "bench": 582.3604183276592,
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -64490,7 +64778,19 @@
          "factoredFill": 3495.4649563238695,
          "gaps": [],
          "step": 25.0,
-         "bench": 0.0
+         "bench": 0.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -67137,7 +67437,19 @@
          "factoredFill": 5235.543118401702,
          "gaps": [],
          "step": 50.0,
-         "strip": 1855.810460579356
+         "strip": 1855.810460579356,
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 50.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -70408,6 +70720,18 @@
           "factoredCutChange": 0.0,
           "factoredFillChange": 0.0,
           "rows": []
+         },
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
          }
         }
        ]
@@ -74414,6 +74738,18 @@
             "fill": 0.0
            }
           ]
+         },
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
          }
         }
        ]
@@ -78019,6 +78355,18 @@
             "approvedFill": 0.0
            }
           ]
+         },
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 300.0,
+          "cut": "inPlace",
+          "fill": "compacted"
          }
         }
        ]
@@ -81744,7 +82092,19 @@
            "name": "Beton",
            "volume": 937.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -85106,7 +85466,19 @@
            "name": "Beton",
            "volume": 937.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Formasyon–Zemin",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "formation",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -88470,7 +88842,19 @@
            "name": "Beton",
            "volume": 937.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Formasyon–Zemin",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "formation",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -91871,7 +92255,19 @@
            "name": "Beton",
            "volume": 937.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Formasyon–Bitkisel Toprak",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "formation",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -95296,7 +95692,19 @@
            "name": "Beton",
            "volume": 937.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -98721,7 +99129,19 @@
            "name": "Beton",
            "volume": 937.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -101497,7 +101917,19 @@
            "name": "Alttemel",
            "volume": 1312.5
           }
-         ]
+         ],
+         "basis": {
+          "name": "Formasyon–Zemin",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "formation",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 50.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -104839,7 +105271,19 @@
            "name": "Beton",
            "volume": 0.0
           }
-         ]
+         ],
+         "basis": {
+          "name": "Formasyon–Zemin",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "formation",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -108209,7 +108653,19 @@
            "name": "Beton",
            "volume": 0.0
           }
-         ]
+         ],
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -111302,7 +111758,19 @@
          "factoredCut": 31611.668615970284,
          "factoredFill": 3495.464956323876,
          "gaps": [],
-         "step": 25.0
+         "step": 25.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -114895,7 +115363,19 @@
          "cutArea": 4552.665247117608,
          "fillArea": 3018.1736178371866,
          "uncovered": 26.998985395621585,
-         "step": 50.0
+         "step": 50.0,
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "corridor",
+          "from": 50.0,
+          "to": 400.0,
+          "cut": "inPlace",
+          "fill": "compacted"
+         }
         }
        ]
       },
@@ -125065,6 +125545,18 @@
           "cut": 0.4819153053648675,
           "fill": 3.523535368854944,
           "plain": 0
+         },
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
          }
         }
        ]
@@ -128116,6 +128608,18 @@
           "cut": 0.1688952613889967,
           "fill": 4.957943015910335,
           "plain": 0
+         },
+         "basis": {
+          "name": "Yol–Bitkisel Toprak",
+          "given": true,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "topsoil",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
          }
         }
        ]
@@ -131182,6 +131686,18 @@
           "cut": 0.4819153053648675,
           "fill": 3.523535368854944,
           "plain": 0
+         },
+         "basis": {
+          "name": "Yol–Zemin",
+          "given": false,
+          "version": "kentos.volume-rule/1",
+          "top": "road",
+          "bottom": "ground",
+          "sides": "daylights",
+          "from": 0.0,
+          "to": 600.0,
+          "cut": "inPlace",
+          "fill": "compacted"
          }
         }
        ]

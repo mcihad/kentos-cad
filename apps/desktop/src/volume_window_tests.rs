@@ -1082,3 +1082,48 @@ fn screens_heights() {
         }
     }
 }
+
+/// ROAD-VOL-19 (docs/adr/1037): Kübaj says what a volume measures as the query's basis does: the rule's lines and sides
+/// under the diagram, the cut in place and the fill compacted on their figures.
+#[test]
+fn the_window_says_what_a_volume_measures() {
+    let mut app = surveyed();
+    let _ = app.update(Message::Run("volume.editor"));
+    send(&mut app, W::Choose(0));
+    let rep = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    let basis = kentos_native_application::road_volumes::basis_of(&rep).expect("a basis");
+    assert_eq!((basis.name.as_str(), basis.given), ("Yol–Zemin", false));
+    assert_eq!(basis.sides, kentos_commands::VolumeSides::Daylights);
+    send(&mut app, W::Choose(1));
+    let rep = app.volume_window.as_ref().unwrap().preview.report.clone().expect("computes");
+    assert_eq!(kentos_native_application::road_volumes::basis_of(&rep).expect("a basis").sides, kentos_commands::VolumeSides::Corridor);
+}
+
+/// Kübaj on a section method's volume and a surfaces method's, light; `.run/gui-evidence/yol-y102/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_basis -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_basis() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y102");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (k, step) in [(0, "kesitler"), (1, "yuzeyler")] {
+        let mut app = surveyed();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(k));
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y102-kubaj-{step}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
