@@ -76,6 +76,7 @@ mod python_calls;
 mod reassociate;
 mod reconcile;
 mod road_plan_axes;
+mod road_view_scales;
 mod source_relations;
 mod sources;
 mod sensors_timing;
