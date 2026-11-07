@@ -100,12 +100,14 @@ _U = TypeVar("_U")
 
 
 def _variant(table: Mapping[str, type[_U]], union: str, tag: str, data: Mapping[str, Any]) -> type[_U]:
+    # Not a map at all (a bare text where the union's object should be) is no variant either, said the same way.
     try:
         return table[data[tag]]
-    except KeyError:
+    except (KeyError, TypeError):
+        name = data.get(tag) if isinstance(data, Mapping) else data
         raise DecodeError(
             "decode",
-            f"{union}: “{data.get(tag)!s}” bilinen bir {tag} değil. Paket sunucudan eski olabilir; güncelleyin.",
+            f"{union}: “{name!s}” bilinen bir {tag} değil. Paket sunucudan eski olabilir; güncelleyin.",
         ) from None
 
 

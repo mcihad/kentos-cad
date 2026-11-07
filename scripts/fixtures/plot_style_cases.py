@@ -532,7 +532,8 @@ def setup(book=True, profiles=()):
         b = {"schema": "kentos.sheet/1", "sheets": [sheet("a-101"), sheet("a-102")], "masters": [], "assets": []}
         if profiles:
             b["plotProfiles"] = list(profiles)
-        d["sheets"] = {"book": b, "pictures": []}
+        # No pictures: no field (a file writes no empty list).
+        d["sheets"] = {"book": b}
     return d
 
 

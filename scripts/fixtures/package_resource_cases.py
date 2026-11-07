@@ -156,7 +156,8 @@ def with_xref(d, *, found=True, pieces=(), layers=()):
         "xref": {"path": path, "digest": DIGEST["kadastro.kcad"], "group": "xr",
                  "objects": [uid(800 + n) for n, _ in enumerate(pieces)]},
         "entities": [copy.deepcopy(p) for p in pieces]})
-    entities(d, {"kind": "insert", "id": 90, "layerId": "cizim", "attrs": {}, "block": XREF_ID, "p": P(0, 0),
+    # Its insert's id is its place in the file, as a .kcad numbers its objects (the drawing's next).
+    entities(d, {"kind": "insert", "id": len(d["entities"]) + 1, "layerId": "cizim", "attrs": {}, "block": XREF_ID, "p": P(0, 0),
                  "scale": 1.0, "rotation": 0.0})
     return d
 

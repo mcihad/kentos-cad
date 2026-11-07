@@ -39,6 +39,7 @@ for _f in (Path(__file__).resolve().parents[2] / "fixtures/geoid/v1").iterdir():
 os.environ["KENTOS_GRID_DIR"] = str(_GRIDS)
 
 import kentos.cad as cad  # noqa: E402
+import kentos.cad._runtime as cad_runtime  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 # The catalog's queries: commands that write nothing (docs/adr/0741 §1).
@@ -194,6 +195,11 @@ class Case:
                 label = self.doc.undo() if op == "undo" else self.doc.redo()
                 if "returns" in step:
                     assert label == step["returns"], f"{at}: returned {label!r}"
+            elif op == "reopen":
+                # The project saved as a .kcad file and opened again (docs/adr/1260 §5): what follows runs on what the
+                # file keeps, the undo chain gone.
+                self.doc = cad.Document.from_bytes(self.doc.to_bytes())
+                before = self.doc.revision
             elif op == "captureRevision":
                 self.revisions[step["as"]] = self.doc.revision
             elif op == "captureUid":
@@ -225,7 +231,12 @@ class Case:
     def command(self, step: dict[str, Any], at: str) -> None:
         # A step may run another command first (a dimension tied before it is broken, docs/adr/0296).
         wrapper = cad.command(step["command"]) if "command" in step else self.wrapper
-        typed = wrapper.input_type.from_json(self.fill(step["input"], at))
+        filled = self.fill(step["input"], at)
+        try:
+            typed = wrapper.input_type.from_json(filled)
+        except (cad.DecodeError, KeyError, TypeError) as e:
+            self.untyped(step, wrapper, filled, at, e)
+            return
         if "nonFinite" in step:
             put_non_finite(typed, step["nonFinite"])
             before = self.doc.revision
@@ -304,6 +315,19 @@ class Case:
                 assert uid in held, f"{at}: output.added[{i}] {uid} is not an object of the drawing"
                 wanted["added"][i] = uid
         same(got, self.fill(want, at), f"{at}: result", step.get("within"), bool(step.get("relative")))
+
+    def untyped(self, step: dict[str, Any], wrapper: Any, filled: Any, at: str, why: Exception) -> None:
+        """A step whose input is not of the command's type (an assignment without its target's kind, docs/adr/1130):
+        the typed layer cannot build it, so a program using it never sends it. Only a refusal for `invalid_input` may
+        be such a step; the input as it is goes to the host, whose answer must be the case's and write nothing."""
+        want = json.loads(json.dumps(step["result"]))
+        refused = isinstance(want, dict) and want.get("status") == "failed" and want.get("error", {}).get("code") == "invalid_input"
+        assert refused, f"{at}: the typed layer cannot read the input ({type(why).__name__}: {why})"
+        held = self.held()
+        answer = self.doc._command(wrapper.id, wrapper.version, step["op"], filled)
+        got = wire(cad_runtime.outcome(wrapper.id, answer, None))
+        assert self.held() == held, f"{at}: ret çizimi değiştirdi: önce {held}, sonra {self.held()}"
+        same(got, self.fill(want, at), f"{at}: result")
 
     def check(self, expect: dict[str, Any] | None, before: str, at: str, within: float | None = None) -> None:
         if not expect:
@@ -438,6 +462,16 @@ class Case:
             elif key == "sheets":
                 # The sheet book's sheets as the command lists them (docs/adr/0252 §2).
                 same(json.loads(self.doc._session.summary())["sheets"], want, f"{at}: sheets")
+            elif key in ("plotProfiles", "sheetProfiles"):
+                # The book's plot profiles, and the profile each sheet's plot settings name (docs/adr/1130), as the
+                # saved file holds them (tools/kcad/kcad.py): no book, no profiles.
+                _, snapshot = _KCAD.read(self.doc.to_bytes())
+                book = (snapshot.get("sheets") or {}).get("book") or {}
+                if key == "plotProfiles":
+                    got = book.get("plotProfiles", [])
+                else:
+                    got = {s["id"]: ((s.get("plot") or {}).get("settings") or {}).get("profile") for s in book.get("sheets", [])}
+                same(got, want, f"{at}: {key}")
             elif key in ("homeView", "origin"):
                 # Where the view opens and the drawing's anchor (docs/adr/0256 §1).
                 same(json.loads(self.doc._session.summary())[key], want, f"{at}: {key}")
@@ -666,12 +700,21 @@ class CommandCases(unittest.TestCase):
                     from publish_cases import run_fixture
                 elif fixture['command']=='file.preflight.sheets':
                     from preflight_cases import run_fixture
+                elif fixture['command']=='file.package':
+                    from file_package_cases import run_fixture
+                elif fixture['command']=='file.recover':
+                    from file_recover_cases import run_fixture
                 else:
                     # Recorded, not failed at once: a failure here stopped the loop and every file after this one in
                     # order went unchecked (the road.* files, behind file.package, for a while).
                     problems.append(f"{path.name}: Dosya komutunun bağımsız Python koşucusu yok: {fixture['command']}")
                     continue
-                cases += run_fixture(fixture)
+                # A file runner stops at its first failing case; recorded so the files after it are still played.
+                try:
+                    cases += run_fixture(fixture)
+                except AssertionError as e:
+                    cases += 1
+                    problems.append(f"{path.name}: {e}")
                 continue
             wrapper = cad.command(fixture["command"])
             self.assertEqual(wrapper.version, fixture["commandVersion"])

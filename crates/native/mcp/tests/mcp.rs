@@ -1446,7 +1446,9 @@ fn named_link(path: &std::path::Path, name: &'static str, connections: usize) {
 #[cfg(unix)]
 #[test]
 fn desktop_attach_names_the_program_whose_link_it_takes() {
-    let base = std::env::temp_dir().join(format!("kentos-mcp-programlar-{}", std::process::id()));
+    // Under /tmp, not the temporary folder: a Unix socket's path holds at most 104 bytes on macOS (108 on Linux), and
+    // macOS's long default TMPDIR (/var/folders/…/T/) put `…/kentos-cad/masaustu-harita.sock` past it.
+    let base = std::path::Path::new("/tmp").join(format!("kmcp-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
     let folder = base.join("kentos-cad");
     std::fs::create_dir_all(&folder).expect("a folder");

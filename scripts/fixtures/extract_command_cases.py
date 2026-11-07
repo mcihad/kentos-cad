@@ -833,7 +833,9 @@ def runs():
     refused("geçersiz sürüm", {"recipe": PARTS, "expectedRevision": "x"}, "invalid_revision", "expectedRevision")
     unloaded = copy.deepcopy(KAT1)
     xb = next(b for b in unloaded["blocks"] if b["id"] == XREF)
-    xb["entities"], xb["xref"]["objects"], xb["xref"]["unloaded"] = [], [], True
+    # No objects: the field is not written at all (a file's writer leaves an empty list out).
+    xb["entities"], xb["xref"]["unloaded"] = [], True
+    del xb["xref"]["objects"]
     ok("yüklü olmayan dış referansın içine bakılamaz, söylenir", {"recipe": XREFS_ONLY}, XREFS_ONLY, setup=unloaded)
     cases.append(dict(name="eski revizyon", steps=[dict(
         op="execute", input={"recipe": PARTS, "base": BASE, "expectedRevision": "999"},
@@ -1065,7 +1067,8 @@ def refresh_cases():
     t = inserted["entities"][-1]
     t["cells"].insert(1, [""] * len(t["cells"][0]))
     t["rows"].insert(1, 0.5)
-    t["formulas"] = []
+    # Its formulas dropped: no field, as a file writes none (an empty list is not written).
+    del t["formulas"]
     cases.append(dict(name="kullanıcı satır eklediyse tablo korunur", setup=inserted, steps=[dict(
         op="execute", command=tables, input=refresh,
         result=dict(status="completed", output=report("unreadable"), warnings=kept_warning),
@@ -1093,7 +1096,7 @@ def refresh_cases():
             bt["source"]["copy"] = [[r[j] for j in (0, 1, 2, 4)] for r in bt["source"]["copy"]]
             bt["columns"] = bt["columns"][:6]
             bt["aligns"] = [bt["aligns"][j] for j in keep]
-            bt["formulas"] = []
+            del bt["formulas"]
         cases.append(dict(name=name, setup=broken, steps=[dict(
             op="execute", command=tables, input=refresh,
             result=dict(status="completed", output=report("unreadable"), warnings=[{"code": code, "message": "$any"}]),

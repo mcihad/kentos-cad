@@ -245,6 +245,14 @@ fn a_stakeout_is_sent_to_an_instrument() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
     let opened = call(&mut server, "drawing.open", json!({"path":path}));
     let drawing = opened["structuredContent"]["drawing"].clone();
+    // A field file's heights must be in a named system (docs/adr/1031) and the work file names none: the project's
+    // heights set first, as Proje ayarları › Kotlar does (BÖHHBÜY's TUDKA-99 orthometric heights, the TG-20 geoid).
+    let set = call(
+        &mut server,
+        "cad.settings.set",
+        json!({"drawing":drawing,"heights":{"kind":"orthometric","verticalSrid":5775,"geoid":{"name":"TG-20"}}}),
+    );
+    assert_eq!(set["isError"], false, "{set}");
     let gsi = std::env::temp_dir().join(format!("kentos-mcp-aplikasyon-{}.gsi", std::process::id()));
     let sent = call(
         &mut server,

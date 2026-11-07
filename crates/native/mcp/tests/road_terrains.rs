@@ -64,10 +64,11 @@ fn a_surface_is_made_asked_and_refused_outside_a_road_project() {
     assert_eq!(section.first().unwrap()["station"], 0.0);
     assert_eq!(section.last().unwrap()["station"], 40.0);
 
-    let map = call(&mut server, "drawing.new", json!({"workspace":"cad","cadWork":"map","province":6}));
-    assert_eq!(map["isError"], false, "{map}");
-    let map = map["structuredContent"]["drawing"].clone();
-    let refused = call(&mut server, "road.terrains.query", json!({"drawing":map}));
+    // A Mimari project holds no surfaces (a Harita project does since docs/adr/1520 §1).
+    let building = call(&mut server, "drawing.new", json!({"workspace":"cad","cadWork":"architecture"}));
+    assert_eq!(building["isError"], false, "{building}");
+    let building = building["structuredContent"]["drawing"].clone();
+    let refused = call(&mut server, "road.terrains.query", json!({"drawing":building}));
     assert_eq!(refused["isError"], true, "{refused}");
     assert_eq!(refused["structuredContent"]["error"]["code"], "not_a_road_project", "{refused}");
 }

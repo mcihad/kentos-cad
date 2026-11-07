@@ -199,8 +199,7 @@ def setup(blocks=None):
             "sheets": {"book": {"schema": "kentos.sheet/1",
                                 "sheets": [sheet("a-101", "sys:cad-mimari", 3), sheet("a-102", "sys:cad-mimari", 3),
                                            sheet("t-101", "sys:cad-teknik", 1)],
-                                "masters": [], "assets": []},
-                       "pictures": []}}
+                                "masters": [], "assets": []}}}
 
 
 def first_resources():

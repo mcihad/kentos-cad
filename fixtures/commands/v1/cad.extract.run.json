@@ -5692,7 +5692,6 @@
        "path": "$fixture:commands/v1/extract/kat2.kcad",
        "relative": "kat2.kcad",
        "digest": "164184475f4dfa07129048ca28e638132e421f8eb2d253030c89d8ad76207820",
-       "objects": [],
        "unloaded": true
       }
      }
