@@ -48,11 +48,15 @@ class _RoadVolumesApprove(LocalCommand[VolumesApprove, VolumesWritten, VolumesWr
     """``road.volumes.approve`` v1. Kübajı onayla: Yol projesinin kübaj hesabını (volume:
     kimliği ya da adı) bugün hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit
     arası her aralığın kazı ve dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not
-    (note) kübajın tanımına yazılır. Onaylı kübajın tanımı değişmez ve silinmez;
-    kaynakları (koridor, aks, boykesit, arazi) değişirse road.volumes.query bugünkü
-    hacmi onaylı hâliyle karşılaştırır. revoke onayı kaldırır. Tek geri alma adımı
-    “Kübaj onayı”. Retler: not_a_road_project, unknown_volume, volume_not_approved,
-    invalid_volume, invalid_revision, revision_conflict.
+    (note) kübajın tanımına yazılır; onay hesabın kaynaklarını (sources: koridor, aks,
+    boykesit, tip kesitler, dever sürümleri, arazinin o anki özeti ve son kabul özeti)
+    ve yöntemin algoritmasını (algorithm, ör. kentos.end-area/1) da saklar (ADR 1041,
+    KCAD şema 197). Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor,
+    aks, boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle
+    karşılaştırır ve onaydan beri değişen kaynakları approval.moved'da sayar (source,
+    id, then, now). revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler:
+    not_a_road_project, unknown_volume, volume_not_approved, invalid_volume,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.volumes.approve"
@@ -79,11 +83,15 @@ class _RoadVolumesApprove(LocalCommand[VolumesApprove, VolumesWritten, VolumesWr
         """Kübajı onayla: Yol projesinin kübaj hesabını (volume: kimliği ya da adı) bugün
         hesaplandığı gibi onaylar: toplamlar ve ardışık iki kesit arası her aralığın kazı ve
         dolgusu, onay günü (at, YYYY-AA-GG) ve isteğe bağlı not (note) kübajın tanımına
-        yazılır. Onaylı kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks,
-        boykesit, arazi) değişirse road.volumes.query bugünkü hacmi onaylı hâliyle
-        karşılaştırır. revoke onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler:
-        not_a_road_project, unknown_volume, volume_not_approved, invalid_volume,
-        invalid_revision, revision_conflict.
+        yazılır; onay hesabın kaynaklarını (sources: koridor, aks, boykesit, tip kesitler,
+        dever sürümleri, arazinin o anki özeti ve son kabul özeti) ve yöntemin algoritmasını
+        (algorithm, ör. kentos.end-area/1) da saklar (ADR 1041, KCAD şema 197). Onaylı
+        kübajın tanımı değişmez ve silinmez; kaynakları (koridor, aks, boykesit, arazi)
+        değişirse road.volumes.query bugünkü hacmi onaylı hâliyle karşılaştırır ve onaydan
+        beri değişen kaynakları approval.moved'da sayar (source, id, then, now). revoke
+        onayı kaldırır. Tek geri alma adımı “Kübaj onayı”. Retler: not_a_road_project,
+        unknown_volume, volume_not_approved, invalid_volume, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -984,9 +992,13 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
     satırların km sırasıyla binary64 toplamıdır). Hesaplanan her kübaj neyden
     hesaplandığını sources'ta söyler (ADR 1040): koridorun, aksının, boykesitinin,
     bölgelerinin tip kesitlerinin ve dever çizelgesinin bugünkü sürümleri, arazinin
-    bugünkü kaynak özeti (digest) ve son kabul özeti (built). Kurp düzeltmeli hesapta
-    kazı ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen
-    kesit yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
+    bugünkü kaynak özeti (digest) ve son kabul özeti (built). Onaylı kübajın approval'ı,
+    onay kaynaklarını saklıyorsa onaydan beri değişenleri moved'da sayar (ADR 1041): her
+    biri türü (corridor, alignment, profile, template, superelevation, surface,
+    algorithm), kimliği (algoritmada adı), onaydaki ve bugünkü sürümü (arazide özeti)
+    ile; onaydan önce saklanmayan kaynaklarda liste yoktur. Kurp düzeltmeli hesapta kazı
+    ve dolgu düzeltilmiş olanlardır, curve düzeltmenin etkisini ve merkezi geçen kesit
+    yüzünden düz kalan aralıkları söyler (volume_curve_past_centre). Her hesabın
     satırları ardışık iki kesit arasıdır: km'ler, kazı ve dolgu (m³; kesiti çözülmeyen
     aralıkta yok), aralığın ortasının katsayıları, kabarma ve sıkışmayla düzeltilmiş
     kazı ve dolgunun birikimli toplamları ve farkı (kütle ordinatı). Toplamlar ham ve
@@ -1030,7 +1042,11 @@ class _RoadVolumesQuery(LocalCommand[VolumesQuery, VolumesQueried, VolumesQuerie
         binary64 toplamıdır). Hesaplanan her kübaj neyden hesaplandığını sources'ta söyler
         (ADR 1040): koridorun, aksının, boykesitinin, bölgelerinin tip kesitlerinin ve dever
         çizelgesinin bugünkü sürümleri, arazinin bugünkü kaynak özeti (digest) ve son kabul
-        özeti (built). Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve
+        özeti (built). Onaylı kübajın approval'ı, onay kaynaklarını saklıyorsa onaydan beri
+        değişenleri moved'da sayar (ADR 1041): her biri türü (corridor, alignment, profile,
+        template, superelevation, surface, algorithm), kimliği (algoritmada adı), onaydaki
+        ve bugünkü sürümü (arazide özeti) ile; onaydan önce saklanmayan kaynaklarda liste
+        yoktur. Kurp düzeltmeli hesapta kazı ve dolgu düzeltilmiş olanlardır, curve
         düzeltmenin etkisini ve merkezi geçen kesit yüzünden düz kalan aralıkları söyler
         (volume_curve_past_centre). Her hesabın satırları ardışık iki kesit arasıdır:
         km'ler, kazı ve dolgu (m³; kesiti çözülmeyen aralıkta yok), aralığın ortasının

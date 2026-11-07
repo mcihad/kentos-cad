@@ -1028,16 +1028,21 @@ impl App {
                     }
                     if let Some(a) = rep.approval.as_ref() {
                         let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+                        // Docs/adr/1041: what moved since, where the approval keeps its sources.
+                        let since = approval_sources_words(a);
                         d = d.note(if a.changed {
                             Banner::warning(format!(
-                                "Onaylı ({}{note}) hâline göre kazı {} m³, dolgu {} m³; {} aralık değişti.",
+                                "Onaylı ({}{note}) hâline göre kazı {} m³, dolgu {} m³; {} aralık değişti.{since}",
                                 a.approved.at,
                                 signed(a.cut_change),
                                 signed(a.fill_change),
                                 a.rows.len()
                             ))
                         } else {
-                            Banner::info(format!("Onaylı: {}{note}; bugün de aynı hacmi veriyor. Değiştirmek için önce onayı kaldırın.", a.approved.at))
+                            Banner::info(format!(
+                                "Onaylı: {}{note}; bugün de aynı hacmi veriyor.{since} Değiştirmek için önce onayı kaldırın.",
+                                a.approved.at
+                            ))
                         });
                     }
                     for wn in &w.preview.warnings {
@@ -1412,6 +1417,41 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// What moved since an approval, as a sentence after the approval's (docs/adr/1041): " Onaydan beri değişen: aks g-1
+/// (1 → 2), arazi t-1 (df9eb6e9… → 2751c2db…)."; nothing where none moved; that the approval does not keep its sources
+/// where it was made before it could.
+pub(crate) fn approval_sources_words(a: &kentos_commands::VolumeApprovalReport) -> String {
+    use kentos_commands::VolumeSourceKind as K;
+    if a.approved.sources.is_none() {
+        return " Bu onay hesaplandığı kaynakları saklamıyor (eski onay).".to_owned();
+    }
+    if a.moved.is_empty() {
+        return String::new();
+    }
+    let value = |m: &kentos_commands::VolumeSourceMove, v: &Option<String>| match v {
+        None => "yok".to_owned(),
+        Some(d) if m.source == K::Surface => format!("{}…", &d[..d.len().min(8)]),
+        Some(v) => v.clone(),
+    };
+    let words: Vec<String> = a
+        .moved
+        .iter()
+        .map(|m| {
+            let what = match m.source {
+                K::Corridor => "koridor",
+                K::Alignment => "aks",
+                K::Profile => "boykesit",
+                K::Template => "tip kesit",
+                K::Superelevation => "dever",
+                K::Surface => "arazi",
+                K::Algorithm => "algoritma",
+            };
+            format!("{what} {} ({} → {})", m.id, value(m, &m.then), value(m, &m.now))
+        })
+        .collect();
+    format!(" Onaydan beri değişen: {}.", words.join(", "))
 }
 
 /// The road project's volumes as saved.

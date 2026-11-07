@@ -285,8 +285,45 @@ pub struct VolumeRowChange {
     pub fill: Option<f64>,
 }
 
+/// A source of an approved volume (docs/adr/1041): the corridor, its alignment, profile, a template, the
+/// superelevation schedule, the terrain surface, or the method's algorithm.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum VolumeSourceKind {
+    Corridor,
+    Alignment,
+    Profile,
+    Template,
+    Superelevation,
+    Surface,
+    Algorithm,
+}
+
+/// A source that is not as the approval had it (docs/adr/1041): which, its id (the algorithm's name), and what it was
+/// then and is now: a revision as decimal text, the surface's digest, the algorithm's version. None then: it was no
+/// source of the approved figures; none now: it is none of today's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct VolumeSourceMove {
+    pub source: VolumeSourceKind,
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub then: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub now: Option<String>,
+}
+
 /// An approved volume against today's: the approval as written, whether the figures changed, today's totals less the
-/// approved ones and the stretches that changed.
+/// approved ones and the stretches that changed; the sources that moved since (docs/adr/1041), in the order of
+/// `VolumeSourceKind` (empty where the approval does not keep its sources: one made before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -295,6 +332,9 @@ pub struct VolumeRowChange {
 pub struct VolumeApprovalReport {
     pub approved: crate::VolumeApprovalDef,
     pub changed: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<VolumeSourceMove>>", optional))]
+    pub moved: Vec<VolumeSourceMove>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub cut_change: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]

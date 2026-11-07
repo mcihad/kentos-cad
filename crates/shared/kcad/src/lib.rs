@@ -831,11 +831,13 @@ pub const SCHEMA_WITH_ROAD_PLACES: u32 = 194;
 pub const SCHEMA_WITH_ROAD_CLOUD_HEIGHTS: u32 = 195;
 /// Schema 196 (docs/adr/1032): a cloud record's `heights`, the clouds' as the call said them and the project's.
 pub const SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS: u32 = 196;
+/// Schema 197 (docs/adr/1041): a volume approval's `sources` and `algorithm`, what its figures were computed from.
+pub const SCHEMA_WITH_ROAD_APPROVAL_SOURCES: u32 = 197;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 194] = [
+pub const SCHEMAS: [u32; 195] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1030,6 +1032,7 @@ pub const SCHEMAS: [u32; 194] = [
     SCHEMA_WITH_ROAD_PLACES,
     SCHEMA_WITH_ROAD_CLOUD_HEIGHTS,
     SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS,
+    SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
 ];
 
 /// The file a drawing is saved as.

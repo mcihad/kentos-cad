@@ -2243,6 +2243,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 197 (docs/adr/1041): a volume approval's sources and algorithm.
+    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_approval_sources) {
+        return crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES;
+    }
     // Schema 196 (docs/adr/1032): a cloud record's heights as the call said them.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_conversions) {
         return crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS;

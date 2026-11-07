@@ -1451,6 +1451,16 @@ pub struct VolumeApprovalDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ended: Option<VolumeApprovalEnd>,
+    /// What the figures were computed from when approved, each as it was then (docs/adr/1041; schema 197): none on an
+    /// approval made before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sources: Option<VolumeSources>,
+    /// The method's algorithm by name and version they were computed by (docs/adr/1040, 1041; schema 197): none on an
+    /// approval made before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub algorithm: Option<String>,
 }
 
 /// How an approval ended (docs/adr/0950): the day (YYYY-MM-DD; none where it was not given), whether it was revoked
@@ -3433,6 +3443,18 @@ fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
                     return fail(path, "onayın bitiş notu en çok 500 karakter olur");
                 }
             }
+            // Docs/adr/1041: what it was computed from and by which algorithm.
+            if let Some(s) = &a.sources
+                && let Some(words) = volume_sources_problem(s)
+            {
+                return fail(format!("{path}.sources"), &words);
+            }
+            if a.algorithm.as_deref().is_some_and(|t| !algorithm_ok(t)) {
+                return fail(
+                    format!("{path}.algorithm"),
+                    "algoritma ad/sürüm biçiminde olmalı (küçük harf, rakam, nokta ve tire; en çok 64 harf)",
+                );
+            }
             None
         };
         if let Some(a) = &v.approved {
@@ -3752,6 +3774,38 @@ fn word_ok(s: &str) -> bool {
     !s.is_empty() && s.chars().count() <= 64 && !s.chars().any(char::is_whitespace)
 }
 
+/// A digest as the road project writes it: 64 lower-case hex digits.
+fn digest_ok(d: &str) -> bool {
+    d.len() == 64 && d.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// An algorithm by name and version (docs/adr/1040): `kentos.end-area/1`; lower-case letters, digits, dots and dashes,
+/// a slash and the version's digits, at most 64 characters.
+fn algorithm_ok(t: &str) -> bool {
+    let Some((name, version)) = t.split_once('/') else { return false };
+    t.len() <= 64
+        && !name.is_empty()
+        && name.bytes().all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'-'))
+        && !version.is_empty()
+        && version.bytes().all(|b| b.is_ascii_digit())
+}
+
+/// What is wrong with a volume's sources as an approval keeps them (docs/adr/1041): ids are words, the templates at
+/// most a corridor's regions, the surface's digests 64 lower-case hex digits.
+fn volume_sources_problem(s: &VolumeSources) -> Option<String> {
+    let named = [&s.corridor, &s.alignment, &s.profile].into_iter().chain(&s.templates).chain(&s.superelevation);
+    if named.into_iter().any(|r| !word_ok(&r.id)) || !word_ok(&s.surface.id) {
+        return Some("kaynağın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı".into());
+    }
+    if s.templates.len() > MAX_CORRIDOR_REGIONS {
+        return Some(format!("en çok {MAX_CORRIDOR_REGIONS} tip kesit olur"));
+    }
+    if [&s.surface.digest, &s.surface.built].into_iter().flatten().any(|d| !digest_ok(d)) {
+        return Some("arazinin özeti 64 küçük onaltılık rakam olmalı".into());
+    }
+    None
+}
+
 fn list_problem(list: &[String]) -> Option<String> {
     if list.len() > MAX_SURFACE_SOURCES {
         return Some(format!("en çok {MAX_SURFACE_SOURCES} kaynak olur"));
@@ -3771,6 +3825,38 @@ fn list_problem(list: &[String]) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Docs/adr/1041: an approval's sources and algorithm as a file keeps them: ids are words, the templates at most a
+    /// corridor's regions, digests 64 lower-case hex digits, the algorithm `name/version`.
+    #[test]
+    fn an_approvals_sources_and_algorithm_are_judged() {
+        for good in ["kentos.end-area/1", "kentos.tin-overlay/12"] {
+            assert!(algorithm_ok(good), "{good}");
+        }
+        let long = format!("{}/1", "a".repeat(63));
+        for bad in ["", "kentos.end-area", "kentos.end-area/", "/1", "Kentos.end-area/1", "kentos.end area/1", "kentos.end-area/1a", &long] {
+            assert!(!algorithm_ok(bad), "{bad}");
+        }
+        let source = |id: &str| RoadSource { id: id.into(), revision: 1 };
+        let ok = VolumeSources {
+            corridor: source("c-1"),
+            alignment: source("g-1"),
+            profile: source("b-1"),
+            templates: vec![source("tk-1")],
+            superelevation: None,
+            surface: RoadSurfaceSource { id: "t-1".into(), digest: Some("a".repeat(64)), built: None },
+        };
+        assert_eq!(volume_sources_problem(&ok), None);
+        let mut spaced = ok.clone();
+        spaced.templates.push(source("iki sözcük"));
+        assert!(volume_sources_problem(&spaced).is_some());
+        let mut upper = ok.clone();
+        upper.surface.built = Some("A".repeat(64));
+        assert!(volume_sources_problem(&upper).is_some());
+        let mut many = ok.clone();
+        many.templates = vec![source("tk"); MAX_CORRIDOR_REGIONS + 1];
+        assert!(volume_sources_problem(&many).is_some());
+    }
 
     fn surface() -> TerrainSurfaceDef {
         TerrainSurfaceDef {

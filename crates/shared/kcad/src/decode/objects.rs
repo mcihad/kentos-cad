@@ -382,6 +382,8 @@ pub(super) struct Features {
     pub(super) road_cloud_heights: bool,
     /// Schema 196: a cloud record's heights as the call said them (docs/adr/1032).
     pub(super) road_cloud_conversions: bool,
+    /// Schema 197: a volume approval's sources and algorithm (docs/adr/1041).
+    pub(super) road_approval_sources: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
     /// Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
@@ -659,6 +661,7 @@ impl Features {
             road_places: schema >= crate::SCHEMA_WITH_ROAD_PLACES,
             road_cloud_heights: schema >= crate::SCHEMA_WITH_ROAD_CLOUD_HEIGHTS,
             road_cloud_conversions: schema >= crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS,
+            road_approval_sources: schema >= crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,

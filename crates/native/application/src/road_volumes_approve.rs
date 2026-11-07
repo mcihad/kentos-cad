@@ -43,7 +43,7 @@ fn check(doc: &kentos_domain::Document, input: &VolumesApprove) -> Result<Checke
             return Err(fail(codes::INVALID_VOLUME, "Onay için günü (at, YYYY-AA-GG) verin.".into(), "at"));
         };
         let (now, _) = common::compute(doc, old)?;
-        let next = common::approval_of(old, &now, day.clone(), input.note.clone());
+        let next = common::approval_of(doc, old, &now, day.clone(), input.note.clone());
         // A new approval of an approved volume takes the old one's place; the old one goes to the history.
         if let Some(mut before) = old.approved.clone() {
             before.ended = Some(VolumeApprovalEnd { at: Some(day), revoked: false, note: None });

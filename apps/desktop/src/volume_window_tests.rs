@@ -134,6 +134,12 @@ fn an_approved_volume_stays_and_says_how_it_changed() {
     let approval = w.preview.report.as_ref().and_then(|r| r.approval.as_ref()).expect("an approval");
     assert!(approval.changed && !approval.rows.is_empty(), "{approval:?}");
     assert!(w.preview.warnings.iter().any(|x| x.code == "volume_changed"));
+    // Docs/adr/1041: the approval kept what it was computed from; the corridor written again moved since.
+    assert_eq!(approval.approved.algorithm.as_deref(), Some("kentos.end-area/1"));
+    assert_eq!(approval.approved.sources.as_ref().map(|s| s.corridor.revision), Some(1));
+    let moved: Vec<_> = approval.moved.iter().map(|m| (m.source, m.id.as_str(), m.then.as_deref(), m.now.as_deref())).collect();
+    assert_eq!(moved, vec![(kentos_commands::VolumeSourceKind::Corridor, "c-1", Some("1"), Some("2"))]);
+    assert_eq!(crate::volume_window::approval_sources_words(approval), " Onaydan beri değişen: koridor c-1 (1 → 2).");
     // Approved, its definition does not change.
     send(&mut app, W::Name("Başka".into()));
     send(&mut app, W::Save);
@@ -1220,6 +1226,100 @@ fn screens_sources() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y105-kubaj-kaynaklar-{step}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// Docs/adr/1041: an approval made before approvals kept their sources says so; one that keeps them says what moved,
+/// the ground by its digest's first digits and a template the corridor no longer names as gone.
+#[test]
+fn the_approval_note_says_what_moved_since() {
+    use kentos_commands::{VolumeApprovalDef, VolumeApprovalReport, VolumeSourceKind as K, VolumeSourceMove};
+    let approved = VolumeApprovalDef {
+        revision: 1,
+        at: "2026-11-03".into(),
+        note: None,
+        cut: 1.0,
+        fill: 1.0,
+        factored_cut: 1.0,
+        factored_fill: 1.0,
+        strip: None,
+        bench: None,
+        rows: vec![],
+        number: 1,
+        ended: None,
+        sources: None,
+        algorithm: None,
+    };
+    let mut report = VolumeApprovalReport {
+        approved,
+        changed: false,
+        moved: vec![],
+        cut_change: 0.0,
+        fill_change: 0.0,
+        factored_cut_change: 0.0,
+        factored_fill_change: 0.0,
+        rows: vec![],
+    };
+    let words = crate::volume_window::approval_sources_words;
+    assert_eq!(words(&report), " Bu onay hesaplandığı kaynakları saklamıyor (eski onay).");
+    let source = |id: &str| kentos_commands::RoadSource { id: id.into(), revision: 1 };
+    report.approved.sources = Some(kentos_commands::VolumeSources {
+        corridor: source("c-1"),
+        alignment: source("g-1"),
+        profile: source("b-1"),
+        templates: vec![source("tk-1"), source("tk-2")],
+        superelevation: None,
+        surface: kentos_commands::RoadSurfaceSource { id: "t-1".into(), digest: Some("d".repeat(64)), built: None },
+    });
+    assert_eq!(words(&report), "");
+    let step = |source, id: &str, then: Option<&str>, now: Option<&str>| VolumeSourceMove {
+        source,
+        id: id.into(),
+        then: then.map(str::to_owned),
+        now: now.map(str::to_owned),
+    };
+    report.moved = vec![
+        step(K::Template, "tk-2", Some("1"), None),
+        step(K::Surface, "t-1", Some(&"d".repeat(64)), Some(&"e".repeat(64))),
+    ];
+    assert_eq!(words(&report), " Onaydan beri değişen: tip kesit tk-2 (1 → yok), arazi t-1 (dddddddd… → eeeeeeee…).");
+}
+
+/// Kübaj approved, then its corridor written again (sampled more densely): the approval's note says how today's figures
+/// differ and which source moved since (docs/adr/1041); light at 1440 px, dark at 1100 px; `.run/gui-evidence/yol-y106/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib volume_window_tests::screens_approval_sources -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_approval_sources() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y106");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (name, theme, size) in [("acik", "light", Size::new(1440.0, 900.0)), ("koyu", "dark", Size::new(1100.0, 760.0))] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::RibbonTab("corridor"));
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::ApprovalNote("1. hakediş".into()));
+        send(&mut app, W::Approve(true));
+        send(&mut app, W::Cancel);
+        densify(&mut app);
+        let _ = app.update(Message::Run("volume.editor"));
+        send(&mut app, W::Choose(0));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("y106-kubaj-onaydan-beri-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

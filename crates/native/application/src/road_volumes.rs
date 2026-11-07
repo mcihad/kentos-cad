@@ -537,7 +537,12 @@ pub(crate) fn compute_on(
     };
     let mut report = report;
     if let Some(a) = &def.approved {
-        let approval = compare(a, &report);
+        let mut approval = compare(a, &report);
+        // Docs/adr/1041: the sources that moved since, where the approval keeps them.
+        if let (Some(then), Some(now)) = (&a.sources, sources_of(doc, def)) {
+            let algorithm = basis_of(&report).map(|b| b.algorithm);
+            approval.moved = moved(then, &now, a.algorithm.as_deref(), algorithm.as_deref());
+        }
         if approval.changed {
             warnings.push(warning(
                 codes::VOLUME_CHANGED,
@@ -617,6 +622,7 @@ pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport
     kentos_commands::VolumeApprovalReport {
         approved: a.clone(),
         changed: c.changed,
+        moved: Vec::new(),
         cut_change: c.cut_change,
         fill_change: c.fill_change,
         factored_cut_change: c.factored_cut_change,
@@ -625,8 +631,53 @@ pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport
     }
 }
 
-/// The figures to approve: the volume as computed now, numbered after its approvals so far (docs/adr/0950).
-pub(crate) fn approval_of(def: &VolumeDef, now: &VolumeReport, at: String, note: Option<String>) -> kentos_commands::VolumeApprovalDef {
+/// The sources that moved since an approval (docs/adr/1041), kind by kind in `VolumeSourceKind`'s order: each of the
+/// approval's against today's by its id (a template the corridor no longer names: none now; one it names anew: none
+/// then), the surface by its digest, the algorithm by its version under its name.
+pub(crate) fn moved(
+    then: &kentos_commands::VolumeSources,
+    now: &kentos_commands::VolumeSources,
+    algorithm_then: Option<&str>,
+    algorithm_now: Option<&str>,
+) -> Vec<kentos_commands::VolumeSourceMove> {
+    use kentos_commands::{RoadSource, RoadSurfaceSource, VolumeSourceKind as K, VolumeSourceMove};
+    type Side = Vec<(String, String)>;
+    fn pair(out: &mut Vec<VolumeSourceMove>, source: K, a: Side, b: Side) {
+        for (id, v) in &a {
+            let found = b.iter().find(|x| x.0 == *id).map(|x| x.1.clone());
+            if found.as_ref() != Some(v) {
+                out.push(VolumeSourceMove { source, id: id.clone(), then: Some(v.clone()), now: found });
+            }
+        }
+        for (id, w) in b.iter().filter(|x| !a.iter().any(|y| y.0 == x.0)) {
+            out.push(VolumeSourceMove { source, id: id.clone(), then: None, now: Some(w.clone()) });
+        }
+    }
+    let rev = |r: &RoadSource| (r.id.clone(), r.revision.to_string());
+    let digest = |s: &RoadSurfaceSource| s.digest.iter().map(|d| (s.id.clone(), d.clone())).collect::<Side>();
+    let named = |t: Option<&str>| {
+        t.and_then(|t| t.split_once('/')).map(|(name, version)| (name.to_owned(), version.to_owned())).into_iter().collect::<Side>()
+    };
+    let mut out = Vec::new();
+    pair(&mut out, K::Corridor, vec![rev(&then.corridor)], vec![rev(&now.corridor)]);
+    pair(&mut out, K::Alignment, vec![rev(&then.alignment)], vec![rev(&now.alignment)]);
+    pair(&mut out, K::Profile, vec![rev(&then.profile)], vec![rev(&now.profile)]);
+    pair(&mut out, K::Template, then.templates.iter().map(rev).collect(), now.templates.iter().map(rev).collect());
+    pair(&mut out, K::Superelevation, then.superelevation.iter().map(rev).collect(), now.superelevation.iter().map(rev).collect());
+    pair(&mut out, K::Surface, digest(&then.surface), digest(&now.surface));
+    pair(&mut out, K::Algorithm, named(algorithm_then), named(algorithm_now));
+    out
+}
+
+/// The figures to approve: the volume as computed now, numbered after its approvals so far (docs/adr/0950), with what
+/// they are computed from and by which algorithm (docs/adr/1041).
+pub(crate) fn approval_of(
+    doc: &Document,
+    def: &VolumeDef,
+    now: &VolumeReport,
+    at: String,
+    note: Option<String>,
+) -> kentos_commands::VolumeApprovalDef {
     let last = def.history.iter().chain(&def.approved).map(|a| a.number).max().unwrap_or(0);
     // An approval from before the numbers counts as one: the next is its successor, not the first.
     let before = def.history.len() + usize::from(def.approved.is_some());
@@ -643,6 +694,8 @@ pub(crate) fn approval_of(def: &VolumeDef, now: &VolumeReport, at: String, note:
         strip: now.strip,
         bench: now.bench,
         rows: now.rows.iter().filter_map(|r| Some([r.from, r.to, r.cut?, r.fill?])).collect(),
+        sources: sources_of(doc, def),
+        algorithm: basis_of(now).map(|b| b.algorithm),
     }
 }
 

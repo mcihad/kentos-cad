@@ -7826,6 +7826,23 @@ VolumeSidesName = Literal["daylights", "corridor"]
 """The names of :class:`VolumeSides`, for a plain string."""
 
 
+class VolumeSourceKind(_StrEnum):
+    """A source of an approved volume (docs/adr/1041): the corridor, its alignment, profile, a template, the
+    superelevation schedule, the terrain surface, or the method's algorithm.
+    """
+    CORRIDOR = "corridor"
+    ALIGNMENT = "alignment"
+    PROFILE = "profile"
+    TEMPLATE = "template"
+    SUPERELEVATION = "superelevation"
+    SURFACE = "surface"
+    ALGORITHM = "algorithm"
+
+
+VolumeSourceKindName = Literal["corridor", "alignment", "profile", "template", "superelevation", "surface", "algorithm"]
+"""The names of :class:`VolumeSourceKind`, for a plain string."""
+
+
 class WallAnchor(_StrEnum):
     """Which end of an edge stays when its length changes (docs/adr/0728 §3).
 
@@ -94743,10 +94760,14 @@ class VolumeApprovalDef(_Model):
         factored_cut: Unit: volume.
         factored_fill: Unit: volume.
         rows: Unit: volume.
+        algorithm: The method's algorithm by name and version they were computed by (docs/adr/1040, 1041; schema 197): none on an
+            approval made before.
         bench: Unit: volume.
         ended: How it ended, in the volume's history (docs/adr/0950; schema 173): none while it stands.
         number: Its number among the volume's approvals, from 1 (docs/adr/0950; schema 173); 0: approved before approvals were
             numbered. Unit: count.
+        sources: What the figures were computed from when approved, each as it was then (docs/adr/1041; schema 197): none on an
+            approval made before.
         strip: Unit: volume.
     """
     revision: int
@@ -94756,10 +94777,12 @@ class VolumeApprovalDef(_Model):
     factored_cut: float
     factored_fill: float
     rows: list[list[float]]
+    algorithm: str | None | Unset = UNSET
     bench: float | None | Unset = UNSET
     ended: VolumeApprovalEnd | None | Unset = UNSET
     note: str | None | Unset = UNSET
     number: int | Unset = UNSET
+    sources: VolumeSources | None | Unset = UNSET
     strip: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -94771,6 +94794,8 @@ class VolumeApprovalDef(_Model):
         out["factoredCut"] = float(self.factored_cut)
         out["factoredFill"] = float(self.factored_fill)
         out["rows"] = [[float(e1) for e1 in e0] for e0 in self.rows]
+        if self.algorithm is not UNSET:
+            out["algorithm"] = self.algorithm
         if self.bench is not UNSET:
             out["bench"] = None if self.bench is None else float(self.bench)
         if self.ended is not UNSET:
@@ -94779,6 +94804,8 @@ class VolumeApprovalDef(_Model):
             out["note"] = self.note
         if self.number is not UNSET:
             out["number"] = self.number
+        if self.sources is not UNSET:
+            out["sources"] = None if self.sources is None else self.sources.to_json()
         if self.strip is not UNSET:
             out["strip"] = None if self.strip is None else float(self.strip)
         return out
@@ -94793,10 +94820,12 @@ class VolumeApprovalDef(_Model):
             factored_cut=float(data["factoredCut"]),
             factored_fill=float(data["factoredFill"]),
             rows=[[float(e1) for e1 in e0] for e0 in data["rows"]],
+            algorithm=data.get("algorithm", UNSET),
             bench=UNSET if "bench" not in data else None if data["bench"] is None else float(data["bench"]),
             ended=UNSET if "ended" not in data else None if data["ended"] is None else VolumeApprovalEnd.from_json(data["ended"]),
             note=data.get("note", UNSET),
             number=data.get("number", UNSET),
+            sources=UNSET if "sources" not in data else None if data["sources"] is None else VolumeSources.from_json(data["sources"]),
             strip=UNSET if "strip" not in data else None if data["strip"] is None else float(data["strip"]),
         )
 
@@ -94832,7 +94861,8 @@ class VolumeApprovalEnd(_Model):
 @dataclass(kw_only=True, slots=True)
 class VolumeApprovalReport(_Model):
     """An approved volume against today's: the approval as written, whether the figures changed, today's totals less the
-    approved ones and the stretches that changed.
+    approved ones and the stretches that changed; the sources that moved since (docs/adr/1041), in the order of
+    `VolumeSourceKind` (empty where the approval does not keep its sources: one made before).
     Attributes:
         cut_change: Unit: volume.
         fill_change: Unit: volume.
@@ -94846,6 +94876,7 @@ class VolumeApprovalReport(_Model):
     factored_cut_change: float
     factored_fill_change: float
     rows: list[VolumeRowChange]
+    moved: list[VolumeSourceMove] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -94856,6 +94887,8 @@ class VolumeApprovalReport(_Model):
         out["factoredCutChange"] = float(self.factored_cut_change)
         out["factoredFillChange"] = float(self.factored_fill_change)
         out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.moved is not UNSET:
+            out["moved"] = [e0.to_json() for e0 in self.moved]
         return out
 
     @classmethod
@@ -94868,6 +94901,7 @@ class VolumeApprovalReport(_Model):
             factored_cut_change=float(data["factoredCutChange"]),
             factored_fill_change=float(data["factoredFillChange"]),
             rows=[VolumeRowChange.from_json(e0) for e0 in data["rows"]],
+            moved=[VolumeSourceMove.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
         )
 
 
@@ -95667,6 +95701,37 @@ class VolumeRowChange(_Model):
             approved_fill=UNSET if "approvedFill" not in data else None if data["approvedFill"] is None else float(data["approvedFill"]),
             cut=UNSET if "cut" not in data else None if data["cut"] is None else float(data["cut"]),
             fill=UNSET if "fill" not in data else None if data["fill"] is None else float(data["fill"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class VolumeSourceMove(_Model):
+    """A source that is not as the approval had it (docs/adr/1041): which, its id (the algorithm's name), and what it was
+    then and is now: a revision as decimal text, the surface's digest, the algorithm's version. None then: it was no
+    source of the approved figures; none now: it is none of today's.
+    """
+    source: VolumeSourceKind | VolumeSourceKindName
+    id: str
+    now: str | None | Unset = UNSET
+    then: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = _enum_out(self.source)
+        out["id"] = self.id
+        if self.now is not UNSET:
+            out["now"] = self.now
+        if self.then is not UNSET:
+            out["then"] = self.then
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> VolumeSourceMove:
+        return cls(
+            source=_enum_in(VolumeSourceKind, data["source"]),
+            id=data["id"],
+            now=data.get("now", UNSET),
+            then=data.get("then", UNSET),
         )
 
 
@@ -122226,6 +122291,9 @@ __all__ = [
     "VolumeRuleName",
     "VolumeSides",
     "VolumeSidesName",
+    "VolumeSourceKind",
+    "VolumeSourceKindName",
+    "VolumeSourceMove",
     "VolumeSources",
     "VolumeSpread",
     "VolumeStateRow",
