@@ -359,6 +359,8 @@ mod impact_window_tests;
 #[cfg(test)]
 mod readjustment_window_tests;
 #[cfg(test)]
+mod brand_tests;
+#[cfg(test)]
 mod ortho_compare_window_tests;
 #[cfg(test)]
 mod ortho_window_tests;
@@ -975,7 +977,9 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             }
             // The server cell's first answer (the web asks once it is idle after start).
             let server = app.check_server_quietly();
-            (app, iced::Task::batch([task, server]))
+            // The window's device pixels per logical pixel: the brand's pictures are chosen by it.
+            let scale = iced::window::oldest().and_then(iced::window::scale_factor).map(app::Message::DeviceScale);
+            (app, iced::Task::batch([task, server, scale]))
         },
         app::App::update,
         app::App::view,

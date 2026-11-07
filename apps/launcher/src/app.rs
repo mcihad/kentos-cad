@@ -105,6 +105,8 @@ pub enum Message {
     TextSize(u8),
     MinimizeOnLaunch(bool),
     SystemTheme(iced::theme::Mode),
+    /// The window's device pixels per logical pixel, at opening and on another screen: the brand's sizes follow it.
+    DeviceScale(f32),
     OpenFolder(PathBuf),
     ShowManifest(String),
     Reload,
@@ -173,7 +175,9 @@ impl Launcher {
         launcher.settings_path = settings_path;
         launcher.reload();
         let theme = iced::system::theme().map(Message::SystemTheme);
-        (launcher, theme)
+        // The window's device pixels per logical pixel: the brand's pictures are chosen by it.
+        let scale = iced::window::oldest().and_then(iced::window::scale_factor).map(Message::DeviceScale);
+        (launcher, Task::batch([theme, scale]))
     }
 
     /// A launcher over the given places (the snapshot and tests give their own).
@@ -361,7 +365,7 @@ impl Launcher {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        let mut subscriptions = vec![event::listen_with(key)];
+        let mut subscriptions = vec![event::listen_with(key), event::listen_with(device_scale)];
         if !self.processes.is_empty() {
             subscriptions.push(Subscription::run(ticks));
         }
@@ -543,6 +547,7 @@ impl Launcher {
                 self.save_settings();
             }
             Message::SystemTheme(mode) => self.system_dark = mode != iced::theme::Mode::Light,
+            Message::DeviceScale(scale) => kentos_ui::widget::brand::set_device_scale(scale),
             Message::OpenFolder(folder) => {
                 if let Err(e) = std::fs::create_dir_all(&folder) {
                     self.say(
@@ -1030,5 +1035,13 @@ mod tests {
             1,
             "a soon app starts nothing and says nothing"
         );
+    }
+}
+
+/// The window's device pixels per logical pixel when it changes (moved to another screen), for the brand's sizes.
+fn device_scale(event: iced::Event, _: iced::event::Status, _: iced::window::Id) -> Option<Message> {
+    match event {
+        iced::Event::Window(iced::window::Event::Rescaled(scale)) => Some(Message::DeviceScale(scale)),
+        _ => None,
     }
 }

@@ -29,6 +29,12 @@ olduğunu ve nasıl kullanılacağını anlatır.
 
 Logo ve yazısı **her zaman laciverttir** (`--c-brand*` jetonları; karo iki temada da lacivert, yazı koyu temada açık lacivert, açık temada lacivert); kullanıcının seçtiği vurgu rengini izlemez, çünkü markanın kendi rengidir. Logo döndürülmez, başka renge boyanmaz; altında hafif bir gölge vardır. Logo ile yazı bir düğmedir: tıklayınca uygulama menüsü açılır (§7.1.1).
 
+**Masaüstünde logo resmi** (`crates/ui/src/widget/brand.rs`): verilen büyük PNG'ler ekranda küçültülerek çizilmez (GPU
+mipmap'siz örnekler, kenarlar kırılır). Logo ve işaret, kullanıldıkları boyutlara 1× ve 2× aygıt pikseliyle bir kez
+küçültülüp `assets/images/brand/` altında durur (`python3 scripts/assets/brand_sizes.py`: kırpma, doğrusal ışıkta,
+önceden çarpılmış alfayla Lanczos-3); uygulama pencerenin ölçeğine göre seçip piksel piksel çizer. Logo yeni bir boyutta
+kullanılırsa boyut betiğe ve `brand.rs`'in listesine eklenir.
+
 ---
 
 ## 3. Renk

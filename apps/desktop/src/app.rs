@@ -663,6 +663,8 @@ pub enum Message {
     BandRead(crate::band_ghosts::Read),
     /// The window's new size: the kept sizes are shown within it.
     WindowResized(iced::Size),
+    /// The window's device pixels per logical pixel, at opening and on another screen: the brand's sizes follow it.
+    DeviceScale(f32),
     /// The layer tree's rows and their menu (layering.rs).
     Layer(crate::layering::Event),
     /// The right button's menus over the drawing and the one-shot snap (drawing_menus.rs).
@@ -2235,6 +2237,7 @@ impl App {
             // Genel bakış's picture, drawn again a moment after a change (navigation_cards.rs).
             self.navigation_subscription(),
             window::resize_events().map(|(_, size)| Message::WindowResized(size)),
+            iced::event::listen_with(device_scale),
             // A large import writes a slice of its objects each frame (exchange/drawing_import.rs).
             if self.importing.is_some() {
                 window::frames().map(|_| {
@@ -2582,6 +2585,7 @@ impl App {
             Message::GridsLooked(looked) => self.grids_looked(looked),
             Message::BandRead(read) => self.band_read(read),
             Message::WindowResized(size) => self.window_resized(size),
+            Message::DeviceScale(scale) => kentos_ui::widget::brand::set_device_scale(scale),
             // The next frame draws them; the bottom panel shows the pyramids' progress.
             Message::RastersReady => {
                 // A raster's address changed: it is read again, said once (docs/adr/0642 §2).
@@ -4838,5 +4842,14 @@ mod tests {
                 .last()
                 .is_some_and(|l| l.level == Level::Warn && l.text.contains("“KA” anlaşılamadı"))
         );
+    }
+}
+
+/// The window's device pixels per logical pixel when it changes (moved to another screen), for the brand's sizes
+/// (kentos_ui's brand.rs); at opening the app asks for it once.
+fn device_scale(event: iced::Event, _: iced::event::Status, _: iced::window::Id) -> Option<Message> {
+    match event {
+        iced::Event::Window(iced::window::Event::Rescaled(scale)) => Some(Message::DeviceScale(scale)),
+        _ => None,
     }
 }
