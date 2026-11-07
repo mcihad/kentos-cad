@@ -255,7 +255,8 @@ impl GridSystemTool {
         };
         let sign = if self.clockwise { -1.0 } else { 1.0 };
         Some(GridsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The axes' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Grid, cx),
             grids: Vec::new(),
             series: None,
             system: (!self.radial).then(|| GridSystem {
@@ -364,12 +365,18 @@ impl GridSystemTool {
     }
 
     fn write(&mut self, cx: &mut Context<'_>) -> bool {
-        let Some(input) = self.request(cx) else {
+        if self.request(cx).is_none() {
             return false;
-        };
+        }
         let words = self.words(&cx.format());
-        let result = grids_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_none() {
+        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Grid, cx, |_, cx| {
+            let Some(input) = self.request(cx) else {
+                return false;
+            };
+            let result = grids_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
+        });
+        if !written {
             self.see(cx);
             return false;
         }
@@ -570,6 +577,10 @@ impl GridSystemTool {
 }
 
 impl Tool for GridSystemTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Grid)
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

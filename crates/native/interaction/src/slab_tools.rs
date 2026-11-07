@@ -214,9 +214,15 @@ impl SlabTool {
         }
     }
 
+    /// The layer kind of the slab the tool writes: by its material (docs/adr/3008).
+    fn layer_kind(&self) -> crate::arch_layer::Kind {
+        crate::arch_layer::Kind::Slab(self.material.clone())
+    }
+
     fn create_input(&self, slab: NewSlab, cx: &Context<'_>) -> SlabsCreate {
         SlabsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The slab's layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&self.layer_kind(), cx),
             slabs: vec![slab],
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
@@ -369,10 +375,14 @@ impl SlabTool {
             self.pts.clear();
             return true;
         }
-        let input = self.create_input(self.new_slab(seed, corners), cx);
         let area = self.area;
-        let result = slabs_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_none() {
+        let kind = self.layer_kind();
+        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let input = self.create_input(self.new_slab(seed, corners), cx);
+            let result = slabs_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
+        });
+        if !written {
             return false;
         }
         let format = cx.format();
@@ -466,6 +476,11 @@ impl SlabTool {
 }
 
 impl Tool for SlabTool {
+    /// A slab's layer; cutting a hole writes no new object.
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        (!self.hole).then(|| self.layer_kind())
+    }
+
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
         Flow::Stay

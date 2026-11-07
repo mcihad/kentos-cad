@@ -102,3 +102,94 @@ fn a_file_opened_and_the_other_programs_keep_the_tab() {
     app.open_new_project_on_program_tab();
     assert_eq!(app.tab, "home");
 }
+
+/// The layer id of the wall written last.
+fn newest_wall_layer(app: &App) -> String {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    doc.entities()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Wall(w) => Some(w),
+            _ => None,
+        })
+        .max_by_key(|w| w.base.id)
+        .expect("a wall")
+        .base
+        .layer_id
+        .clone()
+}
+
+/// A new Mimari project, Dikdörtgen duvar running.
+fn rectangle_tool() -> App {
+    let mut app = started(Some(Module::Architecture));
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    let _ = app.update(Message::Run("tool.wallRectangle"));
+    app
+}
+
+#[test]
+fn kentos_mimari_writes_the_first_wall_on_its_ek4_layer_and_one_undo_takes_both() {
+    // docs/adr/3008: in the 2+1 flat all 54 objects were on Çizim.
+    let mut app = rectangle_tool();
+    assert!(app.memory.layer_keys, "KentOS Mimari keys its layers");
+    assert_eq!(
+        app.session.layer_shown(),
+        Some("MM-DUVA-TUGLA"),
+        "the panel's Katman"
+    );
+    let doc = &app.document.as_ref().unwrap().model;
+    assert!(
+        doc.layers().get("mm-duva-tugla").is_none(),
+        "the layer opens with the first wall"
+    );
+    let _ = app.submit_line("0,0");
+    let _ = app.submit_line("5,4");
+    assert_eq!(newest_wall_layer(&app), "mm-duva-tugla");
+    let doc = &app.document.as_ref().unwrap().model;
+    let layer = doc.layers().get("mm-duva-tugla").expect("opened");
+    assert_eq!(layer.name, "MM-DUVA-TUGLA");
+    assert!(kentos_commands::is_ek4_layer(&layer.name));
+    // One undo: the wall and the layer it opened.
+    let _ = app.update(Message::Run("edit.undo"));
+    let doc = &app.document.as_ref().unwrap().model;
+    assert!(
+        !doc.entities()
+            .any(|e| matches!(e, kentos_commands::Entity::Wall(_)))
+    );
+    assert!(
+        doc.layers().get("mm-duva-tugla").is_none(),
+        "the layer went with its wall"
+    );
+}
+
+#[test]
+fn katman_set_to_etkin_katman_writes_on_the_active_layer() {
+    let mut app = rectangle_tool();
+    let _ = app.update(Message::LayerKeys(false));
+    assert!(!app.memory.layer_keys);
+    assert_eq!(
+        app.session.layer_shown(),
+        Some("Çizim"),
+        "the active layer's name"
+    );
+    let _ = app.submit_line("0,0");
+    let _ = app.submit_line("5,4");
+    let active = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    assert_eq!(newest_wall_layer(&app), active);
+    // Back on: the next wall goes on its kind's layer.
+    let _ = app.update(Message::LayerKeys(true));
+    assert_eq!(app.session.layer_shown(), Some("MM-DUVA-TUGLA"));
+}
+
+#[test]
+fn kentos_cad_keeps_the_active_layer() {
+    let app = started(None);
+    assert!(!app.memory.layer_keys, "the key is KentOS Mimari's");
+}

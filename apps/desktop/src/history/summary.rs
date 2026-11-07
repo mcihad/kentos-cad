@@ -163,7 +163,7 @@ fn walls_create(input: &Value, n: &Names) -> Vec<String> {
         .sum();
     let mut out = vec![
         if walls.len() == 1 { String::new() } else { format!("{} duvar", walls.len()) },
-        (length > 0.0).then(|| n.length(length)).unwrap_or_default(),
+        if length > 0.0 { n.length(length) } else { String::new() },
     ];
     if let Some(w) = shared(walls, "width").and_then(Value::as_f64) {
         out.push(format!("kalınlık {}", n.length(w)));

@@ -243,8 +243,13 @@ pub fn choose(key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
     }
 }
 
+/// The layer kind of a wall the session would draw now: its chosen style's core material (docs/adr/3008).
+pub fn layer_kind(cx: &Context<'_>) -> crate::arch_layer::Kind {
+    crate::arch_layer::Kind::wall(chosen(cx.memory, cx.doc.settings()).as_ref())
+}
+
 /// The command's input: the path as drawn (one bulge per edge, `closed` with the closing one) and the session's
-/// options, on the active layer.
+/// options, on the wall's layer (docs/adr/3008; the active one with the key off or until the layer opens).
 pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> WallsCreate {
     let style = chosen(cx.memory, cx.doc.settings());
     let fixed = style
@@ -253,7 +258,7 @@ pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Wa
         .is_some();
     let m = *cx.memory;
     WallsCreate {
-        layer_id: cx.doc.layers().active().to_owned(),
+        layer_id: crate::arch_layer::planned(&layer_kind(cx), cx),
         walls: vec![NewWall {
             pts: pts.iter().copied().map(wire).collect(),
             bulges: bulges.iter().any(|b| *b != 0.0).then(|| bulges.to_vec()),
@@ -423,8 +428,13 @@ pub fn add_joined(entities: &[kentos_commands::Entity], out: &mut Drawn) {
     }
 }
 
-/// Writes the wall through `cad.walls.create`; whether it was written.
+/// Writes the wall through `cad.walls.create` on its layer (docs/adr/3008); whether it was written.
 pub fn write(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
+    let kind = layer_kind(cx);
+    crate::arch_layer::writing(&kind, cx, |_, cx| write_on(pts, bulges, closed, cx))
+}
+
+fn write_on(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
     let input = input(pts, bulges, closed, cx);
     let result = walls_create::execute(&mut ExecutionContext::new(cx.doc), input);
     match points::written(result, cx) {

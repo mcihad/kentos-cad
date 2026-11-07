@@ -76,7 +76,8 @@ impl WallRectangle {
             .and_then(|s| fixed_width(&s.components))
             .is_some();
         WallsRectangle {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The walls' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&wall::layer_kind(cx), cx),
             frame: match self.size {
                 Some((length, width)) => RectangleFrame::Size {
                     corner: points::wire(a),
@@ -177,12 +178,21 @@ impl WallRectangle {
             self.d.hover = Some(p);
             return true;
         };
-        let input = self.request(a, p, cx);
-        let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
-            for id in out.ids {
-                self.d.note(id, cx);
+        let kind = wall::layer_kind(cx);
+        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let input = self.request(a, p, cx);
+            let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
+            match points::written(result, cx) {
+                Some(out) => {
+                    for id in out.ids {
+                        self.d.note(id, cx);
+                    }
+                    true
+                }
+                None => false,
             }
+        });
+        if written {
             cx.say(
                 Level::Success,
                 format!(
@@ -298,6 +308,10 @@ impl WallRectangle {
 }
 
 impl Tool for WallRectangle {
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(wall::layer_kind(cx))
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

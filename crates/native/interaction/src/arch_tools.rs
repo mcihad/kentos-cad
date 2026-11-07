@@ -199,7 +199,8 @@ impl GridTool {
     fn made(&self, cx: &Context<'_>) -> Option<GridsCreate> {
         let at = self.hover?;
         let mut input = GridsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The axes' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Grid, cx),
             grids: Vec::new(),
             series: None,
             system: None,
@@ -260,8 +261,16 @@ impl GridTool {
 
     fn write(&mut self, input: GridsCreate, cx: &mut Context<'_>) {
         let n = input.grids.len() + input.series.as_ref().map_or(0, |s| s.spacings.len() + 1);
-        let result = grids_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
+        let written =
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Grid, cx, |layer, cx| {
+                let input = GridsCreate {
+                    layer_id: layer.to_owned(),
+                    ..input
+                };
+                let result = grids_create::execute(&mut ExecutionContext::new(cx.doc), input);
+                points::written(result, cx).is_some()
+            });
+        if written {
             cx.say(Level::Success, format!("{n} aks çizildi."));
             self.label = None;
             self.pts.clear();
@@ -277,6 +286,10 @@ impl GridTool {
 }
 
 impl Tool for GridTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Grid)
+    }
+
     fn id(&self) -> &'static str {
         GRID_ID
     }
@@ -622,7 +635,8 @@ impl ColumnTool {
         cx: &Context<'_>,
     ) -> ColumnsCreate {
         ColumnsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The columns' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Column, cx),
             columns,
             crossings,
             tag_start: self.tag.clone(),
@@ -648,8 +662,17 @@ impl ColumnTool {
     }
 
     fn write(&mut self, input: ColumnsCreate, cx: &mut Context<'_>) {
-        let result = columns_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Column, cx, |layer, cx| {
+            let input = ColumnsCreate {
+                layer_id: layer.to_owned(),
+                ..input
+            };
+            let result = columns_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        if let Some(out) = out {
             let n = out.ids.len();
             cx.say(Level::Success, format!("{n} kolon konuldu."));
             if let Some(t) = &self.tag {
@@ -664,6 +687,10 @@ impl ColumnTool {
 }
 
 impl Tool for ColumnTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Column)
+    }
+
     fn point_count(&self) -> usize {
         0
     }
@@ -1280,7 +1307,7 @@ impl FlightTool {
     fn write_arc(&mut self, cx: &mut Context<'_>) {
         match self.arc_line() {
             Some((pts, bulges)) => {
-                self.run(&pts, Some(bulges), cx, true);
+                self.write_run(&pts, Some(bulges), cx);
                 self.pts.clear();
                 self.turned = 0.0;
                 self.seen_at = None;
@@ -1303,6 +1330,25 @@ impl FlightTool {
         pts
     }
 
+    /// A stair's or a ramp's layer kind (docs/adr/3008).
+    fn layer_kind(&self) -> crate::arch_layer::Kind {
+        if self.ramp {
+            crate::arch_layer::Kind::Ramp
+        } else {
+            crate::arch_layer::Kind::Stair
+        }
+    }
+
+    /// Writes the walking line `pts` on its layer, opened with it when missing (docs/adr/3008): written when the
+    /// drawing changed.
+    fn write_run(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
+        crate::arch_layer::writing(&self.layer_kind(), cx, |_, cx| {
+            let generation = cx.doc.generation();
+            self.run(pts, bulges, cx, true);
+            cx.doc.generation() != generation
+        });
+    }
+
     /// The plan or the write for the walking line `pts`.
     fn run(
         &self,
@@ -1311,7 +1357,8 @@ impl FlightTool {
         cx: &mut Context<'_>,
         write: bool,
     ) -> (Vec<Entity>, Option<String>, Vec<String>) {
-        let layer_id = cx.doc.layers().active().to_owned();
+        // The stair's or ramp's layer (docs/adr/3008).
+        let layer_id = crate::arch_layer::planned(&self.layer_kind(), cx);
         let color = cx.draft.color_text();
         let line_weight = cx.draft.line_weight;
         if self.ramp {
@@ -1659,6 +1706,10 @@ impl FlightTool {
 }
 
 impl Tool for FlightTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(FlightTool::layer_kind(self))
+    }
+
     fn id(&self) -> &'static str {
         match (self.ramp, self.spiral) {
             (true, _) => RAMP_ID,
@@ -1824,7 +1875,7 @@ impl Tool for FlightTool {
         self.pts.push(p);
         if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
             let pts = std::mem::take(&mut self.pts);
-            self.run(&pts, None, cx, true);
+            self.write_run(&pts, None, cx);
         }
         self.see(cx);
         true
@@ -2062,7 +2113,7 @@ impl Tool for FlightTool {
         }
         if self.pts.len() >= 2 {
             let pts = std::mem::take(&mut self.pts);
-            self.run(&pts, None, cx, true);
+            self.write_run(&pts, None, cx);
             self.see(cx);
             return Flow::Stay;
         }

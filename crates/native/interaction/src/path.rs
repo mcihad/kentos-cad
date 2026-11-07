@@ -1853,6 +1853,12 @@ impl Path {
 }
 
 impl Tool for Path {
+    /// Duvar writes on its style's layer (docs/adr/3008).
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        (self.separator_level.is_none() && self.shape.id() == crate::wall::ID)
+            .then(|| crate::wall::layer_kind(cx))
+    }
+
     /// Mahal ayırıcı's Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
     fn level_changed(&mut self, cx: &mut Context<'_>) {
         self.see(cx);

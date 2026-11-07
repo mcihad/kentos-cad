@@ -121,7 +121,7 @@ içi izin görmediği farklar:
 | G1 | Araç çalışırken komut satırını istem ve seçenek çipleri dolduruyor; yazı alanı görünmüyor. "Komut satırına tıkla" çipe düşüp menüsünü açıyor. Seçenek harfi çizim alanında küçük harfle yazılınca çalışıyor ("e" → "duvar kalınlığını yazın"), ama bunu ekranda bir şey söylemiyor | ADV-08, ADV-11 |
 | G2 | Büyük harf (Shift+E) aracın seçeneği sayılmıyor: Dikdörtgen duvarı bırakıp Uzat'ı başlatıyor. Küçük "e" doğru çalışıyor (7 Kasım'da gerçek pencerede ikisi de denendi; ilk denemede sürücünün yazdığı büyük "E" yanlışlıkla "E bozuk" diye kaydedilmişti) | ADV-08 (M4) |
 | G3 | Tablo yerleşince şerit kendiliğinden Tablo sekmesine geçiyor; sonraki Çizelge ▾ tıkı başka düğmeye gidiyor, ikinci çizelge sessizce oluşmuyor | ADV-09 |
-| G4 | Duvar ölçüleri "Ölçü katmanı: Çizim", Hepsini etiketle "Etiket katmanı: Çizim (sabit)"; yeni projenin Ölçü ve Yazı katmanları kullanılmıyor | ADV-14 |
+| G4 | Duvar ölçüleri "Ölçü katmanı: Çizim", Hepsini etiketle "Etiket katmanı: Çizim (sabit)"; yeni projenin Ölçü ve Yazı katmanları kullanılmıyor **(M9'da düzeldi: MM-XXXX-OLCU ve MM-XXXX-ETIKET)** | ADV-14 (M9) |
 | G5 | Dikdörtgen duvarın varsayılanı 0,20 m, Stil: Yok **(M8'de düzeldi: KentOS Mimari'de Dış duvar 25, 0,25 m)** | ADV-13 (M8) |
 | G6 | Kenetleme ve ızgara açıkken fareyle konan pencereler 1–2 cm kayıyor (dış zincir 1.900 · 2.952 · 2.095 · 0.953; kod içi izde 1.910 · 2.940 · 2.100 · 0.950); kullanıcı bunu yerleştirirken görmüyor | ADV-11 (ölçüyle yerleştirme) |
 | G7 | Görünen alanda çizelgeye yer yok; ikinci çizelgenin noktası birincinin üstüne düşünce tık tabloyu seçti, ileti yok | ADV-24 |
@@ -720,7 +720,19 @@ _Durum (7 Kasım 2026):_ Başlangıç yapıldı (M8, [ADR 3007](../docs/adr/3007
 
 ### 4.2 Plan grafiği ve AutoCAD düzeyinde ayrıntı
 
-#### ADV-14 — Türe göre katman ve kalem hiyerarşisi [ ]
+#### ADV-14 — Türe göre katman ve kalem hiyerarşisi [~]
+
+_Durum (7 Kasım 2026):_ Katman anahtarı yapıldı (M9, [ADR 3008](../docs/adr/3008-ek4-layer-key.md)).
+- Mimari nesneler EK-4 adlı katmanlara yazılıyor: MM-DUVA-TUGLA, MM-KAPI-GENEL, MM-XXXX-OLCU …
+- Katman ilk nesneyle, aynı geri alma adımında açılıyor. Araç panelinin Katman satırı hedefi söylüyor ve anahtarı
+  kapatabiliyor.
+- 2+1 gerçek pencerede 54 nesneyi 9 katmana dağıttı. DXF'te taramalar "-T" katmanında.
+- Kalanlar:
+  - kalem hiyerarşisi (M10);
+  - ofis ve proje profili;
+  - var olan nesneleri dağıtan komut;
+  - donatı ve blok katmanları (M24);
+  - mahal yazısının DXF'e gitmesi.
 
 **Kullanıcı sonucu:** Çizim bir ofis çizimi gibi katmanlıdır. Paftada kesilen duvar kalın, görünen ince, üstteki kesikli
 çizilir. Dayanak S4, S5.
@@ -1021,7 +1033,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | M8 | Mimari başlangıç ve varsayılan duvar stilleri | ADV-13 | İlk duvar poşeli ve Zemin katta; şablon m ve 1:100 **(M8, ADR 3007: yapıldı; Mimari sekmesiyle açılış M15'ten alındı; malzeme bağı ve örnek proje kaldı)** |
-| M9 | Katman anahtarı (EK-4) | ADV-14 | 2+1 örneği türlerine göre katmanlarda; DXF'te aynısı |
+| M9 | Katman anahtarı (EK-4) | ADV-14 | 2+1 örneği türlerine göre katmanlarda; DXF'te aynısı **(M9, ADR 3008: yapıldı; 54 nesne 9 EK-4 katmanında; profil ve blok katmanı kaldı)** |
 | M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı |
 | M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı |
 | M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte |

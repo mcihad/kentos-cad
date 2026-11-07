@@ -44,6 +44,11 @@
     - İşi Mimari olan yeni proje Zemin kat'la açılır (`ground_floor`: ±0,00, 3,00 m; PAİY 28).
     - KentOS Mimari'de yeni proje Mimari sekmesinde açılır; duvar araçları Dış duvar 25 ile başlar, ilk duvar poşelidir.
     - Şablon m ve 1:100'dür. Ayarsız eski `cad.templates.apply` çağrısı cm ve 1:50 yazmayı sürdürür.
+  - **Katman anahtarı (M9, [ADR 3008](../adr/3008-ek4-layer-key.md)):**
+    - Mimari nesne türünün EK-4 katmanına yazılır: `MM-<öğe>-<malzeme/tip/gösterim>` (`kentos_contracts::ek4`,
+      `kentos_interaction::arch_layer`). Katman ilk nesneyle, aynı geri alma adımında açılır.
+    - KentOS Mimari anahtarı açık başlatır; araç panelinin Katman satırı Etkin katman'a çevirir.
+    - DXF'te EK-4 katmanındaki taramalar "-T" katmanına gider (4.14.5).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

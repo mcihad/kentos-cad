@@ -427,6 +427,8 @@ pub struct Session {
     cursor: Option<Vec2>,
     /// How many tools have started ([`Session::runs`]).
     runs: u64,
+    /// The layer the running tool writes on, by name, as last settled (docs/adr/3008): the panel's Katman.
+    layer: Option<String>,
 }
 
 /// What the web says when the command takes no point at its step.
@@ -948,6 +950,22 @@ impl Session {
         {
             self.tool = None;
         }
+        self.see_layer(cx);
+    }
+
+    /// The running tool's layer, by name (docs/adr/3008): its kind's with the layer key on, else the active one;
+    /// none for a tool of no Mimari object.
+    pub fn layer_shown(&self) -> Option<&str> {
+        self.layer.as_deref()
+    }
+
+    /// Takes the running tool's layer again: after each event, the key turned or the drawing changed.
+    pub fn see_layer(&mut self, cx: &Context<'_>) {
+        self.layer = self
+            .tool
+            .as_ref()
+            .and_then(|t| t.layer_kind(cx))
+            .map(|k| crate::arch_layer::shown(&k, cx));
     }
 
     /// Etkin kat changed (docs/adr/0720 §4): the running tool sees it at once.
@@ -1913,6 +1931,7 @@ impl Session {
             self.select.see_temporary(cx);
         }
         self.follow_locks(cx);
+        self.see_layer(cx);
     }
 
     /// Enter, Space or a quick right click while a tool runs: it commits what

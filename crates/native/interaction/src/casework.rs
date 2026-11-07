@@ -201,7 +201,8 @@ impl Casework {
     fn request(&self, path: &[Vec2], side: CaseworkSide, cx: &Context<'_>) -> CaseworkRun {
         let n = path.len();
         let mut run = CaseworkRun {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The units' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Casework, cx),
             from: points::wire(path[0]),
             through: (n > 2).then(|| path[1..n - 1].iter().map(|p| points::wire(*p)).collect()),
             to: points::wire(path[n - 1]),
@@ -333,9 +334,14 @@ impl Casework {
         if self.pts.len() < self.needed() {
             return false;
         }
-        let input = self.request(&self.pts.clone(), side, cx);
-        let result = casework_run::execute(&mut ExecutionContext::new(cx.doc), input);
-        let Some(out) = points::written(result, cx) else {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Casework, cx, |_, cx| {
+            let input = self.request(&self.pts.clone(), side, cx);
+            let result = casework_run::execute(&mut ExecutionContext::new(cx.doc), input);
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        let Some(out) = out else {
             self.see(cx);
             return false;
         };
@@ -504,6 +510,10 @@ impl Casework {
 }
 
 impl Tool for Casework {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Casework)
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

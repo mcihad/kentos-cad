@@ -27,7 +27,8 @@ pub struct Discover {
 impl Discover {
     fn request(&self, cx: &Context<'_>) -> SpacesDiscover {
         SpacesDiscover {
-            layer_id: cx.doc.layers().active().into(),
+            // The spaces' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Space, cx),
             sources: self.sources.sources(),
             scope: Some(self.level.scope()),
             level: self.level.id(),
@@ -123,6 +124,10 @@ impl Discover {
     }
 }
 impl Tool for Discover {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Space)
+    }
+
     fn id(&self) -> &'static str {
         ID
     }
@@ -193,9 +198,17 @@ impl Tool for Discover {
             cx.say(Level::Info, "Bölgenin iki karşı köşesini seçin.");
             return Flow::Stay;
         }
-        let input = self.request(cx);
-        let result = spaces_discover::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(done) = points::written(result, cx) {
+        let mut written = None;
+        let before = cx.doc.revision();
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Space, cx, |_, cx| {
+            let mut input = self.request(cx);
+            input.expected_revision =
+                crate::arch_layer::carried(input.expected_revision, before, cx);
+            let result = spaces_discover::execute(&mut ExecutionContext::new(cx.doc), input);
+            written = points::written(result, cx);
+            written.is_some()
+        });
+        if let Some(done) = written {
             cx.say(
                 Level::Success,
                 format!(

@@ -96,9 +96,15 @@ impl WallFromLines {
             keep_sources: m.wall_keep_sources,
             max_width: m.wall_pairs.then_some(m.wall_pair_max),
             angle: None,
-            // Kept lines are a reference (an underlay, often locked): the walls go to the active layer, as a new
-            // object does (docs/adr/0798 §3); lines replaced leave their walls on their own layer, as before.
-            layer_id: m.wall_keep_sources.then(|| cx.doc.layers().active().to_owned()),
+            // With the layer key on, the walls go on their style's layer (docs/adr/3008). Else kept lines are a
+            // reference (an underlay, often locked): the walls go to the active layer, as a new object does
+            // (docs/adr/0798 §3); lines replaced leave their walls on their own layer, as before.
+            layer_id: if m.layer_keys {
+                Some(crate::arch_layer::planned(&wall::layer_kind(cx), cx))
+            } else {
+                m.wall_keep_sources
+                    .then(|| cx.doc.layers().active().to_owned())
+            },
             expected_revision: if m.wall_contours {
                 self.plan.revision.clone()
             } else {
@@ -177,6 +183,10 @@ impl WallFromLines {
 }
 
 impl Stages for WallFromLines {
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(wall::layer_kind(cx))
+    }
+
     fn id(&self) -> &'static str {
         ID
     }
@@ -551,9 +561,18 @@ impl Stages for WallFromLines {
             self.ask = None;
             return Flow::Stay;
         }
-        let input = self.request(cx);
-        let result = walls_from_lines::execute(&mut ExecutionContext::new(cx.doc), input);
-        match points::written(result, cx) {
+        let kind = wall::layer_kind(cx);
+        let mut written = None;
+        let before = cx.doc.revision();
+        crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let mut input = self.request(cx);
+            input.expected_revision =
+                crate::arch_layer::carried(input.expected_revision, before, cx);
+            let result = walls_from_lines::execute(&mut ExecutionContext::new(cx.doc), input);
+            written = points::written(result, cx);
+            written.is_some()
+        });
+        match written {
             Some(done) => {
                 let mut said = format!("{LABEL}: {} duvar eklendi", done.uids.len());
                 if !done.removed.is_empty() {

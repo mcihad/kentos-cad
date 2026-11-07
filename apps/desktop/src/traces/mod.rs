@@ -46,6 +46,9 @@ mod compare;
 mod format;
 mod journal;
 mod keyboard;
+#[cfg(test)]
+#[path = "layer_keys_tests.rs"]
+mod layer_keys_tests;
 mod player;
 
 use std::path::{Path, PathBuf};

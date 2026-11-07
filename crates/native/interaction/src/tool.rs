@@ -857,6 +857,9 @@ pub struct Memory {
     pub wall_justify: kentos_commands::WallJustify,
     pub wall_offset: f64,
     pub wall_style: Option<u64>,
+    /// Katman anahtarı (docs/adr/3008): Mimari objects go on their kinds' EK-4 layers instead of the active one.
+    /// KentOS Mimari turns it on at start.
+    pub layer_keys: bool,
     /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
     pub wall_pairs: bool,
     /// Opt-in closed contour conversion; never changes Each/Pairs defaults.
@@ -1290,6 +1293,7 @@ impl Default for Memory {
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,
             wall_style: None,
+            layer_keys: false,
             wall_pairs: false,
             wall_contours: false,
             wall_keep_sources: false,
@@ -1832,6 +1836,11 @@ pub trait Tool {
     /// Values for the active tool's separate settings pane, never the selection's properties.
     fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
         Vec::new()
+    }
+    /// The layer kind of what the tool writes (docs/adr/3008): the panel's Katman says its layer. None for a tool that
+    /// writes no Mimari object, or keeps a layer choice of its own (Duvar ölçüleri's Ölçü katmanı).
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        None
     }
     /// An explicit field commit (Enter/blur); typing a draft in the host writes nothing.
     fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool {

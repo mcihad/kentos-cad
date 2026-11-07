@@ -238,6 +238,7 @@ pub mod spatial;
 pub mod spline;
 pub mod split;
 mod standard_layer;
+pub mod arch_layer;
 pub mod station_labels;
 pub mod station_offset;
 pub mod stretch;

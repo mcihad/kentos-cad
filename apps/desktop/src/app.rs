@@ -540,6 +540,8 @@ pub enum Message {
     Run(&'static str),
     /// Etkin kat chosen on the status bar (docs/adr/0713): a level by its id; none, Katsız.
     ActiveLevel(Option<String>),
+    /// Katman anahtarı on or off (arch_start.rs, docs/adr/3008).
+    LayerKeys(bool),
     /// Kat görünümü chosen (docs/adr/0715).
     LevelView(kentos_interaction::level_view::LevelView),
     /// Run a command ticked on a menu that stays open (a checklist's row:
@@ -2523,6 +2525,7 @@ impl App {
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::ActiveLevel(level) => self.choose_level(level),
+            Message::LayerKeys(on) => self.choose_layer_keys(on),
             Message::LevelView(view) => self.choose_level_view(view),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);

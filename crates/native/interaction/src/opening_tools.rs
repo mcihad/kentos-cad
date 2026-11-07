@@ -272,6 +272,11 @@ impl OpeningTool {
         true
     }
 
+    /// The layer kind of the opening the tool places now: its type's form (docs/adr/3008).
+    fn layer_kind(&self) -> crate::arch_layer::Kind {
+        crate::arch_layer::Kind::opening(self.kind_def().map_or(self.form, |t| t.form))
+    }
+
     /// The type chosen, or the form's first.
     fn type_name(&self) -> String {
         self.kind_def().map_or_else(String::new, |t| t.name)
@@ -286,7 +291,8 @@ impl OpeningTool {
         let measured = span.is_none() && !self.middle;
         let (operation, leaves, build) = self.door_input();
         Some(OpeningsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The opening's layer by its form (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&self.layer_kind(), cx),
             openings: vec![NewOpening {
                 host,
                 point: Some(points::wire(if span.is_some() {
@@ -470,6 +476,10 @@ impl OpeningTool {
 }
 
 impl Tool for OpeningTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(self.layer_kind())
+    }
+
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
         Flow::Stay
@@ -682,12 +692,21 @@ impl Tool for OpeningTool {
             p.raw
         };
         self.hover = Some((slot, at));
-        let Some(input) = self.create_input(slot, at, cx) else {
+        let Some(number) = self
+            .create_input(slot, at, cx)
+            .map(|input| input.openings.first().and_then(|o| o.number.clone()))
+        else {
             return;
         };
-        let number = input.openings.first().and_then(|o| o.number.clone());
-        let result = openings_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
+        let kind = self.layer_kind();
+        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let Some(input) = self.create_input(slot, at, cx) else {
+                return false;
+            };
+            let result = openings_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
+        });
+        if written {
             self.placement.first = None;
             // A number typed was the first: the next ones go on from it.
             if matches!(self.numbering, Numbering::Next(_)) {

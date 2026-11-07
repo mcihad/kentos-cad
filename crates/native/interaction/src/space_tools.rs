@@ -171,7 +171,8 @@ impl SpaceTool {
 
     fn input_for(&self, space: NewSpace, cx: &Context<'_>) -> SpacesCreate {
         SpacesCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The spaces' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Space, cx),
             spaces: vec![space],
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
@@ -237,8 +238,15 @@ impl SpaceTool {
 
     /// Written: the number one more, the drawn corners gone.
     fn write(&mut self, input: SpacesCreate, cx: &mut Context<'_>) -> bool {
-        let result = spaces_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_none() {
+        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Space, cx, |layer, cx| {
+            let input = SpacesCreate {
+                layer_id: layer.to_owned(),
+                ..input
+            };
+            let result = spaces_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
+        });
+        if !written {
             return false;
         }
         let kind = if self.void { "Döşeme boşluğu" } else { "Mahal" };
@@ -258,6 +266,10 @@ impl SpaceTool {
 }
 
 impl Tool for SpaceTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Space)
+    }
+
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.sources.capture(cx);
         self.see(cx);

@@ -120,7 +120,8 @@ impl TagTool {
     fn made(&self, at: Option<Vec2>, cx: &Context<'_>) -> Option<TagsCreate> {
         let of = cx.doc.uid(self.target?)?.to_string();
         Some(TagsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The tags' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx),
             tags: vec![NewTag {
                 of,
                 at: at.map(points::wire),
@@ -153,12 +154,17 @@ impl TagTool {
     }
 
     fn write(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
-        let Some(input) = self.made(at, cx) else {
+        if self.made(at, cx).is_none() {
             return;
-        };
-        let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        said_after(result, cx, |_| {
-            "Etiket yazıldı; nesnesi değişince etiketi de değişir.".into()
+        }
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Tag, cx, |_, cx| {
+            let Some(input) = self.made(at, cx) else {
+                return false;
+            };
+            let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            said_after(result, cx, |_| {
+                "Etiket yazıldı; nesnesi değişince etiketi de değişir.".into()
+            })
         });
         self.target = None;
         self.drawn = Preview::default();
@@ -166,6 +172,10 @@ impl TagTool {
 }
 
 impl Tool for TagTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Tag)
+    }
+
     fn id(&self) -> &'static str {
         TAG_ID
     }
@@ -395,7 +405,8 @@ impl TagAllTool {
     }
     fn made(&self, cx: &Context<'_>) -> TagsCreate {
         TagsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The tags' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx),
             tags: vec![],
             all: Some(TagAll {
                 kinds: self.kinds.clone(),
@@ -419,12 +430,9 @@ impl TagAllTool {
     fn see(&mut self, cx: &Context<'_>) {
         self.source.see(cx.doc.settings());
         self.revision = Some(cx.doc.revision());
-        self.layer = cx.doc.layers().active().to_owned();
-        self.layer_label = cx
-            .doc
-            .layers()
-            .get(&self.layer)
-            .map_or_else(|| self.layer.clone(), |l| l.name.clone());
+        // MM-XXXX-ETIKET with the layer key on (docs/adr/3008), else the active layer.
+        self.layer = crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx);
+        self.layer_label = crate::arch_layer::shown(&crate::arch_layer::Kind::Tag, cx);
         self.drawn = Preview::default();
         self.problem = None;
         match plan_words(tags_create::plan_in(cx.doc, &self.made(cx))) {
@@ -583,7 +591,9 @@ impl Tool for TagAllTool {
         Flow::Stay
     }
     fn pointer_move(&mut self, _p: &Pointer, cx: &mut Context<'_>) {
-        if self.revision != Some(cx.doc.revision()) || self.layer != cx.doc.layers().active() {
+        if self.revision != Some(cx.doc.revision())
+            || self.layer != crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx)
+        {
             self.see(cx);
         }
     }
@@ -704,7 +714,7 @@ impl Tool for TagAllTool {
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         // Keyboard layer changes need not pass through pointer_move, and the
         // active layer alone does not advance the document revision.
-        if self.layer != cx.doc.layers().active() {
+        if self.layer != crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx) {
             self.see(cx);
             cx.say(
                 Level::Warn,
@@ -712,15 +722,20 @@ impl Tool for TagAllTool {
             );
             return Flow::Stay;
         }
-        let mut input = self.made(cx);
-        input.expected_revision = self.revision.map(|r| r.to_string());
-        let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        let written = said_after(result, cx, |out| {
-            format!(
-                "{} yeni etiket · {} etiket yenilendi.",
-                out.uids.len(),
-                out.refreshed.len()
-            )
+        let before = cx.doc.revision();
+        let revision = self.revision;
+        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Tag, cx, |_, cx| {
+            let mut input = self.made(cx);
+            input.expected_revision =
+                crate::arch_layer::carried(revision.map(|r| r.to_string()), before, cx);
+            let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            said_after(result, cx, |out| {
+                format!(
+                    "{} yeni etiket · {} etiket yenilendi.",
+                    out.uids.len(),
+                    out.refreshed.len()
+                )
+            })
         });
         if written {
             Flow::Exit
@@ -892,7 +907,8 @@ impl ScheduleTool {
     fn input_at(&self, at: Vec2, cx: &Context<'_>) -> SchedulesCreate {
         let level = cx.level.filter(|_| self.active_level);
         SchedulesCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The schedules' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Schedule, cx),
             at: points::wire(at),
             of: self.preset.of(),
             columns: self.preset.columns(self.group),
@@ -983,9 +999,14 @@ impl ScheduleTool {
     }
 
     fn write(&mut self, at: Vec2, cx: &mut Context<'_>) {
-        let input = self.input_at(at, cx);
-        let result = schedules_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Schedule, cx, |_, cx| {
+            let input = self.input_at(at, cx);
+            let result = schedules_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        if let Some(out) = out {
             self.done = true;
             self.ghost = Preview::default();
             cx.selection.set([Slot(out.id)]);
@@ -1002,6 +1023,10 @@ impl ScheduleTool {
 }
 
 impl Tool for ScheduleTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Schedule)
+    }
+
     fn point_count(&self) -> usize {
         0
     }

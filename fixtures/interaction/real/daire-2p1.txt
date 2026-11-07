@@ -8,11 +8,6 @@ click 589 20    # Mimari sekmesi
 wait 500
 click 115 84    # araç: Dikdörtgen duvar
 wait 400
-click 1300 655   # panel: Kalınlık
-key ctrl+a
-type 0.25
-key Return
-wait 200
 move 500 450
 type 0,0
 key Return
@@ -25,12 +20,11 @@ wait 800
 shot r01-kontur
 click 234 56    # araç: Ölçülü bölme
 wait 400
-click 1300 655   # panel: Kalınlık
-key ctrl+a
-type 0.15
-key Return
-wait 200
-click 1300 684   # panel: Uzaklık
+click 1300 684   # panel: Stil
+wait 400
+click 1289 537   # İç duvar 15 (menü yukarı açılır)
+wait 300
+click 1300 742   # panel: Uzaklık
 key ctrl+a
 type 4.5
 key Return
@@ -41,9 +35,9 @@ click 293 608   # yan: sağı
 wait 400
 shot r02-bolme-1
 # 2. bölme: alt duvardan 4.5, bölme 1 ile sağ duvar arasında (Uçlar)
-click 1300 771   # panel: Uçlar
+click 1300 829   # panel: Uçlar
 wait 400
-click 1305 835   # İki duvar arasında
+click 1290 765   # İki duvar arasında (menü yukarı açılır)
 wait 300
 click 327 748   # referans: alt duvar
 click 465 542   # uç: bölme 1
@@ -51,7 +45,7 @@ click 898 542   # uç: sağ duvar
 click 559 608   # yan
 wait 300
 # 3. bölme: bölme 1'den 3.5
-click 1300 684   # panel: Uzaklık
+click 1300 742   # panel: Uzaklık
 key ctrl+a
 type 3.5
 key Return
@@ -62,7 +56,7 @@ click 592 437   # uç: bölme 2
 click 559 608   # yan
 wait 300
 # 4. bölme: sağ duvardan 3.0
-click 1300 684   # panel: Uzaklık
+click 1300 742   # panel: Uzaklık
 key ctrl+a
 type 3
 key Return
@@ -86,7 +80,7 @@ click 805 437   # kapı: yatak 2
 wait 200
 click 687 323   # kapı: banyo
 wait 200
-click 1300 713   # panel: Genişlik
+click 1300 742   # panel: Genişlik
 key ctrl+a
 type 1.0
 key Return
@@ -113,35 +107,35 @@ wait 300
 shot r05-aciklik
 click 214 111   # araç: Mahal
 wait 400
-click 1300 771   # panel: Ad
+click 1300 800   # panel: Ad
 key ctrl+a
 type Salon
 key Return
 wait 200
 click 293 608   # mahal: Salon
 wait 300
-click 1300 771   # panel: Ad
+click 1300 800   # panel: Ad
 key ctrl+a
 type Yatak odası 1
 key Return
 wait 200
 click 559 608   # mahal: Yatak odası 1
 wait 300
-click 1300 771   # panel: Ad
+click 1300 800   # panel: Ad
 key ctrl+a
 type Yatak odası 2
 key Return
 wait 200
 click 792 608   # mahal: Yatak odası 2
 wait 300
-click 1300 771   # panel: Ad
+click 1300 800   # panel: Ad
 key ctrl+a
 type Koridor
 key Return
 wait 200
 click 559 343   # mahal: Koridor
 wait 300
-click 1300 771   # panel: Ad
+click 1300 800   # panel: Ad
 key ctrl+a
 type Banyo
 key Return

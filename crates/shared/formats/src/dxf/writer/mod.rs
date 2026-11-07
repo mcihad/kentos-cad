@@ -41,7 +41,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 
 use kentos_contracts::{
-    BlockId, Bounds, DrawingUnit, DxfWriteInput, ExportReport, TextAlign, Vec2,
+    BlockId, Bounds, DrawingUnit, DxfWriteInput, DxfWriteLayer, ExportReport, TextAlign, Vec2,
 };
 
 use super::justify;
@@ -671,6 +671,46 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     (out.s.into_bytes(), report.export())
 }
 
+/// An object on an EK-4 layer has its hatches on that layer's "-T" (the 2026 Dijital Hazırlama Yönetmeliği's EK-4
+/// 4.14.5; docs/adr/3008): MM-DUVA-TUGLA's brick hatch on MM-DUVA-TUGLA-T, a layer the file gets beside it (the
+/// drawing's Tarama look). Objects on other layers keep their hatches with them, as before.
+fn hatches_aside(
+    out: &mut DxfWriteInput,
+    e: &kentos_contracts::Entity,
+    mut pieces: Vec<kentos_contracts::Entity>,
+) -> Vec<kentos_contracts::Entity> {
+    if !pieces
+        .iter()
+        .any(|p| matches!(p, kentos_contracts::Entity::Hatch(_)))
+    {
+        return pieces;
+    }
+    let Some(layer) = out.layers.iter().find(|l| l.id == e.base().layer_id) else {
+        return pieces;
+    };
+    if !kentos_contracts::is_ek4_layer(&layer.name) || layer.name.ends_with("-T") {
+        return pieces;
+    }
+    let name = kentos_contracts::ek4_hatch_layer(&layer.name);
+    let id = name.to_ascii_lowercase();
+    if !out.layers.iter().any(|l| l.id == id) {
+        let aside = DxfWriteLayer {
+            id: id.clone(),
+            name,
+            color: "#8C9AAA".into(),
+            line_weight: 0.13,
+            ..layer.clone()
+        };
+        out.layers.push(aside);
+    }
+    for p in &mut pieces {
+        if matches!(p, kentos_contracts::Entity::Hatch(_)) {
+            p.base_mut().layer_id = id.clone();
+        }
+    }
+    pieces
+}
+
 /// The objects and definitions to write in a local project's unit: every
 /// coordinate and length scaled, the rest as it is.
 /// `input` with every wall as its plain pieces at the input's detail and scale, said in the report; none without walls.
@@ -741,7 +781,10 @@ fn plain_walls(
             (
                 kentos_contracts::Entity::Wall(_) | kentos_contracts::Entity::Opening(_),
                 Some(pieces),
-            ) => put(&mut out, e, pieces),
+            ) => {
+                let pieces = hatches_aside(&mut out, e, pieces);
+                put(&mut out, e, pieces)
+            }
             (kentos_contracts::Entity::Wall(_), None) => left += 1,
             // Keep the explicit role in the architectural whole; the anonymous
             // block's plain analytic path carries the same visible linework.
@@ -777,7 +820,9 @@ fn plain_walls(
             (kentos_contracts::Entity::Slab(s), _) => put(&mut out, e, crate::spaces::slab_pieces(s)),
             // A grid's, column's, stair's or ramp's pieces (docs/adr/0343 §5).
             (e, _) if crate::arch_elements::core_of(e).is_some() => {
-                put(&mut out, e, crate::arch_elements::plain_pieces(e, scale).unwrap_or_default());
+                let pieces = crate::arch_elements::plain_pieces(e, scale).unwrap_or_default();
+                let pieces = hatches_aside(&mut out, e, pieces);
+                put(&mut out, e, pieces);
             }
             _ => out.entities.push(e.clone()),
         }

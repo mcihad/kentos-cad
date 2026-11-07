@@ -184,7 +184,8 @@ impl ViewMarkTool {
             }
         }
         Some(ViewMarksCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The symbols' layer (docs/adr/3008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Symbol, cx),
             marks: vec![NewViewMark {
                 form: self.form,
                 points: points::wire_all(&pts),
@@ -222,11 +223,17 @@ impl ViewMarkTool {
     }
 
     fn write(&mut self, last: Option<Vec2>, cx: &mut Context<'_>) {
-        let Some(input) = self.made(last, cx) else {
+        if self.made(last, cx).is_none() {
             return;
-        };
-        let result = viewmarks_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
+        }
+        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Symbol, cx, |_, cx| {
+            let Some(input) = self.made(last, cx) else {
+                return false;
+            };
+            let result = viewmarks_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
+        });
+        if written {
             cx.say(
                 Level::Success,
                 "Görünüm işareti yazıldı; hedefi yeniden adlandırılınca yazısı da değişir.",
@@ -252,6 +259,10 @@ impl ViewMarkTool {
 }
 
 impl Tool for ViewMarkTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Symbol)
+    }
+
     fn id(&self) -> &'static str {
         match self.form {
             ViewMarkForm::Section => SECTION_ID,
