@@ -84,6 +84,9 @@
 - **Tarama kaydı denetimi (7 Kasım 2026; MAP-13, [ADR 1800](../../docs/adr/1800-scan-registration-check.md)).**
   `cad.pointclouds.register` (Harita + CBS, salt okunur): vokselli nokta-düzlem ICP (Low 2004); dönüşüm tarifi ve 4×4
   matris, önce/sonra RMS, güç ve yatay güç (düz zemin), güvenilir kapsam (`lidar-uyum` örnek sınırı), kontrol KOH_Z'si.
+- **Pafta eş yükselti eğrileri (7 Kasım 2026; MAP-14, [ADR 1820](../../docs/adr/1820-sheet-contours-by-article-78.md)).**
+  `road.terrains.sheetcontours` (Harita + Yol, tek adım): BÖHHBÜY m. 78(1)(c)–(g)/Ek-3 kural paketi
+  `catalog/v1/rules/esyukselti-bohhbuy-2018.json`; dik/düz üçgen kuralı, maskeli kot yazısı, detay kesme.
 - **Ortofoto doğruluk denetimi (6 Kasım 2026; MAP-12, [ADR 1480](../../docs/adr/1480-orthophoto-accuracy-check.md)).**
   `cad.orthophoto.check` (raster sekmesi, salt okunur): bağımsız denetim noktaları, BÖHHBÜY m. 91(2)/54 kural paketi
   `catalog/v1/rules/ortofoto-bohhbuy-2018.json`.

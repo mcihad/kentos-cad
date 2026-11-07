@@ -460,6 +460,7 @@ COMMANDS: dict[str, Any] = {
     "road.terrains.quality": road.terrains.quality,
     "road.terrains.query": road.terrains.query,
     "road.terrains.repair": road.terrains.repair,
+    "road.terrains.sheetcontours": road.terrains.sheetcontours,
     "road.terrains.sparse": road.terrains.sparse,
     "road.terrains.zeroline": road.terrains.zeroline,
     "road.volumes.approve": road.volumes.approve,

@@ -111,35 +111,45 @@ impl Surface {
         while k <= last {
             let z = base + k * interval;
             let is_major = major > 0 && (k as i64).rem_euclid(i64::from(major)) == 0;
-            let mut lines: Vec<ContourLine> = self
-                .level(z)
-                .into_iter()
-                .filter_map(|(mut points, closed)| {
-                    // A line through a corner on the level meets it twice: one place.
-                    points.dedup();
-                    if closed && points.len() > 1 && points.first() == points.last() {
-                        points.pop();
-                    }
-                    // A level touching the surface at a corner only draws no line.
-                    if points.len() < if closed { 3 } else { 2 } {
-                        return None;
-                    }
-                    let points = if closed { start_closed(points) } else { start_open(points) };
-                    Some(ContourLine { z, major: is_major, closed, points })
-                })
-                .collect();
-            lines.sort_by(|a, b| {
-                let (p, q) = (a.points[0], b.points[0]);
-                p[0].total_cmp(&q[0]).then(p[1].total_cmp(&q[1]))
-            });
-            out.extend(lines);
+            out.extend(
+                self.level_lines(z, &|_| true).into_iter().map(|(points, closed)| ContourLine { z, major: is_major, closed, points }),
+            );
             k += 1.0;
         }
         Ok(out)
     }
 
-    /// The lines of one level, each a chain of places (a closed one ends where it starts) and whether it closes.
-    fn level(&self, z: f64) -> Vec<(Vec<[f64; 2]>, bool)> {
+    /// The lines of the level `z` over the kept triangles `keep` takes (by their index in [`Surface::triangles`]),
+    /// each given from its fixed place, in the order of their first places: a line breaks where a triangle is not
+    /// taken. With every triangle taken they are [`Surface::contours`]' lines of the level.
+    pub fn level_lines(&self, z: f64, keep: &dyn Fn(usize) -> bool) -> Vec<(Vec<[f64; 2]>, bool)> {
+        let mut lines: Vec<(Vec<[f64; 2]>, bool)> = self
+            .level(z, keep)
+            .into_iter()
+            .filter_map(|(mut points, closed)| {
+                // A line through a corner on the level meets it twice: one place.
+                points.dedup();
+                if closed && points.len() > 1 && points.first() == points.last() {
+                    points.pop();
+                }
+                // A level touching the surface at a corner only draws no line.
+                if points.len() < if closed { 3 } else { 2 } {
+                    return None;
+                }
+                let points = if closed { start_closed(points) } else { start_open(points) };
+                Some((points, closed))
+            })
+            .collect();
+        lines.sort_by(|a, b| {
+            let (p, q) = (a.0[0], b.0[0]);
+            p[0].total_cmp(&q[0]).then(p[1].total_cmp(&q[1]))
+        });
+        lines
+    }
+
+    /// The lines of one level over the triangles `keep` takes, each a chain of places (a closed one ends where it
+    /// starts) and whether it closes.
+    fn level(&self, z: f64, keep: &dyn Fn(usize) -> bool) -> Vec<(Vec<[f64; 2]>, bool)> {
         let above = |i: u32| self.vertices[i as usize][2] >= z;
         let cross = |a: u32, b: u32| {
             let (a, b) = if a < b { (a, b) } else { (b, a) };
@@ -156,7 +166,10 @@ impl Surface {
         };
         // Each piece by its two edges; each edge's pieces.
         let mut pieces: Vec<[[u32; 2]; 2]> = Vec::new();
-        for t in &self.triangles {
+        for (ti, t) in self.triangles.iter().enumerate() {
+            if !keep(ti) {
+                continue;
+            }
             let crossed: Vec<[u32; 2]> = [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])]
                 .into_iter()
                 .filter(|&(a, b)| above(a) != above(b))

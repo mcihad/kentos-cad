@@ -1641,6 +1641,18 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden"],
         targets: none,
     },
+    // Pafta eş yükselti eğrileri (plan/map-cad.md MAP-14, docs/adr/1820).
+    Entry {
+        id: "road.terrains.sheetcontours",
+        refusals: &[
+            &["not_a_road_project", "invalid_contours"],
+            LAYER,
+            REVISION,
+            &["unknown_terrain", "terrain_unbuildable", "no_contours"],
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     Entry {
         id: "file.import.landxml",
         refusals: &[

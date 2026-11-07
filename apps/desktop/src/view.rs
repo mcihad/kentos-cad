@@ -2107,6 +2107,7 @@ impl App {
             Asking::OrthoCompare => self.ortho_compare_view(),
             Asking::Overlap => self.overlap_view(),
             Asking::Register => self.register_view(),
+            Asking::SheetContours => self.sheet_contours_view(),
             Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),
             Asking::LayerPurge => self.layer_purge_view(),

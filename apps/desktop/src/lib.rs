@@ -80,6 +80,7 @@ mod ortho_compare_window;
 mod ortho_window;
 mod overlap_window;
 mod register_window;
+mod sheet_contours_window;
 mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
@@ -369,6 +370,8 @@ mod ortho_window_tests;
 mod overlap_window_tests;
 #[cfg(test)]
 mod register_window_tests;
+#[cfg(test)]
+mod sheet_contours_window_tests;
 #[cfg(test)]
 mod map_menus_tests;
 mod map_survey_panel_tests;

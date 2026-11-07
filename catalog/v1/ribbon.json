@@ -465,6 +465,10 @@
        {
         "command": "terrain.cloud",
         "size": "large"
+       },
+       {
+        "command": "terrain.sheetContours",
+        "size": "large"
        }
       ]
      },

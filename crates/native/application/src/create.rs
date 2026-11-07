@@ -192,6 +192,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::TerrainContours) => "Eş yükselti eğrileri",
         // Sıfır hattı (docs/adr/1620).
         Some(CreateOperation::TerrainZeroLine) => "Sıfır hattı",
+        // Pafta eş yükselti eğrileri (docs/adr/1820).
+        Some(CreateOperation::SheetContours) => "Pafta eş yükselti eğrileri",
         Some(CreateOperation::LandXml) => "LandXML al",
         Some(CreateOperation::AlignmentLabels) => "Aks km yazısı",
         Some(CreateOperation::ProfileDrawing) => "Boykesit çiz",

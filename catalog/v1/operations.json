@@ -3185,6 +3185,13 @@
       "via": [
         "road.terrains.create"
       ]
+    },
+    "terrain.sheetContours": {
+      "level": "semantic",
+      "via": [
+        "road.terrains.sheetcontours"
+      ],
+      "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820)."
     }
   },
   "tools": {

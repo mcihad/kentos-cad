@@ -903,6 +903,22 @@ nedeniyle söylenir; `.kcad` şema 196; 17+1 bağımsız (Triangle) durum; masa�
 üçgen çizimde görünür. Açık: sınır/kırık hattın pencereden düzenlenmesi, yüzey birleştir, bölgesel yeniden kurma ve
 revizyon bağı, düzenlemeyi kapatma.
 
+**7 Kasım 2026 — MAP-14.2: pafta eş yükselti eğrileri ([ADR 1820](../docs/adr/1820-sheet-contours-by-article-78.md)).**
+Kapsam: **Harita + Yol**; komut Python ve MCP'de. Araştırma: BÖHHBÜY 2018 m. 78(1)(c)–(g) ve Ek-3 0001–0005 resmî
+metinden (aralık, 0,25/0,13 mm, 2 ve 20 mm eşikleri, 200 mm'de 1,4 mm kot yazısı, kesik yardımcı eğri, detay kesmeme).
+
+Kanıtlanan alt maddeler:
+- `road.terrains.sheetcontours` eğrileri paftaya m. 78'e göre çizer: dik yerde yalnız kalın, düz yerde yarım aralıkta
+  yardımcı eğri (üçgen başına), kalın eğrilere maskeli kot yazısı (üstü yokuşa), detay katmanlarının kapalı nesneleri
+  kesilir; değerler kural paketinin verisi.
+- Görsel gizleme veri çıkarmaz: yazının boşluğu maskedir, eğri bölünmez; yüzey ve hesap kotu değişmez.
+- Çekirdeğin seviye izlemesine üçgen süzgeci eklendi; mevcut eğriler bit bit aynı.
+- 27 bağımsız durum (`road_sheet_contour_cases.py`, Triangle); masaüstü Arazi › Yüzey › Pafta eğrileri.
+
+**Açık:** yardımcı eğrinin 5/1 mm deseni, çift çizgili detayın kenar çizgilerinden tanınması, yazı genişliğine göre
+gerçek boşluk, yeniden çizimde tutulması, m. 78(1)(ğ) karakteristik kotlar; düzenleme adımlarının kapatılması, yüzey
+birleştirme, bölgesel yeniden kurma. Madde `[ ]` kalır.
+
 **Kabul:** bordür kırık hattı, gölet deliği, şev, aynı XY/farklı Z ve
 kaynak nokta revizyonu içeren yüzey kur. Kırık hat korunumu, sınır dışı
 üçgenler, kot sorgusu ve kontur bağımsız başvuruyla doğrulansın. Save–reopen

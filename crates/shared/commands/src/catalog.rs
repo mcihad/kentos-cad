@@ -7018,6 +7018,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Pafta eş yükselti eğrileri (plan/map-cad.md MAP-14, docs/adr/1820).
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_SHEET_CONTOURS.into(),
+            version: crate::ROAD_TERRAINS_SHEET_CONTOURS_VERSION,
+            title: "Pafta eş yükselti eğrileri".into(),
+            summary: "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). \
+                      (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. \
+                      3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
+                .into(),
+            aliases: vec!["paftaegrileri".into(), "esyukseltipafta".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsSheetContours>(),
+            output: schema::<crate::TerrainsSheetContoured>(),
+            plan: Some(schema::<crate::TerrainsSheetContoured>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mevcut zeminin 1/1000 pafta eğrileri, binalar kesilerek".into(),
+                input: json!({ "surface": "Mevcut zemin", "layerId": "esyukselti", "scale": 1000, "details": ["bina"] }),
+                output: None,
+            }],
+        },
         // Sıfır hattı (plan/map-cad.md MAP-15, docs/adr/1620).
         CommandDescriptor {
             id: crate::ROAD_TERRAINS_ZEROLINE.into(),
@@ -16039,6 +16066,9 @@ mod tests {
                     crate::ROAD_TERRAINS_CONTOURS => {
                         serde_json::from_value::<crate::TerrainsContours>(e.input.clone()).map(|_| ())
                     }
+                    crate::ROAD_TERRAINS_SHEET_CONTOURS => {
+                        serde_json::from_value::<crate::TerrainsSheetContours>(e.input.clone()).map(|_| ())
+                    }
                     crate::ROAD_TERRAINS_ZEROLINE => {
                         serde_json::from_value::<crate::TerrainsZeroLine>(e.input.clone()).map(|_| ())
                     }
@@ -16968,6 +16998,10 @@ mod tests {
                         }
                         crate::ROAD_TERRAINS_CONTOURS => {
                             serde_json::from_value::<crate::TerrainsContoured>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_SHEET_CONTOURS => {
+                            serde_json::from_value::<crate::TerrainsSheetContoured>(output.clone())
                                 .map(|_| ())
                         }
                         crate::ROAD_TERRAINS_ZEROLINE => {

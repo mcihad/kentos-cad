@@ -1455,6 +1455,7 @@ class CreateOperation(_StrEnum):
     - ``interiorDimensions``: İç ölçü zinciri (docs/adr/0711): the faces a cut crosses, measured as a chain.
     - ``terrainContours``: Eş yükselti eğrileri (plan/road.md Y2.5): a terrain surface's contour lines.
     - ``terrainZeroLine``: Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.
+    - ``sheetContours``: Pafta eş yükselti eğrileri (docs/adr/1820): a surface's contour lines and heights drawn by BÖHHBÜY m. 78.
     - ``landXml``: LandXML al (plan/road.md Y2.5): a LandXML surface's points, breaklines and boundaries.
     - ``alignmentLabels``: `road.alignments.label` (plan/road.md Y3): an alignment's km ticks and words, “Aks km yazısı”.
     - ``profileDrawing``: `road.profiles.draw` (plan/road.md Y4): a profile's frame, grid, terrain, design line and bands, “Boykesit çiz”.
@@ -1509,6 +1510,7 @@ class CreateOperation(_StrEnum):
     INTERIOR_DIMENSIONS = "interiorDimensions"
     TERRAIN_CONTOURS = "terrainContours"
     TERRAIN_ZERO_LINE = "terrainZeroLine"
+    SHEET_CONTOURS = "sheetContours"
     LAND_XML = "landXml"
     ALIGNMENT_LABELS = "alignmentLabels"
     PROFILE_DRAWING = "profileDrawing"
@@ -1526,7 +1528,7 @@ class CreateOperation(_StrEnum):
     SPARSE = "sparse"
 
 
-CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
+CreateOperationName = Literal["swept", "parallel", "perpendicularIn", "perpendicularOut", "divide", "hatch", "boundary", "traverse", "polarSurvey", "forwardIntersection", "resection", "pointsBetween", "intersectPoint", "dimensionChain", "dimensionBaseline", "textFile", "leader", "polygonize", "vertexPoints", "adjoin", "labels", "table", "coordinates", "stations", "centerline", "image", "textAlong", "tangentLine", "fourthCorner", "rangeRings", "planRoad", "networkAdjust", "raster", "pointCloud", "quickDimensions", "interiorDimensions", "terrainContours", "terrainZeroLine", "sheetContours", "landXml", "alignmentLabels", "profileDrawing", "sectionDrawing", "slopePlan", "guardrails", "culverts", "retainingWalls", "routes", "junctions", "platforms", "cloudTerrain", "drainage", "lowConfidence", "sparse"]
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
@@ -23276,6 +23278,99 @@ class ConstructionsCreate(_Model):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ContourInterval(_Model):
+    """A scale's contour interval (metres).
+    Attributes:
+        scale: Unit: scale.
+        interval: Unit: length.
+    """
+    scale: int
+    interval: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scale"] = self.scale
+        out["interval"] = float(self.interval)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContourInterval:
+        return cls(
+            scale=data["scale"],
+            interval=float(data["interval"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ContourRules(_Model):
+    """A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,
+    every how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major
+    lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm).
+    Attributes:
+        release: Unit: count.
+        major_every: Unit: count.
+        major_weight: Unit: paper-mm.
+        minor_weight: Unit: paper-mm.
+        auxiliary_weight: Unit: paper-mm.
+        steep_below: Unit: paper-mm.
+        auxiliary_above: Unit: paper-mm.
+        label_every: Unit: paper-mm.
+        label_height: Unit: paper-mm.
+    """
+    id: str
+    release: int
+    jurisdiction: str
+    source: str
+    effective: str
+    intervals: list[ContourInterval]
+    major_every: int
+    major_weight: float
+    minor_weight: float
+    auxiliary_weight: float
+    steep_below: float
+    auxiliary_above: float
+    label_every: float
+    label_height: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["release"] = self.release
+        out["jurisdiction"] = self.jurisdiction
+        out["source"] = self.source
+        out["effective"] = self.effective
+        out["intervals"] = [e0.to_json() for e0 in self.intervals]
+        out["majorEvery"] = self.major_every
+        out["majorWeight"] = float(self.major_weight)
+        out["minorWeight"] = float(self.minor_weight)
+        out["auxiliaryWeight"] = float(self.auxiliary_weight)
+        out["steepBelow"] = float(self.steep_below)
+        out["auxiliaryAbove"] = float(self.auxiliary_above)
+        out["labelEvery"] = float(self.label_every)
+        out["labelHeight"] = float(self.label_height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContourRules:
+        return cls(
+            id=data["id"],
+            release=data["release"],
+            jurisdiction=data["jurisdiction"],
+            source=data["source"],
+            effective=data["effective"],
+            intervals=[ContourInterval.from_json(e0) for e0 in data["intervals"]],
+            major_every=data["majorEvery"],
+            major_weight=float(data["majorWeight"]),
+            minor_weight=float(data["minorWeight"]),
+            auxiliary_weight=float(data["auxiliaryWeight"]),
+            steep_below=float(data["steepBelow"]),
+            auxiliary_above=float(data["auxiliaryAbove"]),
+            label_every=float(data["labelEvery"]),
+            label_height=float(data["labelHeight"]),
         )
 
 
@@ -82101,6 +82196,68 @@ class ShapesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetContourLabel(_Model):
+    """A height written on a major line: its level, its text, where its middle is and its turn (degrees counter-clockwise
+    from east, its top uphill).
+    Attributes:
+        z: Unit: elevation.
+        at: Unit: length.
+        rotation: Unit: deg.
+    """
+    z: float
+    text: str
+    at: list[float]
+    rotation: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["z"] = float(self.z)
+        out["text"] = self.text
+        out["at"] = [float(e0) for e0 in self.at]
+        out["rotation"] = float(self.rotation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetContourLabel:
+        return cls(
+            z=float(data["z"]),
+            text=data["text"],
+            at=[float(e0) for e0 in data["at"]],
+            rotation=float(data["rotation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SheetContourLine(_Model):
+    """A line as drawn: its level, its kind (`major`, `minor`, `auxiliary`), whether it closes, its places.
+    Attributes:
+        z: Unit: elevation.
+        points: Unit: length.
+    """
+    z: float
+    kind: str
+    closed: bool
+    points: list[list[float]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["z"] = float(self.z)
+        out["kind"] = self.kind
+        out["closed"] = self.closed
+        out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetContourLine:
+        return cls(
+            z=float(data["z"]),
+            kind=data["kind"],
+            closed=data["closed"],
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetDeliveryResource(_Model):
     """
     Attributes:
@@ -97035,6 +97192,136 @@ class TerrainsRepaired(_Model):
             revision=data["revision"],
             excluded=[[float(e1) for e1 in e0] for e0 in data["excluded"]] if "excluded" in data else UNSET,
             largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsSheetContoured(_Model):
+    """Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,
+    the lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in
+    its order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left
+    out inside the details (metres), the objects written (a plan: none), the revision after it and notes.
+    Attributes:
+        scale: Unit: scale.
+        interval: Unit: length.
+        steep: Unit: count.
+        gentle: Unit: count.
+        cut: Unit: length.
+    """
+    rules: str
+    source: str
+    scale: int
+    interval: float
+    lines: list[SheetContourLine]
+    labels: list[SheetContourLabel]
+    steep: int
+    gentle: int
+    cut: float
+    revision: str
+    notes: list[str]
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rules"] = self.rules
+        out["source"] = self.source
+        out["scale"] = self.scale
+        out["interval"] = float(self.interval)
+        out["lines"] = [e0.to_json() for e0 in self.lines]
+        out["labels"] = [e0.to_json() for e0 in self.labels]
+        out["steep"] = self.steep
+        out["gentle"] = self.gentle
+        out["cut"] = float(self.cut)
+        out["revision"] = self.revision
+        out["notes"] = list(self.notes)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSheetContoured:
+        return cls(
+            rules=data["rules"],
+            source=data["source"],
+            scale=data["scale"],
+            interval=float(data["interval"]),
+            lines=[SheetContourLine.from_json(e0) for e0 in data["lines"]],
+            labels=[SheetContourLabel.from_json(e0) for e0 in data["labels"]],
+            steep=data["steep"],
+            gentle=data["gentle"],
+            cut=float(data["cut"]),
+            revision=data["revision"],
+            notes=list(data["notes"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsSheetContours(_Model):
+    """Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the
+    scale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base
+    (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
+    the auxiliary lines and the labels apply (none: they do), the rule package (none: KentOS's BÖHHBÜY 2018).
+
+    Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
+    the package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,
+    `layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,
+    `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.
+    Attributes:
+        base: Unit: elevation.
+        interval: Unit: length.
+        scale: Unit: scale.
+    """
+    surface: str
+    layer_id: str
+    auxiliary: bool | None | Unset = UNSET
+    base: float | None | Unset = UNSET
+    details: list[str] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    interval: float | None | Unset = UNSET
+    labels: bool | None | Unset = UNSET
+    rules: ContourRules | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+    steep: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["layerId"] = self.layer_id
+        if self.auxiliary is not UNSET:
+            out["auxiliary"] = self.auxiliary
+        if self.base is not UNSET:
+            out["base"] = None if self.base is None else float(self.base)
+        if self.details is not UNSET:
+            out["details"] = list(self.details)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.interval is not UNSET:
+            out["interval"] = None if self.interval is None else float(self.interval)
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        if self.rules is not UNSET:
+            out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.steep is not UNSET:
+            out["steep"] = self.steep
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsSheetContours:
+        return cls(
+            surface=data["surface"],
+            layer_id=data["layerId"],
+            auxiliary=data.get("auxiliary", UNSET),
+            base=UNSET if "base" not in data else None if data["base"] is None else float(data["base"]),
+            details=list(data["details"]) if "details" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            labels=data.get("labels", UNSET),
+            rules=UNSET if "rules" not in data else None if data["rules"] is None else ContourRules.from_json(data["rules"]),
+            scale=data.get("scale", UNSET),
+            steep=data.get("steep", UNSET),
         )
 
 
@@ -126210,6 +126497,8 @@ __all__ = [
     "ContinueInPaperOverflow",
     "ContinueShapeWork",
     "ContinuedPaperTableSource",
+    "ContourInterval",
+    "ContourRules",
     "ControlNurbsBy",
     "Convention",
     "ConventionName",
@@ -128741,6 +129030,8 @@ __all__ = [
     "ShareRule",
     "ShareRuleName",
     "SharpRectangleCorners",
+    "SheetContourLabel",
+    "SheetContourLine",
     "SheetDeliveryResource",
     "SheetDeliveryResources",
     "SheetInfo",
@@ -129272,6 +129563,8 @@ __all__ = [
     "TerrainsQuery",
     "TerrainsRepair",
     "TerrainsRepaired",
+    "TerrainsSheetContoured",
+    "TerrainsSheetContours",
     "TerrainsSparseDraw",
     "TerrainsWritten",
     "TerrainsZeroLine",

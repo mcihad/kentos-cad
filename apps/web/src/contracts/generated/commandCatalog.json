@@ -37495,6 +37495,307 @@
       ]
     },
     {
+      "id": "road.terrains.sheetcontours",
+      "version": 1,
+      "title": "Pafta eş yükselti eğrileri",
+      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
+      "aliases": [
+        "paftaegrileri",
+        "esyukseltipafta"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the\nscale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base\n(none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,\nthe auxiliary lines and the labels apply (none: they do), the rule package (none: KentOS's BÖHHBÜY 2018).\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none\nthe package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,\n`layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,\n`unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.",
+        "properties": {
+          "auxiliary": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "base": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "elevation"
+          },
+          "details": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "interval": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "labels": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ContourRules"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "scale"
+          },
+          "steep": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "surface": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "surface",
+          "layerId"
+        ],
+        "title": "TerrainsSheetContours",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the objects written (a plan: none), the revision after it and notes.",
+        "properties": {
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "gentle": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "interval": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/$defs/SheetContourLabel"
+            },
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/SheetContourLine"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rules": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "scale"
+          },
+          "source": {
+            "type": "string"
+          },
+          "steep": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "source",
+          "scale",
+          "interval",
+          "lines",
+          "labels",
+          "steep",
+          "gentle",
+          "cut",
+          "revision",
+          "notes"
+        ],
+        "title": "TerrainsSheetContoured",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the objects written (a plan: none), the revision after it and notes.",
+        "properties": {
+          "cut": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "gentle": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "interval": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/$defs/SheetContourLabel"
+            },
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/SheetContourLine"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rules": {
+            "type": "string"
+          },
+          "scale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "scale"
+          },
+          "source": {
+            "type": "string"
+          },
+          "steep": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules",
+          "source",
+          "scale",
+          "interval",
+          "lines",
+          "labels",
+          "steep",
+          "gentle",
+          "cut",
+          "revision",
+          "notes"
+        ],
+        "title": "TerrainsSheetContoured",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_contours",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_terrain",
+          "terrain_unbuildable",
+          "no_contours"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mevcut zeminin 1/1000 pafta eğrileri, binalar kesilerek",
+          "input": {
+            "details": [
+              "bina"
+            ],
+            "layerId": "esyukselti",
+            "scale": 1000,
+            "surface": "Mevcut zemin"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.terrains.zeroline",
       "version": 1,
       "title": "Sıfır hattı",
@@ -119192,6 +119493,116 @@
       ],
       "type": "object"
     },
+    "ContourInterval": {
+      "additionalProperties": false,
+      "description": "A scale's contour interval (metres).",
+      "properties": {
+        "interval": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "scale": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "scale"
+        }
+      },
+      "required": [
+        "scale",
+        "interval"
+      ],
+      "type": "object"
+    },
+    "ContourRules": {
+      "additionalProperties": false,
+      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm).",
+      "properties": {
+        "auxiliaryAbove": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "auxiliaryWeight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "effective": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "intervals": {
+          "items": {
+            "$ref": "#/$defs/ContourInterval"
+          },
+          "type": "array"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "labelEvery": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "labelHeight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "majorEvery": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "majorWeight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "minorWeight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "source": {
+          "type": "string"
+        },
+        "steepBelow": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        }
+      },
+      "required": [
+        "id",
+        "release",
+        "jurisdiction",
+        "source",
+        "effective",
+        "intervals",
+        "majorEvery",
+        "majorWeight",
+        "minorWeight",
+        "auxiliaryWeight",
+        "steepBelow",
+        "auxiliaryAbove",
+        "labelEvery",
+        "labelHeight"
+      ],
+      "type": "object"
+    },
     "Convention": {
       "description": "Which way a Helmert transformation's rotations turn: EPSG's position\nvector convention (9606) or its coordinate frame convention (9607).",
       "enum": [
@@ -120343,6 +120754,11 @@
         {
           "const": "terrainZeroLine",
           "description": "Sıfır hattı (docs/adr/1620): where two surfaces meet, the cut and fill boundary.",
+          "type": "string"
+        },
+        {
+          "const": "sheetContours",
+          "description": "Pafta eş yükselti eğrileri (docs/adr/1820): a surface's contour lines and heights drawn by BÖHHBÜY m. 78.",
           "type": "string"
         },
         {
@@ -180018,6 +180434,77 @@
           "type": "string"
         }
       ]
+    },
+    "SheetContourLabel": {
+      "description": "A height written on a major line: its level, its text, where its middle is and its turn (degrees counter-clockwise\nfrom east, its top uphill).",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "rotation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "deg"
+        },
+        "text": {
+          "type": "string"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "z",
+        "text",
+        "at",
+        "rotation"
+      ],
+      "type": "object"
+    },
+    "SheetContourLine": {
+      "description": "A line as drawn: its level, its kind (`major`, `minor`, `auxiliary`), whether it closes, its places.",
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "z",
+        "kind",
+        "closed",
+        "points"
+      ],
+      "type": "object"
     },
     "SheetDeliveryResource": {
       "additionalProperties": false,
