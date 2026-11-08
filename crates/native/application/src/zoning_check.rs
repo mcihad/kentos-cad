@@ -3,7 +3,8 @@
 //! boundary not covered by decisions, a decision outside the plan and a plan outside its upper plan come from the
 //! topology core's rules (Çakışmamalı, … içinde kalmalı) over those layers; a road axis whose end meets neither another
 //! road nor a plan boundary from its Sarkan uç olmamalı (docs/adr/2020; the road layer is optional: without it no road
-//! is checked). Nothing is written; no legal or schema conformity is claimed. The shared cases are
+//! is checked); a decision inside a road's planned width from … ile çakışmamalı over the road's corridor
+//! (docs/adr/2240). Nothing is written; no legal or schema conformity is claimed. The shared cases are
 //! `fixtures/commands/v1/cad.zoning.check.json`.
 
 use std::collections::{BTreeMap, HashSet};
@@ -13,7 +14,12 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::geom::intersect::{Edge, point_at};
+use kentos_geometry_core::geom::region::inside_area;
+use kentos_geometry_core::ops::geoprocess::buffer::{Side, buffer};
+use kentos_geometry_core::ops::geoprocess::{Class, class_of, shape_of, union_all};
 use kentos_geometry_core::ops::topology_rules::{Kind, Objects, Rule, check};
+use kentos_geometry_core::vec2::Vec2;
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
@@ -22,7 +28,7 @@ use crate::geometry::shape;
 use crate::profiles::{Place, find, path_words};
 
 /// The kinds in the order the answer lists them.
-pub const KINDS: [&str; 17] = [
+pub const KINDS: [&str; 18] = [
     "missingLayer",
     "noLevel",
     "upperMissing",
@@ -38,6 +44,7 @@ pub const KINDS: [&str; 17] = [
     "uncovered",
     "outside",
     "roadGap",
+    "roadWidth",
     "noteMissing",
     "noteUnused",
 ];
@@ -85,6 +92,20 @@ impl Item<'_> {
 
 fn number(text: &str) -> Option<f64> {
     text.replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+}
+
+/// A road's place for finding its plan (docs/adr/2240): the middle of its longest edge (by the chord of its ends, the
+/// first of equals), on its curve.
+fn middle_of(paths: &[Vec<Edge>]) -> Option<Vec2> {
+    let mut best: Option<(f64, &Edge)> = None;
+    for e in paths.iter().flatten() {
+        let (a, b) = (point_at(e, 0.0), point_at(e, 1.0));
+        let chord = (b.x - a.x).hypot(b.y - a.y);
+        if best.is_none_or(|(c, _)| chord > c) {
+            best = Some((chord, e));
+        }
+    }
+    best.map(|(_, e)| point_at(e, 0.5))
 }
 
 fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
@@ -403,6 +424,93 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
                     f.at.y
                 ),
             );
+        }
+    }
+
+    // A decision inside a road's planned width (docs/adr/2240; Planlı Alanlar İmar Yönetmeliği m. 9(1)(b): the road's
+    // width is the one the plan states). The road's corridor is Genişlik / 2 each side of its axis, the core's two
+    // one-sided buffers joined (flat ends; the outer side of a turn round). It must not overlap a decision of the
+    // road's plan whose use is not a road (… ile çakışmamalı, its pieces narrower than the tolerance not counted). The
+    // road's plan is the lowest-level plan whose boundary holds the middle of the road's longest edge; a road without
+    // a width, or in no plan with decisions, is not checked.
+    if !roads.is_empty() {
+        let plan_areas: Vec<Vec<kentos_geometry_core::geom::arrangement::Area>> = plans
+            .iter()
+            .map(|p| match class_of(&shape(p.e)) {
+                Class::Areas(a) => a,
+                _ => Vec::new(),
+            })
+            .collect();
+        let home_of = |at: Vec2| {
+            let mut best: Option<(i32, usize)> = None;
+            for (k, areas) in plan_areas.iter().enumerate() {
+                if !areas.iter().any(|a| inside_area(a, at)) {
+                    continue;
+                }
+                let r = rank(&plans[k].get("Seviye")).map_or(-1, |r| r as i32);
+                if best.is_none_or(|(b, _)| r > b) {
+                    best = Some((r, k));
+                }
+            }
+            best.map(|(_, k)| k)
+        };
+        let mut shapes: Vec<Shape> = Vec::new();
+        let (mut on, mut uids) = (Vec::new(), Vec::new());
+        // Each object's road (and its width as written) or decision.
+        let mut whose: Vec<Result<(&Item<'_>, String), &Item<'_>>> = Vec::new();
+        let mut homes: Vec<usize> = Vec::new();
+        for road in &roads {
+            let written = road.get("Genislik");
+            let Some(width) = number(&written).filter(|w| *w > 0.0) else { continue };
+            let Class::Paths(paths) = class_of(&shape(road.e)) else { continue };
+            let Some(home) = middle_of(&paths).and_then(home_of) else { continue };
+            let class = Class::Paths(paths);
+            let mut pieces = buffer(&class, width / 2.0, Side::Left);
+            pieces.extend(buffer(&class, width / 2.0, Side::Right));
+            let Some(corridor) = shape_of(&Class::Areas(union_all(&pieces))) else { continue };
+            shapes.push(corridor);
+            on.push(format!("genislik:{home}"));
+            uids.push(road.uid.clone());
+            whose.push(Ok((road, written)));
+            if !homes.contains(&home) {
+                homes.push(home);
+            }
+        }
+        let mut rules = Vec::new();
+        for &home in &homes {
+            let id = &plan_ids[home];
+            for d in decisions.iter().filter(|d| resolved(d).as_ref() == Some(id) && d.get("Kullanim") != "yol") {
+                shapes.push(shape(d.e));
+                on.push(format!("karar:{home}"));
+                uids.push(d.uid.clone());
+                whose.push(Err(d));
+            }
+            rules.push(Rule {
+                id: format!("{}", rules.len()),
+                kind: Kind::MustNotOverlapWith,
+                layer: format!("genislik:{home}"),
+                other: Some(format!("karar:{home}")),
+                value: None,
+            });
+        }
+        if !rules.is_empty() {
+            let checked = check(&Objects { shapes: &shapes, layers: &on, uids: &uids }, &rules, tolerance, &[]);
+            for f in checked.findings {
+                let road = f.objects.iter().find_map(|&k| whose[k].as_ref().ok());
+                let decision = f.objects.iter().find_map(|&k| whose[k].as_ref().err());
+                let (Some((road, written)), Some(decision)) = (road, decision) else { continue };
+                say(
+                    "roadWidth",
+                    &[*road, *decision],
+                    f.measure,
+                    format!(
+                        "“{}” yolunun {written} m genişliği içine {} kararı “{}” giriyor.",
+                        road.get("YolKimlik"),
+                        label(&p, "plan-kullanim", &decision.get("Kullanim")),
+                        decision.get("KararKimlik")
+                    ),
+                );
+            }
         }
     }
 

@@ -82,6 +82,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   koşucusu v2 çizimi (`fixtures/processing/v1/topology.kcad`) okumalı, `topology-check-errors` durumu geçmeli.
 - MAP-08 / ADR 2220: `cad.parcels.boundaries`'ın web işleyicisinde yaylı sınırda eksik köşe (28 ortak durum); web'in
   Sınır grafiği penceresinde Çizimde göster.
+- MAP-09 / ADR 2240: `cad.zoning.check`'in web işleyicisinde `roadWidth` (40 ortak durum); web'in İmar planı denetimi
+  penceresinde Yola giren karar.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

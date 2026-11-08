@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The shared cases of `cad.zoning.check` (İmar planı denetimi; plan/map-cad.md MAP-09, docs/adr/1420), without
+"""The shared cases of `cad.zoning.check` (İmar planı denetimi; plan/map-cad.md MAP-09, docs/adr/1420, 2020, 2240), without
 KentOS code.
 
     python3 scripts/fixtures/zoning_check_cases.py           # writes fixtures/commands/v1/cad.zoning.check.json
@@ -19,6 +19,11 @@ lists are read from it, as the command reads them):
 - with the road layer (Yollar), each road axis's end farther than the tolerance from every other road and from every
   plan boundary's edges: roadGap, its road named and the end said (Y, X to the millimetre), the first end before the
   last (docs/adr/2020); without the layer no road is checked;
+- with the road layer, each road with a width (Genislik, a number above 0): its plan the lowest-level plan whose
+  boundary holds the middle of its longest segment (the first of equals); its corridor half the width each side of
+  each segment, ends flat (the roads here are axis-parallel; no decision comes near a turn's outer corner); each
+  decision of that plan whose use is not yol, the pieces of its common part with the corridor counted as below:
+  roadWidth, the road and the decision named (docs/adr/2240);
 - plan by plan, over its boundary and the decisions that name it (a plan without decisions skipped): two decisions'
   common part, a boundary's part no decision covers, a decision's part outside the boundary, each piece counted when
   its mean width 2A/P passes the tolerance (docs/adr/0202 §2), the area the sum of the counted pieces. The areas here
@@ -37,8 +42,8 @@ OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.zoning.check.json"
 PROFILE = json.loads((ROOT / "catalog/v1/profiles/imar-plani.json").read_text("utf-8"))
 X0, Y0 = 487000.0, 4420000.0
 KINDS = ["missingLayer", "noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noUse", "unknownUse",
-         "missingValue", "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "roadGap", "noteMissing",
-         "noteUnused"]
+         "missingValue", "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "roadGap", "roadWidth",
+         "noteMissing", "noteUnused"]
 OPEN = {"park", "yesil", "meydan", "yol"}
 RANK = ["msp", "cdp", "nip", "uip"]
 LAYER_IDS = {"plan-siniri": "plan", "karar-alani": "karar", "plan-notu": "notlar", "yol-aksi": "yollar"}
@@ -94,8 +99,11 @@ def note(no, at, kapsam="alan", metin="Plan notu metni."):
     return ("notlar", at, {"NotNo": no, "Metin": metin, "Kapsam": kapsam})
 
 
-def road(kimlik, pts):
-    return ("yollar", pts, {"YolKimlik": kimlik, "Tur": "tasit"})
+def road(kimlik, pts, genislik=None):
+    attrs = {"YolKimlik": kimlik, "Tur": "tasit"}
+    if genislik is not None:
+        attrs["Genislik"] = genislik
+    return ("yollar", pts, attrs)
 
 
 def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
@@ -296,6 +304,50 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
             if not near:
                 say("roadGap", [i], None, f"“{g(o, 'YolKimlik')}” yol aksının ucu (Y {X0 + end[0]:.3f}, X {Y0 + end[1]:.3f}) "
                                           "başka bir yola ya da plan sınırına bağlanmıyor (kopuk yol).")
+    # The roads' widths (docs/adr/2240).
+    for i, o in roads:
+        written = g(o, "Genislik")
+        try:
+            width = float(written.replace(",", "."))
+        except ValueError:
+            continue
+        if not width > 0:
+            continue
+        segs = list(zip(o[1], o[1][1:]))
+        chord = lambda s: ((s[1][0] - s[0][0]) ** 2 + (s[1][1] - s[0][1]) ** 2) ** 0.5  # noqa: E731
+        longest = segs[0]
+        for s in segs[1:]:
+            if chord(s) > chord(longest):
+                longest = s
+        mx, my = (longest[0][0] + longest[1][0]) / 2, (longest[0][1] + longest[1][1]) / 2
+        home = None
+        for (pi, po), pid in zip(plans, ids):
+            r = po[1]
+            if not (r[0] <= mx <= r[2] and r[1] <= my <= r[3]):
+                continue
+            rk = RANK.index(g(po, "Seviye")) if g(po, "Seviye") in RANK else -1
+            if home is None or rk > home[0]:
+                home = (rk, pid)
+        if home is None:
+            continue
+        h = width / 2
+        assert all(ax == bx or ay == by for (ax, ay), (bx, by) in segs), "axis-parallel roads only"
+        corridor = [((min(ax, bx), min(ay, by) - h, max(ax, bx), max(ay, by) + h) if ay == by else
+                     (min(ax, bx) - h, min(ay, by), max(ax, bx) + h, max(ay, by))) for (ax, ay), (bx, by) in segs]
+        turns = [b for (_, b) in segs[:-1]]
+        for j, q in decisions:
+            pl = g(q, "Plan")
+            r = (ids[0] if len(plans) == 1 else None) if not pl else (pl if pl in ids else None)
+            if r != home[1] or g(q, "Kullanim") == "yol":
+                continue
+            for tx, ty in turns:
+                x0, y0, x1, y1 = q[1]
+                near = ((max(x0 - tx, 0, tx - x1)) ** 2 + (max(y0 - ty, 0, ty - y1)) ** 2) ** 0.5
+                assert near >= h, "no decision within the turn's round corner"
+            area = counted(pieces([c for cr in corridor for c in intersect(q[1], cr)], []), tolerance)
+            if area is not None:
+                say("roadWidth", [i, j], area, f"“{g(o, 'YolKimlik')}” yolunun {written} m genişliği içine "
+                                               f"{label('plan-kullanim', g(q, 'Kullanim'))} kararı “{g(q, 'KararKimlik')}” giriyor.")
     found.sort(key=lambda f: (f[0], f[1]))
     findings = [f[2] for f in found]
     counts = {}
@@ -338,6 +390,26 @@ MESSY = [
     note("2", (20, 60)),
     note("4", (30, 60)),
 ]
+
+
+# docs/adr/2240: a plan of four blocks between two roads whose areas are decisions of use yol; its nazım plan's own
+# decision covers it all (not the uygulama plan's road's business).
+ROADY = [
+    plan("UIP-R", (0, 0, 100, 60), ust="NIP-R"),
+    plan("NIP-R", (-20, -20, 140, 80), seviye="nip"),
+    karar("N1", (-20, -20, 140, 80), "konut", Plan="NIP-R", TAKS="0.40", KAKS="1.20", KatAdedi="3"),
+    karar("A1", (0, 0, 45, 25), "konut", Plan="UIP-R", TAKS="0.40", KAKS="1.20", KatAdedi="3"),
+    karar("A2", (55, 0, 100, 25), "konut", Plan="UIP-R", TAKS="0.40", KAKS="1.20", KatAdedi="3"),
+    karar("A3", (0, 35, 45, 60), "ticaret", Plan="UIP-R", TAKS="0.50", KAKS="2.00", KatAdedi="4"),
+    karar("A4", (55, 35, 100, 60), "park", Plan="UIP-R"),
+    karar("Y-A", (45, 0, 55, 60), "yol", Plan="UIP-R"),
+    karar("Y-B", (0, 25, 45, 35), "yol", Plan="UIP-R"),
+    karar("Y-C", (55, 25, 100, 35), "yol", Plan="UIP-R"),
+]
+
+
+def roady(w1="10", w2="10"):
+    return ROADY + [road("Y1", [(0, 30), (100, 30)], w1), road("Y2", [(50, 0), (50, 60)], w2)]
 
 
 def with_(objects, index, **attrs):
@@ -429,6 +501,18 @@ def cases():
              classes=ROADS, expect=[]),
         case("plan sınırına toleranstan uzak kalan yol kopuk", GOOD + [road("Y6", [(0, 40), (99.95, 40)])],
              classes=ROADS, expect=["roadGap"]),
+        # docs/adr/2240: a decision inside a road's planned width.
+        case("yollar planda yazılan genişlikte: yol kararları ve nazım planın kararı sayılmaz", roady(), classes=ROADS,
+             expect=[]),
+        case("yol genişliği çizilenden geniş: iki yandaki dört karar yola giriyor", roady(w1="12"), classes=ROADS,
+             expect=["roadWidth"] * 4),
+        case("genişliği yazılmamış yol denetlenmez", roady(w1=None), classes=ROADS, expect=[]),
+        case("dönen yol: iki kolunda da genişlik; dönüşün yuvarlak dış köşesi kararlara değmiyor",
+             ROADY + [road("Y3", [(0, 30), (50, 30), (50, 60)], "12")], classes=ROADS, expect=["roadWidth"] * 3),
+        case("yola giren 3,125 cm'lik şerit 1 cm toleransla sayılır", roady(w1="10.0625"), classes=ROADS,
+             expect=["roadWidth"] * 4),
+        case("aynı şerit 5 cm toleransla dar parçadır, sayılmaz", roady(w1="10.0625"), classes=ROADS, tolerance=0.05,
+             expect=[]),
         refused("tolerans sıfır", 0.0, "0"),
         refused("tolerans eksi", -1.0, "-1"),
     ]
@@ -437,7 +521,7 @@ def cases():
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.zoning.check", "commandVersion": 1,
            "title": "İmar planı denetimi",
-           "note": "ADR 1420. Bağımsız başvuru scripts/fixtures/zoning_check_cases.py: kurallar elle, alanlar eksene "
+           "note": "ADR 1420, 2020, 2240. Bağımsız başvuru scripts/fixtures/zoning_check_cases.py: kurallar elle, alanlar eksene "
                    "paralel dikdörtgen, parçalar koordinat sıkıştırmasıyla tam; KentOS kodu yok.",
            "setup": setup(GOOD), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

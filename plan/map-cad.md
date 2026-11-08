@@ -39,7 +39,7 @@ sırayla alır.
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020 | plan değişikliği taslağı; sembolün karardan seçilmesi | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060 | m. 8(5) yanılma sınırı; ayırma çapının çizimi; değer esaslı dağıtım | ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
@@ -802,6 +802,13 @@ dışındaki parçası, alanıyla) ve `roadGap` (Yollar katmanı varsa yol aksı
 ikisi de topoloji çekirdeğinin kurallarıyla; eski çizimlerin bulguları değişmez; 34 bağımsız durum (Rust, Python);
 pencerede Üst plan dışına taşma ve Kopuk yol, yol kimliğiyle ve Seç ve göster ile. Açık: resmî şema ve eşleme, plan
 değişikliği taslağı, sembolün karardan seçilmesi.
+
+**8 Kasım 2026, üçüncü tur — yola giren karar ([ADR 2240](../docs/adr/2240-zoning-decision-inside-road-width.md)).**
+Kapsam: **Harita + CBS**. Araştırma: Planlı Alanlar İmar Yönetmeliği m. 9(1)(b) (yolun genişliği planda yazılandır),
+ArcGIS Pro'nun “Must Not Overlap With” kuralı. Kanıtlanan: `cad.zoning.check`'e `roadWidth`: genişliği yazılmış yolun
+şeridi (aksın iki yanında yarı genişlik, uçlar düz) yolun planının yol olmayan kararlarıyla çakışmamalı; yolun planı en
+uzun kenarının ortasını içine alan en alt kademeli plan; 40 ortak durum, MCP, masaüstü (Yola giren karar, Alan
+grubu). Açık: yolun parselle tutarlılığı, plan değişikliği taslağı, sembolün karardan seçilmesi, resmî şema ve eşleme.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

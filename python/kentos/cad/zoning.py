@@ -31,9 +31,12 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
     overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız
     kısım), outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol
     aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020),
-    noteMissing, noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01)
-    bundan dar parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da
-    mevzuata uygunluk iddiası değildir. Ret: invalid_input (tolerance).
+    roadWidth (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar
+    şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının
+    ortasını içine alan en alt kademeli plan; ADR 2240), noteMissing, noteUnused. Alan
+    ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz.
+    Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası
+    değildir. Ret: invalid_input (tolerance).
     """
     __slots__ = ()
     id = "cad.zoning.check"
@@ -63,10 +66,13 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
         declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki
         karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım),
         outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu
-        ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020), noteMissing,
-        noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar
-        parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata
-        uygunluk iddiası değildir. Ret: invalid_input (tolerance).
+        ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020), roadWidth
+        (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun
+        planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını
+        içine alan en alt kademeli plan; ADR 2240), noteMissing, noteUnused. Alan ölçen
+        bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt
+        okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir.
+        Ret: invalid_input (tolerance).
 
         Args:
             doc: The drawing it works on.

@@ -55,7 +55,7 @@ impl Group {
             Group::Decisions => {
                 matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview")
             }
-            Group::Areas => matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap"),
+            Group::Areas => matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap" | "roadWidth"),
             Group::Notes => matches!(kind, "noteMissing" | "noteUnused"),
         }
     }
@@ -79,6 +79,7 @@ pub fn kind_word(kind: &str) -> &'static str {
         "uncovered" => "Kararsız kısım",
         "outside" => "Plan dışına taşma",
         "roadGap" => "Kopuk yol",
+        "roadWidth" => "Yola giren karar",
         "noteMissing" => "Plan notu yok",
         "noteUnused" => "Anılmayan not",
         _ => "Bulgu",
