@@ -1,6 +1,6 @@
 //! Yol projesi (road_project_panel.rs, plan/road.md Y13.3): the panel reads the road project's tree, a drawing goes
 //! stale when its template changes and comes back by Hepsini yeniden üret, Kendiliğinden yeniden üret turns on, a
-//! source's row opens its editor; and its pictures.
+//! source's row opens its editor; a rebuild runs as a job whose Durdur writes nothing (docs/adr/2440); and its pictures.
 
 use kentos_commands::RoadNodeState as S;
 use serde_json::{Value, json};
@@ -27,6 +27,17 @@ fn send(app: &mut App, e: P) {
     let _ = app.update(Message::RoadProject(e));
 }
 
+/// A rebuild, run as a job (docs/adr/2440): the panel looked at until it is over.
+fn rebuild(app: &mut App, e: P) {
+    send(app, e);
+    let start = std::time::Instant::now();
+    while app.road_project.running() {
+        assert!(start.elapsed() < std::time::Duration::from_secs(120), "the rebuild ends");
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        send(app, P::Tick);
+    }
+}
+
 fn tree(app: &App) -> kentos_commands::RoadProjectTree {
     app.road_project_read().expect("a drawing").expect("a road project")
 }
@@ -40,7 +51,7 @@ fn the_panel_rebuilds_what_went_stale() {
     assert!(drawings.iter().all(|d| d.state == S::Stale), "{drawings:?}");
     assert_eq!(t.rebuildable, 2);
     // Hepsini yeniden üret: both up to date, one undo step.
-    send(&mut app, P::Rebuild(None, false));
+    rebuild(&mut app, P::Rebuild(None, false));
     let t = tree(&app);
     assert_eq!(t.rebuildable, 0);
     assert!(t.nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
@@ -92,7 +103,7 @@ fn screens() {
         let _ = app.update(Message::RibbonTab("corridor"));
         shot(&mut app, "guncel-degil");
         if name == "acik-genis" {
-            send(&mut app, P::Rebuild(None, false));
+            rebuild(&mut app, P::Rebuild(None, false));
             shot(&mut app, "yeniden-uretildi");
             send(&mut app, P::Deep(true));
             send(&mut app, P::Auto(true));
@@ -129,7 +140,7 @@ fn a_map_project_s_tree_shows_its_zero_line_stale_and_draws_it_again() {
     let zero = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zero line");
     assert_eq!(zero.state, S::Stale, "{zero:?}");
     assert_eq!(zero.why, ["“Tümsek” yüzeyi çizildiğinden beri değişti."]);
-    send(&mut app, P::Rebuild(None, false));
+    rebuild(&mut app, P::Rebuild(None, false));
     let t = tree(&app);
     assert!(t.nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
     let doc = app.document.as_ref().expect("a drawing");
@@ -159,7 +170,7 @@ fn a_map_project_s_cut_and_fill_zones_go_stale_and_are_drawn_again() {
     let zones = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zones");
     assert_eq!(zones.state, S::Stale, "{zones:?}");
     assert_eq!(zones.why, ["“Tümsek” yüzeyi çizildiğinden beri değişti."]);
-    send(&mut app, P::Rebuild(None, false));
+    rebuild(&mut app, P::Rebuild(None, false));
     assert!(tree(&app).nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
     assert_eq!(count(&app), 4, "drawn again in place");
     let doc = app.document.as_ref().expect("a drawing");
@@ -199,7 +210,63 @@ fn map_screens() {
         };
         let _ = app.update(Message::RibbonTab("terrain"));
         shot(&mut app, "1-sifir-hatti-eskidi");
-        send(&mut app, P::Rebuild(None, false));
+        rebuild(&mut app, P::Rebuild(None, false));
         shot(&mut app, "2-yeniden-uretildi");
+    }
+}
+
+/// docs/adr/2440: Hepsini yeniden üret runs as a job: the panel shows it running; Durdur stops it and nothing is
+/// written (both drawings still stale, no undo step); let run, both are current in one step.
+#[test]
+fn a_rebuild_runs_as_a_job_and_durdur_writes_nothing() {
+    let mut app = app();
+    let steps = app.document.as_ref().map(|d| d.model.undo_labels().len());
+    send(&mut app, P::Rebuild(None, false));
+    assert!(app.road_project.running(), "a job, not the window's own thread");
+    send(&mut app, P::Stop);
+    rebuild(&mut app, P::Tick);
+    assert_eq!(crate::files_testing::last_said(&app), "Yeniden üretim durduruldu; hiçbir şey yazılmadı.");
+    assert_eq!(tree(&app).rebuildable, 2);
+    assert_eq!(app.document.as_ref().map(|d| d.model.undo_labels().len()), steps, "nothing written");
+    rebuild(&mut app, P::Rebuild(None, false));
+    assert_eq!(tree(&app).rebuildable, 0);
+    assert!(crate::files_testing::last_said(&app).starts_with("2 çizim yeniden üretildi"), "{}", crate::files_testing::last_said(&app));
+    assert_eq!(app.document.as_ref().map(|d| d.model.undo_labels().len()), steps.map(|n| n + 1));
+}
+
+/// `.run/gui-evidence/yeniden-uretim-isi-2440/`: the panel with the rebuild running (its bar and Durdur), then done.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_project_panel_tests::job_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn job_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yeniden-uretim-isi-2440");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks.close(Panel::Properties);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        send(&mut app, P::Rebuild(None, false));
+        shot(&mut app, "1-calisiyor");
+        rebuild(&mut app, P::Tick);
+        shot(&mut app, "2-bitti");
     }
 }

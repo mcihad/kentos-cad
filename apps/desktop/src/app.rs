@@ -2198,6 +2198,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // A rebuild running as a job in the project tree (road_project_panel.rs, docs/adr/2440).
+            if self.road_project.running() {
+                Subscription::run(crate::road_project_panel::ticks)
+            } else {
+                Subscription::none()
+            },
             // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/), else to
             // Kaynaklar, which adds it by its kind (sources/, docs/adr/0599 §8).
             if self.styles.svg_editor.is_some() {

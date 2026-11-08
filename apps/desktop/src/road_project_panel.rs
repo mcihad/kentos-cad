@@ -5,16 +5,23 @@
 //! (`road.project.rebuild`). Above: Kurarak denetle (the deep reading: surfaces and corridors made, approved volumes
 //! computed) and Kendiliğinden yeniden üret (`road.project.edit`), İş grafiği… (the chain to the sheets,
 //! `road.project.graph`, docs/adr/1940); the tree's head: the counts that filter, Hepsini yeniden üret. The tree is
-//! read again only when the drawing's revision or the depth changes.
+//! read again only when the drawing's revision or the depth changes. A rebuild runs as a job (docs/adr/2440): the panel
+//! shows its progress a drawing at a time and Durdur, heard between the drawings; a stopped one writes nothing.
 
 use std::cell::RefCell;
 use std::collections::HashSet;
 
 use iced::widget::{column, container};
 use iced::{Element, Task};
-use kentos_commands::{RoadNode, RoadNodeKind as N, RoadNodeState as S, RoadProjectEdit, RoadProjectRebuild, RoadProjectTree};
+use iced::futures::{SinkExt, Stream, channel::mpsc};
+use kentos_commands::{
+    CallEnvelope, CallOp, CommandResult, JobPhase, RoadNode, RoadNodeKind as N, RoadNodeState as S, RoadProjectEdit,
+    RoadProjectRebuild, RoadProjectRebuilt, RoadProjectTree,
+};
 use kentos_domain::{Slot, Uuid};
-use kentos_native_application::{ExecutionContext, road_project_edit, road_project_query, road_project_rebuild};
+use kentos_native_application::jobs::Job;
+use kentos_native_application::{ExecutionContext, road_project_edit, road_project_query};
+use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
 use kentos_ui::widget::tree_view::Check;
@@ -37,6 +44,34 @@ pub enum Event {
     Fold(String),
     /// Only the rows in a state (and their parents), or all.
     Filter(Option<Status>),
+    /// The running rebuild looked at (the clock's tick), and asked to stop (docs/adr/2440).
+    Tick,
+    Stop,
+}
+
+/// A rebuild running as a job: the drawing it was started on, how far it has come, whether it was asked to stop.
+pub struct Running {
+    job: Job,
+    session: u64,
+    share: Option<f64>,
+    stopping: bool,
+}
+
+/// How often a running rebuild is looked at.
+const TICK: std::time::Duration = std::time::Duration::from_millis(120);
+
+/// The clock a running rebuild listens to.
+pub fn ticks() -> impl Stream<Item = Message> {
+    let (mut out, ticks) = mpsc::channel(1);
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(TICK);
+            if iced::futures::executor::block_on(out.send(msg(Event::Tick))).is_err() {
+                break;
+            }
+        }
+    });
+    ticks
 }
 
 fn msg(e: Event) -> Message {
@@ -55,6 +90,15 @@ pub struct PanelState {
     toggled: HashSet<String>,
     filter: Option<Status>,
     read: RefCell<Option<Read>>,
+    /// The rebuild running as a job, if one is.
+    pub running: Option<Running>,
+}
+
+impl PanelState {
+    /// Whether a rebuild is running (the app listens to the clock then).
+    pub fn running(&self) -> bool {
+        self.running.is_some()
+    }
 }
 
 impl std::fmt::Debug for PanelState {
@@ -62,6 +106,9 @@ impl std::fmt::Debug for PanelState {
         f.debug_struct("PanelState").field("deep", &self.deep).finish()
     }
 }
+
+/// Durdur: a running rebuild asked to stop between its drawings.
+pub const STOP: &str = "Durdur";
 
 /// A state in words.
 pub(crate) fn state_name(s: S) -> &'static str {
@@ -180,16 +227,32 @@ impl App {
                 }
             }
             Event::Rebuild(id, edited) => {
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                if self.road_project.running.is_some() {
+                    return Task::none();
+                }
+                let Some(doc) = self.document.as_ref() else { return Task::none() };
                 let input = RoadProjectRebuild { drawings: id.map(|i| vec![i]), edited, expected_revision: None };
-                let result = road_project_rebuild::execute(&mut ExecutionContext::new(&mut doc.model), input);
-                if let Some(out) = self.answered(result) {
-                    let objects: usize = out.rebuilt.iter().map(|r| r.uids.len()).sum();
-                    let words = match out.rebuilt.len() {
-                        0 => "Güncel olmayan çizim yok.".to_owned(),
-                        n => format!("{n} çizim yeniden üretildi: {objects} nesne."),
-                    };
-                    self.say(Level::Success, words);
+                let envelope = CallEnvelope {
+                    command: kentos_commands::ROAD_PROJECT_REBUILD.into(),
+                    version: None,
+                    op: CallOp::Execute,
+                    input: serde_json::to_value(&input).unwrap_or_default(),
+                    request_id: None,
+                    expected: None,
+                    relax_constraints: false,
+                };
+                self.road_project.running = Some(Running {
+                    job: Job::start(format!("yeniden-uret-{}", doc.model.revision()), &doc.model, envelope),
+                    session: doc.session,
+                    share: Some(0.0),
+                    stopping: false,
+                });
+            }
+            Event::Tick => self.road_project_tick(),
+            Event::Stop => {
+                if let Some(r) = self.road_project.running.as_mut() {
+                    r.job.cancel();
+                    r.stopping = true;
                 }
             }
             Event::Auto(on) => {
@@ -214,6 +277,46 @@ impl App {
             Event::Filter(f) => self.road_project.filter = f,
         }
         Task::none()
+    }
+
+    /// The running rebuild looked at: its progress, and when it is over its answer (written to the drawing by the job).
+    pub(crate) fn road_project_tick(&mut self) {
+        let (Some(doc), Some(r)) = (self.document.as_mut(), self.road_project.running.as_mut()) else {
+            return;
+        };
+        if doc.session != r.session {
+            // The drawing it was started on is gone: nothing to write to.
+            r.job.cancel();
+            self.road_project.running = None;
+            return;
+        }
+        let status = r.job.status(&mut doc.model);
+        if !status.phase.finished() {
+            r.share = status.progress;
+            return;
+        }
+        self.road_project.running = None;
+        if status.phase == JobPhase::Cancelled {
+            self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned());
+            return;
+        }
+        let result = match status.answer.map(|a| a.result) {
+            Some(CommandResult::Completed { output, warnings }) => match serde_json::from_value::<RoadProjectRebuilt>(output) {
+                Ok(output) => CommandResult::Completed { output, warnings },
+                Err(e) => return self.warn(format!("Yeniden üretimin cevabı okunamadı: {e}")),
+            },
+            Some(CommandResult::Failed { error }) => CommandResult::Failed { error },
+            Some(CommandResult::Conflict { error }) => CommandResult::Conflict { error },
+            _ => return self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned()),
+        };
+        if let Some(out) = self.answered(result) {
+            let objects: usize = out.rebuilt.iter().map(|r| r.uids.len()).sum();
+            let words = match out.rebuilt.len() {
+                0 => "Güncel olmayan çizim yok.".to_owned(),
+                n => format!("{n} çizim yeniden üretildi: {objects} nesne."),
+            };
+            self.say(Level::Success, words);
+        }
     }
 
     /// A drawing's objects selected and shown.
@@ -277,7 +380,8 @@ impl App {
         ]
         .spacing(4)
         .padding([2, 12]);
-        let rebuild = (tree.rebuildable > 0).then(|| msg(Event::Rebuild(None, false)));
+        let running = self.road_project.running.as_ref();
+        let rebuild = (tree.rebuildable > 0 && running.is_none()).then(|| msg(Event::Rebuild(None, false)));
         let body = StatusTree::new(items)
             .toggled(&self.road_project.toggled, |key| msg(Event::Fold(key)))
             .filter(self.road_project.filter, |f| msg(Event::Filter(f)))
@@ -288,7 +392,20 @@ impl App {
             } else {
                 "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun."
             });
-        column![options, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()
+        // A running rebuild (docs/adr/2440): its progress and Durdur.
+        let progress_row: Element<'_, Message> = match running {
+            Some(r) => iced::widget::row![
+                progress::bar(r.share.map(|s| s as f32)).tint(Tint::Muted),
+                label::caption(if r.stopping { "Durduruluyor…" } else { "Yeniden üretiliyor…" }),
+                crate::exchange::words::secondary(STOP, (!r.stopping).then(|| msg(Event::Stop)))
+            ]
+            .spacing(8)
+            .align_y(iced::Center)
+            .padding([2, 12])
+            .into(),
+            None => iced::widget::space().into(),
+        };
+        column![options, progress_row, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()
     }
 }
 

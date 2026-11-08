@@ -187,6 +187,9 @@
 - **Dönen kaydın kendi saha paketiyle denetlenmesi (8 Kasım 2026; MAP-19, [ADR 2420](../../docs/adr/2420-field-record-checked-with-its-package.md)).**
   `cad.asbuilt.check`'in `package`'ı: özet beklenen olur, boş sınırlar paketten, sistem/epok/kot farkı söylenir
   (dönüştürülmez). Harita + Yol + CBS.
+- **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
+  `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
+  Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

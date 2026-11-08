@@ -139,7 +139,14 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandRes
     if !drawings.is_empty() {
         cx.doc.name_step("Yeniden üret");
     }
-    for d in &drawings {
+    // Run as a job (docs/adr/2440): its progress a drawing at a time, a stop heard between the drawings; the job's copy
+    // is dropped, so a stopped rebuild writes nothing.
+    let total = drawings.len() as u64;
+    for (k, d) in drawings.iter().enumerate() {
+        cx.progress(k as u64, total);
+        if cx.stopped() {
+            return CommandResult::Cancelled;
+        }
         match redraw(cx, d) {
             Ok((r, w)) => {
                 rebuilt.push(r);
@@ -148,6 +155,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandRes
             Err(refused) => return relay(*refused),
         }
     }
+    cx.progress(total, total);
     CommandResult::Completed { output: RoadProjectRebuilt { rebuilt, left, revision: cx.doc.revision().to_string() }, warnings }
 }
 
@@ -234,4 +242,89 @@ pub(crate) fn follow(doc: &mut kentos_domain::Document, command: &str) -> Vec<Co
         );
     }
     warnings
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::jobs::Progress;
+    use kentos_commands::{CallOp, DocumentSnapshotV2};
+    use serde_json::{Value, json};
+
+    /// The shared cases' road project with its corridor and guardrail drawn, then the template they read changed: two
+    /// drawings stale (`road.project.rebuild`'s case “İki eskiyen çizim birlikte, tek adımda”).
+    fn two_stale() -> kentos_domain::Document {
+        let cases: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.project.rebuild.json")).expect("cases");
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+        for (command, input) in [
+            ("road.corridors.draw", json!({"corridor": "c-1", "layerId": "0"})),
+            ("road.guardrails.draw", json!({"guardrail": "o-1", "layerId": "korkuluk"})),
+            ("road.templates.edit", json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"})),
+        ] {
+            let r = crate::registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).expect("runs");
+            assert_eq!(r["status"], "completed", "{command}: {r}");
+        }
+        doc
+    }
+
+    fn all() -> RoadProjectRebuild {
+        RoadProjectRebuild { drawings: None, edited: false, expected_revision: None }
+    }
+
+    /// docs/adr/2440: a stop asked before the first drawing is heard: cancelled, nothing written.
+    #[test]
+    fn a_stopped_rebuild_writes_nothing() {
+        let mut doc = two_stale();
+        let before = doc.to_snapshot_v2();
+        let job = Progress::default();
+        job.stop();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        assert!(matches!(write(&mut cx, all()), CommandResult::Cancelled));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
+
+    /// As a job (the desktop's and Python's way): stopped, nothing is written; let run, it is done with its progress
+    /// whole and the tree current.
+    #[test]
+    fn as_a_job_it_stops_or_finishes() {
+        use kentos_commands::{CallEnvelope, JobPhase};
+        let mut doc = two_stale();
+        let before = doc.to_snapshot_v2();
+        let envelope = || CallEnvelope {
+            command: kentos_commands::ROAD_PROJECT_REBUILD.into(),
+            version: None,
+            op: CallOp::Execute,
+            input: json!({}),
+            request_id: None,
+            expected: None,
+            relax_constraints: false,
+        };
+        let mut job = crate::jobs::Job::start("yeniden-uret-durdur".into(), &doc, envelope());
+        job.cancel();
+        assert_eq!(job.wait(&mut doc).phase, JobPhase::Cancelled);
+        assert_eq!(doc.to_snapshot_v2(), before);
+        let mut job = crate::jobs::Job::start("yeniden-uret".into(), &doc, envelope());
+        let status = job.wait(&mut doc);
+        assert_eq!(status.phase, JobPhase::Done, "{status:?}");
+        assert_eq!(status.progress, Some(1.0));
+        let tree = crate::road_project_query::preview(&doc, false).expect("the tree");
+        assert_eq!(tree.rebuildable, 0, "every drawing current");
+        assert_eq!(doc.undo().as_deref(), Some("Yeniden üret"));
+    }
+
+    /// The progress goes a drawing at a time and ends whole; the answer is the shared case's two drawings.
+    #[test]
+    fn the_progress_is_the_drawings() {
+        let mut doc = two_stale();
+        let job = Progress::default();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        let CommandResult::Completed { output, .. } = write(&mut cx, all()) else { panic!("rebuilt") };
+        let names: Vec<&str> = output.rebuilt.iter().map(|r| r.drawing.as_str()).collect();
+        assert_eq!(names, ["cz-1", "cz-2"]);
+        assert_eq!(job.fraction(), Some(1.0));
+    }
 }

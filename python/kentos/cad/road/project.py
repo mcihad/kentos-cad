@@ -383,7 +383,9 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
     verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı
     silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited
     ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman
-    yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. Retler:
+    yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak
+    çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında
+    duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). Retler:
     invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
     drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
     """
@@ -414,7 +416,9 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te
         nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden
         üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da
-        kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. Retler: invalid_revision,
+        kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR
+        2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan
+        yeniden üretim hiçbir şey yazmaz (cancelled). Retler: invalid_revision,
         revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone,
         drawing_edited ve çizim komutlarının retleri.
 

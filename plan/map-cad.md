@@ -50,7 +50,7 @@ sırayla alır.
 | MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420 | iş türleri ve zaman serisi; yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940 | işlem sürümü ve çıktı revizyonu; tariften başka projede üretim; iptal | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440 | işlem sürümü ve çıktı revizyonu (şema 207); tariften başka projede üretim; bütçe | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -1526,6 +1526,13 @@ sistemi, epoku, kot sistemi; güncel olmayan çizimi gösteren pafta “teslim e
 denetimiyle ortak; 21 bağımsız durum (Rust, Python), aynı işin MCP üzerinden aynı grafikleri verdiği test; Proje ağacı
 panelinde İş grafiği… penceresi, Tarifi kaydet. Açık: çizim kaydında işlem sürümü ve çıktı revizyonu (şema), ölçüm
 arşivinin zincire bağlanması, tariften başka projede üretim, atlas sayfaları, iptal.
+
+**8 Kasım 2026, üçüncü tur — yeniden üretim bir iş ([ADR 2440](../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
+Kapsam: **Harita + Yol**. Kanıtlanan: `road.project.rebuild` iş olarak koşunca ilerlemesini çizim çizim söyler,
+durdurmayı çizimler arasında dinler; durdurulan yeniden üretim hiçbir şey yazmaz. Proje ağacı paneli Hepsini yeniden
+üret'i ve ↻'yi iş olarak koşar: ilerleme çubuğu ve Durdur, pencere donmaz. Masaüstünün işi, Python'un işi ve düz çağrı
+(Python, MCP) aynı sonucu verir (aynı çizimler ve sildikleri). Açık: bellek/CPU bütçesi, çizimin kendi hesabının
+içinde durdurma, işlem sürümü ve çıktı revizyonu (şema 207), tariften başka projede üretim.
 
 ## Uygulama sırası ve sahiplik
 

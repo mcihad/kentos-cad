@@ -102,6 +102,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `surveyQuality` (projenin GNSS arşivinden) ve baskı denetiminde `survey_quality_missing`.
 - MAP-19 / ADR 2420: `cad.asbuilt.check`'in web işleyicisinde `package` (36 ortak durum; zip okuma); web'in Uygulama
   kontrolü penceresinde Kaydın saha paketi satırı.
+- MAP-20 / ADR 2440: web'in proje ağacında yeniden üretimin iş olarak koşması (ilerleme, Durdur).
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.
