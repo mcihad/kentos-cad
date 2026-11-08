@@ -1,0 +1,65 @@
+# M18 (docs/adr/3018): the tool's settings in the value field beside the cursor, in the real window, on malzeme.kcad
+# (headless scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text, KentOS Mimari's Dış duvar 25
+# (its thickness the user's). Duvar: 3, Tab (Açı), Tab (Kalınlık), Tab (Hiza), "sa" Enter (Sağ). Dikdörtgen
+# duvar: ↓ opens Boyutlar, 4.2,3.6, Tab (Kalınlık kept), Enter; a click the corner, a second its side: the 4,20 × 3,60 room.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 34 65   # araç: Duvar
+wait 800
+click 500 300
+wait 400
+move 650 300
+wait 300
+move 700 302
+wait 600
+type 3
+wait 500
+key Tab
+wait 500
+key Tab
+wait 600
+shot m18-10-kalinlik
+key Tab
+wait 600
+shot m18-11-hiza
+type sa
+wait 400
+key Return
+wait 500
+move 705 303
+wait 600
+shot m18-12-hiza-sag
+key Escape
+wait 300
+key Escape
+wait 300
+key Escape
+wait 500
+click 34 104   # Duvar ▾
+wait 600
+click 95 172   # araç: Dikdörtgen duvar
+wait 800
+move 600 420
+wait 300
+move 640 450
+wait 600
+key Down
+wait 600
+shot m18-13-boyutlar
+type 4.2,3.6
+wait 400
+key Tab
+wait 600
+shot m18-14-kalinlik
+key Return
+wait 600
+move 645 452
+wait 600
+shot m18-15-oda-onizleme
+click 645 452   # the room's corner
+wait 800
+move 700 400
+wait 400
+click 700 400   # its side: up and right
+wait 1000
+shot m18-16-oda

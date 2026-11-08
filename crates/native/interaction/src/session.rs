@@ -1894,6 +1894,17 @@ impl Session {
             tool.document_changed(cx);
         }
     }
+    /// The running tool's settings the value field offers after its locks, in Tab's order (docs/adr/3018).
+    pub fn cursor_settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
+        let Some(tool) = self.tool.as_ref() else {
+            return Vec::new();
+        };
+        let rows = tool.settings(format);
+        tool.cursor_settings()
+            .iter()
+            .filter_map(|key| rows.iter().find(|r| r.key == *key && r.editable).cloned())
+            .collect()
+    }
     pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let taken = self
             .tool

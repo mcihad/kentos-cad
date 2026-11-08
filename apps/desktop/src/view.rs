@@ -784,17 +784,41 @@ impl App {
                         text: f.text.as_str(),
                         token: f.token,
                         at: f.at,
-                        hint: match f.mode {
-                            Some(_) => "Enter kilitler · Tab öbür değere geçer · Esc kapatır".to_owned(),
-                            None if self.session.tool_id() == "chamfer" => {
+                        hint: match (&f.setting, f.mode) {
+                            // A setting's field (docs/adr/3018): what it holds now, a choice's words.
+                            (Some(s), _) if s.choices.is_empty() && s.value.trim().is_empty() => {
+                                "Enter uygular · Tab sonraki · Esc kapatır".to_owned()
+                            }
+                            (Some(s), _) if s.choices.is_empty() => {
+                                format!("Şimdi {} · Enter uygular · Tab sonraki · Esc kapatır", s.value)
+                            }
+                            (Some(s), _) => format!(
+                                "{} · şimdi {} · baş harfi ya da ↑↓ · Enter uygular · Tab sonraki",
+                                s.choices.join(" · "),
+                                s.value
+                            ),
+                            (None, Some(_)) => "Enter kilitler · Tab öbür değere geçer · Esc kapatır".to_owned(),
+                            (None, None) if self.session.tool_id() == "chamfer" => {
                                 "1. kenar; 2. kenar · Enter uygular".to_owned()
                             },
-                            None if self.session.tool_id() == "fillet" => {
+                            (None, None) if self.session.tool_id() == "fillet" => {
                                 "Yarıçap · ör. 25cm · Enter uygular".to_owned()
                             },
-                            None => format.input_hint(),
+                            // The tool's settings beside the cursor are a Tab away (docs/adr/3018).
+                            (None, None) => {
+                                let settings: Vec<String> = self.field_settings().into_iter().map(|s| s.label).collect();
+                                if settings.is_empty() {
+                                    format.input_hint()
+                                } else {
+                                    format!("{} · Tab: {}", format.input_hint(), settings.join(", "))
+                                }
+                            },
                         },
-                        label: f.mode.map(|m| self.lock_name(m)),
+                        label: f
+                            .setting
+                            .as_ref()
+                            .map(|s| s.label.as_str())
+                            .or_else(|| f.mode.map(|m| self.lock_name(m))),
                         locks: self.lock_chips(&format),
                         length_first: self.locks.length.is_some(),
                     }),

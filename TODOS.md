@@ -92,6 +92,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (`level_view::looks`'un `overhead`'ı, `slab::Look::overhead`).
 - ADR 3013 (çizgi grubu): `io/kcad.ts` şema 206 (`settings.arch.lineGroups`); web çizimi görünüşün `pens`'ini projeden
   (`pens_at`) versin; web'in Proje ayarları › Mimari'si Çizgi kalınlıkları seçimini alsın.
+- M18 / ADR 3018: web'in imleç kutusu (`CursorInput`) aynı Tab sırasını (Uzunluk → Açı → aracın ayarları) ve ↓ ile ilk ayarda
+  açılışı almalı; masaüstünde `Tool::cursor_settings` ve `Session::configure`.
 - M15 / ADR 3015: `scripts/fixtures/ribbon_cases.py`'nin sekme listesi güncel değil (Arazi, Güzergâh, Koridor, Plan, Ölçme,
   Mimari ve bağlam sekmeleri yok); `--check` HEAD'de de kırmızı, çalıştırılırsa onları `fixtures/shell/v1/ribbon.json`'dan
   siler. Şeridi değiştiren her iş `catalog/v1/ribbon.json`'u elle değil `scripts/ui/ribbon.py` ile yazmalı.

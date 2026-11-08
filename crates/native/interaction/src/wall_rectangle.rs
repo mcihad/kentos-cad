@@ -458,6 +458,11 @@ impl Tool for WallRectangle {
         ));
         rows
     }
+    /// The room's sizes, the wall's Kalınlık and what the sizes measure in the value field after its locks
+    /// (docs/adr/3018): "4,20 × 3,60 bir yatak odası" typed beside the cursor.
+    fn cursor_settings(&self) -> &'static [&'static str] {
+        &["B", "E", "R"]
+    }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         if matches!(key, "S" | "E") {
             let taken = crate::tool_settings::wall_apply(key, value, cx);

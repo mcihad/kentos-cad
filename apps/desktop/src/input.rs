@@ -50,6 +50,20 @@ pub struct Field {
     pub at: Vec2,
     /// What the text is: a point, or a lock's value (docs/adr/0166 §6).
     pub mode: Option<LockAsk>,
+    /// A setting of the running tool the text writes instead (docs/adr/3018): Duvar's Kalınlık or Hiza, after the
+    /// locks in Tab's order.
+    pub setting: Option<FieldSetting>,
+}
+
+/// The running tool's setting the value field writes (docs/adr/3018), as the tool's settings pane shows it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FieldSetting {
+    pub key: &'static str,
+    pub label: String,
+    /// What it holds now, said in the hint.
+    pub value: String,
+    /// A choice's words (Sol, Orta, Sağ); none for a value typed.
+    pub choices: Vec<String>,
 }
 
 impl Field {
@@ -59,10 +73,22 @@ impl Field {
             text,
             at,
             mode: None,
+            setting: None,
             token: next_field_token(),
             preview: kentos_interaction::InputPreview::Off,
         }
     }
+}
+
+/// Folded for a choice's start: Turkish lower case (İ → i, I → ı).
+fn folded(text: &str) -> String {
+    text.chars()
+        .flat_map(|c| match c {
+            'İ' => vec!['i'],
+            'I' => vec!['ı'],
+            c => c.to_lowercase().collect(),
+        })
+        .collect()
 }
 
 fn next_field_token() -> u64 {
@@ -920,6 +946,22 @@ impl App {
         {
             return Task::none();
         }
+        // 3. ↓ over the drawing: the value field opens on the running tool's first setting beside the cursor
+        // (docs/adr/3018), as AutoCAD's dynamic input shows a command's options; a room's sizes or Duvar's Hiza are
+        // typed without a click. Tab stays the snap candidates' (there is nearly always one: the grid's).
+        if press.named() == Some(Named::ArrowDown)
+            && !press.modifiers.control()
+            && !press.modifiers.alt()
+            && self.session.is_running()
+            && self.field.is_none()
+            && let Some(first) = self.field_settings().into_iter().next()
+            && let Some(at) = self.field_place()
+        {
+            let mut field = Field::point(String::new(), at);
+            field.setting = Some(first);
+            self.field = Some(field);
+            return self.focus_value_field();
+        }
         // 3. Tab in a panel's field (Öznitelikler, a dock's form): the next field; with none focused it
         // does nothing (docs/adr/0400).
         if press.named() == Some(Named::Tab) && !press.modifiers.control() && !press.modifiers.alt()
@@ -1018,8 +1060,18 @@ impl App {
                     field.text.pop();
                 }
             }
-            // Tab never loses the typed value: it locks it (docs/adr/0166 §6).
+            // Tab never loses the typed value: it locks it (docs/adr/0166 §6), or writes a setting (docs/adr/3018).
             Some(Named::Tab) => self.tab_field(),
+            // A choice's setting: the next or the one before, written at once (Hiza: Sol, Orta, Sağ).
+            Some(named @ (Named::ArrowUp | Named::ArrowDown))
+                if self
+                    .field
+                    .as_ref()
+                    .and_then(|f| f.setting.as_ref())
+                    .is_some_and(|s| !s.choices.is_empty()) =>
+            {
+                self.cycle_setting(named == Named::ArrowDown);
+            }
             _ => match keys::typed(&press) {
                 Some(text) => {
                     if let Some(field) = &mut self.field {
@@ -1040,7 +1092,7 @@ impl App {
         let draft = self
             .field
             .as_ref()
-            .filter(|f| f.mode.is_none())
+            .filter(|f| f.mode.is_none() && f.setting.is_none())
             .map(|f| (f.token, f.text.clone()));
         let preview = self
             .with_tool(|s, cx| s.preview_input(draft.as_ref().map(|(_, t)| t.as_str()), cx))
@@ -1109,6 +1161,7 @@ impl App {
             text: String::new(),
             at: self.viewport.cursor.unwrap_or(at),
             mode: Some(kind),
+            setting: None,
             token: next_field_token(),
             preview: kentos_interaction::InputPreview::Off,
         });
@@ -1122,6 +1175,27 @@ impl App {
             return;
         };
         let text = js_trim(&field.text).to_owned();
+        // A setting's field (docs/adr/3018): what was typed is written, then the next setting; after the last the
+        // length again while a lock holds, else the point.
+        if let Some(setting) = field.setting {
+            if !self.apply_setting(&setting, &text) {
+                return;
+            }
+            if !self.turn_to_setting(Some(setting.key)) {
+                let lock = self.locks.any();
+                if let Some(field) = &mut self.field {
+                    field.setting = None;
+                    field.mode = lock.then_some(LockAsk::Length);
+                    field.text.clear();
+                }
+            }
+            return;
+        }
+        // Nothing typed: the tool's settings, when it offers some beside the cursor.
+        if text.is_empty() && field.mode.is_none() {
+            self.turn_to_setting(None);
+            return;
+        }
         let next = match field.mode {
             None => {
                 if let Some(kentos_geometry_core::tools::locks::LockText::Angle(a)) =
@@ -1149,7 +1223,13 @@ impl App {
                 }
             }
             Some(mode) => {
-                if !self.lock_typed(mode, &text) {
+                // A direction, locked or left empty: the tool's settings come next (docs/adr/3018). Any field left
+                // empty is passed over, nothing locked: Tab goes round the fields as AutoCAD's dynamic input does.
+                let direction = matches!(mode, LockAsk::Angle | LockAsk::Deflection);
+                if !text.is_empty() && !self.lock_typed(mode, &text) {
+                    return;
+                }
+                if direction && self.turn_to_setting(None) {
                     return;
                 }
                 match mode {
@@ -1168,6 +1248,112 @@ impl App {
     fn turn_field(&mut self, mode: LockAsk) {
         if let Some(field) = &mut self.field {
             field.mode = Some(mode);
+            field.setting = None;
+            field.text.clear();
+        }
+    }
+
+    /// The running tool's settings the value field offers after its locks (docs/adr/3018).
+    pub(crate) fn field_settings(&self) -> Vec<FieldSetting> {
+        self.session
+            .cursor_settings(&self.format())
+            .into_iter()
+            .map(|r| {
+                let value = r
+                    .choices
+                    .iter()
+                    .find(|c| c.checked)
+                    .map_or_else(|| r.value.clone(), |c| c.label.clone());
+                FieldSetting {
+                    key: r.key,
+                    label: r.label.into_owned(),
+                    value,
+                    choices: r.choices.into_iter().map(|c| c.label).collect(),
+                }
+            })
+            .collect()
+    }
+
+    /// The field turns to the setting after `after` (the first for none), empty; false when there is none.
+    fn turn_to_setting(&mut self, after: Option<&'static str>) -> bool {
+        let settings = self.field_settings();
+        let next = match after {
+            None => settings.first(),
+            Some(key) => settings.iter().skip_while(|s| s.key != key).nth(1),
+        };
+        let Some(next) = next.cloned() else {
+            return false;
+        };
+        if let Some(field) = &mut self.field {
+            field.setting = Some(next);
+            field.mode = None;
+            field.text.clear();
+        }
+        true
+    }
+
+    /// What was typed written to the field's setting as the settings pane writes it (`Session::configure`); a
+    /// choice by the start of its word (so, o, sa: Sol, Orta, Sağ). Nothing typed keeps what it holds. False, and
+    /// why, when nothing was written.
+    fn apply_setting(&mut self, setting: &FieldSetting, text: &str) -> bool {
+        let text = text.trim();
+        if text.is_empty() {
+            return true;
+        }
+        let value = if setting.choices.is_empty() {
+            text.to_owned()
+        } else {
+            let start = folded(text);
+            let found: Vec<&String> = setting
+                .choices
+                .iter()
+                .filter(|c| folded(c).starts_with(&start))
+                .collect();
+            match found.as_slice() {
+                [one] => (*one).clone(),
+                [] => {
+                    self.warn(format!(
+                        "{} {} olabilir.",
+                        setting.label,
+                        setting.choices.join(", ")
+                    ));
+                    return false;
+                }
+                many => {
+                    let words: Vec<&str> = many.iter().map(|s| s.as_str()).collect();
+                    self.warn(format!(
+                        "“{text}” {} için birden çok değere uyuyor ({}); bir harf daha yazın.",
+                        setting.label,
+                        words.join(", ")
+                    ));
+                    return false;
+                }
+            }
+        };
+        self.with_tool(|s, cx| s.configure(setting.key, &value, cx)) == Some(true)
+    }
+
+    /// ↑ or ↓ in a choice's field: the one before or the next, written at once.
+    fn cycle_setting(&mut self, down: bool) {
+        let Some(setting) = self.field.as_ref().and_then(|f| f.setting.clone()) else {
+            return;
+        };
+        let n = setting.choices.len();
+        if n == 0 {
+            return;
+        }
+        let at = setting
+            .choices
+            .iter()
+            .position(|c| *c == setting.value)
+            .unwrap_or(0);
+        let next = if down { (at + 1) % n } else { (at + n - 1) % n };
+        let value = setting.choices[next].clone();
+        if self.with_tool(|s, cx| s.configure(setting.key, &value, cx)) == Some(true)
+            && let Some(field) = &mut self.field
+            && let Some(s) = &mut field.setting
+        {
+            s.value = value;
             field.text.clear();
         }
     }
@@ -1261,6 +1447,14 @@ impl App {
         };
         let text = js_trim(&field.text).to_owned();
         self.refresh_value_preview();
+        // A setting's field (docs/adr/3018): Enter writes it and the field goes; the pointer goes on drawing.
+        if let Some(setting) = field.setting.clone() {
+            if !self.apply_setting(&setting, &text) {
+                self.field = Some(field);
+                return self.focus_value_field();
+            }
+            return Task::none();
+        }
         if let Some(mode) = field.mode {
             // A lock's field: its number locks it, and the point is placed
             // once its length and direction are both held; left empty, the
@@ -1763,6 +1957,141 @@ mod value_field_tests {
         assert_eq!(
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before
+        );
+    }
+}
+
+/// The running tool's settings in the value field after its locks (docs/adr/3018): Duvar's Kalınlık and Hiza, Tab
+/// from one to the next, Enter writing and closing, a choice by the start of its word or the arrows.
+#[cfg(test)]
+mod cursor_settings_tests {
+    use super::*;
+    use kentos_commands::WallJustify;
+
+    /// kentos-cad's Duvar (no style: its thickness is the user's), its first point clicked.
+    fn wall_started() -> App {
+        let (mut app, _) = App::boot(None);
+        let mut objects = crate::tools_scenes::Objects::new();
+        objects.line("cizim", [0., 0.], [2., 0.]);
+        crate::tools_scenes::open(&mut app, objects);
+        crate::files_testing::make_cad(&mut app);
+        let _ = app.update(Message::DialogClosed);
+        let _ = app.update(Message::Run("tool.wall"));
+        crate::tools_scenes::click(&mut app, [0., 5.]);
+        app
+    }
+
+    fn at() -> Vec2 {
+        Vec2::new(crate::tools_scenes::E + 3.0, crate::tools_scenes::N + 5.0)
+    }
+
+    fn setting(app: &App) -> Option<&'static str> {
+        app.field
+            .as_ref()
+            .and_then(|f| f.setting.as_ref())
+            .map(|s| s.key)
+    }
+
+    #[test]
+    fn tab_takes_the_value_field_from_the_locks_to_duvar_s_thickness_and_justification() {
+        let mut app = wall_started();
+        let keys: Vec<&str> = app.field_settings().iter().map(|s| s.key).collect();
+        assert_eq!(keys, ["E", "H"], "Kalınlık and Hiza");
+        app.field = Some(Field::point("3".into(), at()));
+        app.tab_field();
+        assert_eq!(
+            app.field.as_ref().unwrap().mode,
+            Some(LockAsk::Angle),
+            "3 locked the length"
+        );
+        app.tab_field();
+        assert_eq!(setting(&app), Some("E"), "no angle typed: Kalınlık");
+        app.field.as_mut().unwrap().text = "0.3".into();
+        app.tab_field();
+        assert!(
+            (app.memory.wall_width - 0.3).abs() < 1e-9,
+            "written as the pane writes it"
+        );
+        assert_eq!(setting(&app), Some("H"));
+        app.tab_field();
+        let field = app.field.as_ref().unwrap();
+        assert_eq!(
+            (field.setting.as_ref(), field.mode),
+            (None, Some(LockAsk::Length)),
+            "after the last, the length"
+        );
+        app.tab_field();
+        app.tab_field();
+        assert_eq!(
+            setting(&app),
+            Some("E"),
+            "round again: Açı left empty, Kalınlık"
+        );
+        app.tab_field();
+        app.field.as_mut().unwrap().text = "sa".into();
+        let _ = app.submit_field();
+        assert_eq!(app.memory.wall_justify, WallJustify::Right, "sa: Sağ");
+        assert!(app.field.is_none(), "Enter writes and the field goes");
+        assert!(
+            app.session.is_running(),
+            "the wall goes on from its first point"
+        );
+    }
+
+    #[test]
+    fn the_down_arrow_over_the_drawing_opens_the_field_on_the_tool_s_first_setting() {
+        let mut app = wall_started();
+        crate::tools_scenes::hover(&mut app, [3.3, 7.4]);
+        assert!(app.field.is_none());
+        let down = crate::keys::KeyPress {
+            key: iced::keyboard::Key::Named(Named::ArrowDown),
+            physical: iced::keyboard::key::Physical::Code(iced::keyboard::key::Code::ArrowDown),
+            modifiers: iced::keyboard::Modifiers::empty(),
+            text: None,
+            repeat: false,
+        };
+        let _ = app.key(down);
+        assert_eq!(
+            setting(&app),
+            Some("E"),
+            "the box beside the cursor, on Kalınlık"
+        );
+    }
+
+    #[test]
+    fn a_choice_is_taken_by_the_start_of_its_word_or_the_arrows() {
+        let mut app = wall_started();
+        app.field = Some(Field::point(String::new(), at()));
+        app.tab_field();
+        app.tab_field();
+        assert_eq!(
+            setting(&app),
+            Some("H"),
+            "nothing typed: Kalınlık kept, Hiza"
+        );
+        app.field.as_mut().unwrap().text = "s".into();
+        app.tab_field();
+        assert_eq!(
+            setting(&app),
+            Some("H"),
+            "s is Sol and Sağ: it stays and says so"
+        );
+        assert!(crate::files_testing::last_said(&app).contains("bir harf daha"));
+        app.field.as_mut().unwrap().text = "so".into();
+        app.tab_field();
+        assert_eq!(app.memory.wall_justify, WallJustify::Left, "so: Sol");
+        app.field = Some(Field::point(String::new(), at()));
+        app.tab_field();
+        app.tab_field();
+        let before = app.memory.wall_justify;
+        app.cycle_setting(true);
+        assert_ne!(app.memory.wall_justify, before, "↓ writes the next at once");
+        assert_eq!(
+            app.field
+                .as_ref()
+                .and_then(|f| f.setting.as_ref())
+                .map(|s| s.value.as_str()),
+            Some(app.memory.wall_justify.label())
         );
     }
 }

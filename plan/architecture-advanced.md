@@ -662,7 +662,12 @@ _Durum (8 Kasım 2026):_ Paylaşılan ve ödünç ikonlar ayrıldı (M16, [ADR 3
 - Mimari sekmesinde aynı ikonu taşıyan iki komut yoktur (test).
 - İkon tablosu 16 ve 20 px'te, açık ve koyu temada resimlenir.
 
-#### ADV-11 — Hızlı çizim: imleç yanı seçenekler, tıklanabilir ölçü, kenet ve Oda aracı [ ]
+#### ADV-11 — Hızlı çizim: imleç yanı seçenekler, tıklanabilir ölçü, kenet ve Oda aracı [~]
+
+_Durum (8 Kasım 2026):_ İmleç yanı seçenekler yapıldı (M18, [ADR 3018](../docs/adr/3018-tool-settings-beside-the-cursor.md)).
+- Değer kutusunda Tab Uzunluk → Açı → aracın ayarları; Duvar'da Kalınlık ve Hiza, Dikdörtgen duvarda Boyutlar, Kalınlık ve Boy referansı.
+- ↓ çizimin üstünde kutuyu ilk ayarda açar; yazma panelin yolundan (`configure`).
+- Kalanlar: tıklanabilir geçici ölçü (M19), mimari kenet türleri (M20), Oda aracı (M21), 2+1 izinin yeniden yazımı.
 
 **Kullanıcı sonucu:** "4,20 × 3,60 bir yatak odası, yanına 1,20'lik koridor" fareyle ve birkaç sayıyla çizilir; komut
 satırına odaklanmak gerekmez. Dayanak S11, S13.
@@ -1094,7 +1099,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M18 | İmleç yanında aracın seçenekleri | ADV-11 | Kalınlık, referans ve uzunluk Tab ile |
+| M18 | İmleç yanında aracın seçenekleri | ADV-11 | Kalınlık, referans ve uzunluk Tab ile **(M18, ADR 3018: yapıldı; Duvar Kalınlık/Hiza, Dikdörtgen duvar Boyutlar/Kalınlık/Boy referansı; ↓ ile açılış)** |
 | M19 | Tıklanabilir geçici ölçü | ADV-11 | Ölçüye yazılan değer duvarı taşır |
 | M20 | Mimari kenet türleri ve kenet dili | ADV-11 | Yüz, eksen, çekirdek; imleç yanında yazı |
 | M21 | Oda aracı | ADV-11 | Duvar + mahal + etiket tek adımda |

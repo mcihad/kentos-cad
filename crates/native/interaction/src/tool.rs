@@ -1837,6 +1837,11 @@ pub trait Tool {
     fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
         Vec::new()
     }
+    /// The keys of its `settings` the value field beside the cursor offers after the locks, in Tab's order
+    /// (docs/adr/3018): Duvar's Kalınlık and Hiza. Each is written as the pane writes it (`configure`).
+    fn cursor_settings(&self) -> &'static [&'static str] {
+        &[]
+    }
     /// The layer kind of what the tool writes (docs/adr/3008): the panel's Katman says its layer. None for a tool that
     /// writes no Mimari object, or keeps a layer choice of its own (Duvar ölçüleri's Ölçü katmanı).
     fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {

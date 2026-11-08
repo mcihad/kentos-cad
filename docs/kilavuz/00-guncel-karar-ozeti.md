@@ -97,6 +97,10 @@
       ilk panelidir, başlığı sekmenin adı (`App::building_tools`); kaynak şeridin kendisi.
     - Kart bina nesnesinde `Document::arch_value`'yu okur: duvar Stil, Kalınlık, Kat; açıklık Tür, Genişlik, Numara
       (başlığı biçimi); mahal Numara, Ad, Kat, Alan. Duvarın alanı yazılmaz.
+  - **Aracın seçenekleri imlecin yanında (M18, [ADR 3018](../adr/3018-tool-settings-beside-the-cursor.md)):**
+    - `Tool::cursor_settings` değer kutusunun sunacağı ayar anahtarlarını söyler; yazma `configure` ile, panelin yolundan.
+    - Tab: Uzunluk → Açı → ayarlar; boş alan kilitlenmeden geçilir. ↓ çizimin üstünde kutuyu ilk ayarda açar (Tab kenet
+      adaylarınındır). Seçenekli ayar kelimenin başıyla (so, o, sa) ya da ↑↓ ile.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

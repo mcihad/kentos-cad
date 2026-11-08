@@ -2150,6 +2150,10 @@ impl Tool for Path {
         if self.shape != Shape::Wall { return Vec::new(); }
         crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format)
     }
+    /// Duvar's Kalınlık and Hiza in the value field after its locks (docs/adr/3018).
+    fn cursor_settings(&self) -> &'static [&'static str] {
+        if self.shape == Shape::Wall && self.separator_level.is_none() { &["E", "H"] } else { &[] }
+    }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         if let Some(level)=&mut self.separator_level {
             if key!="L" || !level.choose(value){return false;}
