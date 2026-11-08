@@ -40,7 +40,11 @@ fn filled_with(app: &mut App, csv: &str) {
     ] {
         let _ = app.update(Message::Readjustment(e));
     }
-    let dir = std::env::temp_dir().join(format!("kentos-duzenleme-{}", std::process::id()));
+    // A folder of its own for each call: tests run side by side in one process, and a shared one let one test read
+    // another's records or lose its file to the other's clean-up.
+    static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let k = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let dir = std::env::temp_dir().join(format!("kentos-duzenleme-{}-{k}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let file = dir.join("kayitlar.csv");
     std::fs::write(&file, csv).expect("written");
@@ -188,6 +192,33 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
     assert!(doc.layers().leaves().iter().all(|l| l.name != "Ayırma çapı"), "one step");
 }
 
+/// docs/adr/3080: the parcel numbers of 101/10's two parts outside typed in Dış parça no: read by the parcel's name
+/// into its id; a parcel not partial and a line that does not read are said; Çapın paftaları writes them (the command's
+/// parts table names each outside part with its number); a number short is the command's refusal, nothing written.
+#[test]
+fn the_parts_outside_take_the_typed_parcel_numbers() {
+    let mut app = named();
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let k = app.readjustment.scope.clone().expect("a scope").expect("read");
+    let ten = k.parcels.iter().find(|p| p.parcel == "101/10").expect("101/10").uid.clone();
+    let typed = crate::readjustment_sheet::typed_numbers("101/10: 101/24, 101/25", &k).expect("reads").expect("some");
+    assert_eq!(typed.get(&ten).map(Vec::as_slice), Some(&["101/24".to_owned(), "101/25".to_owned()][..]));
+    assert!(crate::readjustment_sheet::typed_numbers("101/1: 5", &k).expect_err("not partial").contains("kısmen giren"));
+    assert!(crate::readjustment_sheet::typed_numbers("101/10 101/24", &k).expect_err("no colon").contains("okunmadı"));
+    assert_eq!(crate::readjustment_sheet::typed_numbers("  ", &k), Ok(None));
+    // One number short: the command refuses, nothing written, the window stays.
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24".into())));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert!(app.log.last().expect("said").text.contains("2 parçası var; 1 parsel numarası verildi"));
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
+    // Both: the sheets are made.
+    let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert_eq!(app.dialog, None, "the sheets are made");
+}
+
 /// docs/adr/2680: Çapın paftaları over a drawing where a parcel partly inside has no Ada says so and writes nothing;
 /// with every such parcel named, one sheet each in the scope's order, the points numbered on the parcel's own layer
 /// under “Ayırma çapı noktaları”, each map freezing the other parcels' point layers and its coordinate list reading its
@@ -292,6 +323,50 @@ fn sheets_screens() {
             for (sheet, f) in &pdf.sheet_findings {
                 println!("ön denetim {sheet}: {:?} {} {}", f.severity, f.code, f.message);
             }
+        }
+    }
+}
+
+/// `.run/gui-evidence/dis-parca-3080/`: the Ayırma çapı view with Dış parça no typed for 101/10's two pieces outside,
+/// and 101/10's sheet whose table of parts names them, light and wide, dark and narrow; the book as PDF.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::numbers_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn numbers_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dis-parca-3080");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = named();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("readjustment.distribute"));
+        let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+        let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, stem: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "1-pencere");
+        let _ = app.update(Message::Readjustment(R::MakeSheets));
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
+        shot(&mut app, "2-pafta-101-10");
+        if name == "acik-genis" {
+            let doc = &app.document.as_ref().expect("open").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "KentOS", "2026-11-09").expect("a PDF");
+            std::fs::write(out.join("paftalar.pdf"), &pdf.bytes).expect("writes");
         }
     }
 }

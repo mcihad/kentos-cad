@@ -132,6 +132,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-09 / ADR 3040: web'in İmar planı denetiminde yol genişliğine giren kısımların taranması ve parsel başına toplam.
 - MAP-10 / ADR 3060: `cad.scenarios.impact`'in web işleyicisinde `near` (37 ortak durum); web'in Senaryo ölçüleri'nde
   Altyapıyı çizimde göster.
+- MAP-11 / ADR 3080: `cad.readjustment.sheets`'in web işleyicisinde `numbers` (34 ortak durum) ve `sys:ayirma-capi`'nin
+  yeni sütun genişlikleri; web'in Düzenleme dağıtım taslağında Dış parça no kutusu.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

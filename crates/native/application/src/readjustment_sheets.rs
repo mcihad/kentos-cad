@@ -121,12 +121,18 @@ pub fn area_rows(p: &ReadjustmentScopeParcel, scale: u32, mode: RoundingMode) ->
     ]
 }
 
-/// The table of parts: each part's name, its boundary as point numbers and its area at the policy's places.
-pub fn part_rows(p: &ReadjustmentScopeParcel, scale: u32, mode: RoundingMode) -> Vec<Vec<String>> {
+/// The table of parts: each part's name, its boundary as point numbers and its area at the policy's places; with the
+/// parcel numbers given for its outside parts (m. 13/3, docs/adr/3080), each outside part's name says its number.
+pub fn part_rows(p: &ReadjustmentScopeParcel, scale: u32, mode: RoundingMode, numbers: Option<&[String]>) -> Vec<Vec<String>> {
+    let mut outside = numbers.into_iter().flatten();
     part_names(&p.parts)
         .into_iter()
         .zip(&p.parts)
         .map(|(name, part)| {
+            let name = match (part.side == "outside").then(|| outside.next()).flatten() {
+                Some(n) => format!("{name} · parsel {}", n.trim()),
+                None => name,
+            };
             vec![
                 name,
                 boundary_text(part),
@@ -134,6 +140,43 @@ pub fn part_rows(p: &ReadjustmentScopeParcel, scale: u32, mode: RoundingMode) ->
             ]
         })
         .collect()
+}
+
+/// The parcel numbers checked (docs/adr/3080): each for a partial parcel of the scope, one for each of its outside
+/// parts, not empty, at most 20 characters, none twice in a parcel.
+fn numbers_ok(partial: &[&ReadjustmentScopeParcel], numbers: Option<&std::collections::BTreeMap<String, Vec<String>>>) -> Result<(), Stop> {
+    for (uid, given) in numbers.into_iter().flatten() {
+        let at = format!("numbers.{uid}");
+        let Some(p) = partial.iter().find(|p| p.uid == *uid) else {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("“{uid}” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir."),
+                &at,
+            ));
+        };
+        let outside = p.parts.iter().filter(|q| q.side == "outside").count();
+        if given.len() != outside {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("“{}” parselinin düzenleme dışında {outside} parçası var; {} parsel numarası verildi.", p.parcel, given.len()),
+                &at,
+            ));
+        }
+        for (k, n) in given.iter().enumerate() {
+            let t = n.trim();
+            if t.is_empty() || t.chars().count() > 20 {
+                return Err(fail(codes::INVALID_INPUT, "Parsel numarası boş olamaz ve en çok 20 karakterdir.".into(), &format!("{at}[{k}]")));
+            }
+            if given[..k].iter().any(|m| m.trim() == t) {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!("“{}” parselinin iki parçasına aynı parsel numarası (“{t}”) verilmiş.", p.parcel),
+                    &at,
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 /// The parcel's points as the drawing's: a point each, labelled with its number, its parcel and number as attributes.
@@ -235,6 +278,7 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
             ));
         }
     }
+    numbers_ok(&partial, input.numbers.as_ref())?;
     let template = template_of(input.source.as_ref())?;
     let options: InstanceOptions = serde_json::from_value(input.options.clone())
         .map_err(|e| fail(codes::INVALID_OPTIONS, format!("Şablon seçenekleri okunamadı: {e}"), "options"))?;
@@ -345,7 +389,8 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
         patch["kind"]["viewLocked"] = serde_json::Value::Bool(true);
         let mut ops = made.ops;
         ops.push(Op::SetItemProps(SetItemProps { id: item.id.clone(), patch }));
-        let (areas, parts) = (area_rows(p, input.scope.scale, mode), part_rows(p, input.scope.scale, mode));
+        let given = input.numbers.as_ref().and_then(|m| m.get(&p.uid)).map(Vec::as_slice);
+        let (areas, parts) = (area_rows(p, input.scope.scale, mode), part_rows(p, input.scope.scale, mode, given));
         for (at, rows) in [(areas_at, &areas), (parts_at, &parts)] {
             if let Some(i) = at {
                 ops.push(Op::SetItemProps(SetItemProps {

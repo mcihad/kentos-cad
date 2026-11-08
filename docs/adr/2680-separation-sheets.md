@@ -113,7 +113,8 @@ parçalar, alan ve koordinat tablosu tek sayfada”.
 
 ## Sonra
 
-- Çapın tescil bildirimi (m. 22(1)(ğ)) ve dış parçalara parsel numarası (m. 13(3)).
+- Çapın tescil bildirimi (m. 22(1)(ğ)): biçimi yönetmelikte yok, TKGM'ninki beklenir. Dış parçalara parsel numarası
+  (m. 13(3)) yapıldı: [ADR 3080](3080-separation-sheet-outside-part-numbers.md).
 - Önceki paftaların haritalarında sonradan eklenen nokta katmanlarının dondurulması.
 - Değer esaslı dağıtım (resmî metinden kural okunamadı), m. 8(5) tablosu, ikinci kabul (MAP-11'in öbür maddeleri).
 - Web (TODOS §0.2).

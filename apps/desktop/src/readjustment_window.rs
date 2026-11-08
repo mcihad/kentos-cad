@@ -78,6 +78,8 @@ pub struct State {
     pub scope: Option<Result<ReadjustmentScoped, String>>,
     /// What Esas alanları kayıtlara yaz did, a line each (true: to look at).
     pub applied: Vec<(bool, String)>,
+    /// The parcel numbers of the parts outside, as typed: `Ada/Parsel: n, n; …` (docs/adr/3080).
+    pub numbers: String,
 }
 
 impl Default for State {
@@ -103,6 +105,7 @@ impl Default for State {
             tolerance: readjustment_scope::FIRST_TOLERANCE,
             scope: None,
             applied: Vec::new(),
+            numbers: String::new(),
         }
     }
 }
@@ -127,6 +130,8 @@ pub enum Event {
     WriteSheet,
     /// Çapın paftaları (docs/adr/2680).
     MakeSheets,
+    /// The parcel numbers of the parts outside, typed (docs/adr/3080).
+    Numbers(String),
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -377,6 +382,7 @@ impl App {
             }
             Event::WriteSheet => self.readjustment_sheet_write(),
             Event::MakeSheets => return self.readjustment_sheets_make(),
+            Event::Numbers(t) => self.readjustment.numbers = t,
             Event::Apply => {
                 if let Some(Ok(scope)) = &self.readjustment.scope {
                     let scope = scope.clone();
@@ -506,6 +512,16 @@ impl App {
                 .spacing(10)
                 .align_y(Center),
             );
+        // The parts outside's parcel numbers, in the separation sheet's view (docs/adr/3080).
+        let form = if s.view == View::Sheet {
+            form.field(
+                "Dış parça no",
+                crate::style::fields::input(None, "101/10: 101/24, 101/25; …", &s.numbers, false, false)
+                    .on_input(|t| msg(Event::Numbers(t))),
+            )
+        } else {
+            form
+        };
         let mut lines = vec![words::text_line(
             Kind::Info,
             "Taslak: sonuç tekrarlanabilir bir öneridir; incelenip yetkili onayı olmadan kaydın yerine geçmez, resmî uygunluk kararı verilmez.",
@@ -601,6 +617,11 @@ impl App {
             None => {}
         }
         if s.view == View::Sheet {
+            // Article 13(3): each part outside is registered with a parcel number; the user writes the numbers given.
+            lines.push(words::text_line(
+                Kind::Info,
+                "Dış parçaların parsel numaraları (Yönetmelik m. 13/3): düzenleme dışında kalan her parça parsel numarasıyla tescil edilir. Numaraları verildiği gibi Dış parça no kutusuna “101/10: 101/24, 101/25; …” biçiminde yazın; Çapın paftaları Kısımlar tablosunda gösterir. KentOS numara vermez.",
+            ));
             table = match &s.scope {
                 Some(Ok(k)) => sheet(
                     vec![col("Parsel", 70.0), col("Kısım", 150.0), num("Nokta", 55.0), num("Y", 130.0), num("X", 130.0), num("Alan (m²)", 100.0)],

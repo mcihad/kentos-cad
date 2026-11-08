@@ -114,11 +114,19 @@ def areas(p, scale, mode):
             ["Girmeyen kısma kalan (tescilli − giren)", p.get("outsideRecorded", "—")]]
 
 
-def part_rows(p, scale, mode):
-    return [[n, boundary(part), written(part["area"], scale, mode)] for n, part in zip(names(p["parts"]), p["parts"])]
+def part_rows(p, scale, mode, numbers=None):
+    """The table of parts; with the parcel numbers given for its outside parts (m. 13/3, docs/adr/3080), each outside
+    part's name says its number."""
+    out, k = [], 0
+    for n, part in zip(names(p["parts"]), p["parts"]):
+        if numbers is not None and part["side"] == "outside":
+            n = f"{n} · parsel {numbers[k].strip()}"
+            k += 1
+        out.append([n, boundary(part), written(part["area"], scale, mode)])
+    return out
 
 
-def sheets(entities, chosen, kw, given_scale=None, taken=()):
+def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None):
     """The sheets' answer rows and the book's listing for the partial parcels of the scope."""
     scope_kw = {k: kw[k] for k in ("scale", "mode", "tolerance", "field") if k in kw}
     scope = rs.scope(entities, 0, chosen, **scope_kw)
@@ -139,7 +147,8 @@ def sheets(entities, chosen, kw, given_scale=None, taken=()):
         s = given_scale if given_scale is not None else fit_scale(box)
         name = f"{WORD} {p['parcel']}"
         rows.append({"sheet": sid, "name": name, "uid": p["uid"], "parcel": p["parcel"], "scale": s, "center": centre,
-                     "points": len(p["points"]), "areas": areas(p, scale, mode), "parts": part_rows(p, scale, mode)})
+                     "points": len(p["points"]), "areas": areas(p, scale, mode),
+                     "parts": part_rows(p, scale, mode, (numbers or {}).get(p["uid"]))})
         listing.append({"id": sid, "name": name, "width": 210.0, "height": 297.0,
                         "items": len(TEMPLATE["sheet"]["items"]),
                         "maps": [{"item": f"{sid}-item-{MAP_AT}", "name": MAP_NAME, "scale": float(s)}]})
@@ -166,12 +175,14 @@ def made(rows, plan=False):
 WRITTEN = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
 
 
-def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, **kw):
+def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, numbers=None, **kw):
     given = (options or {}).get("scale")
-    rows, listing = sheets(entities, chosen, kw, given)
+    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers)
     inp = {"scope": scope_input(chosen, **kw)}
     if options:
         inp["options"] = options
+    if numbers is not None:
+        inp["numbers"] = numbers
     step = {"op": op, "input": inp, "within": W}
     if op == "validate":
         step["result"] = {"status": "completed", "output": None, "warnings": []}
@@ -214,6 +225,24 @@ def cases():
         ok("kısmen giren parsel: yüzölçümleri ve kısımlar politikanın basamağıyla", [P(3)]),
         ok("kaydı okunmayan parsel: tescilli yazıldığı gibi, fark yok", [P(6)]),
         ok("iki parçası dışarıda kalan parsel: Girmeyen 1 ve 2 aynı paftada (m. 13/3)", [P(10)]),
+        # docs/adr/3080: the parcel numbers of the parts outside, as the user writes them (m. 13/3).
+        ok("dışarıda kalan iki parçanın parsel numaraları yazılınca Kısımlar'da adlarıyla (m. 13/3)", [P(10)],
+           numbers={rs.uid(P(10) + 1): ["101/24", " 101/25 "]}),
+        refused("parsel numaraları: parça sayısı tutmuyor", {"scope": scope_input([P(10)]),
+                "numbers": {rs.uid(P(10) + 1): ["101/24"]}}, "invalid_input",
+                "“101/10” parselinin düzenleme dışında 2 parçası var; 1 parsel numarası verildi.",
+                f"numbers.{rs.uid(P(10) + 1)}"),
+        refused("parsel numaraları: kısmen giren parsel değil", {"scope": scope_input([P(3)]),
+                "numbers": {rs.uid(P(1) + 1): ["5"]}}, "invalid_input",
+                f"“{rs.uid(P(1) + 1)}” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin "
+                "dışarıda kalan parçalarına verilir.", f"numbers.{rs.uid(P(1) + 1)}"),
+        refused("parsel numaraları: aynı numara iki parçada", {"scope": scope_input([P(10)]),
+                "numbers": {rs.uid(P(10) + 1): ["101/24", "101/24"]}}, "invalid_input",
+                "“101/10” parselinin iki parçasına aynı parsel numarası (“101/24”) verilmiş.",
+                f"numbers.{rs.uid(P(10) + 1)}"),
+        refused("parsel numaraları: boş numara", {"scope": scope_input([P(10)]),
+                "numbers": {rs.uid(P(10) + 1): ["101/24", "  "]}}, "invalid_input",
+                "Parsel numarası boş olamaz ve en çok 20 karakterdir.", f"numbers.{rs.uid(P(10) + 1)}[1]"),
         ok("köşesi sınırın dışında: girmeyen kısım L biçiminde, sınırı ortak noktalarla", None, rs.CORNER,
            rs.setup(rs.CORNER)),
         ok("sınır parselin içinde: girmeyen kısım delikli, deliği giren kısmın noktaları", None, rs.HOLED,

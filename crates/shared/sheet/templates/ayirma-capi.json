@@ -130,9 +130,9 @@
           "titleStyle": { "size": 2600, "weight": 600 },
           "source": { "type": "fixed", "rows": [] },
           "columns": [
-            { "heading": "Kısım", "width": 19000, "align": "left" },
+            { "heading": "Kısım", "width": 31000, "align": "left" },
             { "heading": "Sınır (noktalar)", "align": "left" },
-            { "heading": "m²", "width": 22000, "align": "right" }
+            { "heading": "m²", "width": 16000, "align": "right" }
           ],
           "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
           "cellStyle": { "text": { "size": 2100, "weight": 400 }, "padding": 800 }

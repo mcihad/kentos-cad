@@ -41,7 +41,7 @@ sırayla alır.
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
@@ -1105,6 +1105,15 @@ parselin kendi katmanında etiketli, harita standart ölçekte sığar ve öbür
 listesi parselin katmanını okur, Yüzölçümleri tablosu fark kesin ve girmeyen kısma kalan (m. 31/2) ile, Kısımlar
 sınırları nokta numaralarıyla; tek geri alma; 29 ortak durum, Python korunum testi, MCP; masaüstünde Çapın paftaları.
 Açık: tescil bildirimi, dış parçaların numarası, değer esaslı dağıtım, m. 8(5), ikinci kabul.
+
+**9 Kasım 2026, beşinci tur — dışarıda kalan parçaların parsel numaraları ([ADR 3080](../docs/adr/3080-separation-sheet-outside-part-numbers.md)).**
+Kapsam: **Harita + CBS**. Dayanak: Yönetmelik m. 13(3) (dışarıda kalan her parça parsel numarası verilerek tescil
+edilir; numaranın kuralı yazılmaz, m. 21(4) imar parselleri içindir), m. 22(1)(ğ) ve Ek-1–Ek-6 (tescil bildiriminin
+biçimi yok); TÜRMOB kopyası, 9 Kasım 2026. Kanıtlanan: `cad.readjustment.sheets`'e `numbers`: kısmen giren parselin dış
+parçalarına verilmiş numaralar Kısımlar'da adın yanında (“Girmeyen 1 · parsel 101/24”); dört ret (sayı, kısmen girmeyen
+parsel, aynı numara, boş); 34 ortak durum, MCP; masaüstünde Dış parça no kutusu (“101/10: 101/24, 101/25; …”);
+şablonun Kısım sütunu 31 mm. KentOS numara vermez. Açık: tescil bildirimi (TKGM'nin biçimi), numaranın çizimde yazılması,
+değer esaslı dağıtım, m. 8(5), ikinci kabul.
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 

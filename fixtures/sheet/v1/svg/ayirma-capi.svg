@@ -48,10 +48,10 @@
 <rect x="24000" y="167190" width="84000" height="3900" fill="none" stroke="#000000" stroke-width="350"/>
 <text x="24000" y="211535" font-family="Barlow, sans-serif" font-size="2600" font-weight="600" fill="#000000" xml:space="preserve">KISIMLAR</text>
 <rect x="24000" y="213190" width="84000" height="3900" fill="#ededed"/>
-<text x="31102" y="215940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Kısım</text>
-<text x="58046" y="215940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Sınır (noktalar)</text>
-<text x="95834" y="215940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">m²</text>
-<path d="M43000 213190L43000 217090M86000 213190L86000 217090" fill="none" stroke="#000000" stroke-width="180"/>
+<text x="37102" y="215940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Kısım</text>
+<text x="67046" y="215940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">Sınır (noktalar)</text>
+<text x="98834" y="215940" font-family="Barlow, sans-serif" font-size="2000" font-weight="600" fill="#000000" xml:space="preserve">m²</text>
+<path d="M55000 213190L55000 217090M92000 213190L92000 217090" fill="none" stroke="#000000" stroke-width="180"/>
 <rect x="24000" y="213190" width="84000" height="3900" fill="none" stroke="#000000" stroke-width="350"/>
 <text x="112000" y="165535" font-family="Barlow, sans-serif" font-size="2600" font-weight="600" fill="#000000" xml:space="preserve">KOORDİNATLAR</text>
 <rect x="112000" y="167190" width="84000" height="3900" fill="#ededed"/>

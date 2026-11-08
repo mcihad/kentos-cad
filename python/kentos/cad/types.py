@@ -77476,12 +77476,18 @@ class ReadjustmentSheets(_Model):
     (no parcel is partly inside), `no_identity` and `duplicate_parcel` (a partial parcel without Ada or Parsel, or with
     another's), `unknown_template`, `invalid_options` (options that do not read; a name, a centre or an answer to a
     parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
-    (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own.
+    (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
+    not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
+    `invalid_input` at `numbers.‹uid›`.
     Attributes:
+        numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
+            docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
+            outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
         options: The template's paper, scale and answers (cad.sheets.create's options but the name and the centre).
     """
     scope: ReadjustmentScope
     expected_revision: str | None | Unset = UNSET
+    numbers: dict[str, list[str]] | None | Unset = UNSET
     options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
     source: SheetTemplateSource | None | Unset = UNSET
 
@@ -77490,6 +77496,8 @@ class ReadjustmentSheets(_Model):
         out["scope"] = self.scope.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.numbers is not UNSET:
+            out["numbers"] = None if self.numbers is None else {k0: list(e0) for k0, e0 in self.numbers.items()}
         out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
         if self.source is not UNSET:
             out["source"] = None if self.source is None else self.source.to_json()
@@ -77500,6 +77508,7 @@ class ReadjustmentSheets(_Model):
         return cls(
             scope=ReadjustmentScope.from_json(data["scope"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            numbers=UNSET if "numbers" not in data else None if data["numbers"] is None else {k0: list(e0) for k0, e0 in data["numbers"].items()},
             options=data["options"] if "options" in data else dict(),
             source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
         )

@@ -102,12 +102,40 @@ fn new_object(parcel: &str, name: String, part: &ScopePart, f: &Format) -> Optio
     })
 }
 
+/// The parcel numbers typed for the parts outside (docs/adr/3080): `Ada/Parsel: n, n; …`, by the partial parcels'
+/// persistent ids; none when nothing is typed, the reason when a part does not read.
+pub fn typed_numbers(text: &str, scope: &ReadjustmentScoped) -> Result<Option<std::collections::BTreeMap<String, Vec<String>>>, String> {
+    let mut out = std::collections::BTreeMap::new();
+    for part in text.split(';').map(str::trim).filter(|t| !t.is_empty()) {
+        let Some((parcel, list)) = part.split_once(':') else {
+            return Err(format!("Dış parça no: “{part}” okunmadı; “Ada/Parsel: numara, numara” yazın."));
+        };
+        let parcel = parcel.trim();
+        let Some(p) = scope.parcels.iter().find(|p| p.parcel == parcel && p.kind == "partial") else {
+            return Err(format!("Dış parça no: “{parcel}” kapsamda kısmen giren bir parsel değil."));
+        };
+        out.insert(p.uid.clone(), list.split(',').map(|n| n.trim().to_owned()).collect());
+    }
+    Ok((!out.is_empty()).then_some(out))
+}
+
 impl App {
     /// Çapın paftaları (docs/adr/2680): `cad.readjustment.sheets` over the window's boundary, places, rounding and piece
     /// tolerance with KentOS's separation sheet; one undo step. The window closes and the sheets are shown.
     pub(crate) fn readjustment_sheets_make(&mut self) -> Task<Message> {
         let Some(scope) = self.readjustment_scope_input() else { return Task::none() };
-        let input = ReadjustmentSheets { scope, source: None, options: serde_json::json!({}), expected_revision: None };
+        // The parts outside's parcel numbers as typed (docs/adr/3080).
+        let numbers = match &self.readjustment.scope {
+            Some(Ok(k)) => match typed_numbers(&self.readjustment.numbers, k) {
+                Ok(n) => n,
+                Err(why) => {
+                    self.warn(why);
+                    return Task::none();
+                }
+            },
+            _ => None,
+        };
+        let input = ReadjustmentSheets { scope, source: None, options: serde_json::json!({}), numbers, expected_revision: None };
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let result = readjustment_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
         let Some(out) = self.answered(result) else { return Task::none() };

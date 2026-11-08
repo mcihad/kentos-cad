@@ -9603,15 +9603,15 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
-        // Ayırma çapı paftaları (plan/map-cad.md MAP-11, docs/adr/2680).
+        // Ayırma çapı paftaları (plan/map-cad.md MAP-11, docs/adr/2680, 3080).
         CommandDescriptor {
             id: crate::CAD_READJUSTMENT_SHEETS.into(),
             version: crate::CAD_READJUSTMENT_SHEETS_VERSION,
             title: "Ayırma çapı paftaları".into(),
             summary: "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). \
                       Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. \
-                      Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. \
-                      Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var)."
+                      Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. \
+                      Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var)."
                 .into(),
             aliases: vec!["ayirmacapipaftalari".into(), "capinpaftalari".into()],
             effect: CommandEffect::Document,

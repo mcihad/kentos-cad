@@ -1082,6 +1082,266 @@
    ]
   },
   {
+   "name": "dışarıda kalan iki parçanın parsel numaraları yazılınca Kısımlar'da adlarıyla (m. 13/3)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        " 101/25 "
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "group": "$any",
+       "sheets": [
+        {
+         "sheet": "ayirma-capi-1",
+         "name": "Ayırma çapı 101/10",
+         "uid": "0192f800-2060-7000-8000-00000000000b",
+         "parcel": "101/10",
+         "scale": 1000,
+         "center": [
+          486994.0,
+          4420020.0
+         ],
+         "points": 8,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "321.10"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "320.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "-1.10"
+          ],
+          [
+           "Yanılma sınırı",
+           "4.50"
+          ],
+          [
+           "Giren kısım",
+           "240.00"
+          ],
+          [
+           "Girmeyen kısım",
+           "80.00"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "81.10"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "240.00"
+          ],
+          [
+           "Girmeyen 1 · parsel 101/24",
+           "5-6-2-1-5",
+           "40.00"
+          ],
+          [
+           "Girmeyen 2 · parsel 101/25",
+           "4-3-7-8-4",
+           "40.00"
+          ]
+         ],
+         "layer": "$any"
+        }
+       ],
+       "uids": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "sheets": [
+       {
+        "id": "ayirma-capi-1",
+        "name": "Ayırma çapı 101/10",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-1-item-2",
+          "name": "Çap",
+          "scale": 1000.0
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: parça sayısı tutmuyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“101/10” parselinin düzenleme dışında 2 parçası var; 1 parsel numarası verildi.",
+       "path": "numbers.0192f800-2060-7000-8000-00000000000b"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: kısmen giren parsel değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-000000000004"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-000000000002": [
+        "5"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f800-2060-7000-8000-000000000002” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir.",
+       "path": "numbers.0192f800-2060-7000-8000-000000000002"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: aynı numara iki parçada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "101/24"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“101/10” parselinin iki parçasına aynı parsel numarası (“101/24”) verilmiş.",
+       "path": "numbers.0192f800-2060-7000-8000-00000000000b"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: boş numara",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "  "
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Parsel numarası boş olamaz ve en çok 20 karakterdir.",
+       "path": "numbers.0192f800-2060-7000-8000-00000000000b[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
    "name": "köşesi sınırın dışında: girmeyen kısım L biçiminde, sınırı ortak noktalarla",
    "steps": [
     {
@@ -4258,7 +4518,7 @@
             "columns": [
              {
               "heading": "Kısım",
-              "width": 19000,
+              "width": 31000,
               "align": "left"
              },
              {
@@ -4267,7 +4527,7 @@
              },
              {
               "heading": "m²",
-              "width": 22000,
+              "width": 16000,
               "align": "right"
              }
             ],

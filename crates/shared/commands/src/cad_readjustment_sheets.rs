@@ -37,7 +37,9 @@ fn empty_options() -> serde_json::Value {
 /// (no parcel is partly inside), `no_identity` and `duplicate_parcel` (a partial parcel without Ada or Parsel, or with
 /// another's), `unknown_template`, `invalid_options` (options that do not read; a name, a centre or an answer to a
 /// parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
-/// (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own.
+/// (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
+/// not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
+/// `invalid_input` at `numbers.‹uid›`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -53,6 +55,12 @@ pub struct ReadjustmentSheets {
     #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
     #[cfg_attr(feature = "schema", schemars(with = "kentos_sheet::template::InstanceOptions", extend("x-raw-record" = true)))]
     pub options: serde_json::Value,
+    /// The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
+    /// docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
+    /// outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub numbers: Option<std::collections::BTreeMap<String, Vec<String>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]

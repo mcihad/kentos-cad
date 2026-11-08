@@ -343,11 +343,15 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
     Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita
     kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar
     varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada,
-    parsel soruları parselin özniteliklerinden. Tek geri alma adımı. Taslaktır: çaplar
-    parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler:
-    kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel,
-    unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap),
-    not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).
+    parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların
+    tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların
+    sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS
+    numara vermez. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte
+    onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…),
+    no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options
+    (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen
+    girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara), not_fixed_map,
+    separation_sheet_exists (pafta ya da nokta katmanı zaten var).
     """
     __slots__ = ()
     id = "cad.readjustment.sheets"
@@ -365,6 +369,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
         request_id: str | None = None,
@@ -384,16 +389,23 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm
         penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta
         adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin
-        özniteliklerinden. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla
-        birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri
-        (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template,
-        invalid_options (ad, merkez ya da parselin özniteliğine cevap), not_fixed_map,
-        separation_sheet_exists (pafta ya da nokta katmanı zaten var).
+        özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel
+        numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın
+        yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez. Tek geri alma
+        adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS
+        onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels,
+        no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da
+        parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça
+        sayısını tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists
+        (pafta ya da nokta katmanı zaten var).
 
         Args:
             doc: The drawing it works on.
             scope:
             expected_revision:
+            numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
+                docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
+                outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
             options: The template's paper, scale and answers (cad.sheets.create's options but the name and the centre).
             source:
             request_id: Names this write: sent again with the same call it is answered as
@@ -411,6 +423,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.execute_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
         ), request_id=request_id, expected=expected)
@@ -422,6 +435,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
     ) -> ReadjustmentSheetsMade:
@@ -431,6 +445,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.plan_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
         ))
@@ -442,6 +457,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -451,6 +467,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.validate_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
         ))
@@ -462,6 +479,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
         op: str = "execute",
@@ -476,6 +494,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.answer_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
         ), op=op, request_id=request_id, expected=expected)
