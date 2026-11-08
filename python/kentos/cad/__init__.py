@@ -4159,6 +4159,7 @@ __all__ = [
     "Wipeout",
     "WithdrawFormsOp",
     "WktCsvGeometryIn",
+    "WorkChanges",
     "WorkDerivation",
     "WorkDerivationRow",
     "WorkFile",

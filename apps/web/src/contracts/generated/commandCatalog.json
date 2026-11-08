@@ -207554,6 +207554,41 @@
       ],
       "type": "object"
     },
+    "WorkChanges": {
+      "description": "The objects of an item that changed since its approval (docs/adr/2880): how many were added, removed and changed,\nand the persistent ids of those there now (added or changed), by id, at most [`WORK_CHANGES_LISTED`].",
+      "properties": {
+        "added": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "changed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "removed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "changed"
+      ],
+      "type": "object"
+    },
     "WorkDerivation": {
       "additionalProperties": false,
       "description": "Objects made from an item: the item, its revision then, the operation that made them and the objects.",
@@ -207725,6 +207760,23 @@
             "null"
           ]
         },
+        "approvedObjects": {
+          "description": "The objects its approval stamped (schema 210, docs/adr/2880): `[persistent id, object digest]` by id, the very\nlist whose compact JSON's SHA-256 is `approved`; only on an approved item without a file, of at most\n[`MAX_APPROVED_OBJECTS`]. Empty: approved before 210, an item with a file, or one of more objects.",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/EntityId"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
         "file": {
           "anyOf": [
             {
@@ -207880,6 +207932,17 @@
             "string",
             "null"
           ]
+        },
+        "changes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkChanges"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What changed since its approval, object by object (docs/adr/2880): on a revised item without a file whose\napproval kept its objects' digests."
         },
         "content": {
           "description": "Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the\nread worked it out (deep, a source of a derivation, an approved item with a stamp).",

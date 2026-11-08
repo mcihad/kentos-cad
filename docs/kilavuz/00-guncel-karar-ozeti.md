@@ -220,6 +220,10 @@
 - **Ortofoto dikiş ölçümü dikiş hattı boyunca (8 Kasım 2026; MAP-12, [ADR 2860](../../docs/adr/2860-orthophoto-seam-along-a-drawn-line.md)).**
   `cad.orthophoto.compare`'in `seam.line`'ı: yerler hattın başından adım aralıklı, örtüşmedekiler ölçülür; `station`,
   `seam.line` (uzunluk, yerler, dışarıdakiler). Ortofoto karşılaştırması'nda Dikiş hattı. CAD + CBS.
+- **Harita işinde onaydan sonra değişen nesneler (8 Kasım 2026; MAP-01, [ADR 2880](../../docs/adr/2880-map-work-objects-changed-since-approval.md)).**
+  Onay dosyasız öğenin nesnelerini özetleriyle tutar (`approvedObjects`, listenin özeti damgadır; `.kcad` şema 210).
+  Onayı eskimiş öğenin `changes`'i eklenen, silinen ve değişen nesneleri sayar; Harita işi'nde Değişenler satırı onları
+  seçer. Yalnız Harita.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

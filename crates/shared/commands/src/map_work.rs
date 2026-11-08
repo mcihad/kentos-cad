@@ -131,11 +131,38 @@ pub struct WorkRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<String>,
+    /// What changed since its approval, object by object (docs/adr/2880): on a revised item without a file whose
+    /// approval kept its objects' digests.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub changes: Option<WorkChanges>,
     pub state: WorkState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub why: Vec<String>,
 }
+
+/// The objects of an item that changed since its approval (docs/adr/2880): how many were added, removed and changed,
+/// and the persistent ids of those there now (added or changed), by id, at most [`WORK_CHANGES_LISTED`].
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkChanges {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub removed: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub changed: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub uids: Vec<String>,
+}
+
+/// The most ids [`WorkChanges`] lists.
+pub const WORK_CHANGES_LISTED: usize = 1000;
 
 /// A derivation as it stands: its id, source item, operation, the source's revision it was made from, how many of its
 /// objects the drawing holds of how many, its state and why.

@@ -31,7 +31,7 @@ sırayla alır.
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480 | tipli katman profili; onaydan sonra değişen nesneler (şema 207) | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880 | tipli katman profili; değişen nesnenin neyinin değiştiği; silinenin onaylı hâli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
@@ -251,6 +251,14 @@ nesnenin komutlarını taşır. Kanıtlanan: seçimin rolleri (yüzey kaynağı,
 hepsi aynı rolü taşıyorsa); şeridin bağlamsal sekmelerinde Yüzey, Altyapı ve İmar panelleri yalnız o rolde; Arazi
 yüzeyleri, Pafta eğrileri, Yüzey analizi ve Boru hattı denetimi seçimin kendi yüzeyi ya da ağıyla açılır; masaüstü
 testleri ve resimler. Açık: tipli katman profili, onaydan sonra değişen nesneler (şema 207), parsel rolü.
+
+**8 Kasım 2026, beşinci tur — onaydan sonra değişen nesneler ([ADR 2880](../docs/adr/2880-map-work-objects-changed-since-approval.md)).**
+Kapsam: **Harita (CAD)**. Araştırma: ArcGIS Pro'nun sürüm farkları (katman başına sayı; eklenen, silinen, güncellenen;
+listeden seçme), AutoCAD'in DWG Compare'i. Kanıtlanan: onay dosyasız öğenin nesnelerini özetleriyle tutar
+(`approvedObjects`, listenin özeti damgadır, `.kcad` şema 210); onayı eskimiş öğenin `changes`'i eklenen, silinen ve
+değişen nesneleri sayar, bugün olanların kimliklerini verir; `map.work.query` 32, `map.work.edit` 55 ortak durum, MCP;
+Harita işi panelinde Değişenler satırı onları seçer. Açık: değişenin neyinin değiştiği, silinenin onaylı hâli,
+dosyalı öğede nesne başına fark, tipli katman profili.
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

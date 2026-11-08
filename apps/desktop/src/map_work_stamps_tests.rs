@@ -23,7 +23,7 @@ fn fixtures() -> String {
 
 /// `map.work.query`'s drawing (map_work_cases.py): the campaign, the orthophotos, the CAD reference, the design surface
 /// (its two lines in slots 6 and 7) and the user's own line (slot 8).
-fn opened() -> App {
+pub(crate) fn opened() -> App {
     let text = include_str!("../../../fixtures/commands/v1/map.work.query.json")
         .replace("$fixture:", &format!("{}/", fixtures()));
     let cases: Value = serde_json::from_str(&text).expect("cases");
@@ -35,20 +35,20 @@ fn opened() -> App {
     app
 }
 
-fn send(app: &mut App, e: P) {
+pub(crate) fn send(app: &mut App, e: P) {
     let _ = app.update(Message::MapWork(e));
 }
 
-fn tree(app: &App) -> kentos_commands::MapWorkTree {
+pub(crate) fn tree(app: &App) -> kentos_commands::MapWorkTree {
     app.map_work_read().expect("a drawing").expect("a map project")
 }
 
-fn uid(app: &App, slot: u32) -> String {
+pub(crate) fn uid(app: &App, slot: u32) -> String {
     app.document.as_ref().expect("a drawing").model.uid(Slot(slot)).expect("a lasting id").to_string()
 }
 
 /// One of the design's lines given a height attribute: its content moves on.
-fn change_line(app: &mut App, slot: u32, height: &str) {
+pub(crate) fn change_line(app: &mut App, slot: u32, height: &str) {
     let input = json!({"uids": [uid(app, slot)], "attrs": {"Kot": height}, "operation": "attributes"});
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(

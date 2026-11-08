@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod address_rules;
+mod approved_objects;
 mod annotation;
 mod annotation_scale;
 mod annotative;

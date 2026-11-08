@@ -101,17 +101,63 @@ pub const WORK_CONTENT: &str = "kentos.work-content/1";
 /// the object digest is `kentos.object-digest/1` (docs/adr/1320), the object without its slot id. An item that holds no
 /// objects has the digest of `[]`. Its layers' look (colour, style) is not its content; an object's own fields are.
 pub fn content_revision(doc: &Document, work: &MapWork, item: &str) -> String {
-    let mut pairs: Vec<(String, String)> = Vec::new();
+    sha256_hex(&serde_json::to_vec(&content_objects(doc, work, item)).unwrap_or_default())
+}
+
+/// The list [`content_revision`] is the digest of: `[persistent id, object digest]` of the objects the item's layers
+/// hold, by id (docs/adr/2880 keeps it with an approval).
+pub fn content_objects(doc: &Document, work: &MapWork, item: &str) -> Vec<(kentos_commands::EntityId, String)> {
+    let mut pairs: Vec<(kentos_commands::EntityId, String)> = Vec::new();
     for leaf in doc.layers().leaves() {
         if item_of_layer(doc, work, &leaf.id).is_none_or(|i| i.id != item) {
             continue;
         }
         for (uid, entity) in doc.by_layer_with_uids(&leaf.id) {
-            pairs.push((uid.to_string(), crate::sheets_sources::object_digest(entity)));
+            pairs.push((kentos_commands::EntityId(*uid.as_bytes()), crate::sheets_sources::object_digest(entity)));
         }
     }
     pairs.sort_unstable();
-    sha256_hex(&serde_json::to_vec(&pairs).unwrap_or_default())
+    pairs
+}
+
+/// What changed since an approval that kept its objects' digests (docs/adr/2880): the added, the removed and the
+/// changed, by the persistent id; the ids there now listed (added or changed) by id, at most `WORK_CHANGES_LISTED`.
+pub(crate) fn changes_of(then: &[(kentos_commands::EntityId, String)], now: &[(kentos_commands::EntityId, String)]) -> kentos_commands::WorkChanges {
+    let (mut i, mut j) = (0, 0);
+    let (mut added, mut removed, mut changed) = (0u32, 0u32, 0u32);
+    let mut uids: Vec<String> = Vec::new();
+    let note = |u: &kentos_commands::EntityId, uids: &mut Vec<String>| {
+        if uids.len() < kentos_commands::WORK_CHANGES_LISTED {
+            uids.push(kentos_commands::uuid_text(&u.0));
+        }
+    };
+    while i < then.len() || j < now.len() {
+        match (then.get(i), now.get(j)) {
+            (Some(a), Some(b)) if a.0 == b.0 => {
+                if a.1 != b.1 {
+                    changed += 1;
+                    note(&b.0, &mut uids);
+                }
+                i += 1;
+                j += 1;
+            }
+            (Some(a), Some(b)) if a.0 < b.0 => {
+                removed += 1;
+                i += 1;
+            }
+            (Some(_), None) => {
+                removed += 1;
+                i += 1;
+            }
+            (_, Some(b)) => {
+                added += 1;
+                note(&b.0, &mut uids);
+                j += 1;
+            }
+            (None, None) => break,
+        }
+    }
+    kentos_commands::WorkChanges { added, removed, changed, uids }
 }
 
 /// Each item's revision now, worked out once a read: an item with a file, its kept revision (or read deep, a changed
@@ -319,10 +365,15 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
         // Without a file: its content revision where it is judged, or read deep (docs/adr/2080 §1).
         let judged = i.approved.is_some() || work.derivations.iter().any(|d| d.source == i.id);
         let content = (i.file.is_none() && (deep || judged)).then(|| revisions.content(&i.id));
-        // An approval's stamp against the item's revision now (docs/adr/2080 §3).
+        // An approval's stamp against the item's revision now (docs/adr/2080 §3); what changed, object by object, when
+        // the approval kept its objects' digests (docs/adr/2880).
+        let mut changes = None;
         if let Some(stamp) = i.approved.as_ref().filter(|_| i.status == WorkStatus::Approved) {
             let now = revisions.kept(i);
             if now != *stamp {
+                if i.file.is_none() && !i.approved_objects.is_empty() {
+                    changes = Some(changes_of(&i.approved_objects, &content_objects(doc, work, &i.id)));
+                }
                 let what = if i.file.is_some() { "dosyası" } else { "içeriği" };
                 worse(
                     S::Revised,
@@ -348,6 +399,7 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             file,
             content,
             approved: i.approved.clone(),
+            changes,
             state,
             why,
         });

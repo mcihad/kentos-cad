@@ -73,6 +73,7 @@ göre bağlamsal araçlarla düzenlensin.”
 ## Sonra
 
 - Tipli katman profili (MAP-01'in kalanı).
-- Onaydan sonra hangi nesnelerin değiştiği (`.kcad` şema 207: onay damgasında nesne başına özet).
+- Onaydan sonra hangi nesnelerin değiştiği (`.kcad` şema 207: onay damgasında nesne başına özet). Yapıldı:
+  [ADR 2880](2880-map-work-objects-changed-since-approval.md) (şema 210).
 - Parsel ve ada katmanları için rol (bugün kadastro katmanını tanıyan bir proje ayarı yok).
 - Web'in şeridinde aynı roller (TODOS §0.2).

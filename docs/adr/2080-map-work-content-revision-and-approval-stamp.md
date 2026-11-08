@@ -126,7 +126,8 @@ Tarih: 2026-11-08. plan/map-cad.md MAP-01, üçüncü tur. Durum: taslak. Plan s
 ## Sonra
 
 - Nesne türüne göre bağlamsal araçlar (yüzey, plan alanı, altyapı) ve tipli katman profili (MAP-01'in kalanı).
-- Onaydan sonra hangi nesnelerin değiştiği: bugün yalnız revizyon farkı söylenir, nesne başına damga yok.
+- Onaydan sonra hangi nesnelerin değiştiği: bugün yalnız revizyon farkı söylenir, nesne başına damga yok. Yapıldı:
+  [ADR 2880](2880-map-work-objects-changed-since-approval.md).
 - İçe aktarmanın türetme kaydını kendiliğinden yazması (sahibin kararı bekliyor).
 - Güncel olmayan türevin yeniden üretimi ya da güncel kabul edilmesi (Civil 3D'nin Synchronize'ı).
 - Bağlı GeoPackage'ın geri alınabilir yeniden bağlanması.

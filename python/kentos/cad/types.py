@@ -107483,6 +107483,39 @@ class Wipeout(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkChanges(_Model):
+    """The objects of an item that changed since its approval (docs/adr/2880): how many were added, removed and changed,
+    and the persistent ids of those there now (added or changed), by id, at most [`WORK_CHANGES_LISTED`].
+    Attributes:
+        added: Unit: count.
+        removed: Unit: count.
+        changed: Unit: count.
+    """
+    added: int
+    removed: int
+    changed: int
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = self.added
+        out["removed"] = self.removed
+        out["changed"] = self.changed
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkChanges:
+        return cls(
+            added=data["added"],
+            removed=data["removed"],
+            changed=data["changed"],
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkDerivation(_Model):
     """Objects made from an item: the item, its revision then, the operation that made them and the objects.
     Attributes:
@@ -107640,12 +107673,16 @@ class WorkItem(_Model):
         name: 1–200 characters, no space at either end.
         approved: The revision its approval stamped (schema 206, docs/adr/2080 §3), 64 lower-case hex digits: its file's revision
             or, without a file, its content revision then; only on an approved item. None on an item approved before 206.
+        approved_objects: The objects its approval stamped (schema 210, docs/adr/2880): `[persistent id, object digest]` by id, the very
+            list whose compact JSON's SHA-256 is `approved`; only on an approved item without a file, of at most
+            [`MAX_APPROVED_OBJECTS`]. Empty: approved before 210, an item with a file, or one of more objects.
         layers: Layer or group ids; a layer is in one item at most.
     """
     id: str
     kind: WorkKind | WorkKindName
     name: str
     approved: str | None | Unset = UNSET
+    approved_objects: list[list[Any]] | Unset = UNSET
     file: WorkFile | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
     status: WorkStatus | WorkStatusName | Unset = UNSET
@@ -107657,6 +107694,8 @@ class WorkItem(_Model):
         out["name"] = self.name
         if self.approved is not UNSET:
             out["approved"] = self.approved
+        if self.approved_objects is not UNSET:
+            out["approvedObjects"] = [list(e0) for e0 in self.approved_objects]
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
@@ -107672,6 +107711,7 @@ class WorkItem(_Model):
             kind=_enum_in(WorkKind, data["kind"]),
             name=data["name"],
             approved=data.get("approved", UNSET),
+            approved_objects=[list(e0) for e0 in data["approvedObjects"]] if "approvedObjects" in data else UNSET,
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
@@ -107733,6 +107773,8 @@ class WorkRow(_Model):
     Attributes:
         objects: Unit: count.
         approved: The revision its approval stamped (docs/adr/2080 §3).
+        changes: What changed since its approval, object by object (docs/adr/2880): on a revised item without a file whose
+            approval kept its objects' digests.
         content: Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
             read worked it out (deep, a source of a derivation, an approved item with a stamp).
     """
@@ -107743,6 +107785,7 @@ class WorkRow(_Model):
     objects: int
     state: WorkState | WorkStateName
     approved: str | None | Unset = UNSET
+    changes: WorkChanges | None | Unset = UNSET
     content: str | None | Unset = UNSET
     file: WorkFileRow | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
@@ -107758,6 +107801,8 @@ class WorkRow(_Model):
         out["state"] = _enum_out(self.state)
         if self.approved is not UNSET:
             out["approved"] = self.approved
+        if self.changes is not UNSET:
+            out["changes"] = None if self.changes is None else self.changes.to_json()
         if self.content is not UNSET:
             out["content"] = self.content
         if self.file is not UNSET:
@@ -107778,6 +107823,7 @@ class WorkRow(_Model):
             objects=data["objects"],
             state=_enum_in(WorkState, data["state"]),
             approved=data.get("approved", UNSET),
+            changes=UNSET if "changes" not in data else None if data["changes"] is None else WorkChanges.from_json(data["changes"]),
             content=data.get("content", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
@@ -133174,6 +133220,7 @@ __all__ = [
     "Wipeout",
     "WithdrawFormsOp",
     "WktCsvGeometryIn",
+    "WorkChanges",
     "WorkDerivation",
     "WorkDerivationRow",
     "WorkFile",

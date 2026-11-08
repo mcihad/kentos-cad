@@ -161,6 +161,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 layers: layers.clone(),
                 file,
                 approved: None,
+                approved_objects: Vec::new(),
             });
             Ok(Change { item: Some(id), file_revision: revision, ..Change::new(work, "Harita işine ekle") })
         }
@@ -191,9 +192,19 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             let mut stamped = None;
             if next.status != WorkStatus::Approved {
                 next.approved = None;
+                next.approved_objects.clear();
             } else if status == &Some(WorkStatus::Approved) {
                 let stamp = Revisions::new(doc, &work, std::collections::HashMap::new()).kept(&next);
                 next.approved = Some(stamp.clone());
+                // Docs/adr/2880: an item without a file keeps its objects' digests, the list its stamp is the digest
+                // of, so what changes after can be told object by object; an item of too many objects is stamped whole.
+                next.approved_objects = match next.file {
+                    None => {
+                        let pairs = crate::map_work::content_objects(doc, &work, &next.id);
+                        if pairs.len() <= kentos_commands::MAX_APPROVED_OBJECTS { pairs } else { Vec::new() }
+                    }
+                    Some(_) => Vec::new(),
+                };
                 stamped = Some(stamp);
             }
             if next == *old {

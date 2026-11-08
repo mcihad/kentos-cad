@@ -3,9 +3,11 @@
 //! campaigns, reference sources, working data, designs, check results, delivery packages), each item with its status or
 //! its problem as a pill and its derivations under it. An item's row selects its layers' objects and its layer in
 //! Katmanlar; a derivation's row selects its objects and shows them; the row's button relinks a missing file, accepts a
-//! changed one or moves the status on (`map.work.edit`). Above: the kind and the name of a new item, added with the
-//! layer chosen in Katmanlar (else the active one) and, by its second button, a file; Dosyaları oku reads every file's
-//! SHA-256. The tree is read again only when the drawing's revision or the depth changes.
+//! changed one or moves the status on (`map.work.edit`). An approved item whose objects changed since its approval has
+//! a row under it, Değişenler, whose press selects the objects changed and added (docs/adr/2880). Above:
+//! the kind and the name of a new item, added with the layer chosen in Katmanlar (else the active one) and, by its
+//! second button, a file; Dosyaları oku reads every file's SHA-256. The tree is read again only when the drawing's
+//! revision or the depth changes.
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -14,8 +16,8 @@ use std::path::PathBuf;
 use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    WorkDerivationRow, MapWorkEdit, MapWorkOperation, MapWorkTree, WorkFileState as F, WorkKind as K, WorkRow,
-    WorkState as S, WorkStatus as W,
+    WorkDerivationRow, MapWorkEdit, MapWorkOperation, MapWorkTree, WorkChanges, WorkFileState as F, WorkKind as K,
+    WorkRow, WorkState as S, WorkStatus as W,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -32,6 +34,9 @@ pub enum Event {
     Item(String),
     /// A derivation's row, by id: its objects selected and shown.
     Derivation(String),
+    /// Değişenler under an approved item, by the item's id: the objects changed and added since its approval selected
+    /// and shown (docs/adr/2880 §4).
+    Changes(String),
     /// The new item's kind and name.
     Kind(&'static str),
     Name(String),
@@ -209,6 +214,7 @@ impl App {
         match event {
             Event::Item(id) => self.select_item(&id),
             Event::Derivation(id) => self.select_derivation(&id),
+            Event::Changes(id) => self.select_changes(&id),
             Event::Kind(k) => self.map_work.kind = k,
             Event::Name(n) => self.map_work.name = n,
             Event::Add(false) => self.map_work_add(None),
@@ -435,6 +441,29 @@ impl App {
         self.select_slots(slots);
     }
 
+    /// Değişenler (docs/adr/2880 §4): the objects changed and added since the item's approval selected
+    /// and shown, as the tree lists them (at most `WORK_CHANGES_LISTED`); the removed ones are gone from the drawing.
+    fn select_changes(&mut self, id: &str) {
+        let Some(Ok(tree)) = self.map_work_read() else { return };
+        let Some(c) = tree.items.iter().find(|r| r.id == id).and_then(|r| r.changes.clone()) else { return };
+        let Some(doc) = self.document.as_ref() else { return };
+        let slots: Vec<Slot> =
+            c.uids.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)).collect();
+        let n = slots.len();
+        let gone = match c.removed {
+            0 => String::new(),
+            r => format!("; silinen {r} nesne çizimde yok"),
+        };
+        let words = if n == 0 {
+            format!("Onaydan sonra değişen ya da eklenen nesne çizimde yok{gone}.")
+        } else {
+            let first = if (c.changed + c.added) as usize > n { format!(" (ilk {n})") } else { String::new() };
+            self.select_slots(slots);
+            format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{gone}.")
+        };
+        self.say(Level::Info, words);
+    }
+
     pub(crate) fn map_work_view(&self) -> Element<'_, Message> {
         let Some(read) = self.map_work_read() else {
             return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
@@ -533,6 +562,9 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     if let Some(a) = &r.approved {
         detail.push(format!("Onaylanan revizyon {}.", short(a)));
     }
+    if let Some(c) = &r.changes {
+        detail.push(changes_words(c));
+    }
     if r.status == W::Approved {
         detail.push("Onay ofisin teslim kaydıdır; kurum onayı değildir.".into());
     }
@@ -582,6 +614,48 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
             item.action(icon(Icon::Undo).size(13.0), "Taslağa döndür", msg(Event::Status(r.id.clone(), W::Draft)))
         }
     };
+    if let Some(c) = &r.changes {
+        item = item.push(changes_item(r, c));
+    }
+    item
+}
+
+/// What an approved item's objects did since its approval, in one sentence (docs/adr/2880 §4).
+fn changes_words(c: &WorkChanges) -> String {
+    let parts: Vec<String> = [(c.changed, "değişti"), (c.added, "eklendi"), (c.removed, "silindi")]
+        .into_iter()
+        .filter(|(n, _)| *n > 0)
+        .map(|(n, w)| format!("{n} nesne {w}"))
+        .collect();
+    match parts.is_empty() {
+        true => "Onaydan sonra nesneleri değişti.".to_owned(),
+        false => format!("Onaydan sonra {}.", parts.join(", ")),
+    }
+}
+
+/// Değişenler, the row under an approved item whose objects changed since its approval: how many, what each did in
+/// the tip, its press selecting the objects changed and added, as a derivation's row selects its objects. Short, so
+/// that it reads in the narrow dock under its item. The pill is information, not a second problem: the item's own row
+/// already counts as one.
+fn changes_item<'a>(r: &WorkRow, c: &WorkChanges) -> StatusItem<'a, Message> {
+    let there = (c.changed + c.added) as usize;
+    let mut detail = vec![changes_words(c)];
+    detail.push(match (there, c.removed) {
+        (0, _) => "Silinenler çizimde yok; seçilecek nesne yok.".to_owned(),
+        (_, 0) => "Basınca değişen ve eklenen nesneler seçilir ve gösterilir.".to_owned(),
+        _ => "Basınca değişen ve eklenen nesneler seçilir ve gösterilir; silinenler çizimde yok.".to_owned(),
+    });
+    if there > c.uids.len() {
+        detail.push(format!("İlk {} nesne seçilir.", c.uids.len()));
+    }
+    let total = c.changed + c.added + c.removed;
+    let mut item = StatusItem::new(format!("ch:{}", r.id), "Değişenler")
+        .icon(icon(Icon::Select).size(14.0))
+        .status(Status::Info, format!("{total} nesne"))
+        .detail(detail.join(" "));
+    if there > 0 {
+        item = item.on_press(msg(Event::Changes(r.id.clone())));
+    }
     item
 }
 

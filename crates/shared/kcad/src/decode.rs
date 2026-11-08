@@ -1122,6 +1122,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.work_stamps && v.has_stamps() {
                     return Err(r.fail_at(Code::BadValue, at, "dosyası olmayan öğeden türetme şema 206'dan önce yazılmaz"));
                 }
+                // Schema 210 (docs/adr/2880): an approval's objects' digests.
+                if !has.approved_objects && v.has_approved_objects() {
+                    return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedObjects (şema 210'dan önce yok)"));
+                }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

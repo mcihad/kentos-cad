@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `209`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-210.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `210`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-211.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -912,6 +912,16 @@ komutların yazdığı gibi ondalık rakamlar, en çok 20 hane ve 64 bite sığa
 yazmaz. 0 sürüm ya da rakam olmayan revizyon `bad_value` (`broken/drawing-version-zero.kcad`,
 `broken/drawing-revision-not-digits.kcad`). Yazıcı 209'u bir kayıt bunlardan birini taşıyınca seçer; 208 ve öncesi
 `bad_value` sayar (`broken/drawing-provenance-in-schema-208.kcad`). Örnek `map-drawing-provenance.json/.kcad`.
+
+**Şema 210** (ADR 2880; MAP-01): onay damgasının nesneleri. `settings.mapWork.items[i]`'ye `approvedObjects`:
+`[[kalıcı kimlik, nesne özeti], …]`, onaylanan öğenin damgaladığı liste (ADR 2080 §1'in içerik revizyonunun listesi).
+Yalnız dosyası olmayan, onaylı ve damgalı öğede olur; kimlikler boş değildir, kimliğe göre kesin artan sıradadır
+(tekrarsız), özetler 64 küçük onaltılık hanedir, en çok 100 000 çift. Listenin boşluksuz JSON'unun SHA-256'sı öğenin
+`approved` damgasıdır; değilse, dosyası olan öğede, damgasız ya da sırasız listede `bad_value`
+(`broken/map-work-approved-objects-not-the-stamp.kcad`, `broken/map-work-approved-objects-on-a-file.kcad`,
+`broken/map-work-approved-objects-twice.kcad`). Boş liste yazılmaz. Yazıcı 210'u bir öğe listeyi taşıyınca seçer; 209
+ve öncesinde alan bilinmez (`unknown_field`, `broken/map-work-approved-objects-in-schema-209.kcad`). Örnek
+`map-work-approved-objects.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

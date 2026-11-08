@@ -136,7 +136,16 @@ pub struct WorkItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub approved: Option<String>,
+    /// The objects its approval stamped (schema 210, docs/adr/2880): `[persistent id, object digest]` by id, the very
+    /// list whose compact JSON's SHA-256 is `approved`; only on an approved item without a file, of at most
+    /// [`MAX_APPROVED_OBJECTS`]. Empty: approved before 210, an item with a file, or one of more objects.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<(EntityId, String)>>"))]
+    pub approved_objects: Vec<(EntityId, String)>,
 }
+
+/// The most objects an approval keeps a digest for (docs/adr/2880): an item of more is stamped whole only.
+pub const MAX_APPROVED_OBJECTS: usize = 100_000;
 
 /// Objects made from an item: the item, its revision then, the operation that made them and the objects.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -185,6 +194,11 @@ impl MapWork {
     /// Whether an item's file keeps its relative path (schema 193, docs/adr/1201 §1).
     pub fn has_relative(&self) -> bool {
         self.items.iter().any(|i| i.file.as_ref().is_some_and(|f| f.relative.is_some()))
+    }
+
+    /// Whether an approval keeps its objects' digests (schema 210, docs/adr/2880).
+    pub fn has_approved_objects(&self) -> bool {
+        self.items.iter().any(|i| !i.approved_objects.is_empty())
     }
 
     /// Whether it says what schema 206 added (docs/adr/2080): an approval's stamp, or a derivation from an item without
@@ -273,6 +287,31 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
                 return fail(at("approved"), "onay damgası 64 küçük onaltılık haneli SHA-256 olmalı");
             }
         }
+        // Docs/adr/2880: the objects an approval stamped, the list its stamp is the digest of.
+        if !item.approved_objects.is_empty() {
+            let objects = at("approvedObjects");
+            let Some(stamp) = &item.approved else {
+                return fail(objects, "nesne başına özet yalnız onay damgasıyla olur");
+            };
+            if item.file.is_some() {
+                return fail(objects, "dosyası olan öğe nesne başına özet tutmaz; onayı dosyanın revizyonudur");
+            }
+            if item.approved_objects.len() > MAX_APPROVED_OBJECTS {
+                return fail(objects, &format!("onay en çok {MAX_APPROVED_OBJECTS} nesnenin özetini tutar"));
+            }
+            for (k, (uid, digest)) in item.approved_objects.iter().enumerate() {
+                if uid.is_nil() || !is_sha256_text(digest) {
+                    return fail(objects, "her nesne boş olmayan bir kimlik ve 64 küçük onaltılık haneli özettir");
+                }
+                if k > 0 && item.approved_objects[k - 1].0 >= *uid {
+                    return fail(objects, "nesneler kimliğe göre sıralı ve birer kez yazılır");
+                }
+            }
+            let text = serde_json::to_vec(&item.approved_objects).unwrap_or_default();
+            if crate::encoding::sha256_hex(&text) != *stamp {
+                return fail(objects, "nesnelerin listesi onay damgasını vermiyor (damga listenin SHA-256'sı olmalı)");
+            }
+        }
     }
     if work.derivations.len() > MAX_DERIVATIONS {
         return fail("derivations".into(), &format!("en çok {MAX_DERIVATIONS} türetme kaydı olur"));
@@ -335,6 +374,7 @@ mod tests {
                     layers: vec!["gnss".into()],
                     file: Some(WorkFile { path: "/veri/kampanya.nmea".into(), revision: "a".repeat(64), relative: None }),
                     approved: None,
+                    approved_objects: Vec::new(),
                 },
                 WorkItem {
                     id: "is-2".into(),
@@ -344,6 +384,7 @@ mod tests {
                     layers: vec!["tasarim".into()],
                     file: None,
                     approved: None,
+                    approved_objects: Vec::new(),
                 },
             ],
             derivations: vec![WorkDerivation {

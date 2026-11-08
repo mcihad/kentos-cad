@@ -287,11 +287,15 @@ class Drawing:
         now = self.files[at]
         return ("current" if now == f["revision"] else "changed"), now, via, at
 
+    def pairs(self, item_id):
+        """ADR 2080 §1: [persistent id, object digest] of the objects an item's layers hold, by id (the list an approval
+        keeps since docs/adr/2880)."""
+        return sorted([u, digest(self.entities[u])] for u, lid in self.objects.items()
+                      if (self.item_of_layer(lid) or {}).get("id") == item_id)
+
     def content(self, item_id):
         """ADR 2080 §1: the content revision of an item without a file."""
-        pairs = sorted([u, digest(self.entities[u])] for u, lid in self.objects.items()
-                       if (self.item_of_layer(lid) or {}).get("id") == item_id)
-        return sha(json.dumps(pairs, separators=(",", ":")).encode())
+        return sha(json.dumps(self.pairs(item_id), separators=(",", ":")).encode())
 
     def kept(self, i):
         """The revision an approval stamps and is judged against: its file's, or its content revision."""
@@ -383,6 +387,18 @@ class Drawing:
                 row["approved"] = i["approved"]
                 now = self.kept(i)
                 if i.get("status") == "approved" and now != i["approved"]:
+                    # docs/adr/2880: what changed, object by object, when the approval kept its objects' digests.
+                    if "file" not in i and i.get("approvedObjects"):
+                        then = {u: dg for u, dg in i["approvedObjects"]}
+                        nowp = {u: dg for u, dg in self.pairs(i["id"])}
+                        added = sorted(u for u in nowp if u not in then)
+                        changed_ = sorted(u for u in nowp if u in then and then[u] != nowp[u])
+                        removed = [u for u in then if u not in nowp]
+                        ch = {"added": len(added), "removed": len(removed), "changed": len(changed_)}
+                        listed = sorted(added + changed_)[:1000]
+                        if listed:
+                            ch["uids"] = listed
+                        row["changes"] = ch
                     what = "dosyası" if "file" in i else "içeriği"
                     worse("revised", f"Onaydan sonra {what} değişti (onaylanan {i['approved'][:12]}, şimdi {now[:12]}): "
                                      "değişikliği denetleyip yeniden onaylayın.")
@@ -594,6 +610,25 @@ def query_cases():
         ask(a0), step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
                       command="cad.entities.set"),
         ask(a1, expect={"revision": "same"})], d=approved))
+    # docs/adr/2880: an approval that kept its objects' digests says what changed since, object by object: here the
+    # approved list had the first object with another digest, lacked the second (added since) and held one not there
+    # now (removed since).
+    later = setup()
+    now4 = Drawing(later).pairs("is-4")
+    assert len(now4) >= 2, now4
+    earlier = sorted([[now4[0][0], "0" * 64]] + [list(x) for x in now4[2:]]
+                     + [["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6dffff", "1" * 64]])
+    later["settings"]["mapWork"]["items"][3].update(
+        status="approved", approved=sha(json.dumps(earlier, separators=(",", ":")).encode()), approvedObjects=earlier)
+    lt = Drawing(later)
+    row4 = next(r for r in lt.tree(False)["items"] if r["id"] == "is-4")
+    assert row4["changes"] == {"added": 1, "removed": 1, "changed": 1, "uids": sorted([now4[0][0], now4[1][0]])}, row4
+    out.append(case("Onaydan sonra değişen nesneler: biri değişti, biri eklendi, biri silindi (onay nesne başına özet "
+                    "tuttu)", [ask(lt)], d=later))
+    same = setup()
+    same["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(same).content("is-4"),
+                                                   approvedObjects=Drawing(same).pairs("is-4"))
+    out.append(case("Onaylı ve nesneleri aynı: değişen yok, güncel", [ask(Drawing(same))], d=same))
     ortho = setup()
     ortho["settings"]["mapWork"]["items"][1].update(status="approved", approved=S_OLD)
     out.append(case("Onaylı ortofotonun damgası başka bir dosya revizyonu: onaydan sonra dosyası değişti (revised)",
@@ -676,7 +711,9 @@ def edit_cases():
         "“$tmp:yok/plan.dxf” dosyası yok.", "operation.file")]))
     # set
     stamp4 = dr.content("is-4")
-    after = changed(lambda w: w["items"][3].update(status="approved", approved=stamp4))
+    pairs4 = dr.pairs("is-4")
+    # docs/adr/2880: an approval of an item without a file keeps its objects' digests.
+    after = changed(lambda w: w["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4))
     out.append(case("Durum: denetlenen tasarım onaylı teslim revizyonu olur (ofisin kaydı); onay içerik revizyonunu "
                     "damgalar", write_step(dr, after, op({"op": "set", "item": "is-4", "status": "approved"}),
                                            {"item": "is-4", "content": stamp4, "approved": stamp4},
@@ -692,6 +729,7 @@ def edit_cases():
     mo_after = Drawing(moved_on)
     w = copy.deepcopy(mo_after.work)
     w["items"][3]["approved"] = stamp4
+    w["items"][3]["approvedObjects"] = pairs4
     mo_after.set_work(w)
     out.append(case("Yeniden onayla: onaydan sonra değişen tasarım bugünkü içerik revizyonuyla yeniden damgalanır",
                     write_step(mo, mo_after, op({"op": "set", "item": "is-4", "status": "approved"}),
@@ -699,18 +737,32 @@ def edit_cases():
                     d=moved_on))
     kept = setup()
     kept["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4)
+    # docs/adr/2880: an unchanged item approved before its objects were kept gains them when approved again.
+    ka = Drawing(kept)
+    ka_after = Drawing(kept)
+    w = copy.deepcopy(ka_after.work)
+    w["items"][3]["approvedObjects"] = pairs4
+    ka_after.set_work(w)
+    out.append(case("Yeniden onayla: değişmemiş, nesneleri tutulmadan onaylanmış öğe nesne başına özetini kazanır",
+                    write_step(ka, ka_after, op({"op": "set", "item": "is-4", "status": "approved"}),
+                               {"item": "is-4", "content": stamp4, "approved": stamp4}, "Harita işi öğesini değiştir"),
+                    d=kept))
+    whole = setup()
+    whole["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4)
     out.append(case("Yeniden onayla: değişmemiş onaylı öğe", [fail_step(
         op({"op": "set", "item": "is-4", "status": "approved"}), "nothing_to_set", "Değişecek bir şey yok.",
-        "operation")], d=kept))
-    kd = Drawing(kept)
-    kd_after = Drawing(kept)
+        "operation")], d=whole))
+    kd = Drawing(whole)
+    kd_after = Drawing(whole)
     w = copy.deepcopy(kd_after.work)
     w["items"][3]["status"] = "review"
     del w["items"][3]["approved"]
+    # docs/adr/2880: its objects' digests go with the stamp.
+    del w["items"][3]["approvedObjects"]
     kd_after.set_work(w)
-    out.append(case("Onaydan çıkan öğenin damgası kalkar",
+    out.append(case("Onaydan çıkan öğenin damgası ve nesne başına özeti kalkar",
                     write_step(kd, kd_after, op({"op": "set", "item": "is-4", "status": "review"}), {"item": "is-4"},
-                               "Harita işi öğesini değiştir"), d=kept))
+                               "Harita işi öğesini değiştir"), d=whole))
     after = changed(lambda w: w["items"][1].update(name="Ortofoto 2025 (30 cm)", layers=["ortofoto", "bos"]))
     out.append(case("Değiştir: ortofotonun adı ve katmanları",
                     write_step(dr, after, op({"op": "set", "item": "is-2", "name": "Ortofoto 2025 (30 cm)",

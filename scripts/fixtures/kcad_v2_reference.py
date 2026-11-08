@@ -2661,6 +2661,9 @@ def document(d):
     if any("version" in x or "revision" in x for x in d["settings"].get("road", {}).get("drawings", [])):
         # A road drawing's record with the version that drew it and the revision its write made (docs/adr/2840).
         schema = max(schema, 209)
+    if any("approvedObjects" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
+        # A map work item's approval with its objects' digests (docs/adr/2880).
+        schema = max(schema, 210)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3517,7 +3520,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-210.kcad"] = container(root(cmap(parts), version=uint(210)))
+    files["schema-version-211.kcad"] = container(root(cmap(parts), version=uint(211)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6022,6 +6025,30 @@ def build():
         broken_stamp = copy.deepcopy(stamped)
         change(broken_stamp)
         out[f"broken/map-work-{name}.kcad"] = container(document(broken_stamp))
+    # Schema 210 (docs/adr/2880): the approved design keeps its object's digest, the list its stamp is the SHA-256 of;
+    # schema 209 refuses the field, a list that does not give the stamp, one on an item with a file and one out of order
+    # are refused.
+    kept_objects = load("map-work-approved-objects.json")
+    kept_objects_data = document(kept_objects)
+    assert kept_objects_data.count(b"\x67version\x18\xd2") == 1, "an approval's objects are schema 210"
+    out["map-work-approved-objects.kcad"] = container(kept_objects_data)
+    out["broken/map-work-approved-objects-in-schema-209.kcad"] = container(
+        kept_objects_data.replace(b"\x67version\x18\xd2", b"\x67version\x18\xd1"))
+
+    def not_the_stamp(d):
+        d["settings"]["mapWork"]["items"][2]["approvedObjects"][0][1] = "0" * 64
+
+    def on_a_file(d):
+        d["settings"]["mapWork"]["items"][2]["file"] = {"path": "/veri/tasarim.dxf", "revision": "1" * 64}
+
+    def out_of_order(d):
+        pairs = d["settings"]["mapWork"]["items"][2]["approvedObjects"]
+        pairs.append([pairs[0][0], pairs[0][1]])
+
+    for name, change in (("not-the-stamp", not_the_stamp), ("on-a-file", on_a_file), ("twice", out_of_order)):
+        broken_objects = copy.deepcopy(kept_objects)
+        change(broken_objects)
+        out[f"broken/map-work-approved-objects-{name}.kcad"] = container(document(broken_objects))
     # Schema 193 (docs/adr/1201 §1): the items' files with their paths from the project file's folder (one inside it,
     # one beside it); schema 192 refuses the field, an absolute, a climbing and an empty relative path are refused.
     rel = load("map-work-relative.json")
