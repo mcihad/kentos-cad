@@ -2392,9 +2392,9 @@
     },
     {
       "id": "arch.settings",
-      "title": "Katlar",
+      "title": "Mimari ayarları",
       "icon": "archSettings",
-      "description": "Proje ayarları'nın Mimari bölümünü açar: projenin katları (ad, kot, kat yüksekliği) ve duvarların çizim ayrıntısı (ölçeğe göre, şematik, standart, ayrıntılı).",
+      "description": "Proje ayarları'nın Mimari bölümünü açar: projenin katları (ad, kot, kat yüksekliği), duvarların görünüşü (ölçeğe göre, şematik, uygulama, ayrıntılı), planın kesme yüksekliği ve çizgi kalınlıkları.",
       "aliases": [
         "KATLAR",
         "MIMARI",

@@ -2,8 +2,8 @@
 //! 25 round it, İç duvar 15 between the rooms) and a 1. kat 3.06 m up; Kot bound to 1. kat (the tool's Kat and Fark,
 //! then the mark selected with Öznitelikler's Kot, Kat and Fark rows); Kuzey oku on the true north, its ghost and then
 //! placed; Revizyon işaretle with its number, date and description round the kitchen, and Revizyon listesi placed
-//! beside the plan; Malzeme lejandı of the walls' materials; the Mimari tab's Belgele menus (İşaret ▾, Revizyon ▾,
-//! Çizelge ▾); Denetim after the walls took their styles (the interior chain still bound, docs/adr/0721 §6).
+//! beside the plan; Malzeme lejandı of the walls' materials; the Mimari tab's Belgele menus (İşaret ▾, the panel's ▾
+//! with the revisions, Çizelge ▾); Denetim after the walls took their styles (the interior chain still bound, docs/adr/0721 §6).
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
@@ -179,8 +179,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
     ]
 }
 
-/// The Mimari tab's Belgele menus: İşaret ▾ (Kesit, Görünüş, Detay, Kuzey oku), Revizyon ▾ (Revizyon işaretle,
-/// Revizyon listesi), Çizelge ▾ (with Malzeme lejandı); the Kot's Öznitelikler scrolled to its Kot, Kat and Fark.
+/// The Mimari tab's Belgele menus: İşaret ▾ (Kesit, Görünüş, Detay, Kuzey oku), the panel's ▾ (Revizyon işaretle and
+/// Revizyon listesi since docs/adr/3015), Çizelge ▾ (with Malzeme lejandı); the Kot's Öznitelikler scrolled to its
+/// Kot, Kat and Fark.
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
         ("isaret-kot-oznitelik", kot_selected, |s, app| {
@@ -190,8 +191,14 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             let at = crate::tools_screens::caption_at(s, app, "Geometri", false);
             s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(at, -2.0));
         }),
-        ("isaret-belgele-isaret", styled, |s, app| open_split(s, app, "archMarks")),
-        ("isaret-belgele-revizyon", styled, |s, app| open_split(s, app, "archRevisions")),
-        ("isaret-belgele-cizelge", styled, |s, app| open_split(s, app, "archSchedules")),
+        ("isaret-belgele-isaret", styled, |s, app| {
+            open_split(s, app, "archMarks")
+        }),
+        ("isaret-belgele-revizyon", styled, |s, app| {
+            crate::tools_screens::open_more(s, app, "Belgele");
+        }),
+        ("isaret-belgele-cizelge", styled, |s, app| {
+            open_split(s, app, "archSchedules")
+        }),
     ]
 }

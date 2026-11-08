@@ -82,6 +82,11 @@
     - Duvar katmanının deseni SN55 ise katmanın iki kenarı arasında tek zikzak çizilir (`wall::FITTED_INSULATION`);
       bağımsız taramada döşenmiş satırlar.
     - Kolon Ayrıntılı'da SN46 (`arch::CONCRETE`); kolon aracı yeni kolonu dolu yazar.
+  - **Mimari şeridin yeniden düzeni (M15, [ADR 3015](../adr/3015-architecture-ribbon-rearranged.md)):**
+    - Paneller Duvar · Yerleştir · Mahal · Donatı · Düzenle · Belgele · Proje; görünen düğme 37 → 27, en çok 30.
+    - Büyükler Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾ (Mutfak, Kitaplık), Ölçü ▾; Etiket ▾ Hepsini etiketle'yi taşır.
+    - Proje'de Kat ▾ (Üst kat, Alt kat, kat görünümü); `arch.settings`'in adı "Mimari ayarları" (önce "Katlar").
+    - `scripts/ui/ribbon.py` yeniden tek kaynak: Harita ve Yol'un elle yaptığı eklemeler betiğe taşındı, `--check` geçer.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

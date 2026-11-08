@@ -583,7 +583,7 @@
   {
    "id": "arch.settings",
    "kind": "command",
-   "title": "Katlar",
+   "title": "Mimari ayarları",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -14745,7 +14745,7 @@
   {
    "id": "tool.wallJoin",
    "kind": "command",
-   "title": "Duvarları birleştir",
+   "title": "Tek duvara çevir",
    "level": "semantic",
    "via": [
     "cad.walls.edit"

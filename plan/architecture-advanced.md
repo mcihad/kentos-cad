@@ -60,7 +60,7 @@ talimatla yapılır.
 | S3 | 12 mimari pencere modal; karartılmış zemine tık kaydedilmemiş düzenlemeyi sormadan atıyor; seçimle çalışan pencereler açıkken seçim değişmiyor | A1 S3 | K/Y | ADV-09 |
 | S4 | Plan mimari pafta gibi görünmüyor: aracın duvar stili varsayılanı "Yok", poşe yok, kesilen/görünen kalem ayrımı yok; ölçeğe göre ayrıntı yalnız duvarda; plan kesme yüksekliği sabit 1,10 m | M0 resimleri ✓, `contracts/src/arch.rs:94-125` ✓, `contracts/src/opening.rs:21` ✓ | Y | ADV-13, 14, 15 |
 | S5 | Bütün mimari nesneler etkin katmana yazılıyor: 2+1 örneğinde 54 nesnenin hepsi "Çizim" katmanında. DXF'te mahalin adı ve alanı yazılmıyor | M0 ✓, `formats/src/dxf/writer/mod.rs:752-774` ✓ | Y | ADV-14, 25 |
-| S6 | Mimari şerit 46 komutla kabul edildi, bugün 78 komut taşıyor; 42'si ▾ arkasında. Sık işler (Duvarı kaydır, Uzat, Buda, Hepsini etiketle) menüde. Gerçek `kentos-mimari`'de yalnız Duvar, Dikdörtgen duvar, Kapı, Pencere ve Proje ▾ büyük; Mahal ve donatı küçük (M0'ın `kentos-cad` resminde hiç büyük düğme yoktu) | A1 §1.1, gerçek pencere ✓ | Y | ADV-09 |
+| S6 | Mimari şerit 46 komutla kabul edildi, bugün 78 komut taşıyor; 42'si ▾ arkasında. Sık işler (Duvarı kaydır, Uzat, Buda, Hepsini etiketle) menüde. Gerçek `kentos-mimari`'de yalnız Duvar, Dikdörtgen duvar, Kapı, Pencere ve Proje ▾ büyük; Mahal ve donatı küçük (M0'ın `kentos-cad` resminde hiç büyük düğme yoktu) **(M15'te düzeldi: 37 → 27 görünen düğme; Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾, Ölçü ▾ büyük; Hepsini etiketle Etiket ▾'de; Duvarı kaydır, Uzat, Buda M17'de Duvar sekmesine)** | A1 §1.1, gerçek pencere ✓ | Y | ADV-09 |
 | S7 | 78 mimari komutun hiçbirinde kısayol yok, en kısa takma ad 3 harf, F1 listesinde mimari yok | A1 S4 | Y | ADV-08 |
 | S8 | Seçenek harfleri araçtan araca değişiyor; aracın seçeneği olmayan harf genel kısayolu başlatıyor | A1 S5 | Y | ADV-08 |
 | S9 | Terim çakışmaları: duvar kalınlığı istemde "Genişlik", panelde "Kalınlık"; "Döşeme" hem döşeme hem kaplama deseni; "Boşluk" hem açıklık hem şaft; "Duvar birleşimi" ile "Duvarları birleştir" ayrı araçlar | A1 S6 | Y | ADV-08 |
@@ -130,7 +130,7 @@ içi izin görmediği farklar:
 | G10 | Geçici ölçü yazısı mahal etiketinin, kapı ve pencere etiketleri duvar çizgisinin üstüne biniyor (S19 doğrulandı) | ADV-16 |
 | G11 | F1 (Fare ve klavye kısayolları) penceresi Esc'yle kapanmıyor; Kapat düğmesi kapatıyor **(M7'de düzeldi: yazı alanının yuttuğu Esc pencereyi kapatıyor)** | ADV-09 (M7) |
 | G12 | Durum çubuğu uyarıyı kesiyor: "Duvar sürüyor: “L”…" 1440 px'te okunmuyor, tam metin yalnız Komut geçmişi'nde | ADV-09 |
-| G13 | Şerit etiket uzunluğuna duyarlı. Bir etiket 3 harf kısalınca Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyor; 4 harf uzayınca kentos-cad'in Mimari sekmesinde bir panel ikona iniyor (M4'te görüldü) | ADV-09 (M15) |
+| G13 | Şerit etiket uzunluğuna duyarlı. Bir etiket 3 harf kısalınca Mimari şeridi 1440 px'te Proje ▾'yi açıp büyük düğmeleri küçültüyor; 4 harf uzayınca kentos-cad'in Mimari sekmesinde bir panel ikona iniyor (M4'te görüldü) **(M15'te düzeldi: 1440 px'te 13 px yazıyla bütün paneller açık ve sağda yaklaşık 120 px boş; yalnız simge basamağı 7 Kasım'da kalktı)** | ADV-09 (M15) |
 
 ## 2. Piyasa araştırması
 
@@ -592,16 +592,19 @@ tek harfi vardır. Komut geçmişi okunur Türkçe yazar. Dayanak S1, S2, S7–S
 
 #### ADV-09 — Mimari şerit, bağlam ve düzenleyici pencereler [~]
 
-_Durum (7 Kasım 2026):_ Sekme satırı ve Öznitelikler yapıldı (M6, [ADR 3005](../docs/adr/3005-narrow-tabs-and-building-first.md)).
+_Durum (8 Kasım 2026):_ Sekme satırı ve Öznitelikler yapıldı (M6, [ADR 3005](../docs/adr/3005-narrow-tabs-and-building-first.md)).
 - Dar pencerede sığmayan sekmeler ⋯ menüsüne giriyor. Açık sekme, bağlam sekmesi ve programın kendi sekmesi görünür kalıyor.
 - Yapı elemanının kendi bölümü Öznitelikler'de en üstte, ana satırları başında.
 - Düzenleyiciler (M7, [ADR 3006](../docs/adr/3006-editors-ask-and-pick-from-drawing.md)):
   - Bina programı, Duvar stilleri, tipler ve Malzemeler değişiklik varken sorarak kapanıyor.
   - Oda modülleri ve Tasarım seçenekleri'nde Çizimden seç var.
   - Esc F1'i kapatıyor (G11).
+- Şerit (M15, [ADR 3015](../docs/adr/3015-architecture-ribbon-rearranged.md)): 37 → 27 görünen düğme. Paneller Duvar ·
+  Yerleştir · Mahal · Donatı · Düzenle · Belgele · Proje.
+  - Büyükler Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾ (Mutfak, Kitaplık), Ölçü ▾.
+  - Proje'de Kat ▾ (Üst kat, Alt kat, kat görünümü) ve Evre ▾; "Katlar" düğmesinin adı "Mimari ayarları".
 - Kalanlar:
   - pencerelerin yüzer ya da dok paneli olması;
-  - şeridin yeniden düzeni (M15);
   - sağ tık menüsü ve üzerine gelme kartı;
   - alt panel.
 
@@ -1076,7 +1079,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler **(M13, ADR 3012: yapıldı; yüksek pencere kesikli, kesme yüksekliği proje ayarı (yeni projede 1,20), üst katın döşemesi alt katta kesikli; kiriş ve asma tavan nesnesi yok)** |
 | M13+ | Ölçeğe göre çizgi grubu (sahibin onayı) | ADV-15 | Paftanın ölçeğine göre kalem **(ADR 3013: yapıldı; PDF'te duvar 1:200/1:100/1:50/1:20'de 0,25/0,35/0,5/0,7 mm)** |
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım **(M14, ADR 3014: yapıldı; TS 5319 SN46–SN58 kitaplıkta, yalıtım SN55 zikzağı katmana sığar, kolon 1:20'de SN46 ve kolon aracıyla dolu; perdenin 1:20 taraması kaldı)** |
-| M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) |
+| M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) **(M15, ADR 3015: yapıldı; 27 düğme, altı büyük, Kat ▾; Oda büyük düğmesi M21'de)** |
 | M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |
 | M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart |
 

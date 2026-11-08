@@ -480,24 +480,20 @@
      },
      {
       "label": "Tesviye",
-      "works": [
-       "map",
-       "road"
-      ],
       "icon": "platformEditor",
       "items": [
        {
         "command": "platform.editor",
         "size": "large"
        }
+      ],
+      "works": [
+       "map",
+       "road"
       ]
      },
      {
       "label": "Drenaj",
-      "works": [
-       "map",
-       "road"
-      ],
       "icon": "drainageEditor",
       "items": [
        {
@@ -508,6 +504,10 @@
         "command": "pipes.check",
         "size": "large"
        }
+      ],
+      "works": [
+       "map",
+       "road"
       ]
      },
      {
@@ -530,9 +530,6 @@
      },
      {
       "label": "Arazi",
-      "works": [
-       "road"
-      ],
       "icon": "contours",
       "items": [
        {
@@ -554,6 +551,9 @@
       ],
       "overflow": [
        "mesh.query"
+      ],
+      "works": [
+       "road"
       ]
      }
     ],
@@ -1065,9 +1065,6 @@
      {
       "label": "GNSS arşivi",
       "icon": "gnssArchive",
-      "works": [
-       "map"
-      ],
       "items": [
        {
         "command": "map.survey",
@@ -1085,6 +1082,9 @@
         "command": "map.survey.adjustment",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -1931,40 +1931,34 @@
     "label": "Mimari",
     "panels": [
      {
-      "label": "Çiz",
+      "label": "Duvar",
       "icon": "wall",
       "items": [
        {
-        "command": "tool.wall",
-        "size": "large"
-       },
-       {
-        "command": "tool.wallRectangle",
-        "size": "large"
-       },
-       {
-        "command": "tool.wallPartition",
-        "size": "small"
-       },
-       {
-        "command": "tool.wallFromLines",
-        "size": "small"
-       },
-       {
-        "command": "tool.space",
-        "size": "small"
-       },
-       {
-        "command": "tool.slab",
-        "size": "small"
-       },
-       {
-        "command": "tool.spaceDiscover",
-        "size": "small"
-       },
-       {
-        "command": "tool.spaceSeparator",
-        "size": "small"
+        "key": "archWalls",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.wall",
+          "title": "Duvar",
+          "label": "Duvar"
+         },
+         {
+          "command": "tool.wallRectangle",
+          "title": "Duvar",
+          "label": "Dikdörtgen duvar"
+         },
+         {
+          "command": "tool.wallPartition",
+          "title": "Duvar",
+          "label": "Ölçülü bölme"
+         },
+         {
+          "command": "tool.wallFromLines",
+          "title": "Duvar",
+          "label": "Çizgiden duvar"
+         }
+        ]
        }
       ]
      },
@@ -2040,10 +2034,59 @@
        {
         "command": "tool.ramp",
         "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Mahal",
+      "icon": "space",
+      "items": [
+       {
+        "key": "archSpaces",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.space",
+          "title": "Mahal",
+          "label": "Mahal"
+         },
+         {
+          "command": "tool.spaceDiscover",
+          "title": "Mahal",
+          "label": "Toplu mahal bul"
+         },
+         {
+          "command": "tool.spaceSeparator",
+          "title": "Mahal",
+          "label": "Mahal ayırıcı"
+         }
+        ]
        },
        {
-        "command": "tool.casework",
+        "command": "tool.slab",
         "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Donatı",
+      "icon": "casework",
+      "items": [
+       {
+        "key": "archFixtures",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.casework",
+          "title": "Donatı",
+          "label": "Mutfak"
+         },
+         {
+          "command": "block.library",
+          "title": "Donatı",
+          "label": "Kitaplık"
+         }
+        ]
        }
       ]
      },
@@ -2068,27 +2111,18 @@
         "size": "small"
        },
        {
-        "command": "tool.spaceRebound",
-        "size": "small"
-       },
-       {
-        "command": "tool.spaceSources",
-        "size": "small"
-       },
-       {
         "command": "tool.gridNumber",
         "size": "small"
        },
        {
         "command": "tool.openingNumber",
         "size": "small"
-       },
-       {
-        "command": "tool.openingArray",
-        "size": "small"
        }
       ],
       "overflow": [
+       "tool.spaceRebound",
+       "tool.spaceSources",
+       "tool.openingArray",
        "tool.wallShift",
        "tool.spaceNumber",
        "tool.wallJoin",
@@ -2123,8 +2157,20 @@
         ]
        },
        {
-        "command": "tool.tag",
-        "size": "small"
+        "key": "archTags",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.tag",
+          "title": "Etiket",
+          "label": "Etiket"
+         },
+         {
+          "command": "tool.tagAll",
+          "title": "Etiket",
+          "label": "Hepsini etiketle"
+         }
+        ]
        },
        {
         "command": "arch.quantities",
@@ -2191,30 +2237,15 @@
           "label": "Kuzey oku"
          }
         ]
-       },
-       {
-        "key": "archRevisions",
-        "size": "small",
-        "split": [
-         {
-          "command": "tool.revisionMark",
-          "title": "Revizyon",
-          "label": "Revizyon işaretle"
-         },
-         {
-          "command": "arch.revisionList",
-          "title": "Revizyon",
-          "label": "Revizyon listesi"
-         }
-        ]
        }
       ],
       "overflow": [
-       "tool.tagAll",
        "arch.tagsCheck",
        "arch.wallJoinCheck",
        "arch.viewRefs",
-       "tool.roomElevation"
+       "tool.roomElevation",
+       "tool.revisionMark",
+       "arch.revisionList"
       ]
      },
      {
@@ -2222,24 +2253,25 @@
       "icon": "archSettings",
       "items": [
        {
-        "command": "arch.audit",
-        "size": "small"
-       },
-       {
-        "command": "arch.program",
-        "size": "small"
-       },
-       {
-        "command": "arch.settings",
-        "size": "small"
-       },
-       {
-        "command": "arch.wallStyles",
-        "size": "small"
-       },
-       {
-        "command": "arch.template",
-        "size": "small"
+        "menu": "Kat",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.levels.up",
+           "view.levels.down"
+          ]
+         },
+         {
+          "label": "Kat görünümü",
+          "items": [
+           "view.levels.all",
+           "view.levels.active",
+           "view.levels.below"
+          ]
+         }
+        ]
        },
        {
         "menu": "Evre",
@@ -2255,9 +2287,23 @@
           ]
          }
         ]
+       },
+       {
+        "command": "arch.audit",
+        "size": "small"
+       },
+       {
+        "command": "arch.settings",
+        "size": "small"
+       },
+       {
+        "command": "arch.wallStyles",
+        "size": "small"
        }
       ],
       "overflow": [
+       "arch.program",
+       "arch.template",
        "arch.sheetSet",
        "arch.navigator",
        "tool.viewCrop",
@@ -4374,9 +4420,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -4386,6 +4429,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -4640,9 +4686,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -4652,6 +4695,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -4923,9 +4969,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -4935,6 +4978,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -5274,9 +5320,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -5286,6 +5329,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -6342,9 +6388,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -6354,6 +6397,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"

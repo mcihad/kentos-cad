@@ -92,6 +92,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (`level_view::looks`'un `overhead`'ı, `slab::Look::overhead`).
 - ADR 3013 (çizgi grubu): `io/kcad.ts` şema 206 (`settings.arch.lineGroups`); web çizimi görünüşün `pens`'ini projeden
   (`pens_at`) versin; web'in Proje ayarları › Mimari'si Çizgi kalınlıkları seçimini alsın.
+- M15 / ADR 3015: `scripts/fixtures/ribbon_cases.py`'nin sekme listesi güncel değil (Arazi, Güzergâh, Koridor, Plan, Ölçme,
+  Mimari ve bağlam sekmeleri yok); `--check` HEAD'de de kırmızı, çalıştırılırsa onları `fixtures/shell/v1/ribbon.json`'dan
+  siler. Şeridi değiştiren her iş `catalog/v1/ribbon.json`'u elle değil `scripts/ui/ribbon.py` ile yazmalı.
+- `cargo clippy` `kentos-formats`'ta duruyor: `formats/src/report.rs:137` `expect("pushed")` (CAD-ADV-17, ADR 1010) crate'in
+  `clippy::expect_used` yasağına takılıyor; aşağı akıştaki crate'ler ancak `--no-deps` ile denetlenebiliyor.
 - M14 / ADR 3014: web'in WASM çekirdeği yeniden derlenince TS 5319 desenleri ve SN55 zikzağı webde de çizilir;
   `pnpm inventory:check` envanterin elle eklenen 22 tarama simgesini (hatchIcons.ts'ten aynı sırayla) doğrulamalı.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
