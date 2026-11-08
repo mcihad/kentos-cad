@@ -106,9 +106,31 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     }
     let _ = app.update(Message::SurveyNetwork(N::AddKnown));
     assert_eq!(survey(&app).known.len(), 1);
+    // The GVX file's vectors carry their GPS times: the measurement epoch is 2026's, the station's coordinate 2005.0's;
+    // BÖHHBÜY Madde 15(1)(a) wants it moved there, so the campaign needs its velocity grid (docs/adr/2120).
+    let why = app.survey_network.answer.clone().expect("an answer").expect_err("the station is not moved");
+    assert!(why.contains("Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı"), "{why}");
+    crate::survey_epoch_tests::grids();
+    let bytes = std::fs::read(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geoid/v1/hiz.tif"))
+        .expect("the velocity grid");
+    let velocity = kentos_commands::SurveyGrid {
+        name: "Hız alanı (sentetik)".into(),
+        sha256: kentos_native_application::crs_models::sha256(&bytes),
+    };
+    let campaign = survey(&app).campaigns[0].id.clone();
+    let _ = app.map_survey_edit(kentos_commands::MapSurveyOperation::SetCampaign {
+        campaign,
+        name: None,
+        work: None,
+        operator: None,
+        epoch: None,
+        velocity: Some(velocity),
+    });
+    app.survey_network_run();
     let a = app.survey_network.answer.clone().expect("an answer").expect("adjusted");
     assert!(a.acceptable, "{:?}", a.why);
     assert_eq!(a.free.held, ["BN1"]);
+    assert_eq!(a.moved.len(), 1, "the station moved to the measurement epoch");
 }
 
 #[test]

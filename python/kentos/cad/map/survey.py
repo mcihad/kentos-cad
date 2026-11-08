@@ -261,6 +261,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
@@ -292,6 +293,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
             doc: The drawing it works on.
             campaign:
             class_:
+            epoch: The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120). Unit: year.
             hold:
             rules:
             scale: Unit: 1.
@@ -310,6 +312,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.execute_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
@@ -322,6 +325,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
@@ -332,6 +336,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.plan_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
@@ -344,6 +349,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
@@ -354,6 +360,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.validate_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,
@@ -366,6 +373,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         *,
         campaign: str | None | Unset = UNSET,
         class_: str | None | Unset = UNSET,
+        epoch: float | None | Unset = UNSET,
         hold: str | None | Unset = UNSET,
         rules: GnssRules | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
@@ -381,6 +389,7 @@ class _MapSurveyNetwork(LocalCommand[MapSurveyNetwork, MapSurveyNetworked, MapSu
         return self.answer_input(doc, MapSurveyNetwork(
             campaign=campaign,
             class_=class_,
+            epoch=epoch,
             hold=hold,
             rules=rules,
             scale=scale,

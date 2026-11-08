@@ -1131,7 +1131,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             next.known.push(k);
             Ok(Change { id: Some(id), ..Change::new(next, "Bilinen nokta ekle") })
         }
-        Op::Network { campaign, scale, class, rules, hold, layer } => network(
+        Op::Network { campaign, scale, class, rules, hold, epoch, layer } => network(
             doc,
             &now,
             next,
@@ -1141,6 +1141,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 class: class.clone(),
                 rules: rules.clone(),
                 hold: hold.clone(),
+                epoch: *epoch,
             },
             layer.as_deref(),
         ),

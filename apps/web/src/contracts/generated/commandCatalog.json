@@ -62082,7 +62082,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading\nonly. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their\ncovariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first\notherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).\n\nRefusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,\n`unknown_rule_class`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`, `network_too_large`,\n`network_disconnected`.",
+        "description": "Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading\nonly. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their\ncovariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first\notherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).\n\nThe measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times\nwhen every one has its start and end, else none. With one, every known point needs its epoch and one at another\nepoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are\nin one frame and epoch, the network's.\n\nRefusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,\n`unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,\n`epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own\nrefusals, `network_too_large`, `network_disconnected`.",
         "properties": {
           "campaign": {
             "type": [
@@ -62095,6 +62095,15 @@
               "string",
               "null"
             ]
+          },
+          "epoch": {
+            "description": "The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
           },
           "hold": {
             "type": [
@@ -62126,7 +62135,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,\nthe baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's\nresult, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can\nbe accepted and, if not, why, and the drawing's revision.",
+        "description": "Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where\nthe epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,\nthe baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's\nresult, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can\nbe accepted and, if not, why, and the drawing's revision.",
         "properties": {
           "acceptable": {
             "type": "boolean"
@@ -62154,12 +62163,21 @@
             ],
             "x-unit": "year"
           },
+          "epochFrom": {
+            "$ref": "#/$defs/NetworkEpochFrom"
+          },
           "free": {
             "$ref": "#/$defs/NetworkStage"
           },
           "known": {
             "items": {
               "type": "string"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "items": {
+              "$ref": "#/$defs/KnownMoved"
             },
             "type": "array"
           },
@@ -62197,6 +62215,7 @@
         },
         "required": [
           "srid",
+          "epochFrom",
           "known",
           "baselines",
           "stations",
@@ -62210,7 +62229,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,\nthe baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's\nresult, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can\nbe accepted and, if not, why, and the drawing's revision.",
+        "description": "Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where\nthe epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,\nthe baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's\nresult, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can\nbe accepted and, if not, why, and the drawing's revision.",
         "properties": {
           "acceptable": {
             "type": "boolean"
@@ -62238,12 +62257,21 @@
             ],
             "x-unit": "year"
           },
+          "epochFrom": {
+            "$ref": "#/$defs/NetworkEpochFrom"
+          },
           "free": {
             "$ref": "#/$defs/NetworkStage"
           },
           "known": {
             "items": {
               "type": "string"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "items": {
+              "$ref": "#/$defs/KnownMoved"
             },
             "type": "array"
           },
@@ -62281,6 +62309,7 @@
         },
         "required": [
           "srid",
+          "epochFrom",
           "known",
           "baselines",
           "stations",
@@ -62298,11 +62327,13 @@
           "unknown_survey_record",
           "invalid_survey_value",
           "unknown_rule_class",
+          "invalid_epoch",
           "no_baselines",
           "solutions_differ",
           "datum_missing",
           "known_differ",
           "unknown_frame",
+          "epoch_unsupported",
           "duplicate_station",
           "invalid_covariance",
           "network_too_large",
@@ -143981,6 +144012,45 @@
       ],
       "type": "object"
     },
+    "KnownMoved": {
+      "description": "A known point moved to the measurement epoch along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a),\ndocs/adr/2120): its epoch, the years it moved and how far east, north and up (m).",
+      "properties": {
+        "from": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "year"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "shift": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "years": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "year"
+        }
+      },
+      "required": [
+        "id",
+        "mark",
+        "from",
+        "years",
+        "shift"
+      ],
+      "type": "object"
+    },
     "KnownPoint": {
       "description": "A known point: a named point of the drawing (its label or its `Ad`, big and small letters alike), or coordinates.",
       "oneOf": [
@@ -148992,6 +149062,15 @@
                 "null"
               ]
             },
+            "epoch": {
+              "description": "The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "year"
+            },
             "hold": {
               "type": [
                 "string",
@@ -153373,6 +153452,15 @@
           "type": "object"
         }
       ]
+    },
+    "NetworkEpochFrom": {
+      "description": "Where the network's epoch comes from (docs/adr/2120): given, the baselines' observation times, the known points'.",
+      "enum": [
+        "given",
+        "baselines",
+        "known"
+      ],
+      "type": "string"
     },
     "NetworkKind": {
       "description": "Yol ağı or Şebeke: what the tools offer first; the graph is the same.",

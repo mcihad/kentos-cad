@@ -33,7 +33,7 @@ sırayla alır.
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080 | nesne türüne göre bağlamsal araçlar; tipli katman profili; onaydan sonra değişen nesneler | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740 | GVX oturum korelasyonları; bilinen noktanın hız ızgarasıyla ölçme epokuna taşınması; arşiv panelinde bazlar | canlı RTK/NTRIP; gerçek alıcı kabulü |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760 | alan sınıfları; ayrı inceleme kaydı ve katalog geçiş raporu; pencerede eksik alan girişi | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740 | robust kestirim; m. 15(1)(c) benzerlik dönüşümü; seyrek çözüm | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960 | kalıcı ilişki; çok parçalı nesne; köşeyi sahneden seçmek | — |
@@ -397,6 +397,18 @@ Kanıtlanan alt maddeler:
 Ortak durumlar: `map.survey.network` 30, `map.survey.edit`'e 33 yeni (bağımsız `map_survey_network_cases.py`).
 **Açık:** GVX oturum çapraz korelasyonları, bilinen noktaların hız ızgarasıyla ölçme epokuna taşınması, arşiv
 panelinde bazlar, gerçek kullanıcı projesinde GUI kabulü, web. Madde `[ ]` kalır.
+
+**8 Kasım 2026, üçüncü tur — Ağ ölçme epokunda ([ADR 2120](../docs/adr/2120-network-at-the-measurement-epoch.md)).**
+Kapsam işareti: **Harita + CBS** (pencere ve kabul Harita'nın). Araştırma: BÖHHBÜY Madde 15(1)(a) ve (ç), TUREF'in 2005,0
+epoku, PROJ deformation, GVX'in GPS zamanı. Kanıtlanan:
+- ölçme epoku girdiden ya da bazların gözlem zamanlarının ortasından;
+- 2005,0'daki TUSAGA-Aktif/C1 koordinatları arazi ölçümünün hız ızgarasıyla oraya taşınır (`moved`: kaç yıl, doğu,
+  kuzey, yukarı kayma); farklı epoklu bilinen noktalar bir arada; ızgarasızken madde iletisiyle ret;
+- yeni noktalar karara döner, kabul kaydı ölçme epokunu tutar;
+- 36 + 34 ortak durum (PROJ'la bağımsız), Python, MCP; pencerede Ölçme epoku kutusu, özet satırı, Taşınma sütunu.
+
+Açık: bilinen noktanın kendi hızı, oturum başına epok, GVX oturum korelasyonları, arşiv panelinde bazlar, resmî TUREF
+hız alanı. Madde `[ ]` kalır.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

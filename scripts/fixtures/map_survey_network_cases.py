@@ -30,6 +30,12 @@ the script runs itself again under QGIS's Python on macOS. The rules (ADR 1740):
 - a class (catalog/v1/rules/gnss-ag-bohhbuy-2018.json, BÖHHBÜY 2018 Madde 15, 20, 22): a baseline's σX, σY, σZ (the
   processor's by the variance factor, or C1's free stage's) ≤ a + b·10⁻⁶·length; a new mark's σN, σE ≤ horizontal, σU ≤
   height.
+
+ADR 2120 adds the measurement epoch: the input's `epoch`, else the mean of the baselines' observation mid-times (each
+GPS time a decimal year: the year and the share of its seconds gone) when every one has start and end, else none. With
+one every known point says its epoch (one frame) and one at another epoch is moved to it along the campaign's velocity
+grid by PROJ (geoid_cases.transformed, the deformation step); the shift is east, north, up at its given place. The
+network's epoch is the measurement epoch; without one it is the known points' one epoch, as before.
 """
 
 import copy
@@ -465,6 +471,30 @@ def rules_problem(r):
     return None
 
 
+def decimal_year(t):
+    """A GPS time YYYY-MM-DDTHH:MM:SS(.f)(Z) as a decimal year (ADR 2120 §1)."""
+    t = t[:-1] if t.endswith("Z") else t
+    date, time = t.split("T")
+    y, mo, d = (int(x) for x in date.split("-"))
+    hh, mi, ss = time.split(":")
+    leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0
+    days = [31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    before = sum(days[:mo - 1]) + d - 1
+    seconds = float(before * 86400 + int(hh) * 3600 + int(mi) * 60) + float(ss)
+    return y + seconds / ((366.0 if leap else 365.0) * 86400.0)
+
+
+def rs(v):
+    """A float as Rust's Display writes it (1800.0 → 1800)."""
+    s = repr(float(v))
+    return s[:-2] if s.endswith(".0") else s
+
+
+def epoch_text(e):
+    """An epoch as a sentence writes it: two decimals, a decimal comma."""
+    return f"{e:.2f}".replace(".", ",")
+
+
 def analyse(m, inp, prefix=""):
     """ADR 1740's network of the model's archive: (output, the facts a write needs), or Refused."""
     path = lambda f: prefix + f  # noqa: E731
@@ -490,6 +520,9 @@ def analyse(m, inp, prefix=""):
             raise Refused("unknown_rule_class", f"“{package['id']}” kural paketinde “{inp['class']}” sınıfı yok; "
                                                 f"sınıflar: {', '.join(c['id'] for c in package['classes'])}.",
                           path("class"))
+    if "epoch" in inp and not (math.isfinite(inp["epoch"]) and 1900.0 <= inp["epoch"] <= 2100.0):
+        raise Refused("invalid_epoch", "Ölçme epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2026.84 gibi); "
+                                       f"yazılan {rs(inp['epoch'])}.", path("epoch"))
     used = [b for b in sv.get("baselines", []) if b["adjust"] and "excluded" not in b
             and ("campaign" not in inp or b["campaign"] == inp["campaign"])]
     if not used:
@@ -512,13 +545,60 @@ def analyse(m, inp, prefix=""):
         raise Refused("datum_missing", "Ağın bilinen noktası yok: bazların uçlarından en az birine bilinen nokta "
                                        "(TUSAGA-Aktif, C1 …) ekleyin.", held_wrong)
     srid, epoch = kn[0]["srid"], kn[0].get("epoch")
-    for k in kn:
-        if k["srid"] != srid or k.get("epoch") != epoch:
-            raise Refused("known_differ", f"“{kn[0]['id']}” ile “{k['id']}” bilinen noktaları aynı çerçeve ve epokta "
-                                          "değil; hepsini ölçme epokunda aynı çerçevede girin.", held_wrong)
+    # ADR 2120 §1: the measurement epoch.
+    measured = None
+    if "epoch" in inp:
+        measured = (inp["epoch"], "given")
+    elif all("start" in b and "end" in b for b in used):
+        total = 0.0
+        for b in used:
+            total += (decimal_year(b["start"]) + decimal_year(b["end"])) / 2.0
+        measured = (total / len(used), "baselines")
+    if measured is None:
+        for k in kn:
+            if k["srid"] != srid or k.get("epoch") != epoch:
+                raise Refused("known_differ", f"“{kn[0]['id']}” ile “{k['id']}” bilinen noktaları aynı çerçeve ve "
+                                              "epokta değil; hepsini ölçme epokunda aynı çerçevede girin ya da "
+                                              "bazların gözlem zamanlarını verin.", held_wrong)
+    else:
+        for k in kn:
+            if k["srid"] != srid:
+                raise Refused("known_differ", f"“{kn[0]['id']}” ile “{k['id']}” bilinen noktaları aynı çerçevede "
+                                              "değil; hepsini aynı çerçevede girin.", held_wrong)
+        for k in kn:
+            if "epoch" not in k:
+                raise Refused("known_differ", f"“{k['id']}” bilinen noktasının epoku yok; ölçme epoku "
+                                              f"{epoch_text(measured[0])} olan ağda her bilinen noktanın epoku "
+                                              "verilmeli.", held_wrong)
     if srid not in GEOGRAPHIC:
         raise Refused("unknown_frame", f"EPSG:{srid} kayıttaki coğrafi bir sistem değil; bilinen noktaların "
                                        "çerçevesini (4326 WGS 84, 5252 TUREF) verin.", held_wrong)
+    # ADR 2120 §2: each known point at the measurement epoch, moved along the campaign's velocity grid by PROJ.
+    at, moved = {}, []
+    vel = camp.get("velocity") if camp else None
+    for k in kn:
+        given_at = (k["lat"], k["lon"], k["height"])
+        if measured is not None and k["epoch"] != measured[0]:
+            if vel is None:
+                raise Refused("epoch_unsupported", f"“{k['id']}” bilinen noktası {epoch_text(k['epoch'])} epokunda, "
+                                                   f"ağın ölçme epoku {epoch_text(measured[0])}: Madde 15(1)(a) "
+                                                   "uyarınca ölçme epokuna taşınmalı. Arazi ölçümüne hız ızgarasını "
+                                                   "verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme "
+                                                   "epokunda girin.", held_wrong)
+            s = ms.gc.transformed([ms.cv.pt(k["lon"], k["lat"], k["height"])],
+                                  frm={"srid": srid, "epoch": k["epoch"], "heights": ms.ELL},
+                                  to={"srid": srid, "epoch": measured[0], "heights": ms.ELL}, vel=vel)
+            q = s["result"]["output"]["points"][0]
+            now = (q["y"], q["x"], q["z"])
+            d = ecef(*now) - ecef(*given_at)
+            shift = [float(v) for v in rows(k["lat"], k["lon"]) @ d]
+            moved.append({"id": k["id"], "mark": k["mark"], "from": k["epoch"], "years": measured[0] - k["epoch"],
+                          "shift": shift})
+            at[k["id"]] = now
+        else:
+            at[k["id"]] = given_at
+    epoch = measured[0] if measured is not None else epoch
+    epoch_from = measured[1] if measured is not None else "known"
     hold = kn[0]
     if "hold" in inp:
         hold = next((k for k in kn if k["id"] == inp["hold"]), None)
@@ -526,7 +606,7 @@ def analyse(m, inp, prefix=""):
             raise Refused("unknown_survey_record", f"“{inp['hold']}” ağın bilinen noktalarından biri değil.",
                           path("hold"))
     of = {k["mark"]: k for k in kn}
-    xyz = [ecef(of[x]["lat"], of[x]["lon"], of[x]["height"]) if x in of else None for x in marks]
+    xyz = [ecef(*at[of[x]["id"]]) if x in of else None for x in marks]
     ids = [b["id"] for b in used]
     known_ids = [of[x]["id"] if x in of else None for x in marks]
     limit = float(norm.ppf((1.0 + klass["confidence"]) / 2.0)) if klass and "confidence" in klass else BAARDA
@@ -537,7 +617,7 @@ def analyse(m, inp, prefix=""):
         for x in marks:
             k = of.get(x)
             if k is not None and "sigma" in k:
-                r = rows(k["lat"], k["lon"])
+                r = rows(at[k["id"]][0], at[k["id"]][1])
                 g = k["sigma"]
                 weights.append(r.T @ np.diag([g[1] * g[1], g[0] * g[0], g[2] * g[2]]) @ r)
             else:
@@ -617,7 +697,7 @@ def analyse(m, inp, prefix=""):
     for a in reversed(sv.get("adjustments", [])):
         theirs = (a["class"], a["rules"]) if "class" in a and "rules" in a else None
         if (a["baselines"] == ids and a["known"] == [k["id"] for k in kn] and a["hold"] == hold["id"]
-                and a["scale"] == scale and theirs == class_of and new
+                and a["scale"] == scale and a.get("epoch") == epoch and theirs == class_of and new
                 and all(any(p["mark"] == n["mark"] and p["result"].get("adjustment") == a["id"] for p in sv["points"])
                         for n in new)):
             current = a["id"]
@@ -640,6 +720,9 @@ def analyse(m, inp, prefix=""):
     out = {"srid": srid}
     if epoch is not None:
         out["epoch"] = epoch
+    out["epochFrom"] = epoch_from
+    if moved:
+        out["moved"] = moved
     out.update(known=[k["id"] for k in kn], baselines=brows, stations=srows, free=free_s, constrained=held_s)
     if klass:
         r = {"package": package["id"], "release": package["release"], "class": klass["id"],
@@ -750,6 +833,10 @@ def network_cases():
     later = accepted.clone()
     later.survey["baselines"][7]["excluded"] = "Yeniden işlenecek"
     out.append(case("Kabulden sonra bir baz dışlandı: ağ değişti, yeniden kabul edilebilir", later, [ask(later, {})]))
+    # ADR 2120: the measurement epoch from the baselines' observation times (or given) and the known points moved to
+    # it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); the new marks go back to the decision, 2005.0.
+    for name, m, inp in timed_cases():
+        out.append(case(name, m, [ask(m, inp)]))
     out.append(case("Plan aynı cevabı verir", base, [ask(base, {"class": "C2"}, op="plan")]))
     out.append(case("Doğrulama", base, [ask(base, {}, op="validate")]))
     # Refusals, in their order.
@@ -761,6 +848,7 @@ def network_cases():
     bad["classes"] = []
     out.append(case("Kural paketinin sınıfı yok", base, [ask(base, {"rules": bad, "class": "C1"})]))
     out.append(case("Pakette olmayan sınıf", base, [ask(base, {"class": "C4"})]))
+    out.append(case("Ölçme epoku 1900–2100 dışında", base, [ask(base, {"epoch": 1800.0})]))
     none = networked()
     for b in none.survey["baselines"]:
         b["adjust"] = False
@@ -772,7 +860,12 @@ def network_cases():
     nok = networked(known_points=[])
     out.append(case("Bilinen nokta yok", nok, [ask(nok, {})]))
     mixed = networked(known_points=[KNOWN[0], known(2, "BN2", epoch=2026.84)])
-    out.append(case("Bilinen noktaların epokları farklı", mixed, [ask(mixed, {})]))
+    out.append(case("Bilinen noktaların epokları farklı, bazların gözlem zamanı yok", mixed, [ask(mixed, {})]))
+    unmoved = timed(velocity=False)
+    out.append(case("Bilinen noktalar 2005,0'da, ölçme epoku bazlardan, arazi ölçümünün hız ızgarası yok", unmoved,
+                    [ask(unmoved, {})]))
+    no_epoch = timed(known_points=[KNOWN[0], known(2, "BN2", epoch=None)])
+    out.append(case("Ölçme epoku olan ağda epoku olmayan bilinen nokta", no_epoch, [ask(no_epoch, {})]))
     proj = networked(known_points=[known(1, "BN1", srid=5254), known(2, "BN2", srid=5254)])
     out.append(case("Bilinen noktaların çerçevesi coğrafi değil (TM30)", proj, [ask(proj, {})]))
     out.append(case("Tutulacak nokta ağın bilinen noktası değil", base, [ask(base, {"hold": "bn-9"})]))
@@ -789,6 +882,47 @@ def network_cases():
     out.append(case("Büyük küçük harfle ayrılan iki işaret aynı istasyon sayılır", twice, twice_out,
                     "KentOS adları Türkçe katlayarak karşılaştırır (ADR 0203 §2); n4 ile N4 bir istasyondur."))
     return out
+
+
+# ── ADR 2120: the measurement epoch ──────────────────────────────────────────────────────────────────────────────
+
+VEL = {"name": ms.HIZ["name"], "sha256": ms.HIZ["sha256"]}
+
+
+def times(k):
+    """The k-th baseline's observation (GPS time): on 2 November 2026, an hour and a half each, one an hour apart."""
+    return {"start": f"2026-11-02T{8 + k:02d}:00:00Z", "end": f"2026-11-02T{9 + k:02d}:30:00Z"}
+
+
+def timed(velocity=True, known_points=None):
+    """The network's baselines with their observation times; the campaign with the velocity grid when asked."""
+    m = networked(baselines=[record(k + 1, v, **times(k)) for k, v in enumerate(VECTORS)], known_points=known_points)
+    if velocity:
+        m.survey["campaigns"][0]["velocity"] = dict(VEL)
+    return m
+
+
+def at_epoch(mark, epoch):
+    """A known point's published coordinates moved from 2005.0 to `epoch` along the velocity grid by PROJ, rounded as
+    published (a CORS coordinate at the observation time)."""
+    lat, lon, h = KNOWN_AT[mark]
+    s = ms.gc.transformed([ms.cv.pt(lon, lat, h)], frm={"srid": 5252, "epoch": 2005.0, "heights": ms.ELL},
+                          to={"srid": 5252, "epoch": epoch, "heights": ms.ELL}, vel=VEL)
+    q = s["result"]["output"]["points"][0]
+    return {"lat": round(q["y"], 9), "lon": round(q["x"], 9), "height": round(q["z"], 4)}
+
+
+def timed_cases():
+    moving = timed()
+    two_epochs = timed(known_points=[KNOWN[0], known(2, "BN2", epoch=2026.84, **at_epoch("BN2", 2026.84),
+                                                     source="TUSAGA-Aktif günlük çözümü (örnek), 2026,84")])
+    return [
+        ("Ölçme epoku bazların gözlem zamanlarından (2 Kasım 2026); 2005,0'daki bilinen noktalar hız ızgarasıyla oraya "
+         "taşınır, yeni noktalar karara (2005,0) döner", moving, {}),
+        ("Ölçme epoku verilir (2026,5): bazların zamanından önce gelir", moving, {"epoch": 2026.5}),
+        ("Bilinen noktaların epokları farklı (BN1 2005,0'da, BN2 2026,84'te): ikisi de ölçme epokuna taşınır, ağ "
+         "uyuşur", two_epochs, {"class": "C2"}),
+    ]
 
 
 # ── map.survey.edit's network operations ─────────────────────────────────────────────────────────────────────────
@@ -1021,6 +1155,14 @@ def edit_cases():
                        write(with_known, after, {"op": "network"}, {"id": da, "records": records},
                              "Ağ dengelemesini kabul et",
                              extra={"ids": sorted(after.entities), "fields": fields}), d=with_known))
+    # ADR 2120: accepted at the measurement epoch; the known points moved there, the new marks back to 2005.0.
+    moving = timed()
+    after_t, _, da, records, fields = accept(moving, {})
+    out.append(ms.case("Ağı ölçme epokunda kabul et: bilinen noktalar hız ızgarasıyla 2 Kasım 2026'ya taşınır, "
+                       "dengeleme kaydının epoku ölçme epoku, noktalar karara (2005,0) döner",
+                       write(moving, after_t, {"op": "network"}, {"id": da, "records": records},
+                             "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_t.entities), "fields": fields}), d=moving))
     after_c2, res_c2, da, records, fields = accept(with_known, {"class": "C2"})
     out.append(ms.case("Ağı C2 sınıfıyla kabul et: dengeleme kaydı sınıfı, paketi ve sonucunu tutar",
                        write(with_known, after_c2, {"op": "network", "class": "C2"}, {"id": da, "records": records},
@@ -1091,9 +1233,10 @@ def edit_cases():
         {"op": "network"}, "no_baselines", "Dengelemeye girecek baz yok: bazları içe aktarın, dışlananları geri alın ya "
                                            "da dengeleme seçimini açın.", "operation")], d=none))
     mixed = networked(known_points=[KNOWN[0], known(2, "BN2", epoch=2026.84)])
-    out.append(ms.case("Ağı kabul et: bilinen noktaların epokları farklı", [refusal(
+    out.append(ms.case("Ağı kabul et: bilinen noktaların epokları farklı, bazların gözlem zamanı yok", [refusal(
         {"op": "network"}, "known_differ", "“bn-1” ile “bn-2” bilinen noktaları aynı çerçeve ve epokta değil; hepsini "
-                                           "ölçme epokunda aynı çerçevede girin.", "operation")], d=mixed))
+                                           "ölçme epokunda aynı çerçevede girin ya da bazların gözlem zamanlarını "
+                                           "verin.", "operation")], d=mixed))
     out.append(ms.case("Ağı kabul et: pakette olmayan sınıf", [refusal(
         {"op": "network", "class": "C4"}, "unknown_rule_class",
         "“bohhbuy-2018-gnss” kural paketinde “C4” sınıfı yok; sınıflar: C1, C2, C3.", "operation.class")],
@@ -1148,16 +1291,32 @@ def assert_cases():
     assert b["free"]["blunders"] > 0 and not b["acceptable"]
 
 
+def with_grids(fn):
+    """`fn()` with the shared cases' geoid and velocity grids where PROJ finds them, by their SHA-256 (as
+    map_survey_cases.build does): the known points' move to the measurement epoch reads the velocity grid (ADR 2120)."""
+    import shutil
+    import tempfile
+    tmp = Path(tempfile.mkdtemp(prefix="kentos-network-"))
+    for name in ms.gc.FILES:
+        shutil.copy(ms.gc.GRIDS / name, tmp / f"{ms.gc.sha(ms.gc.GRIDS / name)}.{ms.gc.ext(name)}")
+    pyproj.datadir.append_data_dir(str(tmp))
+    try:
+        return fn()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     check = "--check" in sys.argv[1:]
     assert_cases()
+    cases = with_grids(network_cases)
     doc = {"format": "kentos.command-cases", "version": 1, "command": "map.survey.network", "commandVersion": 1,
            "title": "GNSS ağını dengele: serbest ve bilinen noktalara dayalı aşamalar, BÖHHBÜY sınıfları, projeye taşıma",
            "note": "ADR 1740 (MAP-03, MAP-05). Bağımsız başvuru scripts/fixtures/map_survey_network_cases.py: numpy'nin "
                    "tam kovaryanslı en küçük kareleri, scipy'nin χ² ve normal nicemleri, PROJ'un TUREF ECEF dönüşümü ve "
                    "TM30'u (crs_vertical_cases.py); kural paketi catalog/v1/rules/gnss-ag-bohhbuy-2018.json; KentOS kodu "
                    "yok. Sayılar 1e-6 içinde.",
-           "setup": networked().document(), "cases": network_cases()}
+           "setup": networked().document(), "cases": cases}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     stale = []
     for name, data in WRITTEN.items():
@@ -1178,7 +1337,7 @@ def main():
             print(f"{p.relative_to(ROOT)} eski: betiği --check'siz çalıştırın", file=sys.stderr)
         sys.exit(1)
     print(f"map.survey.network: {len(doc['cases'])} durum" + (" (denetlendi)" if check else "") +
-          f"; map.survey.edit'e {len(edit_cases())} ağ durumu (map_survey_cases.py yazar)")
+          f"; map.survey.edit'e {len(with_grids(edit_cases))} ağ durumu (map_survey_cases.py yazar)")
 
 
 if __name__ == "__main__":

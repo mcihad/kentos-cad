@@ -625,6 +625,11 @@ pub enum MapSurveyOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         hold: Option<String>,
+        /// The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+        epoch: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         layer: Option<String>,
@@ -792,9 +797,15 @@ pub fn gnss_rules_default() -> Option<GnssRules> {
 /// covariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first
 /// otherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).
 ///
+/// The measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times
+/// when every one has its start and end, else none. With one, every known point needs its epoch and one at another
+/// epoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are
+/// in one frame and epoch, the network's.
+///
 /// Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
-/// `unknown_rule_class`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`, `network_too_large`,
-/// `network_disconnected`.
+/// `unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,
+/// `epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own
+/// refusals, `network_too_large`, `network_disconnected`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -817,6 +828,41 @@ pub struct MapSurveyNetwork {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub hold: Option<String>,
+    /// The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
+}
+
+/// Where the network's epoch comes from (docs/adr/2120): given, the baselines' observation times, the known points'.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum NetworkEpochFrom {
+    Given,
+    Baselines,
+    Known,
+}
+
+/// A known point moved to the measurement epoch along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a),
+/// docs/adr/2120): its epoch, the years it moved and how far east, north and up (m).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct KnownMoved {
+    pub id: String,
+    pub mark: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub from: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub years: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub shift: [f64; 3],
 }
 
 /// One stage of the adjustment: the marks held fixed, m0 (none without degrees of freedom), the degrees of freedom,
@@ -980,7 +1026,8 @@ pub struct NetworkRules {
     pub stations: u32,
 }
 
-/// Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,
+/// Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where
+/// the epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,
 /// the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
 /// result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
 /// be accepted and, if not, why, and the drawing's revision.
@@ -996,6 +1043,10 @@ pub struct MapSurveyNetworked {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub epoch: Option<f64>,
+    pub epoch_from: NetworkEpochFrom,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<KnownMoved>>"))]
+    pub moved: Vec<KnownMoved>,
     pub known: Vec<String>,
     pub baselines: Vec<NetworkBaseline>,
     pub stations: Vec<NetworkStation>,

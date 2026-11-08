@@ -6,12 +6,18 @@
 //! accepted; the tables list the marks (held, weighted or new, σ north/east/up, how far an accepted point moves), the
 //! baselines (length, residual, w, status; Dışla leaves one out with its test as the reason, Geri al takes it back)
 //! and the known points. Kabul et writes it (`map.survey.edit network`): one undo step. Harita only.
+//!
+//! The measurement epoch (docs/adr/2120): typed, or the mean of the baselines' observation times; the known points at
+//! another epoch are moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)), said in the summary and
+//! in Bilinen noktalar.
 
 use std::path::PathBuf;
 
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_commands::{CommandResult, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkStage};
+use kentos_commands::{
+    CommandResult, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkEpochFrom, NetworkStage,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_survey_network};
 use kentos_ui::label;
@@ -127,6 +133,8 @@ pub struct State {
     pub view: View,
     pub class: Class,
     pub scale: f64,
+    /// The measurement epoch as typed; empty: the baselines' observation times.
+    pub epoch: String,
     pub known: KnownForm,
     pub answer: Option<Result<MapSurveyNetworked, String>>,
 }
@@ -136,6 +144,7 @@ pub enum Event {
     View(View),
     Class(Class),
     Scale(f64),
+    Epoch(String),
     Import,
     Imported(Option<PathBuf>),
     Exclude(String),
@@ -163,6 +172,29 @@ fn number(text: &str, words: &str) -> Result<Option<f64>, String> {
         return Ok(None);
     }
     t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or_else(|| format!("{words} “{t}” bir sayı değil (ondalıktan önce nokta)."))
+}
+
+/// The summary's epoch line (docs/adr/2120): where the network's epoch comes from and how far the known points moved.
+fn epoch_line(a: &MapSurveyNetworked) -> String {
+    // Points before the decimals, as the window's other numbers (m0, vᵀPv, mm).
+    let e = |v: f64| format!("{v:.2}");
+    let mut line = match (a.epoch_from, a.epoch) {
+        (NetworkEpochFrom::Given, Some(t)) => format!("Ölçme epoku {} (yazılan).", e(t)),
+        (NetworkEpochFrom::Baselines, Some(t)) => format!("Ölçme epoku {} (bazların gözlem zamanlarının ortası).", e(t)),
+        (_, Some(t)) => format!("Bazların gözlem zamanı yok: ağın epoku bilinen noktalarınki, {}.", e(t)),
+        _ => "Bazların gözlem zamanı ve bilinen noktaların epoku yok: ağın epoku belirsiz.".to_owned(),
+    };
+    if !a.moved.is_empty() {
+        let horizontal = a.moved.iter().map(|m| m.shift[0].hypot(m.shift[1])).fold(0.0, f64::max);
+        let up = a.moved.iter().map(|m| m.shift[2].abs()).fold(0.0, f64::max);
+        line.push_str(&format!(
+            " {} bilinen nokta arazi ölçümünün hız ızgarasıyla oraya taşındı (en çok {} mm yatay, {} mm düşey; Madde 15(1)(a)).",
+            a.moved.len(),
+            mm(horizontal),
+            mm(up)
+        ));
+    }
+    line
 }
 
 /// A row of Bazlar: an archive baseline and, when it went into the network, its free stage's test.
@@ -196,10 +228,18 @@ fn stage_line(name: &str, st: &NetworkStage) -> (Kind, String) {
 }
 
 impl App {
-    fn survey_network_run(&mut self) {
+    pub(crate) fn survey_network_run(&mut self) {
+        let epoch = match number(&self.survey_network.epoch, "Ölçme epoku") {
+            Ok(e) => e,
+            Err(why) => {
+                self.survey_network.answer = Some(Err(why));
+                return;
+            }
+        };
         let input = MapSurveyNetwork {
             class: self.survey_network.class.id(),
             scale: (self.survey_network.scale != 1.0).then_some(self.survey_network.scale),
+            epoch,
             ..MapSurveyNetwork::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -271,6 +311,7 @@ impl App {
             class: self.survey_network.class.id(),
             rules: None,
             hold: None,
+            epoch: number(&self.survey_network.epoch, "Ölçme epoku").ok().flatten(),
             layer: None,
         };
         if let Some(out) = self.map_survey_edit(op) {
@@ -294,6 +335,10 @@ impl App {
                     self.survey_network.scale = v;
                     self.survey_network_run();
                 }
+            }
+            Event::Epoch(text) => {
+                self.survey_network.epoch = text;
+                self.survey_network_run();
             }
             Event::Import => {
                 return Task::perform(
@@ -376,13 +421,26 @@ impl App {
                 .spacing(10)
                 .align_y(Center),
             )
-            .field("Varyans çarpanı", NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(140));
+            .field("Varyans çarpanı", NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(140))
+            .field(
+                "Ölçme epoku",
+                row![
+                    container(
+                        fields::input(None, "Bazlardan", &s.epoch, false, false).on_input(|v| msg(Event::Epoch(v)))
+                    )
+                    .width(140),
+                    label::caption("Boşsa bazların gözlem zamanlarının ortası; bilinen noktalar oraya hız ızgarasıyla taşınır.")
+                ]
+                .spacing(10)
+                .align_y(Center),
+            );
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = label::caption("").into();
         let mut acceptable = false;
         match &s.answer {
             Some(Ok(a)) => {
                 acceptable = a.acceptable;
+                lines.push(words::text_line(Kind::Info, epoch_line(a)));
                 for (name, st) in [("Serbest dengeleme", &a.free), ("Bilinen noktalara dayalı", &a.constrained)] {
                     let (kind, text) = stage_line(name, st);
                     lines.push(words::text_line(kind, text));
@@ -526,14 +584,15 @@ impl App {
                     }
                     View::Known => sheet(
                         vec![
-                            col("Kimlik", 60.0),
-                            col("İşaret", 90.0),
-                            num("Enlem (°)", 110.0),
-                            num("Boylam (°)", 110.0),
-                            num("h (m)", 90.0),
-                            num("EPSG", 60.0),
-                            num("Epok", 70.0),
-                            col("Ağırlık", 120.0),
+                            col("Kimlik", 50.0),
+                            col("İşaret", 70.0),
+                            num("Enlem (°)", 105.0),
+                            num("Boylam (°)", 105.0),
+                            num("h (m)", 80.0),
+                            num("EPSG", 50.0),
+                            num("Epok", 60.0),
+                            num("Taşınma D/K/Y (mm)", 140.0),
+                            col("Ağırlık", 100.0),
                             road_dialog::Col { title: "Kaynak", width: None, number: false },
                         ],
                         survey
@@ -549,6 +608,10 @@ impl App {
                                             format!("{:.4}", k.height),
                                             k.srid.to_string(),
                                             k.epoch.map_or(String::new(), |e| format!("{e}")),
+                                            // Moved to the measurement epoch along the velocity grid (docs/adr/2120).
+                                            a.moved.iter().find(|m| m.id == k.id).map_or(String::new(), |m| {
+                                                format!("{}/{}/{}", mm(m.shift[0]), mm(m.shift[1]), mm(m.shift[2]))
+                                            }),
                                             match (&k.excluded, k.sigma) {
                                                 (Some(_), _) => "Dışlandı".to_owned(),
                                                 (None, Some(g)) => format!("σ {}/{}/{} mm", mm(g[0]), mm(g[1]), mm(g[2])),

@@ -74,6 +74,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `.kcad` şema 206'nın web okuyucusu ve yazıcısı.
 - MAP-02 / ADR 2100: web'in WASM DXF okuyucusu aynı kuralı alır (kotlu bloğun yükseltilmiş yerleştirmesi patlatılır);
   `apps/web/src/io/dxf.wasm.test.ts`'nin blok beklentileri yeniden okunmalı.
+- MAP-03 / ADR 2120: `map.survey.network`'ün web işleyicisinde ölçme epoku, `epochFrom`, `moved`; kabulde `epoch`.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

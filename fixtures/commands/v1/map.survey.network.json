@@ -1366,6 +1366,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -2447,6 +2448,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -3558,6 +3560,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -4668,6 +4671,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -5778,6 +5782,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -6893,6 +6898,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -7975,6 +7981,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -9066,6 +9073,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -10145,6 +10153,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -11224,6 +11233,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -12259,6 +12269,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -12658,6 +12669,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -13640,6 +13652,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1"
        ],
@@ -14477,6 +14490,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2026.84,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -15694,6 +15708,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -16931,6 +16946,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -17284,6 +17300,3408 @@
         "m0": 0.4505045454111912,
         "chi2": 21.02606981748307,
         "passed": true
+       },
+       "acceptable": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ölçme epoku bazların gözlem zamanlarından (2 Kasım 2026); 2005,0'daki bilinen noktalar hız ızgarasıyla oraya taşınır, yeni noktalar karara (2005,0) döner",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "GNSS arşivi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "heights": {
+      "kind": "ellipsoidal"
+     },
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-11",
+        "layers": [
+         "gnss"
+        ]
+       }
+      ]
+     },
+     "mapSurvey": {
+      "campaigns": [
+       {
+        "id": "kp-1",
+        "name": "GNSS ölçümü 2026-11",
+        "work": "is-1",
+        "epoch": 2005.0,
+        "velocity": {
+         "name": "Hız alanı (sentetik)",
+         "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+        }
+       }
+      ],
+      "sessions": [
+       {
+        "id": "os-1",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-03T09:30:00.0000000Z",
+        "end": "2026-11-03T10:30:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "TRIMBLE R10",
+         "serial": "5123K40001",
+         "firmware": "5.52"
+        },
+        "antenna": {
+         "height": 1.532,
+         "serial": "1441112222",
+         "type": "TRM57971.00     NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun1.26o",
+         "revision": "ea641847939290e541c3f783a9b2de0e6d9fc01d1cd409b5635fba77929e3722",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "3.05",
+         "markerNumber": "N1-2026",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 30.0
+        }
+       },
+       {
+        "id": "os-2",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-04T08:00:00.0000000Z",
+        "end": "2026-11-04T09:00:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "LEICA GS18",
+         "serial": "1830456",
+         "firmware": "8.10"
+        },
+        "antenna": {
+         "height": 1.61,
+         "serial": "1830456",
+         "type": "LEIGS18         NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun2.26o",
+         "revision": "e3b57ae5771c8eec559300a8551526c70da4d195c3b8d1409903dfe931d9ba82",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "2.11",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 15.0
+        }
+       },
+       {
+        "id": "os-3",
+        "campaign": "kp-1",
+        "mark": "N2",
+        "start": "2026-11-03T09:30:00.00Z",
+        "end": "2026-11-03T09:30:11.00Z",
+        "timeSystem": "utc",
+        "antenna": {
+         "type": "Jalon 2 m",
+         "height": 2.0
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n2.nmea",
+         "revision": "7a44f81440f26018cdcb410353a5dbe3f9cc1cac7a69fc105246b24dedf61b53",
+         "format": "nmea"
+        },
+        "observations": [
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.123,
+          "ellipsoidal": 886.623,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:00.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.62,
+          "line": 2
+         },
+         {
+          "kind": "gga",
+          "lat": 39.780100166666664,
+          "lon": 30.515000333333333,
+          "height": 850.131,
+          "ellipsoidal": 886.631,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:01.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.63,
+          "line": 3
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78010008333333,
+          "lon": 30.515000166666667,
+          "height": 850.17,
+          "ellipsoidal": 886.67,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:02.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.9,
+          "line": 4
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.127,
+          "ellipsoidal": 886.627,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:03.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.7,
+          "line": 5
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78009983333333,
+          "lon": 30.514999833333334,
+          "height": 850.119,
+          "ellipsoidal": 886.619,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:10.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.71,
+          "line": 7
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "time": "2026-11-03T09:30:11.00Z",
+          "fix": "RTK sabit",
+          "satellites": 12,
+          "hdop": 0.72,
+          "line": 8
+         }
+        ]
+       }
+      ],
+      "solutions": [
+       {
+        "id": "cz-1",
+        "session": "os-1",
+        "kind": "processed",
+        "lat": 39.7767123,
+        "lon": 30.5206456,
+        "height": 845.231,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 120,
+        "sigma": [
+         0.004,
+         0.003,
+         0.009
+        ],
+        "covariance": [
+         1.6e-05,
+         1e-06,
+         2e-06,
+         9e-06,
+         1e-06,
+         8.1e-05
+        ],
+        "correction": "TUSAGA-Aktif (KNY1, AFYN)",
+        "report": {
+         "path": "$fixture:map-survey/v1/rapor-n1.txt",
+         "revision": "189d30af43626b407c7ad3147b13381abeadafa4f71008be0e20d90df187369b",
+         "format": "report"
+        },
+        "recipe": "TBC 5.90; kesin efemeris (IGS); 10° maske; IGS20 ANTEX; anten 1.532 m ARP",
+        "adjust": true
+       },
+       {
+        "id": "cz-2",
+        "session": "os-2",
+        "kind": "processed",
+        "lat": 39.7767124,
+        "lon": 30.5206455,
+        "height": 846.847,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 0.0,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 240,
+        "sigma": [
+         0.005,
+         0.004,
+         0.012
+        ],
+        "adjust": true
+       },
+       {
+        "id": "cz-3",
+        "session": "os-3",
+        "kind": "receiver",
+        "lat": 39.7801,
+        "lon": 30.515000041666667,
+        "height": 886.625,
+        "srid": 4326,
+        "antennaApplied": 0.0,
+        "fix": "RTK sabit",
+        "epochs": 4,
+        "satellites": 13,
+        "hdop": 0.71,
+        "from": 0,
+        "to": 4,
+        "fixes": [
+         "RTK sabit"
+        ]
+       },
+       {
+        "id": "cz-4",
+        "session": "os-1",
+        "kind": "ppp",
+        "lat": 39.7767131,
+        "lon": 30.5206441,
+        "height": 845.412,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "sigma": [
+         0.02,
+         0.02,
+         0.05
+        ],
+        "correction": "CSRS-PPP",
+        "excluded": "Çok yollu yansıma şüphesi; 40 dakikalık veri"
+       }
+      ],
+      "points": [
+       {
+        "id": "kn-1",
+        "mark": "N1",
+        "uid": "0192f5c0-1340-7000-8000-000000000001",
+        "result": {
+         "revision": 1,
+         "solutions": [
+          "cz-1",
+          "cz-2"
+         ],
+         "method": "mean",
+         "lat": 39.77671235,
+         "lon": 30.52064555,
+         "height": 845.2339999999999,
+         "srid": 5252,
+         "epoch": 2005.0,
+         "targetEpoch": 2005.0,
+         "antenna": [
+          {
+           "session": "os-1",
+           "height": 1.532
+          },
+          {
+           "session": "os-2",
+           "height": 1.61
+          }
+         ],
+         "x": 544604.5188026087,
+         "y": 4404866.510293009,
+         "z": 845.2339999999999,
+         "chain": "complete"
+        }
+       }
+      ],
+      "uses": [
+       {
+        "id": "kb-1",
+        "operation": "Yüzey üret",
+        "uids": [
+         "0192f5c0-1340-7000-8000-000000000002"
+        ],
+        "points": [
+         {
+          "point": "kn-1",
+          "revision": 1
+         }
+        ]
+       }
+      ],
+      "baselines": [
+       {
+        "id": "bz-1",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N1",
+        "d": [
+         -3536.688454276511,
+         2674.4539372296504,
+         1977.4207466980147
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T08:00:00Z",
+        "end": "2026-11-02T09:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-2",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N1",
+        "d": [
+         241.99897956365118,
+         -4036.354143129671,
+         2240.452557216509
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T09:00:00Z",
+        "end": "2026-11-02T10:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-3",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N4",
+        "d": [
+         -5857.314516281801,
+         3105.673234809159,
+         4138.779055520129
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T10:00:00Z",
+        "end": "2026-11-02T11:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-4",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N4",
+        "d": [
+         -2078.620499916886,
+         -3605.130500649888,
+         4401.813124908456
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T11:00:00Z",
+        "end": "2026-11-02T12:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-5",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N4",
+        "d": [
+         -2320.6223254964657,
+         431.2231219522215,
+         2161.358829661327
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T12:00:00Z",
+        "end": "2026-11-02T13:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-6",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N5",
+        "d": [
+         -617.6325425434679,
+         -2976.0008028167613,
+         2397.558884497368
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T13:00:00Z",
+        "end": "2026-11-02T14:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-7",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N5",
+        "d": [
+         -4154.32008169433,
+         -301.54574497832937,
+         4374.980501455615
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T14:00:00Z",
+        "end": "2026-11-02T15:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-8",
+        "campaign": "kp-1",
+        "from": "N4",
+        "to": "N5",
+        "d": [
+         1702.9910404929328,
+         -3407.2220231168135,
+         236.20071894232
+        ],
+        "covariance": [
+         1.4459458988525862e-05,
+         4.843221006697332e-06,
+         7.941999082778689e-06,
+         9.107288129765828e-06,
+         4.6854313842904844e-06,
+         1.393325288170831e-05
+        ],
+        "start": "2026-11-02T15:00:00Z",
+        "end": "2026-11-02T16:30:00Z",
+        "adjust": true
+       }
+      ],
+      "known": [
+       {
+        "id": "bn-1",
+        "mark": "BN1",
+        "lat": 39.753288657,
+        "lon": 30.472811038,
+        "height": 879.581,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0"
+       },
+       {
+        "id": "bn-2",
+        "mark": "BN2",
+        "lat": 39.750589104,
+        "lon": 30.562645279,
+        "height": 828.6594,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "C1 noktası (örnek), TUREF, 2005,0"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 544601.0,
+     "y": 4404865.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yuzey",
+      "name": "Yüzey",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "gnss",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "N1",
+       "Kabul": "kn-1",
+       "Revizyon": "1",
+       "Yöntem": "Ortalama",
+       "Çözüm": "cz-1, cz-2",
+       "Arazi ölçümü": "GNSS ölçümü 2026-11"
+      },
+      "p": {
+       "x": 544604.5188026087,
+       "y": 4404866.510293009
+      },
+      "z": 845.2339999999999
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yuzey",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404865.0
+      },
+      "b": {
+       "x": 544631.0,
+       "y": 4404875.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404885.0
+      },
+      "b": {
+       "x": 544611.0,
+       "y": 4404890.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 544606.0,
+       "y": 4404870.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1340-7000-8000-000000000001",
+     "0192f5c0-1340-7000-8000-000000000002",
+     "0192f5c0-1340-7000-8000-000000000003",
+     "0192f5c0-1340-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5252,
+       "epoch": 2026.8370148401827,
+       "epochFrom": "baselines",
+       "moved": [
+        {
+         "id": "bn-1",
+         "mark": "BN1",
+         "from": 2005.0,
+         "years": 21.837014840182746,
+         "shift": [
+          -0.5166685388586171,
+          0.1697612502492801,
+          -0.042641547659720516
+         ]
+        },
+        {
+         "id": "bn-2",
+         "mark": "BN2",
+         "from": 2005.0,
+         "years": 21.837014840182746,
+         "shift": [
+          -0.5158956438197005,
+          0.16977893364696248,
+          -0.042445376419131015
+         ]
+        }
+       ],
+       "known": [
+        "bn-1",
+        "bn-2"
+       ],
+       "baselines": [
+        {
+         "id": "bz-1",
+         "from": "BN1",
+         "to": "N1",
+         "length": 4855.003799632673,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.0009653175284559684,
+          0.0007653673056840513,
+          0.0009464674985416663
+         ],
+         "free": {
+          "v": [
+           -0.00018521017910694217,
+           0.0008076287907644784,
+           -0.0011525734905806556
+          ],
+          "flag": "ok",
+          "w": 0.40429386169467457
+         },
+         "constrained": {
+          "v": [
+           -0.0008379772629732677,
+           0.0008348537188003288,
+           -0.0011127842385273094
+          ],
+          "flag": "ok",
+          "w": 0.5159810550678621
+         }
+        },
+        {
+         "id": "bz-2",
+         "from": "BN2",
+         "to": "N1",
+         "length": 4622.807148909405,
+         "sigma": [
+          0.0038036386161555734,
+          0.0030192054870723344,
+          0.003730513571148405
+         ],
+         "adjusted": [
+          0.0010845154275717491,
+          0.0008607734508630327,
+          0.0010636885090138438
+         ],
+         "free": {
+          "v": [
+           -0.00016011770212870043,
+           -0.0005300868423961555,
+           0.0019097658748137068
+          ],
+          "flag": "ok",
+          "w": 0.6807501522301179
+         },
+         "constrained": {
+          "v": [
+           0.0007102188747539676,
+           -0.0005672589393901855,
+           0.0018607909016899113
+          ],
+          "flag": "ok",
+          "w": 0.49712698478190065
+         }
+        },
+        {
+         "id": "bz-3",
+         "from": "BN1",
+         "to": "N4",
+         "length": 7815.550630279839,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.0009652856298837047,
+          0.0007653715689674551,
+          0.0009464965093095186
+         ],
+         "free": {
+          "v": [
+           0.0005359052221800267,
+           -0.0014320899171014006,
+           0.0025277237406902643
+          ],
+          "flag": "ok",
+          "w": 0.7950040372647106
+         },
+         "constrained": {
+          "v": [
+           -0.00011686141692065274,
+           -0.0014048641561008337,
+           0.002567483737770125
+          ],
+          "flag": "ok",
+          "w": 0.8042507037267629
+         }
+        },
+        {
+         "id": "bz-4",
+         "from": "BN2",
+         "to": "N4",
+         "length": 6057.523247665434,
+         "sigma": [
+          0.0038036386161555734,
+          0.0030192054870723344,
+          0.003730513571148405
+         ],
+         "adjusted": [
+          0.0010845154275717491,
+          0.0008607734508630328,
+          0.0010636885090138438
+         ],
+         "free": {
+          "v": [
+           0.0001601177021287012,
+           0.0005300868423961555,
+           -0.0019097658748137058
+          ],
+          "flag": "ok",
+          "w": 0.6807501522301177
+         },
+         "constrained": {
+          "v": [
+           0.0010304547587549236,
+           0.0004929155766270093,
+           -0.0019587701024578147
+          ],
+          "flag": "ok",
+          "w": 0.664284233261514
+         }
+        },
+        {
+         "id": "bz-5",
+         "from": "N1",
+         "to": "N4",
+         "length": 3200.4239327085756,
+         "sigma": [
+          0.0038037533967276694,
+          0.003017668336589735,
+          0.0037316401095532315
+         ],
+         "adjusted": [
+          0.0008855674312028486,
+          0.000702543487367322,
+          0.0008686546312144569
+         ],
+         "free": {
+          "v": [
+           -0.0006793532407658146,
+           0.000660102198415976,
+           -0.0006198456880559949
+          ],
+          "flag": "ok",
+          "w": 0.4237408668626414
+         },
+         "constrained": {
+          "v": [
+           -0.0006793527768977505,
+           0.0006601030430428448,
+           -0.0006198749423226754
+          ],
+          "flag": "ok",
+          "w": 0.4237430245455608
+         }
+        },
+        {
+         "id": "bz-6",
+         "from": "N1",
+         "to": "N5",
+         "length": 3871.2193609516603,
+         "sigma": [
+          0.0038037533967276694,
+          0.003017668336589735,
+          0.0037316401095532315
+         ],
+         "adjusted": [
+          0.0009650294453831242,
+          0.0007655096832222454,
+          0.0009466458167257825
+         ],
+         "free": {
+          "v": [
+           0.00033515914237560525,
+           -0.00038263635444600504,
+           0.001377277607870344
+          ],
+          "flag": "ok",
+          "w": 0.3456257697903357
+         },
+         "constrained": {
+          "v": [
+           0.0005527468382243904,
+           -0.0003918259947132578,
+           0.0013644612398727815
+          ],
+          "flag": "ok",
+          "w": 0.4242814487662123
+         }
+        },
+        {
+         "id": "bz-7",
+         "from": "BN1",
+         "to": "N5",
+         "length": 6040.675422963905,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.000990350307892648,
+          0.000785242773333168,
+          0.0009711066471470251
+         ],
+         "free": {
+          "v": [
+           -0.0003506950430730813,
+           0.0006244611263369227,
+           -0.0013751502501096087
+          ],
+          "flag": "ok",
+          "w": 0.4003608409027814
+         },
+         "constrained": {
+          "v": [
+           -0.0007858778218855389,
+           0.0006426073412001748,
+           -0.0013483132660857316
+          ],
+          "flag": "ok",
+          "w": 0.5453928277556428
+         }
+        },
+        {
+         "id": "bz-8",
+         "from": "N4",
+         "to": "N5",
+         "length": 3816.4291135091585,
+         "sigma": [
+          0.0038025595312270737,
+          0.003017828379773414,
+          0.00373272727127342
+         ],
+         "adjusted": [
+          0.0009649337179326795,
+          0.0007655224706224773,
+          0.0009467328299697746
+         ],
+         "free": {
+          "v": [
+           1.4932929373370958e-05,
+           -0.0002421551952688975,
+           -2.661009450642587e-06
+          ],
+          "flag": "ok",
+          "w": 0.1236632222835207
+         },
+         "constrained": {
+          "v": [
+           0.0002325213969955714,
+           -0.00025138404492539614,
+           -1.5399368181905854e-05
+          ],
+          "flag": "ok",
+          "w": 0.1352172087237406
+         }
+        }
+       ],
+       "stations": [
+        {
+         "mark": "BN1",
+         "known": "bn-1",
+         "held": true,
+         "lat": 39.75329018575738,
+         "lon": 30.472805010052433,
+         "height": 879.5383584806696,
+         "sigma": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        {
+         "mark": "N1",
+         "held": false,
+         "lat": 39.77671388170978,
+         "lon": 30.52063952557441,
+         "height": 845.1920838719234,
+         "sigma": [
+          0.000518276558556608,
+          0.0005182765202272589,
+          0.001036552406743756
+         ],
+         "point": "kn-1",
+         "x": 544604.5187593134,
+         "y": 4404866.510773782,
+         "z": 845.2346210088581,
+         "dx": -4.3295323848724365e-05,
+         "dy": 0.00048077292740345,
+         "dz": 0.0006210088581610762
+        },
+        {
+         "mark": "BN2",
+         "known": "bn-2",
+         "held": true,
+         "lat": 39.750590632929566,
+         "lon": 30.56263926025672,
+         "height": 828.6169546497986,
+         "sigma": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        {
+         "mark": "N4",
+         "held": false,
+         "lat": 39.80192733280098,
+         "lon": 30.538736089073716,
+         "height": 860.7464841073379,
+         "sigma": [
+          0.0005182769104324576,
+          0.0005182765902712282,
+          0.0010365521697575954
+         ],
+         "x": 546138.0414440392,
+         "y": 4407675.168365131,
+         "z": 860.7889817291871
+        },
+        {
+         "mark": "N5",
+         "held": false,
+         "lat": 39.805077853121794,
+         "lon": 30.494368906518094,
+         "height": 809.8675608122721,
+         "sigma": [
+          0.0006052169822441898,
+          0.000605216572022954,
+          0.0012104323249322766
+         ],
+         "x": 542336.4723379455,
+         "y": 4408003.046540507,
+         "z": 809.9101553168148
+        }
+       ],
+       "free": {
+        "held": [
+         "BN1"
+        ],
+        "dof": 12,
+        "omega": 1.6258869867295607,
+        "limit": 3.29,
+        "blunders": 0,
+        "m0": 0.368090453866252,
+        "chi2": 21.02606981748307,
+        "passed": true
+       },
+       "constrained": {
+        "held": [
+         "BN1",
+         "BN2"
+        ],
+        "dof": 15,
+        "omega": 2.0512073415947443,
+        "limit": 3.29,
+        "blunders": 0,
+        "m0": 0.3697933965152924,
+        "chi2": 24.99579013972862,
+        "passed": true
+       },
+       "acceptable": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ölçme epoku verilir (2026,5): bazların zamanından önce gelir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "GNSS arşivi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "heights": {
+      "kind": "ellipsoidal"
+     },
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-11",
+        "layers": [
+         "gnss"
+        ]
+       }
+      ]
+     },
+     "mapSurvey": {
+      "campaigns": [
+       {
+        "id": "kp-1",
+        "name": "GNSS ölçümü 2026-11",
+        "work": "is-1",
+        "epoch": 2005.0,
+        "velocity": {
+         "name": "Hız alanı (sentetik)",
+         "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+        }
+       }
+      ],
+      "sessions": [
+       {
+        "id": "os-1",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-03T09:30:00.0000000Z",
+        "end": "2026-11-03T10:30:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "TRIMBLE R10",
+         "serial": "5123K40001",
+         "firmware": "5.52"
+        },
+        "antenna": {
+         "height": 1.532,
+         "serial": "1441112222",
+         "type": "TRM57971.00     NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun1.26o",
+         "revision": "ea641847939290e541c3f783a9b2de0e6d9fc01d1cd409b5635fba77929e3722",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "3.05",
+         "markerNumber": "N1-2026",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 30.0
+        }
+       },
+       {
+        "id": "os-2",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-04T08:00:00.0000000Z",
+        "end": "2026-11-04T09:00:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "LEICA GS18",
+         "serial": "1830456",
+         "firmware": "8.10"
+        },
+        "antenna": {
+         "height": 1.61,
+         "serial": "1830456",
+         "type": "LEIGS18         NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun2.26o",
+         "revision": "e3b57ae5771c8eec559300a8551526c70da4d195c3b8d1409903dfe931d9ba82",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "2.11",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 15.0
+        }
+       },
+       {
+        "id": "os-3",
+        "campaign": "kp-1",
+        "mark": "N2",
+        "start": "2026-11-03T09:30:00.00Z",
+        "end": "2026-11-03T09:30:11.00Z",
+        "timeSystem": "utc",
+        "antenna": {
+         "type": "Jalon 2 m",
+         "height": 2.0
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n2.nmea",
+         "revision": "7a44f81440f26018cdcb410353a5dbe3f9cc1cac7a69fc105246b24dedf61b53",
+         "format": "nmea"
+        },
+        "observations": [
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.123,
+          "ellipsoidal": 886.623,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:00.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.62,
+          "line": 2
+         },
+         {
+          "kind": "gga",
+          "lat": 39.780100166666664,
+          "lon": 30.515000333333333,
+          "height": 850.131,
+          "ellipsoidal": 886.631,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:01.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.63,
+          "line": 3
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78010008333333,
+          "lon": 30.515000166666667,
+          "height": 850.17,
+          "ellipsoidal": 886.67,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:02.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.9,
+          "line": 4
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.127,
+          "ellipsoidal": 886.627,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:03.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.7,
+          "line": 5
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78009983333333,
+          "lon": 30.514999833333334,
+          "height": 850.119,
+          "ellipsoidal": 886.619,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:10.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.71,
+          "line": 7
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "time": "2026-11-03T09:30:11.00Z",
+          "fix": "RTK sabit",
+          "satellites": 12,
+          "hdop": 0.72,
+          "line": 8
+         }
+        ]
+       }
+      ],
+      "solutions": [
+       {
+        "id": "cz-1",
+        "session": "os-1",
+        "kind": "processed",
+        "lat": 39.7767123,
+        "lon": 30.5206456,
+        "height": 845.231,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 120,
+        "sigma": [
+         0.004,
+         0.003,
+         0.009
+        ],
+        "covariance": [
+         1.6e-05,
+         1e-06,
+         2e-06,
+         9e-06,
+         1e-06,
+         8.1e-05
+        ],
+        "correction": "TUSAGA-Aktif (KNY1, AFYN)",
+        "report": {
+         "path": "$fixture:map-survey/v1/rapor-n1.txt",
+         "revision": "189d30af43626b407c7ad3147b13381abeadafa4f71008be0e20d90df187369b",
+         "format": "report"
+        },
+        "recipe": "TBC 5.90; kesin efemeris (IGS); 10° maske; IGS20 ANTEX; anten 1.532 m ARP",
+        "adjust": true
+       },
+       {
+        "id": "cz-2",
+        "session": "os-2",
+        "kind": "processed",
+        "lat": 39.7767124,
+        "lon": 30.5206455,
+        "height": 846.847,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 0.0,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 240,
+        "sigma": [
+         0.005,
+         0.004,
+         0.012
+        ],
+        "adjust": true
+       },
+       {
+        "id": "cz-3",
+        "session": "os-3",
+        "kind": "receiver",
+        "lat": 39.7801,
+        "lon": 30.515000041666667,
+        "height": 886.625,
+        "srid": 4326,
+        "antennaApplied": 0.0,
+        "fix": "RTK sabit",
+        "epochs": 4,
+        "satellites": 13,
+        "hdop": 0.71,
+        "from": 0,
+        "to": 4,
+        "fixes": [
+         "RTK sabit"
+        ]
+       },
+       {
+        "id": "cz-4",
+        "session": "os-1",
+        "kind": "ppp",
+        "lat": 39.7767131,
+        "lon": 30.5206441,
+        "height": 845.412,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "sigma": [
+         0.02,
+         0.02,
+         0.05
+        ],
+        "correction": "CSRS-PPP",
+        "excluded": "Çok yollu yansıma şüphesi; 40 dakikalık veri"
+       }
+      ],
+      "points": [
+       {
+        "id": "kn-1",
+        "mark": "N1",
+        "uid": "0192f5c0-1340-7000-8000-000000000001",
+        "result": {
+         "revision": 1,
+         "solutions": [
+          "cz-1",
+          "cz-2"
+         ],
+         "method": "mean",
+         "lat": 39.77671235,
+         "lon": 30.52064555,
+         "height": 845.2339999999999,
+         "srid": 5252,
+         "epoch": 2005.0,
+         "targetEpoch": 2005.0,
+         "antenna": [
+          {
+           "session": "os-1",
+           "height": 1.532
+          },
+          {
+           "session": "os-2",
+           "height": 1.61
+          }
+         ],
+         "x": 544604.5188026087,
+         "y": 4404866.510293009,
+         "z": 845.2339999999999,
+         "chain": "complete"
+        }
+       }
+      ],
+      "uses": [
+       {
+        "id": "kb-1",
+        "operation": "Yüzey üret",
+        "uids": [
+         "0192f5c0-1340-7000-8000-000000000002"
+        ],
+        "points": [
+         {
+          "point": "kn-1",
+          "revision": 1
+         }
+        ]
+       }
+      ],
+      "baselines": [
+       {
+        "id": "bz-1",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N1",
+        "d": [
+         -3536.688454276511,
+         2674.4539372296504,
+         1977.4207466980147
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T08:00:00Z",
+        "end": "2026-11-02T09:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-2",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N1",
+        "d": [
+         241.99897956365118,
+         -4036.354143129671,
+         2240.452557216509
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T09:00:00Z",
+        "end": "2026-11-02T10:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-3",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N4",
+        "d": [
+         -5857.314516281801,
+         3105.673234809159,
+         4138.779055520129
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T10:00:00Z",
+        "end": "2026-11-02T11:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-4",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N4",
+        "d": [
+         -2078.620499916886,
+         -3605.130500649888,
+         4401.813124908456
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T11:00:00Z",
+        "end": "2026-11-02T12:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-5",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N4",
+        "d": [
+         -2320.6223254964657,
+         431.2231219522215,
+         2161.358829661327
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T12:00:00Z",
+        "end": "2026-11-02T13:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-6",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N5",
+        "d": [
+         -617.6325425434679,
+         -2976.0008028167613,
+         2397.558884497368
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T13:00:00Z",
+        "end": "2026-11-02T14:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-7",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N5",
+        "d": [
+         -4154.32008169433,
+         -301.54574497832937,
+         4374.980501455615
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T14:00:00Z",
+        "end": "2026-11-02T15:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-8",
+        "campaign": "kp-1",
+        "from": "N4",
+        "to": "N5",
+        "d": [
+         1702.9910404929328,
+         -3407.2220231168135,
+         236.20071894232
+        ],
+        "covariance": [
+         1.4459458988525862e-05,
+         4.843221006697332e-06,
+         7.941999082778689e-06,
+         9.107288129765828e-06,
+         4.6854313842904844e-06,
+         1.393325288170831e-05
+        ],
+        "start": "2026-11-02T15:00:00Z",
+        "end": "2026-11-02T16:30:00Z",
+        "adjust": true
+       }
+      ],
+      "known": [
+       {
+        "id": "bn-1",
+        "mark": "BN1",
+        "lat": 39.753288657,
+        "lon": 30.472811038,
+        "height": 879.581,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0"
+       },
+       {
+        "id": "bn-2",
+        "mark": "BN2",
+        "lat": 39.750589104,
+        "lon": 30.562645279,
+        "height": 828.6594,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "C1 noktası (örnek), TUREF, 2005,0"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 544601.0,
+     "y": 4404865.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yuzey",
+      "name": "Yüzey",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "gnss",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "N1",
+       "Kabul": "kn-1",
+       "Revizyon": "1",
+       "Yöntem": "Ortalama",
+       "Çözüm": "cz-1, cz-2",
+       "Arazi ölçümü": "GNSS ölçümü 2026-11"
+      },
+      "p": {
+       "x": 544604.5188026087,
+       "y": 4404866.510293009
+      },
+      "z": 845.2339999999999
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yuzey",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404865.0
+      },
+      "b": {
+       "x": 544631.0,
+       "y": 4404875.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404885.0
+      },
+      "b": {
+       "x": 544611.0,
+       "y": 4404890.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 544606.0,
+       "y": 4404870.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1340-7000-8000-000000000001",
+     "0192f5c0-1340-7000-8000-000000000002",
+     "0192f5c0-1340-7000-8000-000000000003",
+     "0192f5c0-1340-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "epoch": 2026.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5252,
+       "epoch": 2026.5,
+       "epochFrom": "given",
+       "moved": [
+        {
+         "id": "bn-1",
+         "mark": "BN1",
+         "from": 2005.0,
+         "years": 21.5,
+         "shift": [
+          -0.5086946950330741,
+          0.16714129125490867,
+          -0.04198345370789841
+         ]
+        },
+        {
+         "id": "bn-2",
+         "mark": "BN2",
+         "from": 2005.0,
+         "years": 21.5,
+         "shift": [
+          -0.5079337280254421,
+          0.16715870298529883,
+          -0.04179030878998376
+         ]
+        }
+       ],
+       "known": [
+        "bn-1",
+        "bn-2"
+       ],
+       "baselines": [
+        {
+         "id": "bz-1",
+         "from": "BN1",
+         "to": "N1",
+         "length": 4855.003799632673,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.0009653175284559684,
+          0.0007653673056840513,
+          0.0009464674985416663
+         ],
+         "free": {
+          "v": [
+           -0.00018521017682960662,
+           0.0008076287904821725,
+           -0.0011525734911444236
+          ],
+          "flag": "ok",
+          "w": 0.4042938616946747
+         },
+         "constrained": {
+          "v": [
+           -0.0008416264670286831,
+           0.0008381459092195024,
+           -0.001118240550768624
+          ],
+          "flag": "ok",
+          "w": 0.5182521674228369
+         }
+        },
+        {
+         "id": "bz-2",
+         "from": "BN2",
+         "to": "N1",
+         "length": 4622.807148909405,
+         "sigma": [
+          0.0038036386161555734,
+          0.0030192054870723344,
+          0.003730513571148405
+         ],
+         "adjusted": [
+          0.0010845154275717491,
+          0.0008607734508630327,
+          0.0010636885090138438
+         ],
+         "free": {
+          "v": [
+           -0.0001601177050617685,
+           -0.0005300868414411761,
+           0.0019097658748328643
+          ],
+          "flag": "ok",
+          "w": 0.6807501522301177
+         },
+         "constrained": {
+          "v": [
+           0.0007150776108352405,
+           -0.0005716534610113609,
+           0.00186808988615413
+          ],
+          "flag": "ok",
+          "w": 0.5001550408684031
+         }
+        },
+        {
+         "id": "bz-3",
+         "from": "BN1",
+         "to": "N4",
+         "length": 7815.550630279839,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.0009652856298837047,
+          0.0007653715689674551,
+          0.0009464965093095186
+         ],
+         "free": {
+          "v": [
+           0.0005359052175377007,
+           -0.0014320899166169604,
+           0.0025277237419489493
+          ],
+          "flag": "ok",
+          "w": 0.7950040372647104
+         },
+         "constrained": {
+          "v": [
+           -0.00012051069397886775,
+           -0.0014015720850156074,
+           0.002562027540797286
+          ],
+          "flag": "ok",
+          "w": 0.8031151102239839
+         }
+        },
+        {
+         "id": "bz-4",
+         "from": "BN2",
+         "to": "N4",
+         "length": 6057.523247665434,
+         "sigma": [
+          0.0038036386161555734,
+          0.0030192054870723344,
+          0.003730513571148405
+         ],
+         "adjusted": [
+          0.0010845154275717491,
+          0.0008607734508630328,
+          0.0010636885090138438
+         ],
+         "free": {
+          "v": [
+           0.00016011770506177045,
+           0.000530086841441177,
+           -0.0019097658748328636
+          ],
+          "flag": "ok",
+          "w": 0.680750152230118
+         },
+         "constrained": {
+          "v": [
+           0.0010353134343558544,
+           0.0004885209330718816,
+           -0.0019514710046591895
+          ],
+          "flag": "ok",
+          "w": 0.6627660659319653
+         }
+        },
+        {
+         "id": "bz-5",
+         "from": "N1",
+         "to": "N4",
+         "length": 3200.4239327085756,
+         "sigma": [
+          0.0038037533967276694,
+          0.003017668336589735,
+          0.0037316401095532315
+         ],
+         "adjusted": [
+          0.0008855674312028486,
+          0.000702543487367322,
+          0.0008686546312144569
+         ],
+         "free": {
+          "v": [
+           -0.0006793532393064218,
+           0.0006601021988661057,
+           -0.0006198456891761327
+          ],
+          "flag": "ok",
+          "w": 0.42374086686264173
+         },
+         "constrained": {
+          "v": [
+           -0.0006793528416590756,
+           0.000660102923381245,
+           -0.0006198748300876151
+          ],
+          "flag": "ok",
+          "w": 0.42374303980574946
+         }
+        },
+        {
+         "id": "bz-6",
+         "from": "N1",
+         "to": "N5",
+         "length": 3871.2193609516603,
+         "sigma": [
+          0.0038037533967276694,
+          0.003017668336589735,
+          0.0037316401095532315
+         ],
+         "adjusted": [
+          0.0009650294453831242,
+          0.0007655096832222454,
+          0.0009466458167257825
+         ],
+         "free": {
+          "v": [
+           0.0003351591402591955,
+           -0.00038263635422609464,
+           0.0013772776084464656
+          ],
+          "flag": "ok",
+          "w": 0.3456257697903359
+         },
+         "constrained": {
+          "v": [
+           0.0005539621564300354,
+           -0.0003929242524314151,
+           0.001366280853776522
+          ],
+          "flag": "ok",
+          "w": 0.42513206280131094
+         }
+        },
+        {
+         "id": "bz-7",
+         "from": "BN1",
+         "to": "N5",
+         "length": 6040.675422963905,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.000990350307892648,
+          0.000785242773333168,
+          0.0009711066471470251
+         ],
+         "free": {
+          "v": [
+           -0.0003506950407080907,
+           0.0006244611261347887,
+           -0.0013751502508045255
+          ],
+          "flag": "ok",
+          "w": 0.40036084090278123
+         },
+         "constrained": {
+          "v": [
+           -0.0007883099517987072,
+           0.0006448026670587503,
+           -0.001351950296910569
+          ],
+          "flag": "ok",
+          "w": 0.5470510888269611
+         }
+        },
+        {
+         "id": "bz-8",
+         "from": "N4",
+         "to": "N5",
+         "length": 3816.4291135091585,
+         "sigma": [
+          0.0038025595312270737,
+          0.003017828379773414,
+          0.00373272727127342
+         ],
+         "adjusted": [
+          0.0009649337179326795,
+          0.0007655224706224773,
+          0.0009467328299697746
+         ],
+         "free": {
+          "v": [
+           1.493292912490169e-05,
+           -0.00024215519528552376,
+           -2.6610093320466444e-06
+          ],
+          "flag": "ok",
+          "w": 0.12366322228352097
+         },
+         "constrained": {
+          "v": [
+           0.00023373611965374255,
+           -0.0002524832290103855,
+           -1.3580056675263267e-05
+          ],
+          "flag": "ok",
+          "w": 0.13606768345294273
+         }
+        }
+       ],
+       "stations": [
+        {
+         "mark": "BN1",
+         "known": "bn-1",
+         "held": true,
+         "lat": 39.753290162163765,
+         "lon": 30.4728051030829,
+         "height": 879.5390165727586,
+         "sigma": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        {
+         "mark": "N1",
+         "held": false,
+         "lat": 39.776713858105055,
+         "lon": 30.52063961857309,
+         "height": 845.19274055399,
+         "sigma": [
+          0.0005188886619373994,
+          0.0005188886235631294,
+          0.0010377766126668342
+         ],
+         "point": "kn-1",
+         "x": 544604.5187618913,
+         "y": 4404866.510770198,
+         "z": 845.2346212053671,
+         "dx": -4.071742296218872e-05,
+         "dy": 0.00047718919813632965,
+         "dz": 0.0006212053672243201
+        },
+        {
+         "mark": "BN2",
+         "known": "bn-2",
+         "held": true,
+         "lat": 39.750590609333315,
+         "lon": 30.562639353145133,
+         "height": 828.6176097178832,
+         "sigma": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        {
+         "mark": "N4",
+         "held": false,
+         "lat": 39.801927309179305,
+         "lon": 30.53873618209807,
+         "height": 860.7471415670589,
+         "sigma": [
+          0.0005188890142285702,
+          0.0005188886936902522,
+          0.0010377763754006988
+         ],
+         "x": 546138.0414500943,
+         "y": 4407675.168357118,
+         "z": 860.7889833133668
+        },
+        {
+         "mark": "N5",
+         "held": false,
+         "lat": 39.805077829525295,
+         "lon": 30.494368999581354,
+         "height": 809.8682152060792,
+         "sigma": [
+          0.0006059317654129399,
+          0.0006059313547074548,
+          0.001211861889334785
+         ],
+         "x": 542336.4723411193,
+         "y": 4408003.046534973,
+         "z": 809.9101523412392
+        }
+       ],
+       "free": {
+        "held": [
+         "BN1"
+        ],
+        "dof": 12,
+        "omega": 1.6258869867295607,
+        "limit": 3.29,
+        "blunders": 0,
+        "m0": 0.368090453866252,
+        "chi2": 21.02606981748307,
+        "passed": true
+       },
+       "constrained": {
+        "held": [
+         "BN1",
+         "BN2"
+        ],
+        "dof": 15,
+        "omega": 2.056055302992022,
+        "limit": 3.29,
+        "blunders": 0,
+        "m0": 0.3702301359057653,
+        "chi2": 24.99579013972862,
+        "passed": true
+       },
+       "acceptable": true,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Bilinen noktaların epokları farklı (BN1 2005,0'da, BN2 2026,84'te): ikisi de ölçme epokuna taşınır, ağ uyuşur",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "GNSS arşivi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "heights": {
+      "kind": "ellipsoidal"
+     },
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-11",
+        "layers": [
+         "gnss"
+        ]
+       }
+      ]
+     },
+     "mapSurvey": {
+      "campaigns": [
+       {
+        "id": "kp-1",
+        "name": "GNSS ölçümü 2026-11",
+        "work": "is-1",
+        "epoch": 2005.0,
+        "velocity": {
+         "name": "Hız alanı (sentetik)",
+         "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+        }
+       }
+      ],
+      "sessions": [
+       {
+        "id": "os-1",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-03T09:30:00.0000000Z",
+        "end": "2026-11-03T10:30:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "TRIMBLE R10",
+         "serial": "5123K40001",
+         "firmware": "5.52"
+        },
+        "antenna": {
+         "height": 1.532,
+         "serial": "1441112222",
+         "type": "TRM57971.00     NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun1.26o",
+         "revision": "ea641847939290e541c3f783a9b2de0e6d9fc01d1cd409b5635fba77929e3722",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "3.05",
+         "markerNumber": "N1-2026",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 30.0
+        }
+       },
+       {
+        "id": "os-2",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-04T08:00:00.0000000Z",
+        "end": "2026-11-04T09:00:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "LEICA GS18",
+         "serial": "1830456",
+         "firmware": "8.10"
+        },
+        "antenna": {
+         "height": 1.61,
+         "serial": "1830456",
+         "type": "LEIGS18         NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun2.26o",
+         "revision": "e3b57ae5771c8eec559300a8551526c70da4d195c3b8d1409903dfe931d9ba82",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "2.11",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 15.0
+        }
+       },
+       {
+        "id": "os-3",
+        "campaign": "kp-1",
+        "mark": "N2",
+        "start": "2026-11-03T09:30:00.00Z",
+        "end": "2026-11-03T09:30:11.00Z",
+        "timeSystem": "utc",
+        "antenna": {
+         "type": "Jalon 2 m",
+         "height": 2.0
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n2.nmea",
+         "revision": "7a44f81440f26018cdcb410353a5dbe3f9cc1cac7a69fc105246b24dedf61b53",
+         "format": "nmea"
+        },
+        "observations": [
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.123,
+          "ellipsoidal": 886.623,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:00.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.62,
+          "line": 2
+         },
+         {
+          "kind": "gga",
+          "lat": 39.780100166666664,
+          "lon": 30.515000333333333,
+          "height": 850.131,
+          "ellipsoidal": 886.631,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:01.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.63,
+          "line": 3
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78010008333333,
+          "lon": 30.515000166666667,
+          "height": 850.17,
+          "ellipsoidal": 886.67,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:02.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.9,
+          "line": 4
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.127,
+          "ellipsoidal": 886.627,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:03.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.7,
+          "line": 5
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78009983333333,
+          "lon": 30.514999833333334,
+          "height": 850.119,
+          "ellipsoidal": 886.619,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:10.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.71,
+          "line": 7
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "time": "2026-11-03T09:30:11.00Z",
+          "fix": "RTK sabit",
+          "satellites": 12,
+          "hdop": 0.72,
+          "line": 8
+         }
+        ]
+       }
+      ],
+      "solutions": [
+       {
+        "id": "cz-1",
+        "session": "os-1",
+        "kind": "processed",
+        "lat": 39.7767123,
+        "lon": 30.5206456,
+        "height": 845.231,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 120,
+        "sigma": [
+         0.004,
+         0.003,
+         0.009
+        ],
+        "covariance": [
+         1.6e-05,
+         1e-06,
+         2e-06,
+         9e-06,
+         1e-06,
+         8.1e-05
+        ],
+        "correction": "TUSAGA-Aktif (KNY1, AFYN)",
+        "report": {
+         "path": "$fixture:map-survey/v1/rapor-n1.txt",
+         "revision": "189d30af43626b407c7ad3147b13381abeadafa4f71008be0e20d90df187369b",
+         "format": "report"
+        },
+        "recipe": "TBC 5.90; kesin efemeris (IGS); 10° maske; IGS20 ANTEX; anten 1.532 m ARP",
+        "adjust": true
+       },
+       {
+        "id": "cz-2",
+        "session": "os-2",
+        "kind": "processed",
+        "lat": 39.7767124,
+        "lon": 30.5206455,
+        "height": 846.847,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 0.0,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 240,
+        "sigma": [
+         0.005,
+         0.004,
+         0.012
+        ],
+        "adjust": true
+       },
+       {
+        "id": "cz-3",
+        "session": "os-3",
+        "kind": "receiver",
+        "lat": 39.7801,
+        "lon": 30.515000041666667,
+        "height": 886.625,
+        "srid": 4326,
+        "antennaApplied": 0.0,
+        "fix": "RTK sabit",
+        "epochs": 4,
+        "satellites": 13,
+        "hdop": 0.71,
+        "from": 0,
+        "to": 4,
+        "fixes": [
+         "RTK sabit"
+        ]
+       },
+       {
+        "id": "cz-4",
+        "session": "os-1",
+        "kind": "ppp",
+        "lat": 39.7767131,
+        "lon": 30.5206441,
+        "height": 845.412,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "sigma": [
+         0.02,
+         0.02,
+         0.05
+        ],
+        "correction": "CSRS-PPP",
+        "excluded": "Çok yollu yansıma şüphesi; 40 dakikalık veri"
+       }
+      ],
+      "points": [
+       {
+        "id": "kn-1",
+        "mark": "N1",
+        "uid": "0192f5c0-1340-7000-8000-000000000001",
+        "result": {
+         "revision": 1,
+         "solutions": [
+          "cz-1",
+          "cz-2"
+         ],
+         "method": "mean",
+         "lat": 39.77671235,
+         "lon": 30.52064555,
+         "height": 845.2339999999999,
+         "srid": 5252,
+         "epoch": 2005.0,
+         "targetEpoch": 2005.0,
+         "antenna": [
+          {
+           "session": "os-1",
+           "height": 1.532
+          },
+          {
+           "session": "os-2",
+           "height": 1.61
+          }
+         ],
+         "x": 544604.5188026087,
+         "y": 4404866.510293009,
+         "z": 845.2339999999999,
+         "chain": "complete"
+        }
+       }
+      ],
+      "uses": [
+       {
+        "id": "kb-1",
+        "operation": "Yüzey üret",
+        "uids": [
+         "0192f5c0-1340-7000-8000-000000000002"
+        ],
+        "points": [
+         {
+          "point": "kn-1",
+          "revision": 1
+         }
+        ]
+       }
+      ],
+      "baselines": [
+       {
+        "id": "bz-1",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N1",
+        "d": [
+         -3536.688454276511,
+         2674.4539372296504,
+         1977.4207466980147
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T08:00:00Z",
+        "end": "2026-11-02T09:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-2",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N1",
+        "d": [
+         241.99897956365118,
+         -4036.354143129671,
+         2240.452557216509
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T09:00:00Z",
+        "end": "2026-11-02T10:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-3",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N4",
+        "d": [
+         -5857.314516281801,
+         3105.673234809159,
+         4138.779055520129
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T10:00:00Z",
+        "end": "2026-11-02T11:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-4",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N4",
+        "d": [
+         -2078.620499916886,
+         -3605.130500649888,
+         4401.813124908456
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T11:00:00Z",
+        "end": "2026-11-02T12:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-5",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N4",
+        "d": [
+         -2320.6223254964657,
+         431.2231219522215,
+         2161.358829661327
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T12:00:00Z",
+        "end": "2026-11-02T13:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-6",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N5",
+        "d": [
+         -617.6325425434679,
+         -2976.0008028167613,
+         2397.558884497368
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T13:00:00Z",
+        "end": "2026-11-02T14:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-7",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N5",
+        "d": [
+         -4154.32008169433,
+         -301.54574497832937,
+         4374.980501455615
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T14:00:00Z",
+        "end": "2026-11-02T15:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-8",
+        "campaign": "kp-1",
+        "from": "N4",
+        "to": "N5",
+        "d": [
+         1702.9910404929328,
+         -3407.2220231168135,
+         236.20071894232
+        ],
+        "covariance": [
+         1.4459458988525862e-05,
+         4.843221006697332e-06,
+         7.941999082778689e-06,
+         9.107288129765828e-06,
+         4.6854313842904844e-06,
+         1.393325288170831e-05
+        ],
+        "start": "2026-11-02T15:00:00Z",
+        "end": "2026-11-02T16:30:00Z",
+        "adjust": true
+       }
+      ],
+      "known": [
+       {
+        "id": "bn-1",
+        "mark": "BN1",
+        "lat": 39.753288657,
+        "lon": 30.472811038,
+        "height": 879.581,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0"
+       },
+       {
+        "id": "bn-2",
+        "mark": "BN2",
+        "lat": 39.750590633,
+        "lon": 30.562639259,
+        "height": 828.6169,
+        "srid": 5252,
+        "epoch": 2026.84,
+        "source": "TUSAGA-Aktif günlük çözümü (örnek), 2026,84"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 544601.0,
+     "y": 4404865.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yuzey",
+      "name": "Yüzey",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "gnss",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "N1",
+       "Kabul": "kn-1",
+       "Revizyon": "1",
+       "Yöntem": "Ortalama",
+       "Çözüm": "cz-1, cz-2",
+       "Arazi ölçümü": "GNSS ölçümü 2026-11"
+      },
+      "p": {
+       "x": 544604.5188026087,
+       "y": 4404866.510293009
+      },
+      "z": 845.2339999999999
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yuzey",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404865.0
+      },
+      "b": {
+       "x": 544631.0,
+       "y": 4404875.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404885.0
+      },
+      "b": {
+       "x": 544611.0,
+       "y": 4404890.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 544606.0,
+       "y": 4404870.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1340-7000-8000-000000000001",
+     "0192f5c0-1340-7000-8000-000000000002",
+     "0192f5c0-1340-7000-8000-000000000003",
+     "0192f5c0-1340-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "class": "C2"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "srid": 5252,
+       "epoch": 2026.8370148401827,
+       "epochFrom": "baselines",
+       "moved": [
+        {
+         "id": "bn-1",
+         "mark": "BN1",
+         "from": 2005.0,
+         "years": 21.837014840182746,
+         "shift": [
+          -0.5166685388586171,
+          0.1697612502492801,
+          -0.042641547659720516
+         ]
+        },
+        {
+         "id": "bn-2",
+         "mark": "BN2",
+         "from": 2026.84,
+         "years": -0.002985159817171734,
+         "shift": [
+          7.052400107573232e-05,
+          -2.3203321023245982e-05,
+          5.806211999108127e-06
+         ]
+        }
+       ],
+       "known": [
+        "bn-1",
+        "bn-2"
+       ],
+       "baselines": [
+        {
+         "id": "bz-1",
+         "from": "BN1",
+         "to": "N1",
+         "length": 4855.003799632673,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.0009653175284559684,
+          0.0007653673056840513,
+          0.0009464674985416663
+         ],
+         "free": {
+          "v": [
+           -0.0001852101791069426,
+           0.0008076287907644784,
+           -0.0011525734905806558
+          ],
+          "flag": "ok",
+          "w": 0.40429386169467446
+         },
+         "constrained": {
+          "v": [
+           -0.0008539264095508644,
+           0.0008282484196180734,
+           -0.0011336658033784374
+          ],
+          "flag": "ok",
+          "w": 0.524389252337
+         },
+         "limit": 0.01728250569944901,
+         "rules": true
+        },
+        {
+         "id": "bz-2",
+         "from": "BN2",
+         "to": "N1",
+         "length": 4622.807148909405,
+         "sigma": [
+          0.0038036386161555734,
+          0.0030192054870723344,
+          0.003730513571148405
+         ],
+         "adjusted": [
+          0.0010845154275717491,
+          0.0008607734508630327,
+          0.0010636885090138438
+         ],
+         "free": {
+          "v": [
+           -0.00016011770212870033,
+           -0.0005300868423961548,
+           0.0019097658748137075
+          ],
+          "flag": "ok",
+          "w": 0.6807501522301178
+         },
+         "constrained": {
+          "v": [
+           0.0007314837838881177,
+           -0.0005584734250295409,
+           0.0018887300042425125
+          ],
+          "flag": "ok",
+          "w": 0.5083445510846937
+         },
+         "limit": 0.01693421072336411,
+         "rules": true
+        },
+        {
+         "id": "bz-3",
+         "from": "BN1",
+         "to": "N4",
+         "length": 7815.550630279839,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.0009652856298837047,
+          0.0007653715689674551,
+          0.0009464965093095186
+         ],
+         "free": {
+          "v": [
+           0.0005359052221800265,
+           -0.0014320899171014006,
+           0.0025277237406902634
+          ],
+          "flag": "ok",
+          "w": 0.7950040372647103
+         },
+         "constrained": {
+          "v": [
+           -0.00013281081811943106,
+           -0.0014114699164879483,
+           0.0025466008200983534
+          ],
+          "flag": "ok",
+          "w": 0.8035818537342959
+         },
+         "limit": 0.021723325945419758,
+         "rules": true
+        },
+        {
+         "id": "bz-4",
+         "from": "BN2",
+         "to": "N4",
+         "length": 6057.523247665434,
+         "sigma": [
+          0.0038036386161555734,
+          0.0030192054870723344,
+          0.003730513571148405
+         ],
+         "adjusted": [
+          0.0010845154275717491,
+          0.0008607734508630328,
+          0.0010636885090138438
+         ],
+         "free": {
+          "v": [
+           0.00016011770212870163,
+           0.0005300868423961562,
+           -0.0019097658748137066
+          ],
+          "flag": "ok",
+          "w": 0.6807501522301181
+         },
+         "constrained": {
+          "v": [
+           0.0010517194144091095,
+           0.0005017006299660705,
+           -0.001930832353014784
+          ],
+          "flag": "ok",
+          "w": 0.6633806893312393
+         },
+         "limit": 0.019086284871498153,
+         "rules": true
+        },
+        {
+         "id": "bz-5",
+         "from": "N1",
+         "to": "N4",
+         "length": 3200.4239327085756,
+         "sigma": [
+          0.0038037533967276694,
+          0.003017668336589735,
+          0.0037316401095532315
+         ],
+         "adjusted": [
+          0.0008855674312028486,
+          0.000702543487367322,
+          0.0008686546312144569
+         ],
+         "free": {
+          "v": [
+           -0.0006793532407658139,
+           0.0006601021984159761,
+           -0.0006198456880559962
+          ],
+          "flag": "ok",
+          "w": 0.4237408668626412
+         },
+         "constrained": {
+          "v": [
+           -0.0006793530308996809,
+           0.0006601025825248711,
+           -0.0006198762954939186
+          ],
+          "flag": "ok",
+          "w": 0.42374322535129305
+         },
+         "limit": 0.014800635899062864,
+         "rules": true
+        },
+        {
+         "id": "bz-6",
+         "from": "N1",
+         "to": "N5",
+         "length": 3871.2193609516603,
+         "sigma": [
+          0.0038037533967276694,
+          0.003017668336589735,
+          0.0037316401095532315
+         ],
+         "adjusted": [
+          0.0009650294453831242,
+          0.0007655096832222454,
+          0.0009466458167257825
+         ],
+         "free": {
+          "v": [
+           0.00033515914237560547,
+           -0.0003826363544460048,
+           0.0013772776078703438
+          ],
+          "flag": "ok",
+          "w": 0.3456257697903356
+         },
+         "constrained": {
+          "v": [
+           0.0005580624972658626,
+           -0.0003896278775037239,
+           0.0013714364966585506
+          ],
+          "flag": "ok",
+          "w": 0.42743210994807385
+         },
+         "limit": 0.01580682904142749,
+         "rules": true
+        },
+        {
+         "id": "bz-7",
+         "from": "BN1",
+         "to": "N5",
+         "length": 6040.675422963905,
+         "sigma": [
+          0.0038055519150739818,
+          0.003016649544224242,
+          0.0037306299935813024
+         ],
+         "adjusted": [
+          0.000990350307892648,
+          0.000785242773333168,
+          0.0009711066471470251
+         ],
+         "free": {
+          "v": [
+           -0.0003506950430730815,
+           0.0006244611263369229,
+           -0.0013751502501096087
+          ],
+          "flag": "ok",
+          "w": 0.40036084090278146
+         },
+         "constrained": {
+          "v": [
+           -0.0007965080098368255,
+           0.000638205849502361,
+           -0.001362223886294987
+          ],
+          "flag": "ok",
+          "w": 0.5515313701311311
+         },
+         "limit": 0.01906101313444586,
+         "rules": true
+        },
+        {
+         "id": "bz-8",
+         "from": "N4",
+         "to": "N5",
+         "length": 3816.4291135091585,
+         "sigma": [
+          0.0038025595312270737,
+          0.003017828379773414,
+          0.00373272727127342
+         ],
+         "adjusted": [
+          0.0009649337179326795,
+          0.0007655224706224773,
+          0.0009467328299697746
+         ],
+         "free": {
+          "v": [
+           1.4932929373370687e-05,
+           -0.0002421551952688975,
+           -2.6610094506414485e-06
+          ],
+          "flag": "ok",
+          "w": 0.12366322228352056
+         },
+         "constrained": {
+          "v": [
+           0.00023783606054339262,
+           -0.0002491896121888881,
+           -8.42050163540489e-06
+          ],
+          "flag": "ok",
+          "w": 0.13836765604189735
+         },
+         "limit": 0.015724643670263737,
+         "rules": true
+        }
+       ],
+       "stations": [
+        {
+         "mark": "BN1",
+         "known": "bn-1",
+         "held": true,
+         "lat": 39.75329018575738,
+         "lon": 30.472805010052433,
+         "height": 879.5383584806696,
+         "sigma": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        {
+         "mark": "N1",
+         "held": false,
+         "lat": 39.776713881650466,
+         "lon": 30.52063952538839,
+         "height": 845.1920629767701,
+         "sigma": [
+          0.0005208443070724373,
+          0.0005208442685531896,
+          0.0010416879002559626
+         ],
+         "point": "kn-1",
+         "x": 544604.5187434151,
+         "y": 4404866.510767103,
+         "z": 845.2346001137048,
+         "dx": -5.919358227401972e-05,
+         "dy": 0.0004740944132208824,
+         "dz": 0.0006001137048770033,
+         "rules": true
+        },
+        {
+         "mark": "BN2",
+         "known": "bn-2",
+         "held": true,
+         "lat": 39.7505906327911,
+         "lon": 30.562639259822777,
+         "height": 828.6169058103114,
+         "sigma": [
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        {
+         "mark": "N4",
+         "held": false,
+         "lat": 39.80192733274177,
+         "lon": 30.538736088887667,
+         "height": 860.7464632038027,
+         "sigma": [
+          0.0005208446606916195,
+          0.0005208443389441837,
+          0.0010416876620956792
+         ],
+         "x": 546138.041428146,
+         "y": 4407675.168358459,
+         "z": 860.7889608237892,
+         "rules": true
+        },
+        {
+         "mark": "N5",
+         "held": false,
+         "lat": 39.8050778530823,
+         "lon": 30.494368906394016,
+         "height": 809.8675468955189,
+         "sigma": [
+          0.0006082154682498855,
+          0.0006082150559962513,
+          0.0012164292888206558
+         ],
+         "x": 542336.4723273445,
+         "y": 4408003.046536063,
+         "z": 809.9101414000615,
+         "rules": true
+        }
+       ],
+       "free": {
+        "held": [
+         "BN1"
+        ],
+        "dof": 12,
+        "omega": 1.6258869867295607,
+        "limit": 3.29,
+        "blunders": 0,
+        "m0": 0.368090453866252,
+        "chi2": 21.02606981748307,
+        "passed": true
+       },
+       "constrained": {
+        "held": [
+         "BN1",
+         "BN2"
+        ],
+        "dof": 15,
+        "omega": 2.0715826871114804,
+        "limit": 3.29,
+        "blunders": 0,
+        "m0": 0.3716255003011751,
+        "chi2": 24.99579013972862,
+        "passed": true
+       },
+       "rules": {
+        "package": "bohhbuy-2018-gnss",
+        "release": 1,
+        "class": "C2",
+        "articles": "Madde 20(1)(a), (b)",
+        "baselineOf": "processed",
+        "passed": true,
+        "baselines": 0,
+        "stations": 0
        },
        "acceptable": true,
        "revision": "$current"
@@ -17985,6 +21403,7 @@
       "output": {
        "srid": 5252,
        "epoch": 2005.0,
+       "epochFrom": "known",
        "known": [
         "bn-1",
         "bn-2"
@@ -22076,6 +25495,703 @@
    ]
   },
   {
+   "name": "Ölçme epoku 1900–2100 dışında",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "GNSS arşivi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "heights": {
+      "kind": "ellipsoidal"
+     },
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-11",
+        "layers": [
+         "gnss"
+        ]
+       }
+      ]
+     },
+     "mapSurvey": {
+      "campaigns": [
+       {
+        "id": "kp-1",
+        "name": "GNSS ölçümü 2026-11",
+        "work": "is-1",
+        "epoch": 2005.0
+       }
+      ],
+      "sessions": [
+       {
+        "id": "os-1",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-03T09:30:00.0000000Z",
+        "end": "2026-11-03T10:30:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "TRIMBLE R10",
+         "serial": "5123K40001",
+         "firmware": "5.52"
+        },
+        "antenna": {
+         "height": 1.532,
+         "serial": "1441112222",
+         "type": "TRM57971.00     NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun1.26o",
+         "revision": "ea641847939290e541c3f783a9b2de0e6d9fc01d1cd409b5635fba77929e3722",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "3.05",
+         "markerNumber": "N1-2026",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 30.0
+        }
+       },
+       {
+        "id": "os-2",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-04T08:00:00.0000000Z",
+        "end": "2026-11-04T09:00:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "LEICA GS18",
+         "serial": "1830456",
+         "firmware": "8.10"
+        },
+        "antenna": {
+         "height": 1.61,
+         "serial": "1830456",
+         "type": "LEIGS18         NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun2.26o",
+         "revision": "e3b57ae5771c8eec559300a8551526c70da4d195c3b8d1409903dfe931d9ba82",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "2.11",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 15.0
+        }
+       },
+       {
+        "id": "os-3",
+        "campaign": "kp-1",
+        "mark": "N2",
+        "start": "2026-11-03T09:30:00.00Z",
+        "end": "2026-11-03T09:30:11.00Z",
+        "timeSystem": "utc",
+        "antenna": {
+         "type": "Jalon 2 m",
+         "height": 2.0
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n2.nmea",
+         "revision": "7a44f81440f26018cdcb410353a5dbe3f9cc1cac7a69fc105246b24dedf61b53",
+         "format": "nmea"
+        },
+        "observations": [
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.123,
+          "ellipsoidal": 886.623,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:00.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.62,
+          "line": 2
+         },
+         {
+          "kind": "gga",
+          "lat": 39.780100166666664,
+          "lon": 30.515000333333333,
+          "height": 850.131,
+          "ellipsoidal": 886.631,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:01.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.63,
+          "line": 3
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78010008333333,
+          "lon": 30.515000166666667,
+          "height": 850.17,
+          "ellipsoidal": 886.67,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:02.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.9,
+          "line": 4
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.127,
+          "ellipsoidal": 886.627,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:03.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.7,
+          "line": 5
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78009983333333,
+          "lon": 30.514999833333334,
+          "height": 850.119,
+          "ellipsoidal": 886.619,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:10.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.71,
+          "line": 7
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "time": "2026-11-03T09:30:11.00Z",
+          "fix": "RTK sabit",
+          "satellites": 12,
+          "hdop": 0.72,
+          "line": 8
+         }
+        ]
+       }
+      ],
+      "solutions": [
+       {
+        "id": "cz-1",
+        "session": "os-1",
+        "kind": "processed",
+        "lat": 39.7767123,
+        "lon": 30.5206456,
+        "height": 845.231,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 120,
+        "sigma": [
+         0.004,
+         0.003,
+         0.009
+        ],
+        "covariance": [
+         1.6e-05,
+         1e-06,
+         2e-06,
+         9e-06,
+         1e-06,
+         8.1e-05
+        ],
+        "correction": "TUSAGA-Aktif (KNY1, AFYN)",
+        "report": {
+         "path": "$fixture:map-survey/v1/rapor-n1.txt",
+         "revision": "189d30af43626b407c7ad3147b13381abeadafa4f71008be0e20d90df187369b",
+         "format": "report"
+        },
+        "recipe": "TBC 5.90; kesin efemeris (IGS); 10° maske; IGS20 ANTEX; anten 1.532 m ARP",
+        "adjust": true
+       },
+       {
+        "id": "cz-2",
+        "session": "os-2",
+        "kind": "processed",
+        "lat": 39.7767124,
+        "lon": 30.5206455,
+        "height": 846.847,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 0.0,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 240,
+        "sigma": [
+         0.005,
+         0.004,
+         0.012
+        ],
+        "adjust": true
+       },
+       {
+        "id": "cz-3",
+        "session": "os-3",
+        "kind": "receiver",
+        "lat": 39.7801,
+        "lon": 30.515000041666667,
+        "height": 886.625,
+        "srid": 4326,
+        "antennaApplied": 0.0,
+        "fix": "RTK sabit",
+        "epochs": 4,
+        "satellites": 13,
+        "hdop": 0.71,
+        "from": 0,
+        "to": 4,
+        "fixes": [
+         "RTK sabit"
+        ]
+       },
+       {
+        "id": "cz-4",
+        "session": "os-1",
+        "kind": "ppp",
+        "lat": 39.7767131,
+        "lon": 30.5206441,
+        "height": 845.412,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "sigma": [
+         0.02,
+         0.02,
+         0.05
+        ],
+        "correction": "CSRS-PPP",
+        "excluded": "Çok yollu yansıma şüphesi; 40 dakikalık veri"
+       }
+      ],
+      "points": [
+       {
+        "id": "kn-1",
+        "mark": "N1",
+        "uid": "0192f5c0-1340-7000-8000-000000000001",
+        "result": {
+         "revision": 1,
+         "solutions": [
+          "cz-1",
+          "cz-2"
+         ],
+         "method": "mean",
+         "lat": 39.77671235,
+         "lon": 30.52064555,
+         "height": 845.2339999999999,
+         "srid": 5252,
+         "epoch": 2005.0,
+         "targetEpoch": 2005.0,
+         "antenna": [
+          {
+           "session": "os-1",
+           "height": 1.532
+          },
+          {
+           "session": "os-2",
+           "height": 1.61
+          }
+         ],
+         "x": 544604.5188026087,
+         "y": 4404866.510293009,
+         "z": 845.2339999999999,
+         "chain": "complete"
+        }
+       }
+      ],
+      "uses": [
+       {
+        "id": "kb-1",
+        "operation": "Yüzey üret",
+        "uids": [
+         "0192f5c0-1340-7000-8000-000000000002"
+        ],
+        "points": [
+         {
+          "point": "kn-1",
+          "revision": 1
+         }
+        ]
+       }
+      ],
+      "baselines": [
+       {
+        "id": "bz-1",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N1",
+        "d": [
+         -3536.688454276511,
+         2674.4539372296504,
+         1977.4207466980147
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-2",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N1",
+        "d": [
+         241.99897956365118,
+         -4036.354143129671,
+         2240.452557216509
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-3",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N4",
+        "d": [
+         -5857.314516281801,
+         3105.673234809159,
+         4138.779055520129
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-4",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N4",
+        "d": [
+         -2078.620499916886,
+         -3605.130500649888,
+         4401.813124908456
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-5",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N4",
+        "d": [
+         -2320.6223254964657,
+         431.2231219522215,
+         2161.358829661327
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-6",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N5",
+        "d": [
+         -617.6325425434679,
+         -2976.0008028167613,
+         2397.558884497368
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-7",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N5",
+        "d": [
+         -4154.32008169433,
+         -301.54574497832937,
+         4374.980501455615
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "adjust": true
+       },
+       {
+        "id": "bz-8",
+        "campaign": "kp-1",
+        "from": "N4",
+        "to": "N5",
+        "d": [
+         1702.9910404929328,
+         -3407.2220231168135,
+         236.20071894232
+        ],
+        "covariance": [
+         1.4459458988525862e-05,
+         4.843221006697332e-06,
+         7.941999082778689e-06,
+         9.107288129765828e-06,
+         4.6854313842904844e-06,
+         1.393325288170831e-05
+        ],
+        "adjust": true
+       }
+      ],
+      "known": [
+       {
+        "id": "bn-1",
+        "mark": "BN1",
+        "lat": 39.753288657,
+        "lon": 30.472811038,
+        "height": 879.581,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0"
+       },
+       {
+        "id": "bn-2",
+        "mark": "BN2",
+        "lat": 39.750589104,
+        "lon": 30.562645279,
+        "height": 828.6594,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "C1 noktası (örnek), TUREF, 2005,0"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 544601.0,
+     "y": 4404865.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yuzey",
+      "name": "Yüzey",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "gnss",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "N1",
+       "Kabul": "kn-1",
+       "Revizyon": "1",
+       "Yöntem": "Ortalama",
+       "Çözüm": "cz-1, cz-2",
+       "Arazi ölçümü": "GNSS ölçümü 2026-11"
+      },
+      "p": {
+       "x": 544604.5188026087,
+       "y": 4404866.510293009
+      },
+      "z": 845.2339999999999
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yuzey",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404865.0
+      },
+      "b": {
+       "x": 544631.0,
+       "y": 4404875.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404885.0
+      },
+      "b": {
+       "x": 544611.0,
+       "y": 4404890.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 544606.0,
+       "y": 4404870.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1340-7000-8000-000000000001",
+     "0192f5c0-1340-7000-8000-000000000002",
+     "0192f5c0-1340-7000-8000-000000000003",
+     "0192f5c0-1340-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "epoch": 1800.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_epoch",
+       "message": "Ölçme epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2026.84 gibi); yazılan 1800.",
+       "path": "epoch"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
    "name": "Dengelemeye girecek baz yok",
    "setup": {
     "format": "kentos.document",
@@ -24141,7 +28257,7 @@
    ]
   },
   {
-   "name": "Bilinen noktaların epokları farklı",
+   "name": "Bilinen noktaların epokları farklı, bazların gözlem zamanı yok",
    "setup": {
     "format": "kentos.document",
     "version": 2,
@@ -24823,7 +28939,1429 @@
       "status": "failed",
       "error": {
        "code": "known_differ",
-       "message": "“bn-1” ile “bn-2” bilinen noktaları aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin."
+       "message": "“bn-1” ile “bn-2” bilinen noktaları aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin ya da bazların gözlem zamanlarını verin."
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinen noktalar 2005,0'da, ölçme epoku bazlardan, arazi ölçümünün hız ızgarası yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "GNSS arşivi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "heights": {
+      "kind": "ellipsoidal"
+     },
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-11",
+        "layers": [
+         "gnss"
+        ]
+       }
+      ]
+     },
+     "mapSurvey": {
+      "campaigns": [
+       {
+        "id": "kp-1",
+        "name": "GNSS ölçümü 2026-11",
+        "work": "is-1",
+        "epoch": 2005.0
+       }
+      ],
+      "sessions": [
+       {
+        "id": "os-1",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-03T09:30:00.0000000Z",
+        "end": "2026-11-03T10:30:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "TRIMBLE R10",
+         "serial": "5123K40001",
+         "firmware": "5.52"
+        },
+        "antenna": {
+         "height": 1.532,
+         "serial": "1441112222",
+         "type": "TRM57971.00     NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun1.26o",
+         "revision": "ea641847939290e541c3f783a9b2de0e6d9fc01d1cd409b5635fba77929e3722",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "3.05",
+         "markerNumber": "N1-2026",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 30.0
+        }
+       },
+       {
+        "id": "os-2",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-04T08:00:00.0000000Z",
+        "end": "2026-11-04T09:00:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "LEICA GS18",
+         "serial": "1830456",
+         "firmware": "8.10"
+        },
+        "antenna": {
+         "height": 1.61,
+         "serial": "1830456",
+         "type": "LEIGS18         NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun2.26o",
+         "revision": "e3b57ae5771c8eec559300a8551526c70da4d195c3b8d1409903dfe931d9ba82",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "2.11",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 15.0
+        }
+       },
+       {
+        "id": "os-3",
+        "campaign": "kp-1",
+        "mark": "N2",
+        "start": "2026-11-03T09:30:00.00Z",
+        "end": "2026-11-03T09:30:11.00Z",
+        "timeSystem": "utc",
+        "antenna": {
+         "type": "Jalon 2 m",
+         "height": 2.0
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n2.nmea",
+         "revision": "7a44f81440f26018cdcb410353a5dbe3f9cc1cac7a69fc105246b24dedf61b53",
+         "format": "nmea"
+        },
+        "observations": [
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.123,
+          "ellipsoidal": 886.623,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:00.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.62,
+          "line": 2
+         },
+         {
+          "kind": "gga",
+          "lat": 39.780100166666664,
+          "lon": 30.515000333333333,
+          "height": 850.131,
+          "ellipsoidal": 886.631,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:01.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.63,
+          "line": 3
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78010008333333,
+          "lon": 30.515000166666667,
+          "height": 850.17,
+          "ellipsoidal": 886.67,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:02.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.9,
+          "line": 4
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.127,
+          "ellipsoidal": 886.627,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:03.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.7,
+          "line": 5
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78009983333333,
+          "lon": 30.514999833333334,
+          "height": 850.119,
+          "ellipsoidal": 886.619,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:10.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.71,
+          "line": 7
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "time": "2026-11-03T09:30:11.00Z",
+          "fix": "RTK sabit",
+          "satellites": 12,
+          "hdop": 0.72,
+          "line": 8
+         }
+        ]
+       }
+      ],
+      "solutions": [
+       {
+        "id": "cz-1",
+        "session": "os-1",
+        "kind": "processed",
+        "lat": 39.7767123,
+        "lon": 30.5206456,
+        "height": 845.231,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 120,
+        "sigma": [
+         0.004,
+         0.003,
+         0.009
+        ],
+        "covariance": [
+         1.6e-05,
+         1e-06,
+         2e-06,
+         9e-06,
+         1e-06,
+         8.1e-05
+        ],
+        "correction": "TUSAGA-Aktif (KNY1, AFYN)",
+        "report": {
+         "path": "$fixture:map-survey/v1/rapor-n1.txt",
+         "revision": "189d30af43626b407c7ad3147b13381abeadafa4f71008be0e20d90df187369b",
+         "format": "report"
+        },
+        "recipe": "TBC 5.90; kesin efemeris (IGS); 10° maske; IGS20 ANTEX; anten 1.532 m ARP",
+        "adjust": true
+       },
+       {
+        "id": "cz-2",
+        "session": "os-2",
+        "kind": "processed",
+        "lat": 39.7767124,
+        "lon": 30.5206455,
+        "height": 846.847,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 0.0,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 240,
+        "sigma": [
+         0.005,
+         0.004,
+         0.012
+        ],
+        "adjust": true
+       },
+       {
+        "id": "cz-3",
+        "session": "os-3",
+        "kind": "receiver",
+        "lat": 39.7801,
+        "lon": 30.515000041666667,
+        "height": 886.625,
+        "srid": 4326,
+        "antennaApplied": 0.0,
+        "fix": "RTK sabit",
+        "epochs": 4,
+        "satellites": 13,
+        "hdop": 0.71,
+        "from": 0,
+        "to": 4,
+        "fixes": [
+         "RTK sabit"
+        ]
+       },
+       {
+        "id": "cz-4",
+        "session": "os-1",
+        "kind": "ppp",
+        "lat": 39.7767131,
+        "lon": 30.5206441,
+        "height": 845.412,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "sigma": [
+         0.02,
+         0.02,
+         0.05
+        ],
+        "correction": "CSRS-PPP",
+        "excluded": "Çok yollu yansıma şüphesi; 40 dakikalık veri"
+       }
+      ],
+      "points": [
+       {
+        "id": "kn-1",
+        "mark": "N1",
+        "uid": "0192f5c0-1340-7000-8000-000000000001",
+        "result": {
+         "revision": 1,
+         "solutions": [
+          "cz-1",
+          "cz-2"
+         ],
+         "method": "mean",
+         "lat": 39.77671235,
+         "lon": 30.52064555,
+         "height": 845.2339999999999,
+         "srid": 5252,
+         "epoch": 2005.0,
+         "targetEpoch": 2005.0,
+         "antenna": [
+          {
+           "session": "os-1",
+           "height": 1.532
+          },
+          {
+           "session": "os-2",
+           "height": 1.61
+          }
+         ],
+         "x": 544604.5188026087,
+         "y": 4404866.510293009,
+         "z": 845.2339999999999,
+         "chain": "complete"
+        }
+       }
+      ],
+      "uses": [
+       {
+        "id": "kb-1",
+        "operation": "Yüzey üret",
+        "uids": [
+         "0192f5c0-1340-7000-8000-000000000002"
+        ],
+        "points": [
+         {
+          "point": "kn-1",
+          "revision": 1
+         }
+        ]
+       }
+      ],
+      "baselines": [
+       {
+        "id": "bz-1",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N1",
+        "d": [
+         -3536.688454276511,
+         2674.4539372296504,
+         1977.4207466980147
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T08:00:00Z",
+        "end": "2026-11-02T09:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-2",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N1",
+        "d": [
+         241.99897956365118,
+         -4036.354143129671,
+         2240.452557216509
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T09:00:00Z",
+        "end": "2026-11-02T10:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-3",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N4",
+        "d": [
+         -5857.314516281801,
+         3105.673234809159,
+         4138.779055520129
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T10:00:00Z",
+        "end": "2026-11-02T11:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-4",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N4",
+        "d": [
+         -2078.620499916886,
+         -3605.130500649888,
+         4401.813124908456
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T11:00:00Z",
+        "end": "2026-11-02T12:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-5",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N4",
+        "d": [
+         -2320.6223254964657,
+         431.2231219522215,
+         2161.358829661327
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T12:00:00Z",
+        "end": "2026-11-02T13:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-6",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N5",
+        "d": [
+         -617.6325425434679,
+         -2976.0008028167613,
+         2397.558884497368
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T13:00:00Z",
+        "end": "2026-11-02T14:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-7",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N5",
+        "d": [
+         -4154.32008169433,
+         -301.54574497832937,
+         4374.980501455615
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T14:00:00Z",
+        "end": "2026-11-02T15:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-8",
+        "campaign": "kp-1",
+        "from": "N4",
+        "to": "N5",
+        "d": [
+         1702.9910404929328,
+         -3407.2220231168135,
+         236.20071894232
+        ],
+        "covariance": [
+         1.4459458988525862e-05,
+         4.843221006697332e-06,
+         7.941999082778689e-06,
+         9.107288129765828e-06,
+         4.6854313842904844e-06,
+         1.393325288170831e-05
+        ],
+        "start": "2026-11-02T15:00:00Z",
+        "end": "2026-11-02T16:30:00Z",
+        "adjust": true
+       }
+      ],
+      "known": [
+       {
+        "id": "bn-1",
+        "mark": "BN1",
+        "lat": 39.753288657,
+        "lon": 30.472811038,
+        "height": 879.581,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0"
+       },
+       {
+        "id": "bn-2",
+        "mark": "BN2",
+        "lat": 39.750589104,
+        "lon": 30.562645279,
+        "height": 828.6594,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "C1 noktası (örnek), TUREF, 2005,0"
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 544601.0,
+     "y": 4404865.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yuzey",
+      "name": "Yüzey",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "gnss",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "N1",
+       "Kabul": "kn-1",
+       "Revizyon": "1",
+       "Yöntem": "Ortalama",
+       "Çözüm": "cz-1, cz-2",
+       "Arazi ölçümü": "GNSS ölçümü 2026-11"
+      },
+      "p": {
+       "x": 544604.5188026087,
+       "y": 4404866.510293009
+      },
+      "z": 845.2339999999999
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yuzey",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404865.0
+      },
+      "b": {
+       "x": 544631.0,
+       "y": 4404875.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404885.0
+      },
+      "b": {
+       "x": 544611.0,
+       "y": 4404890.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 544606.0,
+       "y": 4404870.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1340-7000-8000-000000000001",
+     "0192f5c0-1340-7000-8000-000000000002",
+     "0192f5c0-1340-7000-8000-000000000003",
+     "0192f5c0-1340-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "epoch_unsupported",
+       "message": "“bn-1” bilinen noktası 2005,00 epokunda, ağın ölçme epoku 2026,84: Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin."
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ölçme epoku olan ağda epoku olmayan bilinen nokta",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "GNSS arşivi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "heights": {
+      "kind": "ellipsoidal"
+     },
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-11",
+        "layers": [
+         "gnss"
+        ]
+       }
+      ]
+     },
+     "mapSurvey": {
+      "campaigns": [
+       {
+        "id": "kp-1",
+        "name": "GNSS ölçümü 2026-11",
+        "work": "is-1",
+        "epoch": 2005.0,
+        "velocity": {
+         "name": "Hız alanı (sentetik)",
+         "sha256": "b6eadcc61ea41f0c1371642268a45a90a84358f2248c7f7375bae41c587d8802"
+        }
+       }
+      ],
+      "sessions": [
+       {
+        "id": "os-1",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-03T09:30:00.0000000Z",
+        "end": "2026-11-03T10:30:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "TRIMBLE R10",
+         "serial": "5123K40001",
+         "firmware": "5.52"
+        },
+        "antenna": {
+         "height": 1.532,
+         "serial": "1441112222",
+         "type": "TRM57971.00     NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun1.26o",
+         "revision": "ea641847939290e541c3f783a9b2de0e6d9fc01d1cd409b5635fba77929e3722",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "3.05",
+         "markerNumber": "N1-2026",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 30.0
+        }
+       },
+       {
+        "id": "os-2",
+        "campaign": "kp-1",
+        "mark": "N1",
+        "start": "2026-11-04T08:00:00.0000000Z",
+        "end": "2026-11-04T09:00:00.0000000Z",
+        "timeSystem": "gps",
+        "receiver": {
+         "type": "LEICA GS18",
+         "serial": "1830456",
+         "firmware": "8.10"
+        },
+        "antenna": {
+         "height": 1.61,
+         "serial": "1830456",
+         "type": "LEIGS18         NONE"
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n1-gun2.26o",
+         "revision": "e3b57ae5771c8eec559300a8551526c70da4d195c3b8d1409903dfe931d9ba82",
+         "format": "rinex"
+        },
+        "rinex": {
+         "version": "2.11",
+         "approximate": [
+          4194423.0,
+          2466101.5,
+          4055712.25
+         ],
+         "interval": 15.0
+        }
+       },
+       {
+        "id": "os-3",
+        "campaign": "kp-1",
+        "mark": "N2",
+        "start": "2026-11-03T09:30:00.00Z",
+        "end": "2026-11-03T09:30:11.00Z",
+        "timeSystem": "utc",
+        "antenna": {
+         "type": "Jalon 2 m",
+         "height": 2.0
+        },
+        "file": {
+         "path": "$fixture:map-survey/v1/n2.nmea",
+         "revision": "7a44f81440f26018cdcb410353a5dbe3f9cc1cac7a69fc105246b24dedf61b53",
+         "format": "nmea"
+        },
+        "observations": [
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.123,
+          "ellipsoidal": 886.623,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:00.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.62,
+          "line": 2
+         },
+         {
+          "kind": "gga",
+          "lat": 39.780100166666664,
+          "lon": 30.515000333333333,
+          "height": 850.131,
+          "ellipsoidal": 886.631,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:01.00Z",
+          "fix": "RTK sabit",
+          "satellites": 14,
+          "hdop": 0.63,
+          "line": 3
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78010008333333,
+          "lon": 30.515000166666667,
+          "height": 850.17,
+          "ellipsoidal": 886.67,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:02.00Z",
+          "fix": "RTK kayan",
+          "satellites": 12,
+          "hdop": 0.9,
+          "line": 4
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "height": 850.127,
+          "ellipsoidal": 886.627,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:03.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.7,
+          "line": 5
+         },
+         {
+          "kind": "gga",
+          "lat": 39.78009983333333,
+          "lon": 30.514999833333334,
+          "height": 850.119,
+          "ellipsoidal": 886.619,
+          "geoid": 36.5,
+          "time": "2026-11-03T09:30:10.00Z",
+          "fix": "RTK sabit",
+          "satellites": 13,
+          "hdop": 0.71,
+          "line": 7
+         },
+         {
+          "kind": "gga",
+          "lat": 39.7801,
+          "lon": 30.515,
+          "time": "2026-11-03T09:30:11.00Z",
+          "fix": "RTK sabit",
+          "satellites": 12,
+          "hdop": 0.72,
+          "line": 8
+         }
+        ]
+       }
+      ],
+      "solutions": [
+       {
+        "id": "cz-1",
+        "session": "os-1",
+        "kind": "processed",
+        "lat": 39.7767123,
+        "lon": 30.5206456,
+        "height": 845.231,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 120,
+        "sigma": [
+         0.004,
+         0.003,
+         0.009
+        ],
+        "covariance": [
+         1.6e-05,
+         1e-06,
+         2e-06,
+         9e-06,
+         1e-06,
+         8.1e-05
+        ],
+        "correction": "TUSAGA-Aktif (KNY1, AFYN)",
+        "report": {
+         "path": "$fixture:map-survey/v1/rapor-n1.txt",
+         "revision": "189d30af43626b407c7ad3147b13381abeadafa4f71008be0e20d90df187369b",
+         "format": "report"
+        },
+        "recipe": "TBC 5.90; kesin efemeris (IGS); 10° maske; IGS20 ANTEX; anten 1.532 m ARP",
+        "adjust": true
+       },
+       {
+        "id": "cz-2",
+        "session": "os-2",
+        "kind": "processed",
+        "lat": 39.7767124,
+        "lon": 30.5206455,
+        "height": 846.847,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 0.0,
+        "fix": "Sabit (L1/L2)",
+        "epochs": 240,
+        "sigma": [
+         0.005,
+         0.004,
+         0.012
+        ],
+        "adjust": true
+       },
+       {
+        "id": "cz-3",
+        "session": "os-3",
+        "kind": "receiver",
+        "lat": 39.7801,
+        "lon": 30.515000041666667,
+        "height": 886.625,
+        "srid": 4326,
+        "antennaApplied": 0.0,
+        "fix": "RTK sabit",
+        "epochs": 4,
+        "satellites": 13,
+        "hdop": 0.71,
+        "from": 0,
+        "to": 4,
+        "fixes": [
+         "RTK sabit"
+        ]
+       },
+       {
+        "id": "cz-4",
+        "session": "os-1",
+        "kind": "ppp",
+        "lat": 39.7767131,
+        "lon": 30.5206441,
+        "height": 845.412,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "antennaApplied": 1.532,
+        "sigma": [
+         0.02,
+         0.02,
+         0.05
+        ],
+        "correction": "CSRS-PPP",
+        "excluded": "Çok yollu yansıma şüphesi; 40 dakikalık veri"
+       }
+      ],
+      "points": [
+       {
+        "id": "kn-1",
+        "mark": "N1",
+        "uid": "0192f5c0-1340-7000-8000-000000000001",
+        "result": {
+         "revision": 1,
+         "solutions": [
+          "cz-1",
+          "cz-2"
+         ],
+         "method": "mean",
+         "lat": 39.77671235,
+         "lon": 30.52064555,
+         "height": 845.2339999999999,
+         "srid": 5252,
+         "epoch": 2005.0,
+         "targetEpoch": 2005.0,
+         "antenna": [
+          {
+           "session": "os-1",
+           "height": 1.532
+          },
+          {
+           "session": "os-2",
+           "height": 1.61
+          }
+         ],
+         "x": 544604.5188026087,
+         "y": 4404866.510293009,
+         "z": 845.2339999999999,
+         "chain": "complete"
+        }
+       }
+      ],
+      "uses": [
+       {
+        "id": "kb-1",
+        "operation": "Yüzey üret",
+        "uids": [
+         "0192f5c0-1340-7000-8000-000000000002"
+        ],
+        "points": [
+         {
+          "point": "kn-1",
+          "revision": 1
+         }
+        ]
+       }
+      ],
+      "baselines": [
+       {
+        "id": "bz-1",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N1",
+        "d": [
+         -3536.688454276511,
+         2674.4539372296504,
+         1977.4207466980147
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T08:00:00Z",
+        "end": "2026-11-02T09:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-2",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N1",
+        "d": [
+         241.99897956365118,
+         -4036.354143129671,
+         2240.452557216509
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T09:00:00Z",
+        "end": "2026-11-02T10:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-3",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N4",
+        "d": [
+         -5857.314516281801,
+         3105.673234809159,
+         4138.779055520129
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T10:00:00Z",
+        "end": "2026-11-02T11:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-4",
+        "campaign": "kp-1",
+        "from": "BN2",
+        "to": "N4",
+        "d": [
+         -2078.620499916886,
+         -3605.130500649888,
+         4401.813124908456
+        ],
+        "covariance": [
+         1.4467666722309886e-05,
+         4.852685888325385e-06,
+         7.937420510064887e-06,
+         9.115601773167692e-06,
+         4.687195258761902e-06,
+         1.3916731504522425e-05
+        ],
+        "start": "2026-11-02T11:00:00Z",
+        "end": "2026-11-02T12:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-5",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N4",
+        "d": [
+         -2320.6223254964657,
+         431.2231219522215,
+         2161.358829661327
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T12:00:00Z",
+        "end": "2026-11-02T13:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-6",
+        "campaign": "kp-1",
+        "from": "N1",
+        "to": "N5",
+        "d": [
+         -617.6325425434679,
+         -2976.0008028167613,
+         2397.558884497368
+        ],
+        "covariance": [
+         1.4468539903117283e-05,
+         4.845079761144216e-06,
+         7.942192842815433e-06,
+         9.106322189656259e-06,
+         4.6821647464696125e-06,
+         1.3925137907226454e-05
+        ],
+        "start": "2026-11-02T13:00:00Z",
+        "end": "2026-11-02T14:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-7",
+        "campaign": "kp-1",
+        "from": "BN1",
+        "to": "N5",
+        "d": [
+         -4154.32008169433,
+         -301.54574497832937,
+         4374.980501455615
+        ],
+        "covariance": [
+         1.448222537832325e-05,
+         4.843890856176396e-06,
+         7.944898522794504e-06,
+         9.100174472668329e-06,
+         4.6748260086693805e-06,
+         1.3917600149008429e-05
+        ],
+        "start": "2026-11-02T14:00:00Z",
+        "end": "2026-11-02T15:30:00Z",
+        "adjust": true
+       },
+       {
+        "id": "bz-8",
+        "campaign": "kp-1",
+        "from": "N4",
+        "to": "N5",
+        "d": [
+         1702.9910404929328,
+         -3407.2220231168135,
+         236.20071894232
+        ],
+        "covariance": [
+         1.4459458988525862e-05,
+         4.843221006697332e-06,
+         7.941999082778689e-06,
+         9.107288129765828e-06,
+         4.6854313842904844e-06,
+         1.393325288170831e-05
+        ],
+        "start": "2026-11-02T15:00:00Z",
+        "end": "2026-11-02T16:30:00Z",
+        "adjust": true
+       }
+      ],
+      "known": [
+       {
+        "id": "bn-1",
+        "mark": "BN1",
+        "lat": 39.753288657,
+        "lon": 30.472811038,
+        "height": 879.581,
+        "srid": 5252,
+        "epoch": 2005.0,
+        "source": "TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0"
+       },
+       {
+        "id": "bn-2",
+        "mark": "BN2",
+        "lat": 39.750589104,
+        "lon": 30.562645279,
+        "height": 828.6594,
+        "srid": 5252
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 544601.0,
+     "y": 4404865.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yuzey",
+      "name": "Yüzey",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "gnss",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "N1",
+       "Kabul": "kn-1",
+       "Revizyon": "1",
+       "Yöntem": "Ortalama",
+       "Çözüm": "cz-1, cz-2",
+       "Arazi ölçümü": "GNSS ölçümü 2026-11"
+      },
+      "p": {
+       "x": 544604.5188026087,
+       "y": 4404866.510293009
+      },
+      "z": 845.2339999999999
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yuzey",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404865.0
+      },
+      "b": {
+       "x": 544631.0,
+       "y": 4404875.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 3,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 544601.0,
+       "y": 4404885.0
+      },
+      "b": {
+       "x": 544611.0,
+       "y": 4404890.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 4,
+      "layerId": "kilitli",
+      "attrs": {
+       "Ad": "K1"
+      },
+      "p": {
+       "x": 544606.0,
+       "y": 4404870.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1340-7000-8000-000000000001",
+     "0192f5c0-1340-7000-8000-000000000002",
+     "0192f5c0-1340-7000-8000-000000000003",
+     "0192f5c0-1340-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "known_differ",
+       "message": "“bn-2” bilinen noktasının epoku yok; ölçme epoku 2026,84 olan ağda her bilinen noktanın epoku verilmeli."
       }
      },
      "expect": {

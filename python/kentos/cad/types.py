@@ -4136,6 +4136,17 @@ NetworkDefineOperationName = Literal["set", "remove"]
 """The names of :class:`NetworkDefineOperation`, for a plain string."""
 
 
+class NetworkEpochFrom(_StrEnum):
+    """Where the network's epoch comes from (docs/adr/2120): given, the baselines' observation times, the known points'."""
+    GIVEN = "given"
+    BASELINES = "baselines"
+    KNOWN = "known"
+
+
+NetworkEpochFromName = Literal["given", "baselines", "known"]
+"""The names of :class:`NetworkEpochFrom`, for a plain string."""
+
+
 class NetworkKind(_StrEnum):
     """Yol ağı or Şebeke: what the tools offer first; the graph is the same."""
     ROAD = "road"
@@ -47762,6 +47773,41 @@ class KmPlaces(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class KnownMoved(_Model):
+    """A known point moved to the measurement epoch along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a),
+    docs/adr/2120): its epoch, the years it moved and how far east, north and up (m).
+    Attributes:
+        from_: Unit: year.
+        years: Unit: year.
+        shift: Unit: m.
+    """
+    id: str
+    mark: str
+    from_: float
+    years: float
+    shift: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["mark"] = self.mark
+        out["from"] = float(self.from_)
+        out["years"] = float(self.years)
+        out["shift"] = [float(e0) for e0 in self.shift]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KnownMoved:
+        return cls(
+            id=data["id"],
+            mark=data["mark"],
+            from_=float(data["from"]),
+            years=float(data["years"]),
+            shift=[float(e0) for e0 in data["shift"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelAbbreviate(_Model):
     """Shortening a label's words (kısaltma).
     Attributes:
@@ -53199,14 +53245,22 @@ class MapSurveyNetwork(_Model):
     covariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first
     otherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).
 
+    The measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times
+    when every one has its start and end, else none. With one, every known point needs its epoch and one at another
+    epoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are
+    in one frame and epoch, the network's.
+
     Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
-    `unknown_rule_class`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`, `network_too_large`,
-    `network_disconnected`.
+    `unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,
+    `epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own
+    refusals, `network_too_large`, `network_disconnected`.
     Attributes:
+        epoch: The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120). Unit: year.
         scale: Unit: 1.
     """
     campaign: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
     hold: str | None | Unset = UNSET
     rules: GnssRules | None | Unset = UNSET
     scale: float | None | Unset = UNSET
@@ -53217,6 +53271,8 @@ class MapSurveyNetwork(_Model):
             out["campaign"] = self.campaign
         if self.class_ is not UNSET:
             out["class"] = self.class_
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
         if self.hold is not UNSET:
             out["hold"] = self.hold
         if self.rules is not UNSET:
@@ -53230,6 +53286,7 @@ class MapSurveyNetwork(_Model):
         return cls(
             campaign=data.get("campaign", UNSET),
             class_=data.get("class", UNSET),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             hold=data.get("hold", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else GnssRules.from_json(data["rules"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
@@ -53238,7 +53295,8 @@ class MapSurveyNetwork(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class MapSurveyNetworked(_Model):
-    """Output of `map.survey.network` v1: the network's frame and epoch (its known points'), the known points it rests on,
+    """Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where
+    the epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,
     the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
     result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
     be accepted and, if not, why, and the drawing's revision.
@@ -53247,6 +53305,7 @@ class MapSurveyNetworked(_Model):
         epoch: Unit: year.
     """
     srid: int
+    epoch_from: NetworkEpochFrom | NetworkEpochFromName
     known: list[str]
     baselines: list[NetworkBaseline]
     stations: list[NetworkStation]
@@ -53256,12 +53315,14 @@ class MapSurveyNetworked(_Model):
     revision: str
     current: str | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
+    moved: list[KnownMoved] | Unset = UNSET
     rules: NetworkRules | None | Unset = UNSET
     why: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["srid"] = self.srid
+        out["epochFrom"] = _enum_out(self.epoch_from)
         out["known"] = list(self.known)
         out["baselines"] = [e0.to_json() for e0 in self.baselines]
         out["stations"] = [e0.to_json() for e0 in self.stations]
@@ -53273,6 +53334,8 @@ class MapSurveyNetworked(_Model):
             out["current"] = self.current
         if self.epoch is not UNSET:
             out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.moved is not UNSET:
+            out["moved"] = [e0.to_json() for e0 in self.moved]
         if self.rules is not UNSET:
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.why is not UNSET:
@@ -53283,6 +53346,7 @@ class MapSurveyNetworked(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> MapSurveyNetworked:
         return cls(
             srid=data["srid"],
+            epoch_from=_enum_in(NetworkEpochFrom, data["epochFrom"]),
             known=list(data["known"]),
             baselines=[NetworkBaseline.from_json(e0) for e0 in data["baselines"]],
             stations=[NetworkStation.from_json(e0) for e0 in data["stations"]],
@@ -53292,6 +53356,7 @@ class MapSurveyNetworked(_Model):
             revision=data["revision"],
             current=data.get("current", UNSET),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            moved=[KnownMoved.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
             rules=UNSET if "rules" not in data else None if data["rules"] is None else NetworkRules.from_json(data["rules"]),
             why=list(data["why"]) if "why" in data else UNSET,
         )
@@ -116057,11 +116122,13 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
     is not a known point accepted (its object on `layer`, the active layer when not given) or made again, in one
     step. Refused while a baseline is a blunder or the model test fails.
     Attributes:
+        epoch: The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it. Unit: year.
         scale: Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "network"
     campaign: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
     hold: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     rules: GnssRules | None | Unset = UNSET
@@ -116073,6 +116140,8 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
             out["campaign"] = self.campaign
         if self.class_ is not UNSET:
             out["class"] = self.class_
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
         if self.hold is not UNSET:
             out["hold"] = self.hold
         if self.layer is not UNSET:
@@ -116088,6 +116157,7 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
         return cls(
             campaign=data.get("campaign", UNSET),
             class_=data.get("class", UNSET),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             hold=data.get("hold", UNSET),
             layer=data.get("layer", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else GnssRules.from_json(data["rules"]),
@@ -129063,6 +129133,7 @@ __all__ = [
     "KmAsk",
     "KmPlaces",
     "KnownMapSurveyOperation",
+    "KnownMoved",
     "KnownPoint",
     "LabelAbbreviate",
     "LabelAlign",
@@ -129457,6 +129528,8 @@ __all__ = [
     "NetworkDefineOperationName",
     "NetworkDefined",
     "NetworkDirection",
+    "NetworkEpochFrom",
+    "NetworkEpochFromName",
     "NetworkKind",
     "NetworkKindName",
     "NetworkLayer",

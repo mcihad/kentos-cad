@@ -6,13 +6,17 @@
 //! the coordinate chain and compared with their accepted points. A rule class (KentOS's package: BÖHHBÜY 2018's C1,
 //! C2, C3) checks the baselines' and the stations' standard deviations at its confidence. `map.survey.edit`'s
 //! `network` writes what this reads. The shared cases are `fixtures/commands/v1/map.survey.network.json`.
+//!
+//! The measurement epoch (docs/adr/2120): given, or the mean of the baselines' observation mid-times; the known points
+//! are moved to it along the campaign's velocity grid by the coordinate chain itself (BÖHHBÜY Madde 15(1)(a)).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, GnssRuleClass, GnssRules, MapSurvey,
-    MapSurveyNetwork, MapSurveyNetworked, NetworkBaseline, NetworkRules, NetworkStage, NetworkStation, SurveyBaseline,
-    SurveyKnown, gnss_rules_default,
+    BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide, CrsTransform,
+    GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, MapSurvey, MapSurveyNetwork, MapSurveyNetworked,
+    NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkStage, NetworkStation, SurveyBaseline, SurveyCampaign,
+    SurveyKnown, VelocityModel, gnss_rules_default,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssResult, GnssStation};
@@ -100,18 +104,91 @@ fn held_wrong(code: &str, message: String, prefix: &str) -> Stop {
     }
 }
 
-/// A known point's X, Y, Z (m) on its frame's ellipsoid.
-fn ecef(k: &SurveyKnown, (a, inv_f): (f64, f64)) -> [f64; 3] {
-    gnss::to_ecef(a, inv_f, k.lat / RAD, k.lon / RAD, k.height)
+/// A place's X, Y, Z (m) on a frame's ellipsoid from its latitude, longitude (degrees) and height (m).
+fn ecef((lat, lon, h): (f64, f64, f64), (a, inv_f): (f64, f64)) -> [f64; 3] {
+    gnss::to_ecef(a, inv_f, lat / RAD, lon / RAD, h)
 }
 
 /// A weighted known point's north, east, up deviations as an X, Y, Z covariance: Rᵀ·diag(σe², σn², σu²)·R, R the
 /// rows east, north, up at its place.
-fn weight(k: &SurveyKnown, sigma: [f64; 3]) -> [f64; 6] {
-    let r = gnss::enu_rows(k.lat / RAD, k.lon / RAD);
+fn weight((lat, lon, _): (f64, f64, f64), sigma: [f64; 3]) -> [f64; 6] {
+    let r = gnss::enu_rows(lat / RAD, lon / RAD);
     let var = [sigma[1] * sigma[1], sigma[0] * sigma[0], sigma[2] * sigma[2]];
     let c = |i: usize, j: usize| (0..3).map(|k| r[k][i] * var[k] * r[k][j]).sum::<f64>();
     [c(0, 0), c(0, 1), c(0, 2), c(1, 1), c(1, 2), c(2, 2)]
+}
+
+/// A GPS time `YYYY-MM-DDTHH:MM:SS` (seconds may have a fraction; a trailing `Z` allowed) as a decimal year: the year
+/// and the share of its seconds gone (docs/adr/2120 §1); none when it does not read.
+pub(crate) fn decimal_year(t: &str) -> Option<f64> {
+    let t = t.strip_suffix('Z').unwrap_or(t);
+    let (date, time) = t.split_once('T')?;
+    let mut d = date.split('-');
+    let (y, mo, da) = (d.next()?.parse::<i64>().ok()?, d.next()?.parse::<i64>().ok()?, d.next()?.parse::<i64>().ok()?);
+    let mut c = time.split(':');
+    let (h, mi, s) = (c.next()?.parse::<i64>().ok()?, c.next()?.parse::<i64>().ok()?, c.next()?.parse::<f64>().ok()?);
+    if d.next().is_some() || c.next().is_some() || !(1..=12).contains(&mo) || !(0..24).contains(&h) || !(0..60).contains(&mi) {
+        return None;
+    }
+    let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+    let days = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if !(1..=days[(mo - 1) as usize]).contains(&da) || !(0.0..60.0).contains(&s) {
+        return None;
+    }
+    let before: i64 = days[..(mo - 1) as usize].iter().sum::<i64>() + da - 1;
+    let seconds = (before * 86_400 + h * 3_600 + mi * 60) as f64 + s;
+    let year = (if leap { 366.0 } else { 365.0 }) * 86_400.0;
+    Some(y as f64 + seconds / year)
+}
+
+/// The measurement epoch and where it comes from (docs/adr/2120 §1): `given`, else the mean of the baselines'
+/// observation mid-times when every one has its start and end; none otherwise.
+fn measurement_epoch(given: Option<f64>, used: &[&SurveyBaseline]) -> Option<(f64, NetworkEpochFrom)> {
+    if let Some(e) = given {
+        return Some((e, NetworkEpochFrom::Given));
+    }
+    let mut sum = 0.0;
+    for b in used {
+        let start = decimal_year(b.start.as_deref()?)?;
+        let end = decimal_year(b.end.as_deref()?)?;
+        sum += (start + end) / 2.0;
+    }
+    Some((sum / used.len() as f64, NetworkEpochFrom::Baselines))
+}
+
+/// A known point's latitude, longitude and ellipsoidal height moved from its epoch to the measurement epoch along the
+/// campaign's velocity grid, by the coordinate chain itself (cad.crs.transform, docs/adr/0631 §2); the chain's own
+/// refusal (a grid not on this device …) kept, its path the operation's.
+fn moved_to(
+    doc: &Document,
+    grid: &VelocityModel,
+    (lat, lon, h): (f64, f64, f64),
+    srid: u32,
+    from: f64,
+    to: f64,
+) -> Result<(f64, f64, f64), Stop> {
+    let ellipsoidal = || Some(HeightReference { kind: HeightKind::Ellipsoidal, vertical_srid: None, geoid: None });
+    let input = CrsTransform {
+        points: vec![CrsPoint { x: lon, y: lat, z: Some(h) }],
+        from: Some(CrsSide { srid: Some(srid), heights: ellipsoidal(), epoch: Some(from) }),
+        to: Some(CrsSide { srid: Some(srid), heights: ellipsoidal(), epoch: Some(to) }),
+        uncertainty: None,
+        velocity: Some(grid.clone()),
+    };
+    match crate::crs_transform::answer(doc, &input) {
+        CommandResult::Completed { output, .. } => match output.points.first() {
+            Some(Some(p)) => Ok((p.y, p.x, p.z.unwrap_or(h))),
+            _ => {
+                let why = output.unreached.first().map_or("", |u| crate::crs_transform::reason_text(&u.reason));
+                Err(fail(codes::EPOCH_UNSUPPORTED, format!("Bilinen nokta ölçme epokuna taşınamadı: {why}"), "operation"))
+            }
+        },
+        CommandResult::Failed { mut error } => {
+            error.path = Some("operation".into());
+            Err(Stop::failed(error))
+        }
+        other => Err(fail(codes::INVALID_SURVEY_VALUE, format!("{other:?}"), "operation")),
+    }
 }
 
 /// A residual vector (ECEF, m) in the local east, north, up of a place.
@@ -226,6 +303,13 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         })?),
         None => None,
     };
+    if let Some(e) = input.epoch.filter(|e| kentos_commands::epoch_problem(*e).is_some()) {
+        return Err(fail(
+            codes::INVALID_EPOCH,
+            format!("Ölçme epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2026.84 gibi); yazılan {e}."),
+            &path("epoch"),
+        ));
+    }
     // The baselines that go in.
     let used: Vec<&SurveyBaseline> = survey
         .baselines
@@ -273,15 +357,42 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         ));
     }
     let (srid, epoch) = (known[0].srid, known[0].epoch);
-    if let Some(k) = known.iter().find(|k| k.srid != srid || k.epoch != epoch) {
-        return Err(held_wrong(
-            codes::KNOWN_DIFFER,
-            format!(
-                "“{}” ile “{}” bilinen noktaları aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin.",
-                known[0].id, k.id
-            ),
-            prefix,
-        ));
+    let measured = measurement_epoch(input.epoch, &used);
+    match measured {
+        // Without a measurement epoch the known points' one epoch is the network's (docs/adr/1740 §3).
+        None => {
+            if let Some(k) = known.iter().find(|k| k.srid != srid || k.epoch != epoch) {
+                return Err(held_wrong(
+                    codes::KNOWN_DIFFER,
+                    format!(
+                        "“{}” ile “{}” bilinen noktaları aynı çerçeve ve epokta değil; hepsini ölçme epokunda aynı çerçevede girin ya da bazların gözlem zamanlarını verin.",
+                        known[0].id, k.id
+                    ),
+                    prefix,
+                ));
+            }
+        }
+        // With one each known point says its epoch, in one frame; another epoch is moved to it (docs/adr/2120 §2).
+        Some((t, _)) => {
+            if let Some(k) = known.iter().find(|k| k.srid != srid) {
+                return Err(held_wrong(
+                    codes::KNOWN_DIFFER,
+                    format!("“{}” ile “{}” bilinen noktaları aynı çerçevede değil; hepsini aynı çerçevede girin.", known[0].id, k.id),
+                    prefix,
+                ));
+            }
+            if let Some(k) = known.iter().find(|k| k.epoch.is_none()) {
+                return Err(held_wrong(
+                    codes::KNOWN_DIFFER,
+                    format!(
+                        "“{}” bilinen noktasının epoku yok; ölçme epoku {} olan ağda her bilinen noktanın epoku verilmeli.",
+                        k.id,
+                        epoch_text(t)
+                    ),
+                    prefix,
+                ));
+            }
+        }
     }
     let Some(shape) = ellipsoid_of(srid) else {
         return Err(held_wrong(
@@ -296,13 +407,47 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         })?,
         None => known[0],
     };
+    // Each known point at the measurement epoch (BÖHHBÜY Madde 15(1)(a)): moved along the campaign's velocity grid.
+    let mut at: HashMap<String, (f64, f64, f64)> = HashMap::new();
+    let mut moved = Vec::new();
+    for k in &known {
+        let given = (k.lat, k.lon, k.height);
+        let place_now = match (measured, k.epoch) {
+            (Some((t, _)), Some(e)) if e != t => {
+                let Some(grid) = velocity_of(campaign.as_ref()) else {
+                    return Err(held_wrong(
+                        codes::EPOCH_UNSUPPORTED,
+                        format!(
+                            "“{}” bilinen noktası {} epokunda, ağın ölçme epoku {}: Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin.",
+                            k.id,
+                            epoch_text(e),
+                            epoch_text(t)
+                        ),
+                        prefix,
+                    ));
+                };
+                let now = moved_to(doc, &grid, given, srid, e, t)?;
+                let (a, b) = (ecef(given, shape), ecef(now, shape));
+                let r = gnss::enu_rows(given.0 / RAD, given.1 / RAD);
+                let d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+                let shift = [0, 1, 2].map(|i| r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2]);
+                moved.push(KnownMoved { id: k.id.clone(), mark: k.mark.clone(), from: e, years: t - e, shift });
+                now
+            }
+            _ => given,
+        };
+        at.insert(k.id.clone(), place_now);
+    }
+    let epoch = measured.map(|m| m.0).or(epoch);
+    let epoch_from = measured.map_or(NetworkEpochFrom::Known, |m| m.1);
+    let place_of = |k: &SurveyKnown| at.get(&k.id).copied().unwrap_or((k.lat, k.lon, k.height));
     let known_of = |m: &str| known.iter().find(|k| k.mark == m).copied();
     let baselines: Vec<Baseline> =
         used.iter().map(|b| Baseline { from: b.from.clone(), to: b.to.clone(), d: b.d, cov: b.covariance }).collect();
     let free_stations: Vec<GnssStation> = marks
         .iter()
         .map(|m| match known_of(m) {
-            Some(k) => GnssStation { name: m.clone(), xyz: Some(ecef(k, shape)), fixed: k.id == hold.id, sigma: None, cov: None },
+            Some(k) => GnssStation { name: m.clone(), xyz: Some(ecef(place_of(k), shape)), fixed: k.id == hold.id, sigma: None, cov: None },
             None => GnssStation { name: m.clone(), xyz: None, fixed: false, sigma: None, cov: None },
         })
         .collect();
@@ -311,10 +456,10 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         .map(|m| match known_of(m) {
             Some(k) => GnssStation {
                 name: m.clone(),
-                xyz: Some(ecef(k, shape)),
+                xyz: Some(ecef(place_of(k), shape)),
                 fixed: k.sigma.is_none(),
                 sigma: None,
-                cov: k.sigma.map(|s| weight(k, s)),
+                cov: k.sigma.map(|s| weight(place_of(k), s)),
             },
             None => GnssStation { name: m.clone(), xyz: None, fixed: false, sigma: None, cov: None },
         })
@@ -435,6 +580,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                 && a.known == known_ids_used
                 && a.hold == hold.id
                 && a.scale == scale
+                && a.epoch == epoch
                 && a.class.clone().zip(a.rules.clone()) == class_of
                 && !new.is_empty()
                 && new.iter().all(|n| {
@@ -475,6 +621,8 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let out = MapSurveyNetworked {
         srid,
         epoch,
+        epoch_from,
+        moved,
         known: known.iter().map(|k| k.id.clone()).collect(),
         baselines: rows,
         stations,
@@ -495,6 +643,16 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         class: class.map(|c| (c.id.clone(), format!("{}@{}", package.id, package.release))),
         new,
     })
+}
+
+/// The campaign's velocity grid as the chain takes it.
+fn velocity_of(campaign: Option<&SurveyCampaign>) -> Option<VelocityModel> {
+    campaign.and_then(|c| c.velocity.as_ref()).map(|g| VelocityModel { name: g.name.clone(), sha256: g.sha256.clone() })
+}
+
+/// An epoch as a sentence writes it: two decimals, a decimal comma (2026,84).
+fn epoch_text(e: f64) -> String {
+    format!("{e:.2}").replace('.', ",")
 }
 
 /// The answer's warnings: a class that does not hold, a network without degrees of freedom; `prefix` is the input's

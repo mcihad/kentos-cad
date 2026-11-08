@@ -240,7 +240,8 @@ MCP: `{"tool": "map.survey.network", "arguments": {"class": "C2"}}` salt okunurd
 - **Çapraz korelasyon:** GVX `SESSION`'larının vektörler arası korelasyonları; oturum başına tam kovaryansla
   beyazlatma.
 - **Madde 15(1)(c):** TUTGA/TUSAGA-Aktif'le 3B benzerlik dönüşümü ve ölçek testi.
-- **Epok:** bilinen noktaların hız ızgarasıyla ölçme epokuna kendiliğinden taşınması; farklı epoklu bilinen noktalar.
+- **Epok:** bilinen noktaların hız ızgarasıyla ölçme epokuna kendiliğinden taşınması; farklı epoklu bilinen noktalar:
+  yapıldı, [ADR 2120](2120-network-at-the-measurement-epoch.md).
 - **Ölçek:** seyrek çözüm ve büyük ağ ölçümü (MAP-05'in kalanı); robust kestirim.
 - **Okuyucular:** SINEX ve RTK denetleyicisinin vektörlerinin okunması (JobXML …).
 - **Arşiv paneli:** bazların ve dengelemelerin panelde gösterilmesi.
