@@ -36,7 +36,7 @@ sırayla alır.
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
@@ -724,6 +724,12 @@ kısalır; dönen referans, kilitli komşu, doğrudan düzenleme ve çelişen ik
 reddedilir; `.kcad` şema 208. 22 ortak durum (harita koordinatında, kesirlerle), MCP, masaüstü (Referans R, Koru K, Enter
 şimdikini korur) ve resimler. Açık: dönen referansı izleyen bağ, yaylı bağ, ortak sınırlı izleme, çok parçalı nesne,
 seçilen köşelerin sahnede işareti.
+
+**9 Kasım 2026, beşinci tur — Eğimle kot ver'de aralığın çizimde işareti ([ADR 2980](../docs/adr/2980-grade-range-marked-on-the-drawing.md)).**
+Kapsam: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Set Grade/Slope Between Points'i aralığı çizimde iki noktayla
+alır. Kanıtlanan: pencere açıkken başlangıç ve bitiş köşeleri Köşe tablosununki gibi halkalanır, aradaki yol (yayı yay
+boyunca) vurgu renginde çizilir; Sahneden seç'te bitiş beklenirken yalnız başlangıç; kapanınca kalkar; masaüstü testi ve
+resimler. Komut değişmedi. Açık: çok parçalı nesne, dönen ve yaylı referans bağı, yüksek/alçak nokta ekleme.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

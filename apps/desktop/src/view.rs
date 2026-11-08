@@ -758,6 +758,7 @@ impl App {
                     params: self.param_grip_marks(),
                     hot: self.session.hot_grips(),
                     marked: self.marked_points(),
+                    range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     extent: self.extent_mark(),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
@@ -953,6 +954,7 @@ impl App {
             params: self.param_grip_marks(),
             hot: self.session.hot_grips(),
             marked: self.marked_points(),
+            range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
             extent: self.extent_mark(),
             problem: self

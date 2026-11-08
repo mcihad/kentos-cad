@@ -167,3 +167,85 @@ fn pick_screens() {
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
     println!("{}", file.display());
 }
+
+/// The range on the drawing (docs/adr/2980): open, the path from vertex 2 to 4 (its arc as points along it) and the two
+/// vertices; while the end is being picked the start alone, while the start is nothing; closed, nothing.
+#[test]
+fn the_range_is_marked_on_the_drawing() {
+    let mut app = opened(Some(Module::Map));
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("tool.grade"));
+    let pts = match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
+        Some(kentos_commands::Entity::Polyline(p)) => p.pts.clone(),
+        _ => panic!("the polyline"),
+    };
+    // The whole path at first: its first and last vertices.
+    let (path, ends) = app.grade_marks();
+    assert_eq!(ends, [pts[0], *pts.last().expect("a last vertex")]);
+    assert!(path.len() > pts.len(), "the arc's points along it: {}", path.len());
+    let _ = app.update(Message::Grade(G::From(2.0)));
+    let _ = app.update(Message::Grade(G::To(4.0)));
+    let (path, ends) = app.grade_marks();
+    assert_eq!(ends, [pts[1], pts[3]]);
+    assert_eq!((path.first(), path.last()), (Some(&pts[1]), Some(&pts[3])));
+    // The marks layer rings the two vertices.
+    let marked = app.marked_points();
+    assert!(marked.iter().any(|p| p.x == pts[1].x && p.y == pts[1].y) && marked.iter().any(|p| p.x == pts[3].x && p.y == pts[3].y));
+    // Picking: the start awaited, nothing; the end awaited, the start alone.
+    let _ = app.update(Message::Grade(G::Pick));
+    assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()));
+    let near = |i: usize| Some(kentos_interaction::Vec2 { x: pts[i].x + 0.01, y: pts[i].y - 0.01 });
+    assert!(app.grade_picked(near(1)));
+    assert_eq!(app.grade_marks(), (Vec::new(), vec![pts[1]]));
+    assert!(app.grade_picked(near(2)));
+    // Closed: nothing.
+    let _ = app.update(Message::Grade(G::Close));
+    assert_eq!(app.grade_marks(), (Vec::new(), Vec::new()));
+}
+
+/// The range 2–4 marked on the drawing beside the window, light wide and dark narrow, `.run/gui-evidence/aralik-2980/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib grade_window_tests::range_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn range_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/aralik-2980");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.selection.set([Slot(1)]);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        // The first frame fits the drawing; then the polyline in the left third, where the window does not cover it.
+        snapshot.settle(&mut app, App::view, &mut update);
+        let pts = match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
+            Some(kentos_commands::Entity::Polyline(p)) => p.pts.clone(),
+            _ => panic!("the polyline"),
+        };
+        let (x0, x1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.x), b.max(p.x)));
+        let (y0, y1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.y), b.max(p.y)));
+        let w = x1 - x0 + 10.0;
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: x0 - 5.0, min_y: y0 - 15.0, max_x: x0 - 5.0 + 3.2 * w, max_y: y1 + 15.0 },
+            24.0,
+        );
+        let _ = app.update(Message::Run("tool.grade"));
+        let _ = app.update(Message::Grade(G::From(2.0)));
+        let _ = app.update(Message::Grade(G::To(4.0)));
+        // The window keeps its path by id: the selection's own colour off, the range stands out.
+        app.selection.set(Vec::new());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("aralik-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

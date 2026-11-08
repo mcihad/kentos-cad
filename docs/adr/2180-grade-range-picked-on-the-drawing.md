@@ -46,6 +46,7 @@ aralık)” maddesini kapatır.
 
 ## Sonra
 
-- Seçilen köşelerin çizimde işaretlenmesi (önizleme katmanı) ve aralığın kenarını vurgulamak.
+- Seçilen köşelerin çizimde işaretlenmesi (önizleme katmanı) ve aralığın kenarını vurgulamak. Yapıldı:
+  [ADR 2980](2980-grade-range-marked-on-the-drawing.md).
 - Yüksek/alçak nokta ekleme, eğimle yükselt/alçalt (ADR 1290 Sonra).
 - Kalıcı ilişki ve çok parçalı nesne (MAP-06'nın kalanı).

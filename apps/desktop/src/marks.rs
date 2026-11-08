@@ -89,6 +89,8 @@ pub struct Marks {
     pub hot: Vec<(Slot, usize)>,
     /// The vertices Köşe tablosu's selected rows name (docs/adr/0172 §3).
     pub marked: Vec<Vec2>,
+    /// Eğimle kot ver's range: the path from its start vertex to its end, drawn over in the accent (docs/adr/2980).
+    pub range: Vec<Vec2>,
     /// The place the data search's Git marked and its coordinates' words
     /// (docs/adr/0178 §6).
     pub found: Option<(Vec2, String)>,
@@ -212,6 +214,7 @@ impl Marks {
             && self.grips.is_empty()
             && self.params.is_empty()
             && self.marked.is_empty()
+            && self.range.is_empty()
             && self.found.is_none()
             && self.extent.is_none()
             && self.problem.is_none()
@@ -261,6 +264,7 @@ impl<Message> canvas::Program<Message> for Marks {
             );
         }
         param_grips(&mut frame, &self.params, &self.camera, &self.colors);
+        range(&mut frame, &self.range, &self.camera, &self.colors, accent);
         marked(&mut frame, &self.marked, &self.camera, &self.colors, accent);
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
@@ -490,6 +494,28 @@ fn param_grips(
 /// The web's `drawMarkedVertices` (docs/adr/0172 §3): an accent ring round
 /// each vertex Köşe tablosu's selected rows name, on a halo so it shows on
 /// any drawing; at most 2 000.
+/// A range of a path (docs/adr/2980): one accent line along its points, on a wider halo so it shows on any drawing,
+/// under the rings of its ends.
+fn range(frame: &mut canvas::Frame, pts: &[Vec2], camera: &Camera, colors: &MarkColors, accent: iced::Color) {
+    if pts.len() < 2 {
+        return;
+    }
+    let line = Path::new(|b| {
+        for (k, &p) in pts.iter().take(20_000).enumerate() {
+            let s = camera.world_to_screen(p);
+            let q = Point::new(s[0] as f32, s[1] as f32);
+            if k == 0 {
+                b.move_to(q);
+            } else {
+                b.line_to(q);
+            }
+        }
+    });
+    let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    frame.stroke(&line, stroke(7.0, colors.halo));
+    frame.stroke(&line, stroke(3.5, accent));
+}
+
 fn marked(
     frame: &mut canvas::Frame,
     pts: &[Vec2],

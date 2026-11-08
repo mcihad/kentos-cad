@@ -237,6 +237,9 @@
 - **Hata elipsleri çizimde (9 Kasım 2026; MAP-05, [ADR 2960](../../docs/adr/2960-network-error-ellipses-drawn.md)).**
   `map.survey.edit network`'ün `ellipses`'i: kabulde her noktanın elipsi büyütülerek, büyük ekseni meridyen
   yakınsaması çıkarılmış yönde, aynı adımda ve dayanan kaydıyla çizilir; Ağ dengelemesi'nde Hata elipsleri. Harita.
+- **Eğimle kot ver'de aralık çizimde (9 Kasım 2026; MAP-06, [ADR 2980](../../docs/adr/2980-grade-range-marked-on-the-drawing.md)).**
+  Pencere açıkken başlangıç ve bitiş köşeleri halkalı, aradaki yol (yayıyla) vurgulu; Sahneden seç'te bitiş beklenirken
+  yalnız başlangıç. Komut değişmedi. CAD (Harita + Yol).
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

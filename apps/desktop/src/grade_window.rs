@@ -2,7 +2,9 @@
 //! take elevations along a constant grade, by `cad.entities.grade`. The window is the preview: the command's plan says
 //! the range's horizontal length, the grade and the end's elevation; Uygula writes one undo step. Vertices are numbered
 //! from 1, as Koordinat listesi numbers them; the grade is typed in percent. Sahneden seç takes the range by two clicks
-//! on the drawing, each the path's vertex nearest it within the pick aperture (docs/adr/2180).
+//! on the drawing, each the path's vertex nearest it within the pick aperture (docs/adr/2180). While the window is open
+//! the range is marked on the drawing: its start and end vertices ringed, the path between them drawn over in the
+//! accent, arcs as points along them; while the end is being picked, the start alone (docs/adr/2980).
 
 use iced::widget::Column;
 use iced::{Element, Task};
@@ -188,6 +190,41 @@ impl App {
             Entity::Line(l) => vec![l.a, l.b],
             Entity::Polyline(p) | Entity::Polygon(p) => p.pts.clone(),
             _ => Vec::new(),
+        }
+    }
+
+    /// The range on the drawing (docs/adr/2980): the path from its start vertex to its end, arcs as points along them,
+    /// and the two vertices; while the end is being picked the start alone, while the start is, nothing. Nothing when
+    /// Eğimle kot ver is not open or the range does not hold.
+    pub(crate) fn grade_marks(&self) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
+        let open = self.dialog == Some(Dialog::Grade) || self.grade.picking.is_some();
+        let Some(doc) = self.document.as_ref().filter(|_| open) else { return (Vec::new(), Vec::new()) };
+        let Some(e) = kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
+        else {
+            return (Vec::new(), Vec::new());
+        };
+        let (pts, bulges) = match e {
+            Entity::Line(l) => (vec![l.a, l.b], None),
+            Entity::Polyline(p) | Entity::Polygon(p) => (p.pts.clone(), p.bulges.clone()),
+            _ => return (Vec::new(), Vec::new()),
+        };
+        let (from, to) = (self.grade.from.max(1.0) as usize - 1, self.grade.to.max(1.0) as usize - 1);
+        match self.grade.picking {
+            Some(Pick::Start) => (Vec::new(), Vec::new()),
+            Some(Pick::End) => (Vec::new(), pts.get(from).copied().into_iter().collect()),
+            None if from < to && to < pts.len() => {
+                let span = &pts[from..=to];
+                let bent = bulges.as_deref().and_then(|b| b.get(from..to));
+                let size = span.windows(2).map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y)).sum::<f64>();
+                let to_core = |p: &kentos_commands::Vec2| kentos_geometry_core::Vec2::new(p.x, p.y);
+                let core: Vec<_> = span.iter().map(to_core).collect();
+                let path = kentos_geometry_core::tessellate::bulge_path(&core, bent, false, (size / 2000.0).max(1e-6))
+                    .into_iter()
+                    .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
+                    .collect();
+                (path, vec![pts[from], pts[to]])
+            }
+            None => (Vec::new(), Vec::new()),
         }
     }
 
