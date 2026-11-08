@@ -2178,6 +2178,11 @@
           "command": "tool.tagAll",
           "title": "Etiket",
           "label": "Hepsini etiketle"
+         },
+         {
+          "command": "tool.openingCodes",
+          "title": "Etiket",
+          "label": "Doğrama kodları"
          }
         ]
        },

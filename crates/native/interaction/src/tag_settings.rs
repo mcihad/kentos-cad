@@ -6,7 +6,7 @@ use kentos_geometry_core::tools::point_text::parse_number;
 
 // Suggestions only: the chosen text still goes through cad.tags.create's parser.
 // No preset id or display value is stored in the document.
-const CONTENTS: [(&str, &str, &str); 10] = [
+const CONTENTS: [(&str, &str, &str); 11] = [
     ("number", "Numara", "{number}"),
     ("name", "Ad", "{name}"),
     ("net", "Net alan", "{netArea}"),
@@ -27,6 +27,8 @@ const CONTENTS: [(&str, &str, &str); 10] = [
         "Açıklık ve boyut",
         "{number}\n{width} × {height}",
     ),
+    // Mimarlar Odası's door and window tag (docs/adr/3028): the type's joinery code over its size in centimetres.
+    ("code", "Doğrama kodu ve ölçü", "{code}\n{size}"),
 ];
 
 pub(super) fn content_label(content: Option<&str>, bulk: bool) -> &'static str {

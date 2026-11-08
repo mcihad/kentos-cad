@@ -154350,6 +154350,13 @@
             }
           ]
         },
+        "code": {
+          "description": "Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a\ndoor in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;\nunique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "depth": {
           "format": "double",
           "type": [
@@ -154835,6 +154842,43 @@
             "kind",
             "type",
             "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Doğrama kodu (docs/adr/3028): the type's joinery code set, or taken away (null); every opening of the type and\nits tag read it.",
+          "properties": {
+            "code": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "code",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Doğrama kodları (docs/adr/3028): each type the drawing's doors, windows and bare openings follow that has no\ncode gets the next of its kind, counted from 01 in the order the drawing first has it: K a door, GK a door with\na room on one side only (the building's outer wall), P a window, B a bare opening. An opening following no\nproject type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a\nlocked layer is left out. Codes given before stay.",
+          "properties": {
+            "kind": {
+              "const": "codes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
           ],
           "type": "object"
         },

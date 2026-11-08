@@ -2633,6 +2633,11 @@ def document(d):
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
         # A tag framed by an ellipse (docs/adr/3027).
         schema = max(schema, 207)
+    if (any("code" in t for t in (d["settings"].get("arch") or {}).get("openingTypes") or [])
+            or any(e["kind"] == "tag" and ("{code}" in e.get("content", "") or "{size}" in e.get("content", ""))
+                   for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
+        # A door or window type's joinery code, a tag naming it or an opening's size (docs/adr/3028).
+        schema = max(schema, 208)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3508,7 +3513,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-208.kcad"] = container(root(cmap(parts), version=uint(208)))
+    files["schema-version-209.kcad"] = container(root(cmap(parts), version=uint(209)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6249,6 +6254,20 @@ def build():
     assert ellipse.count(b"\x67version\x18\xcf") == 1, "an ellipse tag is schema 207"
     out["ellipse-tags.kcad"] = container(ellipse)
     out["broken/ellipse-tags-in-schema-206.kcad"] = container(ellipse.replace(b"\x67version\x18\xcf", b"\x67version\x18\xce"))
+    # Schema 208 (docs/adr/3028): a door type K01 and a window type P01 with their joinery codes and a tag writing the
+    # door's code and size; schema 207 refuses them as unknown, two types of one code and a code not starting with a
+    # letter too.
+    coded = document(load("opening-codes.json"))
+    assert coded.count(b"\x67version\x18\xd0") == 1, "joinery codes are schema 208"
+    out["opening-codes.kcad"] = container(coded)
+    out["broken/opening-codes-in-schema-207.kcad"] = container(coded.replace(b"\x67version\x18\xd0", b"\x67version\x18\xcf"))
+
+    def code_bad(name, change):
+        d = load("opening-codes.json")
+        change(d)
+        out["broken/opening-codes-" + name + ".kcad"] = container(document(d))
+    code_bad("twice", lambda d: d["settings"]["arch"]["openingTypes"][1].update(code="k01"))
+    code_bad("digit-first", lambda d: d["settings"]["arch"]["openingTypes"][0].update(code="1K"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

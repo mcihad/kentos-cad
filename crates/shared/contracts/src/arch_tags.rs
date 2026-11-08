@@ -12,7 +12,7 @@ use ts_rs::TS;
 use crate::entity::{EntityBase, Vec2};
 
 /// The places a template may name, besides `attr:Name`.
-pub const TAG_PLACES: [&str; 38] = [
+pub const TAG_PLACES: [&str; 40] = [
     "number",
     "type",
     "form",
@@ -55,6 +55,9 @@ pub const TAG_PLACES: [&str; 38] = [
     // The shares (docs/adr/0784 §3): a space's unit's share of the common areas and its gross.
     "share",
     "gross",
+    // An opening's type's joinery code and its size in centimetres, 90/210 (docs/adr/3028; KCAD schema 208).
+    "code",
+    "size",
 ];
 /// The most letters a template or a tag's words hold.
 pub const MAX_TAG_LETTERS: usize = 200;
@@ -116,6 +119,11 @@ impl TagShape {
 
 fn is_circle(s: &TagShape) -> bool {
     *s == TagShape::Circle
+}
+
+/// Whether `e` is a tag whose template names an opening's joinery code or size (docs/adr/3028): KCAD schema 208.
+pub fn needs_opening_codes(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Tag(t) if t.tag.content.as_deref().is_some_and(|c| c.contains("{code}") || c.contains("{size}")))
 }
 
 /// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.

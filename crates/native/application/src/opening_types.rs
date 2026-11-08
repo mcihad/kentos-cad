@@ -83,6 +83,7 @@ pub(crate) fn of_builtin(t: &OpeningTypeDef, id: String, name: String) -> Openin
     OpeningType {
         id,
         name,
+        code: None,
         version: 1,
         source: None,
         form: t.form,

@@ -12848,6 +12848,23 @@
    "tests": 0
   },
   {
+   "id": "tool.openingCodes",
+   "kind": "command",
+   "title": "Doğrama kodları",
+   "level": "semantic",
+   "via": [
+    "cad.openingtypes.edit",
+    "cad.tags.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openingtypes.edit, kentos.cad.tags.create",
+   "mcp": "cad.openingtypes.edit, cad.tags.create",
+   "note": "Kodlar ve tipi olmayan açıklıkların tipleri openingtypes.edit'in Codes işlemiyle, etiketler tags.create'in all'ı ({code} üstünde {size}, Yenile) ile; ikisi tek geri alma adımıdır, önizleme aynı planı okur (ADR 3028).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.openingFlip",
    "kind": "command",
    "title": "Açıklığı çevir",

@@ -275,7 +275,11 @@ impl Tool for Number {
             "mahallere sırayla tıklayın; yeniden tıklama çıkarır, Enter önizlemeyi uygular"
         };
         Prompt::new(LABEL, step)
-            .option_with("EK-3", "E", if self.ek3 { "Açık" } else { "Kapalı" })
+            .option_with(
+                "EK-3 numarası",
+                "E",
+                if self.ek3 { "Açık" } else { "Kapalı" },
+            )
             .option("İlk numara", "N")
             .option("Sıralama", "S")
             .option("Yönü seç", "Y")

@@ -10393,6 +10393,8 @@ class OpeningTypesOperation(_Union):
     - :class:`DefineOpeningTypesOperation` (``kind: define``)
     - :class:`UpdateOpeningTypesOperation` (``kind: update``)
     - :class:`RenameOpeningTypesOperation` (``kind: rename``)
+    - :class:`CodeOpeningTypesOperation` (``kind: code``)
+    - :class:`CodesOpeningTypesOperation` (``kind: codes``)
     - :class:`RemoveOpeningTypesOperation` (``kind: remove``)
     - :class:`ImportOpeningTypesOperation` (``kind: import``)
     - :class:`ExportOpeningTypesOperation` (``kind: export``)
@@ -58896,6 +58898,9 @@ class OpeningType(_Model):
         name: What it is called (K01): unique in the project, case aside.
         version: Each change gives it the next; an opening that took an older one is behind (eski sürüm). Unit: count.
         width: The rough opening, metres (an opening's `width`). Unit: length.
+        code: Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+            door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
+            unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).
         depth: Unit: length.
         frame: Unit: length.
         head: Unit: elevation.
@@ -58910,6 +58915,7 @@ class OpeningType(_Model):
     form: OpeningForm | OpeningFormName
     width: float
     build: OpeningBuild | None | Unset = UNSET
+    code: str | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     frame: float | None | Unset = UNSET
     head: float | None | Unset = UNSET
@@ -58929,6 +58935,8 @@ class OpeningType(_Model):
         out["width"] = float(self.width)
         if self.build is not UNSET:
             out["build"] = None if self.build is None else self.build.to_json()
+        if self.code is not UNSET:
+            out["code"] = self.code
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
         if self.frame is not UNSET:
@@ -58958,6 +58966,7 @@ class OpeningType(_Model):
             form=_enum_in(OpeningForm, data["form"]),
             width=float(data["width"]),
             build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
+            code=data.get("code", UNSET),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
@@ -115542,6 +115551,48 @@ class RenameOpeningTypesOperation(OpeningTypesOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class CodeOpeningTypesOperation(OpeningTypesOperation):
+    """Doğrama kodu (docs/adr/3028): the type's joinery code set, or taken away (null); every opening of the type and
+    its tag read it.
+    """
+    TAG_VALUE: ClassVar[str] = "code"
+    type: str
+    code: str | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "code"}
+        out["type"] = self.type
+        out["code"] = self.code
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CodeOpeningTypesOperation:
+        return cls(
+            type=data["type"],
+            code=data["code"] if "code" in data else None,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CodesOpeningTypesOperation(OpeningTypesOperation):
+    """Doğrama kodları (docs/adr/3028): each type the drawing's doors, windows and bare openings follow that has no
+    code gets the next of its kind, counted from 01 in the order the drawing first has it: K a door, GK a door with
+    a room on one side only (the building's outer wall), P a window, B a bare opening. An opening following no
+    project type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a
+    locked layer is left out. Codes given before stay.
+    """
+    TAG_VALUE: ClassVar[str] = "codes"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "codes"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CodesOpeningTypesOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class RemoveOpeningTypesOperation(OpeningTypesOperation):
     """Sil: the type; its openings refuse it (`opening_type_in_use`) unless `detach`, which leaves them with their
     values, following nothing.
@@ -125144,7 +125195,7 @@ _OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": Spacing
 _OPENING_REFERENCE: dict[str, type[OpeningReference]] = {"end": EndOpeningReference, "opening": OpeningOpeningReference, "wall": WallOpeningReference, "grid": GridOpeningReference}
 
 
-_OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": DefineOpeningTypesOperation, "update": UpdateOpeningTypesOperation, "rename": RenameOpeningTypesOperation, "remove": RemoveOpeningTypesOperation, "import": ImportOpeningTypesOperation, "export": ExportOpeningTypesOperation}
+_OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": DefineOpeningTypesOperation, "update": UpdateOpeningTypesOperation, "rename": RenameOpeningTypesOperation, "code": CodeOpeningTypesOperation, "codes": CodesOpeningTypesOperation, "remove": RemoveOpeningTypesOperation, "import": ImportOpeningTypesOperation, "export": ExportOpeningTypesOperation}
 
 
 _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "detach": DetachOpeningsOperation, "push": PushOpeningsOperation, "refresh": RefreshOpeningsOperation, "reset": ResetOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
@@ -125888,7 +125939,9 @@ __all__ = [
     "CloudStats",
     "CloudSummary",
     "CodeCell",
+    "CodeOpeningTypesOperation",
     "CodedClass",
+    "CodesOpeningTypesOperation",
     "CoincidentConstraintRule",
     "CollectLeaderEdit",
     "CollinearConstraintRule",

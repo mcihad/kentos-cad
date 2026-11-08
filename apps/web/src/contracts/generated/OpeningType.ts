@@ -16,6 +16,12 @@ id: string,
  */
 name: string, 
 /**
+ * Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+ * door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
+ * unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).
+ */
+code?: string, 
+/**
  * Each change gives it the next; an opening that took an older one is behind (eski sürüm).
  */
 version: number, 

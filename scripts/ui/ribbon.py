@@ -430,6 +430,8 @@ CAD = [
             ]}, {"key": "archTags", "size": "small", "split": [
                 {"command": "tool.tag", "title": "Etiket", "label": "Etiket"},
                 {"command": "tool.tagAll", "title": "Etiket", "label": "Hepsini etiketle"},
+                # Doğrama kodları (docs/adr/3028): the openings' joinery codes and their tags, code over 90/210.
+                {"command": "tool.openingCodes", "title": "Etiket", "label": "Doğrama kodları"},
             ]}, S("arch.quantities"),
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},

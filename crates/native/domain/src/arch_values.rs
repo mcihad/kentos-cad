@@ -217,6 +217,14 @@ impl Document {
                     "type" | "style" => {
                         text(&x.style).map(|_| Text(self.opening_type_name(x.style.as_deref())))
                     }
+                    // Its type's joinery code and its size, width over height in centimetres (docs/adr/3028).
+                    "code" => x
+                        .style
+                        .as_deref()
+                        .and_then(|s| self.opening_types().iter().find(|t| t.id == s))
+                        .and_then(|t| t.code.clone())
+                        .map(Text),
+                    "size" => Some(Text(x.size_cm())),
                     "form" => Some(Text(x.form.label().to_owned())),
                     "width" => Some(Length(x.width)),
                     // Its widths (docs/adr/0772 §2): never the one for the other.

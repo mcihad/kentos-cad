@@ -36,7 +36,7 @@ fn uids(answer: &Value) -> Vec<String> {
 
 /// A new KentOS Mimari project: a 5 × 4 m room of Dış duvar 25 on its first storey, a door K1 in the first wall and
 /// the room 101 Salon; the first wall's, the door's and the room's slots.
-fn building() -> (App, [Slot; 3]) {
+pub(crate) fn building() -> (App, [Slot; 3]) {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(
         Some(Module::Architecture),

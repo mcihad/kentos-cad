@@ -1968,6 +1968,14 @@
       ],
       "note": "Dış duvarlar, doğrultu, dört yan, aşamanın sıraları ve açıklık uç/merkez seçimi dizi komutuna; mahalleri ikişer kez kesen iç kesen çizgiler iç ölçü komutuna gider; hepsi tek geri alma adımıdır, önizleme aynı planları okur (ADR 3026)."
     },
+    "tool.openingCodes": {
+      "level": "semantic",
+      "via": [
+        "cad.openingtypes.edit",
+        "cad.tags.create"
+      ],
+      "note": "Kodlar ve tipi olmayan açıklıkların tipleri openingtypes.edit'in Codes işlemiyle, etiketler tags.create'in all'ı ({code} üstünde {size}, Yenile) ile; ikisi tek geri alma adımıdır, önizleme aynı planı okur (ADR 3028)."
+    },
     "tool.wallDimensions": {
       "level": "semantic",
       "via": [

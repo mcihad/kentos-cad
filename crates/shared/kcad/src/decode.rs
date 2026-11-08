@@ -1705,6 +1705,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.materials && a.has_materials() {
                     return Err(r.fail_at(Code::UnknownField, at, "projenin malzemeleri şema 148 ister"));
                 }
+                if !has.opening_codes && a.has_opening_codes() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "kapı ve pencere tipinin doğrama kodu (code) şema 208 ister",
+                    ));
+                }
                 if !has.opening_types && a.has_opening_types() {
                     return Err(r.fail_at(
                         Code::UnknownField,

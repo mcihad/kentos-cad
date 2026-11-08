@@ -115,6 +115,8 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                     Found::Project(t) => OpeningType {
                         id: id.clone(),
                         name: name.clone(),
+                        // A copy is another type: its code is not the original's (docs/adr/3028).
+                        code: None,
                         version: 1,
                         source: None,
                         ..*t
@@ -192,6 +194,66 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                 ));
             }
             list[i].name.clone_from(name);
+        }
+        OpeningTypesOperation::Code { kind, code } => {
+            let old = types::find_project(doc, kind, "operation.type")?;
+            if let Some(c) = code
+                && !kentos_commands::opening_code_ok(c)
+            {
+                return Err(invalid(
+                    "operation.code",
+                    format!(
+                        "“{c}” doğrama kodu olamaz: harf, rakam, “-” ya da “.” ile en çok 16 harf, harfle başlar (K01 gibi)."
+                    ),
+                ));
+            }
+            if old.code == *code {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    match code {
+                        Some(c) => format!("“{}” tipinin kodu zaten “{c}”.", old.name),
+                        None => format!("“{}” tipinin kodu yok.", old.name),
+                    },
+                    "operation.code",
+                ));
+            }
+            let i = list.iter().position(|t| t.id == old.id).unwrap_or(0);
+            if let Some(c) = code
+                && let Some(other) = list.iter().enumerate().find(|(j, t)| {
+                    *j != i
+                        && t.code
+                            .as_deref()
+                            .is_some_and(|o| o.to_lowercase() == c.to_lowercase())
+                })
+            {
+                return Err(fail(
+                    codes::OPENING_TYPE_EXISTS,
+                    format!(
+                        "“{c}” kodu “{}” tipinde; başka bir kod verin.",
+                        other.1.name
+                    ),
+                    "operation.code",
+                ));
+            }
+            list[i].code.clone_from(code);
+        }
+        OpeningTypesOperation::Codes {} => {
+            let plan = crate::opening_codes::plan(doc);
+            if plan.given.is_empty() && plan.updates.is_empty() {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Kod verilecek kapı, pencere ya da boşluk yok: çizimde yoklar ya da tiplerinin hepsinin kodu var."
+                        .into(),
+                    "operation",
+                ));
+            }
+            list = plan.types;
+            work.report.applied = plan
+                .updates
+                .iter()
+                .map(|(s, _)| doc.uid(*s).map(|u| u.to_string()).unwrap_or_default())
+                .collect();
+            work.updates = plan.updates;
         }
         OpeningTypesOperation::Remove { kind, detach } => {
             let old = types::find_project(doc, kind, "operation.type")?;

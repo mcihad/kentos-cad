@@ -1452,6 +1452,11 @@ impl ArchSettings {
         !self.opening_types.is_empty()
     }
 
+    /// Whether a door or window type has a joinery code (KCAD 208, docs/adr/3028).
+    pub fn has_opening_codes(&self) -> bool {
+        self.opening_types.iter().any(|t| t.code.is_some())
+    }
+
     /// Whether it keeps combinations of design options (KCAD 154, docs/adr/0808).
     pub fn has_option_combos(&self) -> bool {
         !self.option_combos.is_empty()

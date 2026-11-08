@@ -1,0 +1,37 @@
+# M28 (docs/adr/3028): Doğrama kodları in the real window, on the 2+1 apartment the acceptance test keeps
+# (`KENTOS_ACCEPTANCE_OUT`, acceptance_flat_tests.rs) opened on Mimari at 1440 × 900, 13 px text. Etiket ▾ shows the new
+# item; started from Komut ara, the codes are drawn at the openings with the card's list of types before anything is
+# written; Enter writes them and tags every door and window, the code over 90/210, beside its wall, clear of the swings
+# and of the rooms' tags; a close look at the corridor.
+fit KentOS Mimari — Daire
+wait 3000
+click 600 450 middle   # orta tuşa çift tık: tümünü göster
+click 600 450 middle
+wait 1500
+move 560 470
+wait 500
+shot m28-10-plan
+click 998 84   # Etiket ▾
+wait 900
+shot m28-11-etiket-menusu
+key Escape
+wait 500
+click 1165 20   # Menülerde ara
+wait 500
+type doğrama kodları
+wait 1000
+key Return
+wait 1500
+move 560 470
+wait 600
+shot m28-12-onizleme
+key Return
+wait 2000
+move 560 470
+wait 600
+shot m28-13-kodlandi
+wheel 400 290 4   # koridor ve banyo kapıları
+wait 1200
+move 1200 800
+wait 600
+shot m28-14-yakin

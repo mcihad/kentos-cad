@@ -446,6 +446,12 @@ pub struct OpeningType {
     pub id: String,
     /// What it is called (K01): unique in the project, case aside.
     pub name: String,
+    /// Its joinery code (docs/adr/3028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+    /// door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
+    /// unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 208).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<String>,
     /// Each change gives it the next; an opening that took an older one is behind (eski sürüm).
     #[cfg_attr(feature = "schema", schemars(range(min = 1), extend("x-unit" = "count")))]
     pub version: u32,
@@ -516,6 +522,15 @@ pub fn opening_type_id_ok(id: &str) -> bool {
         && id
             .chars()
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// Whether `code` may be a type's joinery code (docs/adr/3028): a letter first, then letters, digits, `-` or `.`, at
+/// most 16.
+pub fn opening_code_ok(code: &str) -> bool {
+    let mut chars = code.chars();
+    chars.next().is_some_and(char::is_alphabetic)
+        && code.chars().count() <= 16
+        && chars.all(|c| c.is_alphanumeric() || c == '-' || c == '.')
 }
 
 /// A type's id from its name: lower-case ASCII letters and digits, Turkish letters folded, the rest `-`.
@@ -599,6 +614,16 @@ impl OpeningType {
             return Some((
                 "version".into(),
                 "Tipin sürümü 1 ya da daha büyük olmalı.".into(),
+            ));
+        }
+        if let Some(c) = &self.code
+            && !opening_code_ok(c)
+        {
+            return Some((
+                "code".into(),
+                format!(
+                    "“{c}” doğrama kodu olamaz: harf, rakam, “-” ya da “.” ile en çok 16 harf, harfle başlar (K01 gibi)."
+                ),
             ));
         }
         if let Some(s) = &self.source
@@ -765,6 +790,23 @@ impl OpeningFields {
     /// Its sizes (docs/adr/0772 §2).
     pub fn sizes(&self) -> OpeningSizes {
         opening_sizes(self)
+    }
+
+    /// Its size in centimetres as Mimarlar Odası writes it on a plan (docs/adr/3028): width over height, 90/210; its
+    /// width alone when it has no head. A whole centimetre is written without decimals, else one.
+    pub fn size_cm(&self) -> String {
+        let cm = |m: f64| {
+            let c = m * 100.0;
+            if (c - c.round()).abs() < 0.05 {
+                format!("{}", c.round() as i64)
+            } else {
+                format!("{c:.1}")
+            }
+        };
+        match self.head {
+            Some(h) => format!("{}/{}", cm(self.width), cm(h - self.sill.unwrap_or(0.0))),
+            None => cm(self.width),
+        }
     }
 }
 
@@ -1237,7 +1279,18 @@ pub fn opening_types_problem(types: &[OpeningType]) -> Option<(String, String)> 
         ));
     }
     let mut seen = std::collections::BTreeSet::new();
+    let mut codes = std::collections::BTreeSet::new();
     for (i, t) in types.iter().enumerate() {
+        if let Some(c) = &t.code
+            && !codes.insert(c.to_lowercase())
+        {
+            return Some((
+                format!("openingTypes[{i}].code"),
+                format!(
+                    "“{c}” doğrama kodu iki tipte var; kod büyük küçük harf ayırmadan tek olmalı."
+                ),
+            ));
+        }
         if !seen.insert(t.name.to_lowercase()) {
             return Some((
                 format!("openingTypes[{i}].name"),
@@ -1277,6 +1330,7 @@ mod tests {
         OpeningType {
             id: "k01".into(),
             name: "K01".into(),
+            code: None,
             version: 1,
             source: None,
             form: OpeningForm::Door,
@@ -1322,6 +1376,7 @@ mod tests {
         let mut t = OpeningType {
             id: "k01".into(),
             name: "K01".into(),
+            code: None,
             version: 2,
             source: None,
             form: OpeningForm::Door,

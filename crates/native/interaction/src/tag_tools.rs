@@ -403,11 +403,70 @@ impl TagAllTool {
     pub fn new() -> Self {
         Self::default()
     }
+    /// The untagged openings' tags, each placed beside its wall clear of the walls, the swings and the tags
+    /// (docs/adr/3028); the command's own place sits them on the wall line or on a room's tag. The source level's
+    /// openings only, as `all` takes them; none past 500 (the command's place then).
+    fn opening_tags(&self, cx: &Context<'_>) -> Vec<NewTag> {
+        if !self.kinds.contains(&TaggedKind::Opening) {
+            return Vec::new();
+        }
+        let doc: &kentos_domain::Document = cx.doc;
+        let tagged: std::collections::BTreeSet<&str> = doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Tag(t) => Some(t.tag.of.as_str()),
+                _ => None,
+            })
+            .collect();
+        let level_of = |o: &kentos_commands::OpeningEntity| {
+            kentos_domain::Uuid::parse_str(&o.opening.host)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+                .map(|w| w.own_level().map(str::to_owned))
+        };
+        let wanted =
+            |o: &kentos_commands::OpeningEntity| match (self.source.scope(), self.source.id()) {
+                (kentos_commands::SpaceScope::Unassigned, _) => level_of(o) == Some(None),
+                (_, Some(id)) => level_of(o) == Some(Some(id)),
+                _ => true,
+            };
+        let untagged: Vec<String> = doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Opening(o) if doc.layers().is_visible(&o.base.layer_id) && wanted(o) => {
+                    doc.uid(Slot(o.base.id)).map(|u| u.to_string())
+                }
+                _ => None,
+            })
+            .filter(|u| !tagged.contains(u.as_str()))
+            .collect();
+        if untagged.is_empty() || untagged.len() > 500 {
+            return Vec::new();
+        }
+        kentos_native_application::tags::opening_places(
+            doc,
+            &untagged,
+            self.content.as_deref(),
+            self.shape,
+            self.size,
+        )
+        .into_iter()
+        .map(|(of, at)| NewTag {
+            of,
+            at: Some(at),
+            content: self.content.clone(),
+            shape: self.shape,
+            size: self.size,
+            leader: None,
+        })
+        .collect()
+    }
     fn made(&self, cx: &Context<'_>) -> TagsCreate {
         TagsCreate {
             // The tags' layer (docs/adr/3008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx),
-            tags: vec![],
+            tags: self.opening_tags(cx),
             all: Some(TagAll {
                 kinds: self.kinds.clone(),
                 refresh: self.refresh.then_some(true),

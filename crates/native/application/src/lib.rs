@@ -431,6 +431,7 @@ pub mod opening_placement;
 pub mod openings_edit;
 pub mod opening_distances;
 // Kapı ve pencere tipleri (docs/adr/0772).
+pub mod opening_codes;
 pub(crate) mod opening_types;
 pub(crate) mod door_audit;
 pub mod fixture_audit;

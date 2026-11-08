@@ -87,6 +87,8 @@ pub const TOOLS: &[&str] = &[
     crate::wall_shift::ID,
     crate::wall_dimensions::ID,
     crate::plan_dimensions::ID,
+    // Doğrama kodları (docs/adr/3028).
+    crate::opening_codes_tool::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
     // The wall edits by a click (docs/adr/0340 §6).
@@ -498,6 +500,9 @@ impl Session {
                 Box::new(crate::interior_dims::InteriorDimensions::default())
             }
             crate::plan_dimensions::ID => Box::new(crate::plan_dimensions::PlanDimensions::new()),
+            crate::opening_codes_tool::ID => {
+                Box::new(crate::opening_codes_tool::OpeningCodes::new())
+            }
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }

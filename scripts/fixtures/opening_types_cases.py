@@ -90,7 +90,11 @@ def wall(id, x0, y, x1, level=None, layer_id="duvar"):
 
 def type_json(t):
     """A type as the project keeps it: defaults left out."""
-    out = {"id": t["id"], "name": t["name"], "version": t["version"]}
+    out = {"id": t["id"], "name": t["name"]}
+    if t.get("code") is not None:
+        # Its joinery code (docs/adr/3028), after its name as the contract writes it.
+        out["code"] = t["code"]
+    out["version"] = t["version"]
     if t.get("source") is not None:
         out["source"] = t["source"]
     out["form"] = t["form"]
@@ -871,6 +875,20 @@ def types_edit_cases():
     inp = {"operation": {"kind": "rename", "type": "K02", "name": "K02"}}
     out.append(edit_case("Ret: ad aynı", [types_step(d, "execute", inp, refusal("nothing_to_set", "Tipin adı zaten “K02”.",
                                                                                "operation.name"))]))
+    # Doğrama kodu (docs/adr/3028): the type's joinery code; its openings and their tags read it, nothing else changes.
+    after = copy.deepcopy(d)
+    for t in after.types:
+        if t["id"] == "k02":
+            t["code"] = "K02"
+    inp = {"operation": {"kind": "code", "type": "k02", "code": "K02"}}
+    out.append(edit_case("Doğrama kodu: tip kodunu alır, izleyenler aynı", [types_step(after, "execute", inp, done(edited(after.types, EMPTY)))]))
+    inp = {"operation": {"kind": "code", "type": "K02", "code": "1K"}}
+    out.append(edit_case("Ret: rakamla başlayan doğrama kodu", [types_step(d, "execute", inp, refusal(
+        "invalid_opening_type", "“1K” doğrama kodu olamaz: harf, rakam, “-” ya da “.” ile en çok 16 harf, harfle başlar (K01 gibi).",
+        "operation.code"))]))
+    inp = {"operation": {"kind": "code", "type": "K02", "code": None}}
+    out.append(edit_case("Ret: kodu olmayan tipin kodu kaldırılmaz", [types_step(d, "execute", inp, refusal(
+        "nothing_to_set", "“K02” tipinin kodu yok.", "operation.code"))]))
     inp = {"operation": {"kind": "remove", "type": "K02"}}
     out.append(edit_case("Ret: izlenen tip silinmez", [types_step(d, "execute", inp, refusal(
         "opening_type_in_use", "“K02” tipini 3 açıklık izliyor; silmek için onları tipten ayırın (detach: true) ya da önce başka tip verin.",

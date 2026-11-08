@@ -854,11 +854,14 @@ pub const SCHEMA_WITH_PLAN_CUT: u32 = 205;
 pub const SCHEMA_WITH_LINE_GROUPS: u32 = 206;
 /// Schema 207 (docs/adr/3027): a tag framed by an ellipse round its first line (a room's number, Mimarlar Odası's).
 pub const SCHEMA_WITH_ELLIPSE_TAGS: u32 = 207;
+/// Schema 208 (docs/adr/3028): a door or window type's joinery code (`settings.arch.openingTypes[].code`) and a tag
+/// naming it or an opening's size (`{code}`, `{size}`).
+pub const SCHEMA_WITH_OPENING_CODES: u32 = 208;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 205] = [
+pub const SCHEMAS: [u32; 206] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1064,6 +1067,7 @@ pub const SCHEMAS: [u32; 205] = [
     SCHEMA_WITH_PLAN_CUT,
     SCHEMA_WITH_LINE_GROUPS,
     SCHEMA_WITH_ELLIPSE_TAGS,
+    SCHEMA_WITH_OPENING_CODES,
 ];
 
 /// The file a drawing is saved as.

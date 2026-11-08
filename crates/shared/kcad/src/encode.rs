@@ -2270,6 +2270,20 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 208 (docs/adr/3028): a type's joinery code, a tag naming it or an opening's size.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_opening_codes)
+        || objs.iter().any(kentos_contracts::needs_opening_codes)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_opening_codes))
+    {
+        return crate::SCHEMA_WITH_OPENING_CODES;
+    }
     // Schema 207 (docs/adr/3027): a tag framed by an ellipse (a room's number, Mimarlar Odası's).
     if objs.iter().any(kentos_contracts::needs_ellipse_tags)
         || doc
