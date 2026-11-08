@@ -119,3 +119,145 @@ fn a_door_and_a_window_print_by_their_maps_scale() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// The library's double bed (`catalog/v1/blocks/kentos-temel.kblok`, Mobilya/Yatak): its outline and two pillows.
+fn bed_library() -> String {
+    let library: Value = serde_json::from_str(include_str!(
+        "../../../../../catalog/v1/blocks/kentos-temel.kblok"
+    ))
+    .expect("the library");
+    let bed: Vec<Value> = library["blocks"]
+        .as_array()
+        .expect("its blocks")
+        .iter()
+        .filter(|b| b["name"] == "Çift kişilik yatak")
+        .cloned()
+        .collect();
+    json!({ "format": "kentos.blocks", "version": 1, "blocks": bed }).to_string()
+}
+
+/// Kolon, merdiven, rampa ve mobilya ölçeğe göre (docs/adr/3011): a tagged column, a numbered stair with railings, a
+/// ramp with railings and the library's double bed, the same storey on 1:200, 1:100 and 1:50 sheets, written as PDF
+/// and read back.
+/// - 1:200: the column's outline, the stair's band, treads, cut and arrow, the ramp's band, arrow, slope and levels,
+///   the bed's outline;
+/// - 1:100: and the column's name, the railings, the treads' numbers, the bed's pillows;
+/// - 1:50: and the column's size and the stair's risers and treads in words.
+///
+/// `KENTOS_SCALE_PDF_DIR=dir` keeps the three PDFs there (`parca-1-<scale>.pdf`).
+#[test]
+fn columns_stairs_ramps_and_furniture_print_by_their_maps_scale() {
+    let mut s = Session::new(&NewDrawing {
+        name: "Ölçek 2".into(),
+        srid: 0,
+        plot_scale: 100.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: Some(DrawingUnit::M),
+        annotation: None,
+        cad_work: Some(CadWork::Architecture),
+        heights: None,
+    })
+    .expect("a new building");
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let call = |s: &mut Session, command: &str, input: Value| {
+        done(
+            s.call(json!({ "command": command, "input": input }))
+                .expect("answers"),
+        )
+    };
+    call(
+        &mut s,
+        "cad.columns.create",
+        json!({ "layerId": layer,
+        "columns": [{ "at": { "x": 1.0, "y": 4.0 }, "width": 0.3, "depth": 0.5, "tag": "S1" }] }),
+    );
+    call(
+        &mut s,
+        "cad.stairs.create",
+        json!({ "layerId": layer,
+        "stairs": [{ "pts": [{ "x": 3.0, "y": 4.0 }, { "x": 5.8, "y": 4.0 }], "width": 1.2, "risers": 11,
+            "riserHeight": 0.175, "tread": 0.28, "numbering": true, "railings": "both", "cut": 6 }] }),
+    );
+    call(
+        &mut s,
+        "cad.ramps.create",
+        json!({ "layerId": layer,
+        "ramps": [{ "pts": [{ "x": 1.0, "y": 1.0 }, { "x": 7.0, "y": 1.0 }], "width": 1.2, "rise": 0.36,
+            "slope": 6.0, "railings": "both" }] }),
+    );
+    call(
+        &mut s,
+        "cad.blocks.edit",
+        json!({ "operation": "import", "library": bed_library() }),
+    );
+    call(
+        &mut s,
+        "cad.blocks.insert",
+        json!({ "block": "0192f5b0-0000-7000-8000-000000000007",
+        "at": { "x": 7.5, "y": 3.0 }, "layerId": layer }),
+    );
+    let dir = std::env::temp_dir().join(format!("kentos-olcek-parca-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let mut pages = Vec::new();
+    for (scale, first) in [(200, "A-101"), (100, "A-102"), (50, "A-103")] {
+        let made = done(
+            s.call(json!({ "command": "cad.sheets.levels", "input": {
+                "options": { "scale": scale }, "first": first, "again": true
+            } }))
+            .expect("answers"),
+        );
+        let id = made["sheets"]
+            .as_array()
+            .and_then(|all| {
+                all.iter()
+                    .find(|sheet| sheet["name"].as_str().is_some_and(|n| n.starts_with(first)))
+            })
+            .and_then(|sheet| sheet["id"].as_str())
+            .expect("its sheet")
+            .to_owned();
+        let pdf = dir.join(format!("parca-1-{scale}.pdf"));
+        s.export_pdf(&pdf, &[id]).expect("the PDF");
+        if let Ok(keep) = std::env::var("KENTOS_SCALE_PDF_DIR") {
+            std::fs::copy(
+                &pdf,
+                std::path::Path::new(&keep).join(format!("parca-1-{scale}.pdf")),
+            )
+            .expect("kept");
+        }
+        let bytes = std::fs::read(&pdf).expect("written");
+        pages.push(kentos_formats::pdf::read_page(&bytes, 1).expect("its first page"));
+    }
+    let texts: Vec<Vec<String>> = pages
+        .iter()
+        .map(|p| p.texts.iter().map(|t| t.text.trim().to_owned()).collect())
+        .collect();
+    let has = |k: usize, w: &str| texts[k].iter().any(|t| t == w);
+    let strokes: Vec<usize> = pages
+        .iter()
+        .map(|p| p.paths.iter().filter(|q| q.stroke.is_some()).count())
+        .collect();
+    eprintln!("strokes {strokes:?}");
+    let words = "11 × 17.5/28";
+    // The column's name from 1:100, its size from 1:50; the treads' numbers from 1:100; the stair in words from 1:50.
+    assert!(!has(0, "S1") && has(1, "S1") && has(2, "S1"), "{texts:?}");
+    assert!(!has(1, "30/50") && has(2, "30/50"), "{texts:?}");
+    assert!(
+        !has(0, "1") && has(1, "1") && has(1, "6") && has(2, "6"),
+        "{texts:?}"
+    );
+    assert!(!has(1, words) && has(2, words), "{texts:?}");
+    // The ramp's slope and levels at every scale.
+    assert!(
+        (0..3).all(|k| has(k, "%6.00") && has(k, "+0.36")),
+        "{texts:?}"
+    );
+    // 1:100 adds the stair's railings, the ramp's and the bed's two pillows to 1:200; 1:50 no line more.
+    assert_eq!(strokes[1] - strokes[0], 8, "{strokes:?}");
+    assert_eq!(strokes[2], strokes[1], "{strokes:?}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

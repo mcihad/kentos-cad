@@ -393,6 +393,18 @@ pub struct View {
     pub scale: f64,
 }
 
+/// Beyond 1:`SIMPLE_BEYOND` a schematic view draws the simplest (docs/adr/3010, 3011): a door its leaf, a window its
+/// glass, a stair and a ramp without railings or numbers, a column without its words, a slab's edge its outer line,
+/// furniture its outline. 1:200 is beyond it, 1:100 and 1:150 are not.
+pub const SIMPLE_BEYOND: f64 = 150.0;
+
+impl View {
+    /// Whether it draws the simplest: schematic beyond 1:[`SIMPLE_BEYOND`].
+    pub fn simple(self) -> bool {
+        self.detail == Detail::Schematic && self.scale > SIMPLE_BEYOND
+    }
+}
+
 impl Default for View {
     fn default() -> Self {
         Self {

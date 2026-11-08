@@ -35,7 +35,7 @@
 //! while that layer does (`Piece::gates`), and a nested insert's pieces only
 //! while its layer does.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
 
 use crate::api::json::Json;
@@ -282,6 +282,51 @@ pub struct Blocks {
     dynamic: Arc<HashMap<String, Arc<Definition>>>,
     /// Their variants by block id and values (`Params::key`); emptied when it grows past `MAX_VARIANTS`.
     variants: Arc<Mutex<HashMap<String, Arc<Flat>>>>,
+    /// The furniture: definitions whose library card's category is under "Mobilya/", drawn as their outline beyond
+    /// 1:150 schematic (docs/adr/3011, [`outline_pieces`]).
+    furniture: Arc<HashSet<String>>,
+}
+
+/// The library card category furniture is filed under (catalog/v1/blocks: Mobilya/Yatak, Mobilya/Oturma …).
+pub const FURNITURE_CATEGORY: &str = "Mobilya/";
+
+/// A furniture insert's pieces as its simplest view draws them (docs/adr/3011): the closed pieces round the whole, a
+/// bed's frame without its pillows, a sofa's without its cushions; a closed piece is kept when its box is at least half
+/// the pieces' box both ways. Pieces none of which goes round the whole are kept as they are.
+pub fn outline_pieces(pieces: Vec<Piece>, font: crate::text::Font) -> Vec<Piece> {
+    let boxes: Vec<Bounds> = pieces
+        .iter()
+        .map(|p| entity_bounds_in(&p.shape, font))
+        .collect();
+    let mut all = empty_bounds();
+    for b in &boxes {
+        if b.min_x <= b.max_x {
+            extend_bounds(&mut all, Vec2::new(b.min_x, b.min_y), 0.0);
+            extend_bounds(&mut all, Vec2::new(b.max_x, b.max_y), 0.0);
+        }
+    }
+    let (w, h) = (all.max_x - all.min_x, all.max_y - all.min_y);
+    let round = |p: &Piece, b: &Bounds| {
+        let closed = match &p.shape {
+            // Closed, or ending where it starts.
+            Shape::Polyline { closed, pts, .. } => {
+                *closed || (pts.len() > 3 && pts.first() == pts.last())
+            }
+            Shape::Polygon { .. } | Shape::Circle { .. } => true,
+            Shape::Ellipse { t0, t1, .. } => (t1 - t0).abs() >= 2.0 * PI * 0.999,
+            _ => false,
+        };
+        closed && b.max_x - b.min_x >= w / 2.0 && b.max_y - b.min_y >= h / 2.0
+    };
+    if !(w > 0.0 && h > 0.0 && pieces.iter().zip(&boxes).any(|(p, b)| round(p, b))) {
+        return pieces;
+    }
+    pieces
+        .into_iter()
+        .zip(boxes)
+        .filter(|(p, b)| round(p, b))
+        .map(|(p, _)| p)
+        .collect()
 }
 
 /// The most variants kept at once: a drawing's dynamic inserts draw few distinct values.
@@ -312,20 +357,50 @@ impl Blocks {
             underlays: Arc::new(underlays),
             dynamic: Arc::new(dynamic),
             variants: Arc::default(),
+            furniture: Arc::default(),
         }
+    }
+
+    /// The same definitions, `ids` the furniture among them (docs/adr/3011).
+    pub fn with_furniture(mut self, ids: impl IntoIterator<Item = String>) -> Blocks {
+        self.furniture = Arc::new(ids.into_iter().collect());
+        self
+    }
+
+    /// Whether definition `id` is furniture: drawn as its outline beyond 1:150 schematic.
+    pub fn is_furniture(&self, id: &str) -> bool {
+        self.furniture.contains(id)
+    }
+
+    /// The font pieces are measured in.
+    pub fn font(&self) -> crate::text::Font {
+        self.font
     }
 
     /// Rebuild rare project-font changes from the retained original entities,
     /// not the already flattened pieces. No second copy of static source
     /// geometry is retained solely for this operation.
     pub fn with_font(self, font: Font) -> Blocks {
-        if self.font == font {return self;}
-        let defs = self.by_id.iter().map(|(id, f)| Definition {
-            id:id.clone(), base:f.base, entities:f.entities.clone(), attributes:f.attributes.clone(),
-            dynamic:self.dynamic.get(id).and_then(|d|d.dynamic.clone()),
-            underlay:self.underlays.get(id).copied(),
-        }).collect();
-        Self::new_in(defs, font)
+        if self.font == font {
+            return self;
+        }
+        let defs = self
+            .by_id
+            .iter()
+            .map(|(id, f)| Definition {
+                id: id.clone(),
+                base: f.base,
+                entities: f.entities.clone(),
+                attributes: f.attributes.clone(),
+                dynamic: self.dynamic.get(id).and_then(|d| d.dynamic.clone()),
+                underlay: self.underlays.get(id).copied(),
+            })
+            .collect();
+        let furniture = self.furniture.clone();
+        Blocks {
+            furniture,
+            ..Self::new_in(defs, font)
+        }
     }
 
     /// The flat an insert draws: its definition's, or the variant its parameter values make (docs/adr/0318 §2).
@@ -387,6 +462,7 @@ impl Blocks {
             return Err("blok tanımları bir dizi olmalı".into());
         };
         let mut defs = Vec::with_capacity(list.len());
+        let mut furniture = Vec::new();
         for (i, d) in list.iter().enumerate() {
             let Json::Str(id) = d.get("id") else {
                 return Err(format!("[{i}].id: metin bekleniyordu"));
@@ -418,6 +494,11 @@ impl Blocks {
                 Json::Obj(_) => Some(Arc::new(Dynamic::from_json(d.get("dynamic")))),
                 _ => None,
             };
+            if let Json::Str(category) = d.get("card").get("category")
+                && category.starts_with(FURNITURE_CATEGORY)
+            {
+                furniture.push(id.clone());
+            }
             defs.push(Definition {
                 id: id.clone(),
                 base,
@@ -427,7 +508,7 @@ impl Blocks {
                 underlay: Underlay::of(d.get("xref")),
             });
         }
-        Ok(Blocks::new(defs))
+        Ok(Blocks::new(defs).with_furniture(furniture))
     }
 
     /// A dynamic definition's parameters and actions (docs/adr/0318); none for a plain one.

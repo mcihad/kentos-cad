@@ -732,7 +732,8 @@ _Durum (7 Kasım 2026):_ Katman anahtarı yapıldı (M9, [ADR 3008](../docs/adr/
   - yay, cam ve malzeme sınırları ISO 128-23'ün ince çizgisiyle, nesnenin kaleminin yarısıyla çiziliyor;
   - 1:50 PDF'te 0,5 / 0,25 / 0,125 mm ölçüldü.
 - Kalanlar:
-  - ölçeğe göre çizgi grubu (M12) ve kesme düzleminin önündeki çizgiler (M13);
+  - ölçeğe göre çizgi grubu (sahibin kararı bekleniyor: ISO 128-23 hangi ölçeğe hangi grubun düştüğünü söylemiyor) ve
+    kesme düzleminin önündeki çizgiler (M13);
   - ofis ve proje profili;
   - var olan nesneleri dağıtan komut;
   - donatı ve blok katmanları (M24);
@@ -770,10 +771,18 @@ _Durum (7 Kasım 2026):_ Kapı ve pencere ölçeğe göre çiziliyor (M11, [ADR 
 - Dayanak: Mimarlar Odası Mimari Proje Çizim ve Sunuş Standartları. Ön proje 1/100'de "kapıların açılış yönleri
   belirtilir"; uygulama projesi 1/50'de "doğramalar detayına uygun" çizilir.
 - Aynı kat üç paftada PDF'e basıldı. Kapı ve pencere çizgisi 1:200'de 2, 1:100'de 5, 1:50'de 9; önce üçünde de 9'du.
+- Kolon, merdiven, rampa, döşeme kenarı ve mobilya da ölçeğe göre çiziliyor (M12,
+  [ADR 3011](../docs/adr/3011-elements-by-scale.md)).
+  - 1:200 en sadedir: kolonda yazı, merdivende ve rampada korkuluk, merdivende numara, döşeme kenarında iç çizgi yok;
+    mobilya dış çizgisiyle.
+  - 1:50'de kolonun ölçüsü (30/50) ve merdivenin rıht ve basamağı (11 × 17.5/28) yazılır: Mimarlar Odası uygulama
+    projesinde "kolon isimleri ve ölçüleri", merdivenin "basamak adedi … ve rıht yüksekliği" ister.
+  - Aynı kat üç paftada PDF'e basıldı ve gerçek pencerede önceki ikiliyle karşılaştırıldı.
 - Kalanlar:
-  - 1:20 kasa profili;
-  - kolon, merdiven, döşeme, mobilya ve tarama düzeyi ile ölçeğe göre çizgi grubu (M12);
+  - 1:20 kasa profili ve kolonun beton taraması (M14);
+  - ölçeğe göre çizgi grubu (sahibin kararı bekleniyor);
   - kesme yüksekliği (M13), tarama kitaplığı (M14);
+  - mobilyanın parça parça ayrıntı düzeyi, ıslak hacim ve mutfak bloklarının sade gösterimi;
   - web çiziminin düzeyi ölçeğe göre seçmesi.
 
 **Kullanıcı sonucu:** Aynı plan 1:100'de sade, 1:50'de uygulama, 1:20'de detay ayrıntısıyla çizilir. Dayanak S4.
@@ -1054,7 +1063,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M9 | Katman anahtarı (EK-4) | ADV-14 | 2+1 örneği türlerine göre katmanlarda; DXF'te aynısı **(M9, ADR 3008: yapıldı; 54 nesne 9 EK-4 katmanında; profil ve blok katmanı kaldı)** |
 | M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı **(M10, ADR 3009: yapıldı; yay, cam ve malzeme sınırı yarım kalem; 1:50 PDF'te ölçüldü; ölçeğe göre çizgi grubu M11–M12'ye)** |
 | M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı **(M11, ADR 3010: yapıldı; kapı ve pencere çizgisi 1:200'de 2, 1:100'de 5, 1:50'de 9; 1:20 kasa profili kaldı)** |
-| M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte |
+| M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte **(M12, ADR 3011: yapıldı; 1:200 sade, 1:50'de kolon ölçüsü ve merdiven bilgisi; kolonun beton taraması M14'e, çizgi grubu sahibin kararına)** |
 | M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler |
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım |
 | M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) |

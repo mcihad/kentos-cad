@@ -106,9 +106,30 @@ pub fn runs(rs: &[kentos_geometry_core::geom::slab::Run]) -> Vec<kentos_contract
 /// A slab as plain objects (docs/adr/0722 §6): its rings and its edge's lines, each on its layer with its look. What
 /// DXF without KentOS's data and Patlat write.
 pub fn slab_pieces(s: &kentos_contracts::SlabEntity) -> Vec<kentos_contracts::Entity> {
+    slab_pieces_of(s, None)
+}
+
+/// [`slab_pieces`] as a drawing at `view` shows them (docs/adr/3011): beyond 1:150 schematic its edge's outer lines
+/// alone, as the walls beside it are drawn.
+pub fn slab_pieces_in(
+    s: &kentos_contracts::SlabEntity,
+    view: kentos_geometry_core::geom::wall::View,
+) -> Vec<kentos_contracts::Entity> {
+    slab_pieces_of(s, Some(view))
+}
+
+fn slab_pieces_of(
+    s: &kentos_contracts::SlabEntity,
+    view: Option<kentos_geometry_core::geom::wall::View>,
+) -> Vec<kentos_contracts::Entity> {
     let parts: Vec<Area> = s.slab.parts.iter().map(area).collect();
+    let look = slab_look(&s.slab);
+    let shapes = match view {
+        Some(view) => kentos_geometry_core::geom::slab::pieces_in(&parts, &look, view),
+        None => kentos_geometry_core::geom::slab::pieces(&parts, &look),
+    };
     let mut out = Vec::new();
-    for piece in kentos_geometry_core::geom::slab::pieces(&parts, &slab_look(&s.slab)) {
+    for piece in shapes {
         let Some(mut plain) = crate::blocks::piece_entity(&piece) else {
             continue;
         };

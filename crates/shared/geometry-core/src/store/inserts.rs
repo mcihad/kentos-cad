@@ -480,3 +480,64 @@ fn many_objects_put_on_several_cores_make_the_same_store() {
         assert_eq!(one.hits(at, 0.5), many.hits(at, 0.5), "{at:?}");
     }
 }
+
+/// Furniture follows the store's view (docs/adr/3011): its outline alone beyond 1:150 schematic, whole at 1:100 and
+/// 1:50; a block that is not furniture is whole at every view; another view's pieces are the same as the store's at it.
+#[test]
+fn furniture_is_its_outline_in_the_simplest_view() {
+    use crate::geom::wall::{Detail, View};
+    let blocks = r##"[
+        {"id":"y","name":"Yatak","base":{"x":0,"y":0},"card":{"category":"Mobilya/Yatak","tags":[],"version":1},
+         "entities":[
+            {"kind":"polygon","id":1,"layerId":"","attrs":{},
+             "pts":[{"x":0,"y":0},{"x":1.6,"y":0},{"x":1.6,"y":2},{"x":0,"y":2}]},
+            {"kind":"polygon","id":2,"layerId":"","attrs":{},
+             "pts":[{"x":0.1,"y":0.1},{"x":0.75,"y":0.1},{"x":0.75,"y":0.45},{"x":0.1,"y":0.45}]},
+            {"kind":"polygon","id":3,"layerId":"","attrs":{},
+             "pts":[{"x":0.85,"y":0.1},{"x":1.5,"y":0.1},{"x":1.5,"y":0.45},{"x":0.85,"y":0.45}]}]},
+        {"id":"k","name":"Kutu","base":{"x":0,"y":0},
+         "entities":[
+            {"kind":"polyline","id":1,"layerId":"","attrs":{},"closed":true,
+             "pts":[{"x":0,"y":0},{"x":2,"y":0},{"x":2,"y":2},{"x":0,"y":2}]},
+            {"kind":"line","id":2,"layerId":"","attrs":{},"a":{"x":0.2,"y":0.2},"b":{"x":0.6,"y":0.2}}]}]"##;
+    let mut s = Store::new();
+    s.set_blocks_json(blocks).unwrap();
+    s.put_json(
+        r#"[{"id":1,"layerId":"a","kind":"insert","block":"y","p":{"x":0,"y":0},"scale":1,"rotation":0},
+            {"id":2,"layerId":"a","kind":"insert","block":"k","p":{"x":5,"y":0},"scale":1,"rotation":0}]"#,
+    )
+    .unwrap();
+    let count = |s: &Store, id: f64| {
+        s.get(id)
+            .unwrap()
+            .expanded
+            .as_ref()
+            .map_or(0, |x| x.shapes.len())
+    };
+    let simple = View {
+        detail: Detail::Schematic,
+        scale: 200.0,
+    };
+    for (view, bed) in [
+        (simple, 1),
+        (
+            View {
+                detail: Detail::Schematic,
+                scale: 100.0,
+            },
+            3,
+        ),
+        (
+            View {
+                detail: Detail::Standard,
+                scale: 50.0,
+            },
+            3,
+        ),
+    ] {
+        s.set_wall_view(view);
+        assert_eq!((count(&s, 1.0), count(&s, 2.0)), (bed, 2), "{view:?}");
+    }
+    assert_eq!(s.expanded_at(1.0, simple).unwrap().shapes.len(), 1);
+    assert_eq!(count(&s, 1.0), 3, "its own pieces untouched");
+}

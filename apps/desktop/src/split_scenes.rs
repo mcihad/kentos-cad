@@ -65,7 +65,7 @@ fn uid(app: &App, slot: u32) -> String {
         .to_string()
 }
 
-/// The door-and-window room at 1:100, its walls' detail by the view (Proje ayarları › Mimari: Otomatik), in three
+/// The door-and-window room at 1:100, its walls' detail by the view (Proje ayarları › Mimari: Ölçeğe göre), in three
 /// views: the active one far (1:150, schematic: the bodies filled), the next near on the inner wall's tee (1:50,
 /// standard: the brick hatched), the last close on the bottom left door (1:15, detailed: the plaster, its frame).
 fn three_details(app: &mut App) {

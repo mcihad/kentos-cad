@@ -81,10 +81,23 @@ fn the_level_above_draws_the_stair_past_its_cut_and_never_picks_it() {
     let Shape::Stair { pts, stair } = &shape else { panic!("a stair shape") };
     let mut above = stair.clone();
     above.upper = true;
+    // At the store's view (docs/adr/3011): this drawing's scale is beyond 1:150, its railings left out there.
+    let view = b.spatial.store().wall_view();
+    let upper = Shape::Stair {
+        pts: pts.clone(),
+        stair: above.clone(),
+    };
     assert_eq!(
         pieces.shapes.len(),
-        kentos_geometry_core::geom::arch::stair_upper_pieces(pts, &above, b.doc.settings().plot_scale).len(),
-        "the store holds what the plan from above draws"
+        kentos_geometry_core::geom::arch::pieces_in(&upper, view).len(),
+        "the store holds what the plan from above draws at its view"
+    );
+    assert!(
+        view.simple()
+            && pieces.shapes.len() + 2
+                == kentos_geometry_core::geom::arch::stair_upper_pieces(pts, &above, view.scale)
+                    .len(),
+        "its two railings past the cut drawn only from 1:150 on"
     );
     // Never picked, snapped to: its end's corner (the U's last flight ends at (0, 2.6) ± 0.6).
     let at = |x: f64, y: f64| Vec2::new(E + x, N + y);

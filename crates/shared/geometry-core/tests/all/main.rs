@@ -90,6 +90,7 @@ mod spaces;
 mod space_index;
 mod space_columns;
 mod arch;
+mod arch_levels;
 mod tags;
 mod viewmarks;
 mod wall_joins;

@@ -83,6 +83,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kalınlığıyla çarpsın.
 - M11 / ADR 3010: web'in çizimi deponun duvar görünüşünü (`set_wall_view`) paftanın ölçeğine ve ekranın yakınlığına göre
   seçsin; seçmedikçe kapı ve pencere webde her ölçekte bütün parçalarıyla (Uygulama) çizilir.
+- M12 / ADR 3011: web'in JSON blok tanımlarında (`Blocks::from_json`) kapalı çoklu çizginin `closed`ı okunmuyor;
+  mobilyanın 1:200 sade gösterimi webde yalnız çokgen, çember ve ucu başına dönen çizgide çalışır. Web görünüşü seçince
+  bunu da okusun.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

@@ -26,8 +26,9 @@ pub const SPAN_TOLERANCE: f64 = 1e-9;
 pub const PLAN_CUT: f64 = 1.1;
 
 /// Up to 1:`SWING_UP_TO` a schematic drawing shows a door's swing and a window's faces; beyond (1:200 and smaller) a
-/// door is its leaf and a window its glass in the wall's hole (docs/adr/3010).
-pub const SWING_UP_TO: f64 = 150.0;
+/// door is its leaf and a window its glass in the wall's hole (docs/adr/3010): the walls' simplest view
+/// ([`wall::SIMPLE_BEYOND`]).
+pub const SWING_UP_TO: f64 = wall::SIMPLE_BEYOND;
 
 /// What an opening is (the contract's `OpeningForm`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -746,7 +747,7 @@ impl Part {
         let schematic = view.detail == wall::Detail::Schematic;
         match self {
             Part::Leaf | Part::Glass | Part::Zone | Part::Outline | Part::Cross => true,
-            Part::Swing | Part::Face => !schematic || view.scale <= SWING_UP_TO,
+            Part::Swing | Part::Face => !view.simple(),
             Part::Frame
             | Part::Mullion
             | Part::Sill

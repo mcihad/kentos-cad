@@ -1,5 +1,5 @@
 //! Proje ayarları › Mimari (docs/adr/0339 §3, §6): the project's levels, a row each (Ad, Kot, Kat yüksekliği; up,
-//! down, delete; Kat ekle), and the detail the walls are drawn at (Otomatik, Şematik, Uygulama, Ayrıntılı). What
+//! down, delete; Kat ekle), and the detail the walls are drawn at (Ölçeğe göre, Şematik, Uygulama, Ayrıntılı). What
 //! does not hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch`,
 //! which keeps a level a wall names.
 
@@ -71,7 +71,7 @@ const METHODS: [(Option<kentos_commands::SpaceMethod>, &str); 3] = [
 ];
 
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
-    (None, "Otomatik"),
+    (None, "Ölçeğe göre"),
     (Some(WallDetail::Schematic), "Şematik"),
     (Some(WallDetail::Standard), "Uygulama"),
     (Some(WallDetail::Detailed), "Ayrıntılı"),
@@ -274,7 +274,7 @@ pub(super) fn view<'a>(
             .spacing(6)
             .push(container(details).width(typography::scaled(200.0)))
             .push(label::caption(
-                "Otomatik: modelde yaklaştıkça duvar bileşenleri görünür. 1:30 ve daha büyükte ayrıntılı, 1:75'e dek standart, daha küçükte şematik gösterilir. Pafta ve PDF kendi ölçeğini kullanır; taramaların çizim ölçeği değişmez.",
+                "Ölçeğe göre: modelde yaklaştıkça ayrıntı artar. 1:30 ve daha büyükte ayrıntılı, 1:75'e dek uygulama, daha küçükte şematik çizilir; 1:150'den küçük paftada kapı kanadıyla, merdiven korkuluksuz, mobilya dış çizgisiyle en sade hâlini alır. Pafta ve PDF kendi ölçeğini kullanır; taramaların çizim ölçeği değişmez.",
             )),
     );
     let read_now = read(rows, detail, method, None);

@@ -690,10 +690,7 @@ impl Store {
         }
         self.wall_view = view;
         let walls: Vec<u32> = (0..self.slots.len() as u32)
-            // A space's label is sized on paper too (docs/adr/0342 §2); a door's parts follow the detail (docs/adr/3010).
-            .filter(|&s| {
-                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Opening { .. } | Shape::Space { .. } | Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. }))
-            })
+            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if self.follows_view(&it.shape)))
             .collect();
         for s in &walls {
             let fresh = self.slots[*s as usize]
@@ -711,6 +708,24 @@ impl Store {
 
     pub fn wall_view(&self) -> crate::geom::wall::View {
         self.wall_view
+    }
+
+    /// Whether an object's pieces follow the walls' view: the walls, the architectural objects and a space's label
+    /// sized on paper (docs/adr/0339 §3, 0342 §2), a door's parts (docs/adr/3010), furniture's outline (docs/adr/3011).
+    fn follows_view(&self, shape: &Shape) -> bool {
+        match shape {
+            Shape::Wall { .. }
+            | Shape::Opening { .. }
+            | Shape::Space { .. }
+            | Shape::Grid { .. }
+            | Shape::Column { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. }
+            | Shape::Tag { .. }
+            | Shape::ViewMark { .. } => true,
+            Shape::Insert { block, .. } => self.blocks.is_furniture(block),
+            _ => false,
+        }
     }
 
     /// `set_blocks` from the contract's JSON of the definitions (`[{ id, base, entities, … }]`).
@@ -736,6 +751,10 @@ impl Store {
     fn expansion_in(&self, shape: &Shape, view: crate::geom::wall::View) -> (Option<Arc<Expanded>>, Bounds) {
         let b = entity_bounds_in(shape, self.font);
         let pieces = match shape {
+            // Furniture its outline in the simplest view (docs/adr/3011).
+            Shape::Insert { block, .. } if view.simple() && self.blocks.is_furniture(block) => {
+                crate::block::outline_pieces(self.blocks.expand(shape), self.font)
+            }
             Shape::Insert { .. } => self.blocks.expand(shape),
             // A wall's faces, ends, lines and hatches at the view's detail; one that cannot be drawn its path
             // (docs/adr/0339 §1).
@@ -752,12 +771,12 @@ impl Store {
                         annotation_origin: None,
                     }]
                 }),
-            // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2).
+            // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2) and level (docs/adr/3011).
             Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
-                crate::geom::arch::pieces(shape, view.scale)
+                crate::geom::arch::pieces_in(shape, view)
             }
-            // Its rings and its label at the view's scale (docs/adr/0342 §2).
-            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view.scale),
+            // Its rings and its label at the view's scale (docs/adr/0342 §2); a slab's edge at its level.
+            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view),
             // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2) the view's detail and scale show
             // (docs/adr/3010); a flue's cross, and the outline of one plan does not cut dashed (docs/adr/0719 §2).
             Shape::Opening { place, opening, .. } => {
@@ -786,15 +805,16 @@ impl Store {
     }
 
     /// Pieces as an object's expansion, its box grown around them.
-    /// A space's rings and, when `label`, its label at the view's `scale` (docs/adr/0342 §2).
+    /// A space's rings and, when `label`, its label at the view's scale (docs/adr/0342 §2); a slab's edge at the view's
+    /// level (docs/adr/3011).
     fn space_pieces(
         &self,
         parts: &[crate::geom::arrangement::Area],
         space: &crate::geom::space::Spec,
         label: bool,
-        scale: f64,
+        view: crate::geom::wall::View,
     ) -> Vec<crate::block::Piece> {
-        crate::geom::space::pieces_with(parts, space, scale, label)
+        crate::geom::space::pieces_with_view(parts, space, view, label)
             .into_iter()
             .map(|shape| crate::block::Piece {
                 shape,
@@ -825,7 +845,7 @@ impl Store {
         match shape {
             Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
                 let b = entity_bounds_in(shape, self.font);
-                self.expanded_of(self.space_pieces(parts, space, false, view.scale), b)
+                self.expanded_of(self.space_pieces(parts, space, false, view), b)
             }
             _ => self.expansion_in(shape, view),
         }
@@ -837,19 +857,7 @@ impl Store {
     /// without pieces.
     pub fn expanded_at(&self, id: f64, view: crate::geom::wall::View) -> Option<Arc<Expanded>> {
         let it = self.get(id)?;
-        let depends = matches!(
-            it.shape,
-            Shape::Wall { .. }
-                | Shape::Opening { .. }
-                | Shape::Space { .. }
-                | Shape::Grid { .. }
-                | Shape::Column { .. }
-                | Shape::Stair { .. }
-                | Shape::Ramp { .. }
-                | Shape::Tag { .. }
-                | Shape::ViewMark { .. }
-        );
-        if view == self.wall_view || !depends {
+        if view == self.wall_view || !self.follows_view(&it.shape) {
             return it.expanded.clone();
         }
         self.wall_expansion_in(id, &it.shape, view).0

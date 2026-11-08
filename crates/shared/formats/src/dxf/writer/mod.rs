@@ -817,10 +817,12 @@ fn plain_walls(
                 put(&mut out, e, pieces);
             }
             // A slab's rings and its edge's lines (docs/adr/0722 §6).
-            (kentos_contracts::Entity::Slab(s), _) => put(&mut out, e, crate::spaces::slab_pieces(s)),
+            (kentos_contracts::Entity::Slab(s), _) => {
+                put(&mut out, e, crate::spaces::slab_pieces_in(s, view))
+            }
             // A grid's, column's, stair's or ramp's pieces (docs/adr/0343 §5).
             (e, _) if crate::arch_elements::core_of(e).is_some() => {
-                let pieces = crate::arch_elements::plain_pieces(e, scale).unwrap_or_default();
+                let pieces = crate::arch_elements::plain_pieces_in(e, view).unwrap_or_default();
                 let pieces = hatches_aside(&mut out, e, pieces);
                 put(&mut out, e, pieces);
             }

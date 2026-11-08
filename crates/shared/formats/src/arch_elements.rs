@@ -167,8 +167,22 @@ pub fn outline_points(e: &Entity) -> Option<Vec<Vec2>> {
 /// over it); none for another object. What DXF and Patlat write (docs/adr/0343 §5).
 pub fn plain_pieces(e: &Entity, scale: f64) -> Option<Vec<Entity>> {
     let shape = core_of(e)?;
+    plain_of(e, kentos_geometry_core::geom::arch::pieces(&shape, scale))
+}
+
+/// [`plain_pieces`] as a drawing at `view` shows them (docs/adr/3011): what DXF writes, at the walls' detail and the
+/// file's scale; Patlat keeps the whole.
+pub fn plain_pieces_in(
+    e: &Entity,
+    view: kentos_geometry_core::geom::wall::View,
+) -> Option<Vec<Entity>> {
+    let shape = core_of(e)?;
+    plain_of(e, kentos_geometry_core::geom::arch::pieces_in(&shape, view))
+}
+
+fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Option<Vec<Entity>> {
     let mut out = Vec::new();
-    for piece in kentos_geometry_core::geom::arch::pieces(&shape, scale) {
+    for piece in pieces {
         let Some(mut plain) = crate::blocks::piece_entity(&piece.shape) else {
             continue;
         };
@@ -252,4 +266,63 @@ pub fn simple(e: &Entity) -> Option<Entity> {
         }
         _ => return None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_geometry_core::geom::wall::{Detail, View};
+
+    fn entity(json: serde_json::Value) -> Entity {
+        serde_json::from_value(json).expect("an object")
+    }
+
+    fn words(pieces: &[Entity]) -> Vec<String> {
+        pieces
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Text(t) => Some(t.text.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// DXF writes a column and a stair as the file's scale draws them (docs/adr/3011): at 1:200 the column without its
+    /// name and the stair without railings; at 1:50 the column's name and size and the stair's risers in words. Patlat
+    /// keeps the whole.
+    #[test]
+    fn dxf_writes_a_column_and_a_stair_at_the_files_scale() {
+        let simple = View {
+            detail: Detail::Schematic,
+            scale: 200.0,
+        };
+        let standard = View {
+            detail: Detail::Standard,
+            scale: 50.0,
+        };
+        let column = entity(
+            serde_json::json!({ "kind": "column", "id": 1, "layerId": "kolon", "attrs": {},
+            "at": { "x": 3.0, "y": 3.0 }, "width": 0.3, "depth": 0.5, "tag": "S1" }),
+        );
+        assert!(words(&plain_pieces_in(&column, simple).unwrap()).is_empty());
+        assert_eq!(
+            words(&plain_pieces_in(&column, standard).unwrap()),
+            ["S1\n30/50"]
+        );
+        assert_eq!(words(&plain_pieces(&column, 200.0).unwrap()), ["S1"]);
+        let stair = entity(
+            serde_json::json!({ "kind": "stair", "id": 2, "layerId": "merdiven", "attrs": {},
+            "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 2.8, "y": 0.0 }], "width": 1.2, "risers": 11,
+            "riserHeight": 0.175, "tread": 0.28, "railings": "both" }),
+        );
+        let whole = plain_pieces(&stair, 100.0).unwrap().len();
+        assert_eq!(
+            plain_pieces_in(&stair, simple).unwrap().len(),
+            whole - 2,
+            "no railings at 1:200"
+        );
+        let at_50 = plain_pieces_in(&stair, standard).unwrap();
+        assert_eq!(at_50.len(), whole + 1);
+        assert_eq!(words(&at_50), ["11 × 17.5/28"]);
+    }
 }

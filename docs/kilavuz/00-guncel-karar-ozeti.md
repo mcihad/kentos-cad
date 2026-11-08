@@ -59,6 +59,11 @@
       - Kasası çizilmeyen pencere duvar ucundan ucuna uzanır.
     - Depo açıklığı görünüşe bağlı nesnelerden sayar; DXF düz parçaları aynı görünüşü alır. Yakalama ve Patlat bütün
       sembolü kullanır.
+  - **Kolon, merdiven, rampa, döşeme kenarı, mobilya ölçeğe göre (M12, [ADR 3011](../adr/3011-elements-by-scale.md)):**
+    - En sade düzey `wall::View::simple` (şematik ve 1:150'den küçük); `arch::pieces_in`, `slab::pieces_in`,
+      `block::outline_pieces` ona göre çizer. `arch::pieces` (önizleme, fikstür) bütündür.
+    - 1:50'de kolonun ölçüsü (30/50) ve merdivenin rıht/basamağı (11 × 17.5/28) yazılır.
+    - Mobilya: kütüphane kartının kategorisi "Mobilya/"; en sade düzeyde bütünü saran kapalı parçalar kalır.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
