@@ -66528,6 +66528,50 @@ class PipeNear(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PipeProfileCrossing(_Model):
+    """A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
+    profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
+    (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
+    high, from its invert up (a point at its invert without a diameter), its name and invert above.
+    Attributes:
+        station: Unit: length.
+        at: Unit: length.
+        diameter: Unit: m.
+        invert: Unit: elevation.
+    """
+    uid: str
+    station: float
+    at: list[float]
+    diameter: float | None | Unset = UNSET
+    invert: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["station"] = float(self.station)
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else float(self.diameter)
+        if self.invert is not UNSET:
+            out["invert"] = None if self.invert is None else float(self.invert)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeProfileCrossing:
+        return cls(
+            uid=data["uid"],
+            station=float(data["station"]),
+            at=[float(e0) for e0 in data["at"]],
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else float(data["diameter"]),
+            invert=UNSET if "invert" not in data else None if data["invert"] is None else float(data["invert"]),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PipeProfileGround(_Model):
     """A place of the ground line: its distance and height (none: off the surface).
     Attributes:
@@ -66549,6 +66593,32 @@ class PipeProfileGround(_Model):
         return cls(
             station=float(data["station"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeProfileOther(_Model):
+    """The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,
+    as the run's.
+    """
+    network: str
+    inverts: PipeInverts
+    diameter: PipeDiameter | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["inverts"] = self.inverts.to_json()
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else self.diameter.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeProfileOther:
+        return cls(
+            network=data["network"],
+            inverts=PipeInverts.from_json(data["inverts"]),
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
         )
 
 
@@ -66790,12 +66860,15 @@ class PipesChecked(_Model):
 class PipesProfile(_Model):
     """Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:
     where the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,
-    drawn on `layerId` with its frame's lower left at `at`.
+    drawn on `layerId` with its frame's lower left at `at`; `crossing`, another network whose pipes crossing the run in
+    plan are drawn where they cross (none: no such pipes; docs/adr/2760).
 
     Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a
-    size not above zero; `exaggeration` or `height` not above zero, a datum not finite); `unknown_network`,
-    `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`);
-    `invalid_network`, `tools_unavailable`; `invalid_pipe_run` (the start or the end not a pipe of the network, the end
+    size not above zero, the crossing network's too at `crossing.…`; `exaggeration` or `height` not above zero, a datum
+    not finite); `unknown_network`, `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`,
+    `terrain_unbuildable`); `invalid_network`, `tools_unavailable`; the crossing network's at `crossing.network`
+    (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is the run's own or too large,
+    `invalid_network`); `invalid_pipe_run` (the start or the end not a pipe of the network, the end
     not down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the
     lowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,
     `revision_conflict`. Warning: `layer_hidden`.
@@ -66812,6 +66885,7 @@ class PipesProfile(_Model):
     inverts: PipeInverts
     layer_id: str
     at: list[float]
+    crossing: PipeProfileOther | None | Unset = UNSET
     datum: float | None | Unset = UNSET
     diameter: PipeDiameter | None | Unset = UNSET
     end: str | None | Unset = UNSET
@@ -66827,6 +66901,8 @@ class PipesProfile(_Model):
         out["inverts"] = self.inverts.to_json()
         out["layerId"] = self.layer_id
         out["at"] = [float(e0) for e0 in self.at]
+        if self.crossing is not UNSET:
+            out["crossing"] = None if self.crossing is None else self.crossing.to_json()
         if self.datum is not UNSET:
             out["datum"] = None if self.datum is None else float(self.datum)
         if self.diameter is not UNSET:
@@ -66851,6 +66927,7 @@ class PipesProfile(_Model):
             inverts=PipeInverts.from_json(data["inverts"]),
             layer_id=data["layerId"],
             at=[float(e0) for e0 in data["at"]],
+            crossing=UNSET if "crossing" not in data else None if data["crossing"] is None else PipeProfileOther.from_json(data["crossing"]),
             datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
             end=data.get("end", UNSET),
@@ -66864,13 +66941,14 @@ class PipesProfile(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipesProfiled(_Model):
     """Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the
-    ground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects
-    written (a plan: none) and the revision after it (a plan: before).
+    ground line, the run's length, why it ends, the datum and the top of the frame (the crossing pipes in it too), the
+    exaggeration, the crossing pipes; the objects written (a plan: none) and the revision after it (a plan: before).
     Attributes:
         length: Unit: length.
         datum: Unit: elevation.
         top: Unit: elevation.
         exaggeration: Unit: 1.
+        crossings: The other network's pipes crossing the run, along it (docs/adr/2760).
     """
     network: str
     pipes: list[PipeProfilePipe]
@@ -66881,6 +66959,7 @@ class PipesProfiled(_Model):
     top: float
     exaggeration: float
     revision: str
+    crossings: list[PipeProfileCrossing] | Unset = UNSET
     ground: list[PipeProfileGround] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
@@ -66895,6 +66974,8 @@ class PipesProfiled(_Model):
         out["top"] = float(self.top)
         out["exaggeration"] = float(self.exaggeration)
         out["revision"] = self.revision
+        if self.crossings is not UNSET:
+            out["crossings"] = [e0.to_json() for e0 in self.crossings]
         if self.ground is not UNSET:
             out["ground"] = [e0.to_json() for e0 in self.ground]
         if self.uids is not UNSET:
@@ -66913,6 +66994,7 @@ class PipesProfiled(_Model):
             top=float(data["top"]),
             exaggeration=float(data["exaggeration"]),
             revision=data["revision"],
+            crossings=[PipeProfileCrossing.from_json(e0) for e0 in data["crossings"]] if "crossings" in data else UNSET,
             ground=[PipeProfileGround.from_json(e0) for e0 in data["ground"]] if "ground" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
@@ -131386,7 +131468,9 @@ __all__ = [
     "PipeGround",
     "PipeInverts",
     "PipeNear",
+    "PipeProfileCrossing",
     "PipeProfileGround",
+    "PipeProfileOther",
     "PipeProfilePipe",
     "PipeProfileStructure",
     "PipeRunEnd",

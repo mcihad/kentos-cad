@@ -2,7 +2,8 @@
 //! window opens on the first utility network with the attributes the pipes have and the project's surface, no limit;
 //! limits typed in the form find more, Bulgulu shows only the pipes with findings, Bulgulu boruları seç selects them,
 //! CSV kaydet writes the table, nothing is written to the drawing. Harita, Yol and GIS offer it, Mimari does not. Diğer
-//! ağ measures the clearances to the water network as the shared cases do (docs/adr/2360). And its pictures.
+//! ağ measures the clearances to the water network as the shared cases do (docs/adr/2360); with it, the profile draws
+//! the water pipes crossing the run (docs/adr/2760). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -163,6 +164,134 @@ fn the_profile_of_the_run_is_drawn_in_one_step() {
     assert_eq!(app.dialog, None);
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Hat profili"));
+}
+
+fn profile_output(name: &str) -> Value {
+    let profile: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
+    profile["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect(name)["steps"][0]["result"]
+        ["output"]
+        .clone()
+}
+
+/// docs/adr/2760: with Diğer ağ the water network, Hat profilini çiz draws its pipes crossing the run as the shared
+/// case of `cad.pipes.profile` says (its objects' count): an ellipse for each crossing pipe with an invert there, as
+/// wide as its diameter and the exaggeration times as high, its name and invert above; W7 has no heights, so it is
+/// told, not drawn. Kesişen borular off: the profile without them, the sewer's main case.
+#[test]
+fn the_profile_draws_the_water_pipes_crossing_the_run() {
+    use kentos_commands::Entity;
+    let want = profile_output("Kesişen borular: içme suyu boruları atıksu hattını kesiyor");
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+    assert!(app.pipes_check.profile_crossings, "on when the window opens");
+    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let said = crate::files_testing::last_said(&app);
+    assert!(said.contains(", 4 kesişen boru (1 borunun orada kotu yok, çizilmedi);"), "{said}");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let drawn: Vec<&Entity> = doc.entities().skip(before).collect();
+    assert_eq!(drawn.len(), want["uids"].as_array().map(Vec::len).unwrap_or(0), "{said}");
+    let exaggeration = want["exaggeration"].as_f64().expect("the exaggeration");
+    let known: Vec<&Value> =
+        want["crossings"].as_array().expect("crossings").iter().filter(|c| c["invert"].is_number()).collect();
+    let ellipses: Vec<(f64, f64)> = drawn
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Ellipse(e) => Some((e.major.x.hypot(e.major.y), e.ratio)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(ellipses.len(), known.len(), "W3, W1 and W2");
+    for ((major, ratio), c) in ellipses.iter().zip(&known) {
+        let d = c["diameter"].as_f64().expect("a diameter");
+        assert!((major - d / 2.0 * exaggeration).abs() < 1e-9, "{major} {d}");
+        assert!((ratio - 1.0 / exaggeration).abs() < 1e-12, "{ratio}");
+    }
+    let texts: Vec<&str> = drawn
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Text(t) => Some(t.text.as_str()),
+            _ => None,
+        })
+        .collect();
+    for c in &known {
+        let words = format!("{} {:.2}", c["name"].as_str().unwrap_or(""), c["invert"].as_f64().unwrap_or(0.0));
+        assert!(texts.contains(&words.as_str()), "{words}");
+    }
+    assert!(!texts.iter().any(|t| t.starts_with("W7")), "W7 has no invert there");
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Hat profili"));
+    // Kesişen borular off: the sewer's main case.
+    let _ = app.update(Message::Run("pipes.check"));
+    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+    let _ = app.update(Message::PipesCheck(P::ProfileCrossings(false)));
+    let _ = app.update(Message::PipesCheck(P::DrawProfile));
+    let main = profile_output("Atıksu ana hattı P1'den çıkışa: altı boru");
+    let count = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    assert_eq!(count, before + main["uids"].as_array().map(Vec::len).unwrap_or(0));
+    assert!(!crate::files_testing::last_said(&app).contains("kesişen"), "{}", crate::files_testing::last_said(&app));
+}
+
+/// The window with Diğer ağ (kesişen borular in the profile's row) and the profile with the water pipes crossing the
+/// run, then close on W1 crossing P2's body; `.run/gui-evidence/kesisen-borular-2760/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib pipes_check_window_tests::crossing_profile_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn crossing_profile_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesisen-borular-2760");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pipes.check"));
+        let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+        let _ = app.update(Message::PipesCheck(P::DrawProfile));
+        let centres: Vec<[f64; 2]> = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .skip(before)
+            .filter_map(|e| match e {
+                kentos_commands::Entity::Ellipse(e) => Some([e.c.x, e.c.y]),
+                _ => None,
+            })
+            .collect();
+        let (x0, x1) = centres.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| (a.min(c[0]), b.max(c[0])));
+        let (y0, y1) = centres.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| (a.min(c[1]), b.max(c[1])));
+        // The three crossings with the run's lines around them, then W1 (the second) on P2's body.
+        let w1 = centres.get(1).copied().expect("W1");
+        for (bounds, file) in [
+            (kentos_render_wgpu::Bounds { min_x: x0 - 15.0, min_y: y0 - 45.0, max_x: x1 + 15.0, max_y: y1 + 45.0 }, "2-profil"),
+            (kentos_render_wgpu::Bounds { min_x: w1[0] - 15.0, min_y: w1[1] - 8.0, max_x: w1[0] + 15.0, max_y: w1[1] + 12.0 }, "3-w1-yakin"),
+        ] {
+            app.viewport.camera.fit(&bounds, 12.0);
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
 }
 
 /// The profile drawn under the drawing; `.run/gui-evidence/hat-profili-1860/`.

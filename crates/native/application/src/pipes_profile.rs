@@ -8,15 +8,17 @@
 //! depth. It is drawn as `road.profiles.draw` draws a road's (docs/adr/0902 §8): the frame from the datum to the top,
 //! the elevation grid with its heights on both sides, the ground (black), the inverts (red, 0.5) and the crowns (red,
 //! 0.25), each structure from its lowest invert to the ground, and under the frame the bands (`PIPE_PROFILE_BANDS`): a
-//! tick through them at every node, each node's values at it and each pipe's at its middle. One undo step “Hat
-//! profili” through `cad.entities.create`'s write. The shared cases are `fixtures/commands/v1/cad.pipes.profile.json`.
+//! tick through them at every node, each node's values at it and each pipe's at its middle. Asked (docs/adr/2760),
+//! another network's pipes crossing the run in plan (the clearances' crossings) are drawn where they cross: an ellipse
+//! of the diameter, its height times the exaggeration, the name and invert above. One undo step “Hat profili” through
+//! `cad.entities.create`'s write. The shared cases are `fixtures/commands/v1/cad.pipes.profile.json`.
 
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, PIPE_PROFILE_BANDS,
-    PIPE_PROFILE_LIMIT, PipeGround, PipeInverts, PipeProfileGround, PipeProfilePipe, PipeProfileStructure, PipeRunEnd,
-    PipesProfile, PipesProfiled, TextAlign, Vec2,
+    PIPE_LIMIT, PIPE_PROFILE_LIMIT, PipeClearanceAsk, PipeGround, PipeInverts, PipeProfileCrossing, PipeProfileGround,
+    PipeProfilePipe, PipeProfileStructure, PipeRunEnd, PipesProfile, PipesProfiled, TextAlign, Vec2,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::network::Dir;
@@ -25,6 +27,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::pipes_check::{self as pipes, attr, path_of};
+use crate::pipes_clearance;
 use crate::road_profiles_draw::{grid_step, line, masked, turned};
 
 /// The design's red (as `road.profiles.draw`'s).
@@ -47,6 +50,16 @@ struct Checked {
 /// The question's own rules: where the values are read, and the drawing's sizes.
 fn asked(input: &PipesProfile) -> Result<(), Stop> {
     pipes::asked_values(&input.inverts, input.diameter.as_ref(), input.ground.as_ref())?;
+    // The crossing network's values, read as the run's (docs/adr/2760).
+    if let Some(c) = &input.crossing {
+        pipes::asked_values(&c.inverts, c.diameter.as_ref(), None).map_err(|stop| match stop {
+            Stop::Failed(mut e) => {
+                e.path = e.path.take().map(|p| format!("crossing.{p}"));
+                Stop::Failed(e)
+            }
+            other => other,
+        })?;
+    }
     let bad = |message: &str, path: &str| Err(refuse(codes::INVALID_PIPE_CHECK, message.into(), path));
     if input.exaggeration.is_some_and(|e| !(e.is_finite() && e > 0.0)) {
         return bad("Düşey abartı 0'dan büyük bir sayı olmalı (yatay ölçeğin kaç katı).", "exaggeration");
@@ -67,6 +80,32 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
         Some(m) => Some(m.built()?),
         None => None,
     };
+    // The crossing network (docs/adr/2760): its pipes made ready as the clearances take them.
+    let crossing = match &input.crossing {
+        Some(c) => Some((
+            pipes_clearance::load_other(
+                doc,
+                &c.network,
+                &def,
+                "crossing.network",
+                |name| format!("Kesişen borular başka bir ağdan okunur; “{name}” profili çizilen ağın kendisi."),
+                |name, n| {
+                    format!("“{name}” ağında {n} boru var; en çok {PIPE_LIMIT} borunun kesişimi aranır. Ağı süzgeçle bölün.")
+                },
+            )?,
+            PipeClearanceAsk {
+                network: c.network.clone(),
+                inverts: c.inverts.clone(),
+                diameter: c.diameter.clone(),
+                vertical: None,
+                horizontal: None,
+                above: None,
+            },
+        )),
+        None => None,
+    };
+    let other = crossing.as_ref().map(|((_, session), ask)| pipes_clearance::Other::new(doc, ask, session));
+    let mut crossings: Vec<PipeProfileCrossing> = Vec::new();
     let g = &session.graph;
     let slot = |id: f64| Slot(id as u32);
     let uid_of = |k: usize| doc.uid(slot(g.edges[k].id)).map(|u| u.to_string()).unwrap_or_default();
@@ -146,6 +185,18 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
         };
         // The station along the run of a station along the drawn pipe.
         let along = |st: f64| s0 + if reversed { l - st } else { st };
+        if let Some(o) = &other {
+            for x in pipes_clearance::crossing_pipes(e, &path, o) {
+                crossings.push(PipeProfileCrossing {
+                    uid: x.uid,
+                    name: x.name,
+                    station: along(x.station),
+                    at: x.at,
+                    invert: x.invert,
+                    diameter: x.radius.filter(|r| *r > 0.0).map(|r| 2.0 * r),
+                });
+            }
+        }
         let (inv0, inv1) = (path.invert(ends_read, 0.0), path.invert(ends_read, l));
         let (up, down) = if reversed { (inv1, inv0) } else { (inv0, inv1) };
         let slope = up.zip(down).filter(|_| l > 0.0).map(|(u, d)| (u - d) / l);
@@ -250,10 +301,18 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
     if matches!(input.ground, Some(PipeGround::Structures { .. })) {
         ground = structures.iter().map(|s| PipeProfileGround { station: s.station, z: s.ground }).collect();
     }
-    // The elevations shown, the datum and the top.
+    // The crossing pipes along the run, then by their uid (docs/adr/2760).
+    crossings.sort_by(|a, b| a.station.total_cmp(&b.station).then_with(|| a.uid.cmp(&b.uid)));
+    // The elevations shown, the datum and the top: the crossing pipes' inverts and tops too.
     let mut zs: Vec<f64> = ground.iter().filter_map(|p| p.z).collect();
     zs.extend(inverts.iter().flat_map(|(_, i, c)| [*i, *c]).flatten());
     zs.extend(structures.iter().filter_map(|s| s.ground));
+    for c in &crossings {
+        if let Some(i) = c.invert {
+            zs.push(i);
+            zs.extend(c.diameter.map(|d| i + d));
+        }
+    }
     let (lo, hi) = zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)));
     if !lo.is_finite() {
         return Err(broken(
@@ -285,6 +344,7 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
             datum,
             top: hi.ceil() + 1.0,
             exaggeration: input.exaggeration.unwrap_or(10.0),
+            crossings,
             uids: Vec::new(),
             revision: doc.revision().to_string(),
         },
@@ -307,6 +367,24 @@ fn polyline(pts: &[[f64; 2]], closed: bool, color: Option<&str>, weight: f64) ->
         },
         color: color.map(str::to_owned),
         line_weight: Some(weight),
+        line_type: None,
+        line_pattern: None,
+        attrs: None,
+        label: None,
+        label_of: None,
+        label_scale: None,
+        symbol: None,
+        order: None,
+        transparency: None,
+    }
+}
+
+/// An object drawn as it is, the layer's look.
+fn drawn(geometry: EntityGeometry) -> NewObject {
+    NewObject {
+        geometry,
+        color: None,
+        line_weight: None,
         line_type: None,
         line_pattern: None,
         attrs: None,
@@ -392,6 +470,36 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
         if let (Some(low), Some(g)) = (low, s.ground) {
             out.push(line([x(s.station), y(low)], [x(s.station), y(g)], None, Some(0.35)));
         }
+    }
+    // The crossing pipes (docs/adr/2760): as Civil 3D draws a crossing pipe in a profile view, an ellipse of its diameter
+    // across and its diameter times the exaggeration high from its invert up (a point at its invert without a
+    // diameter), its name and invert above it, masked over the lines.
+    for c in &o.crossings {
+        let Some(inv) = c.invert else { continue };
+        let xs = x(c.station);
+        let top = match c.diameter {
+            Some(d) => {
+                let (rx, ry) = (d / 2.0, d / 2.0 * o.exaggeration);
+                let (major, ratio) = if ry >= rx { (Vec2 { x: 0.0, y: ry }, rx / ry) } else { (Vec2 { x: rx, y: 0.0 }, ry / rx) };
+                out.push(drawn(EntityGeometry::Ellipse {
+                    c: Vec2 { x: xs, y: y(inv) + ry },
+                    major,
+                    ratio,
+                    t0: 0.0,
+                    t1: std::f64::consts::TAU,
+                }));
+                y(inv) + 2.0 * ry
+            }
+            None => {
+                out.push(drawn(EntityGeometry::Point { p: Vec2 { x: xs, y: y(inv) }, z: None, parts: None }));
+                y(inv)
+            }
+        };
+        let words = match &c.name {
+            Some(n) => format!("{n} {inv:.2}"),
+            None => format!("{inv:.2}"),
+        };
+        out.push(masked(text([xs, top + 0.5 * h], words, TextAlign::BottomCenter)));
     }
     // The bands: their lines, a tick through them at every node, their names.
     let n = PIPE_PROFILE_BANDS.len() as f64;

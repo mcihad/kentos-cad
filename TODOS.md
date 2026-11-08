@@ -102,6 +102,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   analizi › Fark'ında Bölgelere satırı.
 - MAP-16 / ADR 2360: `cad.pipes.check`'in web işleyicisinde `clearance` (44 ortak durum); web'in Boru hattı denetimi
   penceresinde Diğer ağ satırları, Kesişim ve Yakın geçiş tabloları.
+- MAP-16 / ADR 2760: `cad.pipes.profile`'ın web işleyicisinde `crossing` ve `crossings` (47 ortak durum); web'in Boru
+  hattı denetimi penceresinde Hat profili satırının kesişen borular kutusu.
 - MAP-17 / ADR 2380: web'in Dışa aktarma kaybı denetimi matrisinde Bloklar, Tablolar ve İlişkiler satırları ile
   blockChanged, tableChanged, relationLost sözleri (denetim headless, web yazıcıları ayrı).
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

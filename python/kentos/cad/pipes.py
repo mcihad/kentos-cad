@@ -15,6 +15,7 @@ from .types import (  # noqa: F401
     PipeDiameter,
     PipeGround,
     PipeInverts,
+    PipeProfileOther,
     PipesCheck,
     PipesChecked,
     PipesProfile,
@@ -269,6 +270,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
         inverts: PipeInverts,
         layer_id: str,
         at: Sequence[float],
+        crossing: PipeProfileOther | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         end: str | None | Unset = UNSET,
@@ -304,6 +306,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
             inverts:
             layer_id:
             at: Unit: length.
+            crossing:
             datum: Unit: elevation.
             diameter:
             end:
@@ -329,6 +332,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
             inverts=inverts,
             layer_id=layer_id,
             at=list(at),
+            crossing=crossing,
             datum=datum,
             diameter=diameter,
             end=end,
@@ -348,6 +352,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
         inverts: PipeInverts,
         layer_id: str,
         at: Sequence[float],
+        crossing: PipeProfileOther | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         end: str | None | Unset = UNSET,
@@ -365,6 +370,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
             inverts=inverts,
             layer_id=layer_id,
             at=list(at),
+            crossing=crossing,
             datum=datum,
             diameter=diameter,
             end=end,
@@ -384,6 +390,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
         inverts: PipeInverts,
         layer_id: str,
         at: Sequence[float],
+        crossing: PipeProfileOther | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         end: str | None | Unset = UNSET,
@@ -401,6 +408,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
             inverts=inverts,
             layer_id=layer_id,
             at=list(at),
+            crossing=crossing,
             datum=datum,
             diameter=diameter,
             end=end,
@@ -420,6 +428,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
         inverts: PipeInverts,
         layer_id: str,
         at: Sequence[float],
+        crossing: PipeProfileOther | None | Unset = UNSET,
         datum: float | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         end: str | None | Unset = UNSET,
@@ -442,6 +451,7 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
             inverts=inverts,
             layer_id=layer_id,
             at=list(at),
+            crossing=crossing,
             datum=datum,
             diameter=diameter,
             end=end,

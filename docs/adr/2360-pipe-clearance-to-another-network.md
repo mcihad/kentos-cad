@@ -146,5 +146,7 @@ MCP: `{"tool": "cad.pipes.check", "arguments": {..., "clearance": {...}}}`.
 - 3B en kısa uzaklık. Eğimli borularda bu, kesişim yerindeki düşey açıklıktan biraz kısadır.
 - Et kalınlığı: malzeme ve dış çap özniteliği.
 - Diğer ağın yapılarına (baca, vana odası) açıklık.
-- Kesişimlerin çizimde gösterilmesi. Hat profilinde kesişen borunun kesiti (Civil 3D'nin crossing pipe'ı).
+- Kesişimlerin planda gösterilmesi.
+- Hat profilinde kesişen borunun kesiti (Civil 3D'nin crossing pipe'ı). Yapıldı:
+  [ADR 2760](2760-crossing-pipes-in-the-pipe-profile.md).
 - EK-1'in ve idarenin değerleri sürümlü bir kural paketinde (ADR 1640 Sonra).

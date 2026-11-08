@@ -2,16 +2,20 @@
 import type { PipeDiameter } from "./PipeDiameter";
 import type { PipeGround } from "./PipeGround";
 import type { PipeInverts } from "./PipeInverts";
+import type { PipeProfileOther } from "./PipeProfileOther";
 
 /**
  * Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:
  * where the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,
- * drawn on `layerId` with its frame's lower left at `at`.
+ * drawn on `layerId` with its frame's lower left at `at`; `crossing`, another network whose pipes crossing the run in
+ * plan are drawn where they cross (none: no such pipes; docs/adr/2760).
  *
  * Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a
- * size not above zero; `exaggeration` or `height` not above zero, a datum not finite); `unknown_network`,
- * `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`);
- * `invalid_network`, `tools_unavailable`; `invalid_pipe_run` (the start or the end not a pipe of the network, the end
+ * size not above zero, the crossing network's too at `crossing.…`; `exaggeration` or `height` not above zero, a datum
+ * not finite); `unknown_network`, `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`,
+ * `terrain_unbuildable`); `invalid_network`, `tools_unavailable`; the crossing network's at `crossing.network`
+ * (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is the run's own or too large,
+ * `invalid_network`); `invalid_pipe_run` (the start or the end not a pipe of the network, the end
  * not down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the
  * lowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,
  * `revision_conflict`. Warning: `layer_hidden`.
@@ -24,4 +28,4 @@ network: string,
 /**
  * The run's first pipe: its uid.
  */
-start: string, end?: string, inverts: PipeInverts, diameter?: PipeDiameter, ground?: PipeGround, layerId: string, at: [number, number], datum?: number, exaggeration?: number, height?: number, expectedRevision?: string, };
+start: string, end?: string, inverts: PipeInverts, diameter?: PipeDiameter, ground?: PipeGround, layerId: string, at: [number, number], datum?: number, exaggeration?: number, height?: number, crossing?: PipeProfileOther, expectedRevision?: string, };

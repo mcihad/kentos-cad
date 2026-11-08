@@ -46,7 +46,7 @@ sırayla alır.
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
-| MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420 | iş türleri ve zaman serisi; yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
@@ -1413,6 +1413,15 @@ yarıçaplar, istenen üst tarafın denetimi; bulgular clash, closeCrossing, wro
 44 ortak durum (mpmath), MCP; Boru hattı denetimi'nde Diğer ağ satırları, Kesişim ve Yakın geçiş tabloları. Açık: yüzey
 kaplaması, 3B en kısa uzaklık, et kalınlığı, kesişimlerin çizimde ve hat profilinde gösterilmesi, profilin canlı
 güncellenmesi.
+
+**8 Kasım 2026, dördüncü tur — hat profilinde kesişen borular ([ADR 2760](../docs/adr/2760-crossing-pipes-in-the-pipe-profile.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: Civil 3D'nin profil görünüşünde kesişen borusu (doğru kotunda; iç duvar, dış
+duvar ve tarama bileşenleri; kilometre ve kot yazan Crossing Profile etiketi). Kanıtlanan: `cad.pipes.profile`'a
+`crossing`: başka ağın hattı planda kesen boruları açıklığın kurallarıyla bulunur, akarlarıyla ve çaplarıyla listelenir;
+akarı bilinen her biri akarından yukarı çap genişliğinde, çap × abartı yüksekliğinde elips (çapsızı nokta), üstünde ad
+ve akar kotu; kotsuz boru listede kalır, çizilmez; 47 ortak durum (mpmath), MCP; Boru hattı denetimi'nde Diğer ağ
+seçilince Hat profili satırında kesişen borular kutusu. Açık: kesişen borunun dış duvarı ve taraması (et kalınlığı),
+kesişimlerin planda gösterilmesi, yüzey kaplaması, profilin canlı güncellenmesi.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 

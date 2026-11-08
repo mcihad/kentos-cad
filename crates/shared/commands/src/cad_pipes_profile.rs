@@ -40,12 +40,15 @@ pub const PIPE_PROFILE_BANDS: [&str; 9] = [
 
 /// Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:
 /// where the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,
-/// drawn on `layerId` with its frame's lower left at `at`.
+/// drawn on `layerId` with its frame's lower left at `at`; `crossing`, another network whose pipes crossing the run in
+/// plan are drawn where they cross (none: no such pipes; docs/adr/2760).
 ///
 /// Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a
-/// size not above zero; `exaggeration` or `height` not above zero, a datum not finite); `unknown_network`,
-/// `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`);
-/// `invalid_network`, `tools_unavailable`; `invalid_pipe_run` (the start or the end not a pipe of the network, the end
+/// size not above zero, the crossing network's too at `crossing.…`; `exaggeration` or `height` not above zero, a datum
+/// not finite); `unknown_network`, `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`,
+/// `terrain_unbuildable`); `invalid_network`, `tools_unavailable`; the crossing network's at `crossing.network`
+/// (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is the run's own or too large,
+/// `invalid_network`); `invalid_pipe_run` (the start or the end not a pipe of the network, the end
 /// not down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the
 /// lowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,
 /// `revision_conflict`. Warning: `layer_hidden`.
@@ -86,8 +89,54 @@ pub struct PipesProfile {
     pub height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    pub crossing: Option<PipeProfileOther>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,
+/// as the run's.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PipeProfileOther {
+    pub network: String,
+    pub inverts: PipeInverts,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub diameter: Option<PipeDiameter>,
+}
+
+/// A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
+/// profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
+/// (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
+/// high, from its invert up (a point at its invert without a diameter), its name and invert above.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PipeProfileCrossing {
+    pub uid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub invert: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub diameter: Option<f64>,
 }
 
 /// A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is
@@ -198,8 +247,8 @@ pub enum PipeRunEnd {
 }
 
 /// Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the
-/// ground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects
-/// written (a plan: none) and the revision after it (a plan: before).
+/// ground line, the run's length, why it ends, the datum and the top of the frame (the crossing pipes in it too), the
+/// exaggeration, the crossing pipes; the objects written (a plan: none) and the revision after it (a plan: before).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -221,6 +270,10 @@ pub struct PipesProfiled {
     pub top: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub exaggeration: f64,
+    /// The other network's pipes crossing the run, along it (docs/adr/2760).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PipeProfileCrossing>>", optional))]
+    pub crossings: Vec<PipeProfileCrossing>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,

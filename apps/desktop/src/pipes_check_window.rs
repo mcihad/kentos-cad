@@ -7,7 +7,8 @@
 //! draws the run from a pipe along the flow as a longitudinal profile under the drawing (`cad.pipes.profile`, docs/adr/1860).
 //! Diğer ağ (docs/adr/2360) measures the clearances to another utility network's pipes: where they cross, the vertical
 //! clearance and which is above; where they pass, the horizontal one. The least clearances and the side that must be
-//! above are the user's; Kesişim and Yakın geçiş list them.
+//! above are the user's; Kesişim and Yakın geçiş list them. With it, Hat profili draws its pipes crossing the run too
+//! (kesişen borular, docs/adr/2760).
 
 use std::path::PathBuf;
 
@@ -16,7 +17,7 @@ use kentos_ui::widget::grow::Grows;
 use iced::{Center, Element, Task};
 use kentos_commands::{
     CommandResult, NetworkKind, PipeAbove, PipeCheck, PipeClearanceAsk, PipeCrossing, PipeDiameter, PipeGround,
-    PipeInverts, PipeNear, PipeUnit, PipesCheck, PipesChecked, PipesProfile,
+    PipeInverts, PipeNear, PipeProfileOther, PipeUnit, PipesCheck, PipesChecked, PipesProfile,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -36,6 +37,8 @@ const SAVE: &str = "CSV kaydet…";
 const SELECT: &str = "Bulgulu boruları seç";
 /// The run from the pipe chosen drawn as a longitudinal profile (`cad.pipes.profile`, docs/adr/1860).
 const DRAW_PROFILE: &str = "Hat profilini çiz";
+/// Diğer ağ's pipes crossing the run drawn in the profile too (docs/adr/2760).
+const PROFILE_CROSSINGS: &str = "kesişen borular";
 
 /// Where the inverts are read.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -140,6 +143,8 @@ pub struct State {
     pub profile_start: String,
     pub profile_end: String,
     pub profile_layer: String,
+    /// Diğer ağ's pipes crossing the run drawn in the profile (docs/adr/2760); on when the window opens.
+    pub profile_crossings: bool,
     pub layers: Vec<(String, String)>,
     /// Diğer ağ (docs/adr/2360): the other network's id (empty: no clearance), where its inverts and diameters are,
     /// the least vertical and horizontal clearances (metres) and the side that must be above.
@@ -174,6 +179,7 @@ pub enum Event {
     ProfileStart(String),
     ProfileEnd(String),
     ProfileLayer(String),
+    ProfileCrossings(bool),
     DrawProfile,
     Other(String),
     OtherFrom(From),
@@ -424,6 +430,7 @@ impl App {
             other_start: "Akar baş".into(),
             other_end: "Akar son".into(),
             other_unit: "mm".into(),
+            profile_crossings: true,
             ..State::default()
         };
         self.pipes_check_run();
@@ -455,6 +462,12 @@ impl App {
             datum: None,
             exaggeration: None,
             height: None,
+            // The other network of the clearances: its pipes crossing the run drawn in the profile (docs/adr/2760).
+            crossing: check.clearance.filter(|_| s.profile_crossings).map(|c| PipeProfileOther {
+                network: c.network,
+                inverts: c.inverts,
+                diameter: c.diameter.map(|d| PipeDiameter { catalog: Vec::new(), ..d }),
+            }),
             expected_revision: None,
         };
         // Planned at the origin (nothing written), then drawn under the drawing by how far its frame reaches up.
@@ -466,10 +479,16 @@ impl App {
         let Some(doc) = self.document.as_mut() else { return };
         let result = pipes_profile::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
+            // The crossing pipes (docs/adr/2760): those without an invert there are listed, not drawn.
+            let crossing = match (out.crossings.len(), out.crossings.iter().filter(|c| c.invert.is_none()).count()) {
+                (0, _) => String::new(),
+                (n, 0) => format!(", {n} kesişen boru"),
+                (n, k) => format!(", {n} kesişen boru ({k} borunun orada kotu yok, çizilmedi)"),
+            };
             self.say(
                 Level::Success,
                 format!(
-                    "Hat profili çizildi: {} boru, {:.2} m, kıyas kotu {:.2}; {} nesne.",
+                    "Hat profili çizildi: {} boru, {:.2} m, kıyas kotu {:.2}{crossing}; {} nesne.",
                     out.pipes.len(),
                     out.length,
                     out.datum,
@@ -551,6 +570,10 @@ impl App {
             }
             Event::ProfileLayer(v) => {
                 s.profile_layer = v;
+                return Task::none();
+            }
+            Event::ProfileCrossings(v) => {
+                s.profile_crossings = v;
                 return Task::none();
             }
             Event::DrawProfile => {
@@ -842,19 +865,25 @@ impl App {
         };
         let ends: Vec<(String, String)> =
             std::iter::once((String::new(), "Akışın sonu".to_owned())).chain(pipes.iter().cloned()).collect();
-        let profile = Form::new().label_width(110.0).field(
-            "Hat profili",
-            row![
-                container(fields::select_owned(pipes, &s.profile_start, |v| msg(Event::ProfileStart(v)))).width(120),
-                label::caption("bitiş"),
-                container(fields::select_owned(ends, &s.profile_end, |v| msg(Event::ProfileEnd(v)))).width(140),
-                label::caption("katman"),
-                container(fields::select_owned(s.layers.clone(), &s.profile_layer, |v| msg(Event::ProfileLayer(v)))).width(150),
-                words::secondary(DRAW_PROFILE, (ready && !s.profile_start.is_empty()).then(|| msg(Event::DrawProfile)))
-            ]
-            .spacing(8)
-            .align_y(Center),
-        );
+        let mut line = row![
+            container(fields::select_owned(pipes, &s.profile_start, |v| msg(Event::ProfileStart(v)))).width(120),
+            label::caption("bitiş"),
+            container(fields::select_owned(ends, &s.profile_end, |v| msg(Event::ProfileEnd(v)))).width(140),
+            label::caption("katman"),
+            container(fields::select_owned(s.layers.clone(), &s.profile_layer, |v| msg(Event::ProfileLayer(v)))).width(150),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        // With Diğer ağ: its pipes crossing the run drawn in the profile too (docs/adr/2760).
+        if !s.other.is_empty() {
+            line = line.push(words::check(
+                s.profile_crossings,
+                PROFILE_CROSSINGS,
+                Some(msg(Event::ProfileCrossings(!s.profile_crossings))),
+            ));
+        }
+        let line = line.push(words::secondary(DRAW_PROFILE, (ready && !s.profile_start.is_empty()).then(|| msg(Event::DrawProfile))));
+        let profile = Form::new().label_width(110.0).field("Hat profili", line);
         let body = body.push(profile);
         Frame::new(TITLE)
             .scroll(body)
@@ -871,6 +900,7 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
             Control::Press(DRAW_PROFILE) => Some(msg(Event::DrawProfile)),
+            Control::Check(PROFILE_CROSSINGS, on) => Some(msg(Event::ProfileCrossings(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

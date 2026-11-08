@@ -59934,7 +59934,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:\nwhere the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,\ndrawn on `layerId` with its frame's lower left at `at`.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a\nsize not above zero; `exaggeration` or `height` not above zero, a datum not finite); `unknown_network`,\n`not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`);\n`invalid_network`, `tools_unavailable`; `invalid_pipe_run` (the start or the end not a pipe of the network, the end\nnot down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the\nlowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,\n`revision_conflict`. Warning: `layer_hidden`.",
+        "description": "Input of `cad.pipes.profile` v1: the run from `start` (a pipe's uid) along the flow, to `end` (a pipe's uid; absent:\nwhere the flow leaves the network or splits), of `network`'s pipes, its values read as `cad.pipes.check` reads them,\ndrawn on `layerId` with its frame's lower left at `at`; `crossing`, another network whose pipes crossing the run in\nplan are drawn where they cross (none: no such pipes; docs/adr/2760).\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a catalogue of more than 200 sizes or a\nsize not above zero, the crossing network's too at `crossing.…`; `exaggeration` or `height` not above zero, a datum\nnot finite); `unknown_network`, `not_a_pipe_network`; the surface's (`not_a_road_project`, `unknown_terrain`,\n`terrain_unbuildable`); `invalid_network`, `tools_unavailable`; the crossing network's at `crossing.network`\n(`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is the run's own or too large,\n`invalid_network`); `invalid_pipe_run` (the start or the end not a pipe of the network, the end\nnot down the flow from the start, more than 10 000 pipes, no elevation to draw); `invalid_pipe_check` (a datum over the\nlowest elevation); the layer's (`layer_not_found`, `not_a_layer`, `layer_locked`); `invalid_revision`,\n`revision_conflict`. Warning: `layer_hidden`.",
         "properties": {
           "at": {
             "items": {
@@ -59945,6 +59945,16 @@
             "minItems": 2,
             "type": "array",
             "x-unit": "length"
+          },
+          "crossing": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeProfileOther"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "datum": {
             "format": "double",
@@ -60030,8 +60040,15 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the\nground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects\nwritten (a plan: none) and the revision after it (a plan: before).",
+        "description": "Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the\nground line, the run's length, why it ends, the datum and the top of the frame (the crossing pipes in it too), the\nexaggeration, the crossing pipes; the objects written (a plan: none) and the revision after it (a plan: before).",
         "properties": {
+          "crossings": {
+            "description": "The other network's pipes crossing the run, along it (docs/adr/2760).",
+            "items": {
+              "$ref": "#/$defs/PipeProfileCrossing"
+            },
+            "type": "array"
+          },
           "datum": {
             "format": "double",
             "type": "number",
@@ -60103,8 +60120,15 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the\nground line, the run's length, why it ends, the datum and the top of the frame, the exaggeration; the objects\nwritten (a plan: none) and the revision after it (a plan: before).",
+        "description": "Output of `cad.pipes.profile` v1, and its plan: the network's id, the run's pipes and nodes in the flow's order, the\nground line, the run's length, why it ends, the datum and the top of the frame (the crossing pipes in it too), the\nexaggeration, the crossing pipes; the objects written (a plan: none) and the revision after it (a plan: before).",
         "properties": {
+          "crossings": {
+            "description": "The other network's pipes crossing the run, along it (docs/adr/2760).",
+            "items": {
+              "$ref": "#/$defs/PipeProfileCrossing"
+            },
+            "type": "array"
+          },
           "datum": {
             "format": "double",
             "type": "number",
@@ -170912,6 +170936,57 @@
       ],
       "type": "object"
     },
+    "PipeProfileCrossing": {
+      "description": "A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a\nprofile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter\n(none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration\nhigh, from its invert up (a point at its invert without a diameter), its name and invert above.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "diameter": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "invert": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "station": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "station",
+        "at"
+      ],
+      "type": "object"
+    },
     "PipeProfileGround": {
       "description": "A place of the ground line: its distance and height (none: off the surface).",
       "properties": {
@@ -170931,6 +171006,33 @@
       },
       "required": [
         "station"
+      ],
+      "type": "object"
+    },
+    "PipeProfileOther": {
+      "additionalProperties": false,
+      "description": "The network whose pipes cross the run (docs/adr/2760): its id or name, and where its inverts and diameters are read,\nas the run's.",
+      "properties": {
+        "diameter": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PipeDiameter"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inverts": {
+          "$ref": "#/$defs/PipeInverts"
+        },
+        "network": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "network",
+        "inverts"
       ],
       "type": "object"
     },

@@ -21,7 +21,11 @@ profile and the usual hidden, locked and group layers. The rules, by hand:
   inside the frame, the height written on both sides); the ground, the inverts' and the crowns' lines (each a run of two
   or more known places); a line for each node with a ground and an invert; the bands' ten lines across, three down and a
   tick at every node; the nine bands' names; each node's name, distance, ground, inverts and depth where known; each
-  pipe's slope and diameter where known and its length.
+  pipe's slope and diameter where known and its length;
+- asked (docs/adr/2760), another network's pipes crossing the run in plan, by the clearances' rules
+  (pipes_check_cases.Plan and hits at mpmath's 50 digits; a place two edges share once): the distance along the run,
+  the place, the other's invert there and its diameter where known, along the run then by uid; each with an invert
+  drawn (an ellipse, or a point without a diameter) and its words; its invert and crown among the elevations shown.
 
     The objects' places are the command's; the cases hold the profile's values and the objects' count.
 """
@@ -53,8 +57,8 @@ KAPAK = check.KAPAK
 STORM_D = check.STORM_D
 
 
-def setup(work="map", extra=False):
-    s = check.setup(work)
+def setup(work="map", extra=False, water=False):
+    s = check.setup(work, water=water)
     s["layers"] += [check.layer("profil", "Profil"),
                     {**check.layer("gizli", "Gizli"), "visible": False},
                     {**check.layer("kilitli", "Kilitli"), "locked": True},
@@ -125,9 +129,37 @@ def runs(points):
     return [r for r in out if len(r) >= 2]
 
 
+def crossing_pipes(pipe, other):
+    """docs/adr/2760: the other network's pipes crossing `pipe` in plan: (station on it, the other Plan, its station),
+    by the clearances' own rules (check.Plan, check.hits at mpmath's 50 digits); a place two edges share once."""
+    import mpmath as mp
+    mp.mp.dps = 50
+    mine = check.Plan(mp, pipe, {"from": "heights"}, None)
+    out = []
+    for b in other:
+        found = []
+        for ea in mine.edges:
+            for eb in b.edges:
+                for t, u, q in check.hits(mp, ea, eb):
+                    sa = float(ea[-2] + t * (ea[-1] - ea[-2]))
+                    sb = float(eb[-2] + u * (eb[-1] - eb[-2]))
+                    if any(abs(f[0] - sa) <= 1e-9 * max(pipe.length, 1.0) and abs(f[1] - sb) <= 1e-9 * max(b.length, 1.0)
+                           for f in found):
+                        continue
+                    found.append((sa, sb, q))
+        out += [(sa, b, sb, q) for sa, sb, q in found]
+    return out
+
+
 def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None, datum=None, exaggeration=None,
-            extra=False):
+            extra=False, crossing=None):
     pipes, structures = network(net, extra)
+    if crossing is not None:
+        import mpmath as mp
+        mp.mp.dps = 50
+        theirs = [check.Plan(mp, q, crossing["inverts"], crossing.get("diameter"))
+                  for q in check.drawing()[crossing["network"]][0]]
+    crossed = []
     by_uid = {check.uid(p.n): i for i, p in enumerate(pipes)}
     flows = []
     for p in pipes:
@@ -177,6 +209,16 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
 
         def along(st):
             return s0 + (L - st if rev else st)
+        if crossing is not None:
+            for sa, b, sb, q in crossing_pipes(p, theirs):
+                row_ = {"uid": check.uid(b.pipe.n), "name": b.pipe.attrs["Ad"], "station": along(sa),
+                        "at": [X0 + float(q[0]), Y0 + float(q[1])]}
+                inv = b.invert(sb)
+                if inv is not None:
+                    row_["invert"] = inv
+                if b.radius:
+                    row_["diameter"] = 2.0 * b.radius
+                crossed.append(row_)
         if inverts == "heights" and p.heights is not None:
             pts = sorted((along(st), z) for st, z in zip(p.st, p.heights))
         else:
@@ -236,9 +278,15 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
         out_nodes.append(node)
     if ground_ and ground_["from"] == "structures":
         ground = [{"station": n["station"], **({"z": n["ground"]} if "ground" in n else {})} for n in out_nodes]
+    crossed.sort(key=lambda c: (c["station"], c["uid"]))
     zs = [g["z"] for g in ground if "z" in g]
     zs += [v for _, z, c in inv_pts for v in (z, c) if v is not None]
     zs += [n["ground"] for n in out_nodes if "ground" in n]
+    for c in crossed:
+        if "invert" in c:
+            zs.append(c["invert"])
+            if "diameter" in c:
+                zs.append(c["invert"] + c["diameter"])
     if not zs:
         return None
     lo, hi = min(zs), max(zs)
@@ -251,6 +299,8 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
         out["ground"] = ground
     out.update({"length": s0, "ends": ends, "datum": datum_, "top": top,
                 "exaggeration": 10.0 if exaggeration is None else exaggeration})
+    if crossed:
+        out["crossings"] = crossed
     # The objects drawn, counted.
     heights = grid_heights(datum_, top)
     count = 1 + sum(1 for v in heights if datum_ + 1e-9 < v < top - 1e-9) + 2 * len(heights)
@@ -262,6 +312,8 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
     count += (BANDS + 1) + 3 + len(out_nodes) + BANDS
     count += sum(1 + sum(1 for k_ in ("name", "ground", "inlet", "outlet", "depth") if k_ in n) for n in out_nodes)
     count += sum(1 + sum(1 for k_ in ("slope", "diameter") if k_ in r) for r in rows)
+    # docs/adr/2760: each crossing pipe with an invert, an ellipse (a point without a diameter) and its words.
+    count += 2 * sum(1 for c in crossed if "invert" in c)
     return out, count
 
 
@@ -284,7 +336,7 @@ def cases():
     def ok(name, inp, op="execute", warns=(), note=None, setup_=None, extra=False, net="atiksu"):
         args = dict(start=inp["start"], end=inp.get("end"), inverts=inp["inverts"]["from"],
                     diameter=inp.get("diameter"), ground_=inp.get("ground"), datum=inp.get("datum"),
-                    exaggeration=inp.get("exaggeration"), extra=extra)
+                    exaggeration=inp.get("exaggeration"), extra=extra, crossing=inp.get("crossing"))
         o, count = profile(inp["network"] if inp["network"] in ("atiksu", "yagmur") else net, **args)
         o = dict(o)
         o["revision"] = "$current"
@@ -343,6 +395,23 @@ def cases():
     ok("Gizli katmana uyarıyla", sewer(layerId="gizli"), warns=[hidden])
     ok("Yol projesinde de", sewer(), setup_=setup("road"))
     ok("CBS projesinde kapak kotuyla", storm(), setup_=setup("gis"), net="yagmur")
+    # docs/adr/2760: the water network's pipes crossing the run.
+    water, ask = setup(water=True), check.WATER_ASK
+    cross = ok("Kesişen borular: içme suyu boruları atıksu hattını kesiyor", sewer(crossing=ask), setup_=water,
+               note="W3, W1, W2 P1–P3'ü kotlarıyla kesişir (elips); W7 P4'ü kotsuz kesişir, yalnız listede")
+    assert [c["name"] for c in cross["crossings"]] == ["W3", "W1", "W2", "W7"], cross["crossings"]
+    assert "invert" not in cross["crossings"][3] and all("diameter" in c for c in cross["crossings"])
+    thin = ok("Kesişen borular çapsız: kesişimin akarında nokta",
+              sewer(crossing={"network": "su", "inverts": {"from": "heights"}}), setup_=water)
+    assert all("diameter" not in c for c in thin["crossings"])
+    fields = ok("Kesişen borular akar özniteliğinden: su borularında yok, yalnız listede",
+                sewer(crossing={**ask, "inverts": SEWER_IN}), setup_=water)
+    assert all("invert" not in c for c in fields["crossings"])
+    ok("Kesişen borular planda yazılmaz", sewer(crossing=ask), op="plan", setup_=water)
+    arc = ok("Yağmursuyunun yaylı Q3 borusunu W4 kesiyor", storm(crossing=ask), setup_=water, net="yagmur")
+    assert [c["name"] for c in arc["crossings"]] == ["W4"], arc.get("crossings")
+    alone = ok("Kesişim yoksa liste yok", sewer(start=P_UID("P7"), crossing=ask), setup_=water)
+    assert "crossings" not in alone
     # Refusals.
     bad = "invalid_pipe_check"
     no("Boş akar kotu özniteliği", sewer(inverts={"from": "fields", "start": " ", "end": "x"}),
@@ -379,6 +448,21 @@ def cases():
                                                                           "path": "layerId"}})
     no("Katman yok", sewer(layerId="yok"),
        failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))
+    no("Kesişen ağ hattın kendi ağı", sewer(crossing={**ask, "network": "atiksu"}),
+       failed(bad, "Kesişen borular başka bir ağdan okunur; “Atıksu” profili çizilen ağın kendisi.", "crossing.network"))
+    no("Kesişen ağın boş akar özniteliği", sewer(crossing={**ask, "inverts": {"from": "fields", "start": " ", "end": "x"}}),
+       failed(bad, "Baş akar kotunun özniteliği boş; özniteliğin adını yazın.", "crossing.inverts.start"))
+    no("Kesişen ağın kataloğunda sıfır çap",
+       sewer(crossing={**ask, "diameter": {"field": "Çap", "unit": "mm", "catalog": [0.0]}}),
+       failed(bad, "Katalogdaki çaplar 0'dan büyük olmalı.", "crossing.diameter.catalog[0]"))
+    no("Olmayan kesişen ağ", sewer(crossing={**ask, "network": "gaz"}),
+       failed("unknown_network", "“gaz” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.",
+              "crossing.network"))
+    no("Kesişen ağ yol ağı", sewer(crossing={**ask, "network": "yollar"}),
+       failed("not_a_pipe_network", "“Yollar” bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.",
+              "crossing.network"))
+    no("Önce hattın ağı, sonra kesişen ağ", sewer(network="kanal", crossing={**ask, "network": "gaz"}),
+       failed("unknown_network", "“kanal” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.", "network"))
     no("Geçersiz beklenen sürüm", sewer(expectedRevision="on"), drainage.BAD_REVISION)
     no("Eski sürüme göre hazırlanmış", sewer(expectedRevision="41"), drainage.CONFLICT)
     assert base_n == 257, base_n

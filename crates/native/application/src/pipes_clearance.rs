@@ -60,27 +60,41 @@ pub(crate) fn asked(c: &PipeClearanceAsk) -> Result<(), Stop> {
 /// The other network asked by its id or name, built; refused under `clearance.network`, and when it is the network
 /// checked.
 pub(crate) fn load(doc: &Document, c: &PipeClearanceAsk, checked: &NetworkDef) -> Result<(NetworkDef, NetworkSession), Stop> {
-    let def = network_def(doc, &c.network).map_err(under)?;
+    load_other(
+        doc,
+        &c.network,
+        checked,
+        "clearance.network",
+        |name| format!("Açıklık başka bir ağın borularına ölçülür; “{name}” denetlenen ağın kendisi."),
+        |name, n| format!("“{name}” ağında {n} boru var; en çok {PIPE_LIMIT} boruya açıklık ölçülür. Ağı süzgeçle bölün."),
+    )
+}
+
+/// Another network than `checked` by its id or name, built; refused at `at`, with `same`'s words when it is `checked`
+/// and `large`'s (its name, its pipes) when it has more than `PIPE_LIMIT` pipes.
+pub(crate) fn load_other(
+    doc: &Document,
+    network: &str,
+    checked: &NetworkDef,
+    at: &str,
+    same: impl Fn(&str) -> String,
+    large: impl Fn(&str, usize) -> String,
+) -> Result<(NetworkDef, NetworkSession), Stop> {
+    let def = network_def(doc, network).map_err(|stop| match stop {
+        Stop::Failed(mut e) => {
+            e.path = Some(at.to_owned());
+            Stop::Failed(e)
+        }
+        other => other,
+    })?;
     if def.id == checked.id {
-        return Err(refuse(
-            codes::INVALID_PIPE_CHECK,
-            format!("Açıklık başka bir ağın borularına ölçülür; “{}” denetlenen ağın kendisi.", def.name),
-            "clearance.network",
-        ));
+        return Err(refuse(codes::INVALID_PIPE_CHECK, same(&def.name), at));
     }
     let (_, session) = host()
         .map_err(|e| Stop::failed(*e))
-        .and_then(|h| h.network(doc, &def.id).map_err(|why| refuse(codes::INVALID_NETWORK, why, "clearance.network")))?;
+        .and_then(|h| h.network(doc, &def.id).map_err(|why| refuse(codes::INVALID_NETWORK, why, at)))?;
     if session.graph.edges.len() > PIPE_LIMIT {
-        return Err(refuse(
-            codes::INVALID_PIPE_CHECK,
-            format!(
-                "“{}” ağında {} boru var; en çok {PIPE_LIMIT} boruya açıklık ölçülür. Ağı süzgeçle bölün.",
-                def.name,
-                session.graph.edges.len()
-            ),
-            "clearance.network",
-        ));
+        return Err(refuse(codes::INVALID_PIPE_CHECK, large(&def.name, session.graph.edges.len()), at));
     }
     Ok((def, session))
 }
@@ -88,6 +102,8 @@ pub(crate) fn load(doc: &Document, c: &PipeClearanceAsk, checked: &NetworkDef) -
 /// A pipe of either network as the clearances take it.
 struct Pipe {
     uid: String,
+    /// Its `Ad` attribute.
+    name: Option<String>,
     path: Path,
     /// Its plan: the path's segments and arcs, in its stations' order.
     edges: Vec<Edge>,
@@ -170,7 +186,15 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
                 None => Some(0.0),
                 Some(d) => diameter_of(e, d).ok().map(|x| x * d.unit.metres() / 2.0),
             };
-            Pipe { uid: doc.uid(slot).map(|u| u.to_string()).unwrap_or_default(), path, edges, inverts, radius, bounds }
+            Pipe {
+                uid: doc.uid(slot).map(|u| u.to_string()).unwrap_or_default(),
+                name: e.and_then(|e| e.base().attrs.get("Ad").cloned()),
+                path,
+                edges,
+                inverts,
+                radius,
+                bounds,
+            }
         })
         .collect()
 }
@@ -291,12 +315,21 @@ fn normal_feet(s0: Vec2, s1: Vec2, c: Vec2, r: f64, a0: f64, sweep: f64) -> Vec<
 /// The crossings of two pipes in plan: (station on the first, station on the second, place), along the first; a place
 /// two edges share is one crossing.
 fn crossings_of(p: &Pipe, o: &Pipe) -> Vec<(f64, f64, Vec2)> {
+    crossings_along(&p.edges, &p.path, o)
+}
+
+/// [`crossings_of`] of a plan's `edges` along `path` (its stations) and the pipe `o`.
+fn crossings_along(edges: &[Edge], path: &Path, o: &Pipe) -> Vec<(f64, f64, Vec2)> {
+    let station = |i: usize, t: f64| match (path.stations.get(i), path.stations.get(i + 1)) {
+        (Some(a), Some(b)) => a + t.clamp(0.0, 1.0) * (b - a),
+        _ => 0.0,
+    };
     let mut out: Vec<(f64, f64, Vec2)> = Vec::new();
-    let (tol_p, tol_o) = (1e-9 * p.path.length().max(1.0), 1e-9 * o.path.length().max(1.0));
-    for (i, ep) in p.edges.iter().enumerate() {
+    let (tol_p, tol_o) = (1e-9 * path.length().max(1.0), 1e-9 * o.path.length().max(1.0));
+    for (i, ep) in edges.iter().enumerate() {
         for (j, eo) in o.edges.iter().enumerate() {
             for h in intersect_edges(ep, eo) {
-                let (sp, so) = (p.station(i, h.t), o.station(j, h.u));
+                let (sp, so) = (station(i, h.t), o.station(j, h.u));
                 if out.iter().any(|x| (x.0 - sp).abs() <= tol_p && (x.1 - so).abs() <= tol_o) {
                     continue;
                 }
@@ -305,6 +338,44 @@ fn crossings_of(p: &Pipe, o: &Pipe) -> Vec<(f64, f64, Vec2)> {
         }
     }
     out.sort_by(|a, b| a.0.total_cmp(&b.0));
+    out
+}
+
+/// A pipe of the other network crossing a pipe of a run in plan (docs/adr/2760): the station along the run's pipe, the
+/// other's uid and name, its invert there and half its diameter (as the clearances read them), and the place.
+pub(crate) struct Crossed {
+    pub(crate) station: f64,
+    pub(crate) uid: String,
+    pub(crate) name: Option<String>,
+    pub(crate) invert: Option<f64>,
+    pub(crate) radius: Option<f64>,
+    pub(crate) at: [f64; 2],
+}
+
+/// The other network's pipes the pipe `e` (its plan `path`) crosses, along it.
+pub(crate) fn crossing_pipes(e: Option<&Entity>, path: &Path, other: &Other<'_>) -> Vec<Crossed> {
+    let edges = plan_of(e, path);
+    let mut bounds = Bounds { min_x: f64::INFINITY, min_y: f64::INFINITY, max_x: f64::NEG_INFINITY, max_y: f64::NEG_INFINITY };
+    for b in edges.iter().map(tight_box) {
+        bounds.min_x = bounds.min_x.min(b.min_x);
+        bounds.min_y = bounds.min_y.min(b.min_y);
+        bounds.max_x = bounds.max_x.max(b.max_x);
+        bounds.max_y = bounds.max_y.max(b.max_y);
+    }
+    if ![bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y].iter().all(|v| v.is_finite()) {
+        return Vec::new();
+    }
+    let mut found = Vec::new();
+    other.tree.search(&bounds, &mut found);
+    found.sort_unstable();
+    let mut out: Vec<Crossed> = Vec::new();
+    for &k in &found {
+        let o = &other.pipes[k as usize];
+        for (sp, so, at) in crossings_along(&edges, path, o) {
+            out.push(Crossed { station: sp, uid: o.uid.clone(), name: o.name.clone(), invert: o.invert(so), radius: o.radius, at: [at.x, at.y] });
+        }
+    }
+    out.sort_by(|a, b| a.station.total_cmp(&b.station).then_with(|| a.uid.cmp(&b.uid)));
     out
 }
 
