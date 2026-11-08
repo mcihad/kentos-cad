@@ -709,3 +709,112 @@ fn an_upper_slab_shows_dashed_on_the_plan_below_it() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// docs/adr/3014: KentOS's wall styles and a column on 1:20 and 1:50 sheets. TS 5319 (Teknik resim – Taramalar):
+/// the heat insulation of Dış duvar 25 and the insulation of Bölme duvar 10 are its SN55, a zigzag between the layer's
+/// two faces, one line along the wall; the concrete of a column at 1:20 its SN46. `KENTOS_SCALE_PDF_DIR=dir` keeps the
+/// PDFs (`malzeme-1-<scale>.pdf`) and the drawing (`malzeme.kcad`) there.
+#[test]
+fn the_materials_print_by_ts_5319() {
+    let mut s = Session::new(&NewDrawing {
+        name: "Malzeme".into(),
+        srid: 0,
+        plot_scale: 50.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: Some(DrawingUnit::M),
+        annotation: None,
+        cad_work: Some(CadWork::Architecture),
+        heights: None,
+    })
+    .expect("a new building");
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    for (y, width, style) in [
+        (0.0, 0.25, "Dış duvar 25"),
+        (1.0, 0.20, "Gazbeton 20"),
+        (2.0, 0.25, "Betonarme perde 25"),
+        (3.0, 0.10, "Bölme duvar 10"),
+    ] {
+        let made = done(
+            s.call(json!({ "command": "cad.walls.create", "input": {
+                "layerId": layer,
+                "walls": [{ "pts": [{ "x": 0.0, "y": y }, { "x": 3.0, "y": y }], "width": width,
+                            "arch": { "level": "zemin" } }],
+                "lineWeight": 0.5
+            } }))
+            .expect("answers"),
+        );
+        let uid = made["uids"][0].as_str().expect("a wall").to_owned();
+        done(
+            s.call(json!({ "command": "cad.walls.edit", "input": {
+                "uids": [uid], "operation": { "kind": "set", "style": style }
+            } }))
+            .expect("answers"),
+        );
+    }
+    done(
+        s.call(json!({ "command": "cad.columns.create", "input": {
+            "layerId": layer, "lineWeight": 0.5,
+            "columns": [{ "at": { "x": 4.0, "y": 1.5 }, "width": 0.3, "depth": 0.5, "tag": "S1" }]
+        } }))
+        .expect("answers"),
+    );
+    let dir = std::env::temp_dir().join(format!("kentos-malzeme-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let keep = std::env::var("KENTOS_SCALE_PDF_DIR").ok();
+    let mut pages = Vec::new();
+    for (scale, first) in [(20, "A-101"), (50, "A-102")] {
+        let made = done(
+            s.call(json!({ "command": "cad.sheets.levels", "input": {
+                "options": { "scale": scale }, "first": first, "again": true
+            } }))
+            .expect("answers"),
+        );
+        let id = made["sheets"]
+            .as_array()
+            .and_then(|all| {
+                all.iter()
+                    .find(|sheet| sheet["name"].as_str().is_some_and(|n| n.starts_with(first)))
+            })
+            .and_then(|sheet| sheet["id"].as_str())
+            .expect("its sheet")
+            .to_owned();
+        let pdf = dir.join(format!("malzeme-1-{scale}.pdf"));
+        s.export_pdf(&pdf, &[id]).expect("the PDF");
+        if let Some(keep) = &keep {
+            std::fs::copy(
+                &pdf,
+                std::path::Path::new(keep).join(format!("malzeme-1-{scale}.pdf")),
+            )
+            .expect("kept");
+        }
+        pages.push((
+            scale,
+            kentos_formats::pdf::read_page(&std::fs::read(&pdf).expect("written"), 1)
+                .expect("its first page"),
+        ));
+    }
+    if let Some(keep) = &keep {
+        s.save(Some(&std::path::Path::new(keep).join("malzeme.kcad")))
+            .expect("kept");
+    }
+    for (scale, page) in &pages {
+        // A zigzag is one stroked line of many points; a tiled hatch is lines of two.
+        let zigzags = page
+            .paths
+            .iter()
+            .filter(|p| p.stroke.is_some())
+            .flat_map(|p| &p.parts)
+            .filter(|(pts, closed)| !closed && pts.len() >= 12)
+            .count();
+        eprintln!("1:{scale}: {zigzags} lines of 12 points or more");
+        // Dış duvar 25's heat insulation and Bölme duvar 10's insulation (shown at 1:20 only).
+        let want = if *scale == 20 { 2 } else { 1 };
+        assert!(zigzags >= want, "1:{scale}: {zigzags} zigzags");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}

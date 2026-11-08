@@ -139,6 +139,24 @@ impl Item {
             .map(|(_, s)| s)
     }
 
+    /// [`Item::shapes`] snapping looks at: a symbol drawn over the object left out (docs/adr/3014), as a hatch is.
+    pub fn snap_shapes(&self) -> impl Iterator<Item = &Shape> + Clone {
+        let (list, keep): (&[Shape], fn(&&Shape) -> bool) = match &self.expanded {
+            Some(x) => (&x.shapes, |s| !crate::block::shows_nothing(s)),
+            None => (std::slice::from_ref(&self.shape), |_| true),
+        };
+        let veiled = self.veiled.as_deref();
+        let symbols = self.expanded.as_deref().map(|x| x.strokes.as_slice());
+        list.iter()
+            .enumerate()
+            .filter(move |(i, s)| {
+                keep(s)
+                    && veiled.is_none_or(|v| v.get(*i) != Some(&true))
+                    && symbols.is_none_or(|k| !k.get(*i).is_some_and(|st| st.symbol))
+            })
+            .map(|(_, s)| s)
+    }
+
     /// Whether piece `i` of an insert shows: no layer it shows only with is hidden (docs/adr/0315 §2).
     pub fn piece_shown(&self, i: usize) -> bool {
         self.veiled

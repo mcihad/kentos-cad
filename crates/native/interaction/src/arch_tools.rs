@@ -622,6 +622,9 @@ impl ColumnTool {
             anchor: (self.anchor != ColumnAnchor::Center).then_some(self.anchor),
             rotation: (self.turn != 0.0).then_some(self.turn),
             tag: None,
+            // Its inside darkened, as Mimarlar Odası asks of a bearing element on a plan (§14.5.3 i); at 1:20 its
+            // concrete is TS 5319's SN46 instead (docs/adr/3014).
+            fill: Some(true),
             // Etkin kat (docs/adr/0713).
             arch: cx.level_arch(),
             ..NewColumn::default()

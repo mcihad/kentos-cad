@@ -77,6 +77,11 @@
       1:50'ye dek 0,5, 1:100'e dek 0,35, ötesi 0,25); yoksa her nesne kendi kaleminde. Yeni Mimari projesi `byScale`.
     - Nesnenin kalemi 1:50'deki genişliğidir; pay `wall::View::pens`, depo modelin parçalarında (`takes_line_group`)
       `weight_scale` ile çarpar. Açıklama öğeleri ve DXF kendi kaleminde.
+  - **TS 5319 taramaları ve yalıtım simgesi (M14, [ADR 3014](../adr/3014-ts-5319-hatches-and-insulation.md)):**
+    - Kitaplıkta `ts` grubu (SN46, SN47, SN48, SN49, SN21, SN22, SN23, SN54, SN55, SN58, SN5).
+    - Duvar katmanının deseni SN55 ise katmanın iki kenarı arasında tek zikzak çizilir (`wall::FITTED_INSULATION`);
+      bağımsız taramada döşenmiş satırlar.
+    - Kolon Ayrıntılı'da SN46 (`arch::CONCRETE`); kolon aracı yeni kolonu dolu yazar.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

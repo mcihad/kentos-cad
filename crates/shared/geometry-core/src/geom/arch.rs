@@ -730,6 +730,9 @@ enum Level {
     Construction,
 }
 
+/// A column's concrete at 1:20 (docs/adr/3014): TS 5319's SN46, betonarme.
+pub const CONCRETE: &str = "SN46";
+
 /// The level a view draws at: the simplest beyond 1:150 schematic, construction from standard on.
 fn level_of(view: crate::geom::wall::View) -> Level {
     if view.simple() {
@@ -769,11 +772,19 @@ fn column_size(spec: &ColumnSpec) -> String {
 
 /// A column's pieces at 1:`scale`: its fill, its outline, its tag and place beside its upper right.
 pub fn column_pieces(at: Vec2, spec: &ColumnSpec, scale: f64) -> Vec<Piece> {
-    column_pieces_at(at, spec, scale, Level::Whole)
+    column_pieces_at(at, spec, scale, Level::Whole, false)
 }
 
-/// [`column_pieces`] at `level`: beyond 1:150 without its words, from 1:50 with its size under them (docs/adr/3011).
-fn column_pieces_at(at: Vec2, spec: &ColumnSpec, scale: f64, level: Level) -> Vec<Piece> {
+/// [`column_pieces`] at `level`: beyond 1:150 without its words, from 1:50 with its size under them (docs/adr/3011);
+/// `detailed` (1:20, Ayrıntılı) its concrete as TS 5319's SN46 instead of a solid fill (docs/adr/3014): a detail shows
+/// the material where a plan darkens the bearing element (Mimarlar Odası §14.5.3 i).
+fn column_pieces_at(
+    at: Vec2,
+    spec: &ColumnSpec,
+    scale: f64,
+    level: Level,
+    detailed: bool,
+) -> Vec<Piece> {
     let mut out = Vec::new();
     let r = spec.width / 2.0;
     let centre = column_center(at, spec);
@@ -783,7 +794,21 @@ fn column_pieces_at(at: Vec2, spec: &ColumnSpec, scale: f64, level: Level) -> Ve
         let c = column_corners(at, spec);
         (c.clone(), polygon(c))
     };
-    if spec.fill {
+    let concrete = detailed
+        .then(|| crate::geom::wall::component_hatch(CONCRETE, 1.0, 0.0, scale))
+        .flatten();
+    if let Some(pattern) = concrete {
+        let mut hatch = piece(Shape::Hatch {
+            ring,
+            holes: None,
+            pattern,
+            assoc: None,
+            boundary: None,
+        });
+        // The pattern's lines narrow (ISO 128-23: hatching is the narrow line).
+        hatch.stroke.weight_scale = Some(0.5);
+        out.push(hatch);
+    } else if spec.fill {
         out.push(piece(Shape::Hatch {
             ring,
             holes: None,
@@ -1919,7 +1944,13 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
 pub fn pieces_in(shape: &Shape, view: crate::geom::wall::View) -> Vec<Piece> {
     let (level, scale) = (level_of(view), view.scale);
     match shape {
-        Shape::Column { at, column } => column_pieces_at(*at, column, scale, level),
+        Shape::Column { at, column } => column_pieces_at(
+            *at,
+            column,
+            scale,
+            level,
+            view.detail == crate::geom::wall::Detail::Detailed,
+        ),
         Shape::Stair { pts, stair } => stair_pieces_at(pts, stair, scale, level),
         Shape::Ramp { pts, ramp } => ramp_pieces_at(pts, ramp, scale, level),
         _ => pieces(shape, scale),

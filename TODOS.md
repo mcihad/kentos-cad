@@ -92,6 +92,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (`level_view::looks`'un `overhead`'ı, `slab::Look::overhead`).
 - ADR 3013 (çizgi grubu): `io/kcad.ts` şema 206 (`settings.arch.lineGroups`); web çizimi görünüşün `pens`'ini projeden
   (`pens_at`) versin; web'in Proje ayarları › Mimari'si Çizgi kalınlıkları seçimini alsın.
+- M14 / ADR 3014: web'in WASM çekirdeği yeniden derlenince TS 5319 desenleri ve SN55 zikzağı webde de çizilir;
+  `pnpm inventory:check` envanterin elle eklenen 22 tarama simgesini (hatchIcons.ts'ten aynı sırayla) doğrulamalı.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

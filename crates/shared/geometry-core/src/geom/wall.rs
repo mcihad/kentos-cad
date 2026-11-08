@@ -22,7 +22,7 @@ use crate::geom::bulge::{bulge_path_outline, has_bulges};
 use crate::geom::hatch_pattern::library_pattern;
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
 use crate::geometry::signed_area;
-use crate::jsmath::{PI, atan2};
+use crate::jsmath::{PI, atan2, js_hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 /// Conservative path box used by the native wall join candidate search.
@@ -620,6 +620,115 @@ pub fn component_hatch(pattern: &str, size: f64, angle: f64, scale: f64) -> Opti
     })
 }
 
+/// The pattern a wall's layer draws as TS 5319's insulation symbol fitted to its thickness (docs/adr/3014): SN55, one
+/// zigzag between the layer's two sides, each vee as wide as half the layer is thick, its points on both faces; not a
+/// pattern tiled at a size of its own (Revit's Insulation, Archicad's fills fitted to a skin). Elsewhere (a hatch of its
+/// own) SN55 tiles as the library's rows.
+pub const FITTED_INSULATION: &str = "SN55";
+
+/// At most this many points in one zigzag: a layer longer than that many vees draws its first ones.
+const ZIGZAG_POINTS: usize = 4000;
+
+/// A layer thinner than this on paper (mm) draws no zigzag (docs/adr/3014): at 1:200 a 5 cm insulation is 0.25 mm and
+/// its vees would be a smudge; at 1:50 it is 1 mm. TS 5319's note: the representation goes by the drawing's scale.
+pub const ZIGZAG_MIN_MM: f64 = 1.0;
+
+/// The point of `line` nearest `p`.
+fn nearest_on(line: &[Vec2], p: Vec2) -> Option<Vec2> {
+    let mut best: Option<(f64, Vec2)> = None;
+    for w in line.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let len2 = dx * dx + dy * dy;
+        let t = if len2 > 0.0 {
+            js_min(
+                1.0,
+                js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
+            )
+        } else {
+            0.0
+        };
+        let q = Vec2::new(a.x + t * dx, a.y + t * dy);
+        let d = js_hypot(q.x - p.x, q.y - p.y);
+        if best.is_none_or(|(e, _)| d < e) {
+            best = Some((d, q));
+        }
+    }
+    best.map(|(_, q)| q)
+}
+
+/// The point `s` along `line` (its chords), and the line's whole length with `s` beyond it.
+fn along(line: &[Vec2], s: f64) -> Option<Vec2> {
+    let mut left = s;
+    for w in line.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let len = js_hypot(b.x - a.x, b.y - a.y);
+        if left <= len {
+            let k = if len > 0.0 { left / len } else { 0.0 };
+            return Some(Vec2::new(a.x + k * (b.x - a.x), a.y + k * (b.y - a.y)));
+        }
+        left -= len;
+    }
+    None
+}
+
+/// TS 5319's SN55 between a layer's sides (docs/adr/3014): for each stretch of the first side, points every half its
+/// thickness along it, every other one moved to its foot on the second side; the thickness is measured at the stretch's
+/// middle. None for a stretch with no second side beside it, or thinner than `least`.
+fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
+    let others: Vec<Vec<Vec2>> = second.iter().map(|s| s.line.outline(s.closed)).collect();
+    let foot = |p: Vec2| -> Option<Vec2> {
+        others
+            .iter()
+            .filter_map(|o| nearest_on(o, p))
+            .min_by(|a, b| {
+                crate::jsmath::js_cmp(
+                    js_hypot(a.x - p.x, a.y - p.y),
+                    js_hypot(b.x - p.x, b.y - p.y),
+                )
+            })
+    };
+    let mut out = Vec::new();
+    for st in first {
+        let line = st.line.outline(st.closed);
+        let length: f64 = line
+            .windows(2)
+            .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .sum();
+        let Some(middle) = along(&line, length / 2.0) else {
+            continue;
+        };
+        let Some(across) = foot(middle) else {
+            continue;
+        };
+        let thick = js_hypot(across.x - middle.x, across.y - middle.y);
+        // At the limit it draws (a 5 cm layer at 1:50), the measured thickness a hair under it.
+        if thick <= 1e-6 || thick < least * (1.0 - 1e-9) || length <= thick / 2.0 {
+            continue;
+        }
+        let step = thick / 2.0;
+        let n = crate::jsmath::js_floor(length / step) as usize;
+        let mut pts = Vec::with_capacity(n.min(ZIGZAG_POINTS) + 1);
+        for k in 0..=n.min(ZIGZAG_POINTS) {
+            let Some(p) = along(&line, k as f64 * step) else {
+                break;
+            };
+            pts.push(if k % 2 == 1 { foot(p).unwrap_or(p) } else { p });
+        }
+        if pts.len() >= 3 {
+            out.push(Shape::Polyline {
+                pts,
+                bulges: None,
+                holes: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            });
+        }
+    }
+    out
+}
+
 fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> Piece {
     let edge = edge.cloned().unwrap_or_default();
     Piece {
@@ -764,6 +873,17 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
             let Some(fill) = c.hatch.as_ref().filter(|_| shown(c)) else {
                 continue;
             };
+            // TS 5319's insulation fitted to the layer (docs/adr/3014): a zigzag between its sides, the narrow line.
+            if fill.pattern.eq_ignore_ascii_case(FITTED_INSULATION)
+                && let (Some(first), Some(second)) = (d.lines.get(k), d.lines.get(k + 1))
+            {
+                for z in zigzags(first, second, ZIGZAG_MIN_MM * view.scale / 1000.0) {
+                    let mut symbol = boundary(z, c.edge.as_ref());
+                    symbol.stroke.symbol = true;
+                    out.push(symbol);
+                }
+                continue;
+            }
             let Some(pattern) = hatch_of(fill, turn, view.scale) else {
                 continue;
             };

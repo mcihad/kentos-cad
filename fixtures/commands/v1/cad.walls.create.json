@@ -2007,8 +2007,8 @@
                     "material": "Isı yalıtımı",
                     "thickness": 0.05,
                     "hatch": {
-                      "pattern": "ANSI37",
-                      "scale": 0.5,
+                      "pattern": "SN55",
+                      "scale": 1.0,
                       "angle": 0.0
                     },
                     "detail": "standard",
@@ -2076,8 +2076,8 @@
                       "material": "Isı yalıtımı",
                       "thickness": 0.05,
                       "hatch": {
-                        "pattern": "ANSI37",
-                        "scale": 0.5,
+                        "pattern": "SN55",
+                        "scale": 1.0,
                         "angle": 0.0
                       },
                       "detail": "standard",
@@ -2212,7 +2212,7 @@
                     "name": "Gazbeton",
                     "material": "Gazbeton",
                     "hatch": {
-                      "pattern": "DOTS",
+                      "pattern": "SN48",
                       "scale": 1.0,
                       "angle": 0.0
                     },
@@ -2269,7 +2269,7 @@
                       "name": "Gazbeton",
                       "material": "Gazbeton",
                       "hatch": {
-                        "pattern": "DOTS",
+                        "pattern": "SN48",
                         "scale": 1.0,
                         "angle": 0.0
                       },
@@ -3538,8 +3538,8 @@
                       "material": "Isı yalıtımı",
                       "thickness": 0.05,
                       "hatch": {
-                        "pattern": "ANSI37",
-                        "scale": 0.5,
+                        "pattern": "SN55",
+                        "scale": 1.0,
                         "angle": 0.0
                       },
                       "detail": "standard",
@@ -3585,8 +3585,8 @@
                       "material": "Isı yalıtımı",
                       "thickness": 0.05,
                       "hatch": {
-                        "pattern": "ANSI37",
-                        "scale": 0.5,
+                        "pattern": "SN55",
+                        "scale": 1.0,
                         "angle": 0.0
                       },
                       "detail": "standard",

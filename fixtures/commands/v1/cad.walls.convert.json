@@ -1836,7 +1836,7 @@
                     "name": "Gazbeton",
                     "material": "Gazbeton",
                     "hatch": {
-                      "pattern": "DOTS",
+                      "pattern": "SN48",
                       "scale": 1.0,
                       "angle": 0.0
                     },
@@ -1883,7 +1883,7 @@
                     "name": "Gazbeton",
                     "material": "Gazbeton",
                     "hatch": {
-                      "pattern": "DOTS",
+                      "pattern": "SN48",
                       "scale": 1.0,
                       "angle": 0.0
                     },
@@ -1940,7 +1940,7 @@
                       "name": "Gazbeton",
                       "material": "Gazbeton",
                       "hatch": {
-                        "pattern": "DOTS",
+                        "pattern": "SN48",
                         "scale": 1.0,
                         "angle": 0.0
                       },

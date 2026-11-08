@@ -243,6 +243,10 @@ pub struct PieceStroke {
     /// swing, a window's glass and a wall's boundaries between materials are drawn at 0.5 of the object's weight,
     /// whatever gives that weight (its layer, its own, a view's pen). None: the whole pen.
     pub weight_scale: Option<f64>,
+    /// A symbol drawn over its object, as a hatch is (docs/adr/3014: TS 5319's insulation zigzag in a wall's layer):
+    /// drawn and picked with it, never snapped to. Its corners every few centimetres would take the pointer from the
+    /// wall's faces and axis.
+    pub symbol: bool,
 }
 
 impl PieceStroke {
@@ -255,6 +259,7 @@ impl PieceStroke {
             scale: number_field(rest, "lineTypeScale"),
             transparency: number_field(rest, "transparency"),
             weight_scale: None,
+            symbol: false,
         }
     }
 }
@@ -1450,6 +1455,7 @@ fn flat_of(
                                 .flatten()
                         }),
                         weight_scale: piece.stroke.weight_scale,
+                        symbol: piece.stroke.symbol,
                     },
                     attribute: None,
                     annotation_origin: piece.annotation_origin.clone(),

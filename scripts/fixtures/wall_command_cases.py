@@ -168,18 +168,18 @@ def plaster(t, name):
 BUILTIN = [
     {"id": "kentos-dis-duvar-25", "name": "Dış duvar 25",
      "components": [plaster(0.02, "İç sıva"), comp("Tuğla", None, "standard", ("ANSI31", 1.0, None)),
-                    comp("Isı yalıtımı", 0.05, "standard", ("ANSI37", 0.5, None), 3), plaster(0.03, "Dış sıva")],
+                    comp("Isı yalıtımı", 0.05, "standard", ("SN55", 1.0, None), 3), plaster(0.03, "Dış sıva")],
      "fill": "#5A5A5A", "width": 0.25},
     {"id": "kentos-ic-duvar-15", "name": "İç duvar 15",
      "components": [plaster(0.02, "Sıva"), comp("Tuğla", None, "standard", ("ANSI31", 1.0, None)), plaster(0.02, "Sıva")],
      "fill": "#5A5A5A", "width": 0.15},
     {"id": "kentos-gazbeton-20", "name": "Gazbeton 20",
-     "components": [plaster(0.02, "Sıva"), comp("Gazbeton", None, "standard", ("DOTS", 1.0, None)), plaster(0.02, "Sıva")],
+     "components": [plaster(0.02, "Sıva"), comp("Gazbeton", None, "standard", ("SN48", 1.0, None)), plaster(0.02, "Sıva")],
      "fill": "#5A5A5A", "width": 0.20},
     {"id": "kentos-betonarme-25", "name": "Betonarme perde 25",
      "components": [comp("Betonarme", None, "standard", ("SOLID", 1.0, "#A6A6A6"))], "fill": "#3C3C3C", "width": 0.25},
     {"id": "kentos-bolme-10", "name": "Bölme duvar 10",
-     "components": [plaster(0.0125, "Alçı levha"), comp("Yalıtım", None, "detailed", ("ANSI37", 0.5, None), 2), plaster(0.0125, "Alçı levha")],
+     "components": [plaster(0.0125, "Alçı levha"), comp("Yalıtım", None, "detailed", ("SN55", 1.0, None), 2), plaster(0.0125, "Alçı levha")],
      "width": 0.10},
 ]
 

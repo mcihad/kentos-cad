@@ -785,9 +785,12 @@ _Durum (7 Kasım 2026):_ Kapı ve pencere ölçeğe göre çiziliyor (M11, [ADR 
 - Ölçeğe göre çizgi grubu ([ADR 3013](../docs/adr/3013-line-groups-by-scale.md), sahibin onayı 8 Kasım):
   TS 88-23 / ISO 128-23 grupları, duvar 1:200'de 0,25, 1:100'de 0,35, 1:50'de 0,5, 1:20'de 0,7 mm, kapı-pencere yarısı.
   Yeni Mimari projesinde açık; Proje ayarları › Mimari › Çizgi kalınlıkları.
+- TS 5319 taramaları ve yalıtım simgesi (M14, [ADR 3014](../docs/adr/3014-ts-5319-hatches-and-insulation.md)):
+  SN46–SN58 kitaplıkta; ısı yalıtımı katmanın iki yüzü arasında SN55 zikzağı; kolon 1:20'de SN46, kolon aracıyla dolu
+  (Mimarlar Odası §14.5.3 i). 1:20 PDF'te iki yalıtım zikzağı.
 - Kalanlar:
-  - 1:20 kasa profili ve kolonun beton taraması (M14);
-  - kiriş izi ve asma tavan (nesneleri yok), tarama kitaplığı (M14);
+  - 1:20 kasa profili; duvar katmanına ölçeğe göre ikinci tarama (perde 1:20'de SN46);
+  - kiriş izi ve asma tavan (nesneleri yok);
   - mobilyanın parça parça ayrıntı düzeyi, ıslak hacim ve mutfak bloklarının sade gösterimi;
   - web çiziminin düzeyi ölçeğe göre seçmesi.
 
@@ -1072,7 +1075,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte **(M12, ADR 3011: yapıldı; 1:200 sade, 1:50'de kolon ölçüsü ve merdiven bilgisi; kolonun beton taraması M14'e, çizgi grubu sahibin kararına)** |
 | M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler **(M13, ADR 3012: yapıldı; yüksek pencere kesikli, kesme yüksekliği proje ayarı (yeni projede 1,20), üst katın döşemesi alt katta kesikli; kiriş ve asma tavan nesnesi yok)** |
 | M13+ | Ölçeğe göre çizgi grubu (sahibin onayı) | ADV-15 | Paftanın ölçeğine göre kalem **(ADR 3013: yapıldı; PDF'te duvar 1:200/1:100/1:50/1:20'de 0,25/0,35/0,5/0,7 mm)** |
-| M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım |
+| M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım **(M14, ADR 3014: yapıldı; TS 5319 SN46–SN58 kitaplıkta, yalıtım SN55 zikzağı katmana sığar, kolon 1:20'de SN46 ve kolon aracıyla dolu; perdenin 1:20 taraması kaldı)** |
 | M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) |
 | M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |
 | M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart |

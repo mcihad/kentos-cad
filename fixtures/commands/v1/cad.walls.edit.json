@@ -1441,8 +1441,8 @@
                       "material": "Isı yalıtımı",
                       "thickness": 0.05,
                       "hatch": {
-                        "pattern": "ANSI37",
-                        "scale": 0.5,
+                        "pattern": "SN55",
+                        "scale": 1.0,
                         "angle": 0.0
                       },
                       "detail": "standard",
@@ -1549,8 +1549,8 @@
                     "material": "Isı yalıtımı",
                     "thickness": 0.05,
                     "hatch": {
-                      "pattern": "ANSI37",
-                      "scale": 0.5,
+                      "pattern": "SN55",
+                      "scale": 1.0,
                       "angle": 0.0
                     },
                     "detail": "standard",
@@ -1618,8 +1618,8 @@
                       "material": "Isı yalıtımı",
                       "thickness": 0.05,
                       "hatch": {
-                        "pattern": "ANSI37",
-                        "scale": 0.5,
+                        "pattern": "SN55",
+                        "scale": 1.0,
                         "angle": 0.0
                       },
                       "detail": "standard",

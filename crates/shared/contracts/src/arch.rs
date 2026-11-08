@@ -1722,11 +1722,12 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             components: vec![
                 plaster(0.02, "İç sıva"),
                 component("Tuğla", None, Standard, Some(("ANSI31", 1.0, None)), 1),
+                // TS 5319's SN55 fitted to the layer: a zigzag between its sides (docs/adr/3014).
                 component(
                     "Isı yalıtımı",
                     Some(0.05),
                     Standard,
-                    Some(("ANSI37", 0.5, None)),
+                    Some(("SN55", 1.0, None)),
                     3,
                 ),
                 plaster(0.03, "Dış sıva"),
@@ -1752,7 +1753,8 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             name: "Gazbeton 20".into(),
             components: vec![
                 plaster(0.02, "Sıva"),
-                component("Gazbeton", None, Standard, Some(("DOTS", 1.0, None)), 1),
+                // TS 5319's SN48, lightweight concrete (docs/adr/3014).
+                component("Gazbeton", None, Standard, Some(("SN48", 1.0, None)), 1),
                 plaster(0.02, "Sıva"),
             ],
             caps: WallCaps::Closed,
@@ -1778,7 +1780,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             name: "Bölme duvar 10".into(),
             components: vec![
                 plaster(0.0125, "Alçı levha"),
-                component("Yalıtım", None, Detailed, Some(("ANSI37", 0.5, None)), 2),
+                component("Yalıtım", None, Detailed, Some(("SN55", 1.0, None)), 2),
                 plaster(0.0125, "Alçı levha"),
             ],
             caps: WallCaps::Closed,

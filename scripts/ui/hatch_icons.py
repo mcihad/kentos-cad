@@ -32,7 +32,7 @@ OUT = ROOT / "apps/web/src/ui/hatchIcons.ts"
 # The square the pattern fills, in icon pixels (the frame's inside).
 LO, HI = 4.0, 16.0
 # Pixels a paper millimetre takes, by group, and the patterns that want their own.
-SCALE = {"ansi": 0.85, "iso": 0.45, "general": 0.85}
+SCALE = {"ansi": 0.85, "iso": 0.45, "general": 0.85, "ts": 0.9}
 OWN = {"DOTS": 2.4, "ISO07W100": 0.9, "BRICK": 0.5, "CROSS": 0.65, "NET3": 1.2}
 FRAME = '<rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-width="1.2"/>'
 

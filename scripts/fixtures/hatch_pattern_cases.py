@@ -15,7 +15,11 @@ natively and through WASM: `hatchPatterns`, `hatchPaints`,
 - Library (§2): the patterns' families in paper millimetres, unturned; e is
   1/8 inch (3.175 mm); a 45° line through (k·e·√2, 0) lies k·e under the one
   through the origin. ISO 128's line types (W100: d = 1 mm) as horizontal
-  families 5 mm apart.
+  families 5 mm apart. TS 5319's symbols (docs/adr/3014) after its figure, in
+  millimetres; SN55 tiled as zigzag rows h = 2 high with vees p = 2 wide, a
+  row h apart: its rising sides at atan2(h, p/2) through the origin and its
+  falling sides at the negative angle through (p/2, h), each line's next
+  (p·cos, ∓p·sin) on, dashes a side long and a gap as long again.
 - Dashes (§3): signed lengths (plus drawn, minus a gap, 0 a dot) as runs:
   neighbours of one kind joined; when the last run is of the first's kind it
   joins the first and the pattern starts that much earlier (the phase gains
@@ -115,7 +119,33 @@ def library():
     ]
 
 
-LIB = {p["name"]: p for p in library()}
+def ts_symbols():
+    """TS 5319's SN symbols (docs/adr/3014), written from the ADR."""
+    ts = lambda name, d, lines: {"name": name, "group": "ts", "description": d, "lines": lines}
+    mm = lambda d: (d * math.sqrt(2.0), 0.0)
+    h, p = 2.0, 2.0
+    up = math.atan2(h, p / 2.0)
+    side = math.hypot(p / 2.0, h)
+    zig = [
+        fam(math.degrees(up), (0.0, 0.0), (p * math.cos(up), -p * math.sin(up)), (side, -side)),
+        fam(-math.degrees(up), (p / 2.0, h), (p * math.cos(up), p * math.sin(up)), (side, -side)),
+    ]
+    return [
+        ts("SN46", "Betonarme (TS 5319 SN46)", [fam(45.0, (0.0, 0.0), (0.0, 3.0)), fam(45.0, mm(1.5), (0.5, 3.0), (0.0, -1.0))]),
+        ts("SN47", "Beton, takviyesiz (TS 5319 SN47)", [fam(45.0, (0.0, 0.0), (1.0, 2.5), (2.5, -1.0))]),
+        ts("SN48", "Hafif beton, gazbeton (TS 5319 SN48)", [fam(45.0, (0.0, 0.0), (0.0, 4.0)), fam(45.0, mm(2.0), (1.0, 4.0), (0.0, -2.0))]),
+        ts("SN49", "Pomzalı beton (TS 5319 SN49)", [fam(45.0, (0.0, 0.0), (0.0, 1.5))]),
+        ts("SN21", "Ahşap, enine lifli (TS 5319 SN21)", [fam(45.0, (0.0, 0.0), (0.0, 3.0)), fam(45.0, mm(0.8), (0.0, 3.0))]),
+        ts("SN22", "Ahşap, lif doğrultusunda (TS 5319 SN22)", [fam(0.0, (0.0, 0.0), (0.0, 1.5))]),
+        ts("SN23", "Ağaç malzeme (TS 5319 SN23)", [fam(90.0, (0.0, 0.0), (0.0, 2.0))]),
+        ts("SN54", "Porselen (TS 5319 SN54)", [fam(0.0, (0.0, 0.0), (0.0, 1.5)), fam(90.0, (0.0, 0.0), (0.0, 1.5))]),
+        ts("SN55", "Yalıtım malzemesi (TS 5319 SN55)", zig),
+        ts("SN58", "Tecrit malzemesi (TS 5319 SN58)", [fam(45.0, (0.0, 0.0), (0.0, 2.5)), fam(135.0, (0.0, 0.0), (0.0, 2.5))]),
+        ts("SN5", "Kum (TS 5319 SN5)", [fam(0.0, (0.0, 0.0), (0.75, 1.5), (0.0, -1.5))]),
+    ]
+
+
+LIB = {p["name"]: p for p in library() + ts_symbols()}
 
 # ── Dashes ──────────────────────────────────────────────────────────────
 
@@ -483,7 +513,7 @@ def build():
         "format": "kentos.hatch-pattern-cases",
         "version": 1,
         "source": "scripts/fixtures/hatch_pattern_cases.py; docs/adr/0186",
-        "library": library(),
+        "library": library() + ts_symbols(),
         "dashes": [{"note": n, "signed": s, "expect": runs_json(s)} for n, s in DASH_CASES],
         "paints": [{"note": n, "pattern": p, "expect": paints(p)} for n, p in PAINT_CASES],
         "pieces": [{"note": n, "ring": r, "holes": h, "pattern": p, "budget": b, "expect": pieces(r, h, p, b)} for n, r, h, p, b in PIECE_CASES],
