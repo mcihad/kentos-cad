@@ -15,7 +15,7 @@
 //! │ Yüzey          [▾]            (Fark: Taban yüzeyi [▾] / Karşılaştırma [▾])          │
 //! │ …the mode's rows, one label column (Ölçü, Yöntem, Kazı / dolgu katsayısı …)         │
 //! │ Çizime yaz ─── Katman [▾] [Sıfır hattını çiz] · Bant aralığı [ ] [Kazı ve dolgu …]  │
-//! │                Bölgelere ☐ Yazı ☐ Miktar tablosu (docs/adr/2340)                      │
+//! │                Bölgelere ☐ Yazı ☐ Miktar tablosu ☐ En derin yer (2340, 2740)          │
 //! │ ┌ the picture ┐  the figures and tables                                            │
 //! │ └─────────────┘                                                [Önizle] [Kapat]    │
 //! └────────────────────────────────────────────────────────────────────────────────────┘
@@ -128,9 +128,10 @@ pub struct Window {
     pub(crate) roughness: bool,
     /// Fark by a grid's cells (docs/adr/1600), else the exact TIN–TIN prisms.
     pub(crate) volume_grid: bool,
-    /// The cut and fill zones' labels and quantity table (docs/adr/2340).
+    /// The cut and fill zones' labels and quantity table (docs/adr/2340), their deepest places (docs/adr/2740).
     pub(crate) zone_labels: bool,
     pub(crate) zone_table: bool,
+    pub(crate) zone_depths: bool,
     pub(crate) checks: Option<String>,
     /// Kapsam's boundary: a closed object's uid; none, the surface itself.
     pub(crate) boundary: Option<String>,
@@ -161,9 +162,10 @@ pub enum Event {
     DrawZero,
     /// Fark: the cut and fill zones written as areas (`road.terrains.cutfill`).
     DrawZones,
-    /// Fark: the zones' labels and their quantity table with them (docs/adr/2340).
+    /// Fark: the zones' labels and their quantity table with them (docs/adr/2340), their deepest places (docs/adr/2740).
     ZoneLabels(bool),
     ZoneTable(bool),
+    ZoneDepths(bool),
     DrawSparse,
     Field(usize, String),
     Preview,
@@ -319,6 +321,7 @@ impl App {
             volume_grid: false,
             zone_labels: false,
             zone_table: false,
+            zone_depths: false,
             checks: None,
             boundary: None,
             layer: self.relation_layers().into_iter().next().map(|(id, _)| id),
@@ -374,6 +377,10 @@ impl App {
             }
             Event::ZoneTable(on) => {
                 w.zone_table = on;
+                return Task::none();
+            }
+            Event::ZoneDepths(on) => {
+                w.zone_depths = on;
                 return Task::none();
             }
             Event::Checks(l) => w.checks = l,
@@ -439,6 +446,7 @@ impl App {
                     interval,
                     labels: w.zone_labels.then_some(true),
                     table: w.zone_table.then_some(true),
+                    depths: w.zone_depths.then_some(true),
                     expected_revision: None,
                 };
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
@@ -676,6 +684,7 @@ impl App {
                         pair(vec![
                             words::check(w.zone_labels, "Yazı (tür, hacim)", Some(msg(Event::ZoneLabels(!w.zone_labels)))).into(),
                             words::check(w.zone_table, "Miktar tablosu", Some(msg(Event::ZoneTable(!w.zone_table)))).into(),
+                            words::check(w.zone_depths, "En derin yer", Some(msg(Event::ZoneDepths(!w.zone_depths)))).into(),
                         ]),
                     );
             }

@@ -45,7 +45,7 @@ sırayla alır.
 | MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
@@ -1344,6 +1344,13 @@ tablo), GEOS'un InteriorPointArea'sı. Kanıtlanan: `road.terrains.cutfill`'e `l
 çekirdeğin iç noktasında) ve `table` (bölgeler, kazı, dolgu, net; iki ondalık; Tablo aracının sütun sığdırmasıyla);
 ikisi de tutulan çizimin parçası, yüzey değişince yeniden çizilir; 38 ortak durum (GEOS'la aynı yer), MCP; Fark'ta
 Bölgelere satırı. Açık: bölgenin derinlik yazısı, malzeme bölgesi, stok sahası, kesit yöntemi.
+
+**8 Kasım 2026, dördüncü tur — bölgenin en derin yeri ([ADR 2740](../docs/adr/2740-cut-fill-zone-deepest-places.md)).**
+Kapsam: **Harita + Yol**. Dayanak: örtüşme parçasında farkın doğrusallığı (uç değer köşede), Civil 3D'nin kot
+aralıklı hacim yüzeyi. Kanıtlanan: çekirdek her bölgenin en derin yerini parçalarının köşelerinden verir (1 nm içinde
+eşitse en batı, sonra en güney); `road.terrains.cutfill`'de `deepest`/`depth` ve istenince `depths` (nokta ve
+“derinlik/yükseklik” yazısı); 44 ortak durum (shapely'li başvuru), MCP; Fark'ta En derin yer kutusu. Açık: malzeme
+bölgesi, stok sahası, kesit yöntemi.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

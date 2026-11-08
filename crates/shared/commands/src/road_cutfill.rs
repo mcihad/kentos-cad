@@ -23,7 +23,8 @@ pub const MOST_CUTFILL_BANDS: u64 = 1000;
 /// part of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference
 /// `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
 /// `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
-/// docs/adr/2340).
+/// docs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;
+/// docs/adr/2740).
 ///
 /// Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
 /// `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
@@ -49,6 +50,9 @@ pub struct TerrainsCutFill {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub table: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub depths: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -81,7 +85,9 @@ pub enum CutFillKind {
 
 /// A zone as written: cut or fill; with an interval its band of the difference, `[from, to)` (m); its plan area, its
 /// volume (m³, the cut's and the fill's alike above 0); its outer ring (counterclockwise, from its smallest place, x
-/// then y) and its holes (clockwise, each from its smallest place, ordered by it).
+/// then y) and its holes (clockwise, each from its smallest place, ordered by it); its deepest place and depth (m, the
+/// cut's depth and the fill's height alike above 0; docs/adr/2740): the corner of the overlay's pieces in it where the
+/// difference is largest in size, among those within 1 nm of it the westmost, then the southmost.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -107,6 +113,10 @@ pub struct TerrainCutFillZone {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<[f64; 2]>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub holes: Vec<Vec<[f64; 2]>>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub deepest: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub depth: f64,
 }
 
 /// Output of `road.terrains.cutfill` v1, and its plan: the surfaces' ids, the interval asked, the zones (by band, cut
@@ -156,6 +166,11 @@ pub struct TerrainsCutFilled {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
     pub table: Vec<Vec<String>>,
+    /// The zones' deepest places and their words (“derinlik 1.85 m”, a fill's “yükseklik 0.42 m”), in the zones' order
+    /// (asked for, docs/adr/2740).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
+    pub depths: Vec<CutFillLabel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,

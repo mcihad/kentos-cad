@@ -94,6 +94,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   penceresinde Ayıkla satırı.
 - MAP-14 / ADR 2720: web'in `cad.entities.create` işleyicisinde nesnenin `linePattern`'ı (86 ortak durum) ve
   `road.terrains.sheetcontours` işleyicisinde yardımcı eğrinin deseni ve tipin eklenmesi (36 ortak durum).
+- MAP-15 / ADR 2740: web'in `road.terrains.cutfill` işleyicisinde bölgelerin `deepest`/`depth`'i ve `depths` (44 ortak
+  durum); web'in Yüzey analizi › Fark'ında En derin yer.
 - MAP-14 / ADR 2320: `road.terrains.sheetcontours`'un web işleyicisinde `spots` (32 ortak durum); web'in Pafta eğrileri
   penceresinde Tepe ve çukur kotları kutusu.
 - MAP-15 / ADR 2340: `road.terrains.cutfill`'in web işleyicisinde `labels` ve `table` (38 ortak durum); web'in Yüzey

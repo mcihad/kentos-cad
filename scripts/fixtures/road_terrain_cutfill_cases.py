@@ -18,6 +18,11 @@ Asked for (docs/adr/2340): each zone's label at shapely's (GEOS's) representativ
 kind and the volume to two decimals; the quantity table's cells: the heading, each zone (number, kind, its band when
 banded, area, volume), then the cut's, the fill's and the net totals, numbers to two decimals.
 
+Each zone's deepest place (docs/adr/2740): among the corners of its pieces (a piece goes to the zone that covers its
+corners' mean), the one where |d| is largest; within 1 nm of it, the westmost, then the southmost; its depth |d|.
+Asked for, each zone's deepest place and its words: “derinlik” for a cut, “yükseklik” for a fill, |d| to two
+decimals and “m”.
+
 No KentOS code.
 
     uv run --no-project --python 3.11 --with shapely python3 scripts/fixtures/road_terrain_cutfill_cases.py [--check]
@@ -224,13 +229,17 @@ def zones_of(bid, cid, interval):
         merged = unary_union([Polygon([p for p, _ in part]) for part, _, _ in pieces])
         geoms = [orient(g, sign=1.0) for g in (merged.geoms if hasattr(merged, "geoms") else [merged])]
         sums = [[0.0, 0.0] for _ in geoms]
+        deepest = [None for _ in geoms]
         for part, a, v in pieces:
             n = len(part)
             c = Point(sum(p[0] for p, _ in part) / n, sum(p[1] for p, _ in part) / n)
             g = next(i for i, geom in enumerate(geoms) if geom.covers(c))
             sums[g][0] += a
             sums[g][1] += v
-        for geom, (a, v) in zip(geoms, sums):
+            for q, d in part:
+                if deeper(q, abs(d), deepest[g]):
+                    deepest[g] = (q, abs(d))
+        for geom, (a, v), deep in zip(geoms, sums, deepest):
             holes = sorted((ring(h.coords) for h in geom.interiors), key=lambda h: h[0])
             zone = {"kind": "cut" if k < 0 else "fill"}
             if interval is not None:
@@ -238,9 +247,23 @@ def zones_of(bid, cid, interval):
             zone.update({"area": a, "volume": abs(v), "ring": ring(geom.exterior.coords)})
             if holes:
                 zone["holes"] = holes
+            zone["deepest"] = [deep[0][0], deep[0][1]]
+            zone["depth"] = deep[1]
             zones.append((k, zone))
     zones.sort(key=lambda kz: (kz[0], kz[1]["ring"][0]))
     return [z for _, z in zones], t
+
+
+def deeper(p, depth, best):
+    """docs/adr/2740: deeper by more than 1 nm, or as deep within it and west, then south of the deepest so far."""
+    if best is None:
+        return True
+    q, d = best
+    if depth > d + ZERO:
+        return True
+    if depth >= d - ZERO:
+        return (p[0], p[1]) < (q[0], q[1])
+    return False
 
 
 def find(name):
@@ -291,6 +314,9 @@ def answer(inp):
         out["labels"] = labels_of(zones)
     if inp.get("table"):
         out["table"] = table_of(out)
+    if inp.get("depths"):
+        out["depths"] = [{"at": z["deepest"], "text": f"{'derinlik' if z['kind'] == 'cut' else 'yükseklik'} "
+                                                       f"{z['depth']:.2f} m"} for z in zones]
     return out
 
 
@@ -306,7 +332,8 @@ def cases():
         o = answer(inp)
         written = op == "execute"
         o["revision"] = "$current"
-        added = 2 * len(o["zones"]) + len(o.get("labels", [])) + (1 if o.get("table") else 0)
+        added = (2 * len(o["zones"]) + len(o.get("labels", [])) + 2 * len(o.get("depths", []))
+                 + (1 if o.get("table") else 0))
         if written:
             # Each zone a hatch (its fill) and a closed area (its data); its label; the table.
             o["uids"] = [ANY] * added
@@ -363,6 +390,18 @@ def cases():
     ok("Yazı ve tablo birlikte, plan yazmaz", {"base": "Teras", "comparison": "Set", "labels": True, "table": True},
        op="plan")
     ok("Proje koordinatlarında yazılar", {"base": "Uzak düz", "comparison": "Uzak tümsek", "labels": True})
+    # docs/adr/2740: each zone's deepest place and depth.
+    deep = ok("En derin yer: kazının derinliği, dolgunun yüksekliği, noktası ve yazısıyla",
+              {"base": "Düz", "comparison": "Tümsek", "depths": True})
+    assert [d_["text"].split()[0] for d_ in deep["depths"]] == ["derinlik", "yükseklik"], deep["depths"]
+    assert all(z_["depth"] > 0.0 for z_ in deep["zones"]), deep["zones"]
+    ok("Bantlı bölgelerin en derin yerleri", {"base": "Düz", "comparison": "Tümsek", "interval": 0.2, "depths": True})
+    ok("Yazı, tablo ve en derin yer birlikte", {"base": "Düz", "comparison": "Tümsek", "labels": True, "table": True,
+                                                 "depths": True})
+    ok("Setin sırtında eşit derinlikler: en batıdaki, sonra en güneydeki", {"base": "Teras", "comparison": "Set",
+                                                                         "depths": True})
+    ok("En derin yer planı yazmaz", {"base": "Düz", "comparison": "Tümsek", "depths": True}, op="plan")
+    ok("Proje koordinatlarında en derin yer", {"base": "Uzak düz", "comparison": "Uzak tümsek", "depths": True})
     ok("Kimliklerle", {"base": "t-5", "comparison": "t-10"})
     ok("Adlar küçük harfle", {"base": "düz", "comparison": "tümsek"})
     ok("Plan yazmaz", {"base": "Düz", "comparison": "Tümsek", "interval": 0.2}, op="plan")

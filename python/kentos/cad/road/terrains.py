@@ -1196,10 +1196,14 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
     road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde
     (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table:
     bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki
-    ondalık), projenin tablo yüksekliğiyle (ADR 2340). Harita ve Yol projelerinde. Tek
-    geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project,
-    layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
-    invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill.
+    ondalık), projenin tablo yüksekliğiyle (ADR 2340). Her bölgenin en derin yeri ve
+    derinliği cevapta (deepest, depth; ADR 2740): parçalarının köşelerinden farkın
+    mutlak değeri en büyük olanı, 1 nm içinde eşitlerden en batıdaki, sonra en
+    güneydeki; depths: bu yerlere nokta ve yanına “derinlik 1.85 m” (dolguda
+    “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu
+    bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
+    invalid_revision, revision_conflict, invalid_analysis, unknown_terrain,
+    terrain_unbuildable, no_cut_fill.
     """
     __slots__ = ()
     id = "road.terrains.cutfill"
@@ -1218,6 +1222,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         base: str,
         comparison: str,
         layer_id: str,
+        depths: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
@@ -1241,16 +1246,20 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un
         kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu
         (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle
-        (ADR 2340). Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu
-        bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
-        invalid_revision, revision_conflict, invalid_analysis, unknown_terrain,
-        terrain_unbuildable, no_cut_fill.
+        (ADR 2340). Her bölgenin en derin yeri ve derinliği cevapta (deepest, depth; ADR
+        2740): parçalarının köşelerinden farkın mutlak değeri en büyük olanı, 1 nm içinde
+        eşitlerden en batıdaki, sonra en güneydeki; depths: bu yerlere nokta ve yanına
+        “derinlik 1.85 m” (dolguda “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri
+        alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found,
+        not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis,
+        unknown_terrain, terrain_unbuildable, no_cut_fill.
 
         Args:
             doc: The drawing it works on.
             base:
             comparison:
             layer_id: The layer the zones go on.
+            depths:
             expected_revision:
             interval: Unit: m.
             labels:
@@ -1271,6 +1280,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             base=base,
             comparison=comparison,
             layer_id=layer_id,
+            depths=depths,
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
@@ -1285,6 +1295,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         base: str,
         comparison: str,
         layer_id: str,
+        depths: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
@@ -1297,6 +1308,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             base=base,
             comparison=comparison,
             layer_id=layer_id,
+            depths=depths,
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
@@ -1311,6 +1323,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         base: str,
         comparison: str,
         layer_id: str,
+        depths: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
@@ -1323,6 +1336,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             base=base,
             comparison=comparison,
             layer_id=layer_id,
+            depths=depths,
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
@@ -1337,6 +1351,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         base: str,
         comparison: str,
         layer_id: str,
+        depths: bool | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
@@ -1354,6 +1369,7 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             base=base,
             comparison=comparison,
             layer_id=layer_id,
+            depths=depths,
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,

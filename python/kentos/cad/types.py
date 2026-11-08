@@ -98132,11 +98132,15 @@ class TerrainContour(_Model):
 class TerrainCutFillZone(_Model):
     """A zone as written: cut or fill; with an interval its band of the difference, `[from, to)` (m); its plan area, its
     volume (m³, the cut's and the fill's alike above 0); its outer ring (counterclockwise, from its smallest place, x
-    then y) and its holes (clockwise, each from its smallest place, ordered by it).
+    then y) and its holes (clockwise, each from its smallest place, ordered by it); its deepest place and depth (m, the
+    cut's depth and the fill's height alike above 0; docs/adr/2740): the corner of the overlay's pieces in it where the
+    difference is largest in size, among those within 1 nm of it the westmost, then the southmost.
     Attributes:
         area: Unit: area.
         volume: Unit: volume.
         ring: Unit: length.
+        deepest: Unit: length.
+        depth: Unit: m.
         from_: Unit: m.
         holes: Unit: length.
         to: Unit: m.
@@ -98145,6 +98149,8 @@ class TerrainCutFillZone(_Model):
     area: float
     volume: float
     ring: list[list[float]]
+    deepest: list[float]
+    depth: float
     from_: float | None | Unset = UNSET
     holes: list[list[list[float]]] | Unset = UNSET
     to: float | None | Unset = UNSET
@@ -98155,6 +98161,8 @@ class TerrainCutFillZone(_Model):
         out["area"] = float(self.area)
         out["volume"] = float(self.volume)
         out["ring"] = [[float(e1) for e1 in e0] for e0 in self.ring]
+        out["deepest"] = [float(e0) for e0 in self.deepest]
+        out["depth"] = float(self.depth)
         if self.from_ is not UNSET:
             out["from"] = None if self.from_ is None else float(self.from_)
         if self.holes is not UNSET:
@@ -98170,6 +98178,8 @@ class TerrainCutFillZone(_Model):
             area=float(data["area"]),
             volume=float(data["volume"]),
             ring=[[float(e1) for e1 in e0] for e0 in data["ring"]],
+            deepest=[float(e0) for e0 in data["deepest"]],
+            depth=float(data["depth"]),
             from_=UNSET if "from" not in data else None if data["from"] is None else float(data["from"]),
             holes=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
             to=UNSET if "to" not in data else None if data["to"] is None else float(data["to"]),
@@ -99380,7 +99390,8 @@ class TerrainsCutFill(_Model):
     part of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference
     `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
     `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
-    docs/adr/2340).
+    docs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;
+    docs/adr/2740).
 
     Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
     `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
@@ -99393,6 +99404,7 @@ class TerrainsCutFill(_Model):
     base: str
     comparison: str
     layer_id: str
+    depths: bool | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: bool | None | Unset = UNSET
@@ -99403,6 +99415,8 @@ class TerrainsCutFill(_Model):
         out["base"] = self.base
         out["comparison"] = self.comparison
         out["layerId"] = self.layer_id
+        if self.depths is not UNSET:
+            out["depths"] = self.depths
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         if self.interval is not UNSET:
@@ -99419,6 +99433,7 @@ class TerrainsCutFill(_Model):
             base=data["base"],
             comparison=data["comparison"],
             layer_id=data["layerId"],
+            depths=data.get("depths", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=data.get("labels", UNSET),
@@ -99445,6 +99460,8 @@ class TerrainsCutFilled(_Model):
         uncovered: Unit: area.
         least: Unit: m.
         largest: Unit: m.
+        depths: The zones' deepest places and their words (“derinlik 1.85 m”, a fill's “yükseklik 0.42 m”), in the zones' order
+            (asked for, docs/adr/2740).
         interval: Unit: m.
         labels: The zones' labels, in the zones' order (asked for, docs/adr/2340).
         table: The quantity table's cells, heading first (asked for, docs/adr/2340).
@@ -99463,6 +99480,7 @@ class TerrainsCutFilled(_Model):
     least: float
     largest: float
     revision: str
+    depths: list[CutFillLabel] | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: list[CutFillLabel] | Unset = UNSET
     table: list[list[str]] | Unset = UNSET
@@ -99484,6 +99502,8 @@ class TerrainsCutFilled(_Model):
         out["least"] = float(self.least)
         out["largest"] = float(self.largest)
         out["revision"] = self.revision
+        if self.depths is not UNSET:
+            out["depths"] = [e0.to_json() for e0 in self.depths]
         if self.interval is not UNSET:
             out["interval"] = None if self.interval is None else float(self.interval)
         if self.labels is not UNSET:
@@ -99511,6 +99531,7 @@ class TerrainsCutFilled(_Model):
             least=float(data["least"]),
             largest=float(data["largest"]),
             revision=data["revision"],
+            depths=[CutFillLabel.from_json(e0) for e0 in data["depths"]] if "depths" in data else UNSET,
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=[CutFillLabel.from_json(e0) for e0 in data["labels"]] if "labels" in data else UNSET,
             table=[list(e0) for e0 in data["table"]] if "table" in data else UNSET,

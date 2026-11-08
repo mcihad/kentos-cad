@@ -32,7 +32,10 @@ pub const STRAIGHT: f64 = 1e-6;
 
 /// A zone: its band (`k`: `[k·i, (k+1)·i)` with an interval; without one −1 the cut, 0 the fill), its plan area (m²), the
 /// integral of the difference over it (m³; negative in the cut), its outer ring (counterclockwise, from its smallest
-/// place, x then y) and its holes (clockwise, each from its smallest place, ordered by it).
+/// place, x then y) and its holes (clockwise, each from its smallest place, ordered by it); its deepest place and how
+/// deep (docs/adr/2740): the corner of its pieces where the difference is largest in size (the difference is linear
+/// over a piece, so its largest is at a corner), the cut's depth and the fill's height alike above 0; among corners
+/// within [`ZERO`] of the largest, the westmost, then the southmost.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Zone {
     pub band: i64,
@@ -40,6 +43,8 @@ pub struct Zone {
     pub volume: f64,
     pub outer: Vec<[f64; 2]>,
     pub holes: Vec<Vec<[f64; 2]>>,
+    pub deepest: [f64; 2],
+    pub depth: f64,
 }
 
 /// Two surfaces' zones, ordered by band and then by their outer ring's first place; the cut and fill volumes, summed
@@ -64,9 +69,10 @@ pub struct Zones {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TooManyBands(pub u64);
 
-/// A band's convex piece: its corners, plan area and the difference's integral over it.
+/// A band's convex piece: its corners with the difference there, plan area and the difference's integral over it.
 struct Piece {
     pts: Vec<[f64; 2]>,
+    ds: Vec<f64>,
     area: f64,
     volume: f64,
 }
@@ -77,7 +83,23 @@ fn push(bands: &mut BTreeMap<i64, Vec<Piece>>, band: i64, part: &[([f64; 2], f64
     }
     let (area, volume) = integral(part);
     if area > 0.0 {
-        bands.entry(band).or_default().push(Piece { pts: part.iter().map(|(p, _)| *p).collect(), area, volume });
+        bands.entry(band).or_default().push(Piece {
+            pts: part.iter().map(|(p, _)| *p).collect(),
+            ds: part.iter().map(|(_, d)| *d).collect(),
+            area,
+            volume,
+        });
+    }
+}
+
+/// Whether the corner `p` with `depth` is deeper than the deepest so far (`best`): deeper by more than [`ZERO`], or as
+/// deep within it and west of it, then south (docs/adr/2740).
+fn deeper(p: [f64; 2], depth: f64, best: Option<([f64; 2], f64)>) -> bool {
+    match best {
+        None => true,
+        Some((_, d)) if depth > d + ZERO => true,
+        Some((q, d)) if depth >= d - ZERO => (p[0], p[1]) < (q[0], q[1]),
+        Some(_) => false,
     }
 }
 
@@ -176,6 +198,7 @@ fn dissolve(band: i64, pieces: &[Piece]) -> Vec<Zone> {
         })
         .collect();
     let mut sums = vec![(0.0, 0.0); merged.len()];
+    let mut deepest: Vec<Option<([f64; 2], f64)>> = vec![None; merged.len()];
     for p in pieces {
         // A convex piece's corners' mean is inside it, so inside the zone it went to (unless it was a sliver).
         let n = p.pts.len() as f64;
@@ -192,14 +215,21 @@ fn dissolve(band: i64, pieces: &[Piece]) -> Vec<Zone> {
         };
         sums[k].0 += p.area;
         sums[k].1 += p.volume;
+        for (q, d) in p.pts.iter().zip(&p.ds) {
+            if deeper(*q, d.abs(), deepest[k]) {
+                deepest[k] = Some((*q, d.abs()));
+            }
+        }
     }
     merged
         .iter()
         .zip(sums)
-        .map(|(a, (area, volume))| {
+        .zip(deepest)
+        .map(|((a, (area, volume)), deep)| {
             let mut holes: Vec<Vec<[f64; 2]>> = a.holes.iter().map(|h| ring(h, false)).filter(|h| h.len() >= 3).collect();
             holes.sort_by(|p, q| (p[0][0], p[0][1]).partial_cmp(&(q[0][0], q[0][1])).unwrap_or(std::cmp::Ordering::Equal));
-            Zone { band, area, volume, outer: ring(&a.outer, true), holes }
+            let (deepest, depth) = deep.unwrap_or(([0.0, 0.0], 0.0));
+            Zone { band, area, volume, outer: ring(&a.outer, true), holes, deepest, depth }
         })
         .collect()
 }

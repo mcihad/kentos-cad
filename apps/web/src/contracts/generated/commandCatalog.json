@@ -38005,7 +38005,7 @@
       "id": "road.terrains.cutfill",
       "version": 1,
       "title": "Kazı ve dolgu bölgeleri",
-      "summary": "İki arazi yüzeyinin kazı ve dolgu bölgelerini (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) yazar: karşılaştırmanın tabanın altında kaldığı yer kazı, üstünde kaldığı yer dolgu; her bölge aynı halkalarla bir düz tarama (dolgusu) ve bir delikli kapalı alandır (verisi). Örtüşmenin her parçasında fark (karşılaştırma − taban) doğrusaldır; parça sıfırda ve interval verilirse onun katlarında kesilir (bant k: [k·interval, (k+1)·interval); bantsız: bir kazı, bir dolgu bandı), bir bandın parçaları çekirdeğin alan cebiriyle (1 µm) bölgelere birleşir. Her bölgenin alanı ve hacmi parçalarının toplamıdır; kazı ve dolgu hacimleri road.terrains.compare'in kesin TIN–TIN hacimleridir. İkisi de öznitelikleriyle (Tür, Alan, Hacim, bantta alt ve üst sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın taraması daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz, söylenir. Çizim iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle (ADR 2340). Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill.",
+      "summary": "İki arazi yüzeyinin kazı ve dolgu bölgelerini (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) yazar: karşılaştırmanın tabanın altında kaldığı yer kazı, üstünde kaldığı yer dolgu; her bölge aynı halkalarla bir düz tarama (dolgusu) ve bir delikli kapalı alandır (verisi). Örtüşmenin her parçasında fark (karşılaştırma − taban) doğrusaldır; parça sıfırda ve interval verilirse onun katlarında kesilir (bant k: [k·interval, (k+1)·interval); bantsız: bir kazı, bir dolgu bandı), bir bandın parçaları çekirdeğin alan cebiriyle (1 µm) bölgelere birleşir. Her bölgenin alanı ve hacmi parçalarının toplamıdır; kazı ve dolgu hacimleri road.terrains.compare'in kesin TIN–TIN hacimleridir. İkisi de öznitelikleriyle (Tür, Alan, Hacim, bantta alt ve üst sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın taraması daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz, söylenir. Çizim iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle (ADR 2340). Her bölgenin en derin yeri ve derinliği cevapta (deepest, depth; ADR 2740): parçalarının köşelerinden farkın mutlak değeri en büyük olanı, 1 nm içinde eşitlerden en batıdaki, sonra en güneydeki; depths: bu yerlere nokta ve yanına “derinlik 1.85 m” (dolguda “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill.",
       "aliases": [
         "kazidolgu",
         "kazidolguharitasi",
@@ -38024,13 +38024,19 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the\npart of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference\n`comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.\n`labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;\ndocs/adr/2340).\n\nRefusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,\n`revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,\n`invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),\n`no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.",
+        "description": "Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the\npart of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference\n`comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.\n`labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;\ndocs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;\ndocs/adr/2740).\n\nRefusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,\n`revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,\n`invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),\n`no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.",
         "properties": {
           "base": {
             "type": "string"
           },
           "comparison": {
             "type": "string"
+          },
+          "depths": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -38101,6 +38107,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "area"
+          },
+          "depths": {
+            "description": "The zones' deepest places and their words (“derinlik 1.85 m”, a fill's “yükseklik 0.42 m”), in the zones' order\n(asked for, docs/adr/2740).",
+            "items": {
+              "$ref": "#/$defs/CutFillLabel"
+            },
+            "type": "array"
           },
           "fill": {
             "format": "double",
@@ -38222,6 +38235,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "area"
+          },
+          "depths": {
+            "description": "The zones' deepest places and their words (“derinlik 1.85 m”, a fill's “yükseklik 0.42 m”), in the zones' order\n(asked for, docs/adr/2740).",
+            "items": {
+              "$ref": "#/$defs/CutFillLabel"
+            },
+            "type": "array"
           },
           "fill": {
             "format": "double",
@@ -198952,12 +198972,27 @@
       "type": "object"
     },
     "TerrainCutFillZone": {
-      "description": "A zone as written: cut or fill; with an interval its band of the difference, `[from, to)` (m); its plan area, its\nvolume (m³, the cut's and the fill's alike above 0); its outer ring (counterclockwise, from its smallest place, x\nthen y) and its holes (clockwise, each from its smallest place, ordered by it).",
+      "description": "A zone as written: cut or fill; with an interval its band of the difference, `[from, to)` (m); its plan area, its\nvolume (m³, the cut's and the fill's alike above 0); its outer ring (counterclockwise, from its smallest place, x\nthen y) and its holes (clockwise, each from its smallest place, ordered by it); its deepest place and depth (m, the\ncut's depth and the fill's height alike above 0; docs/adr/2740): the corner of the overlay's pieces in it where the\ndifference is largest in size, among those within 1 nm of it the westmost, then the southmost.",
       "properties": {
         "area": {
           "format": "double",
           "type": "number",
           "x-unit": "area"
+        },
+        "deepest": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "depth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
         },
         "from": {
           "format": "double",
@@ -199017,7 +199052,9 @@
         "kind",
         "area",
         "volume",
-        "ring"
+        "ring",
+        "deepest",
+        "depth"
       ],
       "type": "object"
     },

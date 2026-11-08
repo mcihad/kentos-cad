@@ -18,4 +18,9 @@ labels?: Array<CutFillLabel>,
 /**
  * The quantity table's cells, heading first (asked for, docs/adr/2340).
  */
-table?: Array<Array<string>>, uids?: Array<string>, revision: string, };
+table?: Array<Array<string>>, 
+/**
+ * The zones' deepest places and their words (“derinlik 1.85 m”, a fill's “yükseklik 0.42 m”), in the zones' order
+ * (asked for, docs/adr/2740).
+ */
+depths?: Array<CutFillLabel>, uids?: Array<string>, revision: string, };

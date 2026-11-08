@@ -5,7 +5,8 @@
  * part of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference
  * `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
  * `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
- * docs/adr/2340).
+ * docs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;
+ * docs/adr/2740).
  *
  * Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
  * `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
@@ -16,4 +17,4 @@ export type TerrainsCutFill = { base: string, comparison: string,
 /**
  * The layer the zones go on.
  */
-layerId: string, interval?: number, labels?: boolean, table?: boolean, expectedRevision?: string, };
+layerId: string, interval?: number, labels?: boolean, table?: boolean, depths?: boolean, expectedRevision?: string, };

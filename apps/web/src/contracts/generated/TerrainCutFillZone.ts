@@ -4,6 +4,8 @@ import type { CutFillKind } from "./CutFillKind";
 /**
  * A zone as written: cut or fill; with an interval its band of the difference, `[from, to)` (m); its plan area, its
  * volume (m³, the cut's and the fill's alike above 0); its outer ring (counterclockwise, from its smallest place, x
- * then y) and its holes (clockwise, each from its smallest place, ordered by it).
+ * then y) and its holes (clockwise, each from its smallest place, ordered by it); its deepest place and depth (m, the
+ * cut's depth and the fill's height alike above 0; docs/adr/2740): the corner of the overlay's pieces in it where the
+ * difference is largest in size, among those within 1 nm of it the westmost, then the southmost.
  */
-export type TerrainCutFillZone = { kind: CutFillKind, from?: number, to?: number, area: number, volume: number, ring: Array<[number, number]>, holes?: Array<Array<[number, number]>>, };
+export type TerrainCutFillZone = { kind: CutFillKind, from?: number, to?: number, area: number, volume: number, ring: Array<[number, number]>, holes?: Array<Array<[number, number]>>, deepest: [number, number], depth: number, };

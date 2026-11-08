@@ -762,6 +762,98 @@ fn fark_writes_the_zones_labels_and_quantity_table() {
     assert_eq!(undone.as_deref(), Some("Kazı ve dolgu bölgeleri"));
 }
 
+/// docs/adr/2740: Bölgelere En derin yer ticked writes each zone's deepest place, a point and its words beside it, at
+/// the shared case's places and words (the cut's depth, the fill's height); one undo step.
+#[test]
+fn fark_writes_the_zones_deepest_places() {
+    let (mut app, cases) = cutfill_app();
+    let want = cases["cases"].as_array().unwrap().iter()
+        .find(|c| c["name"] == "En derin yer: kazının derinliği, dolgunun yüksekliği, noktası ve yazısıyla")
+        .expect("the case")["steps"][0]["result"]["output"]
+        .clone();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Compare));
+    send(&mut app, W::Surface("t-5".into()));
+    send(&mut app, W::Comparison("t-10".into()));
+    send(&mut app, W::Layer("kazi-dolgu".into()));
+    send(&mut app, W::ZoneDepths(true));
+    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    send(&mut app, W::DrawZones);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let depths = want["depths"].as_array().expect("depths");
+    let written: Vec<&kentos_commands::Entity> = doc.entities().skip(before).collect();
+    let zones = want["zones"].as_array().map_or(0, Vec::len);
+    assert_eq!(written.len(), 2 * zones + 2 * depths.len(), "{}", crate::files_testing::last_said(&app));
+    let points: Vec<[f64; 2]> = written
+        .iter()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Point(p) => Some([p.p.x, p.p.y]),
+            _ => None,
+        })
+        .collect();
+    let texts: Vec<String> = written
+        .iter()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.text.clone()),
+            _ => None,
+        })
+        .collect();
+    for ((p, t), d) in points.iter().zip(&texts).zip(depths) {
+        assert_eq!(t, d["text"].as_str().unwrap());
+        assert!((p[0] - d["at"][0].as_f64().unwrap()).abs() < 1e-9 && (p[1] - d["at"][1].as_f64().unwrap()).abs() < 1e-9);
+    }
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Kazı ve dolgu bölgeleri"));
+}
+
+/// The zones with their deepest places at 1:100, `.run/gui-evidence/en-derin-yer-2740/`.
+#[test]
+#[ignore = "writes pictures"]
+fn screens_zone_depths() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/en-derin-yer-2740");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let (mut app, _) = cutfill_app();
+        {
+            let model = &mut app.document.as_mut().expect("a drawing").model;
+            let mut settings = model.settings().clone();
+            settings.plot_scale = 100.0;
+            model.set_settings(settings);
+        }
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Compare));
+        send(&mut app, W::Surface("t-5".into()));
+        send(&mut app, W::Comparison("t-10".into()));
+        send(&mut app, W::Layer("kazi-dolgu".into()));
+        send(&mut app, W::ZoneLabels(true));
+        send(&mut app, W::ZoneDepths(true));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("1-fark-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+        println!("{}", path.display());
+        send(&mut app, W::DrawZones);
+        send(&mut app, W::Close);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let b = app.viewport.bounds;
+        app.viewport.camera.center.x = 6005.0;
+        app.viewport.camera.center.y = 5.0;
+        app.viewport.camera.scale = f64::from(b.width.min(b.height)) / 13.0;
+        snapshot.settle(&mut app, App::view, &mut update);
+        let path = out.join(format!("2-bolgeler-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+        println!("{}", path.display());
+    }
+}
+
 /// The zones with their labels and quantity table at 1:100 (the fixture's 1:1000 would make 2.5 m texts on 10 m
 /// zones); `.run/gui-evidence/bolge-yazisi-2340/`.
 #[test]

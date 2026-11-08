@@ -184,6 +184,9 @@
 - **Kazı ve dolgu bölgelerinin yazısı ve miktar tablosu (8 Kasım 2026; MAP-15, [ADR 2340](../../docs/adr/2340-cut-fill-zone-labels-and-quantity-table.md)).**
   `road.terrains.cutfill`'in `labels`'ı (tür ve hacim, iç noktada) ve `table`'ı (bölgeler, kazı, dolgu, net); tutulan
   çizimle birlikte yeniden çizilir. Harita + Yol.
+- **Kazı ve dolgu bölgesinin en derin yeri (8 Kasım 2026; MAP-15, [ADR 2740](../../docs/adr/2740-cut-fill-zone-deepest-places.md)).**
+  `road.terrains.cutfill`: her bölgenin en derin yeri ve derinliği çekirdeğin parça köşelerinden (1 nm içinde eşitse en
+  batı, sonra en güney); `depths` nokta ve “derinlik/yükseklik” yazısı; Fark'ta En derin yer. Harita + Yol.
 - **Başka bir altyapı ağının borularına açıklık (8 Kasım 2026; MAP-16, [ADR 2360](../../docs/adr/2360-pipe-clearance-to-another-network.md)).**
   `cad.pipes.check`'in `clearance`'ı: kesişimde düşey açıklık ve üstteki boru, kesişmeyen çiftte yatay açıklık; en az
   açıklıklar ve üst taraf kullanıcının, iç çaplarla (et kalınlığı katılmaz). Harita + Yol + CBS.

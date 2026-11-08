@@ -9,7 +9,9 @@
 //!
 //! Asked for (docs/adr/2340), each zone's kind and volume is written inside it (the core's interior point, GEOS's rule),
 //! the project's text height; and a quantity table beside the zones (the zones, then the cut's, the fill's and the net
-//! totals), the project's table height, its columns fitted as the Tablo tool fits them.
+//! totals), the project's table height, its columns fitted as the Tablo tool fits them. Asked for (docs/adr/2740), each
+//! zone's deepest place (the core's: its pieces' corner where the difference is largest in size) gets a point and its
+//! depth beside it, the fill's as its height.
 //!
 //! The checks, in the contract's order: a map or road project; the layer; the expected revision; the interval; the
 //! surfaces, two different ones; both made; the bands' count; a zone at all.
@@ -116,6 +118,8 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill) -> Result<Check
                 volume: zone.volume.abs(),
                 ring: zone.outer,
                 holes: zone.holes,
+                deepest: zone.deepest,
+                depth: zone.depth,
             }
         })
         .collect();
@@ -137,6 +141,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill) -> Result<Check
             largest,
             labels: Vec::new(),
             table: Vec::new(),
+            depths: Vec::new(),
             uids: Vec::new(),
             revision: doc.revision().to_string(),
         },
@@ -155,6 +160,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill) -> Result<Check
         if input.table.unwrap_or(false) {
             c.out.table = table_cells(&c.out);
         }
+        if input.depths.unwrap_or(false) {
+            c.out.depths = c.out.zones.iter().map(|z| CutFillLabel { at: z.deepest, text: depth_text(z) }).collect();
+        }
         c
     })
 }
@@ -162,6 +170,11 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill) -> Result<Check
 /// A zone's words: its kind and its volume to two decimals (m³).
 fn label_text(z: &TerrainCutFillZone) -> String {
     format!("{} {:.2} m³", if z.kind == CutFillKind::Cut { "Kazı" } else { "Dolgu" }, z.volume)
+}
+
+/// A zone's deepest place's words (docs/adr/2740): the cut's depth, the fill's height, to two decimals (m).
+fn depth_text(z: &TerrainCutFillZone) -> String {
+    format!("{} {:.2} m", if z.kind == CutFillKind::Cut { "derinlik" } else { "yükseklik" }, z.depth)
 }
 
 /// A zone's label place: the core's interior point of its rings.
@@ -267,6 +280,26 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
             })
         })
         .collect();
+    // docs/adr/2740: each zone's deepest place, a point and its words beside it, half a text's height right.
+    for d in &out.depths {
+        objects.push(bare(EntityGeometry::Point { p: Vec2 { x: d.at[0], y: d.at[1] }, z: None, parts: None }));
+        objects.push(bare(EntityGeometry::Text {
+            layout: None,
+            annotative: None,
+            p: Vec2 { x: d.at[0] + text / 2.0, y: d.at[1] },
+            text: d.text.clone(),
+            height: text,
+            rotation: 0.0,
+            align: Some(TextAlign::MiddleLeft),
+            width_factor: None,
+            mask: true,
+            box_width: None,
+            line_spacing: None,
+            runs: Vec::new(),
+            face: Default::default(),
+            path: None,
+        }));
+    }
     if out.table.is_empty() {
         return objects;
     }

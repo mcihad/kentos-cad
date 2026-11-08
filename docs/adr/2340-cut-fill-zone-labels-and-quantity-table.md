@@ -68,6 +68,6 @@ bir miktar tablosu” maddesini kapatır; derinlik yazısı sonraya kalır.
 
 ## Sonra
 
-- Bölgenin en derin yeri ve derinliği (çekirdeğin parça köşelerinden).
+- Bölgenin en derin yeri ve derinliği (çekirdeğin parça köşelerinden). Yapıldı: [ADR 2740](2740-cut-fill-zone-deepest-places.md).
 - Malzeme bölgesi ve stok sahası; kesit yöntemiyle hacim karşılaştırması (ADR 1840 Sonra).
 - Tablonun yerini kullanıcının seçmesi.
