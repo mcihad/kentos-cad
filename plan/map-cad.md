@@ -31,7 +31,7 @@ sırayla alır.
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080 | nesne türüne göre bağlamsal araçlar; tipli katman profili; onaydan sonra değişen nesneler | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480 | tipli katman profili; onaydan sonra değişen nesneler (şema 207) | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
@@ -244,6 +244,13 @@ Kanıtlanan:
 
 Açık: nesne türüne göre bağlamsal araçlar, tipli katman profili, onaydan sonra hangi nesnelerin değiştiği, içe
 aktarmanın kendi kaydı (sahip kararı), güncel olmayan türevin yeniden üretimi. Madde `[ ]` kalır.
+
+**8 Kasım 2026, dördüncü tur — rolüne göre bağlamsal araçlar ([ADR 2480](../docs/adr/2480-contextual-tools-by-object-role.md)).**
+Kapsam: **Harita + Yol** (yüzey, altyapı), **Harita** (imar). Araştırma: Civil 3D'nin bağlamsal sekmeleri seçili
+nesnenin komutlarını taşır. Kanıtlanan: seçimin rolleri (yüzey kaynağı, altyapı ağının parçası, imar planı nesnesi;
+hepsi aynı rolü taşıyorsa); şeridin bağlamsal sekmelerinde Yüzey, Altyapı ve İmar panelleri yalnız o rolde; Arazi
+yüzeyleri, Pafta eğrileri, Yüzey analizi ve Boru hattı denetimi seçimin kendi yüzeyi ya da ağıyla açılır; masaüstü
+testleri ve resimler. Açık: tipli katman profili, onaydan sonra değişen nesneler (şema 207), parsel rolü.
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

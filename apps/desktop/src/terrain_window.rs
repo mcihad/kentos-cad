@@ -208,8 +208,10 @@ impl App {
         let made = road_terrains::made_surfaces(&doc.model);
         let kept: Vec<TerrainSurfaceDef> = made.iter().map(|(d, _, _)| d.clone()).collect();
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
+        // The selection's own surface's row when every selected object is its source (docs/adr/2480), else the first.
+        let picked = self.selection_roles().surface.and_then(|id| kept.iter().position(|d| d.id == id));
         self.terrain_window = Some(Window {
-            chosen: (!kept.is_empty()).then_some(0),
+            chosen: picked.or((!kept.is_empty()).then_some(0)),
             rows: kept.iter().cloned().map(Row::of).collect(),
             reports: made.into_iter().map(|(_, r, _)| r).collect(),
             kept,

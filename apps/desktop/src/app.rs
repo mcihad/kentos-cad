@@ -1072,6 +1072,8 @@ pub struct App {
     /// The contextual tab the selection opens, kept by the selection's and
     /// the drawing's change counts (docs/adr/0622 §4): the view asks it often.
     pub(crate) selection_tab_cache: std::cell::Cell<Option<crate::modes::SelectionTab>>,
+    /// The selection's roles in the project (docs/adr/2480): what the contextual tabs' role panels ask.
+    pub(crate) selection_roles: crate::selection_roles::RolesCache,
     /// The selection's change count the ribbon last followed: a new
     /// selection brings its tab to the front, none takes it away.
     pub(crate) ribbon_follows: Option<(u64, u64)>,
@@ -1744,6 +1746,7 @@ impl App {
                 .map_or("home", |tab| tab.id),
             ribbon_context: false,
             selection_tab_cache: std::cell::Cell::new(None),
+            selection_roles: crate::selection_roles::RolesCache::default(),
             ribbon_follows: None,
             ribbon_collapsed: false,
             mode: Mode::Dark,

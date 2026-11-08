@@ -193,6 +193,9 @@
 - **Dikiş ölçümü (8 Kasım 2026; MAP-12, [ADR 2460](../../docs/adr/2460-orthophoto-seam-measured-in-the-images.md)).**
   `cad.orthophoto.compare`'in `seam`'i: örtüşmede NCC ve parabolle piksel altı kayma, yer durumları (ok, low, edge,
   flat), m. 67(6) sınırı; pikseller aynı boyda ve dönüksüz olmalı. CAD + CBS.
+- **Rolüne göre bağlamsal araçlar (8 Kasım 2026; MAP-01, [ADR 2480](../../docs/adr/2480-contextual-tools-by-object-role.md)).**
+  Şerit panelinin `roles` alanı (surface, network, zoning): seçimin hepsi o roldeyse Yüzey, Altyapı, İmar panelleri;
+  pencereler seçimin yüzeyi ya da ağıyla açılır (`selection_roles.rs`). Harita + Yol.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

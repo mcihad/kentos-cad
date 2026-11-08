@@ -589,6 +589,9 @@ mod second_crs;
 mod segment_scenes;
 mod selecting;
 mod selection_chip;
+mod selection_roles;
+#[cfg(test)]
+mod selection_roles_tests;
 mod selection_commands;
 #[cfg(test)]
 mod selection_scenes;

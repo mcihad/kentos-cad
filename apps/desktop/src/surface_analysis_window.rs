@@ -302,14 +302,17 @@ impl App {
             return;
         }
         let surfaces: Vec<String> = doc.model.settings().road.as_ref().map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| s.id.clone()).collect());
-        let Some(first) = surfaces.first().cloned() else {
+        // The selection's own surface when every selected object is its source (docs/adr/2480), else the first.
+        let picked = self.selection_roles().surface.filter(|id| surfaces.contains(id));
+        let Some(first) = picked.or_else(|| surfaces.first().cloned()) else {
             self.warn("Yüzey analizi bir arazi yüzeyinde okunur: önce Arazi yüzeyleri'nde bir yüzey oluşturun.".to_owned());
             return;
         };
+        let comparison = surfaces.iter().find(|s| **s != first).cloned();
         self.surface_analysis_window = Some(Box::new(Window {
             mode: Mode::Analysis,
             surface: Some(first),
-            comparison: surfaces.get(1).cloned(),
+            comparison,
             assume_heights: false,
             measure: 1,
             roughness: false,

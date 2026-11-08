@@ -1064,6 +1064,10 @@ pub struct Panel {
     pub keep: bool,
     /// The corner button of the title (↘): another tab, or a command.
     pub launcher: Option<Launcher>,
+    /// The roles the selection's objects must all have for a contextual panel to show (docs/adr/2480): `surface`
+    /// (a terrain surface's points or breaklines), `network` (a utility network's pipes), `zoning` (a zoning plan's
+    /// areas); none: every selection.
+    pub roles: &'static [&'static str],
 }
 
 impl Panel {
@@ -1591,6 +1595,7 @@ impl Catalog {
                             .map(|o| leak(o.command()))
                             .collect(),
                         keep: panel.keep,
+                        roles: leak_list(panel.roles),
                         launcher: panel.launcher.map(|l| Launcher {
                             title: leak(l.title),
                             target: match (l.tab, l.command) {
@@ -2148,6 +2153,9 @@ struct RawPanel {
     /// Its name in a CAD work that holds other things than `label` says (docs/adr/0802), by the work.
     #[serde(default, rename = "workLabels")]
     work_labels: std::collections::BTreeMap<String, String>,
+    /// The roles the selection must have (a contextual panel, docs/adr/2480); none: every selection.
+    #[serde(default)]
+    roles: Vec<String>,
 }
 
 /// A seldom used command under a panel's ▾: its id, or its id and the CAD works (and project types) it shows for

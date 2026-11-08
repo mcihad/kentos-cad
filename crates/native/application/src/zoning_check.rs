@@ -108,6 +108,22 @@ fn middle_of(paths: &[Vec<Edge>]) -> Option<Vec2> {
     best.map(|(_, e)| point_at(e, 0.5))
 }
 
+
+/// The layers of the zoning plan's classes as the drawing has them (plan boundaries, decision areas, plan notes; the
+/// profile `imar-plani`'s paths): what the selection's role `zoning` reads (docs/adr/2480). A class without its layer
+/// is left out.
+pub fn plan_layers(doc: &Document) -> Vec<String> {
+    let Some(p) = builtin_profile(ZONING_PROFILE) else { return Vec::new() };
+    ["plan-siniri", "karar-alani", "plan-notu"]
+        .iter()
+        .filter_map(|class| p.classes.iter().find(|c| c.id == *class))
+        .filter_map(|c| match find(doc.layers().nodes(), &c.layer) {
+            Place::Layer(id) => Some(id),
+            _ => None,
+        })
+        .collect()
+}
+
 fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
     let tolerance = input.tolerance.unwrap_or(FIRST_TOLERANCE);
     if !tolerance.is_finite() || tolerance < LEAST_TOLERANCE {

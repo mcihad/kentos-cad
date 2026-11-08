@@ -375,10 +375,13 @@ impl App {
             .filter(|n| n.kind == NetworkKind::Utility)
             .map(|n| (n.id.clone(), n.name.clone()))
             .collect();
-        let Some(first) = networks.first() else {
+        // The selection's own network when every selected object is its part (docs/adr/2480), else the first.
+        let picked = self.selection_roles().network.and_then(|id| networks.iter().find(|n| n.0 == id).cloned());
+        let Some(first) = picked.or_else(|| networks.first().cloned()) else {
             self.warn("Boru hattı denetimi: projede altyapı ağı yok. Önce Ağlar'da boruların katmanıyla bir altyapı ağı tanımlayın.");
             return Task::none();
         };
+        let first = &first;
         let net = settings.networks.iter().find(|n| n.id == first.0);
         let edge_layers: Vec<String> = net.map(|n| n.edges.iter().map(|l| l.layer.clone()).collect()).unwrap_or_default();
         let junction_layers: Vec<String> = net.map(|n| n.junctions.iter().map(|l| l.layer.clone()).collect()).unwrap_or_default();

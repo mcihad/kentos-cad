@@ -105,6 +105,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-20 / ADR 2440: web'in proje ağacında yeniden üretimin iş olarak koşması (ilerleme, Durdur).
 - MAP-12 / ADR 2460: `cad.orthophoto.compare`'in web işleyicisinde `seam` (40 ortak durum; raster pikselleri); web'in
   Ortofoto karşılaştırması penceresinde Dikiş ölçümü satırı ve Dikiş tablosu.
+- MAP-01 / ADR 2480: web'in şeridinde panelin `roles` alanı (surface, network, zoning) ve seçimin rolleri; pencerelerin
+  seçimin yüzeyi ya da ağıyla açılması.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

@@ -114,7 +114,9 @@ impl App {
             .as_ref()
             .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
             .unwrap_or_default();
-        let Some(first) = surfaces.first().map(|s| s.0.clone()) else {
+        // The selection's own surface when every selected object is its source (docs/adr/2480), else the first.
+        let picked = self.selection_roles().surface.filter(|id| surfaces.iter().any(|(s, _)| s == id));
+        let Some(first) = picked.or_else(|| surfaces.first().map(|s| s.0.clone())) else {
             self.warn("Pafta eğrileri: projede arazi yüzeyi yok; önce Arazi › Yeni yüzey ile kurun.");
             return Task::none();
         };

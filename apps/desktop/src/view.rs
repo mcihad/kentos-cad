@@ -424,6 +424,10 @@ impl App {
         panel: &RibbonPanel,
     ) -> Option<Group<'static, Message>> {
         use crate::ribbon_keys::{TipKey, folded_id, more_id};
+        // A contextual panel for objects of a role (docs/adr/2480): only when every selected object has it.
+        if !self.roles_hold(panel.roles) {
+            return None;
+        }
         // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
         let (flash_here, flash_more) = self.flash_in(panel);
         // A panel the web draws itself (ribbon_panels.rs, docs/adr/0089), with

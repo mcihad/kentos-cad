@@ -4384,6 +4384,29 @@
      ]
     },
     {
+     "label": "İmar",
+     "icon": "zoningCheck",
+     "works": [
+      "map"
+     ],
+     "modes": [
+      "cad"
+     ],
+     "roles": [
+      "zoning"
+     ],
+     "items": [
+      {
+       "command": "zoning.check",
+       "size": "large"
+      },
+      {
+       "command": "scenario.impact",
+       "size": "small"
+      }
+     ]
+    },
+    {
      "label": "Harita işi",
      "icon": "workSource",
      "works": [
@@ -4647,6 +4670,54 @@
      "works": [
       "map",
       "road"
+     ]
+    },
+    {
+     "label": "Yüzey",
+     "icon": "terrainSurface",
+     "works": [
+      "map",
+      "road"
+     ],
+     "modes": [
+      "cad"
+     ],
+     "roles": [
+      "surface"
+     ],
+     "items": [
+      {
+       "command": "terrain.surfaces",
+       "size": "large"
+      },
+      {
+       "command": "terrain.sheetContours",
+       "size": "small"
+      },
+      {
+       "command": "terrain.analysis",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Altyapı",
+     "icon": "pipesCheck",
+     "works": [
+      "map",
+      "road"
+     ],
+     "modes": [
+      "cad"
+     ],
+     "roles": [
+      "network"
+     ],
+     "items": [
+      {
+       "command": "pipes.check",
+       "size": "large"
+      }
      ]
     },
     {
@@ -4930,6 +5001,54 @@
      "works": [
       "map",
       "road"
+     ]
+    },
+    {
+     "label": "Yüzey",
+     "icon": "terrainSurface",
+     "works": [
+      "map",
+      "road"
+     ],
+     "modes": [
+      "cad"
+     ],
+     "roles": [
+      "surface"
+     ],
+     "items": [
+      {
+       "command": "terrain.surfaces",
+       "size": "large"
+      },
+      {
+       "command": "terrain.sheetContours",
+       "size": "small"
+      },
+      {
+       "command": "terrain.analysis",
+       "size": "small"
+      }
+     ]
+    },
+    {
+     "label": "Altyapı",
+     "icon": "pipesCheck",
+     "works": [
+      "map",
+      "road"
+     ],
+     "modes": [
+      "cad"
+     ],
+     "roles": [
+      "network"
+     ],
+     "items": [
+      {
+       "command": "pipes.check",
+       "size": "large"
+      }
      ]
     },
     {
@@ -5281,6 +5400,29 @@
      "works": [
       "map",
       "road"
+     ]
+    },
+    {
+     "label": "İmar",
+     "icon": "zoningCheck",
+     "works": [
+      "map"
+     ],
+     "modes": [
+      "cad"
+     ],
+     "roles": [
+      "zoning"
+     ],
+     "items": [
+      {
+       "command": "zoning.check",
+       "size": "large"
+      },
+      {
+       "command": "scenario.impact",
+       "size": "small"
+      }
      ]
     },
     {
