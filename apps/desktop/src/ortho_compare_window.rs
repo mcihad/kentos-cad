@@ -4,7 +4,8 @@
 //! (none: the images against each other only) and the scale on the third, the name attribute on the fourth. The
 //! summary says the largest shift against the limit (2·GSD of the coarser image, BÖHHBÜY 67(6)), the systematic shift
 //! and each image's own check; the table lists every point's shift and, with the ground's points, each image's error
-//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts. Dikiş ölçümü (docs/adr/2460) measures the
+//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts. Dikiş hattı (docs/adr/2860) measures along
+//! the one line or polyline chosen in the drawing. Dikiş ölçümü (docs/adr/2460) measures the
 //! shift in the images themselves where they overlap: its step, window, search and least correlation on one line, its
 //! places in their own table (Noktalar | Dikiş).
 
@@ -31,6 +32,9 @@ pub const TITLE: &str = "Ortofoto karşılaştırması";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
 const SWAP: &str = "Yer değiştir";
+/// The seam line taken from the drawing's selection, and let go (docs/adr/2860).
+const TAKE_LINE: &str = "Seçili çizgiyi al";
+const DROP_LINE: &str = "Hattı kaldır";
 /// The ground's layer left out: the images are compared with each other only.
 const NONE: &str = "— yok —";
 
@@ -74,6 +78,9 @@ pub struct State {
     pub search: f64,
     pub correlation: String,
     pub show: Show,
+    /// The seam line measured along (docs/adr/2860): its persistent id and its words; empty: the overlap's grid.
+    pub seam_line: String,
+    pub seam_line_name: String,
 }
 
 #[derive(Clone, Debug)]
@@ -90,6 +97,9 @@ pub enum Event {
     Window(f64),
     Search(f64),
     Correlation(String),
+    /// The seam line: the one line or polyline chosen in the drawing taken, or let go (docs/adr/2860).
+    TakeLine,
+    DropLine,
     Show(Show),
     Swap,
     Save,
@@ -168,6 +178,7 @@ impl App {
             search: s.search.max(0.0) as u32,
             correlation,
             folder,
+            line: (!s.seam_line.is_empty()).then(|| s.seam_line.clone()),
         });
         let input = OrthophotoCompare {
             first: s.first.clone(),
@@ -272,6 +283,8 @@ impl App {
             search: 5.0,
             correlation: String::new(),
             show: Show::Points,
+            seam_line: String::new(),
+            seam_line_name: String::new(),
         };
         self.ortho_compare_run();
         self.dialog = Some(Dialog::OrthoCompare);
@@ -305,6 +318,34 @@ impl App {
             Event::Window(v) => s.window = v,
             Event::Search(v) => s.search = v,
             Event::Correlation(v) => s.correlation = v,
+            Event::TakeLine => {
+                // The one line or polyline chosen (docs/adr/2860): its persistent id and words.
+                let chosen = self.selection.ids().to_vec();
+                let picked = self.document.as_ref().and_then(|doc| match chosen.as_slice() {
+                    [slot] => match doc.model.get(*slot) {
+                        Some(kentos_commands::Entity::Line(_)) => Some(("Çizgi", *slot)),
+                        Some(kentos_commands::Entity::Polyline(_)) => Some(("Çoklu çizgi", *slot)),
+                        _ => None,
+                    }
+                    .and_then(|(kind, slot)| doc.model.uid(slot).map(|u| (kind, u.to_string()))),
+                    _ => None,
+                });
+                match picked {
+                    Some((kind, uid)) => {
+                        let s = &mut self.ortho_compare;
+                        s.seam_line = uid;
+                        s.seam_line_name = kind.to_owned();
+                    }
+                    None => {
+                        self.warn("Dikiş hattı için çizimde tek bir çizgi ya da çoklu çizgi seçin.".to_owned());
+                        return Task::none();
+                    }
+                }
+            }
+            Event::DropLine => {
+                s.seam_line.clear();
+                s.seam_line_name.clear();
+            }
             Event::Show(v) => {
                 s.show = v;
                 return Task::none();
@@ -342,7 +383,7 @@ impl App {
         Task::none()
     }
 
-    fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
+    pub(crate) fn ortho_compare_lines(&self) -> (Vec<Element<'_, Message>>, Vec<Vec<String>>) {
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let Some(answer) = &self.ortho_compare.answer else { return (lines, rows) };
@@ -416,9 +457,18 @@ impl App {
             lines.push(words::text_line(Kind::Warn, format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", "))));
         }
         if let Some(m) = &r.seam {
+            // Along a seam line (docs/adr/2860): its places in the overlap and those outside it.
+            let where_ = match &m.line {
+                Some(l) => format!(
+                    "dikiş hattı boyunca ({}) {} yer, {} yer örtüşmenin dışında",
+                    self.format().length(l.length),
+                    m.patches.len(),
+                    l.outside
+                ),
+                None => format!("{} yer", m.patches.len()),
+            };
             let counted = format!(
-                "Dikiş ölçümü: {} yer; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
-                m.patches.len(),
+                "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
                 m.ok,
                 m.low,
                 m.edge,
@@ -448,6 +498,8 @@ impl App {
             for p in r.seam.iter().flat_map(|m| &m.patches) {
                 let o = |v: Option<f64>| v.map(cm).unwrap_or_default();
                 rows.push(vec![
+                    // Docs/adr/2860: the distance along the seam line (the grid's places: none).
+                    p.station.map(|v| f.length_bare(v)).unwrap_or_default(),
                     f.coord(p.at[0]),
                     f.coord(p.at[1]),
                     o(p.dx),
@@ -540,12 +592,31 @@ impl App {
                 ]
                 .spacing(8)
                 .align_y(Center),
+            )
+            // Docs/adr/2860: along a drawn seam line, else the overlap's grid.
+            .field(
+                "Dikiş hattı",
+                row![
+                    container(fields::input(
+                        None,
+                        "Örtüşmenin bütünü",
+                        &s.seam_line_name,
+                        false,
+                        false
+                    ))
+                    .width(160),
+                    words::secondary(TAKE_LINE, s.seam.then(|| msg(Event::TakeLine))),
+                    words::secondary(DROP_LINE, (s.seam && !s.seam_line.is_empty()).then(|| msg(Event::DropLine)))
+                ]
+                .spacing(8)
+                .align_y(Center),
             );
         let (lines, rows) = self.ortho_compare_lines();
         let f = self.format();
         let table = if s.show == Show::Seam {
             sheet(
                 vec![
+                    num("Hat (m)", 70.0),
                     num(f.east_label(), 110.0),
                     num(f.north_label(), 110.0),
                     num("dx (cm)", 70.0),
@@ -594,6 +665,8 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SWAP) => Some(msg(Event::Swap)),
+            Control::Press(TAKE_LINE) => Some(msg(Event::TakeLine)),
+            Control::Press(DROP_LINE) => Some(msg(Event::DropLine)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

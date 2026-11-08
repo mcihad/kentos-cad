@@ -5,6 +5,8 @@
  * the first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by
  * normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
  * whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
- * a raster's relative file is looked for (the drawing's folder).
+ * a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
+ * id (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,
+ * those inside the overlap measured.
  */
-export type OrthoSeamAsk = { step: number, window: number, search: number, correlation?: number, folder?: string, };
+export type OrthoSeamAsk = { step: number, window: number, search: number, correlation?: number, folder?: string, line?: string, };

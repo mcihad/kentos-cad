@@ -4,6 +4,7 @@
  * A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the
  * second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
  * `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
- * patch has no texture), and whether an `ok` place is over the limit.
+ * patch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance
+ * along the line.
  */
-export type OrthoPatch = { at: [number, number], dx?: number, dy?: number, d?: number, correlation?: number, state: string, over: boolean, };
+export type OrthoPatch = { at: [number, number], dx?: number, dy?: number, d?: number, correlation?: number, state: string, over: boolean, station?: number, };

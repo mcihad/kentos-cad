@@ -371,8 +371,35 @@ def seam_raster(name, origin, pixel=PIX):
             "style": {"render": "gray", "bands": [1]}, "file": f"$fixture:orthophoto/v1/files/{name}"}
 
 
-def seam_setup(second="dikis-b.tif", second_origin=B0, pixel=PIX):
-    return setup(points=[], first=seam_raster("dikis-a.tif", A0), second=seam_raster(second, second_origin, pixel))
+def seam_setup(second="dikis-b.tif", second_origin=B0, pixel=PIX, extra=()):
+    return setup(points=[], first=seam_raster("dikis-a.tif", A0), second=seam_raster(second, second_origin, pixel),
+                 extra=extra)
+
+
+# docs/adr/2860: a seam line drawn across the overlap, from north of it to south of it with a bend: its places every
+# step along it, those inside the overlap (with the window's and the search's margin) measured.
+SEAM_LINE = [(515.0, 121.5), (516.2, 114.0), (514.4, 106.5)]
+
+
+def polyline(pts, bulges=None):
+    e = {"kind": "polyline", "layerId": "0", "attrs": {}, "pts": [{"x": X0 + x, "y": Y0 + y} for x, y in pts]}
+    if bulges:
+        e["bulges"] = bulges
+    return e
+
+
+def along(pts, s):
+    """The point at distance s along pts (edges of no length skipped; past the end, the end)."""
+    walked = 0.0
+    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+        length = math.hypot(bx - ax, by - ay)
+        if length == 0.0:
+            continue
+        if s <= walked + length:
+            t = (s - walked) / length
+            return (ax + t * (bx - ax), ay + t * (by - ay))
+        walked += length
+    return pts[-1]
 
 
 def ncc(a, b):
@@ -392,8 +419,9 @@ def vertex(l, c, r):
     return (l - r) / (2 * den) if den < 0 else 0.0
 
 
-def seam(pixels, ask, limit, truth):
-    """The overlap measured as docs/adr/2460 says; `pixels` the two images' rows, `truth` the second's known shift."""
+def seam(pixels, ask, limit, truth, line=None):
+    """The overlap measured as docs/adr/2460 says; `pixels` the two images' rows, `truth` the second's known shift;
+    `line` (docs/adr/2860): (uid, world vertices) of a seam line measured along instead of the grid."""
     (ra, oa), (rb, ob) = pixels
     w, r, step = ask["window"], ask["search"], ask["step"]
     half = w // 2
@@ -403,10 +431,34 @@ def seam(pixels, ask, limit, truth):
     oy0 = max(oa[1] - H_A * PIX, ob[1] - H_A * PIX) + reach * PIX
     oy1 = min(oa[1], ob[1]) - reach * PIX
     patches = []
-    y = oy1
-    while y >= oy0:
-        x = ox0
-        while x <= ox1:
+    places, line_out = [], None
+    if line is not None:
+        uid_, pts = line
+        length = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]))
+        total = outside = 0
+        k = 0
+        while True:
+            st = k * step
+            if st > length:
+                break
+            px_, py_ = along(pts, st)
+            total += 1
+            if ox0 <= px_ <= ox1 and oy0 <= py_ <= oy1:
+                places.append(((px_, py_), st))
+            else:
+                outside += 1
+            k += 1
+        line_out = {"uid": uid_, "length": length, "places": total, "outside": outside}
+    else:
+        y = oy1
+        while y >= oy0:
+            x = ox0
+            while x <= ox1:
+                places.append(((x, y), None))
+                x += step
+            y -= step
+    for (x, y), station in places:
+        if True:
             ci, cj = math.floor((x - oa[0]) / PIX), math.floor((y - oa[1]) / -PIX)
             at = [oa[0] + (ci + 0.5) * PIX, oa[1] + (cj + 0.5) * -PIX]
             bi = math.floor((at[0] - ob[0]) / PIX - 0.5 + 0.5)
@@ -423,12 +475,13 @@ def seam(pixels, ask, limit, truth):
                     c = scores[(u, v)]
                     if c is not None and (best is None or c > best[2]):
                         best = (u, v, c)
+            here = {} if station is None else {"station": station}
             if best is None:
-                patches.append({"at": at, "state": "flat", "over": False})
+                patches.append({"at": at, "state": "flat", "over": False, **here})
             else:
                 u, v, c = best
                 if abs(u) == r or abs(v) == r:
-                    patches.append({"at": at, "correlation": c, "state": "edge", "over": False})
+                    patches.append({"at": at, "correlation": c, "state": "edge", "over": False, **here})
                 else:
                     sc = lambda du, dv: scores[(u + du, v + dv)] if scores[(u + du, v + dv)] is not None else c
                     fu, fv = vertex(sc(-1, 0), c, sc(1, 0)), vertex(sc(0, -1), c, sc(0, 1))
@@ -438,26 +491,30 @@ def seam(pixels, ask, limit, truth):
                     d = math.hypot(dx, dy)
                     ok_ = ask.get("correlation") is None or c >= ask["correlation"]
                     patches.append({"at": at, "dx": dx, "dy": dy, "d": d, "correlation": c,
-                                    "state": "ok" if ok_ else "low", "over": ok_ and d > limit})
-            x += step
-        y -= step
+                                    "state": "ok" if ok_ else "low", "over": ok_ and d > limit, **here})
     good = [p for p in patches if p["state"] == "ok"]
     out = {"patches": patches, **{k: sum(1 for p in patches if p["state"] == k) for k in ("ok", "low", "edge", "flat")}}
     if good:
         out["shift"] = stats([{"name": str(k), "role": "check", "dx": p["dx"], "dy": p["dy"], "d": p["d"]}
                               for k, p in enumerate(good)])
         out["passed"] = all(not p["over"] for p in patches)
+    if line_out is not None:
+        out["line"] = line_out
     return out, good
 
 
-def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True):
-    s = seam_setup(second)
+def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line=None):
+    """`line` (docs/adr/2860): the seam line's local vertices, drawn as the drawing's third object and measured along."""
+    s = seam_setup(second, extra=() if line is None else (polyline(line),))
+    if line is not None:
+        ask = dict(ask, line=uid(3))
     inp = dict(DEFAULT, seam=ask)
     out = compare(s, uid(1), uid(2), "okuma-2024", "okuma-2026")
     limit = out["limit"]
     pa = (ROWS["dikis-a.tif"], A0)
     pb = (ROWS[second], B0)
-    measured, good = seam((pa, pb), ask, limit, truth)
+    world = None if line is None else (uid(3), [(X0 + x, Y0 + y) for x, y in line])
+    measured, good = seam((pa, pb), ask, limit, truth, world)
     if expect_true:
         # Places whose window and search stay in the clean texture (off the flat and the changed patches).
         reach = (ask["window"] // 2 + ask["search"] + 1) * PIX
@@ -468,8 +525,11 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True):
         assert errs and max(errs) < 0.05, (name, len(errs), max(errs))
         ERRORS[name] = (len(errs), max(errs))
     out["seam"] = measured
+    where_ = (f"örtüşmede {len(measured['patches'])} yer" if line is None else
+              f"dikiş hattı boyunca ({measured['line']['length']:.2f} m) örtüşmede {len(measured['patches'])} yer, "
+              f"{measured['line']['outside']} yer örtüşmenin dışında")
     out["notes"].append(
-        f"Dikiş ölçümü: örtüşmede {len(measured['patches'])} yer; {measured['ok']} sayıldı, {measured['low']} "
+        f"Dikiş ölçümü: {where_}; {measured['ok']} sayıldı, {measured['low']} "
         f"korelasyonu düşük, {measured['edge']} tepe arama sınırında, {measured['flat']} dokusuz. Yerler görüntülerin "
         f"kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).")
     case = {"name": name, "setup": s, "steps": [{"op": "plan", "input": inp, "result": {
@@ -495,10 +555,15 @@ def seam_cases():
     assert m3["passed"] is False and m3["ok"] > 0
     c4, m4 = seam_case("dikiş: arama dar, tepe sınırda kalır", dict(ask, search=2), "dikis-c.tif", S_C, False)
     assert m4["edge"] > 0 and m4["ok"] == 0
+    # docs/adr/2860: along a drawn seam line.
+    c5, m5 = seam_case("dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır", ask, line=SEAM_LINE)
+    assert m5["line"]["outside"] > 0 and m5["ok"] > 3 and len(m5["patches"]) + m5["line"]["outside"] == m5["line"]["places"]
+    assert all(p["station"] <= m5["line"]["length"] for p in m5["patches"])
     seam_in = lambda **kw: {"seam": dict(ask, **kw)}
     bad = "invalid_input"
     ss = seam_setup()
-    return [c1, c2, c3, c4,
+    lined = lambda e: seam_setup(extra=(e,))  # noqa: E731
+    return [c1, c2, c3, c4, c5,
             refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
                     "seam.step", ss),
             refused("dikiş: çift pencere", seam_in(window=20), bad, "Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.",
@@ -516,6 +581,17 @@ def seam_cases():
                     "küçültün.", "seam", seam_setup(second_origin=(X0 + 900.0, Y0 + 120.0))),
             refused("dikiş: dosyası olmayan görüntü", seam_in(), "file_not_found", "$any", "second",
                     seam_setup(second="yok.tif")),
+            refused("dikiş hattı: çizimde yok", seam_in(line=uid(9)), bad,
+                    f"“{uid(9)}” kimlikli dikiş hattı çizimde yok.", "seam.line", ss),
+            refused("dikiş hattı: nokta", seam_in(line=uid(3)), bad, "Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.",
+                    "seam.line", lined(point(3, "0", 515.0, 114.0, None, "N"))),
+            refused("dikiş hattı: yaylı", seam_in(line=uid(3)), bad,
+                    "Dikiş hattı düz kenarlı olmalı; yaylı çoklu çizgi bu ölçümde okunmaz.", "seam.line",
+                    lined(polyline(SEAM_LINE, [0.2, 0.0, 0.0]))),
+            refused("dikiş hattı: örtüşmeden geçmiyor", seam_in(line=uid(3)), bad,
+                    "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı "
+                    "örtüşmeden geçirin ya da adımı küçültün.", "seam.line",
+                    lined(polyline([(502.0, 119.0), (504.0, 110.0)]))),
             ]
 
 

@@ -1,7 +1,7 @@
 //! The seam measured in the images through a real AI host (plan/map-cad.md MAP-12, docs/adr/2460): the shared seam
 //! case's drawing (two synthetic GeoTIFFs of the fixtures, their paths made absolute) opened as a .kcad file over MCP.
 //! `cad.orthophoto.compare` with `seam` gives the case's places, counts and shift; a narrow search leaves every peak
-//! on its edge.
+//! on its edge; along a drawn seam line (docs/adr/2860) the places are the line's, each with its distance along it.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -21,7 +21,7 @@ fn alike(got: &Value, want: &Value, name: &str) {
     assert_eq!(g.len(), w.len(), "{name}");
     for (a, b) in g.iter().zip(w) {
         assert_eq!(a["state"], b["state"], "{name}");
-        for key in ["dx", "dy", "correlation"] {
+        for key in ["dx", "dy", "correlation", "station"] {
             match (a[key].as_f64(), b[key].as_f64()) {
                 (Some(x), Some(y)) => assert!((x - y).abs() < 1e-9, "{name} {key}: {x} {y}"),
                 (x, y) => assert_eq!(x.is_some(), y.is_some(), "{name} {key}"),
@@ -31,12 +31,24 @@ fn alike(got: &Value, want: &Value, name: &str) {
     for key in ["ok", "low", "edge", "flat", "passed"] {
         assert_eq!(got[key], want[key], "{name} {key}");
     }
+    // The seam line's length, places and those outside (docs/adr/2860), where one was asked.
+    for key in ["uid", "places", "outside"] {
+        assert_eq!(got["line"][key], want["line"][key], "{name} line.{key}");
+    }
+    match (got["line"]["length"].as_f64(), want["line"]["length"].as_f64()) {
+        (Some(x), Some(y)) => assert!((x - y).abs() < 1e-9, "{name} line.length"),
+        (x, y) => assert_eq!(x.is_some(), y.is_some(), "{name} line.length"),
+    }
 }
 
 #[test]
 fn the_seam_over_mcp_is_the_cases() {
     let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.compare.json")).unwrap();
-    for name in ["dikiş: örtüşmede ölçülen kayma bilinen sentetik kaymadır; dokusuz ve değişen yerler ayrı", "dikiş: arama dar, tepe sınırda kalır"] {
+    for name in [
+        "dikiş: örtüşmede ölçülen kayma bilinen sentetik kaymadır; dokusuz ve değişen yerler ayrı",
+        "dikiş: arama dar, tepe sınırda kalır",
+        "dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır",
+    ] {
         let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
         let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&case["setup"])).unwrap();
         let path = std::env::temp_dir().join(format!("kentos-orthophoto-seam-{}.kcad", std::process::id()));

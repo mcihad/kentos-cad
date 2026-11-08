@@ -2225,6 +2225,7 @@ __all__ = [
     "OrthoRules",
     "OrthoSeam",
     "OrthoSeamAsk",
+    "OrthoSeamLine",
     "OrthoStats",
     "OrthophotoCheck",
     "OrthophotoChecked",

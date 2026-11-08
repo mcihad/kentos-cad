@@ -89,7 +89,8 @@ mozaik ve iki zamanlı karşılaştırmada kayma ölçülebilsin.”
 
 - Görüntü ara değeriyle (çift kübik) piksel altı: Debella-Gilo ve Kääb'e göre parabolden doğru.
 - Farklı piksel boyunda ya da dönük görüntüler: birinin öbürünün ızgarasına yeniden örneklenmesi.
-- Çizilmiş bir dikiş hattı boyunca ölçüm (bugün örtüşmenin bütünü).
+- Çizilmiş bir dikiş hattı boyunca ölçüm (bugün örtüşmenin bütünü). Yapıldı:
+  [ADR 2860](2860-orthophoto-seam-along-a-drawn-line.md).
 - Noktasız (yalnız dikiş) karşılaştırmada okuma katmanlarının isteğe bağlı olması.
 - Yer başına korelasyonun çizimde gösterimi; büyük görüntülerde iş olarak koşma (ilerleme, durdurma; ADR 2440 gibi).
 - Görüntüden türeyen nesnenin kaynağa izi (MAP-01'in sahip kararını bekler).

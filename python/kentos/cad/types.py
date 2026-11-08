@@ -61119,13 +61119,15 @@ class OrthoPatch(_Model):
     """A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the
     second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
     `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
-    patch has no texture), and whether an `ok` place is over the limit.
+    patch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance
+    along the line.
     Attributes:
         at: Unit: system.
         correlation: Unit: 1.
         d: Unit: length.
         dx: Unit: length.
         dy: Unit: length.
+        station: Unit: length.
     """
     at: list[float]
     state: str
@@ -61134,6 +61136,7 @@ class OrthoPatch(_Model):
     d: float | None | Unset = UNSET
     dx: float | None | Unset = UNSET
     dy: float | None | Unset = UNSET
+    station: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -61148,6 +61151,8 @@ class OrthoPatch(_Model):
             out["dx"] = None if self.dx is None else float(self.dx)
         if self.dy is not UNSET:
             out["dy"] = None if self.dy is None else float(self.dy)
+        if self.station is not UNSET:
+            out["station"] = None if self.station is None else float(self.station)
         return out
 
     @classmethod
@@ -61160,6 +61165,7 @@ class OrthoPatch(_Model):
             d=UNSET if "d" not in data else None if data["d"] is None else float(data["d"]),
             dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
             dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
+            station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
         )
 
 
@@ -61269,12 +61275,14 @@ class OrthoSeam(_Model):
         low: Unit: count.
         edge: Unit: count.
         flat: Unit: count.
+        line: The seam line measured along (docs/adr/2860); none: the overlap's grid.
     """
     patches: list[OrthoPatch]
     ok: int
     low: int
     edge: int
     flat: int
+    line: OrthoSeamLine | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
     shift: OrthoStats | None | Unset = UNSET
 
@@ -61285,6 +61293,8 @@ class OrthoSeam(_Model):
         out["low"] = self.low
         out["edge"] = self.edge
         out["flat"] = self.flat
+        if self.line is not UNSET:
+            out["line"] = None if self.line is None else self.line.to_json()
         if self.passed is not UNSET:
             out["passed"] = self.passed
         if self.shift is not UNSET:
@@ -61299,6 +61309,7 @@ class OrthoSeam(_Model):
             low=data["low"],
             edge=data["edge"],
             flat=data["flat"],
+            line=UNSET if "line" not in data else None if data["line"] is None else OrthoSeamLine.from_json(data["line"]),
             passed=data.get("passed", UNSET),
             shift=UNSET if "shift" not in data else None if data["shift"] is None else OrthoStats.from_json(data["shift"]),
         )
@@ -61310,7 +61321,9 @@ class OrthoSeamAsk(_Model):
     the first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by
     normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
     whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
-    a raster's relative file is looked for (the drawing's folder).
+    a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
+    id (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,
+    those inside the overlap measured.
     Attributes:
         step: Unit: length.
         window: Unit: count.
@@ -61322,6 +61335,7 @@ class OrthoSeamAsk(_Model):
     search: int
     correlation: float | None | Unset = UNSET
     folder: str | None | Unset = UNSET
+    line: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -61332,6 +61346,8 @@ class OrthoSeamAsk(_Model):
             out["correlation"] = None if self.correlation is None else float(self.correlation)
         if self.folder is not UNSET:
             out["folder"] = self.folder
+        if self.line is not UNSET:
+            out["line"] = self.line
         return out
 
     @classmethod
@@ -61342,6 +61358,39 @@ class OrthoSeamAsk(_Model):
             search=data["search"],
             correlation=UNSET if "correlation" not in data else None if data["correlation"] is None else float(data["correlation"]),
             folder=data.get("folder", UNSET),
+            line=data.get("line", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamLine(_Model):
+    """The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and
+    how many of them lie outside the overlap (not measured).
+    Attributes:
+        length: Unit: length.
+        places: Unit: count.
+        outside: Unit: count.
+    """
+    uid: str
+    length: float
+    places: int
+    outside: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["length"] = float(self.length)
+        out["places"] = self.places
+        out["outside"] = self.outside
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamLine:
+        return cls(
+            uid=data["uid"],
+            length=float(data["length"]),
+            places=data["places"],
+            outside=data["outside"],
         )
 
 
@@ -131215,6 +131264,7 @@ __all__ = [
     "OrthoRules",
     "OrthoSeam",
     "OrthoSeamAsk",
+    "OrthoSeamLine",
     "OrthoStats",
     "OrthophotoCheck",
     "OrthophotoChecked",

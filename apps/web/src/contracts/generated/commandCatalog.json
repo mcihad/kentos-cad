@@ -160602,7 +160602,7 @@
       "type": "object"
     },
     "OrthoPatch": {
-      "description": "A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the\nsecond's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;\n`low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the\npatch has no texture), and whether an `ok` place is over the limit.",
+      "description": "A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the\nsecond's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;\n`low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the\npatch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance\nalong the line.",
       "properties": {
         "at": {
           "items": {
@@ -160651,6 +160651,14 @@
         },
         "state": {
           "type": "string"
+        },
+        "station": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         }
       },
       "required": [
@@ -160787,6 +160795,17 @@
           "type": "integer",
           "x-unit": "count"
         },
+        "line": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OrthoSeamLine"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seam line measured along (docs/adr/2860); none: the overlap's grid."
+        },
         "low": {
           "format": "uint32",
           "minimum": 0,
@@ -160833,7 +160852,7 @@
     },
     "OrthoSeamAsk": {
       "additionalProperties": false,
-      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder).",
+      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,\nthose inside the overlap measured.",
       "properties": {
         "correlation": {
           "format": "double",
@@ -160844,6 +160863,12 @@
           "x-unit": "1"
         },
         "folder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
           "type": [
             "string",
             "null"
@@ -160871,6 +160896,38 @@
         "step",
         "window",
         "search"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamLine": {
+      "description": "The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and\nhow many of them lie outside the overlap (not measured).",
+      "properties": {
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "outside": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "places": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "length",
+        "places",
+        "outside"
       ],
       "type": "object"
     },

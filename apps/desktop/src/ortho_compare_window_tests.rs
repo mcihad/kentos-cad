@@ -236,3 +236,64 @@ fn seam_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/2860: the seam line chosen in the drawing (Seçili çizgiyi al) gives the shared case's places along it, the
+/// distance along the line in the table; with nothing chosen it is said and the grid stays; Hattı kaldır goes back to
+/// the overlap's grid.
+#[test]
+fn the_seam_is_measured_along_the_chosen_line() {
+    let c = case("dikiş hattı boyunca");
+    let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+    let _ = app.update(Message::Run("raster.compare"));
+    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+        let _ = app.update(Message::OrthoCompare(e));
+    }
+    let _ = app.update(Message::OrthoCompare(C::TakeLine));
+    assert!(app.ortho_compare.seam_line.is_empty(), "nothing chosen: no line");
+    app.selection.set(vec![Slot(3)]);
+    let _ = app.update(Message::OrthoCompare(C::TakeLine));
+    assert_eq!(app.ortho_compare.seam_line_name, "Çoklu çizgi");
+    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
+    let (_, rows) = app.ortho_compare_lines();
+    assert_eq!(rows[0][0], "4.000", "the first place 4 m along the line");
+    let _ = app.update(Message::OrthoCompare(C::DropLine));
+    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+    assert!(got["seam"].get("line").is_none(), "the overlap's grid again");
+}
+
+/// `.run/gui-evidence/dikis-hatti-2860/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ortho_compare_window_tests::line_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn line_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-hatti-2860");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let c = case("dikiş hattı boyunca");
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("raster.compare"));
+        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        app.selection.set(vec![Slot(3)]);
+        let _ = app.update(Message::OrthoCompare(C::TakeLine));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-dikis-hatti-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

@@ -238,7 +238,9 @@ pub struct OrthophotoCompare {
 /// the first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by
 /// normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
 /// whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
-/// a raster's relative file is looked for (the drawing's folder).
+/// a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
+/// id (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,
+/// those inside the overlap measured.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -258,12 +260,16 @@ pub struct OrthoSeamAsk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub folder: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line: Option<String>,
 }
 
 /// A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the
 /// second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
 /// `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
-/// patch has no texture), and whether an `ok` place is over the limit.
+/// patch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance
+/// along the line.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -290,6 +296,27 @@ pub struct OrthoPatch {
     pub correlation: Option<f64>,
     pub state: String,
     pub over: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub station: Option<f64>,
+}
+
+/// The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and
+/// how many of them lie outside the overlap (not measured).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthoSeamLine {
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub places: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub outside: u32,
 }
 
 /// The overlap's measurement (docs/adr/2460): every place in order (north to south, west to east), the counts by state,
@@ -316,6 +343,10 @@ pub struct OrthoSeam {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub passed: Option<bool>,
+    /// The seam line measured along (docs/adr/2860); none: the overlap's grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line: Option<OrthoSeamLine>,
 }
 
 /// A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,

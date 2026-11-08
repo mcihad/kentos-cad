@@ -13,11 +13,16 @@
 //!
 //! The two images must have pixels of one size and no turn (north up); resampling one to the other is left for later.
 //! Nothing is written.
+//!
+//! Along a drawn seam line (`line`, docs/adr/2860): the places are every `step` metres along it from its start (the
+//! k-th at k × step, the line's length included when it falls on a step), each the point at that distance on its straight
+//! edges; those inside the overlap (as the grid's) are measured, in the line's order, each with its distance; the rest are
+//! counted as outside.
 
 use std::path::Path;
 
-use kentos_commands::{OrthoPatch, OrthoPoint, OrthoSeam, OrthoSeamAsk, RasterEntity};
-use kentos_domain::Document;
+use kentos_commands::{Entity, OrthoPatch, OrthoPoint, OrthoSeam, OrthoSeamAsk, OrthoSeamLine, RasterEntity};
+use kentos_domain::{Document, Uuid};
 use kentos_formats::raster::source::Region;
 
 use crate::checks::{Stop, error};
@@ -101,6 +106,50 @@ fn vertex(l: f64, c: f64, r: f64) -> f64 {
     if den < 0.0 { (l - r) / (2.0 * den) } else { 0.0 }
 }
 
+/// The seam line's vertices (east, north): a line, or a polyline of straight edges (a closed one back to its start);
+/// refused at `seam.line` as the contract says.
+fn seam_line(doc: &Document, uid: &str) -> Result<Vec<[f64; 2]>, Stop> {
+    let bad = |m: String| fail(codes::INVALID_INPUT, m, "seam.line");
+    let e = Uuid::parse_str(uid.trim())
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+        .ok_or_else(|| bad(format!("“{uid}” kimlikli dikiş hattı çizimde yok.")))?;
+    let pts = match e {
+        Entity::Line(l) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
+        Entity::Polyline(p) => {
+            if p.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0)) {
+                return Err(bad("Dikiş hattı düz kenarlı olmalı; yaylı çoklu çizgi bu ölçümde okunmaz.".into()));
+            }
+            let mut pts: Vec<[f64; 2]> = p.pts.iter().map(|v| [v.x, v.y]).collect();
+            if p.closed && let Some(first) = pts.first().copied() {
+                pts.push(first);
+            }
+            pts
+        }
+        _ => return Err(bad("Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.".into())),
+    };
+    Ok(pts)
+}
+
+/// The point at distance `s` along `pts` (edges of no length skipped; past the end, the end).
+fn along(pts: &[[f64; 2]], s: f64) -> [f64; 2] {
+    let mut walked = 0.0;
+    for w in pts.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let length = (b[0] - a[0]).hypot(b[1] - a[1]);
+        if length == 0.0 {
+            continue;
+        }
+        if s <= walked + length {
+            let t = (s - walked) / length;
+            return [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+        }
+        walked += length;
+    }
+    pts.last().copied().unwrap_or([0.0, 0.0])
+}
+
 /// The overlap of the two images measured; `limit` the shift's (metres).
 pub(crate) fn measure(
     doc: &Document,
@@ -134,6 +183,54 @@ pub(crate) fn measure(
             "seam",
         ));
     }
+    // The places: the overlap's grid (north to south, west to east), or every step along the seam line (docs/adr/2860).
+    let inside = |p: [f64; 2]| p[0] >= ox0 && p[0] <= ox1 && p[1] >= oy0 && p[1] <= oy1;
+    let mut places: Vec<([f64; 2], Option<f64>)> = Vec::new();
+    let mut line = None;
+    match &a.line {
+        Some(uid) => {
+            let pts = seam_line(doc, uid)?;
+            let length: f64 = pts.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum();
+            if !(length > 0.0) {
+                return Err(fail(codes::INVALID_INPUT, "Dikiş hattının uzunluğu yok.".into(), "seam.line"));
+            }
+            let (mut total, mut outside) = (0u32, 0u32);
+            let mut k = 0u64;
+            loop {
+                let s = k as f64 * a.step;
+                if s > length {
+                    break;
+                }
+                let p = along(&pts, s);
+                total += 1;
+                if inside(p) {
+                    places.push((p, Some(s)));
+                } else {
+                    outside += 1;
+                }
+                k += 1;
+            }
+            if places.is_empty() {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı örtüşmeden geçirin ya da adımı küçültün.".into(),
+                    "seam.line",
+                ));
+            }
+            line = Some(OrthoSeamLine { uid: uid.trim().to_owned(), length, places: total, outside });
+        }
+        None => {
+            let mut y = oy1;
+            while y >= oy0 {
+                let mut x = ox0;
+                while x <= ox1 {
+                    places.push(([x, y], None));
+                    x += a.step;
+                }
+                y -= a.step;
+            }
+        }
+    }
     let mut ia = opened(doc, first, a.folder.as_deref(), "first")?;
     let mut ib = opened(doc, second, a.folder.as_deref(), "second")?;
     let read = |o: &mut Opened, x: i64, y: i64, w: u32, h: u32, path: &str| -> Result<Region, Stop> {
@@ -145,10 +242,8 @@ pub(crate) fn measure(
     let r = i64::from(a.search);
     let big = w + 2 * a.search;
     let mut patches = Vec::new();
-    let mut y = oy1;
-    while y >= oy0 {
-        let mut x = ox0;
-        while x <= ox1 {
+    for &([x, y], station) in &places {
+        {
             // The place: the centre of the first image's pixel it falls in.
             let (ci, cj) = (((x - fa[0]) / fa[1]).floor() as i64, ((y - fa[3]) / fa[5]).floor() as i64);
             let at = [fa[0] + (ci as f64 + 0.5) * fa[1], fa[3] + (cj as f64 + 0.5) * fa[5]];
@@ -173,11 +268,11 @@ pub(crate) fn measure(
                 .filter_map(|(k, s)| s.map(|s| (k, s)))
                 .fold(None, |m: Option<(usize, f64)>, (k, s)| if m.is_none_or(|m| s > m.1) { Some((k, s)) } else { m });
             let patch = match best {
-                None => OrthoPatch { at, dx: None, dy: None, d: None, correlation: None, state: "flat".into(), over: false },
+                None => OrthoPatch { at, dx: None, dy: None, d: None, correlation: None, state: "flat".into(), over: false, station },
                 Some((k, c)) => {
                     let (u, v) = ((k % side) as i64 - r, (k / side) as i64 - r);
                     if u.abs() == r || v.abs() == r {
-                        OrthoPatch { at, dx: None, dy: None, d: None, correlation: Some(c), state: "edge".into(), over: false }
+                        OrthoPatch { at, dx: None, dy: None, d: None, correlation: Some(c), state: "edge".into(), over: false, station }
                     } else {
                         let s = |du: i64, dv: i64| scores[(v + dv + r) as usize * side + (u + du + r) as usize].unwrap_or(c);
                         let (fu, fv) = (vertex(s(-1, 0), c, s(1, 0)), vertex(s(0, -1), c, s(0, 1)));
@@ -194,14 +289,13 @@ pub(crate) fn measure(
                             correlation: Some(c),
                             state: if ok { "ok" } else { "low" }.into(),
                             over: ok && d > limit,
+                            station,
                         }
                     }
                 }
             };
             patches.push(patch);
-            x += a.step;
         }
-        y -= a.step;
     }
     let count = |state: &str| patches.iter().filter(|p| p.state == state).count() as u32;
     let points: Vec<OrthoPoint> = patches
@@ -226,5 +320,6 @@ pub(crate) fn measure(
         shift: (ok > 0).then(|| stats(&points.iter().collect::<Vec<_>>())),
         passed: (ok > 0).then(|| patches.iter().all(|p| !p.over)),
         patches,
+        line,
     })
 }

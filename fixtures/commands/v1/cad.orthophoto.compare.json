@@ -13135,6 +13135,382 @@
    ]
   },
   {
+   "name": "dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     },
+     {
+      "kind": "polyline",
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487515.0,
+        "y": 4420121.5
+       },
+       {
+        "x": 487516.2,
+        "y": 4420114.0
+       },
+       {
+        "x": 487514.4,
+        "y": 4420106.5
+       }
+      ],
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002",
+     "0192f5c0-1780-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 1.0,
+       "window": 21,
+       "search": 5,
+       "correlation": 0.8,
+       "line": "0192f5c0-1780-7000-8000-000000000003"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "bohhbuy-2018-m91",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "gsd": [
+        0.1,
+        0.1
+       ],
+       "limit": 0.2,
+       "pairs": [],
+       "unmatched": [],
+       "shift": {
+        "n": 0,
+        "rmseX": 0.0,
+        "rmseY": 0.0,
+        "kohXy": 0.0,
+        "rmseR": 0.0,
+        "meanX": 0.0,
+        "meanY": 0.0,
+        "maxD": 0.0,
+        "nZ": 0
+       },
+       "notes": [
+        "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
+        "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
+        "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
+        "Dikiş ölçümü: dikiş hattı boyunca (15.31 m) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 4 sayıldı, 5 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+       ],
+       "seam": {
+        "patches": [
+         {
+          "at": [
+           487515.65,
+           4420117.55
+          ],
+          "dx": 0.034354559844359756,
+          "dy": -0.023344626650214195,
+          "d": 0.041535615747663915,
+          "correlation": 0.9814584744261138,
+          "state": "ok",
+          "over": false,
+          "station": 4.0
+         },
+         {
+          "at": [
+           487515.75,
+           4420116.55
+          ],
+          "dx": 0.032797280175145715,
+          "dy": -0.022938772104680538,
+          "d": 0.04002310398454218,
+          "correlation": 0.9820521551485097,
+          "state": "ok",
+          "over": false,
+          "station": 5.0
+         },
+         {
+          "at": [
+           487515.95,
+           4420115.55
+          ],
+          "dx": 0.034129877807572484,
+          "dy": -0.023744567297399044,
+          "d": 0.041577073433570824,
+          "correlation": 0.9817200622851147,
+          "state": "ok",
+          "over": false,
+          "station": 6.0
+         },
+         {
+          "at": [
+           487516.15,
+           4420114.55
+          ],
+          "dx": 0.033142643922474235,
+          "dy": -0.02295094169676304,
+          "d": 0.04031352838614024,
+          "correlation": 0.9823139972555083,
+          "state": "ok",
+          "over": false,
+          "station": 7.0
+         },
+         {
+          "at": [
+           487516.15,
+           4420113.65
+          ],
+          "dx": 0.02899768087081611,
+          "dy": 0.029297790490090847,
+          "d": 0.04122166934376812,
+          "correlation": 0.7727513299575685,
+          "state": "low",
+          "over": false,
+          "station": 8.0
+         },
+         {
+          "at": [
+           487515.85,
+           4420112.65
+          ],
+          "dx": -0.005823188810609281,
+          "dy": 0.017995793372392654,
+          "d": 0.018914494627820657,
+          "correlation": 0.3560669548334194,
+          "state": "low",
+          "over": false,
+          "station": 9.0
+         },
+         {
+          "at": [
+           487515.65,
+           4420111.65
+          ],
+          "dx": -0.08137040125438944,
+          "dy": 0.023828710429370403,
+          "d": 0.08478767387437355,
+          "correlation": 0.1775251707636614,
+          "state": "low",
+          "over": false,
+          "station": 10.0
+         },
+         {
+          "at": [
+           487515.45,
+           4420110.65
+          ],
+          "dx": -0.0037614585016854107,
+          "dy": -0.089543292298913,
+          "d": 0.08962226155252094,
+          "correlation": 0.34909210604080504,
+          "state": "low",
+          "over": false,
+          "station": 11.0
+         },
+         {
+          "at": [
+           487515.15,
+           4420109.75
+          ],
+          "dx": 0.02406676101963967,
+          "dy": -0.03886437229812145,
+          "d": 0.0457126724235571,
+          "correlation": 0.7314606430887514,
+          "state": "low",
+          "over": false,
+          "station": 12.0
+         }
+        ],
+        "ok": 4,
+        "low": 5,
+        "edge": 0,
+        "flat": 0,
+        "shift": {
+         "n": 4,
+         "rmseX": 0.03361242617812068,
+         "rmseY": 0.023247091538605907,
+         "kohXy": 0.028898291113696798,
+         "rmseR": 0.0408683552223959,
+         "meanX": 0.03360609043738805,
+         "meanY": -0.023244726937264204,
+         "maxD": 0.041577073433570824,
+         "nZ": 0
+        },
+        "passed": true,
+        "line": {
+         "uid": "0192f5c0-1780-7000-8000-000000000003",
+         "length": 15.308369420011886,
+         "places": 16,
+         "outside": 7
+        }
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
    "name": "dikiş: sıfır adım",
    "steps": [
     {
@@ -14429,6 +14805,810 @@
     "uids": [
      "0192f5c0-1780-7000-8000-000000000001",
      "0192f5c0-1780-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "dikiş hattı: çizimde yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 1.0,
+       "window": 21,
+       "search": 5,
+       "correlation": 0.8,
+       "line": "0192f5c0-1780-7000-8000-000000000009"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f5c0-1780-7000-8000-000000000009” kimlikli dikiş hattı çizimde yok.",
+       "path": "seam.line"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "dikiş hattı: nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 1.0,
+       "window": 21,
+       "search": 5,
+       "correlation": 0.8,
+       "line": "0192f5c0-1780-7000-8000-000000000003"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.",
+       "path": "seam.line"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {
+       "Ad": "N"
+      },
+      "p": {
+       "x": 487515.0,
+       "y": 4420114.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002",
+     "0192f5c0-1780-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "dikiş hattı: yaylı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 1.0,
+       "window": 21,
+       "search": 5,
+       "correlation": 0.8,
+       "line": "0192f5c0-1780-7000-8000-000000000003"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Dikiş hattı düz kenarlı olmalı; yaylı çoklu çizgi bu ölçümde okunmaz.",
+       "path": "seam.line"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     },
+     {
+      "kind": "polyline",
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487515.0,
+        "y": 4420121.5
+       },
+       {
+        "x": 487516.2,
+        "y": 4420114.0
+       },
+       {
+        "x": 487514.4,
+        "y": 4420106.5
+       }
+      ],
+      "bulges": [
+       0.2,
+       0.0,
+       0.0
+      ],
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002",
+     "0192f5c0-1780-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "dikiş hattı: örtüşmeden geçmiyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 1.0,
+       "window": 21,
+       "search": 5,
+       "correlation": 0.8,
+       "line": "0192f5c0-1780-7000-8000-000000000003"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı örtüşmeden geçirin ya da adımı küçültün.",
+       "path": "seam.line"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     },
+     {
+      "kind": "polyline",
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487502.0,
+        "y": 4420119.0
+       },
+       {
+        "x": 487504.0,
+        "y": 4420110.0
+       }
+      ],
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002",
+     "0192f5c0-1780-7000-8000-000000000003"
     ],
     "styles": {
      "items": [],

@@ -112,6 +112,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   doldurulması; web'in ön denetiminde haritanın boş kalite değeri.
 - MAP-19 / ADR 2820: `cad.asbuilt.check`'in web işleyicisinde `packageDesign` (42 ortak durum); web'in Uygulama
   kontrolü'nde paketin tasarımıyla kutusu.
+- MAP-12 / ADR 2860: `cad.orthophoto.compare`'in web işleyicisinde `seam.line` (45 ortak durum); web'in Ortofoto
+  karşılaştırması'nda Dikiş hattı satırı ve Hat (m) sütunu.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

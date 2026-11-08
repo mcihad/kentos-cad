@@ -42,7 +42,7 @@ sırayla alır.
 | MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
@@ -1106,6 +1106,13 @@ başvuruda bayt bayt yazılır; bilinen kayma 0,05 piksel içinde bulunur (en b�
 MCP; Ortofoto karşılaştırması'nda Dikiş ölçümü satırı ve Dikiş tablosu. Açık: çift kübik piksel altı, yeniden
 örnekleme, çizilmiş dikiş hattı boyunca ölçüm, görüntüden türeyen nesnenin izi, DSM/DTM, kalite raporu aktarımı.
 
+
+**8 Kasım 2026, dördüncü tur — dikiş hattı boyunca ölçüm ([ADR 2860](../docs/adr/2860-orthophoto-seam-along-a-drawn-line.md)).**
+Kapsam: **CAD + CBS** (raster). Araştırma: ArcGIS Pro'nun mozaik dikiş hatları (her görüntünün kullanılan bölümü,
+hesaplanan ya da elle düzenlenen hat). Kanıtlanan: `cad.orthophoto.compare`'in `seam.line`'ı: yerler çizilmiş hattın
+başından adım aralıklı, örtüşmedekiler ölçülür, dışındakiler sayılır, her yerin hat boyunca uzaklığı; dört ret;
+45 ortak durum, MCP; Ortofoto karşılaştırması'nda Dikiş hattı satırı ve Hat (m) sütunu. Açık: yaylı hat, çift kübik
+piksel altı, yeniden örnekleme, mozaiğin çokgenlerinden hat.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

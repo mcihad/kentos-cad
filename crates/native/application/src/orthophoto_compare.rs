@@ -155,9 +155,18 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
         notes.push("Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.".into());
     }
     if let Some(s) = &seam {
+        // Along a seam line (docs/adr/2860): its length, its places in the overlap and those outside it.
+        let where_ = match &s.line {
+            Some(l) => format!(
+                "dikiş hattı boyunca ({:.2} m) örtüşmede {} yer, {} yer örtüşmenin dışında",
+                l.length,
+                s.patches.len(),
+                l.outside
+            ),
+            None => format!("örtüşmede {} yer", s.patches.len()),
+        };
         notes.push(format!(
-            "Dikiş ölçümü: örtüşmede {} yer; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
-            s.patches.len(),
+            "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
             s.ok,
             s.low,
             s.edge,
