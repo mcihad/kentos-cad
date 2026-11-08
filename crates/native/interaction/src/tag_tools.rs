@@ -912,14 +912,33 @@ impl SchedulePreset {
             (SchedulePreset::Openings, false) => {
                 &[Number, Code, Form, Type, Width, Height, Sill, Wall]
             }
+            // A units schedule: Planlı Alanlar İmar Yönetmeliği 4's areas of each unit (docs/adr/3029).
+            (SchedulePreset::Units, false) => &[
+                Number,
+                Name,
+                UnitKind,
+                Level,
+                PaiyNet,
+                PaiyGross,
+                PaiyShare,
+                GeneralGross,
+            ],
             (_, false) => return None,
             (SchedulePreset::Openings, true) => &[Code, Type, Form, Width, Height, Count],
             (SchedulePreset::Spaces, true) => &[Usage, Count, Area],
             (SchedulePreset::Columns, true) => &[Type, Width, Count],
             (SchedulePreset::Walls, true) => &[Type, Thickness, Count, Length, Area],
             (SchedulePreset::Fixtures, true) => &[Type, Category, Count],
-            // Alike units by kind and building: their count of spaces, areas, shares and gross summed.
-            (SchedulePreset::Units, true) => &[UnitKind, Building, Count, Area, Share, Gross],
+            // Alike units by kind and building: their count of spaces and the regulation's areas summed (docs/adr/3029).
+            (SchedulePreset::Units, true) => &[
+                UnitKind,
+                Building,
+                Count,
+                PaiyNet,
+                PaiyGross,
+                PaiyShare,
+                GeneralGross,
+            ],
         };
         Some(
             fields

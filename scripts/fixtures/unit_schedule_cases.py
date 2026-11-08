@@ -46,7 +46,7 @@ SCREATE, SEDIT, SQUERY = "cad.schedules.create", "cad.schedules.edit", "cad.sche
 KIND_LABEL = {"unit": "Bağımsız bölüm", "common": "Ortak alan", "outdoor": "Dış alan"}
 TITLES = {"number": "No", "name": "Ad", "unitKind": "Bölüm türü", "building": "Bina", "wing": "Kanat", "level": "Kat",
           "area": "Alan", "recordedArea": "Kayıtlı alan", "shareWeight": "Pay ağırlığı", "share": "Pay",
-          "gross": "Brüt", "target": "Tasarım hedefi", "targetDiff": "Hedef farkı", "count": "Adet", "phase": "Evre",
+          "gross": "Net + pay", "target": "Tasarım hedefi", "targetDiff": "Hedef farkı", "count": "Adet", "phase": "Evre",
           "usage": "Kullanım"}
 AREAS = {"area", "recordedArea", "share", "gross"}
 SUMMED = {"count", "area", "share", "gross", "recordedArea"}

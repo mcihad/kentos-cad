@@ -136,6 +136,13 @@ pub fn needs_opening_codes(e: &crate::Entity) -> bool {
     }
 }
 
+/// Whether `e` is a schedule with a column of Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029): KCAD schema
+/// 209.
+pub fn needs_paiy_areas(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Table(t) if matches!(&t.source,
+        Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_paiy())))
+}
+
 /// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.
 pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Tag(t) if t.tag.shape == TagShape::Ellipse)

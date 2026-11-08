@@ -2641,6 +2641,12 @@ def document(d):
         # A door or window type's joinery code, a tag naming it or an opening's size, a schedule's Kod column
         # (docs/adr/3028).
         schema = max(schema, 208)
+    if any(e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
+           and any(isinstance(c, dict) and c.get("field") in ("paiyNet", "paiyGross", "paiyShare", "generalGross")
+                   for c in e["source"].get("columns", []))
+           for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
+        # A units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (docs/adr/3029).
+        schema = max(schema, 209)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3516,7 +3522,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-209.kcad"] = container(root(cmap(parts), version=uint(209)))
+    files["schema-version-210.kcad"] = container(root(cmap(parts), version=uint(210)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6271,6 +6277,11 @@ def build():
         out["broken/opening-codes-" + name + ".kcad"] = container(document(d))
     code_bad("twice", lambda d: d["settings"]["arch"]["openingTypes"][1].update(code="k01"))
     code_bad("digit-first", lambda d: d["settings"]["arch"]["openingTypes"][0].update(code="1K"))
+    # Schema 209 (docs/adr/3029): a units schedule with the regulation's areas; schema 208 refuses it as unknown.
+    paiy = document(load("paiy-areas.json"))
+    assert paiy.count(b"\x67version\x18\xd1") == 1, "the regulation's areas are schema 209"
+    out["paiy-areas.kcad"] = container(paiy)
+    out["broken/paiy-areas-in-schema-208.kcad"] = container(paiy.replace(b"\x67version\x18\xd1", b"\x67version\x18\xd0"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

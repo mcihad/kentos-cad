@@ -793,7 +793,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -1105,7 +1105,7 @@
          "summed": true
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -1129,7 +1129,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          "members": []
@@ -1797,7 +1797,7 @@
           "No",
           "Mahal sayısı",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -2012,7 +2012,7 @@
          "summed": true
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -2032,7 +2032,7 @@
           "No",
           "Mahal sayısı",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          "members": []
@@ -4432,7 +4432,7 @@
          [
           "Bölüm türü",
           "No",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "Bağımsız bölüm",
@@ -4683,7 +4683,7 @@
          "summed": false
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -4696,7 +4696,7 @@
          "cells": [
           "Bölüm türü",
           "No",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          "members": []
         },
@@ -4925,7 +4925,7 @@
         "cells": [
          [
           "No",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "4",
@@ -5080,7 +5080,7 @@
          "summed": false
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -5092,7 +5092,7 @@
          "role": "heading",
          "cells": [
           "No",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          "members": []
         },
@@ -6793,7 +6793,7 @@
           "No",
           "Pay ağırlığı",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -7001,7 +7001,7 @@
          "summed": true
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -7015,7 +7015,7 @@
           "No",
           "Pay ağırlığı",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          "members": []
         },
@@ -7991,7 +7991,7 @@
           "No",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -8206,7 +8206,7 @@
          "summed": true
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -8220,7 +8220,7 @@
           "No",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          "members": []
         },
@@ -10115,7 +10115,7 @@
           "No",
           "Bölüm türü",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "O",
@@ -10271,7 +10271,7 @@
          "summed": true
         },
         {
-         "heading": "Brüt (m²)",
+         "heading": "Net + pay (m²)",
          "field": "gross",
          "editable": false,
          "summed": true
@@ -10285,7 +10285,7 @@
           "No",
           "Bölüm türü",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          "members": []
         },

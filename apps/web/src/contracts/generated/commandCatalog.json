@@ -177033,7 +177033,10 @@
             "building",
             "wing",
             "recordedArea",
-            "shareWeight"
+            "shareWeight",
+            "paiyGross",
+            "paiyShare",
+            "generalGross"
           ],
           "type": "string"
         },
@@ -177110,6 +177113,11 @@
         {
           "const": "unitKind",
           "description": "A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and\nits share weight (docs/adr/0795): a units schedule's.",
+          "type": "string"
+        },
+        {
+          "const": "paiyNet",
+          "description": "Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its\nnet area, its gross (outer contour: the façade's outer face, a shared wall's axis), its part of the common\nareas' gross and its general gross (gross and part).",
           "type": "string"
         }
       ]

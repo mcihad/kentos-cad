@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 209 (docs/adr/3029): a units schedule's regulation areas.
+    if objs.iter().any(kentos_contracts::needs_paiy_areas)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_paiy_areas))
+    {
+        return crate::SCHEMA_WITH_PAIY_AREAS;
+    }
     // Schema 208 (docs/adr/3028): a type's joinery code, a tag naming it or an opening's size.
     if doc
         .settings

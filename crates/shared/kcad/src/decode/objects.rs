@@ -423,6 +423,7 @@ pub(super) struct Features {
     pub(super) special_doors: bool,
     pub(super) ellipse_tags: bool,
     pub(super) opening_codes: bool,
+    pub(super) paiy_areas: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -705,6 +706,7 @@ impl Features {
             special_doors: schema >= crate::SCHEMA_WITH_SPECIAL_DOORS,
             ellipse_tags: schema >= crate::SCHEMA_WITH_ELLIPSE_TAGS,
             opening_codes: schema >= crate::SCHEMA_WITH_OPENING_CODES,
+            paiy_areas: schema >= crate::SCHEMA_WITH_PAIY_AREAS,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -2486,6 +2488,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 209 (docs/adr/3029): a units schedule's regulation areas; before it none was a field.
+    if kentos_contracts::needs_paiy_areas(&entity) && !has.paiy_areas {
+        return Err(r.fail(
+            Code::UnknownField,
+            "çizelgenin yönetmelik alanı sütunları (paiyNet, paiyGross, paiyShare, generalGross) şema 209 ister",
         ));
     }
     // Schema 208 (docs/adr/3028): a tag naming an opening's joinery code or size; before it neither was a place.

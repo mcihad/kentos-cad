@@ -6311,6 +6311,9 @@ class ScheduleField(_StrEnum):
     - ``wing``
     - ``recordedArea``
     - ``shareWeight``
+    - ``paiyGross``
+    - ``paiyShare``
+    - ``generalGross``
     - ``code``: An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
@@ -6326,6 +6329,7 @@ class ScheduleField(_StrEnum):
     - ``gross``: A space's unit's gross area: its own rooms and its share.
     - ``tracks``: A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its
     - ``unitKind``: A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and
+    - ``paiyNet``: Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its
     """
     NUMBER = "number"
     TYPE = "type"
@@ -6361,6 +6365,9 @@ class ScheduleField(_StrEnum):
     WING = "wing"
     RECORDED_AREA = "recordedArea"
     SHARE_WEIGHT = "shareWeight"
+    PAIY_GROSS = "paiyGross"
+    PAIY_SHARE = "paiyShare"
+    GENERAL_GROSS = "generalGross"
     CODE = "code"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
@@ -6376,9 +6383,10 @@ class ScheduleField(_StrEnum):
     GROSS = "gross"
     TRACKS = "tracks"
     UNIT_KIND = "unitKind"
+    PAIY_NET = "paiyNet"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "paiyGross", "paiyShare", "generalGross", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind", "paiyNet"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 

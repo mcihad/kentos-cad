@@ -708,6 +708,8 @@ mod building_context_tests;
 mod fixture_place_tests;
 #[cfg(test)]
 mod opening_codes_tests;
+#[cfg(test)]
+mod paiy_area_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

@@ -141,6 +141,11 @@
     - `ScheduleField::Code` (Kod; araç var olan kapı-pencere çizelgesine ekler, Çizelge hazırında var). Numarala
       `byRoom` (M): `opening_codes::room_of` hizmet edilen mahal (geçiş mahalli `PASSAGES` ayrılır), -A, -B …; araç
       türe göre K, P, B önekleriyle tek adımda çalışır.
+  - **Bağımsız bölümün yönetmelik alanları (M29, [ADR 3029](../adr/3029-regulation-areas-of-independent-units.md)):**
+    - `Document::paiy_areas`: brüt = grubun mahallerinin `Gross` çizgileri − öbür mahallerin `Centerline` çizgileri
+      (kat kat; ortak duvar-cephe köşesinin örtüşmesi yarı yarıya); net = iç yüz alanları (boşluk ve dış mahal hariç,
+      sıva stilde); pay `kentos_contracts::shares` brütler üstünden. Sütunlar `PaiyNet`, `PaiyGross`, `PaiyShare`,
+      `GeneralGross` (bölüm çizelgesi, KCAD 209); `Gross`'un başlığı "Net + pay".
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

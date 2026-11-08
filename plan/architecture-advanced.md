@@ -968,7 +968,11 @@ Dayanak S20, S22.
 
 ### 4.4 Türkiye'ye uygun proje
 
-#### ADV-22 — Alan hesabı, vaziyet planı ve imar tabloları [ ]
+#### ADV-22 — Alan hesabı, vaziyet planı ve imar tabloları [~]
+
+_Durum (8 Kasım 2026):_ PAİY 4'ün bağımsız bölüm alanları yapıldı (M29 1. bölüm, [ADR 3029](../docs/adr/3029-regulation-areas-of-independent-units.md)).
+- Bölüm çizelgesinde BB net, BB brüt (dış cephede dış yüz, komşuyla eksen; şaft ve galeri hariç), ortak alan payı (ortak alanların brütünden) ve BB genel brüt; eski "Brüt" (net + pay) "Net + pay" adını aldı; KCAD 209.
+- Kalanlar: metrekare cetveli ve yapı inşaat alanı (M29 2. bölüm), merdiven altı 1,80 m, sıvasız projede sıva payı, emsal/TAKS (M30), eklenti ve kat irtifakı (M31), vaziyet planı.
 
 **Kullanıcı sonucu:** Metrekare cetveli, emsal/TAKS tablosu, kat irtifakı tablosu ve vaziyet planı aynı modelden çıkar.
 Sınırı aşan değer çizim sırasında görünür. Dayanak S22; W4 §4/1–3, 8–10.
@@ -1136,7 +1140,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M29 | Türk alan motoru ve metrekare cetveli | ADV-22 | PAİY 4 alanları çizelgede |
+| M29 | Türk alan motoru ve metrekare cetveli | ADV-22 | PAİY 4 alanları çizelgede **(M29 1. bölüm, ADR 3029: yapıldı; bölüm çizelgesinde BB net, brüt, ortak alan payı, genel brüt. Metrekare cetveli 2. bölümde)** |
 | M30 | Emsal/TAKS ve emsal harici | ADV-22 | Canlı rozet ve tablo |
 | M31 | Bağımsız bölüm, eklenti, ortak yer, kat irtifakı | ADV-22 | Paylaşım tablosu |
 | M32 | Vaziyet planı | ADV-22 | Parsel, bahçe mesafeleri, oturum, ±0,00 |

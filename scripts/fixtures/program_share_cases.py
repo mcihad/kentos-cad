@@ -332,7 +332,7 @@ def share_check_cases():
         {"op": "execute", "command": "cad.program.edit", "input": {"program": w},
          "result": {"status": "completed", "output": "$any", "warnings": []},
          "expect": {"revision": "changed", "fields": {str(max(SP) + 1): {"text": f"{parts_w['d2']['gross']} m²"}}}}])
-    rows = [["Bölüm", "Pay (m²)", "Brüt (m²)"]]
+    rows = [["Bölüm", "Pay (m²)", "Net + pay (m²)"]]
     named = {u["id"]: f"{u['number']} {u['name']}" if u.get("name") else u["number"] for u in net["units"]}
     for _, sp in sorted(SP.items()):
         if sp["level"] != "zemin":

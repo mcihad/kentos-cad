@@ -167,10 +167,17 @@ pub enum ScheduleField {
     Wing,
     RecordedArea,
     ShareWeight,
+    /// Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its
+    /// net area, its gross (outer contour: the façade's outer face, a shared wall's axis), its part of the common
+    /// areas' gross and its general gross (gross and part).
+    PaiyNet,
+    PaiyGross,
+    PaiyShare,
+    GeneralGross,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 49] = [
+    pub const ALL: [ScheduleField; 53] = [
         ScheduleField::Number,
         ScheduleField::Code,
         ScheduleField::Type,
@@ -220,6 +227,10 @@ impl ScheduleField {
         ScheduleField::Wing,
         ScheduleField::RecordedArea,
         ScheduleField::ShareWeight,
+        ScheduleField::PaiyNet,
+        ScheduleField::PaiyGross,
+        ScheduleField::PaiyShare,
+        ScheduleField::GeneralGross,
     ];
 
     /// Its heading when the column gives none.
@@ -266,7 +277,8 @@ impl ScheduleField {
             ScheduleField::Drum => "Tambur çapı",
             ScheduleField::Pocket => "Cep boyu",
             ScheduleField::Share => "Pay",
-            ScheduleField::Gross => "Brüt",
+            // Its own rooms and its part: not the regulation's gross (docs/adr/3029), so not called Brüt.
+            ScheduleField::Gross => "Net + pay",
             ScheduleField::Tracks => "Ray sayısı",
             ScheduleField::Panels => "Kanat düzeni",
             ScheduleField::UnitKind => "Bölüm türü",
@@ -274,6 +286,10 @@ impl ScheduleField {
             ScheduleField::Wing => "Kanat",
             ScheduleField::RecordedArea => "Kayıtlı alan",
             ScheduleField::ShareWeight => "Pay ağırlığı",
+            ScheduleField::PaiyNet => "BB net alanı",
+            ScheduleField::PaiyGross => "BB brüt alanı",
+            ScheduleField::PaiyShare => "Ortak alan payı",
+            ScheduleField::GeneralGross => "BB genel brüt alanı",
         }
     }
 
@@ -328,6 +344,10 @@ impl ScheduleField {
             ScheduleField::Wing => "wing",
             ScheduleField::RecordedArea => "recordedArea",
             ScheduleField::ShareWeight => "shareWeight",
+            ScheduleField::PaiyNet => "paiyNet",
+            ScheduleField::PaiyGross => "paiyGross",
+            ScheduleField::PaiyShare => "paiyShare",
+            ScheduleField::GeneralGross => "generalGross",
         }
     }
 
@@ -353,11 +373,16 @@ impl ScheduleField {
                     | Target
                     | TargetDiff
                     | Count
+                    | PaiyNet
+                    | PaiyGross
+                    | PaiyShare
+                    | GeneralGross
             );
         }
         match self {
             Count | Level | Phase | Attr => true,
             UnitKind | Building | Wing | RecordedArea | ShareWeight => false,
+            PaiyNet | PaiyGross | PaiyShare | GeneralGross => false,
             Number => matches!(of, ScheduleOf::Openings | ScheduleOf::Spaces),
             Type => matches!(
                 of,
@@ -430,7 +455,12 @@ impl ScheduleField {
     /// each unit's own (a spaces schedule repeats its unit's on each of its spaces, docs/adr/0784 §3).
     pub fn summed_in(self, of: ScheduleOf) -> bool {
         use ScheduleField::*;
-        self.summed() || (of == ScheduleOf::Units && matches!(self, Share | Gross | RecordedArea))
+        self.summed()
+            || (of == ScheduleOf::Units
+                && matches!(
+                    self,
+                    Share | Gross | RecordedArea | PaiyNet | PaiyGross | PaiyShare | GeneralGross
+                ))
     }
 
     /// Whether it is a length the project's unit writes.
@@ -478,6 +508,12 @@ impl ScheduleField {
     /// Whether it is one of the shares' fields (docs/adr/0784, `.kcad` schema 147).
     pub fn is_share(self) -> bool {
         matches!(self, ScheduleField::Share | ScheduleField::Gross)
+    }
+
+    /// Whether it is one of Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029, `.kcad` schema 209).
+    pub fn is_paiy(self) -> bool {
+        use ScheduleField::*;
+        matches!(self, PaiyNet | PaiyGross | PaiyShare | GeneralGross)
     }
 
     /// Whether it is an opening's type's joinery code (docs/adr/3028, `.kcad` schema 208).

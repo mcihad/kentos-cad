@@ -74,6 +74,10 @@ pub fn numeric(f: ScheduleField) -> bool {
                 | ScheduleField::Share
                 | ScheduleField::Gross
                 | ScheduleField::RecordedArea
+                | ScheduleField::PaiyNet
+                | ScheduleField::PaiyGross
+                | ScheduleField::PaiyShare
+                | ScheduleField::GeneralGross
         )
 }
 
@@ -181,7 +185,11 @@ impl Document {
                 ScheduleField::Area
                 | ScheduleField::Share
                 | ScheduleField::Gross
-                | ScheduleField::RecordedArea => Some(match s.area_unit {
+                | ScheduleField::RecordedArea
+                | ScheduleField::PaiyNet
+                | ScheduleField::PaiyGross
+                | ScheduleField::PaiyShare
+                | ScheduleField::GeneralGross => Some(match s.area_unit {
                     kentos_contracts::AreaUnit::M2 => "m²",
                     kentos_contracts::AreaUnit::Donum => "dönüm",
                     kentos_contracts::AreaUnit::Ha => "ha",
@@ -265,13 +273,31 @@ impl Document {
                 }
             }
         }
+        // Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029), worked out once when a column asks.
+        let paiy = columns
+            .iter()
+            .any(|c| c.field.is_paiy())
+            .then(|| self.paiy_areas());
         let mut rows = Vec::new();
         for u in &program.units {
             let mine = of.iter().find(|(id, _)| *id == u.id).map(|(_, g)| g);
+            let pa = paiy
+                .as_ref()
+                .and_then(|v| v.iter().find(|(id, _)| *id == u.id))
+                .map(|(_, g)| g);
             if let Some(f) = filter {
-                let lv = f.levels.as_ref().is_none_or(|ls| mine.is_some_and(|g| g.levels.iter().any(|l| ls.contains(l))));
-                let bd = f.buildings.as_ref().is_none_or(|bs| u.building.as_ref().is_some_and(|b| bs.contains(b)));
-                let wg = f.wings.as_ref().is_none_or(|ws| u.wing.as_ref().is_some_and(|w| ws.contains(w)));
+                let lv = f
+                    .levels
+                    .as_ref()
+                    .is_none_or(|ls| mine.is_some_and(|g| g.levels.iter().any(|l| ls.contains(l))));
+                let bd = f
+                    .buildings
+                    .as_ref()
+                    .is_none_or(|bs| u.building.as_ref().is_some_and(|b| bs.contains(b)));
+                let wg = f
+                    .wings
+                    .as_ref()
+                    .is_none_or(|ws| u.wing.as_ref().is_some_and(|w| ws.contains(w)));
                 let kd = f.kinds.as_ref().is_none_or(|ks| ks.contains(&u.kind));
                 if !(lv && bd && wg && kd) {
                     continue;
@@ -319,7 +345,17 @@ impl Document {
                         };
                         brief.area_difference(g.briefed).map(ArchValue::Area)
                     }),
-                    ScheduleField::Count => Some(ArchValue::Count(mine.map_or(0, |g| g.uids.len() as u64))),
+                    ScheduleField::Count => {
+                        Some(ArchValue::Count(mine.map_or(0, |g| g.uids.len() as u64)))
+                    }
+                    ScheduleField::PaiyNet => pa.map(|g| ArchValue::Area(g.net)),
+                    ScheduleField::PaiyGross => pa.map(|g| ArchValue::Area(g.gross)),
+                    ScheduleField::PaiyShare if u.kind == UnitKind::Unit => {
+                        pa.and_then(|g| g.share).map(ArchValue::Area)
+                    }
+                    ScheduleField::GeneralGross if u.kind == UnitKind::Unit => {
+                        pa.and_then(|g| g.general()).map(ArchValue::Area)
+                    }
                     _ => None,
                 })
                 .collect();

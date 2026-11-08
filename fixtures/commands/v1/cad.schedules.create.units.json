@@ -793,7 +793,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -1128,7 +1128,7 @@
           "Alan (m²)",
           "Kayıtlı alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Mahal sayısı"
          ],
          [
@@ -3020,7 +3020,7 @@
           "No",
           "Pay ağırlığı",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -4001,7 +4001,7 @@
           "No",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -4978,7 +4978,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Mahal sayısı"
          ],
          [
@@ -6818,7 +6818,7 @@
           "Mahal sayısı",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "Bağımsız bölüm",
@@ -7074,7 +7074,7 @@
           "Bina",
           "No",
           "Alan (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "A Blok",

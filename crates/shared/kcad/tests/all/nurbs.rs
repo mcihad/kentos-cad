@@ -175,7 +175,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "nurbs/tangents",
         ),
-        ("broken/schema-version-209.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-210.kcad", Code::SchemaVersion, ""),
     ] {
         let err = refused(file);
         assert_eq!(err.code, code, "{file}: {err}");
