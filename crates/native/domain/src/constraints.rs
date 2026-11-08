@@ -51,11 +51,15 @@ pub fn core_element(e: &CadElement) -> Element {
                 index: u32::MAX,
             },
         },
-        CadElement::Segment { part, ring, index } => Element::Segment {
-            part: *part,
-            ring: *ring,
-            index: *index,
-        },
+        // A boundary edge is its bond adapter's (docs/adr/2580); to the core it is the straight edge it names, so an
+        // object that no longer has that straight edge loses its bonds.
+        CadElement::Segment { part, ring, index } | CadElement::Boundary { part, ring, index } => {
+            Element::Segment {
+                part: *part,
+                ring: *ring,
+                index: *index,
+            }
+        }
         CadElement::ArcEdge { part, ring, index } => Element::ArcEdge {
             part: *part,
             ring: *ring,
@@ -281,7 +285,7 @@ impl Document {
                 return false;
             };
             let indexed = match &r.element {
-                CadElement::Segment { .. } | CadElement::ArcEdge { .. } => true,
+                CadElement::Segment { .. } | CadElement::ArcEdge { .. } | CadElement::Boundary { .. } => true,
                 CadElement::Point { place } => {
                     matches!(place, SubPlace::Vertex { .. } | SubPlace::Node { .. })
                 }

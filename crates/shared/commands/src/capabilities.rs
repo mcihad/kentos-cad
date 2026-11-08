@@ -382,6 +382,9 @@ const ENTRIES: &[Entry] = &[
                 "layer_locked",
                 // Paralel kaydır's shared boundary (docs/adr/1960).
                 "shared_boundary_locked",
+                // Paralel kaydır's kept reference: the bond's own refusals (docs/adr/2580).
+                "invalid_constraint",
+                "constraint_governed",
             ],
             REVISION,
         ],

@@ -35,4 +35,8 @@ created?: Array<string>,
  * Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,
  * each with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).
  */
-neighbours?: Array<ShapeNeighbour>, revision: string, };
+neighbours?: Array<ShapeNeighbour>, 
+/**
+ * Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).
+ */
+bonds?: Array<string>, revision: string, };

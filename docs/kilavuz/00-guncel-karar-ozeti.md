@@ -214,6 +214,10 @@
 - **GNSS ağında güven bölgesi (8 Kasım 2026; MAP-05, [ADR 2560](../../docs/adr/2560-network-confidence-regions.md)).**
   Yeni noktaların hata elipsi (yarı eksenler √χ²₂, yön, kotun aralığı √χ²₁) sınıfın güveninde, yoksa 0,95; dairede yön
   yok. Pencerede özet ve Noktalar sütunu. Harita + CBS.
+- **Paralel kaydır'da referans ve Bu uzaklığı koru (8 Kasım 2026; MAP-06, [ADR 2580](../../docs/adr/2580-parallel-shift-reference-and-kept-distance.md)).**
+  `edgeShift`'in `reference`'ı kenarı başka bir düz kenara uzaklıkla getirir; `keep` uzaklığı harita bağı yazar (sınır
+  kenarı `boundary`, mimari bağların çözümüyle izler; dönen referans, kilitli komşu, çelişki hiçbir şey yazmaz). `.kcad`
+  şema 208. Araçta Referans (R), Koru (K). CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

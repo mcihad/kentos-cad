@@ -227,6 +227,8 @@ mod standard_install;
 #[cfg(test)]
 mod edge_shift_scenes;
 #[cfg(test)]
+mod edge_shift_bond_scenes;
+#[cfg(test)]
 mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;

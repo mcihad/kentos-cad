@@ -97,7 +97,7 @@ pub const MOUSE_ACTIONS: [(&str, &str); 25] = [
 ];
 
 /// Keys a running tool reads that no command is bound to (docs/adr/0268, 0271): their meaning, then the keys.
-pub const DRAWING_KEYS: [(&str, &str); 9] = [
+pub const DRAWING_KEYS: [(&str, &str); 10] = [
     (
         "Kenet adayları arasında ileri ve geri (imleç dururken)",
         "Tab / Shift+Tab",
@@ -117,6 +117,10 @@ pub const DRAWING_KEYS: [(&str, &str); 9] = [
     (
         "Buda ve Uzat: Kesişen pencere, sınırların uzantıları, Sil (Buda), Çit",
         "K / U / R / C",
+    ),
+    (
+        "Paralel kaydır: hedef alan, referans kenar, Bu uzaklığı koru (Enter şimdiki uzaklığı korur)",
+        "A / R / K",
     ),
     (
         "Seçeneği adıyla seç: tam adı ya da başı (kopya, kop)",

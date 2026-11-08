@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `207`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-208.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `208`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-209.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -898,6 +898,13 @@ ve en çok 1 m/yıldır; hızı olan noktanın `epoch`'u vardır, yoksa `bad_val
 `broken/map-survey-velocity-too-fast.kcad`). Yazıcı 207'yi bir bilinen noktanın hızı varken seçer; 206 ve öncesi
 `velocity`'yi `unknown_field` sayar (`broken/map-survey-velocity-in-schema-206.kcad`). Örnek
 `map-survey-velocity.json/.kcad`.
+
+**Şema 208** (ADR 2580; MAP-06): harita bağı. Kısıtın parçasında yeni tür `boundary` (`part`, `ring`, `index`): bir
+alanın ya da tek parçalı çoklu çizginin yalnız kendine paralel kayan düz kenarı (Paralel kaydır'ın kuralı). Yalnız
+uzaklık kuralı alır: `a` bir düz kenar (`segment`) ya da başka bir sınır kenarı, `b` sınır kenarı, `axis` yazılmaz;
+başka kural, ters sıra ya da duvar çizgisi ve pervazla birlikte `bad_value` (`broken/map-bond-parallel.kcad`,
+`broken/map-bond-boundary-first.kcad`). Yazıcı 208'i bir kısıt sınır kenarı anınca seçer; 207 ve öncesi sınır kenarını
+`bad_value` sayar (`broken/map-bond-in-schema-207.kcad`). Örnek `map-bond.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

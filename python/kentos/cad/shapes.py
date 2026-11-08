@@ -32,13 +32,17 @@ class _ShapesEdit(LocalCommand[ShapesEdit, ShapesEdited, EntitiesEditPlan]):
     kenarları paylaşan görünen nesneler aynı adımda birlikte kayar, komşu parsel
     edinilen alanı verir, neighbours her komşunun önceki ve sonraki boyunu söyler;
     kilitli komşu ayrılır ve neighbour_locked ile söylenir ya da stopOnLocked ile
-    shared_boundary_locked reddi gelir, ADR 1960), Sadeleştir (simplify: toleranstaki
-    köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable:
-    baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu
-    çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı
-    nesnelere böler; ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da).
-    Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe,
-    kaydırma, parça) verir. Tek geri alma adımı, aracın adıyla.
+    shared_boundary_locked reddi gelir, ADR 1960; reference ile distance kenarın
+    referans kenarın doğrusuna uzaklığıdır, kenar ve referans 0,001° içinde paralel
+    olmalı; keep (Bu uzaklığı koru) uzaklığı aynı adımda kalıcı bağ olarak yazar,
+    referans değişince kenar izler, bonds yeni bağların kimlikleri, ADR 2580),
+    Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır,
+    Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve
+    Parçala (split: çizgi, açık çoklu çizgi, yay ve daireyi kesişimlerinden, eşit
+    parçalara ya da uzunluktan ayrı nesnelere böler; ilk parça nesnenin yerini ve
+    kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra alan ya da
+    uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı,
+    aracın adıyla.
     """
     __slots__ = ()
     id = "cad.shapes.edit"
@@ -69,13 +73,16 @@ class _ShapesEdit(LocalCommand[ShapesEdit, ShapesEdited, EntitiesEditPlan]):
         görünen nesneler aynı adımda birlikte kayar, komşu parsel edinilen alanı verir,
         neighbours her komşunun önceki ve sonraki boyunu söyler; kilitli komşu ayrılır ve
         neighbour_locked ile söylenir ya da stopOnLocked ile shared_boundary_locked reddi
-        gelir, ADR 1960), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver
-        (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan
-        yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay ve
-        daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; ilk
-        parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce
-        ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek
-        geri alma adımı, aracın adıyla.
+        gelir, ADR 1960; reference ile distance kenarın referans kenarın doğrusuna
+        uzaklığıdır, kenar ve referans 0,001° içinde paralel olmalı; keep (Bu uzaklığı koru)
+        uzaklığı aynı adımda kalıcı bağ olarak yazar, referans değişince kenar izler, bonds
+        yeni bağların kimlikleri, ADR 2580), Sadeleştir (simplify: toleranstaki köşeleri
+        atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı
+        okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay
+        ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler;
+        ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri
+        (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça)
+        verir. Tek geri alma adımı, aracın adıyla.
 
         Args:
             doc: The drawing it works on.

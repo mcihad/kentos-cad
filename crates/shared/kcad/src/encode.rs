@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 208 (docs/adr/2580): a constraint naming a boundary edge, a map bond.
+    if doc
+        .constraints
+        .constraints
+        .iter()
+        .any(|c| kentos_contracts::rule_is_map_bond(&c.rule))
+    {
+        return crate::SCHEMA_WITH_BOUNDARY_BONDS;
+    }
     // Schema 207 (docs/adr/2520): a known point's own velocity.
     if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_velocities) {
         return crate::SCHEMA_WITH_KNOWN_VELOCITIES;

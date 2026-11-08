@@ -11,11 +11,18 @@
 //! Topolojik düzenleme is on (docs/adr/0160, 1960) the objects sharing the
 //! edge's corners move with it: the preview draws them and a neighbour
 //! area's new size, the command writes them in the same step.
+//!
+//! Referans (R, docs/adr/2580): a parallel straight edge of another object is clicked; the distance shown and typed is
+//! then the edge's distance from it (“şimdi bu değere getir”). Koru (K) turns Bu uzaklığı koru on: the distance is
+//! written as a map bond, so the edge follows when the reference moves (“bu ilişkiyi koru”); Enter keeps the distance
+//! there is now. The reference stays for the next edge while it is parallel.
 
-use kentos_commands::{Entity, ShapeWork, StretchTopology};
+use kentos_commands::{ConstraintRule, Entity, ShapeWork, ShiftReference, StretchTopology};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::ops::arch_bonds::PARALLEL;
 use kentos_geometry_core::ops::edge_shift::{self as rules, Picked};
+use kentos_geometry_core::ops::subref::{EdgeKind, Place, edge_line, edge_place_near};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::geometry::shape;
 
@@ -32,6 +39,9 @@ pub const ID: &str = "edgeShift";
 pub const LABEL: &str = "Paralel kaydır";
 /// A click where no area's or polyline's edge is.
 pub const NO_EDGE_HERE: &str = "Tıklanan yerde kaydırılacak kenar yok; kilitsiz bir alanın ya da çoklu çizginin kenarına tıklayın.";
+/// A click for the reference where no straight edge is.
+pub const NO_REFERENCE_HERE: &str =
+    "Tıklanan yerde düz kenar yok; referans bir çizgi ya da bir yolun veya alanın düz kenarıdır.";
 
 /// The edge picked: its object, the object's shape then and how it moves.
 #[derive(Clone, Debug)]
@@ -43,6 +53,44 @@ struct Picking {
     area: Option<f64>,
 }
 
+/// The reference the edge keeps its distance from (docs/adr/2580): its object, its straight segment's ends and the
+/// point that names the segment to the command.
+#[derive(Clone, Copy, Debug)]
+struct Reference {
+    slot: Slot,
+    a: Vec2,
+    b: Vec2,
+    at: Vec2,
+}
+
+impl Reference {
+    fn unit(&self) -> Vec2 {
+        let l = (self.b.x - self.a.x).hypot(self.b.y - self.a.y);
+        Vec2::new((self.b.x - self.a.x) / l, (self.b.y - self.a.y) / l)
+    }
+
+    /// A point's signed distance from the reference's line, its left positive.
+    fn across(&self, p: Vec2) -> f64 {
+        let u = self.unit();
+        -u.y * (p.x - self.a.x) + u.x * (p.y - self.a.y)
+    }
+
+    /// The foot of `p` on the reference's line.
+    fn foot(&self, p: Vec2) -> Vec2 {
+        let u = self.unit();
+        let t = u.x * (p.x - self.a.x) + u.y * (p.y - self.a.y);
+        Vec2::new(self.a.x + u.x * t, self.a.y + u.y * t)
+    }
+}
+
+/// How the edge moves: by a shift along its normal, or to a distance from the reference (none: where it is, the bond
+/// only).
+#[derive(Clone, Copy, Debug)]
+enum Amount {
+    Shift(f64),
+    FromReference(Option<f64>),
+}
+
 /// Where the cursor moves the edge: the place, the distance, the shape moved there (or why not) and, while
 /// Topolojik düzenleme is on, the neighbours moved with it (their shapes, each area's size before and after).
 type At = (Vec2, f64, Result<Shape, String>, Vec<(Shape, Option<(f64, f64)>)>);
@@ -50,6 +98,11 @@ type At = (Vec2, f64, Result<Shape, String>, Vec<(Shape, Option<(f64, f64)>)>);
 pub struct EdgeShift {
     edge: Option<Picking>,
     asking: bool,
+    /// Referans (R): the next click picks the reference.
+    referencing: bool,
+    reference: Option<Reference>,
+    /// Koru (K): Bu uzaklığı koru.
+    keep: bool,
     at: Option<At>,
     format: Format,
 }
@@ -70,17 +123,28 @@ fn signed(text: String, v: f64) -> String {
     if v > 0.0 { format!("+{text}") } else { text }
 }
 
+/// The sine of the angle between a picked edge and a reference.
+fn sine(k: &Picked, r: &Reference) -> f64 {
+    let l = (k.b.x - k.a.x).hypot(k.b.y - k.a.y);
+    let w = Vec2::new((k.b.x - k.a.x) / l, (k.b.y - k.a.y) / l);
+    let u = r.unit();
+    (u.x * w.y - u.y * w.x).abs()
+}
+
 impl EdgeShift {
     pub fn new() -> Self {
         Self {
             edge: None,
             asking: false,
+            referencing: false,
+            reference: None,
+            keep: false,
             at: None,
             format: Format::default(),
         }
     }
 
-    /// The edge under the click, or why none is taken.
+    /// The edge under the click, or why none is taken. A reference not parallel to it is let go.
     fn pick(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(slot) = edge::pick_said(p, cx, editable) else {
             cx.say(Level::Warn, NO_EDGE_HERE);
@@ -92,6 +156,13 @@ impl EdgeShift {
         let geom = shape(e);
         match rules::pick(&geom, p.raw) {
             Ok(picked) => {
+                if let Some(r) = self.reference
+                    && (sine(&picked, &r) > PARALLEL || picked.bulge != 0.0)
+                {
+                    self.reference = None;
+                    self.keep = false;
+                    cx.say(Level::Info, "Referans bu kenara paralel değil; referans bırakıldı.");
+                }
                 self.edge = Some(Picking {
                     slot,
                     area: rules::area_of(&geom),
@@ -104,6 +175,71 @@ impl EdgeShift {
         }
     }
 
+    /// The reference under the click (docs/adr/2580): the nearest straight edge of any object there, parallel to the
+    /// picked edge within 0.001° and not the edge itself; or why none is taken (the tool keeps asking).
+    fn pick_reference(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        let Some(picking) = &self.edge else {
+            return;
+        };
+        let found = edge::pick(p, cx, |_, _| true).and_then(|slot| {
+            let core = edge::core(cx.doc.get(slot)?);
+            let place = edge_place_near(&core, EdgeKind::Straight, p.raw)?;
+            let (a, b) = edge_line(&core, place)?;
+            let index = match place {
+                Place::Along {
+                    part, ring, index, ..
+                }
+                | Place::Mid { part, ring, index } => (part, ring, index),
+                _ => (0, 0, 0),
+            };
+            (a != b).then_some((slot, a, b, index))
+        });
+        let Some((slot, a, b, (part, ring, index))) = found else {
+            cx.say(Level::Warn, NO_REFERENCE_HERE);
+            return;
+        };
+        let k = &picking.picked;
+        if slot == picking.slot && (part, ring, index) == (0, k.ring, k.edge) {
+            cx.say(Level::Warn, "Kenar kendisinin referansı olamaz; başka bir kenar seçin.");
+            return;
+        }
+        let r = Reference {
+            slot,
+            a,
+            b,
+            at: Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
+        };
+        if k.bulge != 0.0 {
+            cx.say(
+                Level::Warn,
+                "Yaylı kenarın bir doğruya uzaklığı tek bir sayı değil; referansla yalnız düz kenar kaydırılır.",
+            );
+            self.referencing = false;
+            return;
+        }
+        let s = sine(k, &r);
+        if s > PARALLEL {
+            cx.say(
+                Level::Warn,
+                format!(
+                    "Kenar referansa paralel değil (aralarında {:.4}° var); uzaklık yalnız 0,001° içinde paralel kenarlar arasında tutulur.",
+                    s.min(1.0).asin().to_degrees()
+                ),
+            );
+            return;
+        }
+        self.referencing = false;
+        self.reference = Some(r);
+        let now = r.across(k.a).abs();
+        cx.say(
+            Level::Info,
+            format!(
+                "Referans seçildi: kenar şimdi {} uzakta. Uzaklığı yazın ya da yerine tıklayın; Koru (K) uzaklığı kalıcı bağ yapar.",
+                cx.format().length(now)
+            ),
+        );
+    }
+
     /// The point's distance from the picked edge along its normal; none
     /// with no edge picked.
     fn distance_at(&self, p: Vec2) -> Option<f64> {
@@ -112,24 +248,50 @@ impl EdgeShift {
         Some((p.x - k.mid.x) * k.normal.x + (p.y - k.mid.y) * k.normal.y)
     }
 
-    /// Writes the edge moved `d` and says so; the tool waits for the next
-    /// edge. Whether it was written.
-    fn write(&mut self, d: f64, cx: &mut Context<'_>) -> bool {
+    /// The point's distance from the reference on the edge's side (negative: past the reference); none without one.
+    fn from_reference(&self, p: Vec2) -> Option<f64> {
+        let (k, r) = (&self.edge.as_ref()?.picked, self.reference?);
+        let side = if r.across(k.a) >= 0.0 { 1.0 } else { -1.0 };
+        Some(side * r.across(p))
+    }
+
+    /// Writes the edge moved by `amount` and says so; the tool waits for the
+    /// next edge (the reference stays). Whether it was written.
+    fn write(&mut self, amount: Amount, cx: &mut Context<'_>) -> bool {
         let Some(picking) = &self.edge else {
             return false;
         };
         let k = &picking.picked;
+        // The distance a bond keeps: the one given, or the one there is now.
+        let kept = match (amount, self.reference) {
+            (Amount::FromReference(Some(d)), _) => d,
+            (Amount::FromReference(None), Some(r)) => r.across(k.a).abs(),
+            _ => 0.0,
+        };
+        let (distance, reference) = match (amount, self.reference) {
+            (Amount::FromReference(d), Some(r)) => (
+                d,
+                Some(ShiftReference {
+                    id: edge::uid(cx.doc, r.slot),
+                    at: points::wire(r.at),
+                    keep: self.keep,
+                }),
+            ),
+            (Amount::Shift(d), _) => (Some(d), None),
+            (Amount::FromReference(_), None) => return false,
+        };
         // The picked edge's middle names it (an arc's on the arc); the command picks the same nearest edge
         // (docs/adr/0622 §9, 1024).
         let work = ShapeWork::EdgeShift {
             id: edge::uid(cx.doc, picking.slot),
             at: points::wire(k.mid),
-            distance: Some(d),
+            distance,
             area: None,
             topology: cx.draft.topology.then_some(StretchTopology {
                 points: cx.draft.topology_points,
                 stop_on_locked: cx.draft.topology_stop_on_locked,
             }),
+            reference,
         };
         let Some(out) = points::write_shape(work, cx) else {
             return false;
@@ -142,13 +304,29 @@ impl EdgeShift {
         }
         let moved_area = picking.area.map(|_| out.after);
         let format = cx.format();
-        let said = match moved_area {
-            Some(area) => format!(
-                "{LABEL}: kenar {} kaydırıldı, alan {}.",
-                format.length(d),
-                format.area(area)
+        let area = moved_area.map(|a| format!(", alan {}", format.area(a))).unwrap_or_default();
+        // The bond's parameter, as the Kısıtlar panel names it.
+        let parameter = out.bonds.first().and_then(|id| {
+            cx.doc
+                .constraints()
+                .constraints
+                .iter()
+                .find(|c| c.id.to_string() == *id)
+                .and_then(|c| match &c.rule {
+                    ConstraintRule::Distance { parameter, .. } => Some(parameter.clone()),
+                    _ => None,
+                })
+        });
+        let said = match (amount, parameter) {
+            (Amount::FromReference(_), Some(p)) => format!(
+                "{LABEL}: kenar referanstan {} uzakta{area}; uzaklık {p} olarak korunuyor, referans kayınca kenar izler.",
+                format.length(kept)
             ),
-            None => format!("{LABEL}: kenar {} kaydırıldı.", format.length(d)),
+            (Amount::FromReference(Some(d)), None) => {
+                format!("{LABEL}: kenar referanstan {} uzağa kaydırıldı{area}.", format.length(d))
+            }
+            (Amount::FromReference(None), None) => format!("{LABEL}: kenar yerinde kaldı."),
+            (Amount::Shift(d), _) => format!("{LABEL}: kenar {} kaydırıldı{area}.", format.length(d)),
         };
         cx.say(Level::Success, said);
         self.edge = None;
@@ -173,11 +351,27 @@ impl Tool for EdgeShift {
                 format!("hedef alanı yazın ({})", self.format.area_unit_label()),
             );
         }
+        if self.referencing {
+            return Prompt::new(
+                LABEL,
+                "referans kenara tıklayın (paralel bir çizgi ya da yolun veya alanın düz kenarı)",
+            );
+        }
         match &self.edge {
             None => Prompt::new(
                 LABEL,
                 "kaydırılacak kenara tıklayın (alan ya da çoklu çizgi)",
             ),
+            Some(_) if self.reference.is_some() => {
+                let prompt = Prompt::new(LABEL, "referansa uzaklığı yazın ya da yerine tıklayın")
+                    .option_with("Referans", "R", "seçili")
+                    .toggle("Koru", "K", self.keep);
+                if self.keep {
+                    prompt.option("Şimdikini koru", "Enter")
+                } else {
+                    prompt
+                }
+            }
             Some(picking) => {
                 let step = if picking.area.is_some() {
                     "uzaklığı yazın ya da yerine tıklayın (dışarı artı)"
@@ -185,11 +379,12 @@ impl Tool for EdgeShift {
                     "uzaklığı yazın ya da yerine tıklayın (sağa artı)"
                 };
                 let prompt = Prompt::new(LABEL, step);
-                if picking.area.is_some() {
+                let prompt = if picking.area.is_some() {
                     prompt.option("Alan", "A")
                 } else {
                     prompt
-                }
+                };
+                prompt.option("Referans", "R")
             }
         }
     }
@@ -205,11 +400,11 @@ impl Tool for EdgeShift {
 
     /// The cursor snaps once the edge is picked: the edge goes through the point.
     fn snaps(&self) -> bool {
-        self.edge.is_some()
+        self.edge.is_some() && !self.referencing
     }
 
     fn cursor(&self) -> Cursor {
-        if self.edge.is_some() {
+        if self.edge.is_some() && !self.referencing {
             Cursor::Cross
         } else {
             Cursor::Pick
@@ -218,6 +413,10 @@ impl Tool for EdgeShift {
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.format = cx.format();
+        if self.referencing {
+            self.at = None;
+            return;
+        }
         let Some(d) = self.distance_at(p.world) else {
             edge::hover(p, cx, editable);
             return;
@@ -259,10 +458,22 @@ impl Tool for EdgeShift {
         if self.asking {
             return;
         }
-        match self.distance_at(p.world) {
-            None => self.pick(p, cx),
-            Some(d) => {
-                self.write(d, cx);
+        if self.referencing {
+            self.pick_reference(p, cx);
+            return;
+        }
+        match (self.distance_at(p.world), self.from_reference(p.world)) {
+            (None, _) => self.pick(p, cx),
+            // Past the reference the edge would leave its side: said, nothing written.
+            (Some(_), Some(from)) if from < 0.0 => cx.say(
+                Level::Warn,
+                "İmleç referansın öbür yanında; kenar bulunduğu yanda kalır. Referansın kenar yanına tıklayın.",
+            ),
+            (Some(_), Some(from)) => {
+                self.write(Amount::FromReference(Some(from)), cx);
+            }
+            (Some(d), None) => {
+                self.write(Amount::Shift(d), cx);
             }
         }
     }
@@ -288,7 +499,7 @@ impl Tool for EdgeShift {
                     match rules::for_area(&shape, ring, index, target) {
                         Ok(d) => {
                             self.asking = false;
-                            self.write(d, cx);
+                            self.write(Amount::Shift(d), cx);
                         }
                         Err(why) => cx.say(Level::Warn, why),
                     }
@@ -300,35 +511,76 @@ impl Tool for EdgeShift {
             }
             return true;
         }
-        if upper_tr(t) == "A" {
-            if has_area {
-                self.asking = true;
-            } else {
-                cx.say(Level::Warn, rules::NOT_AREA);
+        match upper_tr(t).as_str() {
+            "A" => {
+                if !has_area {
+                    cx.say(Level::Warn, rules::NOT_AREA);
+                } else if self.reference.is_some() {
+                    cx.say(Level::Warn, "Referansla hedef alan verilmez; referansa uzaklığı yazın.");
+                } else {
+                    self.asking = true;
+                }
+                return true;
             }
-            return true;
+            // Referans (docs/adr/2580): the next click picks it, again when one is chosen.
+            "R" => {
+                self.referencing = true;
+                self.at = None;
+                return true;
+            }
+            "K" => {
+                if self.reference.is_some() {
+                    self.keep = !self.keep;
+                } else {
+                    cx.say(
+                        Level::Warn,
+                        "Bu uzaklığı koru bir referansla olur: önce Referans (R) ile paralel bir kenar seçin.",
+                    );
+                }
+                return true;
+            }
+            _ => {}
         }
         match cx.typed_length(t) {
+            Some(d) if d.is_finite() && self.reference.is_some() => {
+                if d < 0.0 {
+                    cx.say(
+                        Level::Warn,
+                        "Referansa uzaklık eksi olamaz: kenar bulunduğu yanda kalır.",
+                    );
+                } else {
+                    self.write(Amount::FromReference(Some(d)), cx);
+                }
+                true
+            }
             Some(d) if d.is_finite() => {
-                self.write(d, cx);
+                self.write(Amount::Shift(d), cx);
                 true
             }
             _ => false,
         }
     }
 
-    /// Enter: Alan's question ends; else the tool leaves (a click or a typed
-    /// distance writes).
-    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
-        if std::mem::take(&mut self.asking) {
+    /// Enter: Alan's question or the reference's ends; with Koru on, the distance there is now is kept as a bond;
+    /// else the tool leaves (a click or a typed distance writes).
+    fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if std::mem::take(&mut self.asking) || std::mem::take(&mut self.referencing) {
+            return Flow::Stay;
+        }
+        if self.keep && self.reference.is_some() && self.edge.is_some() {
+            self.write(Amount::FromReference(None), cx);
             return Flow::Stay;
         }
         Flow::Exit
     }
 
-    /// Esc: Alan's question, then the edge go first.
+    /// Esc: Alan's question or the reference's, then the edge, then the reference go first.
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
-        if std::mem::take(&mut self.asking) {
+        if std::mem::take(&mut self.asking) || std::mem::take(&mut self.referencing) {
+            return true;
+        }
+        if self.edge.is_none() && self.reference.take().is_some() {
+            self.keep = false;
             return true;
         }
         self.undo_step(cx)
@@ -337,6 +589,7 @@ impl Tool for EdgeShift {
     /// Ctrl+Z: the edge goes; with none the drawing is undone.
     fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
         self.asking = false;
+        self.referencing = false;
         self.at = None;
         self.edge.take().is_some()
     }
@@ -356,12 +609,41 @@ impl Tool for EdgeShift {
             std::f64::consts::PI / 90.0,
         );
         out.strokes.push(Stroke::solid(edge_pts, false).width(2.0).tone(Tone::Snap));
+        // The reference, the line the edge keeps its distance from (docs/adr/2580): long dashes, stays where it is.
+        if let Some(r) = self.reference {
+            out.strokes.push(Stroke {
+                pts: vec![r.a, r.b],
+                closed: false,
+                dash: Some([10.0, 4.0]),
+                width: 2.0,
+                tone: Tone::Snap,
+            });
+        }
         let Some((at, d, moved, around)) = &self.at else {
             return out;
         };
-        let mut lines = vec![format.length(*d)];
+        let mut lines = match self.from_reference(*at) {
+            Some(from) => {
+                let mut l = vec![format!("referanstan {}", format.length(from))];
+                if self.keep {
+                    l.push("uzaklık korunacak".into());
+                }
+                l
+            }
+            None => vec![format.length(*d)],
+        };
+        // From the reference to the cursor, square to it: the distance asked.
+        if let Some(r) = self.reference {
+            out.strokes.push(Stroke {
+                pts: vec![r.foot(*at), *at],
+                closed: false,
+                dash: Some([3.0, 3.0]),
+                width: 1.0,
+                tone: Tone::Accent,
+            });
+        }
         match moved {
-            Ok(moved) => {
+            Ok(moved) if self.from_reference(*at).is_none_or(|f| f >= 0.0) => {
                 let outline = Outline::of(moved, Some([6.0, 4.0]), 1.0, Tone::Accent);
                 out.strokes.extend(outline.strokes);
                 if let (Some(before), Some(after)) = (picking.area, rules::area_of(moved)) {
@@ -382,6 +664,10 @@ impl Tool for EdgeShift {
                         ));
                     }
                 }
+            }
+            Ok(_) => {
+                lines.push("referansın öbür yanı".into());
+                out.tag_tone = Tone::Danger;
             }
             Err(why) => {
                 lines.push(why.clone());

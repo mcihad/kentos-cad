@@ -4,13 +4,18 @@
 //! walls read back from their jambs) and openings slid along their walls. `constraint_solve::solve_set` runs it beside
 //! the general solver, which never sees these constraints; every command that solves goes through there.
 //!
-//! The shared cases are `fixtures/commands/v1/cad.constraints.edit.arch.json` (`scripts/fixtures/arch_bond_cases.py`).
+//! Map bonds (docs/adr/2580) go through it too: a boundary edge is a line whose shift Paralel kaydır writes
+//! (`map_bonds`), and the straight segment it keeps its distance from a line that only holds, unless the same edge is
+//! the boundary of another bond (a chain: then it is that boundary's shift).
+//!
+//! The shared cases are `fixtures/commands/v1/cad.constraints.edit.arch.json` (`scripts/fixtures/arch_bond_cases.py`)
+//! and, for map bonds, `cad.shapes.edit.bond.json` (`scripts/fixtures/map_bond_cases.py`).
 
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_commands::{
     CadElement, ConstraintRule, ConstraintSet, ElementRef, Entity, EntityId, JambEnd,
-    OpeningEntity, WallEntity, WallLine,
+    OpeningEntity, SubPlace, WallEntity, WallLine,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::Vec2 as P;
@@ -24,6 +29,7 @@ use kentos_geometry_core::ops::arch_bonds::{
 use kentos_geometry_core::ops::wall_shift;
 
 use crate::constraint_solve::Held;
+use crate::geometry::shape;
 
 /// A bond that held within this after its shifts were written, metres.
 pub const SETTLED: f64 = 1e-6;
@@ -42,11 +48,13 @@ fn slot_of(doc: &Document, uid: EntityId) -> Option<Slot> {
     doc.slot_of(Uuid::from_bytes(uid.0))
 }
 
-/// The drawing as the adapter reads it: the document with the walls and openings it has moved so far.
+/// The drawing as the adapter reads it: the document with the walls, openings and boundary edges' objects (areas and
+/// paths, docs/adr/2580) it has moved so far.
 pub(crate) struct View<'a> {
     doc: &'a Document,
     walls: HashMap<Slot, WallEntity>,
     openings: HashMap<Slot, OpeningEntity>,
+    shapes: HashMap<Slot, Entity>,
 }
 
 /// A wall's path and fields as the core reads them.
@@ -106,6 +114,15 @@ impl<'a> View<'a> {
             doc,
             walls: HashMap::new(),
             openings: HashMap::new(),
+            shapes: HashMap::new(),
+        }
+    }
+
+    /// An object as the adapter has it so far: moved by a map bond, else the document's.
+    fn entity(&self, slot: Slot) -> Option<Entity> {
+        match self.shapes.get(&slot) {
+            Some(e) => Some(e.clone()),
+            None => self.doc.get(slot).cloned(),
         }
     }
 
@@ -162,6 +179,23 @@ impl<'a> View<'a> {
 enum Var {
     Edge(Slot, usize),
     Opening(Slot),
+    /// A boundary edge (docs/adr/2580): its object, part, ring and edge.
+    Boundary(Slot, u32, u32, u32),
+    /// A straight segment a map bond keeps its distance from, not the boundary of another bond: always held.
+    Segment(Slot, u32, u32, u32),
+}
+
+impl Var {
+    fn slot(&self) -> Slot {
+        match *self {
+            Var::Edge(s, _) | Var::Opening(s) | Var::Boundary(s, ..) | Var::Segment(s, ..) => s,
+        }
+    }
+
+    /// A map bond's: a boundary edge or the segment it keeps its distance from.
+    fn is_map(&self) -> bool {
+        matches!(self, Var::Boundary(..) | Var::Segment(..))
+    }
 }
 
 /// The constraints of a set that name architectural parts, read as the core's problem over a view.
@@ -206,6 +240,29 @@ fn item(view: &View<'_>, vars: &mut Vec<Var>, e: &ElementRef) -> Option<Item> {
                 host,
             }))
         }
+        CadElement::Boundary { part, ring, index } => {
+            let (at, dir) =
+                crate::map_bonds::boundary_line(&shape(&view.entity(slot)?), part, ring, index)?;
+            Some(Item::Line(Line {
+                var: var(vars, Var::Boundary(slot, part, ring, index)),
+                at,
+                dir,
+            }))
+        }
+        // Only a map bond names a segment here (the contract's rule): its reference.
+        CadElement::Segment { part, ring, index } => {
+            let (at, dir) =
+                crate::map_bonds::segment_line(&shape(&view.entity(slot)?), part, ring, index)?;
+            // The same edge as another bond's boundary is that boundary (a chain); else it only holds.
+            let k = match vars
+                .iter()
+                .position(|x| *x == Var::Boundary(slot, part, ring, index))
+            {
+                Some(k) => k,
+                None => var(vars, Var::Segment(slot, part, ring, index)),
+            };
+            Some(Item::Line(Line { var: k, at, dir }))
+        }
         _ => None,
     }
 }
@@ -225,21 +282,29 @@ fn read(view: &View<'_>, set: &ConstraintSet, values: &BTreeMap<String, f64>) ->
         bonds: Vec::new(),
         broken: Vec::new(),
     };
-    // Edges first, so a jamb finds its wall's edge when that edge is one of the problem's.
+    // Edges first, so a jamb finds its wall's edge when that edge is one of the problem's, and a map bond's segment
+    // the boundary edge it is (docs/adr/2580).
     for c in &set.constraints {
-        if !kentos_commands::rule_is_architectural(&c.rule) {
+        if !kentos_commands::rule_is_bond(&c.rule) {
             continue;
         }
         for e in c.rule.elements() {
-            if let CadElement::Wall { edge, .. } = e.element
-                && let Some(slot) = slot_of(view.doc, e.uid)
-            {
-                var(&mut out.vars, Var::Edge(slot, edge as usize));
+            let Some(slot) = slot_of(view.doc, e.uid) else {
+                continue;
+            };
+            match e.element {
+                CadElement::Wall { edge, .. } => {
+                    var(&mut out.vars, Var::Edge(slot, edge as usize));
+                }
+                CadElement::Boundary { part, ring, index } => {
+                    var(&mut out.vars, Var::Boundary(slot, part, ring, index));
+                }
+                _ => {}
             }
         }
     }
     for (i, c) in set.constraints.iter().enumerate() {
-        if !kentos_commands::rule_is_architectural(&c.rule) {
+        if !kentos_commands::rule_is_bond(&c.rule) {
             continue;
         }
         let mut get = |e: &ElementRef| item(view, &mut out.vars, e);
@@ -427,7 +492,7 @@ fn refused_again(
     };
     let (now, _) = equations(doc, &less, view, holds, before, true).ok()?;
     let same = (0..=k).all(|i| {
-        !matches!(all.vars.get(i), Some(Var::Edge(..)))
+        !matches!(all.vars.get(i), Some(Var::Edge(..) | Var::Boundary(..)))
             || ((now[i] == 0.0) == (shifts[i] == 0.0) && (now[i] - shifts[i]).abs() <= SETTLED)
     });
     if !same {
@@ -513,7 +578,15 @@ fn equations(
         })
     };
     match outcome {
-        Outcome::Conflict { bonds, why } => Err((bonds, why_words(why).into())),
+        Outcome::Conflict { bonds, why } => {
+            // Map bonds' own words when one of them is in the conflict (docs/adr/2580).
+            let map = bonds.iter().any(|&b| {
+                read.bonds
+                    .get(b)
+                    .is_some_and(|bond| bond_vars(bond).iter().any(|&v| read.vars[v].is_map()))
+            });
+            Err((bonds, why_words(why, map).into()))
+        }
         Outcome::Solved { shifts, dof } => Ok((shifts, dof)),
     }
 }
@@ -531,9 +604,12 @@ fn held(
     let mut fixed_moved = Vec::new();
     let uid = |s: Slot| doc.uid(s).map(|u| EntityId(u.into_bytes()));
     for (k, v) in read.vars.iter().enumerate() {
-        let slot = match v {
-            Var::Edge(s, _) | Var::Opening(s) => *s,
-        };
+        // A map bond's reference only holds (docs/adr/2580).
+        if matches!(v, Var::Segment(..)) {
+            out[k] = true;
+            continue;
+        }
+        let slot = v.slot();
         if doc
             .get(slot)
             .is_some_and(|e| doc.layers().is_locked(e.base().layer_id.as_str()))
@@ -548,6 +624,27 @@ fn held(
                     out[k] = true
                 }
                 (Some(CadElement::Jamb { .. }), Var::Opening(_)) => out[k] = true,
+                // A boundary edge held by name, or by one of its two vertices (a grip).
+                (
+                    Some(
+                        CadElement::Boundary { part, ring, index }
+                        | CadElement::Segment { part, ring, index },
+                    ),
+                    Var::Boundary(_, p, r, i),
+                ) if (part, ring, index) == (*p, *r, *i) => out[k] = true,
+                (
+                    Some(CadElement::Point {
+                        place: SubPlace::Vertex { part, ring, index },
+                    }),
+                    Var::Boundary(s, p, r, i),
+                ) if (part, ring) == (*p, *r)
+                    && view.entity(*s).is_some_and(|e| {
+                        crate::map_bonds::ends(&shape(&e), *r, *i)
+                            .is_some_and(|(a, b)| index == a || index == b)
+                    }) =>
+                {
+                    out[k] = true
+                }
                 _ => {}
             }
         }
@@ -588,6 +685,10 @@ fn held(
                     _ => true,
                 }
             }
+            // A boundary edge the write turned or moved across (docs/adr/2580).
+            (Var::Boundary(s, p, r, i), was) => view
+                .entity(*s)
+                .is_none_or(|now| crate::map_bonds::moved(was, &shape(&now), *p, *r, *i)),
             _ => false,
         };
         if moved {
@@ -608,9 +709,7 @@ fn held(
                 Item::Line(l) => l.var,
                 Item::Jamb(j) => j.var,
             };
-            let slot = match read.vars[k] {
-                Var::Edge(s, _) | Var::Opening(s) => s,
-            };
+            let slot = read.vars[k].slot();
             if out[k] && uid(slot).is_some_and(|id| before.is_some_and(|m| m.contains_key(&id))) {
                 fixed_moved.push(b);
             }
@@ -619,11 +718,15 @@ fn held(
     (out, fixed_moved)
 }
 
-fn why_words(why: Why) -> &'static str {
-    match why {
-        Why::NotParallel => "Bağlı duvar çizgileri artık paralel değil (bir duvar döndü)",
-        Why::Crossing => "Pervazın bağlandığı çizgi açıklığın duvarını en az 30° ile kesmiyor",
-        Why::Inconsistent => "Bağlar birlikte tutmuyor",
+/// Why the bonds do not hold, in Turkish; `map`: a map bond is among them (docs/adr/2580).
+fn why_words(why: Why, map: bool) -> &'static str {
+    match (why, map) {
+        (Why::NotParallel, true) => {
+            "Bağlı kenar artık referansına paralel değil (referans ya da kenar döndü; bağlı kenar döndürülmez)"
+        }
+        (Why::NotParallel, false) => "Bağlı duvar çizgileri artık paralel değil (bir duvar döndü)",
+        (Why::Crossing, _) => "Pervazın bağlandığı çizgi açıklığın duvarını en az 30° ile kesmiyor",
+        (Why::Inconsistent, _) => "Bağlar birlikte tutmuyor",
     }
 }
 
@@ -639,7 +742,7 @@ fn solve_once(
         any: set
             .constraints
             .iter()
-            .any(|c| kentos_commands::rule_is_architectural(&c.rule)),
+            .any(|c| kentos_commands::rule_is_bond(&c.rule)),
         ..Solved::default()
     };
     if !out.any {
@@ -693,6 +796,28 @@ fn solve_once(
         }
     }
     carry(&mut view, &moved_walls);
+    // The map bonds' boundary edges as Paralel kaydır moves them, in the shifts' order (docs/adr/2580).
+    for (k, v) in read.vars.iter().enumerate() {
+        let Var::Boundary(slot, part, ring, index) = *v else {
+            continue;
+        };
+        if shifts[k] == 0.0 {
+            continue;
+        }
+        match boundary_shift(&view, slot, part, ring, index, shifts[k]) {
+            Ok(next) => {
+                view.shapes.insert(slot, next);
+            }
+            Err(words) => {
+                let bonds: Vec<usize> = (0..read.bonds.len())
+                    .filter(|&b| bond_vars(&read.bonds[b]).contains(&k))
+                    .collect();
+                out.refused_at = Some((k, shifts.clone()));
+                conflict(&mut out, bonds, words);
+                return out;
+            }
+        }
+    }
     for (k, v) in read.vars.iter().enumerate() {
         let Var::Opening(slot) = *v else { continue };
         if shifts[k] == 0.0 {
@@ -707,10 +832,15 @@ fn solve_once(
     let again = self::read(&view, set, values);
     for (b, bond) in again.bonds.iter().enumerate() {
         if core::miss(bond).is_none_or(|m| m.abs() > SETTLED) {
+            let map = bond_vars(bond).iter().any(|&v| again.vars[v].is_map());
             conflict(
                 &mut out,
                 vec![b],
-                "Bağlar duvarların izleyebildiği kadar tutamadı (bağlı duvarlar birbirini engelliyor)".into(),
+                if map {
+                    "Bağlar kenarların izleyebildiği kadar tutamadı (bağlı kenarlar birbirini engelliyor)".into()
+                } else {
+                    "Bağlar duvarların izleyebildiği kadar tutamadı (bağlı duvarlar birbirini engelliyor)".into()
+                },
             );
             out.conflicting = vec![again.rules[b]];
             return out;
@@ -725,6 +855,7 @@ fn solve_once(
                 .into_iter()
                 .map(|(s, o)| (s, Entity::Opening(o))),
         )
+        .chain(view.shapes)
         .collect();
     changed.sort_by_key(|(s, _)| s.0);
     out.changed = changed;
@@ -789,6 +920,32 @@ fn shift(view: &mut View<'_>, slot: Slot, edge: usize, by: f64) -> Result<Vec<Sl
         out.push(s);
     }
     Ok(out)
+}
+
+/// Paralel kaydır on the view (docs/adr/2580): the boundary edge of `slot` moved `by` along its left normal, its
+/// neighbours lengthening or shortening to meet it. The object as it would be written; why not, in Turkish (a locked
+/// layer too: a locked object is held, so only a set that wants it moved anyway reaches here).
+fn boundary_shift(
+    view: &View<'_>,
+    slot: Slot,
+    part: u32,
+    ring: u32,
+    index: u32,
+    by: f64,
+) -> Result<Entity, String> {
+    let e = view.entity(slot).ok_or("Bağlı kenarın nesnesi çizimde yok")?;
+    let layer = &e.base().layer_id;
+    if view.doc.layers().is_locked(layer) {
+        let name = view
+            .doc
+            .layers()
+            .get(layer)
+            .map_or(layer.as_str(), |n| n.name.as_str());
+        return Err(format!(
+            "Bağ “{name}” katmanındaki bir kenarı kaydırmak istiyor ve o katman kilitli. Kilidi açın ya da bağı kaldırın."
+        ));
+    }
+    crate::map_bonds::shifted(&e, part, ring, index, by)
 }
 
 /// The openings of the walls moved, read back from their jambs onto their walls' new paths (docs/adr/0341 §3): their
@@ -885,6 +1042,9 @@ pub(crate) fn side_now(doc: &Document, a: &ElementRef, b: &ElementRef) -> Option
 /// arc edge or an edge it has not, a jamb on no opening or off its wall, two jambs on different edges, a jamb's line
 /// along its wall, lines a bond wants parallel that are not.
 pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<String> {
+    if kentos_commands::rule_is_map_bond(rule) {
+        return crate::map_bonds::rule_problem(doc, rule);
+    }
     let view = View::new(doc);
     let mut vars = Vec::new();
     let mut items = Vec::new();

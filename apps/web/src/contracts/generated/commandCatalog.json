@@ -87840,7 +87840,7 @@
       "id": "cad.shapes.edit",
       "version": 1,
       "title": "Biçim işlemleri",
-      "summary": "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı; topology ile ortak köşeleri ve kenarları paylaşan görünen nesneler aynı adımda birlikte kayar, komşu parsel edinilen alanı verir, neighbours her komşunun önceki ve sonraki boyunu söyler; kilitli komşu ayrılır ve neighbour_locked ile söylenir ya da stopOnLocked ile shared_boundary_locked reddi gelir, ADR 1960), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı, aracın adıyla.",
+      "summary": "Nesnelerin biçimini kalıcı kimlikleriyle değiştirir; geometriyi komut ortak çekirdekle hesaplar: Biçim değiştir (reshape: alanı ya da çizgiyi çizilen hatla keser ya da büyütür; çizgi çoklu çizgi olur), Sürdür (continue: çizgiyi ya da çoklu çizgiyi ucundan ya da başından noktalarla ve bükümlerle uzatır, köşeler kotlarını korur), Paralel kaydır (edgeShift: at'a en yakın düz kenarı distance kadar ya da area m²'lik alana ulaşana dek kaydırır; alanda dışarı, çoklu çizgide yürüme yönünün sağı artı; topology ile ortak köşeleri ve kenarları paylaşan görünen nesneler aynı adımda birlikte kayar, komşu parsel edinilen alanı verir, neighbours her komşunun önceki ve sonraki boyunu söyler; kilitli komşu ayrılır ve neighbour_locked ile söylenir ya da stopOnLocked ile shared_boundary_locked reddi gelir, ADR 1960; reference ile distance kenarın referans kenarın doğrusuna uzaklığıdır, kenar ve referans 0,001° içinde paralel olmalı; keep (Bu uzaklığı koru) uzaklığı aynı adımda kalıcı bağ olarak yazar, referans değişince kenar izler, bonds yeni bağların kimlikleri, ADR 2580), Sadeleştir (simplify: toleranstaki köşeleri atar), Kot ver (elevation: Sabit, Artır, Sıfırla) ve Okunur yap (readable: baş aşağı okunan yazıları yarım tur döndürür) ve Parçala (split: çizgi, açık çoklu çizgi, yay ve daireyi kesişimlerinden, eşit parçalara ya da uzunluktan ayrı nesnelere böler; ilk parça nesnenin yerini ve kimliğini korur, yeniler created'da). Cevap ölçüleri (önce ve sonra alan ya da uzunluk, eklenen ya da atılan köşe, kaydırma, parça) verir. Tek geri alma adımı, aracın adıyla.",
       "aliases": [
         "bicim-islemleri",
         "shapes"
@@ -87892,6 +87892,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "1"
+          },
+          "bonds": {
+            "description": "Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "changed": {
             "description": "The objects updated or replaced in place.",
@@ -88022,6 +88029,8 @@
           "too_many_points",
           "layer_locked",
           "shared_boundary_locked",
+          "invalid_constraint",
+          "constraint_governed",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -88042,6 +88051,28 @@
               },
               "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
               "kind": "edgeShift"
+            }
+          }
+        },
+        {
+          "title": "Parselin ön kenarını yolun kenarından 5 m'de tut (Bu uzaklığı koru)",
+          "input": {
+            "work": {
+              "at": {
+                "x": 423540.0,
+                "y": 4512315.0
+              },
+              "distance": 5.0,
+              "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4001",
+              "kind": "edgeShift",
+              "reference": {
+                "at": {
+                  "x": 423540.0,
+                  "y": 4512308.0
+                },
+                "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d4002",
+                "keep": true
+              }
             }
           }
         },
@@ -117070,6 +117101,41 @@
           "required": [
             "kind",
             "end"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next\n(part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours\nlengthening or shortening to meet it (Paralel kaydır's rule, docs/adr/0191). Only the map bond takes it: the\ndistance from a straight segment (`Segment`, or another boundary) to it.",
+          "properties": {
+            "index": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "boundary",
+              "type": "string"
+            },
+            "part": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "ring": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            }
+          },
+          "required": [
+            "kind",
+            "part",
+            "ring",
+            "index"
           ],
           "type": "object"
         }
@@ -184356,7 +184422,7 @@
           "type": "object"
         },
         {
-          "description": "Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward\nnormal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours\nlengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects\nsharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what\nthe edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with\n`stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too.",
+          "description": "Paralel kaydır: the straight edge nearest `at` moved parallel to itself by `distance` (along its outward\nnormal; an area's outward is away from the area), or until the area is `area` square metres; its neighbours\nlengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects\nsharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what\nthe edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with\n`stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. With\n`reference` (docs/adr/2580) `distance` is the distance from the reference's line, and `keep` writes it as a bond.",
           "properties": {
             "area": {
               "format": "double",
@@ -184384,6 +184450,16 @@
             "kind": {
               "const": "edgeShift",
               "type": "string"
+            },
+            "reference": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ShiftReference"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "topology": {
               "anyOf": [
@@ -185378,6 +185454,27 @@
           "type": "object"
         }
       ]
+    },
+    "ShiftReference": {
+      "additionalProperties": false,
+      "description": "Paralel kaydır's reference (docs/adr/2580): the straight segment nearest `at` of object `id` (a line, or a path's\nor an area's straight edge; one on a locked layer too, it is only read) that the edge keeps its distance from. With\nit, `distance` is the distance to hold between the reference's line and the edge, on the side the edge is now (not\na shift); the edge must be straight and parallel to the reference within 0.001°. `keep` (Bu uzaklığı koru): the\ndistance written as a lasting bond in the same step, a distance constraint from the reference to the edge with its\nparameter, so that the edge follows when the reference moves; without `distance` the bond keeps the distance now.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "id": {
+          "type": "string"
+        },
+        "keep": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "at"
+      ],
+      "type": "object"
     },
     "ShpColumnAsText": {
       "description": "A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses).",

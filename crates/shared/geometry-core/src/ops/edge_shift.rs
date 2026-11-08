@@ -283,6 +283,19 @@ fn edge_normal(r: &Ring, ring: usize, closed: bool, edge: usize) -> Result<Vec2,
     Ok(if inside_left { right } else { Vec2::new(-right.x, -right.y) })
 }
 
+/// The unit normal [`shifted`] moves edge `edge` of ring `ring` along (its `d`): away from an area's inside, to the
+/// right of a polyline's way; an arc's at its middle. A map bond turns its shift into this distance (docs/adr/2580).
+pub fn normal(shape: &Shape, ring: usize, edge: usize) -> Result<Vec2, &'static str> {
+    let rings = rings_of(shape)?;
+    let r = rings.rings.get(ring).ok_or(NO_EDGE)?;
+    let n = r.pts.len();
+    let edges = if rings.closed { n } else { n.saturating_sub(1) };
+    if edge >= edges {
+        return Err(NO_EDGE);
+    }
+    edge_normal(r, ring, rings.closed, edge)
+}
+
 /// The ring `ring` with its edge `edge` moved `d` by `edge_shift_arcs`.
 fn arc_shift(rings: &Rings, ring: usize, edge: usize, d: f64) -> Result<Ring, &'static str> {
     let r = &rings.rings[ring];

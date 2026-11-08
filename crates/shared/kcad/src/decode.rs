@@ -333,7 +333,7 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
             "constraints" if has.constraints => {
-                constraints_ = Some(constraints(r, has.arch_bonds, has.arc_edge_bonds)?)
+                constraints_ = Some(constraints(r, has.arch_bonds, has.arc_edge_bonds, has.boundary_bonds)?)
             }
             "dimensionSets" if has.dimension_sets => {
                 dimension_sets_ = Some(dimension_sets(r, has)?)
@@ -517,6 +517,7 @@ fn constraints(
     r: &mut Reader<'_>,
     arch: bool,
     arcs: bool,
+    boundaries: bool,
 ) -> Result<(usize, kentos_contracts::ConstraintSet), KcadError> {
     let at = r.position();
     let value = r.opaque()?;
@@ -550,6 +551,19 @@ fn constraints(
         })
     }) {
         return Err(r.fail_at(Code::BadValue, at, "yaylı kenar kısıtları şema 157 ister"));
+    }
+    // Schema 208 (docs/adr/2580): a boundary edge, a map bond's, only from it on.
+    if !boundaries
+        && set
+            .constraints
+            .iter()
+            .any(|c| kentos_contracts::rule_is_map_bond(&c.rule))
+    {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "sınır kenarı kısıtları (harita bağları) şema 208'den önce yazılmaz",
+        ));
     }
     // Schema 137 (docs/adr/0770): a wall's line or an opening's jamb only from it on.
     if !arch

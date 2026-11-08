@@ -82,7 +82,7 @@ pub fn core_rule(doc: &Document, mapped: &mut Mapped, rule: &ConstraintRule) -> 
 
 /// What a dimension measures now in the drawing, in metres or radians.
 pub fn measured_now(doc: &Document, rule: &ConstraintRule) -> Option<f64> {
-    if kentos_commands::rule_is_architectural(rule) {
+    if kentos_commands::rule_is_bond(rule) {
         return crate::arch_bonds::measured(doc, rule);
     }
     let mut mapped = Mapped {
@@ -329,10 +329,10 @@ pub(crate) fn solve_set_with_axes(
         index: HashMap::new(),
     };
     let mut constraints = Vec::with_capacity(set.constraints.len());
-    // The core's constraints are the set's general ones; the architectural ones go to their adapter.
+    // The core's constraints are the set's general ones; the bonds (architectural, map) go to their adapter.
     let mut index: Vec<usize> = Vec::with_capacity(set.constraints.len());
     for (i, c) in set.constraints.iter().enumerate() {
-        if kentos_commands::rule_is_architectural(&c.rule) {
+        if kentos_commands::rule_is_bond(&c.rule) {
             continue;
         }
         index.push(i);

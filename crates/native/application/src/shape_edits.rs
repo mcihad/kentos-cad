@@ -6,8 +6,8 @@
 
 use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan, Entity, EntityEdit,
-    EntityGeometry, ShapeElevation, ShapeNeighbour, ShapeWork, ShapesEdit, ShapesEdited, StretchTopology, TextEntity,
-    Vec2 as Wire,
+    EntityGeometry, ShapeElevation, ShapeNeighbour, ShapeWork, ShapesEdit, ShapesEdited, ShiftReference,
+    StretchTopology, TextEntity, Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{
@@ -32,7 +32,7 @@ fn v(p: Wire) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
-fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<(Slot, &'d Entity), Stop> {
+pub(crate) fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<(Slot, &'d Entity), Stop> {
     if !is_uid_text(uid) {
         return Err(refuse(
             codes::INVALID_UID,
@@ -100,6 +100,8 @@ struct Prepared {
     /// Paralel kaydır with Topolojik düzenleme: the neighbours that moved with the edge, and what is said of them.
     neighbours: Vec<ShapeNeighbour>,
     warnings: Vec<CommandWarning>,
+    /// Paralel kaydır's Bu uzaklığı koru: the bond written after the shift (docs/adr/2580).
+    keep: Option<crate::edge_shift_reference::Kept>,
 }
 
 impl Prepared {
@@ -116,6 +118,7 @@ impl Prepared {
             creates: false,
             neighbours: Vec::new(),
             warnings: Vec::new(),
+            keep: None,
         }
     }
 }
@@ -311,6 +314,7 @@ fn edge_shift_of(
     distance: Option<f64>,
     area: Option<f64>,
     topology: Option<StretchTopology>,
+    reference: Option<&ShiftReference>,
 ) -> Result<Prepared, Stop> {
     let (slot, e) = object(doc, id, "work.id")?;
     checks::point(at, "Kenarın noktasının", "work.at")?;
@@ -320,6 +324,40 @@ fn edge_shift_of(
     }
     let s = shape(e);
     let picked = rules::pick(&s, v(at)).map_err(|why| refused(why, "work.at"))?;
+    // With a reference the distance is from its line, and Bu uzaklığı koru keeps it (docs/adr/2580).
+    let (d, keep) = match reference {
+        Some(r) => crate::edge_shift_reference::by_reference(doc, slot, e, &picked, distance, area, r)?,
+        None => (plain_distance(&s, &picked, distance, area)?, None),
+    };
+    let moved = rules::shifted(&s, picked.ring, picked.edge, d)
+        .map_err(|why| refused(why, "work.distance"))?;
+    let is_area = rules::area_of(&s).is_some();
+    // Only the bond, the edge where it is: nothing to write but the bond.
+    let changes = if d == 0.0 && keep.is_some() {
+        Vec::new()
+    } else {
+        vec![EntityEdit::Update {
+            uid: id.to_owned(),
+            geometry: written(&moved)?,
+        }]
+    };
+    let mut p = Prepared::new(EditOperation::EdgeShift, changes);
+    p.objects = 1;
+    p.keep = keep;
+    p.before = rules::area_of(&s).unwrap_or_else(|| size(&s, false));
+    p.after = rules::area_of(&moved).unwrap_or_else(|| size(&moved, is_area));
+    p.distance = d;
+    if let Some(t) = topology
+        && !p.changes.is_empty()
+    {
+        follow(doc, &mut p, t, (slot, s, moved))?;
+    }
+    Ok(p)
+}
+
+/// Paralel kaydır's shift without a reference: `distance`, or the one that reaches the target `area`.
+fn plain_distance(s: &Shape, picked: &rules::Picked, distance: Option<f64>, area: Option<f64>) -> Result<f64, Stop> {
+    let refused = |text: String, path: &str| refuse(codes::EDGE_SHIFT_REFUSED, text, path);
     let d = match (distance, area) {
         (Some(d), None) => {
             checks::finite(d, "Uzaklık", "Sonlu bir sayı verin.", "work.distance")?;
@@ -327,7 +365,7 @@ fn edge_shift_of(
         }
         (None, Some(target)) => {
             checks::finite(target, "Hedef alan", "Sonlu bir sayı verin.", "work.area")?;
-            rules::for_area(&s, picked.ring, picked.edge, target)
+            rules::for_area(s, picked.ring, picked.edge, target)
                 .map_err(|why| refused(why, "work.area"))?
         }
         _ => {
@@ -338,23 +376,7 @@ fn edge_shift_of(
             ));
         }
     };
-    let moved = rules::shifted(&s, picked.ring, picked.edge, d)
-        .map_err(|why| refused(why, "work.distance"))?;
-    let is_area = rules::area_of(&s).is_some();
-    let mut p = Prepared::new(
-        EditOperation::EdgeShift,
-        vec![EntityEdit::Update {
-            uid: id.to_owned(),
-            geometry: written(&moved)?,
-        }],
-    );
-    p.before = rules::area_of(&s).unwrap_or_else(|| size(&s, false));
-    p.after = rules::area_of(&moved).unwrap_or_else(|| size(&moved, is_area));
-    p.distance = d;
-    if let Some(t) = topology {
-        follow(doc, &mut p, t, (slot, s, moved))?;
-    }
-    Ok(p)
+    Ok(d)
 }
 
 /// The size a neighbour is said by: an area's net area, a path's length, a point's 0.
@@ -623,7 +645,8 @@ fn prepare(doc: &Document, input: &ShapesEdit) -> Result<Prepared, Stop> {
             distance,
             area,
             topology,
-        } => edge_shift_of(doc, id, *at, *distance, *area, *topology),
+            reference,
+        } => edge_shift_of(doc, id, *at, *distance, *area, *topology, reference.as_ref()),
         ShapeWork::Simplify { ids, tolerance } => simplify_of(doc, ids, *tolerance),
         ShapeWork::Elevation { ids, elevation } => elevation_of(doc, ids, *elevation),
         ShapeWork::Readable { ids } => readable_of(doc, ids),
@@ -736,7 +759,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
-    let output = |changed: Vec<String>, created: Vec<String>, revision: String| ShapesEdited {
+    let output = |changed: Vec<String>, created: Vec<String>, bonds: Vec<String>, revision: String| ShapesEdited {
         changed,
         before: p.before,
         after: p.after,
@@ -746,24 +769,49 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         distance: p.distance,
         created: if p.creates { created } else { Vec::new() },
         neighbours: p.neighbours.clone(),
+        bonds,
         revision,
     };
     // Okunur yap with every text readable already: nothing to write, nothing refused.
-    if p.changes.is_empty() {
+    if p.changes.is_empty() && p.keep.is_none() {
         return CommandResult::Completed {
-            output: output(Vec::new(), Vec::new(), cx.doc.revision().to_string()),
+            output: output(Vec::new(), Vec::new(), Vec::new(), cx.doc.revision().to_string()),
             warnings: Vec::new(),
         };
     }
-    match ours(edit::write_in(cx, edit_input(&p, &input))) {
-        CommandResult::Completed {
-            output: o,
-            warnings,
-        } => CommandResult::Completed {
-            output: output(o.changed, o.created, o.revision),
+    let (changed, created, revision, mut warnings) = if p.changes.is_empty() {
+        (Vec::new(), Vec::new(), cx.doc.revision().to_string(), Vec::new())
+    } else {
+        match ours(edit::write_in(cx, edit_input(&p, &input))) {
+            CommandResult::Completed {
+                output: o,
+                warnings,
+            } => (o.changed, o.created, o.revision, warnings),
+            other => return crate::trim::relay(other),
+        }
+    };
+    let Some(kept) = &p.keep else {
+        return CommandResult::Completed {
+            output: output(changed, created, Vec::new(), revision),
             // What the neighbours did first, then the edit's own (docs/adr/1960).
             warnings: p.warnings.iter().cloned().chain(warnings).collect(),
-        },
-        other => crate::trim::relay(other),
+        };
+    };
+    // Bu uzaklığı koru (docs/adr/2580): the bonds already there follow the shift first, in this step (the next edge of
+    // a chain moves; an edge bonded elsewhere refuses the shift), then the new bond and its parameter are written.
+    match crate::constraint_follow::follow(cx.doc, kentos_commands::CAD_SHAPES_EDIT, false, &|| false) {
+        Ok(followed) => warnings.extend(followed.warnings),
+        Err(stop) => return stop.into(),
+    }
+    let label = crate::edit::label(EditOperation::EdgeShift);
+    let bond = match crate::constraints_edit::add_bond_given(cx.doc, kept.rule.clone(), label, kept.value, "work.reference") {
+        Ok(id) => id,
+        Err(stop) => return stop.into(),
+    };
+    // The bond is written after the shift: the drawing's revision now, not the shift's.
+    drop(revision);
+    CommandResult::Completed {
+        output: output(changed, created, vec![bond], cx.doc.revision().to_string()),
+        warnings: p.warnings.iter().cloned().chain(warnings).collect(),
     }
 }

@@ -8900,6 +8900,7 @@ class CadElement(_Union):
     - :class:`CircleCadElement` (``kind: circle``)
     - :class:`WallCadElement` (``kind: wall``)
     - :class:`JambCadElement` (``kind: jamb``)
+    - :class:`BoundaryCadElement` (``kind: boundary``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -84488,6 +84489,7 @@ class ShapesEdited(_Model):
         skipped: Unit: count.
         count: Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces. Unit: count.
         distance: Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit. Unit: length.
+        bonds: Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).
         created: Parçala: the new objects, the pieces after each object's first, in order.
         neighbours: Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,
             each with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).
@@ -84500,6 +84502,7 @@ class ShapesEdited(_Model):
     count: int
     distance: float
     revision: str
+    bonds: list[str] | Unset = UNSET
     created: list[str] | Unset = UNSET
     neighbours: list[ShapeNeighbour] | Unset = UNSET
 
@@ -84513,6 +84516,8 @@ class ShapesEdited(_Model):
         out["count"] = self.count
         out["distance"] = float(self.distance)
         out["revision"] = self.revision
+        if self.bonds is not UNSET:
+            out["bonds"] = list(self.bonds)
         if self.created is not UNSET:
             out["created"] = list(self.created)
         if self.neighbours is not UNSET:
@@ -84530,6 +84535,7 @@ class ShapesEdited(_Model):
             count=data["count"],
             distance=float(data["distance"]),
             revision=data["revision"],
+            bonds=list(data["bonds"]) if "bonds" in data else UNSET,
             created=list(data["created"]) if "created" in data else UNSET,
             neighbours=[ShapeNeighbour.from_json(e0) for e0 in data["neighbours"]] if "neighbours" in data else UNSET,
         )
@@ -85707,6 +85713,38 @@ class SheetsSetResult(_Model):
             pictures=UNSET if "pictures" not in data else None if data["pictures"] is None else [SheetPicture.from_json(e0) for e0 in data["pictures"]],
             standard_ratios=UNSET if "standardRatios" not in data else None if data["standardRatios"] is None else [PaperScaleRatio.from_json(e0) for e0 in data["standardRatios"]],
             templates=UNSET if "templates" not in data else None if data["templates"] is None else [PaperTemplate.from_json(e0) for e0 in data["templates"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShiftReference(_Model):
+    """Paralel kaydır's reference (docs/adr/2580): the straight segment nearest `at` of object `id` (a line, or a path's
+    or an area's straight edge; one on a locked layer too, it is only read) that the edge keeps its distance from. With
+    it, `distance` is the distance to hold between the reference's line and the edge, on the side the edge is now (not
+    a shift); the edge must be straight and parallel to the reference within 0.001°. `keep` (Bu uzaklığı koru): the
+    distance written as a lasting bond in the same step, a distance constraint from the reference to the edge with its
+    parameter, so that the edge follows when the reference moves; without `distance` the bond keeps the distance now.
+    Attributes:
+        at: Unit: length.
+    """
+    id: str
+    at: Vec2
+    keep: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["at"] = _vec2_out(self.at)
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShiftReference:
+        return cls(
+            id=data["id"],
+            at=Vec2.from_json(data["at"]),
+            keep=data.get("keep", UNSET),
         )
 
 
@@ -109617,6 +109655,38 @@ class JambCadElement(CadElement):
 
 
 @dataclass(kw_only=True, slots=True)
+class BoundaryCadElement(CadElement):
+    """A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next
+    (part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours
+    lengthening or shortening to meet it (Paralel kaydır's rule, docs/adr/0191). Only the map bond takes it: the
+    distance from a straight segment (`Segment`, or another boundary) to it.
+    Attributes:
+        part: Unit: index.
+        ring: Unit: index.
+        index: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "boundary"
+    part: int
+    ring: int
+    index: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "boundary"}
+        out["part"] = self.part
+        out["ring"] = self.ring
+        out["index"] = self.index
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoundaryCadElement:
+        return cls(
+            part=data["part"],
+            ring=data["ring"],
+            index=data["index"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ModuleCaseworkChange(CaseworkChange):
     """A module's own values become `width` and `hand` (absent: the run's); `holds`, when given, what it holds.
     Attributes:
@@ -124291,7 +124361,8 @@ class EdgeShiftShapeWork(ShapeWork):
     lengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects
     sharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what
     the edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with
-    `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too.
+    `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. With
+    `reference` (docs/adr/2580) `distance` is the distance from the reference's line, and `keep` writes it as a bond.
     Attributes:
         at: Unit: length.
         area: Unit: 1.
@@ -124302,6 +124373,7 @@ class EdgeShiftShapeWork(ShapeWork):
     at: Vec2
     area: float | None | Unset = UNSET
     distance: float | None | Unset = UNSET
+    reference: ShiftReference | None | Unset = UNSET
     topology: StretchTopology | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -124312,6 +124384,8 @@ class EdgeShiftShapeWork(ShapeWork):
             out["area"] = None if self.area is None else float(self.area)
         if self.distance is not UNSET:
             out["distance"] = None if self.distance is None else float(self.distance)
+        if self.reference is not UNSET:
+            out["reference"] = None if self.reference is None else self.reference.to_json()
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else self.topology.to_json()
         return out
@@ -124323,6 +124397,7 @@ class EdgeShiftShapeWork(ShapeWork):
             at=Vec2.from_json(data["at"]),
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
+            reference=UNSET if "reference" not in data else None if data["reference"] is None else ShiftReference.from_json(data["reference"]),
             topology=UNSET if "topology" not in data else None if data["topology"] is None else StretchTopology.from_json(data["topology"]),
         )
 
@@ -128156,7 +128231,7 @@ _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParame
 _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": ToBoundChange}
 
 
-_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement}
+_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement, "boundary": BoundaryCadElement}
 
 
 _CASEWORK_CHANGE: dict[str, type[CaseworkChange]] = {"module": ModuleCaseworkChange, "recipe": RecipeCaseworkChange, "release": ReleaseCaseworkChange}
@@ -128942,6 +129017,7 @@ __all__ = [
     "BorderPaperItemKind",
     "BothNetworkDirection",
     "BoundChange",
+    "BoundaryCadElement",
     "BoundaryForm",
     "BoundaryFormName",
     "BoundaryProblem",
@@ -131778,6 +131854,7 @@ __all__ = [
     "SheetsPublished",
     "SheetsSet",
     "SheetsSetResult",
+    "ShiftReference",
     "ShiftWallsOperation",
     "ShowHeaderPaperEmptyTable",
     "ShownExtractValue",

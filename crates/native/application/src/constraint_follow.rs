@@ -222,7 +222,7 @@ pub(crate) fn bonds_refusal<'u, T>(
         .constraints()
         .constraints
         .iter()
-        .filter(|c| kentos_commands::rule_is_architectural(&c.rule))
+        .filter(|c| kentos_commands::rule_is_bond(&c.rule))
         .flat_map(|c| c.rule.elements().into_iter().map(|e| e.uid))
         .collect();
     if named.is_empty()

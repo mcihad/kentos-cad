@@ -91,7 +91,8 @@ fn part(
             let at = point(&core, core_place(*place))?;
             Some((at, Vec::new()))
         }
-        CadElement::Segment { part, ring, index } => {
+        // A map bond's boundary edge is drawn where its straight edge is (docs/adr/2580).
+        CadElement::Segment { part, ring, index } | CadElement::Boundary { part, ring, index } => {
             let place = Place::Mid {
                 part: *part as usize,
                 ring: *ring as usize,

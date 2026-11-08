@@ -1141,6 +1141,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "file_unwritable",
         "yazılamayan disk ya da geri okununca aynı çıkmayan GeoPackage ortak durumda kurulamaz (plan dosya yazmaz); geçici adla yazılıp geri okunarak yerine konması ve yarım dosyanın kalmaması gpkg_tiles_files.rs'te sınanır (ADR 0556 §4)",
     ),
+    (
+        "cad.shapes.edit",
+        "invalid_constraint",
+        "Bu uzaklığı koru bağı yazmadan önce kenarı ve referansı denetler (düz, 0,001° içinde paralel, kendisi değil; ADR 2580); bağın kendi reddi ancak çizimin 10 000 kısıt sınırında gelir, ortak durumda kurulmaz",
+    ),
+    (
+        "cad.shapes.edit",
+        "constraint_governed",
+        "ilişkili dizinin öğesi olan alana Bu uzaklığı koru bağ koymaz (ADR 2580, 0338 §2); ilişkili dizi kuran durum Paralel kaydır dosyasında yok, aynı ret cad.constraints.edit'in durumlarında sınanır",
+    ),
 ];
 
 fn why_unreached(command: &str, code: &str) -> Option<&'static str> {

@@ -65,6 +65,18 @@ pub enum CadElement {
     },
     /// An opening's start or end jamb, the middle of its jamb line (docs/adr/0770 §4, 0694).
     Jamb { end: JambEnd },
+    /// A boundary edge (docs/adr/2580): an area's or a single path's straight edge from vertex `index` to the next
+    /// (part 0, ring 0 the outer ring or the path, 1… the holes) that moves only parallel to itself, its neighbours
+    /// lengthening or shortening to meet it (Paralel kaydır's rule, docs/adr/0191). Only the map bond takes it: the
+    /// distance from a straight segment (`Segment`, or another boundary) to it.
+    Boundary {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        part: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        ring: u32,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        index: u32,
+    },
 }
 
 /// Which line of a wall's edge an architectural constraint names (docs/adr/0770 §4).
@@ -119,6 +131,17 @@ impl CadElement {
     /// Whether it is an architectural part (a wall line or a jamb): docs/adr/0770 §4.
     pub fn is_architectural(&self) -> bool {
         matches!(self, CadElement::Wall { .. } | CadElement::Jamb { .. })
+    }
+
+    /// Whether it is a map bond's boundary edge (docs/adr/2580).
+    pub fn is_boundary(&self) -> bool {
+        matches!(self, CadElement::Boundary { .. })
+    }
+
+    /// Whether the bond adapter solves the constraints naming it, not the general solver: an architectural part or a
+    /// boundary edge (docs/adr/0770 §4, 2580).
+    pub fn is_bonded(&self) -> bool {
+        self.is_architectural() || self.is_boundary()
     }
 }
 
@@ -521,6 +544,7 @@ enum Shape {
     Circle,
     WallLine,
     Jamb,
+    Boundary,
 }
 
 fn shape(e: &ElementRef) -> Shape {
@@ -530,6 +554,7 @@ fn shape(e: &ElementRef) -> Shape {
         CadElement::Circle | CadElement::ArcEdge { .. } => Shape::Circle,
         CadElement::Wall { .. } => Shape::WallLine,
         CadElement::Jamb { .. } => Shape::Jamb,
+        CadElement::Boundary { .. } => Shape::Boundary,
     }
 }
 
@@ -549,7 +574,11 @@ fn element_problem(e: &ElementRef) -> Option<String> {
             }
             _ => None,
         },
-        CadElement::Segment { part, ring, index: i } | CadElement::ArcEdge { part, ring, index: i } if index(part) || index(ring) || index(i) => {
+        CadElement::Segment { part, ring, index: i }
+        | CadElement::ArcEdge { part, ring, index: i }
+        | CadElement::Boundary { part, ring, index: i }
+            if index(part) || index(ring) || index(i) =>
+        {
             Some("kenarın sırası sınırı aşıyor".into())
         }
         CadElement::Wall { edge, .. } if index(edge) => Some("duvar kenarının sırası sınırı aşıyor".into()),
@@ -561,6 +590,38 @@ fn element_problem(e: &ElementRef) -> Option<String> {
 /// solver never sees it.
 pub fn rule_is_architectural(rule: &ConstraintRule) -> bool {
     rule.elements().iter().any(|e| e.element.is_architectural())
+}
+
+/// Whether a rule is a map bond: it names a boundary edge (docs/adr/2580).
+pub fn rule_is_map_bond(rule: &ConstraintRule) -> bool {
+    rule.elements().iter().any(|e| e.element.is_boundary())
+}
+
+/// Whether the bond adapter solves a rule (an architectural bond or a map bond, docs/adr/0770 §4, 2580); the general
+/// solver never sees it.
+pub fn rule_is_bond(rule: &ConstraintRule) -> bool {
+    rule.elements().iter().any(|e| e.element.is_bonded())
+}
+
+/// Why a map bond's parts do not fit it (docs/adr/2580): only a distance, along the line between them, from a straight
+/// segment or a boundary edge (`a`, what is held) to a boundary edge (`b`, what follows).
+fn map_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
+    use Shape::{Boundary, Segment};
+    if kinds.iter().any(|k| matches!(k, Shape::WallLine | Shape::Jamb)) {
+        return Some("sınır kenarı duvar çizgisi ve pervazla bağlanmaz".into());
+    }
+    let fits = match rule {
+        ConstraintRule::Distance { axis, .. } => {
+            *axis == DistanceAxis::Aligned && matches!(kinds, [Segment | Boundary, Boundary])
+        }
+        _ => false,
+    };
+    (!fits).then(|| {
+        format!(
+            "{} kısıtı sınır kenarı almaz; harita bağı bir düz kenardan (çizgi, yolun düz kenarı ya da başka bir sınır kenarı) sınır kenarına uzaklıktır",
+            rule_label(rule)
+        )
+    })
 }
 
 /// Why an architectural rule's parts do not fit it (docs/adr/0770 §4): only distance, parallel, symmetric and fix, and
@@ -607,6 +668,9 @@ fn rule_problem(rule: &ConstraintRule) -> Option<String> {
         }
     }
     let kinds: Vec<Shape> = elements.iter().map(|e| shape(e)).collect();
+    if rule_is_map_bond(rule) {
+        return map_problem(rule, &kinds);
+    }
     if rule_is_architectural(rule) {
         return architectural_problem(rule, &kinds);
     }

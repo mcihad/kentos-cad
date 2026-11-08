@@ -2655,6 +2655,10 @@ def document(d):
         # A constraint naming a wall's line or an opening's jamb (docs/adr/0770 §4).
         schema = max(schema, 137)
 
+    if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "boundary" for r in rules for k in ("a", "b", "axis")):
+        # A constraint naming a boundary edge, a map bond (docs/adr/2580).
+        schema = max(schema, 208)
+
     def built(e):
         if e["kind"] == "wall":
             return any(c.get("wrap") for c in e.get("components", [])) or any(
@@ -3510,7 +3514,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-208.kcad"] = container(root(cmap(parts), version=uint(208)))
+    files["schema-version-209.kcad"] = container(root(cmap(parts), version=uint(209)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5939,6 +5943,29 @@ def build():
         broken_moving = copy.deepcopy(moving)
         change(broken_moving)
         out[f"broken/map-survey-{name}.kcad"] = container(document(broken_moving))
+    # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
+    # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
+    kept = load("map-bond.json")
+    kept_data = document(kept)
+    assert kept_data.count(b"\x67version\x18\xd0") == 1, "a map bond is schema 208"
+    out["map-bond.kcad"] = container(kept_data)
+    out["broken/map-bond-in-schema-207.kcad"] = container(
+        kept_data.replace(b"\x67version\x18\xd0", b"\x67version\x18\xcf"))
+
+    def parallel(d):
+        rule = d["constraints"]["constraints"][0]["rule"]
+        rule.update(kind="parallel")
+        rule.pop("left")
+        rule.pop("parameter")
+
+    def turned(d):
+        rule = d["constraints"]["constraints"][0]["rule"]
+        rule["a"], rule["b"] = rule["b"], rule["a"]
+
+    for name, change in (("parallel", parallel), ("boundary-first", turned)):
+        broken_kept = copy.deepcopy(kept)
+        change(broken_kept)
+        out[f"broken/map-bond-{name}.kcad"] = container(document(broken_kept))
     # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
     # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
     # item without a file, an object in two derivations and a draft status written are refused.

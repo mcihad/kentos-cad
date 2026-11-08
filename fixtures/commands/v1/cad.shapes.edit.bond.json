@@ -1,0 +1,3518 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.shapes.edit",
+ "commandVersion": 1,
+ "title": "Paralel kaydır'ın referansı ve Bu uzaklığı koru: harita bağı (ADR 2580)",
+ "note": "Beklenenler scripts/fixtures/map_bond_cases.py'den: ADR 0191'in Paralel kaydır kuralı ve ADR 2580'in bağı kesirlerle, KentOS kodu kullanılmadı; çizimin sayıları mikrometre içinde.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Harita bağı",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cekme",
+    "name": "Çekme",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "bordur",
+    "name": "Bordür",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487200.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487200.0,
+      "y": 4420040.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487190.0,
+     "y": 4420004.0
+    },
+    "b": {
+     "x": 487280.0,
+     "y": 4420004.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487220.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487240.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487240.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4420040.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "cekme",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487203.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487217.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487217.0,
+      "y": 4420037.0
+     },
+     {
+      "x": 487203.0,
+      "y": 4420037.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487250.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487270.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487270.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487250.0,
+      "y": 4420040.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "bordur",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487185.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487188.0,
+      "y": 4420007.0
+     },
+     {
+      "x": 487245.0,
+      "y": 4420007.0
+     },
+     {
+      "x": 487248.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487190.0,
+     "y": 4420060.0
+    },
+    "b": {
+     "x": 487240.0,
+     "y": 4420062.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487300.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487320.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487320.0,
+      "y": 4420040.0
+     },
+     {
+      "x": 487300.0,
+      "y": 4420040.0
+     }
+    ],
+    "bulges": [
+     0.2,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "kind": "circle",
+    "id": 9,
+    "layerId": "yol",
+    "attrs": {},
+    "c": {
+     "x": 487350.0,
+     "y": 4420004.0
+    },
+    "r": 3.0
+   },
+   {
+    "kind": "line",
+    "id": 10,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487190.0,
+     "y": 4420001.0
+    },
+    "b": {
+     "x": 487280.0,
+     "y": 4420001.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5a6-2580-7000-8000-000000000001",
+   "0192f5a6-2580-7000-8000-000000000002",
+   "0192f5a6-2580-7000-8000-000000000003",
+   "0192f5a6-2580-7000-8000-000000000004",
+   "0192f5a6-2580-7000-8000-000000000005",
+   "0192f5a6-2580-7000-8000-000000000006",
+   "0192f5a6-2580-7000-8000-000000000007",
+   "0192f5a6-2580-7000-8000-000000000008",
+   "0192f5a6-2580-7000-8000-000000000009",
+   "0192f5a6-2580-7000-8000-00000000000a"
+  ]
+ },
+ "cases": [
+  {
+   "name": "Bu uzaklığı koru: parselin ön kenarı yolun kenarından 5 m'ye, bağ ve d1 = 5 aynı adımda; tek adımda geri alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "within": 1e-06,
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canRedo": true,
+      "constraintKinds": [],
+      "parameters": [],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Referansla tek seferlik: kenar yolun kenarından 8 m'ye; bağ yazılmaz, yol kayınca parsel kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 8,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 560,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": -2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -1
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420003.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420003.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bu uzaklığı koru şimdiki uzaklıkla: kenar yerinde kalır, yalnız bağ yazılır (d1 = 6)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "before": 600,
+       "after": 600,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 0,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "6"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol 2 m güneye kayınca bağlı ön kenar da 2 m kayar, yan kenarlar uzar; tek geri alma adımı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -2
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420007.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420007.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420002.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420002.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Taşı",
+     "within": 1e-06,
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "canRedo": true,
+      "constraintKinds": [
+       "distance"
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420004.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol kendi doğrultusunda 3 m kayınca bağlı kenar yerinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 3,
+       "dy": 0
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487193.0,
+         "y": 4420004.0
+        },
+        "b": {
+         "x": 487283.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol döndürülünce bağ tutmaz: constraint_conflict, hiçbir şey yazılmaz; bağ kaldırılınca geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "rotate",
+       "center": {
+        "x": 487190.0,
+        "y": 4420004.0
+       },
+       "angle": 0.01
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_conflict",
+       "message": "Bağlı kenar artık referansına paralel değil (referans ya da kenar döndü; bağlı kenar döndürülmez); hiçbir şey yazılmadı. Şu bağ kaldırılınca düzenleme geçer: d1 (Uzaklık). Ya da kısıtları gevşeterek düzenleyin.",
+       "uids": "$any",
+       "bonds": [
+        {
+         "id": "$any",
+         "label": "Uzaklık",
+         "parameter": "d1",
+         "parts": [
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000002",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000001",
+           "element": {
+            "kind": "boundary",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         ],
+         "kept": 5,
+         "frees": true
+        }
+       ]
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420004.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki bağlı parsel tutulur: yol kayınca constraint_conflict, hiçbir şey yazılmaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Harita bağı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "cad"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cekme",
+      "name": "Çekme",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bordur",
+      "name": "Bordür",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487200.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 2,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+       "x": 487190.0,
+       "y": 4420004.0
+      },
+      "b": {
+       "x": 487280.0,
+       "y": 4420004.0
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487220.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487240.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487240.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "cekme",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487203.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487217.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487217.0,
+        "y": 4420037.0
+       },
+       {
+        "x": 487203.0,
+        "y": 4420037.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "kilitli",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487250.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487270.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487270.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487250.0,
+        "y": 4420040.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "bordur",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487185.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487188.0,
+        "y": 4420007.0
+       },
+       {
+        "x": 487245.0,
+        "y": 4420007.0
+       },
+       {
+        "x": 487248.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+       "x": 487190.0,
+       "y": 4420060.0
+      },
+      "b": {
+       "x": 487240.0,
+       "y": 4420062.0
+      }
+     },
+     {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "parsel",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487300.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487320.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487320.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487300.0,
+        "y": 4420040.0
+       }
+      ],
+      "bulges": [
+       0.2,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "kind": "circle",
+      "id": 9,
+      "layerId": "yol",
+      "attrs": {},
+      "c": {
+       "x": 487350.0,
+       "y": 4420004.0
+      },
+      "r": 3.0
+     },
+     {
+      "kind": "line",
+      "id": 10,
+      "layerId": "yol",
+      "attrs": {},
+      "a": {
+       "x": 487190.0,
+       "y": 4420001.0
+      },
+      "b": {
+       "x": 487280.0,
+       "y": 4420001.0
+      }
+     }
+    ],
+    "uids": [
+     "0192f5a6-2580-7000-8000-000000000001",
+     "0192f5a6-2580-7000-8000-000000000002",
+     "0192f5a6-2580-7000-8000-000000000003",
+     "0192f5a6-2580-7000-8000-000000000004",
+     "0192f5a6-2580-7000-8000-000000000005",
+     "0192f5a6-2580-7000-8000-000000000006",
+     "0192f5a6-2580-7000-8000-000000000007",
+     "0192f5a6-2580-7000-8000-000000000008",
+     "0192f5a6-2580-7000-8000-000000000009",
+     "0192f5a6-2580-7000-8000-00000000000a"
+    ],
+    "constraints": {
+     "parameters": [
+      {
+       "name": "d1",
+       "kind": "length",
+       "expression": "6"
+      }
+     ],
+     "constraints": [
+      {
+       "id": "0192f5a6-2580-7000-8000-000000000101",
+       "rule": {
+        "kind": "distance",
+        "a": {
+         "uid": "0192f5a6-2580-7000-8000-000000000002",
+         "element": {
+          "kind": "segment",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "b": {
+         "uid": "0192f5a6-2580-7000-8000-000000000005",
+         "element": {
+          "kind": "boundary",
+          "part": 0,
+          "ring": 0,
+          "index": 0
+         }
+        },
+        "left": true,
+        "parameter": "d1"
+       }
+      }
+     ]
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -2
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_conflict",
+       "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Şu bağ kaldırılınca düzenleme geçer: d1 (Uzaklık). Ya da kısıtları gevşeterek düzenleyin.",
+       "uids": "$any",
+       "bonds": [
+        {
+         "id": "$any",
+         "label": "Uzaklık",
+         "parameter": "d1",
+         "parts": [
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000002",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000005",
+           "element": {
+            "kind": "boundary",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         ],
+         "kept": 6,
+         "measured": 8,
+         "frees": true
+        }
+       ]
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "fields": {
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420004.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420004.0
+        }
+       },
+       "5": {
+        "pts": [
+         {
+          "x": 487250.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487250.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bağlı kenar doğrudan kaydırılınca constraint_conflict; gevşeterek düzenlenince bağ kalkar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420009.0
+       },
+       "distance": 1
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_conflict",
+       "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Şu bağ kaldırılınca düzenleme geçer: d1 (Uzaklık). Ya da kısıtları gevşeterek düzenleyin.",
+       "uids": "$any",
+       "bonds": [
+        {
+         "id": "$any",
+         "label": "Uzaklık",
+         "parameter": "d1",
+         "parts": [
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000002",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000001",
+           "element": {
+            "kind": "boundary",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         ],
+         "kept": 5,
+         "measured": 4,
+         "frees": true
+        }
+       ]
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "constraintKinds": [
+       "distance"
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420009.0
+       },
+       "distance": 1
+      }
+     },
+     "relaxConstraints": true,
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 620,
+       "after": 640,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "constraints_relaxed",
+        "message": "Kısıtlar gevşetildi: düzenlemenin bozduğu 1 kısıt kaldırıldı."
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [],
+      "parameters": [],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420008.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420008.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parametre 7 olunca kenar yolun kenarından 7 m'ye kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.parameters.edit",
+     "input": {
+      "edits": [
+       {
+        "kind": "set",
+        "name": "d1",
+        "expression": "7"
+       }
+      ]
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "7"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420011.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420011.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420004.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bağ kaldırılınca yol yalnız kayar, parsel yerinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.constraints.edit",
+     "input": {
+      "edit": {
+       "kind": "remove",
+       "ids": [
+        "$constraint:0"
+       ]
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [],
+      "parameters": []
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -2
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420002.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420002.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zincir: çekme alanının ön kenarı parselin ön kenarına 5 m'de bağlı; yol 2 m kayınca ikisi birden kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:4",
+       "at": {
+        "x": 487210.0,
+        "y": 4420015.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:1",
+        "at": {
+         "x": 487210.0,
+         "y": 4420009.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "before": 308,
+       "after": 322,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance",
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       },
+       {
+        "name": "d2",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "4": {
+        "pts": [
+         {
+          "x": 487203.0,
+          "y": 4420014.0
+         },
+         {
+          "x": 487217.0,
+          "y": 4420014.0
+         },
+         {
+          "x": 487217.0,
+          "y": 4420037.0
+         },
+         {
+          "x": 487203.0,
+          "y": 4420037.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -2
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance",
+       "distance"
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420007.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420007.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420002.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420002.0
+        }
+       },
+       "4": {
+        "pts": [
+         {
+          "x": 487203.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487217.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487217.0,
+          "y": 4420037.0
+         },
+         {
+          "x": 487203.0,
+          "y": 4420037.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki referans çelişir: kenar iki yola bağlı; yollardan biri kayınca constraint_conflict, iki bağdan biri kaldırılınca geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 600,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       }
+      ],
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420009.0
+       },
+       "reference": {
+        "id": "$uidOf:10",
+        "at": {
+         "x": 487210.0,
+         "y": 4420001.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "before": 620,
+       "after": 620,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 0,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance",
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "5"
+       },
+       {
+        "name": "d2",
+        "kind": "length",
+        "expression": "8"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -1
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "constraint_conflict",
+       "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Şu bağlardan biri kaldırılınca düzenleme geçer: d1 (Uzaklık), d2 (Uzaklık). Ya da kısıtları gevşeterek düzenleyin.",
+       "uids": "$any",
+       "bonds": [
+        {
+         "id": "$any",
+         "label": "Uzaklık",
+         "parameter": "d1",
+         "parts": [
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000002",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000001",
+           "element": {
+            "kind": "boundary",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         ],
+         "kept": 5,
+         "measured": 6,
+         "frees": true
+        },
+        {
+         "id": "$any",
+         "label": "Uzaklık",
+         "parameter": "d2",
+         "parts": [
+          {
+           "uid": "0192f5a6-2580-7000-8000-00000000000a",
+           "element": {
+            "kind": "segment",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          },
+          {
+           "uid": "0192f5a6-2580-7000-8000-000000000001",
+           "element": {
+            "kind": "boundary",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+           }
+          }
+         ],
+         "kept": 8,
+         "measured": 8,
+         "frees": true
+        }
+       ]
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420009.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420040.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420040.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420004.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bordürün (çoklu çizgi) düz kenarı yolun kenarından 2 m'de tutulur; yol kayınca izler, komşu kenarlar uzar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:6",
+       "at": {
+        "x": 487216.5,
+        "y": 4420007.0
+       },
+       "distance": 2,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487216.5,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "before": 83.68332812825267,
+       "after": 85.27435336888749,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current",
+       "bonds": [
+        "$any"
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "constraintKinds": [
+       "distance"
+      ],
+      "parameters": [
+       {
+        "name": "d1",
+        "kind": "length",
+        "expression": "2"
+       }
+      ],
+      "fields": {
+       "6": {
+        "pts": [
+         {
+          "x": 487185.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487188.23076923075,
+          "y": 4420006.0
+         },
+         {
+          "x": 487244.76923076925,
+          "y": 4420006.0
+         },
+         {
+          "x": 487248.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0,
+       "dy": -2
+      }
+     },
+     "within": 1e-06,
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "fields": {
+       "6": {
+        "pts": [
+         {
+          "x": 487185.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487188.6923076923,
+          "y": 4420004.0
+         },
+         {
+          "x": 487244.3076923077,
+          "y": 4420004.0
+         },
+         {
+          "x": 487248.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "2": {
+        "a": {
+         "x": 487190.0,
+         "y": 4420002.0
+        },
+        "b": {
+         "x": 487280.0,
+         "y": 4420002.0
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Referans kenara paralel değil: reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:7",
+        "at": {
+         "x": 487215.0,
+         "y": 4420061.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Kenar referansa paralel değil (aralarında 2.2906° var); uzaklık yalnız 0,001° içinde paralel kenarlar arasında tutulur.",
+       "path": "work.reference.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Referans düz bir kenar değil (daire): reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:9",
+        "at": {
+         "x": 487353.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Referans düz bir kenar olmalı: bir çizgi ya da bir yolun veya alanın düz kenarı.",
+       "path": "work.reference.id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı kenar referansla kaydırılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:8",
+       "at": {
+        "x": 487310.0,
+        "y": 4420009.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487310.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Yaylı kenarın bir doğruya uzaklığı tek bir sayı değil; referansla yalnız düz kenar kaydırılır.",
+       "path": "work.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenar kendisinin referansı olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:1",
+        "at": {
+         "x": 487210.0,
+         "y": 4420010.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Kenar kendisinin referansı olamaz; başka bir kenar seçin.",
+       "path": "work.reference.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Referansla hedef alan verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "area": 650,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Referansla hedef alan verilmez: referansa uzaklığı (distance) verin.",
+       "path": "work.area"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Referansla ne uzaklık ne Bu uzaklığı koru: reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Referansla bir uzaklık (distance) verin ya da şimdiki uzaklığı Bu uzaklığı koru (keep) ile bağlayın.",
+       "path": "work.distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Referansa eksi uzaklık reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": -1,
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487210.0,
+         "y": 4420004.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_distance",
+       "message": "Referansa uzaklık eksi olamaz: kenar bulunduğu yanda kalır; sıfır ya da daha büyük bir uzaklık yazın.",
+       "path": "work.distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenar referansın doğrusu üstünde: hangi yana kayacağı belli değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487210.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "reference": {
+        "id": "$uidOf:3",
+        "at": {
+         "x": 487230.0,
+         "y": 4420010.0
+        }
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Kenar referansın doğrusu üstünde; hangi yana kayacağı belli değil. Önce kenarı Paralel kaydır ile bir yana alın.",
+       "path": "work.distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katmandaki kenara yalnız bağ kurulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:5",
+       "at": {
+        "x": 487260.0,
+        "y": 4420010.0
+       },
+       "reference": {
+        "id": "$uidOf:2",
+        "at": {
+         "x": 487260.0,
+         "y": 4420004.0
+        },
+        "keep": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli katman” katmanı kilitli; kenara bağ kurulmaz. Kilidi Katmanlar panelinden açın.",
+       "path": "work.id"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  }
+ ]
+}

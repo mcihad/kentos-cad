@@ -36,7 +36,7 @@ sırayla alır.
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
@@ -676,6 +676,17 @@ Kapsam işareti: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Set Grade/Slo
 Kanıtlanan: Sahneden seç iki tıkla başlangıç ve bitiş köşesini alır (seçim açıklığında en yakın köşe), pencere aralıkla
 ve önizlemeyle döner, köşelerin yeri yardım satırında; uzak tıklama söylenir, Esc pencereye döner; komut aynı
 (`cad.entities.grade`, numarayla). Açık: seçilen köşelerin sahnede işareti, kalıcı ilişki, çok parçalı nesne.
+
+**8 Kasım 2026, dördüncü tur — Paralel kaydır'da referans ve Bu uzaklığı koru ([ADR 2580](../docs/adr/2580-parallel-shift-reference-and-kept-distance.md)).**
+Kapsam işareti: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Araştırma: Civil 3D 2026'nın güzergâha bağlı
+özellik çizgisi (kendiliğinden güncellenir, bağlıyken doğrudan düzenlenmez), OpenRoads'un öteleme kuralı ve Remove Rules.
+Kanıtlanan: kalıcı ilişki alt maddesinin ilk parçası. `cad.shapes.edit` › `edgeShift`'in `reference`'ı kenarı başka bir
+nesnenin düz kenarına uzaklıkla getirir (şimdi bu değere getir); `keep` uzaklığı harita bağı olarak yazar (bu ilişkiyi
+koru). Sınır kenarı (`boundary`) mimari bağların doğrusal çözümüyle izler, komşular Paralel kaydır'ın kuralıyla uzar ya da
+kısalır; dönen referans, kilitli komşu, doğrudan düzenleme ve çelişen iki bağ hiçbir şey yazmadan, yoldaki bağı söyleyerek
+reddedilir; `.kcad` şema 208. 22 ortak durum (harita koordinatında, kesirlerle), MCP, masaüstü (Referans R, Koru K, Enter
+şimdikini korur) ve resimler. Açık: dönen referansı izleyen bağ, yaylı bağ, ortak sınırlı izleme, çok parçalı nesne,
+seçilen köşelerin sahnede işareti.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

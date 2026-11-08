@@ -11,7 +11,7 @@ use std::collections::HashSet;
 
 use kentos_commands::{
     CommandResult, CommandWarning, ConstraintId, ConstraintsListed, ConstraintsQuery, EntityId,
-    ListedConstraint, rule_is_architectural, rule_label,
+    ListedConstraint, rule_is_architectural, rule_is_bond, rule_label,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -164,7 +164,7 @@ pub fn read(doc: &Document, input: &ConstraintsQuery) -> CommandResult<Constrain
                 .parameter()
                 .filter(|_| !c.reference)
                 .and_then(|p| kept.get(p).copied()),
-            holds: if rule_is_architectural(&c.rule) {
+            holds: if rule_is_bond(&c.rule) {
                 !unmet.contains(&c.id)
             } else {
                 !failing.contains(&c.id)

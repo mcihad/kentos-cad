@@ -52,6 +52,26 @@ pub enum SplitMethod {
     Length,
 }
 
+/// Paralel kaydır's reference (docs/adr/2580): the straight segment nearest `at` of object `id` (a line, or a path's
+/// or an area's straight edge; one on a locked layer too, it is only read) that the edge keeps its distance from. With
+/// it, `distance` is the distance to hold between the reference's line and the edge, on the side the edge is now (not
+/// a shift); the edge must be straight and parallel to the reference within 0.001°. `keep` (Bu uzaklığı koru): the
+/// distance written as a lasting bond in the same step, a distance constraint from the reference to the edge with its
+/// parameter, so that the edge follows when the reference moves; without `distance` the bond keeps the distance now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ShiftReference {
+    pub id: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Vec2,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub keep: bool,
+}
+
 /// The edit, with what it works on.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -86,7 +106,8 @@ pub enum ShapeWork {
     /// lengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects
     /// sharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what
     /// the edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with
-    /// `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too.
+    /// `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. With
+    /// `reference` (docs/adr/2580) `distance` is the distance from the reference's line, and `keep` writes it as a bond.
     EdgeShift {
         id: String,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -102,6 +123,9 @@ pub enum ShapeWork {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         topology: Option<crate::StretchTopology>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        reference: Option<ShiftReference>,
     },
     /// Sadeleştir: the paths' vertices within `tolerance` of their outline dropped.
     Simplify {
@@ -190,6 +214,10 @@ pub struct ShapesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ShapeNeighbour>>"))]
     pub neighbours: Vec<ShapeNeighbour>,
+    /// Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub bonds: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

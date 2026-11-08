@@ -463,6 +463,10 @@ pub use column_distances::distances as columns_distances;
 // Mimari denetim (docs/adr/0703).
 pub mod arch_audit;
 pub mod arch_bonds;
+// Harita bağı: sınır kenarının referansa kalıcı uzaklığı (docs/adr/2580).
+pub(crate) mod map_bonds;
+// Paralel kaydır'ın referansı ve Bu uzaklığı koru (docs/adr/2580).
+pub(crate) mod edge_shift_reference;
 pub mod arch_exceptions;
 pub use opening_distances::distances as openings_distances;
 pub use wall_distances::distances as walls_distances;

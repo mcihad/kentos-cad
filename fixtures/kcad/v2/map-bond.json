@@ -1,0 +1,24 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Harita bağı",
+  "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 1000.0, "workspace": "cad"},
+  "origin": {"x": 0.0, "y": 0.0},
+  "layers": [
+    {"id": "parsel", "name": "Parsel", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+    {"id": "yol", "name": "Yol", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}
+  ],
+  "activeLayer": "parsel",
+  "uids": ["0192f5a6-2580-7000-8000-000000000001", "0192f5a6-2580-7000-8000-000000000002"],
+  "styles": {"items": [], "categories": []},
+  "entities": [
+    {"kind": "polygon", "id": 1, "layerId": "parsel", "attrs": {}, "pts": [{"x": 487200.0, "y": 4420010.0}, {"x": 487220.0, "y": 4420010.0}, {"x": 487220.0, "y": 4420040.0}, {"x": 487200.0, "y": 4420040.0}]},
+    {"kind": "line", "id": 2, "layerId": "yol", "attrs": {}, "a": {"x": 487190.0, "y": 4420005.0}, "b": {"x": 487230.0, "y": 4420005.0}}
+  ],
+  "constraints": {
+    "parameters": [{"name": "d1", "kind": "length", "expression": "5"}],
+    "constraints": [
+      {"id": "0192f5a6-2580-7000-8000-000000000101", "rule": {"kind": "distance", "a": {"uid": "0192f5a6-2580-7000-8000-000000000002", "element": {"kind": "segment", "part": 0, "ring": 0, "index": 0}}, "b": {"uid": "0192f5a6-2580-7000-8000-000000000001", "element": {"kind": "boundary", "part": 0, "ring": 0, "index": 0}}, "left": true, "parameter": "d1"}}
+    ]
+  }
+}

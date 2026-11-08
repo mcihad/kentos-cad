@@ -115,8 +115,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   durum); web'in Detay eşleştirme penceresinde Alan gir.
 - Ad değişikliği (8 Kasım 2026): web'in arayüzünde Detay eşleştirme, GNSS ağ dengelemesi, katman menüsünde Koordinat
   sistemi ▸ Tanımla / Dönüştür, Rasteri projenin sistemine çevir; adayın işareti Eşleştirme (eski Uzlaştırma okunur).
-- MAP-05 / ADR 2560: web'in `map.survey.network` işleyicisinde istasyonların `ellipse`'i (42 ortak durum); web'in Arşivden
-  ağ dengelemesi penceresinde güven bölgesi satırı ve sütunu.
+- MAP-05 / ADR 2560: web'in `map.survey.network` işleyicisinde istasyonların `ellipse`'i (42 ortak durum); web'in GNSS ağ
+  dengelemesi penceresinde güven bölgesi satırı ve sütunu.
+- MAP-06 / ADR 2580: web'in `cad.shapes.edit` işleyicisinde `edgeShift`'in `reference`'ı ve `keep`'i, bağ çözümünde sınır
+  kenarı (`boundary`; 22 ortak durum); web'in `.kcad` okuyucusunda şema 208; Paralel kaydır aracında Referans (R) ve Koru
+  (K), bağın işareti.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.
