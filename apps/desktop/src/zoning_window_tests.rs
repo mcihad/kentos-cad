@@ -108,6 +108,38 @@ fn the_parcels_inside_a_road_s_width() {
     assert_eq!(app.selection.ids().len(), 8, "the road, the four decisions and the three parcels");
 }
 
+/// docs/adr/3040: a third road across parcel 101/2 puts it in two road widths; the summary sums its parts (25 m² in
+/// Y1's, 250 m² in Y3's: 275 m², from two roads), largest first; Bulguları göster hatches the decisions' and the
+/// parcels' parts in road widths until İşareti kaldır, worked out again when the drawing changes.
+#[test]
+fn a_parcel_in_two_roads_is_summed_and_the_parts_hatched() {
+    let mut app = opened(Some(Module::Map), ROAD_PARCEL);
+    let doc = app.document.as_mut().expect("a drawing");
+    let out = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.entities.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "yollar", "objects": [{"geometry": {"kind": "polyline",
+            "pts": [{"x": 487035.0, "y": 4420000.0}, {"x": 487035.0, "y": 4420060.0}]},
+            "attrs": {"YolKimlik": "Y3", "Tur": "tasit", "Genislik": "10"}}]}),
+    )
+    .expect("runs");
+    assert_eq!(out["status"], "completed", "{out}");
+    let _ = app.update(Message::Run("zoning.check"));
+    let totals = app.zoning_parcel_totals();
+    assert_eq!(totals[0].0, "101/2");
+    assert_eq!(totals[0].1, 2, "two roads");
+    assert!((totals[0].2 - 275.0).abs() < 1e-6, "{totals:?}");
+    // Bulguları göster: the parts hatched, kept until İşareti kaldır.
+    let _ = app.update(Message::Zoning(Z::Show));
+    let m = app.zoning_marks().expect("hatched");
+    let area: f64 = m.regions.iter().map(|a| kentos_geometry_core::geom::region::net_area(a)).sum();
+    assert!(area > 275.0, "the decisions' and the parcels' parts: {area}");
+    assert!(app.available("data.unmark"));
+    let _ = app.update(Message::Run("data.unmark"));
+    assert!(app.zoning_marks().is_none());
+}
+
 #[test]
 fn the_clean_plan_has_no_finding() {
     let mut app = opened(Some(Module::Map), GOOD);
@@ -251,5 +283,53 @@ fn road_parcel_screens() {
             snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
             println!("{}", path.display());
         }
+    }
+}
+
+
+/// docs/adr/3040: the road widths' parts hatched over the drawing after Bulguları göster (a third road across 101/2),
+/// light wide and dark narrow, `.run/gui-evidence/yola-giren-3040/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib zoning_window_tests::hatch_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn hatch_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yola-giren-3040");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map), ROAD_PARCEL);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let doc = app.document.as_mut().expect("a drawing");
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            "cad.entities.create",
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({"layerId": "yollar", "objects": [{"geometry": {"kind": "polyline",
+                "pts": [{"x": 487035.0, "y": 4420000.0}, {"x": 487035.0, "y": 4420060.0}]},
+                "attrs": {"YolKimlik": "Y3", "Tur": "tasit", "Genislik": "10"}}]}),
+        );
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("zoning.check"));
+        let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::Zoning(Z::Show));
+        app.selection.set(Vec::new());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("cizimde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
     }
 }

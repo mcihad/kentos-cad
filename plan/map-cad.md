@@ -39,7 +39,7 @@ sırayla alır.
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
@@ -961,6 +961,13 @@ Kapsam: **Harita + CBS**. Araştırma: Planlı Alanlar İmar Yönetmeliği m. 9(
 yolun şeridi parsel katmanındaki parsellerle (hangi planda olursa olsun) çakışmamalı; çakışan alan, yol ve Ada/Parsel;
 yasal sonuç iddia edilmez. 6 yeni ortak durum (46), MCP, masaüstü (Yola giren parsel, Alan grubu, Nesne sütununda
 Ada/Parsel) ve resimler. Açık: plan değişikliği taslağı, sembolün karardan seçilmesi, resmî şema ve eşleme.
+
+**9 Kasım 2026, beşinci tur — yola giren kısımlar çizimde ve parsel başına toplam ([ADR 3040](../docs/adr/3040-road-width-overlaps-hatched.md)).**
+Kapsam: **Harita + CBS**. Kanıtlanan: denetimin yan işlevi (`zoning_check::with_regions`) yol genişliği ve yola giren
+parsel bulgularının çekirdekteki örtüşme bölgelerini verir (komutun cevabı aynı); Seç ve göster onları çizimde tehlike
+renginde tarar, İşareti kaldır'a dek, her bölge ayrı (üst üste binenler birbirini silmez); özet yola giren parselleri
+toplam alanlarıyla, birden çok yoldan girenleri sayıyla söyler; masaüstü testi (üçüncü yolla 101/2: 275 m², 2 yoldan)
+ve resimler. Açık: bölgelerin komutun cevabına girmesi, plan değişikliği taslağı, sembolün karardan seçilmesi.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

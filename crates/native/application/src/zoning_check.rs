@@ -127,6 +127,24 @@ pub fn plan_layers(doc: &Document) -> Vec<String> {
 }
 
 fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
+    run_with_regions(doc, input).map(|(checked, _)| checked)
+}
+
+/// The answer and each finding's regions (docs/adr/3040): a road width's or a road parcel's overlap with the road's
+/// corridor, as the core's rule finds it; none for the other kinds. The command's answer does not carry them; Bulguları
+/// göster draws them.
+pub fn with_regions(
+    doc: &Document,
+    input: &ZoningCheck,
+) -> Result<(ZoningChecked, Vec<Vec<kentos_geometry_core::geom::arrangement::Area>>), String> {
+    run_with_regions(doc, input).map_err(|stop| stop.into_error().message)
+}
+
+#[allow(clippy::type_complexity)]
+fn run_with_regions(
+    doc: &Document,
+    input: &ZoningCheck,
+) -> Result<(ZoningChecked, Vec<Vec<kentos_geometry_core::geom::arrangement::Area>>), Stop> {
     let tolerance = input.tolerance.unwrap_or(FIRST_TOLERANCE);
     if !tolerance.is_finite() || tolerance < LEAST_TOLERANCE {
         return Err(fail(
@@ -138,7 +156,9 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
     let Some(p) = builtin_profile(ZONING_PROFILE) else {
         return Err(fail(codes::INVALID_INPUT, "İmar planı profili okunamadı.".into(), "profile"));
     };
-    let mut findings: Vec<(usize, i64, ZoningFinding)> = Vec::new();
+    // The regions the next finding is shown by (a road's corridor's overlap, docs/adr/3040), taken by `say`.
+    let pending: std::cell::RefCell<Vec<kentos_geometry_core::geom::arrangement::Area>> = std::cell::RefCell::new(Vec::new());
+    let mut findings: Vec<(usize, i64, ZoningFinding, Vec<kentos_geometry_core::geom::arrangement::Area>)> = Vec::new();
     let mut say = |kind: &str, items: &[&Item<'_>], area: Option<f64>, message: String| {
         let order = KINDS.iter().position(|k| *k == kind).unwrap_or(KINDS.len());
         let mut items = items.to_vec();
@@ -148,6 +168,7 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
             order,
             first,
             ZoningFinding { kind: kind.to_owned(), uids: items.iter().map(|i| i.uid.clone()).collect(), area, message },
+            pending.take(),
         ));
     };
     // Each class's layer and objects, in the drawing's order.
@@ -553,6 +574,7 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
                     w => Some(w),
                 });
                 let (Some((road, written)), Some(other)) = (road, other) else { continue };
+                *pending.borrow_mut() = f.regions.clone();
                 match other {
                     Whose::Decision(decision) => say(
                         "roadWidth",
@@ -585,14 +607,14 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
         }
     }
 
-    findings.sort_by_key(|(order, first, _)| (*order, *first));
-    let findings: Vec<ZoningFinding> = findings.into_iter().map(|(_, _, f)| f).collect();
+    findings.sort_by_key(|(order, first, _, _)| (*order, *first));
+    let (findings, regions): (Vec<ZoningFinding>, Vec<Vec<_>>) = findings.into_iter().map(|(_, _, f, r)| (f, r)).unzip();
     let mut counts: BTreeMap<String, u32> = BTreeMap::new();
     for f in &findings {
         *counts.entry(f.kind.clone()).or_default() += 1;
     }
     let n = |v: usize| v.min(u32::MAX as usize) as u32;
-    Ok(ZoningChecked {
+    Ok((ZoningChecked {
         profile: ZONING_PROFILE.to_owned(),
         tolerance,
         plans: n(plans.len()),
@@ -600,7 +622,7 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
         notes: n(notes.len()),
         findings,
         counts,
-    })
+    }, regions))
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningCheck) -> CommandResult<()> {

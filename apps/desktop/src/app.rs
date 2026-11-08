@@ -1549,6 +1549,8 @@ pub struct App {
     pub(crate) parcel_graph: Option<crate::parcel_boundaries_marks::Shown>,
     /// Senaryo ölçüleri's access left on the drawing (docs/adr/2260), until İşareti kaldır.
     pub(crate) impact_reach: Option<crate::impact_reach_marks::Shown>,
+    /// İmar planı denetimi's road overlaps hatched on the drawing (docs/adr/3040).
+    pub(crate) zoning_shown_marks: Option<crate::zoning_marks::Shown>,
     pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) asbuilt: crate::asbuilt_window::State,
@@ -2018,6 +2020,7 @@ impl App {
             parcel_boundaries: Default::default(),
             parcel_graph: None,
             impact_reach: None,
+            zoning_shown_marks: None,
             pipes_check: Default::default(),
             exchange_check: Default::default(),
             asbuilt: Default::default(),
@@ -3680,6 +3683,7 @@ impl App {
                 self.sources.extent_mark = None;
                 self.parcel_graph = None;
                 self.impact_reach = None;
+                self.zoning_shown_marks = None;
                 return self.data_event(crate::search::Event::Unmark);
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
@@ -4229,6 +4233,7 @@ impl App {
                     || self.extent_mark().is_some()
                     || self.parcel_graph_marks().is_some()
                     || self.impact_reach_marks().is_some()
+                    || self.zoning_marks().is_some()
             }
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),

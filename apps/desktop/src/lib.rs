@@ -81,6 +81,7 @@ mod survey_network_window;
 mod features_reconcile_window;
 mod features_reconcile_fill;
 mod zoning_window;
+mod zoning_marks;
 mod impact_window;
 mod readjustment_window;
 mod ortho_compare_window;

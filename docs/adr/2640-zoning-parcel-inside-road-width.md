@@ -49,6 +49,7 @@ eksik plan notu, kopuk yol devamlılığı ve üst/alt plan tutarsızlığı sah
 
 ## Sonra
 
-- Parselin yola giren kısmının sahnede taranması; parsel bazında toplam (birden çok yoldan).
+- Parselin yola giren kısmının sahnede taranması; parsel bazında toplam (birden çok yoldan). Yapıldı:
+  [ADR 3040](3040-road-width-overlaps-hatched.md).
 - Plan değişikliği taslağı, sembolün karardan seçilmesi, resmî şema ve eşleme (MAP-09'un öbür maddeleri).
 - Web (TODOS §0.2).

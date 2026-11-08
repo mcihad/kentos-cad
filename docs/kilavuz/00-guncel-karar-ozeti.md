@@ -246,6 +246,9 @@
 - **Sınır grafiği'nde satır çizimde (9 Kasım 2026; MAP-08, [ADR 3020](../../docs/adr/3020-boundary-graph-row-on-the-drawing.md)).**
   Tabloda seçilen satıra Çizimde göster gider ve onu vurgu renginde öne çıkarır (sınır eğrisi boyunca, köşe ve sorun
   çift halkayla); kimliğiyle tutulur. Komut değişmedi. Harita + CBS'nin tipli parsel katmanı.
+- **Yola giren kısımlar çizimde (9 Kasım 2026; MAP-09, [ADR 3040](../../docs/adr/3040-road-width-overlaps-hatched.md)).**
+  İmar planı denetiminin Seç ve göster'i yol genişliğine giren karar ve parsel kısımlarını İşareti kaldır'a dek tarar;
+  özet parsel başına toplamı (birden çok yoldan) söyler. Komutun cevabı aynı. Harita + CBS.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

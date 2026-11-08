@@ -164,10 +164,22 @@ impl App {
                     }
                 }
                 let n = slots.len();
+                // The road overlaps hatched on the drawing until İşareti kaldır (docs/adr/3040).
+                let hatched = self
+                    .zoning_shown()
+                    .iter()
+                    .filter(|f| crate::zoning_marks::HATCHED.contains(&f.kind.as_str()))
+                    .count();
+                let input = ZoningCheck { tolerance: Some(self.zoning.tolerance) };
+                self.zoning_shown_marks = (hatched > 0).then(|| crate::zoning_marks::Shown::new(doc.session, input));
                 self.selection.set(slots);
                 self.zoning = State::default();
                 self.dialog = None;
-                self.say(Level::Info, format!("{TITLE}: bulgulardaki {n} nesne seçildi."));
+                let words = match hatched {
+                    0 => format!("{TITLE}: bulgulardaki {n} nesne seçildi."),
+                    h => format!("{TITLE}: bulgulardaki {n} nesne seçildi; yola giren {h} kısım çizimde tarandı (İşareti kaldır siler)."),
+                };
+                self.say(Level::Info, words);
                 return Task::done(Message::Run("view.zoomSelection"));
             }
             Event::ApplyProfile => {
@@ -198,6 +210,34 @@ impl App {
             }
         }
         Task::none()
+    }
+
+    /// The parcels that enter road widths, each with the sum of its parts in every road it enters (docs/adr/3040): its
+    /// name and roads, largest first; none without such findings.
+    pub(crate) fn zoning_parcel_totals(&self) -> Vec<(String, usize, f64)> {
+        let (Some(doc), Some(Ok(r))) = (self.document.as_ref(), &self.zoning.answer) else { return Vec::new() };
+        let mut by: Vec<(String, String, usize, f64)> = Vec::new();
+        for f in r.findings.iter().filter(|f| f.kind == "roadParcel") {
+            // The parcel is the finding's area object (the road is its axis).
+            let Some((uid, e)) = f.uids.iter().find_map(|u| {
+                let e = Uuid::parse_str(u).ok().and_then(|x| doc.model.slot_of(x)).and_then(|s| doc.model.get(s))?;
+                matches!(e, kentos_commands::Entity::Polygon(_)).then(|| (u.clone(), e))
+            }) else {
+                continue;
+            };
+            let a = &e.base().attrs;
+            let name: Vec<&str> = ["Ada", "Parsel"].iter().filter_map(|k| a.get(*k).map(|v| v.trim())).filter(|v| !v.is_empty()).collect();
+            let name = if name.is_empty() { format!("#{}", e.base().id) } else { name.join("/") };
+            match by.iter_mut().find(|x| x.0 == uid) {
+                Some(x) => {
+                    x.2 += 1;
+                    x.3 += f.area.unwrap_or(0.0);
+                }
+                None => by.push((uid, name, 1, f.area.unwrap_or(0.0))),
+            }
+        }
+        by.sort_by(|a, b| b.3.total_cmp(&a.3));
+        by.into_iter().map(|(_, name, roads, area)| (name, roads, area)).collect()
     }
 
     /// A finding's objects as the table names them: a plan by its PlanKimlik, a decision by its KararKimlik, a note
@@ -251,6 +291,27 @@ impl App {
                         if total == 0 { "bulgu yok".to_owned() } else { format!("{total} bulgu") }
                     ),
                 ));
+                // Each parcel's parts in road widths summed, those in more than one road said (docs/adr/3040).
+                let totals = self.zoning_parcel_totals();
+                if !totals.is_empty() {
+                    let parts: Vec<String> = totals
+                        .iter()
+                        .take(6)
+                        .map(|(name, roads, area)| match roads {
+                            1 => format!("{name} {}", f.area(*area)),
+                            k => format!("{name} {} ({k} yoldan)", f.area(*area)),
+                        })
+                        .collect();
+                    let more = totals.len().saturating_sub(6);
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        format!(
+                            "Yola giren parseller, yol genişliğindeki toplam alanlarıyla: {}{}. Bulguları göster bu kısımları çizimde tarar.",
+                            parts.join(", "),
+                            if more > 0 { format!(" ve {more} parsel daha") } else { String::new() }
+                        ),
+                    ));
+                }
                 lines.push(words::text_line(
                     Kind::Info,
                     "Karar sembolden ya da renkten değil, alanların tipli değerlerinden okunur. Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir.",

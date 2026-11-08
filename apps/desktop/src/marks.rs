@@ -102,6 +102,8 @@ pub struct Marks {
     pub graph: Option<std::sync::Arc<crate::parcel_boundaries_marks::GraphMarks>>,
     /// Senaryo ölçüleri's access left on the drawing (docs/adr/2260).
     pub reach: Option<std::sync::Arc<crate::impact_reach_marks::ReachMarks>>,
+    /// İmar planı denetimi's road overlaps, hatched (docs/adr/3040).
+    pub zoning: Option<std::sync::Arc<crate::zoning_marks::ZoningMarks>>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
@@ -220,6 +222,7 @@ impl Marks {
             && self.problem.is_none()
             && self.graph.is_none()
             && self.reach.is_none()
+            && self.zoning.is_none()
             && self.broken.is_empty()
             && self.missing.is_empty()
             && self.clips.is_empty()
@@ -284,6 +287,9 @@ impl<Message> canvas::Program<Message> for Marks {
         if let Some(r) = &self.reach {
             let tokens = Tokens::of(theme);
             crate::impact_reach_marks::draw(&mut frame, r, &self.camera, &self.colors, &tokens);
+        }
+        if let Some(z) = &self.zoning {
+            crate::zoning_marks::draw(&mut frame, z, &self.camera, &self.colors, &Tokens::of(theme));
         }
         if let Some(g) = &self.graph {
             let tokens = Tokens::of(theme);
