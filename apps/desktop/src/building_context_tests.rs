@@ -418,3 +418,49 @@ fn oda_s_name_beside_the_cursor_takes_the_list_or_any_word() {
         app.session.prompt().text()
     );
 }
+
+#[test]
+fn duvar_shows_the_loop_s_area_and_kapat_writes_its_room_when_asked() {
+    use crate::viewport::Event;
+    let mut app = fresh_mimari();
+    let _ = app.update(Message::WindowResized(iced::Size::new(1440.0, 900.0)));
+    let _ = app.update(Message::Run("tool.wall"));
+    // The drawing area's size first: without it the camera's scale is unsettled and the snap's reach covers the room.
+    app.viewport.camera.set_size(1100.0, 600.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: -10.0,
+            min_y: -10.0,
+            max_x: 60.0,
+            max_y: 50.0,
+        },
+        24.0,
+    );
+    let _ = app.with_tool(|s, cx| s.configure("M", "yes", cx));
+    assert!(app.memory.wall_room, "Kapanınca mahal on");
+    // Large enough that its corners stand apart on the screen the test's camera gives (no snap between them).
+    for p in ["0,0", "50,0", "50,40"] {
+        let _ = app.submit_line(p);
+    }
+    // The pointer off the first corner's lines (tracking would take it there): (2, 38), the loop 1910 m².
+    let _ = app.update(Message::Viewport(Event::Moved(screen(&app, 2.0, 38.0))));
+    let format = app.format();
+    let lines = app
+        .session
+        .preview(&format)
+        .and_then(|p| p.tag)
+        .map(|t| t.lines)
+        .unwrap_or_default();
+    assert!(
+        lines
+            .iter()
+            .any(|l| l.starts_with("Döngü alanı") && l.contains("1910")),
+        "{lines:?}"
+    );
+    let _ = app.submit_line("0,40");
+    let _ = app.submit_line("K");
+    assert_eq!(counts(&app), (1, 1, 0), "the closed wall and its room");
+    assert!(crate::files_testing::last_said(&app).contains("mahali eklendi"));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(counts(&app), (0, 0, 0), "one undo takes both");
+}

@@ -167,6 +167,12 @@ pub fn wall_rows(memory: &Memory, styles: &[WallStyleDef], f: &Format) -> Vec<Se
 }
 pub fn wall_apply(key: &str, value: &str, cx: &mut Context<'_>) -> bool {
     match key {
+        // Kapanınca mahal (docs/adr/3022): Açık or Kapalı (yes, no as the toggle sends them).
+        "M" => {
+            let v = crate::prompt::fold_tr(value.trim());
+            cx.memory.wall_room = matches!(v.as_str(), "YES" | "AÇIK" | "ACIK" | "EVET" | "1");
+            true
+        }
         "S" | "H" => wall::choose(key, value, cx),
         "E" | "Ö" => {
             if key == "E"

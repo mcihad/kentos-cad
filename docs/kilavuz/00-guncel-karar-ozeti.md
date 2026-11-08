@@ -110,6 +110,9 @@
   - **Oda aracı (M21, [ADR 3021](../adr/3021-room-tool.md)):**
     - `tool.room` = `WallRectangle::room`: duvarlar, ortasından tohumlanan mahal ve etiketi bir `begin_group`'ta; reddedilen
       parça hepsini geri alır. Mahal adı açık seçimdir (`Setting::open`: liste önerir, her ad alınır).
+  - **Kapanınca mahal ve canlı döngü alanı (M22, [ADR 3022](../adr/3022-room-on-closing-and-live-loop-area.md)):**
+    - Duvar'ın `Memory::wall_room` (M): Kapat kapalı duvarı ve kutup noktasından tohumlanan mahali tek adımda yazar; ilk
+      değeri Kapalı. Çizerken etikette "Döngü alanı" (yol üzerinden, imleçten ilk köşeye kapanan halka).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

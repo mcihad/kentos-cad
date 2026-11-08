@@ -857,6 +857,8 @@ pub struct Memory {
     pub wall_justify: kentos_commands::WallJustify,
     pub wall_offset: f64,
     pub wall_style: Option<u64>,
+    /// Duvar's Kapanınca mahal (docs/adr/3022): a loop closed with Kapat writes its room's space too, one undo step.
+    pub wall_room: bool,
     /// Katman anahtarı (docs/adr/3008): Mimari objects go on their kinds' EK-4 layers instead of the active one.
     /// KentOS Mimari turns it on at start.
     pub layer_keys: bool,
@@ -1292,6 +1294,7 @@ impl Default for Memory {
             wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,
+            wall_room: false,
             wall_style: None,
             layer_keys: false,
             wall_pairs: false,

@@ -1,0 +1,29 @@
+# M22 (docs/adr/3022): Duvar's loop area while drawing and Kapanınca mahal, in the real window, on malzeme.kcad
+# (headless scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text. Duvar ▾ › Duvar; M turns Kapanınca mahal
+# on; three corners clicked and the pointer at the fourth: the tag says the loop's area; the fourth clicked and K
+# (Kapat): the closed wall and its room, one undo step.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 34 104   # Duvar ▾
+wait 600
+click 61 144   # araç: Duvar
+wait 600
+key m
+wait 500
+click 450 250
+wait 300
+click 850 250
+wait 300
+click 850 600
+wait 300
+move 600 590
+wait 300
+move 455 596
+wait 800
+shot m22-10-dongu-alani
+click 450 600
+wait 400
+key k
+wait 1200
+shot m22-11-mahal
+key Escape
