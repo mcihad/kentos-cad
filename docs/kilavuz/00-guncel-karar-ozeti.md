@@ -40,7 +40,7 @@
   `cad.survey.baselines` salt okunur: korelasyonlu ECEF bazlar, sabit/ağırlıklı kontrol, minimal datum, m0/χ²/Baarda.
 - **Aday uzlaştırma (7 Kasım 2026; MAP-04, [ADR 1760](../../docs/adr/1760-asset-candidate-reconciliation.md)).**
   `map.features.reconcile`: iki kaynağın adayları yarıçapla gruplanır (uyuşan, tek, çelişen, var olan); tek kabul,
-  çelişki düzeltme ister; adaylar `Uzlaştırma` ile işaretlenir ve tekrar okunmaz; köken öznitelikte; `.kcad` değişmedi.
+  çelişki düzeltme ister; adaylar `Eşleştirme` (8 Kasım 2026'ya dek `Uzlaştırma`) ile işaretlenir ve tekrar okunmaz; köken öznitelikte; `.kcad` değişmedi.
 - **Arşivden GNSS ağı (7 Kasım 2026; MAP-03/05, [ADR 1740](../../docs/adr/1740-gnss-network-from-archive.md)).**
   `.kcad` şema 199 (`mapSurvey`'de `bz-N` baz, `bn-N` bilinen nokta, `da-N` dengeleme; `method: network`); GVX 1.0
   okuyucu; `map.survey.network` iki aşama (serbest, bilinen noktalara dayalı), BÖHHBÜY C1/C2/C3 kural paketi
@@ -196,17 +196,21 @@
 - **Rolüne göre bağlamsal araçlar (8 Kasım 2026; MAP-01, [ADR 2480](../../docs/adr/2480-contextual-tools-by-object-role.md)).**
   Şerit panelinin `roles` alanı (surface, network, zoning): seçimin hepsi o roldeyse Yüzey, Altyapı, İmar panelleri;
   pencereler seçimin yüzeyi ya da ağıyla açılır (`selection_roles.rs`). Harita + Yol.
-- **Yeniden izdüşürün önizlemesi (8 Kasım 2026; MAP-02, [ADR 2500](../../docs/adr/2500-reproject-preview-shifts-and-reasons.md)).**
+- **Katmanın koordinatlarını dönüştürmenin önizlemesi (8 Kasım 2026; MAP-02, [ADR 2500](../../docs/adr/2500-reproject-preview-shifts-and-reasons.md)).**
   `cad.layers.reproject`'in cevabı (plan da) nesne başına kayma, EPSG kullanım alanlarının notları, toplu kayma ve
   zincirin kararıdır; ret her nedeni sayısıyla söyler (yazı, daire, yay artık “sistemin dışında” değil). Masaüstünde
-  Yeniden izdüşür önizleme penceresi açar, Uygula yazar. Harita + CBS.
+  Koordinat sistemi ▸ Dönüştür önizleme penceresi açar, Uygula yazar. Harita + CBS.
 - **Bilinen noktanın kendi hızı (8 Kasım 2026; MAP-03, [ADR 2520](../../docs/adr/2520-known-point-own-velocity.md)).**
   `bn-N`'nin yer merkezli hızı (m/yıl, epokuyla) noktayı ölçme epokuna doğrusal taşır (IERS 2010 §4.1.2); yoksa hız
   ızgarası. `moved[].by`; `.kcad` şema 207. Ağ ızgarasız da dengelenir, yeni noktaların karara dönmesi ızgara ister.
   Harita + CBS.
-- **Uzlaştırmada alan kuralları ve alan girişi (8 Kasım 2026; MAP-04, [ADR 2540](../../docs/adr/2540-reconcile-field-rules-and-entry.md)).**
+- **Detay eşleştirmede alan kuralları ve alan girişi (8 Kasım 2026; MAP-04, [ADR 2540](../../docs/adr/2540-reconcile-field-rules-and-entry.md)).**
   `map.features.reconcile` varlığın değerlerini sınıf katmanının alan kurallarından (`check_value`) geçirir, kanonik
   yazar; uymayan `invalid`'de nedeniyle, grup yazılmaz. Pencerede Alan gir (listeden seçim). Harita.
+- **Haritacılığın kelimeleriyle üç ad (8 Kasım 2026, sahibin onayıyla).** Adayları uzlaştır → **Detay eşleştirme** (işaret
+  özniteliği Eşleştirme; eski Uzlaştırma okunur), Arşivden ağ dengelemesi → **GNSS ağ dengelemesi**, katman menüsünde
+  Sistem ata / Yeniden izdüşür → Koordinat sistemi ▸ **Tanımla / Dönüştür**, raster için **Rasteri projenin sistemine
+  çevir**. Kimlikler aynı, eski adlar arama takma adı. Kayıt ADR 2500, 2540, 2560.
 - **GNSS ağında güven bölgesi (8 Kasım 2026; MAP-05, [ADR 2560](../../docs/adr/2560-network-confidence-regions.md)).**
   Yeni noktaların hata elipsi (yarı eksenler √χ²₂, yön, kotun aralığı √χ²₁) sınıfın güveninde, yoksa 0,95; dairede yön
   yok. Pencerede özet ve Noktalar sütunu. Harita + CBS.

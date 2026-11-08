@@ -1,6 +1,6 @@
 //! `cad.rasters.reproject` v1 (docs/adr/0644 §3; plan/gis.md `CBS-31`): a raster file in another coordinate system
 //! resampled onto a north-up grid of the project's system, written as a GeoTIFF and added as a raster linked to it, as
-//! one undo step “Rasteri yeniden izdüşür”. The grid covers the source's border (20 steps a side) carried into the
+//! one undo step “Rasteri projenin sistemine çevir”. The grid covers the source's border (20 steps a side) carried into the
 //! project's system, its corner on a multiple of the pixel (given, or the source's middle pixel's footprint to six
 //! significant figures); each output pixel's centre goes back through the project's datum choices to the source's
 //! pixels (`kentos_formats::raster::warp`, its values kept). The STAC preparation reprojects its local copies with the
@@ -25,7 +25,7 @@ use crate::links::find;
 use crate::raster_files::{self, Bytes, Out};
 
 /// The undo step's name.
-pub const STEP: &str = "Rasteri yeniden izdüşür";
+pub const STEP: &str = "Rasteri projenin sistemine çevir";
 
 /// Points along each side of the source whose images bound the grid.
 const PER_SIDE: u32 = 20;
@@ -547,7 +547,7 @@ pub fn plan(
     }
 }
 
-/// Checks `input` again, writes the GeoTIFF and adds the raster as one undo step “Rasteri yeniden izdüşür”.
+/// Checks `input` again, writes the GeoTIFF and adds the raster as one undo step “Rasteri projenin sistemine çevir”.
 pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: RastersReproject,

@@ -555,7 +555,7 @@ def cases():
         ok("kimliğin çevresindeki boşluk okunmaz", first=f" {uid(1)} "),
         refused("ikinci raster projenin sisteminde değil", {}, "crs_mismatch",
                 "Ortofotonun koordinat sistemi EPSG:5256, projeninki EPSG:5254; farklı sistemdeki görüntü "
-                "karşılaştırılmaz. Önce projeye çevirin (Raster › Yeniden izdüşür).", "second",
+                "karşılaştırılmaz. Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).", "second",
                 setup(second=second_raster(srid=5256))),
         refused("birinci raster değil", {"first": uid(3)}, "not_a_raster",
                 f"“{uid(3)}” bir raster değil; ortofotoyu seçin.", "first"),

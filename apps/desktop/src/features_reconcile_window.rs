@@ -1,10 +1,10 @@
-//! Adayları uzlaştır (docs/adr/1760; `map.featuresReconcile`): candidates of map assets from two extractions (a point
+//! Detay eşleştirme (docs/adr/1760; `map.featuresReconcile`; named “Adayları uzlaştır” until 8 November 2026): candidates of map assets from two extractions (a point
 //! cloud's, an orthophoto's) reconciled by `map.features.reconcile` through KentOS's `harita-varliklari` profile. The
 //! form names the two sources' layers and names, the class and confidence fields, the radius and the reviewer; the
 //! summary counts the groups by status; the table lists the groups (class, status, sources, candidates, spread, missing
 //! fields, whether it is written). A single's Kabul accepts it, a conflict's Direk/Ağaç… corrects its other
 //! candidates' class to it, Reddet rejects the group's candidates with a reason; the decisions stay in the window until
-//! Uzlaştır writes them all in one undo step. Harita only. Areas (building footprints, green areas; docs/adr/2140) are
+//! Eşleştir writes them all in one undo step. Harita only. Areas (building footprints, green areas; docs/adr/2140) are
 //! grouped by their overlap ratio, the table says an area group's smallest one.
 //!
 //! Alan gir (docs/adr/2540): a group whose required field is missing or whose value its class layer's field rules refuse
@@ -27,9 +27,9 @@ use crate::road_dialog::{self, col, num};
 use crate::style::fields;
 use crate::traces::Control;
 
-pub const TITLE: &str = "Adayları uzlaştır";
+pub const TITLE: &str = "Detay eşleştirme";
 const CLOSE: &str = "Kapat";
-const RUN: &str = "Uzlaştır";
+const RUN: &str = "Eşleştir";
 pub(crate) const PROFILE: &str = "harita-varliklari";
 
 #[derive(Clone, Debug, Default)]
@@ -118,11 +118,11 @@ impl App {
             CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
                 Err(error.message)
             }
-            _ => Err("Adaylar uzlaştırılamadı.".to_owned()),
+            _ => Err("Adaylar eşleştirilemedi.".to_owned()),
         });
     }
 
-    /// Adayları uzlaştır (`map.featuresReconcile`): the window, its sources guessed by their layers' names.
+    /// Detay eşleştirme (`map.featuresReconcile`): the window, its sources guessed by their layers' names.
     pub(crate) fn open_features_reconcile(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
@@ -216,7 +216,7 @@ impl App {
             Event::Reject(g) => self.reconcile_decide(g, |uid, _| {
                 Some(CandidateDecision {
                     candidate: uid.to_owned(),
-                    reject: Some("Adayları uzlaştır penceresinde reddedildi.".into()),
+                    reject: Some("Detay eşleştirme penceresinde reddedildi.".into()),
                     ..CandidateDecision::default()
                 })
             }),
@@ -312,7 +312,7 @@ impl App {
                 if duplicates + unknown + reviewed > 0 {
                     lines.push(words::text_line(
                         Kind::Warn,
-                        format!("{duplicates} yinelenen aday, {unknown} sınıfı okunmayan aday; {reviewed} aday daha önce uzlaştırıldı (okunmaz)."),
+                        format!("{duplicates} yinelenen aday, {unknown} sınıfı okunmayan aday; {reviewed} aday daha önce eşleştirildi (okunmaz)."),
                     ));
                 }
                 let missing = a.groups.iter().filter(|g| !g.missing.is_empty()).count();
@@ -331,7 +331,7 @@ impl App {
                 }
                 lines.push(words::text_line(
                     Kind::Info,
-                    "Tek kaynaklı aday kabul edilmeden, çelişen aday sınıfı düzeltilmeden kesin varlık olmaz; kararlar Uzlaştır'la yazılır.",
+                    "Tek kaynaklı aday kabul edilmeden, çelişen aday sınıfı düzeltilmeden kesin varlık olmaz; kararlar Eşleştir'le yazılır.",
                 ));
                 // The classes by the profile's titles (the answer names them by id).
                 let titles: std::collections::BTreeMap<String, String> = kentos_commands::builtin_profile(PROFILE)

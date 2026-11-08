@@ -38,7 +38,7 @@ fn raster(doc: &Document, uid: &str, path: &str) -> Result<(Uuid, f64), Stop> {
         return Err(fail(
             codes::CRS_MISMATCH,
             format!(
-                "Ortofotonun koordinat sistemi EPSG:{}, projeninki EPSG:{project}; farklı sistemdeki görüntü karşılaştırılmaz. Önce projeye çevirin (Raster › Yeniden izdüşür).",
+                "Ortofotonun koordinat sistemi EPSG:{}, projeninki EPSG:{project}; farklı sistemdeki görüntü karşılaştırılmaz. Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).",
                 r.raster.srid
             ),
             path,

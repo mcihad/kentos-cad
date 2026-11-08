@@ -1,5 +1,5 @@
 //! A layer's source system on the desktop (docs/adr/0583 §1–§2): the layer's right-click menu Koordinat sistemi ▸
-//! says where its objects came from, Sistem ata ▸ writes or clears that record (`cad.layers.crs`), Yeniden izdüşür ▸
+//! says where its objects came from, Tanımla ▸ writes or clears that record (`cad.layers.crs`), Dönüştür ▸
 //! opens the preview of moving the objects from the system chosen into the project's (`cad.layers.reproject`,
 //! reproject_window.rs, docs/adr/2500); its Uygula moves them.
 
@@ -22,7 +22,8 @@ pub enum Event {
 }
 
 impl App {
-    /// Sistem ata… and Yeniden izdüşür from the command line or a menu without a layer (docs/adr/0583 §2): the
+    /// Koordinat sistemini tanımla… and Koordinatları dönüştür from the command line or a menu without a layer
+    /// (docs/adr/0583 §2): the
     /// active layer's record said, the preview of moving its objects from the recorded system (docs/adr/2500); a
     /// system is chosen in the layer's menu.
     pub(crate) fn layer_crs_run(&mut self, moving: bool) -> Task<Message> {
@@ -41,14 +42,14 @@ impl App {
             }
             (true, _) => self.warn(format!(
                 "“{}” katmanının kayıtlı kaynak sistemi yok: Katmanlar'da katmanın sağ tık menüsünde Koordinat sistemi ▸ \
-                 Yeniden izdüşür ▸ ile nesnelerin bulunduğu sistemi seçin.",
+                 Dönüştür ▸ ile nesnelerin bulunduğu sistemi seçin.",
                 node.name
             )),
             (false, record) => self.say(
                 Level::Info,
                 format!(
                     "“{}” katmanının kaynak sistemi: {}. Değiştirmek için Katmanlar'da katmanın sağ tık menüsünde \
-                     Koordinat sistemi ▸ Sistem ata ▸.",
+                     Koordinat sistemi ▸ Tanımla ▸.",
                     node.name,
                     record.map_or_else(|| "bilinmiyor".to_owned(), |(name, _)| name)
                 ),
@@ -92,7 +93,7 @@ impl App {
         Task::none()
     }
 
-    /// Koordinat sistemi ▸ of a layer: its record, Sistem ata ▸ and Yeniden izdüşür ▸, the registry's systems by datum.
+    /// Koordinat sistemi ▸ of a layer: its record, Tanımla ▸ and Dönüştür ▸, the registry's systems by datum.
     pub(crate) fn layer_crs_menu(&self, node: &LayerNode) -> Menu<Message> {
         let Some(doc) = &self.document else {
             return Menu::new();
@@ -129,7 +130,7 @@ impl App {
         );
         menu = menu
             .separator()
-            .submenu("Sistem ata", assign)
+            .submenu("Tanımla", assign)
             .icon(icon("crs"));
         // Moving needs the project's own system and an unlocked layer (docs/adr/0583 §2).
         let can_move = settings.has_system() && !node.locked;
@@ -158,7 +159,7 @@ impl App {
                     });
             moving = moving.submenu(*datum, list);
         }
-        menu.submenu("Yeniden izdüşür", moving)
+        menu.submenu("Dönüştür", moving)
             .icon(icon("geoReproject"))
     }
 }

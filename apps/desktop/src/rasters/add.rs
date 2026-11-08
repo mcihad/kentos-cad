@@ -715,7 +715,7 @@ impl App {
     }
 
     /// Projenin sistemine çevir: the file resampled onto the project's grid beside it (`<ad>-epsg<kod>.tif`) and added
-    /// on a new layer, one undo step “Rasteri yeniden izdüşür”.
+    /// on a new layer, one undo step “Rasteri projenin sistemine çevir”.
     fn raster_add_reproject(&mut self) {
         let Some(s) = self.rasters.add.clone() else {
             return;

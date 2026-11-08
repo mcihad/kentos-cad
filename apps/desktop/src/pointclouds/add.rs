@@ -1062,7 +1062,7 @@ impl App {
             Rule::Other { srid } => words::text_line(
                 Line::Error,
                 format!(
-                    "Bulutun sistemi ({}) projeninkinden ({project}) başka; bulut eklenmez. KentOS bulutu yeniden izdüşürmez: bulutu projenin sistemine çevirip yeniden deneyin.",
+                    "Bulutun sistemi ({}) projeninkinden ({project}) başka; bulut eklenmez. KentOS bulutu projenin sistemine kendiliğinden çevirmez: bulutu projenin sistemine çevirip yeniden deneyin.",
                     crate::crs::title_of(srid)
                 ),
             ),

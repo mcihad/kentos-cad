@@ -3448,12 +3448,12 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
-        // Rasteri yeniden izdüşür (docs/adr/0644 §3), held together by fixtures/commands/v1/cad.rasters.reproject.json.
+        // Rasteri projenin sistemine çevir (docs/adr/0644 §3), held together by fixtures/commands/v1/cad.rasters.reproject.json.
         CommandDescriptor {
             id: crate::CAD_RASTERS_REPROJECT.into(),
             version: crate::CAD_RASTERS_REPROJECT_VERSION,
-            title: "Rasteri yeniden izdüşür".into(),
-            summary: "Başka koordinat sistemindeki bir raster dosyasını (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da drawing'in klasöründen göreli) projenin sistemine çevirir: pikselleri projenin sisteminde kuzeyi yukarıda bir ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır (yoksa dosyanın yanına <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı olarak katmana eklenir (layer; yoksa dosyanın adıyla yeni katman en üstte), tek geri alma adımı “Rasteri yeniden izdüşür”. \
+            title: "Rasteri projenin sistemine çevir".into(),
+            summary: "Başka koordinat sistemindeki bir raster dosyasını (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da drawing'in klasöründen göreli) projenin sistemine çevirir: pikselleri projenin sisteminde kuzeyi yukarıda bir ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır (yoksa dosyanın yanına <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı olarak katmana eklenir (layer; yoksa dosyanın adıyla yeni katman en üstte), tek geri alma adımı “Rasteri projenin sistemine çevir”. \
                       Dosya sistem bildirmiyorsa srid verilir (crs_unknown); bildirdiğinden başka srid uyarıyla onun yerine sayılır (crs_overridden). Dönüşüm projenin datum seçimleriyle, Koordinat dönüştür'ün yoluyla yapılır; yolu ve doğruluğu cevabın way'indedir. \
                       Izgara kaynağın kenarlarının (her kenarda 20 adım) projedeki görüntüsünü örter, köşesi piksel boyunun (cell; yoksa kaynağın orta pikselinin projede kapladığı alanın karekökü, altı anlamlı basamak) katındadır. sample nearest kaynağın merkezin altındaki pikselini alır (sınıf ve kalite bantları kodlarını korur), bilinear çevresindeki dördün ağırlıklı ortalamasını, değersiz pikselleri dışarıda bırakarak. Değerler korunur: 8 bitlik raster RGBA'ya çevrilmez. \
                       Dosya yarım kalmaz: geçici adla yazılır, sonra yerine konur; var olan output overwrite verilmezse reddedilir (file_exists). Kaynağın kendisinin üzerine yazılmaz. plan yazmadan ızgarayı söyler."
@@ -10060,11 +10060,11 @@ pub fn catalog() -> CommandCatalog {
         CommandDescriptor {
             id: crate::MAP_FEATURES_RECONCILE.into(),
             version: crate::MAP_FEATURES_RECONCILE_VERSION,
-            title: "Adayları uzlaştır".into(),
-            summary: "Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını bir veri profilinin sınıflarıyla uzlaştırır. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Uzlaştırma özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz: insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı; plan yazmadan söyler. \
+            title: "Detay eşleştirme".into(),
+            summary: "Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını (detayları) bir veri profilinin sınıflarıyla eşleştirir. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Eşleştirme özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz (eski çizimlerin Uzlaştırma özniteliği de okunur): insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı; plan yazmadan söyler. \
                       Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing, layer_locked."
                 .into(),
-            aliases: vec!["uzlastir".into(), "adayuzlastir".into()],
+            aliases: vec!["eslestir".into(), "detayeslestir".into(), "uzlastir".into(), "adayuzlastir".into()],
             effect: CommandEffect::Document,
             hosts: vec![CommandHost::Desktop],
             headless: true,
@@ -10821,17 +10821,17 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
-        // Sistem ata (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.crs.json.
+        // Katmanın koordinat sistemini tanımla (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.crs.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_CRS.into(),
             version: crate::CAD_LAYERS_CRS_VERSION,
-            title: "Sistem ata".into(),
+            title: "Katmanın koordinat sistemini tanımla".into(),
             summary: "Katmanın kaynak sistemi kaydını yazar ya da siler (srid verilmezse ya da null ise): nesnelerinin hangi koordinat sisteminden geldiği; adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım alanı kayıttan. \
                       Nesneler her zaman projenin sistemindedir; atama hiçbir koordinatı değiştirmez (yanlış sistemde alınmış veriyi çevirmek için cad.layers.reproject). \
-                      Katman ağacının değişikliğidir: tek geri alma adımı “Sistem ata”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri değişmez. \
+                      Katman ağacının değişikliğidir: tek geri alma adımı “Katmanın koordinat sistemini tanımla”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri değişmez. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
-            aliases: vec!["sistemata".into(), "assigncrs".into()],
+            aliases: vec!["tanimla".into(), "sistemata".into(), "assigncrs".into()],
             effect: CommandEffect::Document,
             hosts: vec![CommandHost::Desktop],
             headless: true,
@@ -10856,19 +10856,19 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
-        // Yeniden izdüşür (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.reproject.json.
+        // Katmanın koordinatlarını dönüştür (docs/adr/0583 §2), held together by fixtures/commands/v1/cad.layers.reproject.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_REPROJECT.into(),
             version: crate::CAD_LAYERS_REPROJECT_VERSION,
-            title: "Yeniden izdüşür".into(),
+            title: "Katmanın koordinatlarını dönüştür".into(),
             summary: "Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. \
                       Kotlar ve ölçüler kalır; yalnız noktalar ve düz kenarlı çizgiler çevrilir. Çevrilemeyen nesne (sistemin ya da ızgaranın dışında; yay, daire, yazı, blok gibi türden) varsa hiçbir şey yazılmaz: crs_unreached her nedeni sayısıyla söyler, uids nesneleri verir. \
-                      Katmanın kaynak sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. \
+                      Katmanın kaynak sistemi from olur. Tek geri alma adımı “Katmanın koordinatlarını dönüştür”. \
                       Cevap önizlemedir, plan da aynısını verir (ADR 2500): her nesnenin ilk noktasının şimdiki ve yeni yeri, kayması, noktalarının en küçük ve en büyük kayması; noktaları EPSG kullanım alanlarının dışına düşen nesnenin notları (outside_source_area, outside_operation_area, outside_project_area; outside_area uyarısı); bütün noktaların ortalama, en küçük ve en büyük kayması; dönüşüm zincirinin kararı (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000 nesne listelenir, notlular önce. \
                       Kilitli katman reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
-            aliases: vec!["izdusur".into(), "reproject".into()],
+            aliases: vec!["katmandonustur".into(), "izdusur".into(), "reproject".into()],
             effect: CommandEffect::Document,
             hosts: vec![CommandHost::Desktop],
             headless: true,

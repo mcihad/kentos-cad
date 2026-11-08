@@ -1260,7 +1260,7 @@
       "via": [
         "map.features.reconcile"
       ],
-      "note": "Pencerenin önizlemesi map.features.reconcile'ın planı; kararlar ve Uzlaştır aynı komutun execute'u (ADR 1760)."
+      "note": "Pencerenin önizlemesi map.features.reconcile'ın planı; kararlar ve Eşleştir aynı komutun execute'u (ADR 1760)."
     },
     "map.survey.adjustment": {
       "level": "semantic",

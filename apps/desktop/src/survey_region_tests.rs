@@ -1,4 +1,4 @@
-//! Arşivden ağ dengelemesi's confidence regions (survey_network_window.rs, plan/map-cad.md MAP-05, docs/adr/2560): on
+//! GNSS ağ dengelemesi's confidence regions (survey_network_window.rs, plan/map-cad.md MAP-05, docs/adr/2560): on
 //! the shared case whose baselines' deviations are oblong and turned 30°, every new mark's error ellipse is the case's
 //! (semi-axes, direction, height's interval at 0.95), the summary names the largest and Noktalar's column shows each
 //! with its direction as a semt in the project's angle unit; on the base case the round ellipses have no direction.

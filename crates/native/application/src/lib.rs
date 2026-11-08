@@ -1012,7 +1012,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RASTERS_MOSAIC,
         kentos_commands::CAD_RASTERS_MOSAIC_VERSION,
     ),
-    // Rasteri yeniden izdüşür ([`rasters_reproject`], docs/adr/0644 §3).
+    // Rasteri projenin sistemine çevir ([`rasters_reproject`], docs/adr/0644 §3).
     (
         kentos_commands::CAD_RASTERS_REPROJECT,
         kentos_commands::CAD_RASTERS_REPROJECT_VERSION,

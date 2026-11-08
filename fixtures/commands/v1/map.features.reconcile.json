@@ -3,12 +3,12 @@
  "version": 1,
  "command": "map.features.reconcile",
  "commandVersion": 1,
- "title": "Harita varlığı adaylarını uzlaştır: iki kaynak, yinelenen, çelişen, tek, var olan, eksik alan, karar",
+ "title": "Detay eşleştirme: iki kaynak, yinelenen, çelişen, tek, var olan, eksik alan, karar",
  "note": "ADR 1760 (MAP-04) ve ADR 2140 (alanlar). Bağımsız başvuru scripts/fixtures/map_features_reconcile_cases.py: kurallar ADR'den, uzaklıklar Python'un math.hypot'uyla, Hausdorff köşe-doğru parçası, alanların örtüşme oranı ve ağırlık merkezi shapely (GEOS) ile; KentOS kodu yok. Sınıflar KentOS'un harita-varliklari profilinden (veri).",
  "setup": {
   "format": "kentos.document",
   "version": 2,
-  "name": "Aday uzlaştırma",
+  "name": "Detay eşleştirme",
   "settings": {
    "srid": 5254,
    "lengthDecimals": 3,
@@ -486,7 +486,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -1272,12 +1272,12 @@
    ]
   },
   {
-   "name": "Uzlaştır: uyuşan direkler ve bordür yazılır, var olan direğin adayı işaretlenir; tek adımda geri alınır",
+   "name": "Eşleştir: uyuşan direkler ve bordür yazılır, var olan direğin adayı işaretlenir; tek adımda geri alınır",
    "note": "Kapı uyuşuyor ama zorunlu KapiNo yok: yazılmaz. Tek rögar ve çelişen direk/ağaç karar bekler.",
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -2147,7 +2147,7 @@
          "Kod": "DRK",
          "Güven": "0.92",
          "Tur": "Aydınlatma",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "3": {
@@ -2155,21 +2155,21 @@
          "Kod": "DRK",
          "Güven": "0.81",
          "Ad": "D-10",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "4": {
         "attrs": {
          "Kod": "DRK 2",
          "Güven": "0.88",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "5": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.40",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "6": {
@@ -2177,21 +2177,21 @@
          "Kod": "direk",
          "Güven": "0.77",
          "Tur": "Elektrik",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "10": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.90",
-         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+         "Eşleştirme": "0192f5c0-1760-7000-8000-000000000001"
         }
        },
        "14": {
         "attrs": {
          "Kod": "BRD",
          "Güven": "0.86",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        },
        "15": {
@@ -2199,7 +2199,7 @@
          "Kod": "BRD",
          "Güven": "0.93",
          "Ad": "Bordür 1",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        }
       }
@@ -2208,7 +2208,7 @@
     },
     {
      "op": "undo",
-     "returns": "Adayları uzlaştır",
+     "returns": "Detay eşleştirme",
      "expect": {
       "canRedo": true,
       "ids": [
@@ -2239,7 +2239,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -3184,7 +3184,7 @@
          "Kod": "DRK",
          "Güven": "0.92",
          "Tur": "Aydınlatma",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "3": {
@@ -3192,21 +3192,21 @@
          "Kod": "DRK",
          "Güven": "0.81",
          "Ad": "D-10",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "4": {
         "attrs": {
          "Kod": "DRK 2",
          "Güven": "0.88",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "5": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.40",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "6": {
@@ -3214,14 +3214,14 @@
          "Kod": "direk",
          "Güven": "0.77",
          "Tur": "Elektrik",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "7": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.65",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        },
        "8": {
@@ -3229,7 +3229,7 @@
          "Kod": "AGC",
          "Güven": "0.70",
          "Cins": "Çınar",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        },
        "9": {
@@ -3237,35 +3237,35 @@
          "Kod": "ROG",
          "Güven": "0.55",
          "Sebeke": "Atıksu",
-         "Uzlaştırma": "$uidOf:21"
+         "Eşleştirme": "$uidOf:21"
         }
        },
        "10": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.90",
-         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+         "Eşleştirme": "0192f5c0-1760-7000-8000-000000000001"
         }
        },
        "12": {
         "attrs": {
          "Kod": "KAP",
          "Güven": "0.90",
-         "Uzlaştırma": "$uidOf:22"
+         "Eşleştirme": "$uidOf:22"
         }
        },
        "13": {
         "attrs": {
          "Kod": "KAP",
          "Güven": "0.80",
-         "Uzlaştırma": "$uidOf:22"
+         "Eşleştirme": "$uidOf:22"
         }
        },
        "14": {
         "attrs": {
          "Kod": "BRD",
          "Güven": "0.86",
-         "Uzlaştırma": "$uidOf:23"
+         "Eşleştirme": "$uidOf:23"
         }
        },
        "15": {
@@ -3273,14 +3273,14 @@
          "Kod": "BRD",
          "Güven": "0.93",
          "Ad": "Bordür 1",
-         "Uzlaştırma": "$uidOf:23"
+         "Eşleştirme": "$uidOf:23"
         }
        },
        "11": {
         "attrs": {
          "Kod": "XYZ",
          "Güven": "0.50",
-         "Uzlaştırma": "Reddedildi: Gölge; nesne yok"
+         "Eşleştirme": "Reddedildi: Gölge; nesne yok"
         }
        }
       }
@@ -3289,7 +3289,7 @@
     },
     {
      "op": "undo",
-     "returns": "Adayları uzlaştır",
+     "returns": "Detay eşleştirme",
      "expect": {
       "canRedo": true,
       "ids": [
@@ -3320,7 +3320,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -4093,7 +4093,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -4980,7 +4980,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -5682,11 +5682,11 @@
    ]
   },
   {
-   "name": "Yeniden çalıştırma: uzlaştırılmış adaylar okunmaz, insan kararı ezilmez",
+   "name": "Yeniden çalıştırma: eşleştirilmiş adaylar okunmaz, insan kararı ezilmez",
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -5895,7 +5895,7 @@
        "Kod": "DRK",
        "Güven": "0.92",
        "Tur": "Aydınlatma",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "p": {
        "x": 500010.0,
@@ -5911,7 +5911,7 @@
        "Kod": "DRK",
        "Güven": "0.81",
        "Ad": "D-10",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "p": {
        "x": 500010.18,
@@ -5926,7 +5926,7 @@
       "attrs": {
        "Kod": "DRK 2",
        "Güven": "0.88",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "p": {
        "x": 500030.0,
@@ -5941,7 +5941,7 @@
       "attrs": {
        "Kod": "DRK",
        "Güven": "0.40",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "p": {
        "x": 500030.12,
@@ -5957,7 +5957,7 @@
        "Kod": "direk",
        "Güven": "0.77",
        "Tur": "Elektrik",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "p": {
        "x": 500029.9,
@@ -6012,7 +6012,7 @@
       "attrs": {
        "Kod": "DRK",
        "Güven": "0.90",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "p": {
        "x": 500090.05,
@@ -6065,7 +6065,7 @@
       "attrs": {
        "Kod": "BRD",
        "Güven": "0.86",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "pts": [
        {
@@ -6090,7 +6090,7 @@
        "Kod": "BRD",
        "Güven": "0.93",
        "Ad": "Bordür 1",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Eşleştirme": "0192f5c0-1760-7000-8000-000000000500"
       },
       "pts": [
        {
@@ -6114,7 +6114,7 @@
       "attrs": {
        "Kod": "DRK",
        "Güven": "0.95",
-       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000500"
+       "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000099"
       },
       "p": {
        "x": 500150.0,
@@ -6399,7 +6399,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -6907,7 +6907,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -7418,7 +7418,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -7930,7 +7930,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -8440,7 +8440,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -8941,7 +8941,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -9451,7 +9451,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -9961,7 +9961,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -10471,7 +10471,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -10982,7 +10982,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -11492,7 +11492,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -12007,7 +12007,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -12522,7 +12522,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -13038,7 +13038,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -13554,7 +13554,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -14071,7 +14071,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -14784,11 +14784,11 @@
    ]
   },
   {
-   "name": "Alanlar (uzlaştır): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı işaretlenir; tek adımda geri alınır",
+   "name": "Alanlar (eşleştir): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı işaretlenir; tek adımda geri alınır",
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -15549,7 +15549,7 @@
          "Kod": "BNA",
          "Güven": "0.90",
          "KatSayisi": "3",
-         "Uzlaştırma": "$uidOf:12"
+         "Eşleştirme": "$uidOf:12"
         }
        },
        "3": {
@@ -15557,21 +15557,21 @@
          "Kod": "BNA",
          "Güven": "0.80",
          "Ad": "A-1",
-         "Uzlaştırma": "$uidOf:12"
+         "Eşleştirme": "$uidOf:12"
         }
        },
        "4": {
         "attrs": {
          "Kod": "BNA",
          "Güven": "0.50",
-         "Uzlaştırma": "$uidOf:12"
+         "Eşleştirme": "$uidOf:12"
         }
        },
        "7": {
         "attrs": {
          "Kod": "BNA",
          "Güven": "0.95",
-         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+         "Eşleştirme": "0192f5c0-1760-7000-8000-000000000001"
         }
        }
       }
@@ -15580,7 +15580,7 @@
     },
     {
      "op": "undo",
-     "returns": "Adayları uzlaştır",
+     "returns": "Detay eşleştirme",
      "expect": {
       "canRedo": true,
       "ids": [
@@ -15605,7 +15605,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -16309,7 +16309,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -17409,7 +17409,7 @@
          "Kod": "DRK",
          "Güven": "0.92",
          "Tur": "Aydınlatma",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "3": {
@@ -17417,21 +17417,21 @@
          "Kod": "DRK",
          "Güven": "0.81",
          "Ad": "D-10",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "4": {
         "attrs": {
          "Kod": "DRK 2",
          "Güven": "0.88",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "5": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.40",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "6": {
@@ -17439,21 +17439,21 @@
          "Kod": "direk",
          "Güven": "0.77",
          "Tur": "Elektrik",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "10": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.90",
-         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+         "Eşleştirme": "0192f5c0-1760-7000-8000-000000000001"
         }
        },
        "14": {
         "attrs": {
          "Kod": "BRD",
          "Güven": "0.86",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        },
        "15": {
@@ -17461,7 +17461,7 @@
          "Kod": "BRD",
          "Güven": "0.93",
          "Ad": "Bordür 1",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        }
       }
@@ -17470,7 +17470,7 @@
     },
     {
      "op": "undo",
-     "returns": "Adayları uzlaştır",
+     "returns": "Detay eşleştirme",
      "expect": {
       "canRedo": true,
       "ids": [
@@ -17501,7 +17501,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -18640,7 +18640,7 @@
          "Kod": "DRK",
          "Güven": "0.92",
          "Tur": "Aydınlatma",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "3": {
@@ -18648,21 +18648,21 @@
          "Kod": "DRK",
          "Güven": "0.81",
          "Ad": "D-10",
-         "Uzlaştırma": "$uidOf:18"
+         "Eşleştirme": "$uidOf:18"
         }
        },
        "4": {
         "attrs": {
          "Kod": "DRK 2",
          "Güven": "0.88",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "5": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.40",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "6": {
@@ -18670,7 +18670,7 @@
          "Kod": "direk",
          "Güven": "0.77",
          "Tur": "Elektrik",
-         "Uzlaştırma": "$uidOf:19"
+         "Eşleştirme": "$uidOf:19"
         }
        },
        "9": {
@@ -18678,35 +18678,35 @@
          "Kod": "ROG",
          "Güven": "0.55",
          "Sebeke": "Atıksu",
-         "Uzlaştırma": "$uidOf:20"
+         "Eşleştirme": "$uidOf:20"
         }
        },
        "10": {
         "attrs": {
          "Kod": "DRK",
          "Güven": "0.90",
-         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+         "Eşleştirme": "0192f5c0-1760-7000-8000-000000000001"
         }
        },
        "12": {
         "attrs": {
          "Kod": "KAP",
          "Güven": "0.90",
-         "Uzlaştırma": "$uidOf:21"
+         "Eşleştirme": "$uidOf:21"
         }
        },
        "13": {
         "attrs": {
          "Kod": "KAP",
          "Güven": "0.80",
-         "Uzlaştırma": "$uidOf:21"
+         "Eşleştirme": "$uidOf:21"
         }
        },
        "14": {
         "attrs": {
          "Kod": "BRD",
          "Güven": "0.86",
-         "Uzlaştırma": "$uidOf:22"
+         "Eşleştirme": "$uidOf:22"
         }
        },
        "15": {
@@ -18714,7 +18714,7 @@
          "Kod": "BRD",
          "Güven": "0.93",
          "Ad": "Bordür 1",
-         "Uzlaştırma": "$uidOf:22"
+         "Eşleştirme": "$uidOf:22"
         }
        }
       }
@@ -18723,7 +18723,7 @@
     },
     {
      "op": "undo",
-     "returns": "Adayları uzlaştır",
+     "returns": "Detay eşleştirme",
      "expect": {
       "canRedo": true,
       "ids": [
@@ -18754,7 +18754,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -19779,7 +19779,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -20728,7 +20728,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -21716,7 +21716,7 @@
          "Kod": "BNA",
          "Güven": "0.90",
          "KatSayisi": "3",
-         "Uzlaştırma": "$uidOf:12"
+         "Eşleştirme": "$uidOf:12"
         }
        },
        "3": {
@@ -21724,21 +21724,21 @@
          "Kod": "BNA",
          "Güven": "0.80",
          "Ad": "A-1",
-         "Uzlaştırma": "$uidOf:12"
+         "Eşleştirme": "$uidOf:12"
         }
        },
        "4": {
         "attrs": {
          "Kod": "BNA",
          "Güven": "0.50",
-         "Uzlaştırma": "$uidOf:12"
+         "Eşleştirme": "$uidOf:12"
         }
        },
        "7": {
         "attrs": {
          "Kod": "BNA",
          "Güven": "0.95",
-         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+         "Eşleştirme": "0192f5c0-1760-7000-8000-000000000001"
         }
        }
       }
@@ -21747,7 +21747,7 @@
     },
     {
      "op": "undo",
-     "returns": "Adayları uzlaştır",
+     "returns": "Detay eşleştirme",
      "expect": {
       "canRedo": true,
       "ids": [
@@ -21772,7 +21772,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -22304,7 +22304,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -22836,7 +22836,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -23332,7 +23332,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,
@@ -23826,7 +23826,7 @@
       "status": "failed",
       "error": {
        "code": "layer_locked",
-       "message": "“Harita varlıkları / Direkler” katmanı kilitli: uzlaştırılan varlık oraya yazılamaz. Kilidi açın.",
+       "message": "“Harita varlıkları / Direkler” katmanı kilitli: eşleştirilen varlık oraya yazılamaz. Kilidi açın.",
        "path": "name"
       }
      },
@@ -23842,7 +23842,7 @@
    "setup": {
     "format": "kentos.document",
     "version": 2,
-    "name": "Aday uzlaştırma",
+    "name": "Detay eşleştirme",
     "settings": {
      "srid": 5254,
      "lengthDecimals": 3,

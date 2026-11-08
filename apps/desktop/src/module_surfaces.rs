@@ -80,7 +80,7 @@ pub(crate) enum LayerEntry {
     Time,
     /// Senaryo ▸ on a scenario group (docs/adr/0210 §10).
     Scenario,
-    /// Koordinat sistemi ▸: Sistem ata, Yeniden izdüşür (docs/adr/0583).
+    /// Koordinat sistemi ▸: Tanımla, Dönüştür (docs/adr/0583).
     Crs,
     /// Görünüş ▸ Stil yükle…, Stili kaydet… (docs/adr/0635 §9).
     StyleFiles,

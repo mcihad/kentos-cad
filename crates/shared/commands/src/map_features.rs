@@ -103,9 +103,13 @@ pub struct FeaturesCoded {
 pub const MAP_FEATURES_RECONCILE: &str = "map.features.reconcile";
 pub const MAP_FEATURES_RECONCILE_VERSION: u32 = 1;
 
-/// The attribute a reconciled candidate keeps (docs/adr/1760): the asset it went into, or why it was rejected. A
-/// candidate holding it is not read again: a reviewer's decision is not undone by the next run.
-pub const RECONCILED_FIELD: &str = "Uzlaştırma";
+/// The attribute a matched candidate keeps (docs/adr/1760; named “Eşleştirme” since 8 November 2026): the asset it went
+/// into, or why it was rejected. A candidate holding it, or the earlier name, is not read again: a reviewer's decision
+/// is not undone by the next run.
+pub const RECONCILED_FIELD: &str = "Eşleştirme";
+
+/// The mark's earlier name, still read in drawings written before 8 November 2026.
+pub const RECONCILED_FIELD_BEFORE: &str = "Uzlaştırma";
 
 /// The longest a candidate source list may be.
 pub const MAX_CANDIDATE_SOURCES: usize = 8;

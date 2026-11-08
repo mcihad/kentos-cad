@@ -45,7 +45,7 @@ büyük ağ kalite yönetimini geliştir.” İlgili:
 2. **Sınıfın ölçek sınırı veridir.** Kural paketinde sınıfa `similarity` (ppm) eklenir; C1'inki 3'tür, paketin
    sürümü 2'ye çıkar. Sınıfın sonucu `rules.similarity` (|λ − 1| ≤ sınır) olur ve `passed`'a girer. Tutmazsa
    `network_rules_failed` uyarısı ölçeği söyler. Kabulü durdurmaz: teknik denetimdir, kurum onayı değildir.
-3. **Masaüstü** (Arşivden ağ dengelemesi): özette benzerlik satırı vardır:
+3. **Masaüstü** (GNSS ağ dengelemesi; 8 Kasım 2026'ya dek Arşivden ağ dengelemesi): özette benzerlik satırı vardır:
    - ölçek ve σ'sı, t ve nicem, uyumlu ya da uyumsuz, sınıfın sınırını tutması;
    - üçten az bilinen noktada bunun koşulu.
 

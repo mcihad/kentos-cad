@@ -7184,7 +7184,7 @@
       "status": "failed",
       "error": {
        "code": "crs_mismatch",
-       "message": "Ortofotonun koordinat sistemi EPSG:5256, projeninki EPSG:5254; farklı sistemdeki görüntü denetlenmez. Önce projeye çevirin (Raster › Yeniden izdüşür).",
+       "message": "Ortofotonun koordinat sistemi EPSG:5256, projeninki EPSG:5254; farklı sistemdeki görüntü denetlenmez. Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).",
        "path": "raster"
       }
      },

@@ -868,29 +868,29 @@ mosaic = _RastersMosaic()
 
 
 class _RastersReproject(LocalCommand[RastersReproject, RastersReprojected, RastersReprojected]):
-    """``cad.rasters.reproject`` v1. Rasteri yeniden izdüşür: Başka koordinat sistemindeki
-    bir raster dosyasını (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da
-    drawing'in klasöründen göreli) projenin sistemine çevirir: pikselleri projenin
-    sisteminde kuzeyi yukarıda bir ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır
-    (yoksa dosyanın yanına <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı olarak katmana
-    eklenir (layer; yoksa dosyanın adıyla yeni katman en üstte), tek geri alma adımı
-    “Rasteri yeniden izdüşür”. Dosya sistem bildirmiyorsa srid verilir (crs_unknown);
-    bildirdiğinden başka srid uyarıyla onun yerine sayılır (crs_overridden). Dönüşüm
-    projenin datum seçimleriyle, Koordinat dönüştür'ün yoluyla yapılır; yolu ve
-    doğruluğu cevabın way'indedir. Izgara kaynağın kenarlarının (her kenarda 20 adım)
-    projedeki görüntüsünü örter, köşesi piksel boyunun (cell; yoksa kaynağın orta
-    pikselinin projede kapladığı alanın karekökü, altı anlamlı basamak) katındadır.
-    sample nearest kaynağın merkezin altındaki pikselini alır (sınıf ve kalite bantları
-    kodlarını korur), bilinear çevresindeki dördün ağırlıklı ortalamasını, değersiz
-    pikselleri dışarıda bırakarak. Değerler korunur: 8 bitlik raster RGBA'ya çevrilmez.
-    Dosya yarım kalmaz: geçici adla yazılır, sonra yerine konur; var olan output
-    overwrite verilmezse reddedilir (file_exists). Kaynağın kendisinin üzerine yazılmaz.
-    plan yazmadan ızgarayı söyler.
+    """``cad.rasters.reproject`` v1. Rasteri projenin sistemine çevir: Başka koordinat
+    sistemindeki bir raster dosyasını (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG,
+    mutlak ya da drawing'in klasöründen göreli) projenin sistemine çevirir: pikselleri
+    projenin sisteminde kuzeyi yukarıda bir ızgaraya yeniden örneklenir, output'a
+    GeoTIFF yazılır (yoksa dosyanın yanına <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı
+    olarak katmana eklenir (layer; yoksa dosyanın adıyla yeni katman en üstte), tek geri
+    alma adımı “Rasteri projenin sistemine çevir”. Dosya sistem bildirmiyorsa srid
+    verilir (crs_unknown); bildirdiğinden başka srid uyarıyla onun yerine sayılır
+    (crs_overridden). Dönüşüm projenin datum seçimleriyle, Koordinat dönüştür'ün yoluyla
+    yapılır; yolu ve doğruluğu cevabın way'indedir. Izgara kaynağın kenarlarının (her
+    kenarda 20 adım) projedeki görüntüsünü örter, köşesi piksel boyunun (cell; yoksa
+    kaynağın orta pikselinin projede kapladığı alanın karekökü, altı anlamlı basamak)
+    katındadır. sample nearest kaynağın merkezin altındaki pikselini alır (sınıf ve
+    kalite bantları kodlarını korur), bilinear çevresindeki dördün ağırlıklı
+    ortalamasını, değersiz pikselleri dışarıda bırakarak. Değerler korunur: 8 bitlik
+    raster RGBA'ya çevrilmez. Dosya yarım kalmaz: geçici adla yazılır, sonra yerine
+    konur; var olan output overwrite verilmezse reddedilir (file_exists). Kaynağın
+    kendisinin üzerine yazılmaz. plan yazmadan ızgarayı söyler.
     """
     __slots__ = ()
     id = "cad.rasters.reproject"
     version = 1
-    title = "Rasteri yeniden izdüşür"
+    title = "Rasteri projenin sistemine çevir"
     scope = "document"
     input_type = RastersReproject
     output_type = RastersReprojected
@@ -914,24 +914,24 @@ class _RastersReproject(LocalCommand[RastersReproject, RastersReprojected, Raste
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RastersReprojected:
-        """Rasteri yeniden izdüşür: Başka koordinat sistemindeki bir raster dosyasını (file;
-        GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da drawing'in klasöründen göreli)
-        projenin sistemine çevirir: pikselleri projenin sisteminde kuzeyi yukarıda bir
-        ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır (yoksa dosyanın yanına
+        """Rasteri projenin sistemine çevir: Başka koordinat sistemindeki bir raster dosyasını
+        (file; GeoTIFF ya da dünya dosyalı PNG ve JPEG, mutlak ya da drawing'in klasöründen
+        göreli) projenin sistemine çevirir: pikselleri projenin sisteminde kuzeyi yukarıda
+        bir ızgaraya yeniden örneklenir, output'a GeoTIFF yazılır (yoksa dosyanın yanına
         <ad>-epsg<kod>.tif) ve raster o dosyaya bağlı olarak katmana eklenir (layer; yoksa
-        dosyanın adıyla yeni katman en üstte), tek geri alma adımı “Rasteri yeniden
-        izdüşür”. Dosya sistem bildirmiyorsa srid verilir (crs_unknown); bildirdiğinden
-        başka srid uyarıyla onun yerine sayılır (crs_overridden). Dönüşüm projenin datum
-        seçimleriyle, Koordinat dönüştür'ün yoluyla yapılır; yolu ve doğruluğu cevabın
-        way'indedir. Izgara kaynağın kenarlarının (her kenarda 20 adım) projedeki
-        görüntüsünü örter, köşesi piksel boyunun (cell; yoksa kaynağın orta pikselinin
-        projede kapladığı alanın karekökü, altı anlamlı basamak) katındadır. sample nearest
-        kaynağın merkezin altındaki pikselini alır (sınıf ve kalite bantları kodlarını
-        korur), bilinear çevresindeki dördün ağırlıklı ortalamasını, değersiz pikselleri
-        dışarıda bırakarak. Değerler korunur: 8 bitlik raster RGBA'ya çevrilmez. Dosya yarım
-        kalmaz: geçici adla yazılır, sonra yerine konur; var olan output overwrite
-        verilmezse reddedilir (file_exists). Kaynağın kendisinin üzerine yazılmaz. plan
-        yazmadan ızgarayı söyler.
+        dosyanın adıyla yeni katman en üstte), tek geri alma adımı “Rasteri projenin
+        sistemine çevir”. Dosya sistem bildirmiyorsa srid verilir (crs_unknown);
+        bildirdiğinden başka srid uyarıyla onun yerine sayılır (crs_overridden). Dönüşüm
+        projenin datum seçimleriyle, Koordinat dönüştür'ün yoluyla yapılır; yolu ve
+        doğruluğu cevabın way'indedir. Izgara kaynağın kenarlarının (her kenarda 20 adım)
+        projedeki görüntüsünü örter, köşesi piksel boyunun (cell; yoksa kaynağın orta
+        pikselinin projede kapladığı alanın karekökü, altı anlamlı basamak) katındadır.
+        sample nearest kaynağın merkezin altındaki pikselini alır (sınıf ve kalite bantları
+        kodlarını korur), bilinear çevresindeki dördün ağırlıklı ortalamasını, değersiz
+        pikselleri dışarıda bırakarak. Değerler korunur: 8 bitlik raster RGBA'ya çevrilmez.
+        Dosya yarım kalmaz: geçici adla yazılır, sonra yerine konur; var olan output
+        overwrite verilmezse reddedilir (file_exists). Kaynağın kendisinin üzerine yazılmaz.
+        plan yazmadan ızgarayı söyler.
 
         Args:
             doc: The drawing it works on.
@@ -1074,7 +1074,7 @@ class _RastersReproject(LocalCommand[RastersReproject, RastersReprojected, Raste
 
 
 reproject = _RastersReproject()
-"""Rasteri yeniden izdüşür (``cad.rasters.reproject``)."""
+"""Rasteri projenin sistemine çevir (``cad.rasters.reproject``)."""
 
 
 __all__ = ["georef", "gpkgread", "gpkgwrite", "mosaic", "reproject"]

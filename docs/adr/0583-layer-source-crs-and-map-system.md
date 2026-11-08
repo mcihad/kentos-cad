@@ -1,5 +1,7 @@
 # ADR 0583: Katmanın kaynak sistemi ve harita sistemi
 
+> **Ad değişikliği (8 Kasım 2026):** “Sistem ata” ve “Yeniden izdüşür” artık katmanın Koordinat sistemi menüsünde **Tanımla** ve **Dönüştür**; ayrıntı [ADR 2500](2500-reproject-preview-shifts-and-reasons.md).
+
 - **Durum:** kabul edildi (2026-10-22). `plan/gis.md` CBS-07: her katmanın kaynak sistemi korunur; çizimde anında dönüşüm; ters
   dönüşümlü tıklama ve kenet; WKT2 ve kullanım alanı; sistem atama, görüntü dönüşümü ve kalıcı izdüşürme ayrı işlerdir.
 - **Sahibin kararı (22 Ekim):** “Tek çalışma sistemi + harita sistemi”. Çizim projenin sisteminde kalır; her katman kaynak

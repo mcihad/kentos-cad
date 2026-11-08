@@ -1,6 +1,6 @@
-//! Adayları uzlaştır (features_reconcile_window.rs, docs/adr/1760) on the shared cases' drawing of
+//! Detay eşleştirme (features_reconcile_window.rs, docs/adr/1760) on the shared cases' drawing of
 //! `map.features.reconcile`: the window guesses the LiDAR and orthophoto layers, its plan is the shared case's; a single's
-//! Kabul and a conflict's correction make them written; Uzlaştır writes in one undo step and marks the candidates, so a
+//! Kabul and a conflict's correction make them written; Eşleştir writes in one undo step and marks the candidates, so a
 //! second run writes nothing; Harita offers it, GIS and Mimari do not. And its pictures.
 
 use kentos_launch::Module;

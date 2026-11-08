@@ -1,4 +1,4 @@
-//! Arşivden ağ dengelemesi with known points' own velocities (survey_network_window.rs, plan/map-cad.md MAP-03,
+//! GNSS ağ dengelemesi with known points' own velocities (survey_network_window.rs, plan/map-cad.md MAP-03,
 //! docs/adr/2520): on the shared case whose known points carry their Earth-centred velocities and whose campaign has
 //! neither a velocity grid nor an epoch decision, both go to the measurement epoch by their velocity, the summary says
 //! so and Bilinen noktalar's Taşınma names it; with the grid for one of them the summary says both ways. The known point

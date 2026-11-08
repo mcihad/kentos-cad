@@ -144,7 +144,7 @@ fn a_layer_takes_its_source_system_and_moves_out_of_it_in_one_step() {
             .expect("the road")
     };
     let before = road(&app);
-    // Yeniden izdüşür on the active layer, from its record: ED50 / TM30's numbers into TUREF / TM36's.
+    // Koordinatları dönüştür on the active layer, from its record: ED50 / TM30's numbers into TUREF / TM36's.
     let _ = app.update(Message::Layer(crate::layering::Event::Activate(
         "yol".into(),
     )));
@@ -286,8 +286,14 @@ fn screens() {
                     &mut update,
                     Input::RightClick(row.center()),
                 );
-                // Koordinat sistemi ▸, the menu's thirteenth row, open.
-                let item = Point::new(1080.0, row.center().y + 290.0);
+                // Koordinat sistemi ▸ open: its row found by its words, so rows added to the menu do not move the
+                // pointer elsewhere. The ribbon's button of that name is above the layer's row and the properties'
+                // label is under the menu; the menu is drawn last, so its row is the last match below.
+                let item = crate::files_testing::find_texts(&mut snapshot, &app, "Koordinat sistemi")
+                    .into_iter()
+                    .filter(|r| r.y > row.y)
+                    .last()
+                    .map_or(Point::new(1080.0, row.center().y + 318.0), |r| r.center());
                 snapshot.input(&mut app, App::view, &mut update, Input::Move(item));
                 save(&mut snapshot, &app, "katman-menu");
             }

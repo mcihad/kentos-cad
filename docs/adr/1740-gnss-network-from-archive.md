@@ -1,5 +1,7 @@
 # 1740 — Arşivden GNSS ağı: bazlar, bilinen noktalar, iki aşamalı dengeleme ve kabul; `.kcad` şema 199
 
+> **Ad değişikliği (8 Kasım 2026):** “Arşivden ağ dengelemesi” penceresi artık **GNSS ağ dengelemesi**; ayrıntı [ADR 2560](2560-network-confidence-regions.md).
+
 Tarih: 2026-11-07. plan/map-cad.md MAP-03 ve MAP-05, ikinci dilim. Durum: taslak.
 
 İlgili ADR'ler:

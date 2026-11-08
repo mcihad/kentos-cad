@@ -1,4 +1,5 @@
-//! Yeniden izdüşür's preview (plan/map-cad.md MAP-02, docs/adr/2500): the layer's objects moved as
+//! The preview of a layer's coordinates moved into the project's system (Koordinat sistemi ▸ Dönüştür; plan/map-cad.md
+//! MAP-02, docs/adr/2500): the layer's objects moved as
 //! `cad.layers.reproject` writes them, and what the move shows before it is written — every object's shift (its first
 //! point now and moved, the smallest and largest shift of its points), what its points fall outside of (EPSG's areas
 //! of use of the source system, of the datum transformation, of the project's system; IOGP GN7-1 §6.5 asks whether

@@ -373,19 +373,20 @@ contingents = _LayersContingents()
 
 
 class _LayersCrs(LocalCommand[LayersCrs, LayersCrsSet, LayersCrsSet]):
-    """``cad.layers.crs`` v1. Sistem ata: Katmanın kaynak sistemi kaydını yazar ya da siler
-    (srid verilmezse ya da null ise): nesnelerinin hangi koordinat sisteminden geldiği;
-    adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım alanı kayıttan. Nesneler her
-    zaman projenin sistemindedir; atama hiçbir koordinatı değiştirmez (yanlış sistemde
-    alınmış veriyi çevirmek için cad.layers.reproject). Katman ağacının değişikliğidir:
-    tek geri alma adımı “Sistem ata”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli
-    katmanda da çalışır, veri değişmez. expectedRevision verilmişse ve çizim o sürümde
-    değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    """``cad.layers.crs`` v1. Katmanın koordinat sistemini tanımla: Katmanın kaynak sistemi
+    kaydını yazar ya da siler (srid verilmezse ya da null ise): nesnelerinin hangi
+    koordinat sisteminden geldiği; adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım
+    alanı kayıttan. Nesneler her zaman projenin sistemindedir; atama hiçbir koordinatı
+    değiştirmez (yanlış sistemde alınmış veriyi çevirmek için cad.layers.reproject).
+    Katman ağacının değişikliğidir: tek geri alma adımı “Katmanın koordinat sistemini
+    tanımla”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri
+    değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.crs"
     version = 1
-    title = "Sistem ata"
+    title = "Katmanın koordinat sistemini tanımla"
     scope = "document"
     input_type = LayersCrs
     output_type = LayersCrsSet
@@ -402,14 +403,15 @@ class _LayersCrs(LocalCommand[LayersCrs, LayersCrsSet, LayersCrsSet]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LayersCrsSet:
-        """Sistem ata: Katmanın kaynak sistemi kaydını yazar ya da siler (srid verilmezse ya da
-        null ise): nesnelerinin hangi koordinat sisteminden geldiği; adı, WKT2'si, EPSG
-        eksen sırası, birimi ve kullanım alanı kayıttan. Nesneler her zaman projenin
-        sistemindedir; atama hiçbir koordinatı değiştirmez (yanlış sistemde alınmış veriyi
-        çevirmek için cad.layers.reproject). Katman ağacının değişikliğidir: tek geri alma
-        adımı “Sistem ata”; kayıt aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır,
-        veri değişmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        """Katmanın koordinat sistemini tanımla: Katmanın kaynak sistemi kaydını yazar ya da
+        siler (srid verilmezse ya da null ise): nesnelerinin hangi koordinat sisteminden
+        geldiği; adı, WKT2'si, EPSG eksen sırası, birimi ve kullanım alanı kayıttan.
+        Nesneler her zaman projenin sistemindedir; atama hiçbir koordinatı değiştirmez
+        (yanlış sistemde alınmış veriyi çevirmek için cad.layers.reproject). Katman ağacının
+        değişikliğidir: tek geri alma adımı “Katmanın koordinat sistemini tanımla”; kayıt
+        aynıysa hiçbir şey yazılmaz. Kilitli katmanda da çalışır, veri değişmez.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -495,7 +497,7 @@ class _LayersCrs(LocalCommand[LayersCrs, LayersCrsSet, LayersCrsSet]):
 
 
 crs = _LayersCrs()
-"""Sistem ata (``cad.layers.crs``)."""
+"""Katmanın koordinat sistemini tanımla (``cad.layers.crs``)."""
 
 
 class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
@@ -1679,27 +1681,27 @@ renderer = _LayersRenderer()
 
 
 class _LayersReproject(LocalCommand[LayersReproject, LayersReprojected, LayersReprojected]):
-    """``cad.layers.reproject`` v1. Yeniden izdüşür: Katmanın nesnelerini verilen sistemden
-    (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin
-    sisteminde sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler kalır; yalnız
-    noktalar ve düz kenarlı çizgiler çevrilir. Çevrilemeyen nesne (sistemin ya da
-    ızgaranın dışında; yay, daire, yazı, blok gibi türden) varsa hiçbir şey yazılmaz:
-    crs_unreached her nedeni sayısıyla söyler, uids nesneleri verir. Katmanın kaynak
-    sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. Cevap önizlemedir, plan da
-    aynısını verir (ADR 2500): her nesnenin ilk noktasının şimdiki ve yeni yeri,
-    kayması, noktalarının en küçük ve en büyük kayması; noktaları EPSG kullanım
-    alanlarının dışına düşen nesnenin notları (outside_source_area,
-    outside_operation_area, outside_project_area; outside_area uyarısı); bütün
-    noktaların ortalama, en küçük ve en büyük kayması; dönüşüm zincirinin kararı
-    (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000 nesne listelenir,
-    notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa ya da from
-    projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    """``cad.layers.reproject`` v1. Katmanın koordinatlarını dönüştür: Katmanın nesnelerini
+    verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine
+    çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler
+    kalır; yalnız noktalar ve düz kenarlı çizgiler çevrilir. Çevrilemeyen nesne
+    (sistemin ya da ızgaranın dışında; yay, daire, yazı, blok gibi türden) varsa hiçbir
+    şey yazılmaz: crs_unreached her nedeni sayısıyla söyler, uids nesneleri verir.
+    Katmanın kaynak sistemi from olur. Tek geri alma adımı “Katmanın koordinatlarını
+    dönüştür”. Cevap önizlemedir, plan da aynısını verir (ADR 2500): her nesnenin ilk
+    noktasının şimdiki ve yeni yeri, kayması, noktalarının en küçük ve en büyük kayması;
+    noktaları EPSG kullanım alanlarının dışına düşen nesnenin notları
+    (outside_source_area, outside_operation_area, outside_project_area; outside_area
+    uyarısı); bütün noktaların ortalama, en küçük ve en büyük kayması; dönüşüm
+    zincirinin kararı (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000
+    nesne listelenir, notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa
+    ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.reproject"
     version = 1
-    title = "Yeniden izdüşür"
+    title = "Katmanın koordinatlarını dönüştür"
     scope = "document"
     input_type = LayersReproject
     output_type = LayersReprojected
@@ -1716,21 +1718,22 @@ class _LayersReproject(LocalCommand[LayersReproject, LayersReprojected, LayersRe
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LayersReprojected:
-        """Yeniden izdüşür: Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın
-        kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış
-        veriyi düzeltir. Kotlar ve ölçüler kalır; yalnız noktalar ve düz kenarlı çizgiler
-        çevrilir. Çevrilemeyen nesne (sistemin ya da ızgaranın dışında; yay, daire, yazı,
-        blok gibi türden) varsa hiçbir şey yazılmaz: crs_unreached her nedeni sayısıyla
-        söyler, uids nesneleri verir. Katmanın kaynak sistemi from olur. Tek geri alma adımı
-        “Yeniden izdüşür”. Cevap önizlemedir, plan da aynısını verir (ADR 2500): her
-        nesnenin ilk noktasının şimdiki ve yeni yeri, kayması, noktalarının en küçük ve en
-        büyük kayması; noktaları EPSG kullanım alanlarının dışına düşen nesnenin notları
-        (outside_source_area, outside_operation_area, outside_project_area; outside_area
-        uyarısı); bütün noktaların ortalama, en küçük ve en büyük kayması; dönüşüm
-        zincirinin kararı (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000
-        nesne listelenir, notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa
-        ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Katmanın koordinatlarını dönüştür: Katmanın nesnelerini verilen sistemden (from;
+        verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde
+        sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler kalır; yalnız noktalar ve düz
+        kenarlı çizgiler çevrilir. Çevrilemeyen nesne (sistemin ya da ızgaranın dışında;
+        yay, daire, yazı, blok gibi türden) varsa hiçbir şey yazılmaz: crs_unreached her
+        nedeni sayısıyla söyler, uids nesneleri verir. Katmanın kaynak sistemi from olur.
+        Tek geri alma adımı “Katmanın koordinatlarını dönüştür”. Cevap önizlemedir, plan da
+        aynısını verir (ADR 2500): her nesnenin ilk noktasının şimdiki ve yeni yeri,
+        kayması, noktalarının en küçük ve en büyük kayması; noktaları EPSG kullanım
+        alanlarının dışına düşen nesnenin notları (outside_source_area,
+        outside_operation_area, outside_project_area; outside_area uyarısı); bütün
+        noktaların ortalama, en küçük ve en büyük kayması; dönüşüm zincirinin kararı
+        (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000 nesne listelenir,
+        notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa ya da from
+        projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -1816,7 +1819,7 @@ class _LayersReproject(LocalCommand[LayersReproject, LayersReprojected, LayersRe
 
 
 reproject = _LayersReproject()
-"""Yeniden izdüşür (``cad.layers.reproject``)."""
+"""Katmanın koordinatlarını dönüştür (``cad.layers.reproject``)."""
 
 
 class _LayersRules(LocalCommand[LayersRules, LayersComposed, LayersComposePlan]):

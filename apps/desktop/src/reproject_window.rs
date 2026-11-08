@@ -1,5 +1,5 @@
-//! Yeniden izdüşür's preview (plan/map-cad.md MAP-02, docs/adr/2500): a layer's Koordinat sistemi ▸ Yeniden
-//! izdüşür ▸, or the command line's Yeniden izdüşür from the active layer's record, opens it on
+//! Katmanın koordinatlarını dönüştür, previewed (plan/map-cad.md MAP-02, docs/adr/2500): a layer's Koordinat sistemi
+//! ▸ Dönüştür ▸, or the command line's Koordinatları dönüştür from the active layer's record, opens it on
 //! `cad.layers.reproject`'s plan — the way and its accuracy, the chain's verdict and its reasons, every point's shift
 //! summed up, the objects whose points fall outside an EPSG area of use, and each object's shift in the kit's table
 //! (those with a note first). Uygula writes the move as one undo step; Vazgeç writes nothing. A layer some of whose
@@ -19,7 +19,7 @@ use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
 use crate::traces::Control;
 
-pub const TITLE: &str = "Yeniden izdüşür";
+pub const TITLE: &str = "Katmanın koordinatlarını dönüştür";
 const APPLY: &str = "Uygula";
 const CANCEL: &str = "Vazgeç";
 const SELECT: &str = "Nesneleri seç";
@@ -69,7 +69,7 @@ impl App {
         }
     }
 
-    /// Yeniden izdüşür of a layer from `from` (none: its record's), previewed: the command's plan, nothing written.
+    /// A layer's coordinates moved from `from` (none: its record's), previewed: the command's plan, nothing written.
     pub(crate) fn open_reproject(&mut self, layer: String, from: Option<u32>) -> Task<Message> {
         let Some(doc) = self.document.as_mut() else {
             self.output("Açık çizim yok.");
@@ -183,7 +183,7 @@ impl App {
                 if !r.uids.is_empty() {
                     lines.push(words::text_line(
                         Kind::Info,
-                        "Katmanın Koordinat sistemi ▸ Yeniden izdüşür ▸ menüsünden başka bir sistem seçin ya da Nesneleri seç ile çevrilemeyenleri seçip başka bir katmana alın.",
+                        "Katmanın Koordinat sistemi ▸ Dönüştür ▸ menüsünden başka bir sistem seçin ya da Nesneleri seç ile çevrilemeyenleri seçip başka bir katmana alın.",
                     ));
                 }
                 return (lines, rows);

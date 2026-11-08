@@ -490,7 +490,7 @@ def refusals():
                 "Birleştirmek için en az iki dosya gerekir: birden çok bulut ya da birden çok dosyalı bir sanal bulut seçin."),
         refused("merge-systems", "Bulutları birleştir, iki koordinat sistemi: ret", "pointcloud.merge",
                 {"input": {"scope": "selection"}},
-                "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu yeniden izdüşürmez. Aynı sistemdeki bulutları seçin.",
+                "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu projenin sistemine kendiliğinden çevirmez. Aynı sistemdeki bulutları seçin.",
                 [IDS["koy"], IDS["sinir"]]),
     ]
 

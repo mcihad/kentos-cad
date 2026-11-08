@@ -1,6 +1,6 @@
 //! `cad.rasters.reproject` v1 (docs/adr/0644 §3; plan/gis.md `CBS-31`): a raster file in another coordinate system
 //! carried into the project's, its pixels resampled onto a north-up grid of the project's system and written as a
-//! GeoTIFF, then added to the drawing as a raster linked to it, as one undo step “Rasteri yeniden izdüşür”. Raster ekle
+//! GeoTIFF, then added to the drawing as a raster linked to it, as one undo step “Rasteri projenin sistemine çevir”. Raster ekle
 //! refuses a file in another system; this is its way in. The values stay (an 8-bit raster is not made RGBA); a
 //! bilinear mean leaves out the cells of no value.
 

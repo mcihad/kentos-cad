@@ -1,15 +1,21 @@
-# 2500 — Yeniden izdüşürmede nesne başına kayma önizlemesi ve nedenleri
+# 2500 — Katmanın koordinatlarını dönüştürmede nesne başına kayma önizlemesi ve nedenleri
 
 Tarih: 2026-11-08. plan/map-cad.md MAP-02, dördüncü tur. Durum: taslak. Plan satırı: “Izgara bulunamadığında, kapsam
 dışına çıkıldığında veya epok belirsizken ‘başarılı hassas dönüşüm’ sonucu üretilmesin. Önizleme farkları ve nedenleri
 göstersin.”
 
 İlgili:
-- [ADR 0583](0583-layer-source-crs-and-map-system.md) §2: katmanın kaynak sistemi, Sistem ata ve Yeniden izdüşür;
+- [ADR 0583](0583-layer-source-crs-and-map-system.md) §2: katmanın kaynak sistemi, Tanımla (eski adı Sistem ata) ve Dönüştür (eski adı Yeniden izdüşür);
 - [ADR 1230](1230-coordinate-chain-epoch-grids-and-budget.md) §3 ve §7. §7'deki “Önizlemede nokta başına fark ve
   nedeni” maddesini bu ADR katmanın yeniden izdüşümü için kapatır;
 - [ADR 0222](0222-kml-gpx-and-explicit-transformation.md) §2: içe aktarmada yalnız noktalar ve düz kenarlı yollar çevrilir;
 - [ADR 0167](0167-second-crs-and-converter.md): her datum çiftinin EPSG yolu.
+
+**Ad değişikliği (8 Kasım 2026, sahibin onayıyla):** katmanın Koordinat sistemi menüsündeki “Sistem ata” ve “Yeniden
+izdüşür” haritacılığın kelimeleriyle **Tanımla** ve **Dönüştür** oldu; komutların ve geri alma adımlarının adları
+“Katmanın koordinat sistemini tanımla” ve “Katmanın koordinatlarını dönüştür”, raster için “Rasteri projenin sistemine
+çevir”. Kimlikler (`cad.layers.crs`, `cad.layers.reproject`, `cad.rasters.reproject`) aynı; eski adlar arama
+takma adıdır.
 
 ## Dayanak
 
@@ -32,9 +38,9 @@ göstersin.”
   8 Kasım 2026'da okundu):
   - §6.6: aday dönüşümlerin her satırı doğruluğunu ve kullanım alanını gösterir. Bu sistemde kullanılamayan dönüşüm
     gri görünür ve seçilemez;
-  - §6.2: katmanın sistemini değiştirmek veri kaynağını değiştirmez (KentOS'un Sistem ata'sı).
+  - §6.2: katmanın sistemini değiştirmek veri kaynağını değiştirmez (KentOS'un Tanımla'sı).
 - **KentOS bugün:**
-  - Yeniden izdüşür önizlemesiz yazıyordu. Cevapta yalnız nesne sayısı, yol ve doğruluk vardı;
+  - Dönüştür (o zamanki adıyla Yeniden izdüşür) önizlemesiz yazıyordu. Cevapta yalnız nesne sayısı, yol ve doğruluk vardı;
   - zincirin kararı (ADR 1230) yalnız Koordinat dönüştür'deydi;
   - yazı, daire, yay ya da blok içeren katman “(sistemin dışında)” diye reddediliyordu. Neden yanlıştı:
     `move_entity` bu türleri hiç almaz (ADR 0222 §2);
@@ -63,7 +69,7 @@ göstersin.”
    ([ADR 0228](0228-web-pause-desktop-and-cloud-first.md)). Kutu yaklaşıktır (GN7-1 §5.7); not bir uyarıdır, ret
    değildir: `outside_area`.
 4. **Zincirin kararı:** `status` ve `reasons`, Koordinat dönüştür'ün aynı iki sistem için verdiği karardır (ADR 1230
-   §3, aynı sıra). Yalnız yatay yol değerlendirilir; Yeniden izdüşür kotları olduğu gibi bırakır (ADR 0583 §2). Sınırlı
+   §3, aynı sıra). Yalnız yatay yol değerlendirilir; Dönüştür kotları olduğu gibi bırakır (ADR 0583 §2). Sınırlı
    zincirde `chain_limited` uyarısı nedenleri sayar. Boş katmanda karar yoktur.
 5. **Ret nedenleri** (`crs_unreached`): çevrilemeyen her nesnenin nedeni söylenir:
    - sistemin dışında;
@@ -74,8 +80,8 @@ göstersin.”
 
    Neden tekse eski cümle kalır, birden çoksa her biri sayısıyla. Öneri nedene göredir: doğru sistemi `from` ile
    vermek, ya da bu nesneleri başka katmana almak. `uids` hepsini verir. Katalog özeti düzeltildi.
-6. **Masaüstü** (`reproject_window.rs`). Katmanın Koordinat sistemi ▸ Yeniden izdüşür ▸ menüsü ve komut satırının
-   Yeniden izdüşür'ü artık yazmaz, önizlemeyi açar:
+6. **Masaüstü** (`reproject_window.rs`). Katmanın Koordinat sistemi ▸ Dönüştür ▸ menüsü ve komut satırının
+   Koordinatları dönüştür'ü artık yazmaz, önizlemeyi açar:
    - tek satırlık giriş, yol ve doğruluk, zincir (tam ya da uyarının nedenleri), notların uyarısı, toplu kayma;
    - kitin tablosu: Nesne, Nokta, Y, X, dY, dX, Kayma, En büyük, Kullanım alanı dışı (kaynak, dönüşüm, proje). CAD
      projesinde eksenler X, Y'dir;

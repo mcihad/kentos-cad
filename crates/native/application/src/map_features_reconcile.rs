@@ -1,13 +1,13 @@
 //! `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several sources
 //! reconciled through a data profile's classes. A candidate is a point or an open polyline on a source's layer whose
 //! class field names a class (its id, or one of its codes as the field's first word's capitals); one that keeps
-//! `Uzlaştırma` was reconciled before and is not read again. Candidates within the radius (points: the plane's
+//! `Eşleştirme` (or the earlier `Uzlaştırma`) was matched before and is not read again. Candidates within the radius (points: the plane's
 //! distance; polylines: the larger of the two discrete Hausdorff ways, vertices to the other's segments) are one group,
 //! joined transitively. A group's representative of a source is its candidate with the highest confidence (none below
 //! any number; a tie to the first); the others of that source are duplicates. A group is `existing` when an asset of its
 //! one class lies within the radius of a representative, `conflict` when its classes differ, `agreed` with two sources
 //! or more, else `single`. Execute writes the agreed groups and the singles a reviewer accepted, whose required fields
-//! are all given, on their class's layer, and marks the candidates; one undo step “Adayları uzlaştır”. The shared cases
+//! are all given, on their class's layer, and marks the candidates; one undo step “Detay eşleştirme”. The shared cases
 //! are `fixtures/commands/v1/map.features.reconcile.json`.
 //!
 //! Areas (docs/adr/2140): a closed polygon is a candidate of an area class; two are one group when their overlap ratio,
@@ -26,7 +26,8 @@ use kentos_geometry_core::ops::areas::areas_of_entity;
 
 use kentos_commands::{
     CandidateDecision, CommandResult, DEFAULT_CODE_FIELD, DataProfile, Entity, FeaturesReconcile, FeaturesReconciled,
-    FieldTrouble, MAX_CANDIDATE_SOURCES, ProfileGeometry, RECONCILED_FIELD, ReconciledCandidate, ReconciledGroup, Vec2,
+    FieldTrouble, MAX_CANDIDATE_SOURCES, ProfileGeometry, RECONCILED_FIELD, RECONCILED_FIELD_BEFORE, ReconciledCandidate,
+    ReconciledGroup, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -309,7 +310,8 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             .and_then(|f| attrs.get(f))
             .and_then(|t| t.trim().parse::<f64>().ok())
             .filter(|v| v.is_finite());
-        let status = if attrs.get(RECONCILED_FIELD).is_some_and(|t| !t.trim().is_empty()) {
+        let marked = |key: &str| attrs.get(key).is_some_and(|t| !t.trim().is_empty());
+        let status = if marked(RECONCILED_FIELD) || marked(RECONCILED_FIELD_BEFORE) {
             "reviewed"
         } else if decision.is_some_and(|d| d.reject.is_some()) {
             "rejected"
@@ -504,6 +506,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                 let skip = *key == field
                     || input.confidence.as_ref() == Some(key)
                     || key == RECONCILED_FIELD
+                    || key == RECONCILED_FIELD_BEFORE
                     || PROVENANCE.contains(&key.as_str())
                     || value.trim().is_empty();
                 if !skip && !attrs.contains_key(key) {
@@ -651,7 +654,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
         })
     };
     for layer in plan.layers.values() {
-        if let Some(stop) = locked(cx.doc, layer, "uzlaştırılan varlık oraya yazılamaz.", "name") {
+        if let Some(stop) = locked(cx.doc, layer, "eşleştirilen varlık oraya yazılamaz.", "name") {
             return stop.into();
         }
     }
@@ -668,7 +671,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
             }
         }
     }
-    let label = "Adayları uzlaştır";
+    let label = "Detay eşleştirme";
     let mut written: Vec<String> = Vec::new();
     let mut marked = 0u32;
     if !marks_any {

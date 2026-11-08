@@ -1,4 +1,4 @@
-//! Adayları uzlaştır's Alan gir (features_reconcile_window.rs, plan/map-cad.md MAP-04, docs/adr/2540): a group whose
+//! Detay eşleştirme's Alan gir (features_reconcile_window.rs, plan/map-cad.md MAP-04, docs/adr/2540): a group whose
 //! required field is missing or whose value its class layer's field rules refuse asks for those fields in a form under
 //! the table. A field whose domain has a list chooses from it (its code goes in), the others are typed; the rule's
 //! sentence stands beside a refused one. Alanları ekle puts the values in the decisions of the group's candidates (over

@@ -8,6 +8,9 @@ artık, kontrol noktası etkisi ve güven bölgesiyle gösterilsin.”
 - [ADR 1380](1380-gnss-baseline-network-adjustment.md): çekirdeğin GNSS dengelemesi (beyazlatma, istatistik);
 - [ADR 2160](2160-network-similarity-article-15-1-c.md): Madde 15(1)(c) benzerliği.
 
+**Ad değişikliği (8 Kasım 2026, sahibin onayıyla):** pencere “Arşivden ağ dengelemesi” yerine **GNSS ağ dengelemesi**
+oldu; kimliği (`map.survey.adjustment`) aynı, eski ad arama takma adıdır.
+
 ## Neden bu parça
 
 MAP-05'in “Sıradaki”lerinden robust kestirim ve ağırlıklı benzerlik bu turda yapılmadı:
@@ -44,7 +47,7 @@ Güven bölgesi planın açık bir isteğidir ve istasyon kovaryansından doğru
    - büyük eksenin yönü: kuzeyden saat yönünde, ½·atan2(2σne, σnn − σee), [0°, 180°);
    - kotun aralığı: √χ²₁(p)·σu (0,95'te 1,96 σ);
    - yön, eksenler büyük eksenin milyonda birinden az farklıysa verilmez: dairede yön yuvarlamadan ibarettir.
-3. **Masaüstü** (Arşivden ağ dengelemesi):
+3. **Masaüstü** (GNSS ağ dengelemesi):
    - özette “Güven bölgesi (%95): en büyük hata elipsi … noktasında, yarı eksenleri … ve … mm; kotun aralığı ±… mm.”;
    - Noktalar tablosunda **Güven bölgesi a/b, yön, kot (mm)** sütunu. Yön projenin açı biriminde semttir; dairede
      “yönsüz” yazar.

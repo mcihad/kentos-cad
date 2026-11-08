@@ -1,5 +1,5 @@
-//! `cad.layers.crs` and `cad.layers.reproject` v1 (docs/adr/0583 §2): a layer's source system recorded (Sistem ata:
-//! nothing moves) and a layer's objects moved from a system into the project's (Yeniden izdüşür).
+//! `cad.layers.crs` and `cad.layers.reproject` v1 (docs/adr/0583 §2): a layer's source system recorded (Koordinat
+//! sistemi ▸ Tanımla: nothing moves) and a layer's objects moved from a system into the project's (▸ Dönüştür).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]

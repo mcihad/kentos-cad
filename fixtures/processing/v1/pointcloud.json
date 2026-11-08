@@ -1698,7 +1698,7 @@
    },
    "expect": {
     "status": "error",
-    "message": "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu yeniden izdüşürmez. Aynı sistemdeki bulutları seçin."
+    "message": "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu projenin sistemine kendiliğinden çevirmez. Aynı sistemdeki bulutları seçin."
    }
   }
  ]

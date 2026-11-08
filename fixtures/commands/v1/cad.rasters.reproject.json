@@ -3,7 +3,7 @@
  "version": 1,
  "command": "cad.rasters.reproject",
  "commandVersion": 1,
- "title": "Rasteri yeniden izdüşür",
+ "title": "Rasteri projenin sistemine çevir",
  "note": "Written by scripts/fixtures/raster_reproject_cases.py from docs/adr/0644 §3 with GDAL and PROJ; do not edit by hand.",
  "setup": {
   "format": "kentos.document",

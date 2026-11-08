@@ -1,4 +1,4 @@
-//! Arşivden ağ dengelemesi (survey_network_window.rs, docs/adr/1740) on the shared cases' drawing of
+//! GNSS ağ dengelemesi (survey_network_window.rs, docs/adr/1740) on the shared cases' drawing of
 //! `map.survey.network`: the window opens with the network adjusted as the shared case says; Kabul et writes it in one
 //! undo step and the drawing saves as `.kcad` schema 199; Dışla leaves a baseline out and Geri al takes it back; a GVX
 //! file and the known point form fill an empty archive; Harita offers it, GIS and Mimari do not. And its pictures.

@@ -1,4 +1,4 @@
-//! Yeniden izdüşür's preview through a real AI host (plan/map-cad.md MAP-02, docs/adr/2500): the drawing of
+//! Katmanın koordinatlarını dönüştür's preview through a real AI host (plan/map-cad.md MAP-02, docs/adr/2500): the drawing of
 //! `cad.layers.reproject`'s shared cases opened as a .kcad file over MCP. The plan of the layer with a point far north
 //! of Türkiye gives the case's shifts (that point first, with its three notes), the shifts summed up, the chain's
 //! verdict and the warnings, and writes nothing; executed, it moves the objects as the plan said. The layer of a point,

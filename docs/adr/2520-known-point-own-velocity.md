@@ -62,7 +62,7 @@ oturumdaki öbür bazları da taşır, testin hangi bazı işaretleyeceği deği
    - yazıcı 207'yi bir bilinen noktanın hızı varken seçer; 206 ve öncesi `velocity`'yi `unknown_field` sayar;
    - Rust okuyucu-yazıcı, bağımsız okuyucu (`tools/kcad/kcad.py`) ve başvuru yazıcısı;
    - örnek `map-survey-velocity`, üç bozuk dosya, “daha yeni” dosya artık `schema-version-208`.
-6. **Masaüstü** (Arşivden ağ dengelemesi):
+6. **Masaüstü** (GNSS ağ dengelemesi):
    - bilinen nokta formunda **Hız (m/yıl)** satırı: VX, VY, VZ, üçü birden ya da hiçbiri;
    - özetin epok satırı yolu söyler: kendi hızıyla, hız ızgarasıyla ya da ikisi birden;
    - Bilinen noktalar'ın Taşınma sütunu “hız …” ya da “ızgara …” der.

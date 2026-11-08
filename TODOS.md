@@ -108,11 +108,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-01 / ADR 2480: web'in şeridinde panelin `roles` alanı (surface, network, zoning) ve seçimin rolleri; pencerelerin
   seçimin yüzeyi ya da ağıyla açılması.
 - MAP-02 / ADR 2500: `cad.layers.reproject`'in web işleyicisinde önizleme alanları (shifts, notlar, toplu kayma, zincirin
-  kararı; 24 ortak durum) ve ret nedenleri; web'in katman menüsünde Yeniden izdüşür önizlemesi; `fixtures/crs/v1/areas.json`.
+  kararı; 24 ortak durum) ve ret nedenleri; web'in katman menüsünde Koordinat sistemi ▸ Dönüştür önizlemesi; `fixtures/crs/v1/areas.json`.
 - MAP-03 / ADR 2520: web'in `map.survey.network` ve `map.survey.edit` işleyicilerinde bilinen noktanın `velocity`'si ve
-  `moved[].by`; web'in `.kcad` okuyucusunda şema 207; Arşivden ağ dengelemesi penceresinde Hız satırı.
+  `moved[].by`; web'in `.kcad` okuyucusunda şema 207; GNSS ağ dengelemesi penceresinde Hız satırı.
 - MAP-04 / ADR 2540: web'in `map.features.reconcile` işleyicisinde sınıf katmanının alan kuralları ve `invalid` (35 ortak
-  durum); web'in Adayları uzlaştır penceresinde Alan gir.
+  durum); web'in Detay eşleştirme penceresinde Alan gir.
+- Ad değişikliği (8 Kasım 2026): web'in arayüzünde Detay eşleştirme, GNSS ağ dengelemesi, katman menüsünde Koordinat
+  sistemi ▸ Tanımla / Dönüştür, Rasteri projenin sistemine çevir; adayın işareti Eşleştirme (eski Uzlaştırma okunur).
 - MAP-05 / ADR 2560: web'in `map.survey.network` işleyicisinde istasyonların `ellipse`'i (42 ortak durum); web'in Arşivden
   ağ dengelemesi penceresinde güven bölgesi satırı ve sütunu.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
@@ -123,9 +125,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-14 / ADR 1820: `road.terrains.sheetcontours`'un web işleyicisi ve Pafta eğrileri penceresi.
 - Şerit (7 Kasım 2026, DESIGN.md §7.3.1): web'in `Ribbon.fit`'inde yalnız ikon basamağının kaldırılması; panel
   sığmazsa adıyla katlanır, şeritte başlıksız düğme kalmaz.
-- MAP-04 / ADR 1760: `map.features.reconcile`'in web işleyicisi ve Adayları uzlaştır penceresi.
+- MAP-04 / ADR 1760: `map.features.reconcile`'in web işleyicisi ve Detay eşleştirme penceresi.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
-  web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
+  web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve GNSS ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının
   Harita'yı kabul etmesi.
 - MAP-19 / ADR 1700: `cad.asbuilt.check`'in web işleyicisi ve Uygulama kontrolü penceresi.
@@ -1294,7 +1296,7 @@ Liste:
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
 - [ ] `CBS-04` PostGIS'te alan, view ve sorgu katmanı, satır düzeyinde çakışma (ADR 0582, 22 Ekim): web'de gerekenler: web'in PostGIS'e bağlanması yok (sunucunun vekiliyle ayrı karar); masaüstündeki PostGIS'e bağlan'ın view, sorgu ve alan seçenekleri.
-- [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Sistem ata, Yeniden izdüşür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
+- [ ] `CBS-07` Katmanın kaynak sistemi ve harita sistemi (ADR 0583, 22 Ekim): web'de gerekenler: `.kcad` şema 98'in `sourceCrs` ve `mapSrid`'inin okunup yazılması (TS türleri üretildi); web'in çizim hatlarında (WebGL2, WebGPU) stil toplayıcısının izdüşümü (`View.map`, WASM `styledBatches`'e harita sistemi), kameranın harita sistemi (`map_ratio`, ters dönüşümlü imleç), durum çubuğunda harita hücresi, koordinat sistemi menüsünde Harita sistemi ▸, katmanın sağ tık menüsünde Koordinat sistemi ▸ (Tanımla, Dönüştür) ve `cad.layers.crs`, `cad.layers.reproject` işleyicileri; içe aktarmaların `sourceCrs`'i.
 - [ ] `CBS-12` Veritabanında alanın dışındaki komşular, yetki ve tam geçerlilik (ADR 0585, 22 Ekim): web'de gerekenler: web PostGIS'e bağlanmaz; GeoPackage parçasının yazması web'e gelince komşunun geçerliliği Geçerliliği denetle'nin sorunlarıyla (yinelenen köşe hariç, önceden geçersiz komşu engel değil).
 - [ ] `CBS-14` Kaynağa bağlı topoloji denetimi (ADR 0589, 22 Ekim): web'de gerekenler: `.kcad` şema 99'un TS kodeği (istisnanın `digest`'i), Topoloji panelinde düşen istisnanın “(istisna düştü)” işareti ve uyarısı, Düzelt ▾'de önizlemenin ikinci satırı (`cad.topology.check`'in `preview`'u WASM'la), İstisna yap'ın `cad.topology.exceptions` ile yazması; bağlı parça web'de yok.
 - [ ] `CBS-01` Kaynak gezgini (ADR 0599, 23 Ekim): web'de gerekenler: web'in Kaynaklar paneli GeoPackage'ı tablolarına ve tabloyu önizlemesine açsın (`cad.sources.describe`'ın `extent`'i ve `cad.sources.query` ile ilk beş kayıt), Bağlı katman olarak aç ve Kopya olarak al, bağlı tabloda Katmana git; Servisler'de hazır altlıklar ve tarayıcıda tutulan servisler; arama (`kentos_interaction::sources::search_*`'ın TS karşılığı, `fixtures/sources/v1/cases.json`'un `search`'ü); Son ve Sık kullanılanlar tarayıcıda (`recent`, `favourites` durumları); sürükleyip bırakma; Kapsamı göster. Veritabanları web'de yok (web PostGIS'e bağlanmaz).

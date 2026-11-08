@@ -1,5 +1,7 @@
 # ADR 0644: STAC varlıklarına erişim, kalite maskesi, yeniden izdüşüm ve modelin kaydı
 
+> **Ad değişikliği (8 Kasım 2026):** “Rasteri yeniden izdüşür” artık **Rasteri projenin sistemine çevir**; ayrıntı [ADR 2500](2500-reproject-preview-shifts-and-reasons.md).
+
 - **Durum:** kabul edildi (2026-10-26). `plan/gis.md` CBS-31'in kalanı. Kapsamı ben belirledim.
 - **Kalan işler (ADR 0528'den):**
   - imzalı adres akışı;

@@ -327,7 +327,7 @@ Kanıtlanan:
 Açık: ölçme pencerelerinin çarpanı `cad.crs.factors`'tan, sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması, nokta
 başına fark önizlemesi, daire/yay/yazının kotu, farklı blok birimiyle kotlu blok, zamana bağlı Helmert. Madde `[ ]` kalır.
 
-**8 Kasım 2026, dördüncü tur — Yeniden izdüşürün önizlemesi ([ADR 2500](../docs/adr/2500-reproject-preview-shifts-and-reasons.md)).**
+**8 Kasım 2026, dördüncü tur — Katmanın koordinatlarını dönüştürmenin önizlemesi ([ADR 2500](../docs/adr/2500-reproject-preview-shifts-and-reasons.md)).**
 Kapsam işareti: **Harita + CBS**. Araştırma: IOGP GN7-1 (kullanım alanı kutusu yaklaşık, dönüşüm seçmede alanın veriyle
 tutarlılığı), PROJ'un işlem seçimi (nokta işlemin kullanım alanıyla karşılaştırılır), QGIS'in datum dönüşümü penceresi
 (adayın doğruluğu ve kullanım alanı). Kanıtlanan:
@@ -337,7 +337,7 @@ tutarlılığı), PROJ'un işlem seçimi (nokta işlemin kullanım alanıyla kar
   sistem için zincir kararı. PROJ'a karşı 24 ortak durum (3 yeni), Rust ve Python;
 - bulunan kusur: yazı, daire, yay ya da blok içeren katman “sistemin dışında” diye reddediliyordu ve katalog yayların
   çevrildiğini söylüyordu. Artık ret her nedeni sayısıyla söyler, katalog düzeltildi;
-- masaüstünde Yeniden izdüşür önizleme penceresi açar (tablo, uyarılar, Uygula/Vazgeç, retteki nesneleri seç); MCP'de
+- masaüstünde Koordinat sistemi ▸ Dönüştür (eski adı Yeniden izdüşür) önizleme penceresi açar (tablo, uyarılar, Uygula/Vazgeç, retteki nesneleri seç); MCP'de
   plan ve ret.
 
 Açık: ölçme pencerelerinin çarpanı `cad.crs.factors`'tan, Koordinat dönüştür'de nokta başına karar, sorgu/düzenleme/dışa
@@ -500,13 +500,13 @@ Kanıtlanan alt maddeler:
 - `map.features.reconcile` nokta ve çizgi adaylarını Harita varlıkları profilinin sınıflarıyla gruplar. Gruplar uyuşan
   (iki kaynak bir sınıfta), tek, çelişen ve zaten var olandır. Yinelenen aday işaretlenir; eksik zorunlu alan bulunur.
 - Belirsiz aday sessizce kesin varlığa dönüşmez: tek kaynak kabul ister, çelişki düzeltme ister.
-- Kabul edilmiş insan düzeltmeleri korunur: aday `Uzlaştırma` ile işaretlenir ve bir daha okunmaz. Kabul edilmiş
+- Kabul edilmiş insan düzeltmeleri korunur: aday `Eşleştirme` (8 Kasım 2026'ya dek `Uzlaştırma`) ile işaretlenir ve bir daha okunmaz. Kabul edilmiş
   varlığın yanındaki yeni aday yeni varlık yapmaz.
 - Köken (Kaynaklar, Adaylar, Yayılım, İnceleme) özniteliktedir.
 - İşlemin tamamı tek geri alma adımıdır.
 - Kabulden kanıtlanan: aynı sokağın LiDAR ve ortofoto adaylarıyla yinelenen önlendi, KapiNo eksiği bulundu, ağaç adayı
   direğe düzeltildi.
-- 25 bağımsız durum (`map_features_reconcile_cases.py`); masaüstü Adayları uzlaştır (Ölçme › Noktalar).
+- 25 bağımsız durum (`map_features_reconcile_cases.py`); masaüstü Detay eşleştirme (eski adı Adayları uzlaştır; Ölçme › Noktalar).
 
 **Açık:** alan sınıfları, inceleme kaydının özniteliğe değil ayrı kayda yazılması ve katalog geçiş raporu, AI çıkarımı,
 pencerede eksik alan girişi, büyük veri. Madde `[ ]` kalır.

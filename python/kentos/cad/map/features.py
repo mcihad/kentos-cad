@@ -184,32 +184,32 @@ code = _MapFeaturesCode()
 
 
 class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, FeaturesReconciled]):
-    """``map.features.reconcile`` v1. Adayları uzlaştır: Birkaç kaynaktan (nokta bulutu ve
-    ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını bir veri profilinin
-    sınıflarıyla uzlaştırır. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa
-    Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık
-    çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m)
-    içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki
-    yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek
-    adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup
-    existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz),
-    conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da
-    single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri,
-    zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin
+    """``map.features.reconcile`` v1. Detay eşleştirme: Birkaç kaynaktan (nokta bulutu ve
+    ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını (detayları) bir veri
+    profilinin sınıflarıyla eşleştirir. Aday, bir kaynağın katmanında sınıf alanı
+    (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta
+    ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius
+    (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide
+    iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en
+    yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları
+    duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni
+    varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir
+    sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş
+    tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin
     ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar
     temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar,
-    Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Uzlaştırma özniteliğiyle
-    (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz: insan
-    kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept,
-    reject (nedenle), fields (eksik alanlar). Tek geri alma adımı; plan yazmadan söyler.
-    Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile,
-    invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing,
-    layer_locked.
+    Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Eşleştirme özniteliğiyle
+    (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz (eski
+    çizimlerin Uzlaştırma özniteliği de okunur): insan kararları sonraki çıkarımla
+    ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik
+    alanlar). Tek geri alma adımı; plan yazmadan söyler. Retler: invalid_revision,
+    revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found,
+    invalid_uid, entity_not_found, class_layer_missing, layer_locked.
     """
     __slots__ = ()
     id = "map.features.reconcile"
     version = 1
-    title = "Adayları uzlaştır"
+    title = "Detay eşleştirme"
     scope = "document"
     input_type = FeaturesReconcile
     output_type = FeaturesReconciled
@@ -233,12 +233,12 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> FeaturesReconciled:
-        """Adayları uzlaştır: Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü)
-        gelen harita varlığı adaylarını bir veri profilinin sınıflarıyla uzlaştırır. Aday,
-        bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını
-        kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence
-        sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur
-        (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff
+        """Detay eşleştirme: Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü)
+        gelen harita varlığı adaylarını (detayları) bir veri profilinin sınıflarıyla
+        eşleştirir. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin
+        bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir;
+        confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir
+        gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff
         uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en
         alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının
         kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar
@@ -247,12 +247,13 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek
         temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların
         alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren
-        öznitelikleri. Adaylar Uzlaştırma özniteliğiyle (varlığın kimliği ya da Reddedildi:
-        neden) işaretlenir ve bir daha okunmaz: insan kararları sonraki çıkarımla ezilmez.
-        decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar).
-        Tek geri alma adımı; plan yazmadan söyler. Retler: invalid_revision,
-        revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found,
-        invalid_uid, entity_not_found, class_layer_missing, layer_locked.
+        öznitelikleri. Adaylar Eşleştirme özniteliğiyle (varlığın kimliği ya da Reddedildi:
+        neden) işaretlenir ve bir daha okunmaz (eski çizimlerin Uzlaştırma özniteliği de
+        okunur): insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf
+        düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı;
+        plan yazmadan söyler. Retler: invalid_revision, revision_conflict, unknown_profile,
+        invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found,
+        class_layer_missing, layer_locked.
 
         Args:
             doc: The drawing it works on.
@@ -395,7 +396,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
 
 
 reconcile = _MapFeaturesReconcile()
-"""Adayları uzlaştır (``map.features.reconcile``)."""
+"""Detay eşleştirme (``map.features.reconcile``)."""
 
 
 __all__ = ["code", "reconcile"]

@@ -1,4 +1,4 @@
-//! Adayları uzlaştır's Alan gir (features_reconcile_fill.rs, docs/adr/2540) on the shared case's drawing whose class
+//! Detay eşleştirme's Alan gir (features_reconcile_fill.rs, docs/adr/2540) on the shared case's drawing whose class
 //! layers carry the profile's fields: the accepted manhole's network “Atıksu” is not on the list and the door has no
 //! number, as the case says; Alan gir chooses Kanalizasyon from the list and types the door's number, both are written
 //! with the values the rules give; a number too long stays refused with the rule's sentence. And its pictures.
@@ -64,7 +64,7 @@ fn alan_gir_fills_the_list_and_the_number_and_both_are_written() {
     send(&mut app, R::Typed("KapiNo".into(), "14".into()));
     send(&mut app, R::FillApply);
     assert!(answer(&app).groups[door].writes);
-    // Uzlaştır: both written with the rules' values.
+    // Eşleştir: both written with the rules' values.
     send(&mut app, R::Run);
     let doc = &app.document.as_ref().expect("a drawing").model;
     let attrs: Vec<std::collections::BTreeMap<String, String>> = doc.entities().map(|e| e.base().attrs.clone()).collect();

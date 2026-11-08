@@ -4200,7 +4200,7 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
-    // Rasteri yeniden izdüşür (docs/adr/0644 §3).
+    // Rasteri projenin sistemine çevir (docs/adr/0644 §3).
     Entry {
         id: "cad.rasters.reproject",
         refusals: &[

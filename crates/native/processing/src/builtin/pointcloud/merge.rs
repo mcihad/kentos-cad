@@ -67,7 +67,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let systems: BTreeSet<u32> = list.iter().map(|c| c.cloud.srid).collect();
     if systems.len() > 1 {
         return RunResult::refused(
-            "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu yeniden izdüşürmez. Aynı sistemdeki bulutları seçin.".to_owned(),
+            "Bulutlar farklı koordinat sistemlerinde; KentOS bulutu projenin sistemine kendiliğinden çevirmez. Aynı sistemdeki bulutları seçin.".to_owned(),
         );
     }
     match go(&*files, r, &list, &sources, feedback) {

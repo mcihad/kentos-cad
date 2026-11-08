@@ -1,6 +1,7 @@
 //! `cad.layers.crs` and `cad.layers.reproject` v1 (docs/adr/0583 §2): a layer's source system recorded, nothing moved
-//! (Sistem ata), and a layer's objects moved from a system into the project's, the record that system (Yeniden
-//! izdüşür), each as one undo step. Yeniden izdüşür's answer is also its preview (docs/adr/2500): each object's shift,
+//! (Koordinat sistemi ▸ Tanımla), and a layer's objects moved from a system into the project's, the record that
+//! system (Koordinat sistemi ▸ Dönüştür), each as one undo step. The move's answer is also its preview (docs/adr/2500):
+//! each object's shift,
 //! what its points fall outside of (EPSG's areas of use) and the chain's verdict for the way. The shared cases are
 //! `fixtures/commands/v1/cad.layers.crs.json` and `cad.layers.reproject.json` (scripts/fixtures/layer_crs_cases.py,
 //! with PROJ).
@@ -18,8 +19,8 @@ use crate::layers_reproject::Preview;
 use crate::sources::mover_in;
 
 /// The undo steps' names.
-pub const ASSIGN: &str = "Sistem ata";
-pub const REPROJECT: &str = "Yeniden izdüşür";
+pub const ASSIGN: &str = "Katmanın koordinat sistemini tanımla";
+pub const REPROJECT: &str = "Katmanın koordinatlarını dönüştür";
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))

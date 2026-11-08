@@ -404,7 +404,7 @@ pub enum Dialog {
     Xrefs,
     /// 2B düzleme indir (flatten_window.rs, docs/adr/1061 §4); its state is `App::flatten`.
     Flatten,
-    /// Yeniden izdüşür's preview (reproject_window.rs, docs/adr/2500); its state is `App::reproject`.
+    /// Katmanın koordinatlarını dönüştür's preview (reproject_window.rs, docs/adr/2500); its state is `App::reproject`.
     Reproject,
     /// Kodla çiz (features_window.rs, docs/adr/1360); its state is `App::features_code`.
     FeaturesCode,
@@ -426,9 +426,9 @@ pub enum Dialog {
     Asbuilt,
     /// İş grafiği (project_graph_window.rs, docs/adr/1940); its state is `App::project_graph`.
     ProjectGraph,
-    /// Arşivden ağ dengelemesi (survey_network_window.rs, docs/adr/1740); its state is `App::survey_network`.
+    /// GNSS ağ dengelemesi (survey_network_window.rs, docs/adr/1740); its state is `App::survey_network`.
     SurveyNetwork,
-    /// Adayları uzlaştır (features_reconcile_window.rs, docs/adr/1760); its state is `App::features_reconcile`.
+    /// Detay eşleştirme (features_reconcile_window.rs, docs/adr/1760); its state is `App::features_reconcile`.
     FeaturesReconcile,
     /// İmar planı denetimi (zoning_window.rs, docs/adr/1420); its state is `App::zoning`.
     Zoning,
@@ -1537,7 +1537,7 @@ pub struct App {
     /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
     pub(crate) xrefs: crate::xrefs_window::State,
     pub(crate) flatten: crate::flatten_window::State,
-    /// Yeniden izdüşür's preview (reproject_window.rs, docs/adr/2500).
+    /// Katmanın koordinatlarını dönüştür's preview (reproject_window.rs, docs/adr/2500).
     pub(crate) reproject: crate::reproject_window::State,
     pub(crate) features_code: crate::features_window::State,
     pub(crate) baselines: crate::baselines_window::State,

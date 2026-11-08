@@ -3,7 +3,7 @@
  "version": 1,
  "command": "cad.layers.reproject",
  "commandVersion": 1,
- "title": "Yeniden izdüşür: katmanın nesneleri bir sistemden projeninkine",
+ "title": "Koordinat sistemi ▸ Dönüştür: katmanın nesneleri bir sistemden projeninkine",
  "note": "ADR 0583. Kayıt koordinat sistemleri kaydından; WKT2 EPSG'nin tanımından yazılır ve PROJ'da (pyproj) kodun kendisiyle aynı eksen sırası ve aynı noktalar olarak okunur. Çevrilen koordinatlar PROJ'un, ADR 0167'nin her datum çifti için adını verdiği EPSG yoluyla; 1 mm içinde. Bağımsız başvuru: scripts/fixtures/layer_crs_cases.py. Önizleme (ADR 2500): nesne başına kayma PROJ'un noktalarından; notlar PROJ'un veritabanındaki EPSG kullanım alanlarından (nokta kaynağın datumundaki yerinde ve vardığı yerde okunur); zincirin kararı ADR 1230 §3'ün kurallarıyla.",
  "setup": {
   "format": "kentos.document",
@@ -747,7 +747,7 @@
     },
     {
      "op": "undo",
-     "returns": "Yeniden izdüşür",
+     "returns": "Katmanın koordinatlarını dönüştür",
      "expect": {
       "entities": {
        "2": {
@@ -879,7 +879,7 @@
    ]
   },
   {
-   "name": "kaydı olan katman from'suz: önce Sistem ata, sonra Yeniden izdüşür",
+   "name": "kaydı olan katman from'suz: önce Tanımla, sonra Dönüştür",
    "steps": [
     {
      "op": "execute",

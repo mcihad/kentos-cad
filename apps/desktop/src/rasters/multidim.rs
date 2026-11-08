@@ -1096,7 +1096,7 @@ impl App {
             Rule::Other { srid: other } => words::text_line(
                 Line::Error,
                 format!(
-                    "Dosyanın sistemi ({}) projeninkinden ({project}) başka; eklenmez. KentOS yeniden izdüşürmez: veriyi projenin sistemine çevirip yeniden deneyin.",
+                    "Dosyanın sistemi ({}) projeninkinden ({project}) başka; eklenmez. KentOS bu dosyayı projenin sistemine kendiliğinden çevirmez: veriyi projenin sistemine çevirip yeniden deneyin.",
                     crate::crs::title_of(other)
                 ),
             ),

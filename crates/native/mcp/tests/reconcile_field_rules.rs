@@ -1,4 +1,4 @@
-//! Uzlaştırmada alan kuralları through a real AI host (plan/map-cad.md MAP-04, docs/adr/2540): the shared case's drawing
+//! Detay eşleştirmede alan kuralları through a real AI host (plan/map-cad.md MAP-04, docs/adr/2540): the shared case's drawing
 //! whose class layers carry the profile's fields, opened as a .kcad file over MCP. The plan says the accepted manhole's
 //! network is not on the list, as the case does; executed with the network chosen from the list and the door's number,
 //! both are written, the network as the list's code.

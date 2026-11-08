@@ -246,7 +246,7 @@ def cases():
         ok("kotsuz noktalar: KOH_Z yok", setup([(n, (g[0], g[1], None), (e[0], e[1], None)) for n, g, e in POINTS])),
         refused("raster projenin sisteminde değil", {}, "crs_mismatch",
                 "Ortofotonun koordinat sistemi EPSG:5256, projeninki EPSG:5254; farklı sistemdeki görüntü denetlenmez. "
-                "Önce projeye çevirin (Raster › Yeniden izdüşür).", "raster", setup(ras=raster(srid=5256))),
+                "Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).", "raster", setup(ras=raster(srid=5256))),
         refused("raster değil", {"raster": uid(2)}, "not_a_raster", f"“{uid(2)}” bir raster değil; ortofotoyu seçin.",
                 "raster"),
         refused("kimlik UUID değil", {"raster": "x"}, "invalid_uid", "“x” geçerli bir nesne kimliği değil.", "raster"),

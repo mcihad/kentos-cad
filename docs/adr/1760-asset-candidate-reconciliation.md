@@ -1,5 +1,7 @@
 # 1760 — Harita varlığı adaylarının iki kaynaktan uzlaştırılması (`map.features.reconcile`)
 
+> **Ad değişikliği (8 Kasım 2026):** “Adayları uzlaştır” artık **Detay eşleştirme**, işaret özniteliği **Eşleştirme**; ayrıntı [ADR 2540](2540-reconcile-field-rules-and-entry.md).
+
 Tarih: 2026-11-07. plan/map-cad.md MAP-04, ikinci dilim. Durum: taslak. İlgili:
 - [ADR 1360](1360-field-codes-and-kodla-ciz.md): saha kodları, Harita varlıkları profili, Kodla çiz. Bu ADR oradaki
   “Sonra: iki kaynaktan aday eşleme ve inceleme” maddesini açar.

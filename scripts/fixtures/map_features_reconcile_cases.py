@@ -13,7 +13,7 @@ pole). The rules (ADR 1760), written here by hand:
 
 - a candidate: a point or an open polyline (two vertices or more) on a source's layer; its class: a decision's
   correction, else its field's text (trimmed) as a class id, else the class whose codes hold the capitals its first
-  word begins with (upper-cased); one keeping `Uzlaştırma` is `reviewed`; a rejected one `rejected`; no class
+  word begins with (upper-cased); one keeping `Eşleştirme` (or the earlier `Uzlaştırma`) is `reviewed`; a rejected one `rejected`; no class
   `unknown`; a point class on a polyline or a line class on a point (or an area class) `wrongKind`;
 - the confidence: the field given, a finite number; none is below any number;
 - groups: candidates of one kind within the radius (points: the plane's distance; polylines: the larger of the two
@@ -25,11 +25,11 @@ pole). The rules (ADR 1760), written here by hand:
 - `existing` when an object of the group's one class's layer (not a candidate) lies within the radius of a
   representative; else `conflict` (classes differ), `agreed` (two sources or more), `single`;
 - the fields: the representatives' (confidence, then source order), but the class field, the confidence field,
-  `Uzlaştırma` and the provenance's; the decisions' fields over them; missing: a required field not given;
+  `Eşleştirme`, `Uzlaştırma` and the provenance's; the decisions' fields over them; missing: a required field not given;
 - written: agreed, or single with an accept, and nothing missing; the asset on the class's layer with the fields, the
   class field = the class's first code, Kaynaklar, Adaylar, Yayılım (3 decimals), İnceleme and Gözden geçiren (with
-  decisions); every member of a written or existing group marked `Uzlaştırma` = the asset, a rejected one
-  `Reddedildi: reason`. One undo step “Adayları uzlaştır”; nothing to write or mark writes nothing.
+  decisions); every member of a written or existing group marked `Eşleştirme` = the asset, a rejected one
+  `Reddedildi: reason`. One undo step “Detay eşleştirme”; nothing to write or mark writes nothing.
 
 ADR 2140 adds areas, by shapely (GEOS): a closed polygon (three vertices or more, area above 0) is a candidate of an area
 class; two are one group when their overlap ratio, intersection area over union area, exceeds `overlap` (0.5 when not
@@ -118,7 +118,7 @@ OBJECTS = [
     point(O, {"Kod": "KAP", "Güven": "0.80"}, 130.10, 12.05),                                 # 13 … no door number
     line(L, {"Kod": "BRD", "Güven": "0.86"}, [(0.0, 0.0), (20.0, 0.0), (40.0, 0.10)]),       # 14 a kerb …
     line(O, {"Kod": "BRD", "Güven": "0.93", "Ad": "Bordür 1"}, [(0.10, 0.15), (20.05, 0.10), (39.90, 0.20)]),  # 15
-    point(L, {"Kod": "DRK", "Güven": "0.95", "Uzlaştırma": uid(0x99)}, 150.0, 5.0),          # 16 reconciled before
+    point(L, {"Kod": "DRK", "Güven": "0.95", "Uzlaştırma": uid(0x99)}, 150.0, 5.0),          # 16 matched before (old name)
     line(L, {"Kod": "DRK", "Güven": "0.60"}, [(170.0, 0.0), (172.0, 0.0)]),                  # 17 a pole drawn as a line
 ]
 
@@ -171,7 +171,7 @@ def setup(objects=OBJECTS, missing_layers=(), locked=(), fields=False):
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"}
     if fields:
         settings["domains"] = copy.deepcopy(PROFILE["domains"])
-    return {"format": "kentos.document", "version": 2, "name": "Aday uzlaştırma",
+    return {"format": "kentos.document", "version": 2, "name": "Detay eşleştirme",
             "settings": settings,
             "origin": {"x": X0, "y": Y0}, "layers": layers, "activeLayer": "cizim", "entities": ents,
             "uids": [uid(i) for i in range(1, len(ents) + 1)], "styles": {"items": [], "categories": []}}
@@ -409,7 +409,7 @@ def analyse(d, inp):
                 confidence = v if math.isfinite(v) else None
             except ValueError:
                 confidence = None
-        if attrs.get("Uzlaştırma", "").strip():
+        if attrs.get("Eşleştirme", "").strip() or attrs.get("Uzlaştırma", "").strip():
             status = "reviewed"
         elif dc and "reject" in dc:
             status = "rejected"
@@ -521,7 +521,7 @@ def analyse(d, inp):
         attrs = {}
         for r in trust:
             for k, v in cands[r]["attrs"].items():
-                if k == field or k == conf or k == "Uzlaştırma" or k in PROVENANCE or not v.strip():
+                if k == field or k == conf or k in ("Eşleştirme", "Uzlaştırma") or k in PROVENANCE or not v.strip():
                     continue
                 attrs.setdefault(k, v)
         accepted, review = False, []
@@ -618,7 +618,7 @@ def executed(d, inp):
     for ci in sorted(written_classes):
         lid = class_layer(d, ci)
         if lays[lid]["locked"]:
-            raise Refused("layer_locked", f"“{path_of(d, lid)}” katmanı kilitli: uzlaştırılan varlık oraya yazılamaz. "
+            raise Refused("layer_locked", f"“{path_of(d, lid)}” katmanı kilitli: eşleştirilen varlık oraya yazılamaz. "
                                           "Kilidi açın.", "name")
     marks_any = any(g["row"]["writes"] or g["row"]["status"] == "existing" for g in groups) or any(
         c["status"] == "rejected" for c in cands)
@@ -673,7 +673,7 @@ def executed(d, inp):
         c = cands[m]
         k = d["uids"].index(c["uid"]) + 1
         attrs = dict(c["attrs"])
-        attrs["Uzlaştırma"] = text
+        attrs["Eşleştirme"] = text
         fields[str(k)] = {"attrs": attrs}
     return answer(cands, groups, sources, written, len(marks)), fields, slot - 1
 
@@ -702,7 +702,7 @@ def step(d, inp, op="execute", undo=True):
     expect = {"revision": "changed", "canUndo": True, "ids": list(range(1, last + 1)), "fields": fields}
     steps = [{"op": op, "input": inp, "result": result, "expect": expect, "within": WITHIN}]
     if undo:
-        steps.append({"op": "undo", "returns": "Adayları uzlaştır",
+        steps.append({"op": "undo", "returns": "Detay eşleştirme",
                       "expect": {"canRedo": True, "ids": list(range(1, len(d["entities"]) + 1))}})
     return steps
 
@@ -724,7 +724,7 @@ def cases():
     out = [
         case("Plan: iki çıkarımın adayları; uyuşan, yinelenen, çelişen, tek, var olan, bilinmeyen, eksik alanlı, çizgi",
              d, step(d, BASE, op="plan")),
-        case("Uzlaştır: uyuşan direkler ve bordür yazılır, var olan direğin adayı işaretlenir; tek adımda geri alınır",
+        case("Eşleştir: uyuşan direkler ve bordür yazılır, var olan direğin adayı işaretlenir; tek adımda geri alınır",
              d, step(d, BASE),
              "Kapı uyuşuyor ama zorunlu KapiNo yok: yazılmaz. Tek rögar ve çelişen direk/ağaç karar bekler."),
     ]
@@ -746,10 +746,10 @@ def cases():
         i = int(k) - 1
         if i < len(after["entities"]):
             after["entities"][i]["attrs"] = f["attrs"]
-    marked = [a for a in after["entities"] if "Uzlaştırma" in a["attrs"]]
+    marked = [a for a in after["entities"] if "Eşleştirme" in a["attrs"]]
     for e in marked:
-        e["attrs"]["Uzlaştırma"] = uid(0x500)
-    out.append(case("Yeniden çalıştırma: uzlaştırılmış adaylar okunmaz, insan kararı ezilmez", after,
+        e["attrs"]["Eşleştirme"] = uid(0x500)
+    out.append(case("Yeniden çalıştırma: eşleştirilmiş adaylar okunmaz, insan kararı ezilmez", after,
                     step(after, BASE)))
     out.append(case("Doğrulama", d, step(d, BASE, op="validate")))
     # Refusals, in their order.
@@ -785,7 +785,7 @@ def cases():
     out.append(case("Alanlar (plan): bina izi iki kaynakta örtüşür (yineleneniyle), 0,25 örtüşen iki iz ayrı tekler, var "
                     "olan binanın üstündeki aday, yeşil alan/bina çelişkisi, nokta çizilmiş bina, alan çizilmiş direk",
                     da, step(da, BASE, op="plan")))
-    out.append(case("Alanlar (uzlaştır): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı "
+    out.append(case("Alanlar (eşleştir): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı "
                     "işaretlenir; tek adımda geri alınır", da, step(da, BASE)))
     out.append(case("Örtüşme 0,2: 0,25 örtüşen iki iz bir gruptur", da, step(da, dict(BASE, overlap=0.2), op="plan")))
     # ADR 2540: the class layers' field rules (the profile applied: each class's fields on its layer, a domain's list).
@@ -846,7 +846,7 @@ def assert_cases():
 def main():
     assert_cases()
     doc = {"format": "kentos.command-cases", "version": 1, "command": "map.features.reconcile", "commandVersion": 1,
-           "title": "Harita varlığı adaylarını uzlaştır: iki kaynak, yinelenen, çelişen, tek, var olan, eksik alan, karar",
+           "title": "Detay eşleştirme: iki kaynak, yinelenen, çelişen, tek, var olan, eksik alan, karar",
            "note": "ADR 1760 (MAP-04) ve ADR 2140 (alanlar). Bağımsız başvuru scripts/fixtures/map_features_reconcile_cases.py: "
                    "kurallar ADR'den, uzaklıklar Python'un math.hypot'uyla, Hausdorff köşe-doğru parçası, alanların örtüşme "
                    "oranı ve ağırlık merkezi shapely (GEOS) ile; KentOS kodu yok. Sınıflar KentOS'un harita-varliklari "

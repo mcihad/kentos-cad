@@ -72,7 +72,7 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
         return Err(fail(
             codes::CRS_MISMATCH,
             format!(
-                "Ortofotonun koordinat sistemi EPSG:{}, projeninki EPSG:{project}; farklı sistemdeki görüntü denetlenmez. Önce projeye çevirin (Raster › Yeniden izdüşür).",
+                "Ortofotonun koordinat sistemi EPSG:{}, projeninki EPSG:{project}; farklı sistemdeki görüntü denetlenmez. Önce projeye çevirin (Raster ekle › Projenin sistemine çevir ve ekle).",
                 r.raster.srid
             ),
             "raster",

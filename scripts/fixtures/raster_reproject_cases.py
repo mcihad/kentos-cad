@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rasteri yeniden izdüşür (docs/adr/0644 §3; plan/gis.md CBS-31): `cad.rasters.reproject`'in ortak durumları ve
+"""Rasteri projenin sistemine çevir (docs/adr/0644 §3; plan/gis.md CBS-31): `cad.rasters.reproject`'in ortak durumları ve
 dosyaları, GDAL ve PROJ'la, KentOS kodu olmadan.
 
     /usr/bin/python3 scripts/fixtures/raster_reproject_cases.py --files    # fixtures/raster/v1/reproject'in GeoTIFF'lerini yazar
@@ -360,7 +360,7 @@ def cases():
 
 def document():
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.rasters.reproject", "commandVersion": 1,
-            "title": "Rasteri yeniden izdüşür",
+            "title": "Rasteri projenin sistemine çevir",
             "note": "Written by scripts/fixtures/raster_reproject_cases.py from docs/adr/0644 §3 with GDAL and PROJ; "
                     "do not edit by hand.",
             "setup": doc(), "cases": cases()}

@@ -1,4 +1,4 @@
-//! Arşivden ağ dengelemesi (docs/adr/1740; `map.survey.adjustment`): the project's GNSS network adjusted from its
+//! GNSS ağ dengelemesi (docs/adr/1740; `map.survey.adjustment`; named “Arşivden ağ dengelemesi” until 8 November 2026): the project's GNSS network adjusted from its
 //! archive by `map.survey.network`, reading only until Kabul et. Baz içe aktar brings a GVX 1.0 file's or KentOS's
 //! baseline text's vectors into the last arazi ölçümü (`map.survey.edit baselines`); the known point form adds a mark's
 //! given coordinates (`known`); the class (BÖHHBÜY 2018's C1, C2, C3, or none) and the variance factor are the user's.
@@ -33,7 +33,7 @@ use crate::road_dialog::{self, col, num, sheet};
 use crate::style::fields;
 use crate::traces::Control;
 
-pub const TITLE: &str = "Arşivden ağ dengelemesi";
+pub const TITLE: &str = "GNSS ağ dengelemesi";
 const CLOSE: &str = "Kapat";
 const ACCEPT: &str = "Kabul et";
 const IMPORT: &str = "Baz içe aktar…";
@@ -310,7 +310,7 @@ impl App {
         });
     }
 
-    /// Arşivden ağ dengelemesi (`map.survey.adjustment`): the window over the project's network.
+    /// GNSS ağ dengelemesi (`map.survey.adjustment`): the window over the project's network.
     pub(crate) fn open_survey_network(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
@@ -426,8 +426,8 @@ impl App {
                     .as_ref()
                     .and_then(|a| a.as_ref().ok())
                     .and_then(|a| a.baselines.iter().find(|b| b.id == id))
-                    .and_then(|b| b.free.w.map(|w| format!("Serbest dengelemede uyuşumsuz (w = {w:.2}); Arşivden ağ dengelemesi penceresinden.")))
-                    .unwrap_or_else(|| "Arşivden ağ dengelemesi penceresinden dışlandı.".to_owned());
+                    .and_then(|b| b.free.w.map(|w| format!("Serbest dengelemede uyuşumsuz (w = {w:.2}); GNSS ağ dengelemesi penceresinden.")))
+                    .unwrap_or_else(|| "GNSS ağ dengelemesi penceresinden dışlandı.".to_owned());
                 self.map_survey_edit(Op::Exclude { solution: id, reason });
                 self.survey_network_run();
             }

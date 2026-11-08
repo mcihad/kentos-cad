@@ -1,7 +1,7 @@
-//! Adayları uzlaştır with area candidates (features_reconcile_window.rs, plan/map-cad.md MAP-04, docs/adr/2140): on the
+//! Detay eşleştirme with area candidates (features_reconcile_window.rs, plan/map-cad.md MAP-04, docs/adr/2140): on the
 //! shared case's drawing of building footprints and green areas, the window's plan is the case's (the footprints that
 //! overlap above 0.5 agree, the overlap ratio in the table), the overlap box joins the two footprints overlapping 0.25
-//! when set to 0.2, and Uzlaştır writes the agreed building as its most trusted footprint with Örtüşme, one undo step.
+//! when set to 0.2, and Eşleştir writes the agreed building as its most trusted footprint with Örtüşme, one undo step.
 //! And the pictures.
 
 use kentos_commands::Entity;
@@ -50,7 +50,7 @@ fn footprints_agree_by_their_overlap_and_uzlastir_writes_the_trusted_one() {
     let _ = app.update(Message::FeaturesReconcile(R::Overlap(0.2)));
     assert_eq!(answer(&app).groups.iter().filter(|g| g.status == "agreed").count(), 2);
     let _ = app.update(Message::FeaturesReconcile(R::Overlap(0.5)));
-    // Uzlaştır: the agreed footprint on Bina izleri, with its overlap, one undo step.
+    // Eşleştir: the agreed footprint on Bina izleri, with its overlap, one undo step.
     let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     let _ = app.update(Message::FeaturesReconcile(R::Run));
     let doc = &app.document.as_ref().expect("a drawing").model;
@@ -67,7 +67,7 @@ fn footprints_agree_by_their_overlap_and_uzlastir_writes_the_trusted_one() {
     assert_eq!(app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0), before, "one undo step");
 }
 
-/// The window on the footprints: the plan with the overlap column, and after Uzlaştır; light wide and dark narrow,
+/// The window on the footprints: the plan with the overlap column, and after Eşleştir; light wide and dark narrow,
 /// `.run/gui-evidence/aday-alanlar-2140/`:
 ///
 /// ```text

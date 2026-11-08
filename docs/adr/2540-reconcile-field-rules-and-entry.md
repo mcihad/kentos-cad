@@ -1,4 +1,4 @@
-# 2540 — Uzlaştırmada alan kuralları ve pencerede alan girişi
+# 2540 — Detay eşleştirmede alan kuralları ve pencerede alan girişi
 
 Tarih: 2026-11-08. plan/map-cad.md MAP-04, dördüncü tur. Durum: taslak. Plan satırı: “… eksik zorunlu alan bulunur”;
 ADR 2140'ın “Sonra”sındaki “pencerede eksik alan girişi (ADR 1760)” maddesi.
@@ -8,6 +8,11 @@ ADR 2140'ın “Sonra”sındaki “pencerede eksik alan girişi (ADR 1760)” m
 - [ADR 2140](2140-area-candidates-by-overlap.md): alan adayları;
 - [ADR 0199](0199-layer-fields-and-feature-table.md) §1: katman alanlarının değer kuralı (`check_value`);
 - [ADR 1360](1360-field-codes-and-kodla-ciz.md): Harita varlıkları profili, alanların değer listeleri (domain).
+
+**Ad değişikliği (8 Kasım 2026, sahibin onayıyla):** pencere “Adayları uzlaştır” yerine haritacılığın kelimeleriyle
+**Detay eşleştirme**, düğmesi **Eşleştir**, adayların işareti **Eşleştirme** özniteliği oldu (eski çizimlerin
+“Uzlaştırma”sı da okunur). Kimlikler (`map.features.reconcile`, `map.featuresReconcile`) aynı; eski adlar arama
+takma adıdır.
 
 ## Dayanak
 
@@ -24,7 +29,7 @@ ADR 2140'ın “Sonra”sındaki “pencerede eksik alan girişi (ADR 1760)” m
 - **Profilin uygulanması** (ADR 1360): Harita varlıkları profili sınıfların alanlarını katmanlarına koyar. Değer
   listesi olan alan (şebeke, direk türü, kontrol noktası türü) listesini katmanda taşır.
 - **KentOS bugün:**
-  - uzlaştırma varlığı sınıfın katmanına doğrudan yazıyordu. Adayların ve kararların değerleri katmanın alan
+  - eşleştirme varlığı sınıfın katmanına doğrudan yazıyordu. Adayların ve kararların değerleri katmanın alan
     kurallarından geçmiyordu: “Atıksu” şebeke listesinde olmadığı hâlde rögara yazılırdı, “Aydınlatma” etiketi kodu
     yerine kalırdı;
   - komut kararla alan vermeyi biliyordu (`fields`). Pencere ise yalnız eksik alanı gösteriyordu, değer girilemiyordu.
@@ -40,7 +45,7 @@ ADR 2140'ın “Sonra”sındaki “pencerede eksik alan girişi (ADR 1760)” m
    - katmanın alanı olmayan değer eskisi gibi yazılır;
    - sınıf katmanında alan yoksa (profil uygulanmamış) sınama yoktur. Var olan durumlar bu yüzden değişmedi.
 2. **Cevapta** `ReconciledGroup.invalid`: `FieldTrouble` (alan, ileti), katmanın alan sırasıyla.
-3. **Masaüstü** (Adayları uzlaştır):
+3. **Masaüstü** (Detay eşleştirme):
    - tablonun **Alan** sütunu “… eksik” ve “… kurala uymaz” der;
    - özet her kurala uymayan değeri cümlesiyle söyler;
    - eksik ya da kurala uymayan alanı olan grubun satırında **Alan gir** vardır. Tablonun altında o alanların formu

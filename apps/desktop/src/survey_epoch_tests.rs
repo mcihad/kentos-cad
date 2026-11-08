@@ -1,4 +1,4 @@
-//! Arşivden ağ dengelemesi at the measurement epoch (survey_network_window.rs, plan/map-cad.md MAP-03,
+//! GNSS ağ dengelemesi at the measurement epoch (survey_network_window.rs, plan/map-cad.md MAP-03,
 //! docs/adr/2120): on the shared case whose baselines carry their observation times and whose campaign has a velocity
 //! grid, the window says the measurement epoch (the baselines' mid-times), the known points moved to it from 2005.0 and
 //! how far (Bilinen noktalar's Taşınma); a typed epoch wins; a box that is no number says so; Kabul et keeps the

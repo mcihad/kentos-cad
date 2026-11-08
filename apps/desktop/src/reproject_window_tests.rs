@@ -1,5 +1,5 @@
-//! Yeniden izdüşür's preview (reproject_window.rs, docs/adr/2500) on the drawing of `cad.layers.reproject`'s shared
-//! cases: a layer's Koordinat sistemi ▸ Yeniden izdüşür ▸ opens the window on the command's plan, which is the shared
+//! Katmanın koordinatlarını dönüştür's preview (reproject_window.rs, docs/adr/2500) on the drawing of
+//! `cad.layers.reproject`'s shared cases: a layer's Koordinat sistemi ▸ Dönüştür ▸ opens the window on the command's plan, which is the shared
 //! case's (each object's shift, the notes, the shifts summed up, the chain's verdict, the warnings) with nothing
 //! written; Uygula writes the case's move as one undo step, Vazgeç nothing; a layer whose text and circle do not move
 //! says each reason counted, as the case does, and Nesneleri seç selects the objects. And its pictures.

@@ -10,7 +10,7 @@ codes) and checked against PROJ (pyproj): the text read by PROJ moves points acr
 does, and has the code's axis order. The moved coordinates are PROJ's, along the EPSG path ADR 0167 names for each
 pair of datums (crs_transform_cases.py's `transformer`); the cases compare them within 1 mm.
 
-Yeniden izdüşür's preview (docs/adr/2500) is written here too: each object's first point now and moved (PROJ's), its
+The preview of Koordinat sistemi ▸ Dönüştür (docs/adr/2500) is written here too: each object's first point now and moved (PROJ's), its
 points' shifts, the shifts summed up; the notes from EPSG's areas of use as PROJ's database gives them (the source
 system's and the project's, `CRS.area_of_use`; the datum transformation's, `CoordinateOperation.area_of_use` of the
 path's operations), a point read at its place on the source's datum (PROJ's inverse) and where it lands; the chain's
@@ -277,7 +277,7 @@ def ent(id_, kind, layer_id, attrs, **geom):
 
 
 
-# ── Yeniden izdüşür's preview (docs/adr/2500) ────────────────────────────────────────────────────────────────────
+# ── Koordinat sistemi ▸ Dönüştür's preview (docs/adr/2500) ────────────────────────────────────────────────────────────────
 
 NOTES = ["outside_source_area", "outside_operation_area", "outside_project_area"]
 NOTE_TEXT = {
@@ -420,11 +420,11 @@ def reproject_cases():
                   {"revision": "changed", "entities": new_entities}, within=WITHIN)),
         case("geri alma eski koordinatları ve kaydın yokluğunu geri getirir",
              step({"layer": "eski", "from": 2322}, answered("eski", 2322), CHANGED, within=WITHIN),
-             {"op": "undo", "returns": "Yeniden izdüşür", "expect": {"entities": old_entities}}),
+             {"op": "undo", "returns": "Katmanın koordinatlarını dönüştür", "expect": {"entities": old_entities}}),
         case("plan hiçbir şey yazmaz",
              {"op": "plan", "input": {"layer": "eski", "from": 2322},
               "result": answered("eski", 2322), "expect": SAME, "within": WITHIN}),
-        case("kaydı olan katman from'suz: önce Sistem ata, sonra Yeniden izdüşür",
+        case("kaydı olan katman from'suz: önce Tanımla, sonra Dönüştür",
              step({"layer": "gps", "srid": 4326}, done({"layer": "gps", "crs": record(4326), "changed": True,
                                                          "revision": "$current"}), CHANGED, command="cad.layers.crs"),
              step({"layer": "gps"}, answered("gps", 4326),
@@ -524,9 +524,9 @@ def main():
             "her datum çifti için adını verdiği EPSG yoluyla; 1 mm içinde. Bağımsız başvuru: "
             "scripts/fixtures/layer_crs_cases.py.")
     files = {
-        "cad.layers.crs.json": build("cad.layers.crs", "Sistem ata: katmanın kaynak sistemi kaydı", note, crs_cases()),
+        "cad.layers.crs.json": build("cad.layers.crs", "Koordinat sistemi ▸ Tanımla: katmanın kaynak sistemi kaydı", note, crs_cases()),
         "cad.layers.reproject.json": build("cad.layers.reproject",
-                                           "Yeniden izdüşür: katmanın nesneleri bir sistemden projeninkine",
+                                           "Koordinat sistemi ▸ Dönüştür: katmanın nesneleri bir sistemden projeninkine",
                                            note + " Önizleme (ADR 2500): nesne başına kayma PROJ'un noktalarından; "
                                            "notlar PROJ'un veritabanındaki EPSG kullanım alanlarından (nokta kaynağın "
                                            "datumundaki yerinde ve vardığı yerde okunur); zincirin kararı ADR 1230 "
