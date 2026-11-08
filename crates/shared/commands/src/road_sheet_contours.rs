@@ -89,12 +89,14 @@ pub fn contour_rules_default() -> Option<ContourRules> {
 /// scale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base
 /// (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
 /// the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
-/// (`spots`, none: not; docs/adr/2320), the rule package (none: KentOS's BÖHHBÜY 2018).
+/// (`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot
+/// heights (`slopes`, none: no such heights; docs/adr/3120), the rule package (none: KentOS's BÖHHBÜY 2018).
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
-/// the package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,
-/// `layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,
-/// `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.
+/// the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
+/// their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
+/// `slopes.top`, `slopes.bottom`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
+/// `invalid_contours` (more than 10 000 levels), `no_contours`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -132,10 +134,30 @@ pub struct TerrainsSheetContours {
     pub spots: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    pub slopes: Option<SheetSlopes>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<ContourRules>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
+}
+
+/// The slopes whose characteristic points take spot heights (BÖHHBÜY m. 78(1)(ğ), docs/adr/3120): the layers of the
+/// slopes' top lines and of their bottom lines. Every corner of a line or polyline there is such a point, its height
+/// the surface's at it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SheetSlopes {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub top: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub bottom: Vec<String>,
 }
 
 /// A line as drawn: its level, its kind (`major`, `minor`, `auxiliary`), whether it closes, its places.
@@ -170,9 +192,10 @@ pub struct SheetContourLabel {
     pub rotation: f64,
 }
 
-/// A characteristic point's height (BÖHHBÜY m. 78(1)(ğ), docs/adr/2320): a `summit` or a `pit`, the surface's vertex
-/// with the highest (lowest) height inside an innermost closed major or minor line, its place and height, and the
-/// height to the decimetre as written.
+/// A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
+/// with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
+/// (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there; its place and height, and
+/// the height to the decimetre as written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

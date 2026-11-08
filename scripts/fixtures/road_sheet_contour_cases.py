@@ -25,7 +25,11 @@ The rules, by hand (BÖHHBÜY 2018 m. 78(1)(c)–(g), Ek-3 0001–0005, the pack
 - asked for (docs/adr/2320; m. 78(1)(ğ)), the characteristic points: inside each innermost closed major or minor line
   (no other such line's first place inside it, even-odd), the surface's vertex highest above the level, else the one
   lowest below it (the earlier vertex among equals; a vertex at the level is on the line; one inside a detail is no
-  ground shown), its height to the decimetre (half up, one decimal) beside a point. A second surface, a bowl of 81 shaken points beside the first, has a pit.
+  ground shown), its height to the decimetre (half up, one decimal) beside a point. A second surface, a bowl of 81 shaken points beside the first, has a pit;
+- asked for (docs/adr/3120; m. 78(1)(ğ)'s slopes), every corner of a line or polyline on the slopes' top layers, then on
+  their bottom layers, in the drawing's order, once per place, its height the surface's there (Triangle's triangle, its
+  plane), written as the summits' are; a corner off the surface is counted. The slope's top and bottom lines run along
+  the scarp, the top's last line ending beyond the surface.
 """
 
 import copy
@@ -71,6 +75,11 @@ BUILDING = [(230.0, 130.0), (272.0, 130.0), (272.0, 166.0), (230.0, 166.0)]
 ROAD = [(-10.0, 58.5), (410.0, 70.5), (410.0, 82.5), (-10.0, 70.5)]
 SLOPE = [(85.0, 205.0), (118.0, 205.0), (118.0, 236.0), (85.0, 236.0)]
 TWO = [(500.0, 500.0, 850.0), (510.0, 500.0, 851.0)]
+# docs/adr/3120: the scarp's top and bottom lines (its logistic is centred at x = 100 m); the top's last piece a line
+# that shares its first corner with the polyline and ends beyond the surface (y 320).
+SLOPE_TOP = [(110.0, 30.0), (111.5, 75.0), (109.0, 120.0), (110.5, 165.0)]
+SLOPE_TOP_LINE = ((110.5, 165.0), (110.0, 320.0))
+SLOPE_BOTTOM = [(90.0, 30.0), (88.5, 75.0), (91.0, 120.0), (89.5, 165.0), (90.0, 190.0)]
 
 
 def bowl_points():
@@ -88,7 +97,8 @@ def bowl_points():
 BOWL = bowl_points()
 
 LAYERS = [rt.node("0", "0"), rt.node("zemin", "Zemin"), rt.node("bina", "Bina"), rt.node("yol", "Yol"),
-          rt.node("sev", "Şev sınırı"), rt.node("az", "Az nokta"), rt.node("cukur", "Çukur"),
+          rt.node("sev", "Şev sınırı"), rt.node("sev-ust", "Şev üstü"), rt.node("sev-dip", "Şev dibi"),
+          rt.node("az", "Az nokta"), rt.node("cukur", "Çukur"),
           rt.node("esyukselti", "Eş yükselti"),
           rt.node("arazi", "Arazi", [rt.node("ek", "Ek")]), {**rt.node("kilitli", "Kilitli"), "locked": True},
           {**rt.node("gizli", "Gizli"), "visible": False}]
@@ -105,6 +115,10 @@ def entities():
     ents.append(("polyline", "sev", {"pts": [P(*p) for p in SLOPE], "closed": True}))
     ents += [("point", "az", {"p": P(x, y), "z": z}) for x, y, z in TWO]
     ents += [("point", "cukur", {"p": P(x, y), "z": z}) for x, y, z in BOWL]
+    # docs/adr/3120: after the bowl, so the earlier objects keep their ids.
+    ents.append(("polyline", "sev-ust", {"pts": [P(*p) for p in SLOPE_TOP]}))
+    ents.append(("line", "sev-ust", {"a": P(*SLOPE_TOP_LINE[0]), "b": P(*SLOPE_TOP_LINE[1])}))
+    ents.append(("polyline", "sev-dip", {"pts": [P(*p) for p in SLOPE_BOTTOM]}))
     return ents
 
 
@@ -135,7 +149,8 @@ def surface_of(points):
 
 S = surface_of(POINTS)
 # The bowl's points come after the first surface's and the details in the drawing: their ids follow.
-S3 = rt.build({"points": [(x, y, z, U(len(ENTS) - len(BOWL) + i + 1)) for i, (x, y, z) in enumerate(BOWL)],
+BOWL_FIRST = next(i for i, e in enumerate(ENTS) if e[1] == "cukur")
+S3 = rt.build({"points": [(x, y, z, U(BOWL_FIRST + i + 1)) for i, (x, y, z) in enumerate(BOWL)],
                "breaklines": [], "boundary": None, "voids": [], "tolerance": None, "maxEdge": None, "edges": [],
                "removed": []})
 
@@ -177,6 +192,33 @@ def spots_of(s, lines, dets=()):
         out.append({"kind": kind, "x": s["xy"][i][0], "y": s["xy"][i][1], "z": z,
                     "text": f"{math.floor(z * 10.0 + 0.5) / 10.0:.1f}"})
     return out
+
+
+def slope_spots(s, top=(), bottom=()):
+    """The slopes' characteristic points (docs/adr/3120): each corner of a line or polyline on the top layers, then on
+    the bottom ones, in the drawing's order, once per place; its height the surface's (none off it: counted)."""
+    out, seen, off = [], [], 0
+    for kind, layers in (("slopeTop", top), ("slopeBottom", bottom)):
+        for k, layer, g in ENTS:
+            if layer not in layers:
+                continue
+            if k == "line":
+                corners = [(g["a"]["x"], g["a"]["y"]), (g["b"]["x"], g["b"]["y"])]
+            elif k == "polyline":
+                corners = [(v["x"], v["y"]) for v in g["pts"]]
+            else:
+                continue
+            for c in corners:
+                if c in seen:
+                    continue
+                seen.append(c)
+                h = rt.height(s, c)
+                if h["place"] != "inside":
+                    off += 1
+                    continue
+                z = h["z"]
+                out.append({"kind": kind, "x": c[0], "y": c[1], "z": z, "text": f"{math.floor(z * 10.0 + 0.5) / 10.0:.1f}"})
+    return out, off
 
 
 def level_lines(s, z, keep):
@@ -349,7 +391,7 @@ def details_of(layers):
 
 
 def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary=True, labels=True, rules=None,
-          spots=False, surface=None):
+          spots=False, surface=None, slopes=None):
     rules = rules or RULES
     if interval is None:
         interval = next(i["interval"] for i in rules["intervals"] if i["scale"] == scale)
@@ -405,7 +447,16 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
     if spots:
         notes.append(f"Tepe ve çukurlarda {len(found)} karakteristik nokta kotu dm'ye kadar yazıldı "
                      f"({num(rules['spotHeight'])} mm, m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da "
-                     "en alçak köşe; şev üstü ve dibi işaretlenmedi.")
+                     "en alçak köşe" + ("." if slopes else "; şev üstü ve dibi işaretlenmedi."))
+    if slopes:
+        more, off = slope_spots(s, slopes.get("top", ()), slopes.get("bottom", ()))
+        tops = sum(1 for m in more if m["kind"] == "slopeTop")
+        note = (f"Şevlerin üstünde {tops}, dibinde {len(more) - tops} karakteristik nokta kotu dm'ye kadar yazıldı "
+                f"({num(rules['spotHeight'])} mm, m. 78(1)(ğ)): şev çizgilerinin köşeleri, kotları yüzeyden.")
+        if off:
+            note += f" Yüzeyin dışındaki {off} köşe yazılmadı."
+        notes.append(note)
+        found = found + more
     # docs/adr/2720: the auxiliary lines take the package's pattern (Ek-3 0003) as a project line type of its name.
     pattern = None
     if rules.get("auxiliaryPattern") and any(l["kind"] == "auxiliary" for l in lines):
@@ -491,6 +542,20 @@ def cases():
     walled = drawn(out, "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz", {"spots": True, "details": all3},
                    spots=True, details=all3)
     assert walled["spots"] and walled["spots"][0]["z"] < top["spots"][0]["z"], walled.get("spots")
+    # docs/adr/3120: the slopes' tops and bottoms (m. 78(1)(ğ)).
+    both = {"top": ["sev-ust"], "bottom": ["sev-dip"]}
+    sloped = drawn(out, "Şev kotları: üst ve dip çizgilerinin köşeleri yüzeyden dm'ye kadar; ortak köşe bir kez, yüzeyin "
+                   "dışındaki köşe sayılır", {"slopes": both}, slopes=both)
+    kinds = [s_["kind"] for s_ in sloped["spots"]]
+    assert kinds == ["slopeTop"] * 4 + ["slopeBottom"] * 5, kinds
+    assert all(t["z"] > b["z"] + 5.0 for t, b in zip(sloped["spots"][:4], sloped["spots"][4:])), sloped["spots"]
+    # The rest at 1/5000 (5 m apart): fewer lines to carry.
+    drawn(out, "Şev kotları planı yazmaz (1/5000)", {"scale": 5000, "slopes": both}, op="plan", scale=5000, slopes=both)
+    drawn(out, "Yalnız şev üstü (1/5000)", {"scale": 5000, "slopes": {"top": ["sev-ust"]}}, scale=5000,
+          slopes={"top": ["sev-ust"]})
+    drawn(out, "Tepe ve şev kotları birlikte: tepe önce, şevler sonra (1/5000)", {"scale": 5000, "spots": True,
+          "slopes": both}, scale=5000, spots=True, slopes=both)
+    drawn(out, "Boş şev katmanları: şev kotu istenmemiş sayılır (1/5000)", {"scale": 5000, "slopes": {}}, scale=5000)
     # docs/adr/2720: the auxiliary pattern added as a project line type in the same step; the project's own kept.
     plain_out = sheet()
     assert plain_out.get("pattern"), "the default package draws auxiliary lines with its pattern"
@@ -533,6 +598,13 @@ def cases():
     refused(out, "Kot noktası yazı yüksekliği vermeyen paket", {"spots": True, "rules": no_spot},
             rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi kot noktası yazısının yüksekliğini (spotHeight, "
                       "Ek-3 0004) vermiyor; tepe ve çukur kotları yazılmaz.", "rules"))
+    refused(out, "Şev kotları, kot noktası yazı yüksekliği vermeyen paket", {"slopes": both, "rules": no_spot},
+            rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi kot noktası yazısının yüksekliğini (spotHeight, "
+                      "Ek-3 0004) vermiyor; şev kotları yazılmaz.", "rules"))
+    refused(out, "Olmayan şev üstü katmanı", {"slopes": {"top": ["yok"]}},
+            rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "slopes.top"))
+    refused(out, "Olmayan şev dibi katmanı", {"slopes": {"top": ["sev-ust"], "bottom": ["yok"]}},
+            rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "slopes.bottom"))
     refused(out, "Çok sık düzey", {"interval": 0.001},
             rt.failed("invalid_contours", "Bu aralıkla yüzeyi 10 000'den çok düzey keser; aralığı büyütün.", "interval"))
     refused(out, "Kesen düzey yok", {"interval": 1000.0},

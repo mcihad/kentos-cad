@@ -258,6 +258,9 @@
 - **Dönüşüm uygula (9 Kasım 2026; MAP-13, [ADR 3100](../../docs/adr/3100-apply-a-transform-to-a-point-cloud.md)).**
   İşlemler aracı `pointcloud.transform`: bulut 16 sayılık afin matrisle yeni dosyaya taşınır (kaynağın ızgarası, yarım
   sıfırdan uzağa); Tarama kaydı'nda Buluta uygula kaydın matrisini getirir. Kaynak ve koordinat sistemi değişmez. Harita + CBS.
+- **Şev üstü ve dibi kotları (9 Kasım 2026; MAP-14, [ADR 3120](../../docs/adr/3120-sheet-slope-top-and-bottom-heights.md)).**
+  `road.terrains.sheetcontours`'un `slopes`'u: şevlerin üst ve dip çizgilerinin köşeleri, kotları yüzeyden dm'ye
+  (m. 78(1)(ğ)); Pafta eğrileri'nde Şevler (ğ) satırı. Aralık ya da eşik uydurulmaz. Harita + Yol.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

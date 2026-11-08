@@ -2,7 +2,8 @@
 //! `road.terrains.sheetcontours`: the window guesses the contour layer and the detail layers, its plan is the shared
 //! case's; a rule unticked changes the plan; Çiz writes the lines and heights in one undo step; Harita offers it; the
 //! summit's height ticked is the shared case's, the building's vertices left out (docs/adr/2320); the auxiliary lines
-//! take the package's 5/1 mm pattern as a project line type (docs/adr/2720). And its pictures.
+//! take the package's 5/1 mm pattern as a project line type (docs/adr/2720); the slopes' tops and bottoms guessed
+//! from their layers' names and their corners' heights the shared case's (docs/adr/3120). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -133,6 +134,78 @@ fn the_summit_height_is_the_shared_case_s() {
     let _ = app.update(Message::SheetContours(E::Draw));
     let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
     assert_eq!(after, before + r.lines.len() + r.labels.len() + 2);
+}
+
+/// docs/adr/3120: the slopes' top and bottom layers guessed from their names and left out of the details; Şev kotları
+/// ticked gives the shared case's corners and heights; with no bottom layer only the top's; Çiz writes a point and a
+/// height for each.
+#[test]
+fn the_slope_heights_are_the_shared_case_s() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    let s = &app.sheet_contours;
+    assert_eq!((s.slope_top.as_str(), s.slope_bottom.as_str()), ("sev-ust", "sev-dip"));
+    assert_eq!(s.details, vec!["bina".to_owned(), "yol".to_owned(), "sev".to_owned()]);
+    assert!(s.answer.clone().expect("an answer").expect("planned").spots.is_empty(), "not ticked: none");
+    let _ = app.update(Message::SheetContours(E::Slopes(true)));
+    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Şev kotları: üst ve dip")))
+        .expect("the case")["steps"][0]["result"]["output"]["spots"]
+        .clone();
+    // The places, kinds and texts the case's; the heights within the cases' 10⁻⁹ m (Triangle's plane and KentOS's).
+    let want = case.as_array().expect("spots");
+    assert_eq!(r.spots.len(), want.len());
+    for (got, w) in r.spots.iter().zip(want) {
+        assert_eq!((got.kind.as_str(), got.x, got.y, got.text.as_str()), (w["kind"].as_str().expect("kind"), w["x"].as_f64().expect("x"), w["y"].as_f64().expect("y"), w["text"].as_str().expect("text")));
+        assert!((got.z - w["z"].as_f64().expect("z")).abs() < 1e-9, "{} vs {}", got.z, w["z"]);
+    }
+    assert!(r.notes.iter().any(|n| n.contains("Yüzeyin dışındaki 1 köşe yazılmadı")), "{:?}", r.notes);
+    let _ = app.update(Message::SheetContours(E::SlopeBottom(String::new())));
+    let top = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    assert!(top.spots.len() == 4 && top.spots.iter().all(|s| s.kind == "slopeTop"), "{:?}", top.spots);
+    let _ = app.update(Message::SheetContours(E::SlopeBottom("sev-dip".into())));
+    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let _ = app.update(Message::SheetContours(E::Draw));
+    let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    assert_eq!(after, before + r.lines.len() + r.labels.len() + 2 * r.spots.len());
+}
+
+/// `.run/gui-evidence/sev-kotlari-3120/`: the window with Şev kotları ticked, and the drawing at the scarp after Çiz.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib sheet_contours_window_tests::slope_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn slope_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sev-kotlari-3120");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("terrain.sheetContours"));
+        let _ = app.update(Message::SheetContours(E::Slopes(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::SheetContours(E::Draw));
+        let b = kentos_commands::Bounds { min_x: 70.0, min_y: 22.0, max_x: 130.0, max_y: 84.0 };
+        app.navigating(|a| a.zoom_to_bounds(&b));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-sevde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 /// `.run/gui-evidence/tepe-kotu-2320/`: the window with the summit's height, and the drawing at the hilltop after Çiz.

@@ -70,7 +70,8 @@ pafta çıktısı mevzuatın çizim kurallarıyla üretilsin.”
 
 ## Sonra
 
-- Şev üstü ve dibi kotları (şev sınırı çizgisinden), ölçmecinin seçtiği noktalar.
+- Şev üstü ve dibi kotları yapıldı: [ADR 3120](3120-sheet-slope-top-and-bottom-heights.md) (şevlerin üst ve dip
+  çizgilerinin köşeleri). Ölçmecinin seçtiği öbür noktalar kaldı.
 - Yardımcı eğrinin 5/1 mm deseni: `cad.entities.create` nesneye proje çizgi tipini (`linePattern`) veremiyor. Önce
   komutun nesne biçimine eklenmeli. Yapıldı: [ADR 2720](2720-auxiliary-contour-pattern.md).
 - Yüzey birleştirme, eğrilerin yeniden kurulan çizimlere girmesi (ADR 1820 Sonra).

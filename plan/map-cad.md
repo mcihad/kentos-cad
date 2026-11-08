@@ -44,7 +44,7 @@ sırayla alır.
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
@@ -1365,6 +1365,13 @@ kural paketine `auxiliaryPattern` (sürüm 3); `road.terrains.sheetcontours` yar
 proje çizgi tipiyle çizer, tip yoksa ekler (proje ayarı, geri almada kalır), varsa projedekini kullanır; create 86,
 pafta eğrileri 36 ortak durum, MCP (`.kcad` geri okuması), masaüstü testi ve resim (1:1000'de 5 m / 1 m). Açık: şev
 üstü ve dibi kotları, yüzey birleştirme, bölgesel yeniden kurma.
+
+**9 Kasım 2026, beşinci tur — şev üstü ve dibi kotları ([ADR 3120](../docs/adr/3120-sheet-slope-top-and-bottom-heights.md)).**
+Kapsam: **Harita + Yol**. Dayanak: BÖHHBÜY m. 78(1)(ğ) (şev, dip ve üstlerindeki karakteristik noktalar, kotları dm'ye
+kadar; yönetmelik hangi noktanın karakteristik olduğunu söylemez), Ek-3 0004. Kanıtlanan: `road.terrains.sheetcontours`'a
+`slopes` (üst ve dip katmanları): çizgi ve çoklu çizgilerin köşeleri, ortak köşe bir kez, kot yüzeyden, yüzeyin dışındaki
+köşe sayılır; tepe ve çukurdan sonra `slopeTop`, `slopeBottom`; üç ret; 44 ortak durum (36'dan), Python, MCP; masaüstünde
+Şevler (ğ) satırı, katmanlar adlarından. Açık: ölçmecinin seçtiği öbür noktalar, yüzey birleştirme, bölgesel yeniden kurma.
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

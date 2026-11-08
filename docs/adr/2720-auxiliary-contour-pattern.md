@@ -65,5 +65,6 @@ eğrinin 5/1 mm deseni (komutun nesne biçimi önce `linePattern` almalı)”.
 
 ## Sonra
 
-- Şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma (MAP-14'ün öbür maddeleri).
+- Şev üstü ve dibi kotları yapıldı: [ADR 3120](3120-sheet-slope-top-and-bottom-heights.md).
+- Yüzey birleştirme; bölgesel yeniden kurma (MAP-14'ün öbür maddeleri).
 - Web (TODOS §0.2).

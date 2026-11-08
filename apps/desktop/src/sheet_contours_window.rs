@@ -2,10 +2,12 @@
 //! `road.terrains.sheetcontours` (BÖHHBÜY m. 78(1)(c)–(g)). The surface and the layer on one line, the scale and the
 //! interval (empty: the package's for the scale) on the next, the rules (e) and (f) as ticks, the detail layers (g) as
 //! ticks; the summary is the command's plan, counted by kind, with its notes. Çiz writes them in one undo step.
+//! Şevler (ğ, docs/adr/3120): a tick and the layers of the slopes' tops and bottoms (guessed from their names, left
+//! out of the details), whose lines' corners take spot heights.
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
+use kentos_commands::{CommandResult, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_terrains_sheet};
 use kentos_ui::label;
@@ -19,6 +21,8 @@ use crate::traces::Control;
 pub const TITLE: &str = "Pafta eğrileri";
 const CLOSE: &str = "Kapat";
 const DRAW: &str = "Çiz";
+/// A slope layer's choice when there is none.
+const NONE: &str = "";
 
 #[derive(Clone, Debug, Default)]
 pub struct State {
@@ -38,6 +42,10 @@ pub struct State {
     pub spots: bool,
     /// The detail layers ticked (g).
     pub details: Vec<String>,
+    /// The slopes' spot heights (ğ, docs/adr/3120): ticked, and the layers of their tops and bottoms ("" none).
+    pub slopes: bool,
+    pub slope_top: String,
+    pub slope_bottom: String,
     pub answer: Option<Result<TerrainsSheetContoured, String>>,
 }
 
@@ -52,6 +60,9 @@ pub enum Event {
     Labels(bool),
     Spots(bool),
     Detail(String, bool),
+    Slopes(bool),
+    SlopeTop(String),
+    SlopeBottom(String),
     Draw,
     Close,
 }
@@ -76,6 +87,10 @@ impl State {
             auxiliary: Some(self.auxiliary),
             labels: Some(self.labels),
             spots: Some(self.spots),
+            slopes: self.slopes.then(|| SheetSlopes {
+                top: [&self.slope_top].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                bottom: [&self.slope_bottom].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+            }),
             ..Default::default()
         })
     }
@@ -101,7 +116,8 @@ impl App {
     }
 
     /// Pafta eğrileri (`terrain.sheetContours`): the project's first surface, a layer named for contours, the detail
-    /// layers guessed from their names (bina, yol, dere, kanal, şev).
+    /// layers guessed from their names (bina, yol, dere, kanal, şev), the slopes' top and bottom layers too (şev with
+    /// üst; şev with dip or dibi, alt or taban), those not among the details.
     pub(crate) fn open_sheet_contours(&mut self) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
@@ -133,7 +149,21 @@ impl App {
             .into_iter()
             .next()
             .unwrap_or_else(|| doc.model.layers().active().to_owned());
-        let details = named(&["bina", "yol", "dere", "kanal", "ark", "şev", "sev"]);
+        let slope = |ends: &[&str]| -> String {
+            layers
+                .iter()
+                .find(|(_, n)| {
+                    let n = n.to_lowercase();
+                    (n.contains("şev") || n.contains("sev")) && ends.iter().any(|w| n.contains(w))
+                })
+                .map(|(id, _)| id.clone())
+                .unwrap_or_default()
+        };
+        let (slope_top, slope_bottom) = (slope(&["üst", "ust"]), slope(&["dip", "dib", "alt", "taban"]));
+        let details: Vec<String> = named(&["bina", "yol", "dere", "kanal", "ark", "şev", "sev"])
+            .into_iter()
+            .filter(|d| *d != slope_top && *d != slope_bottom)
+            .collect();
         self.sheet_contours = State {
             surfaces,
             surface: first,
@@ -146,6 +176,9 @@ impl App {
             labels: true,
             spots: false,
             details,
+            slopes: false,
+            slope_top,
+            slope_bottom,
             answer: None,
         };
         self.sheet_contours_run();
@@ -165,7 +198,7 @@ impl App {
             self.say(
                 Level::Success,
                 format!(
-                    "{TITLE}: {} eğri, {} kot yazısı ve {} tepe ya da çukur kotu çizildi.",
+                    "{TITLE}: {} eğri, {} kot yazısı ve {} karakteristik nokta kotu çizildi.",
                     out.lines.len(),
                     out.labels.len(),
                     out.spots.len()
@@ -193,6 +226,9 @@ impl App {
                     s.details.push(id);
                 }
             }
+            Event::Slopes(v) => s.slopes = v,
+            Event::SlopeTop(v) => s.slope_top = v,
+            Event::SlopeBottom(v) => s.slope_bottom = v,
             Event::Draw => {
                 self.sheet_contours_draw();
                 return Task::none();
@@ -214,7 +250,7 @@ impl App {
             .map_or("ölçek için aralık yok".to_owned(), |i| format!("{i} (m. 78(1)(c))"));
         let mut ticks = row![].spacing(14).align_y(Center);
         for (id, name) in &s.layers {
-            if *id == s.layer {
+            if *id == s.layer || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom)) {
                 continue;
             }
             let on = s.details.contains(id);
@@ -254,7 +290,20 @@ impl App {
                 .spacing(14)
                 .align_y(Center),
             )
-            .field("Kesmeyeceği (g)", ticks);
+            .field("Kesmeyeceği (g)", ticks)
+            .field("Şevler (ğ)", {
+                let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
+                choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
+                row![
+                    words::check(s.slopes, "Şev kotları", Some(msg(Event::Slopes(!s.slopes)))),
+                    label::caption("Üstü"),
+                    container(fields::select_owned(choices.clone(), &s.slope_top, |v| msg(Event::SlopeTop(v)))).width(190),
+                    label::caption("Dibi"),
+                    container(fields::select_owned(choices, &s.slope_bottom, |v| msg(Event::SlopeBottom(v)))).width(190)
+                ]
+                .spacing(10)
+                .align_y(Center)
+            });
         let mut lines = Vec::new();
         match &s.answer {
             Some(Ok(r)) => {
@@ -272,7 +321,7 @@ impl App {
                         r.interval
                     ),
                 ));
-                for sp in &r.spots {
+                for sp in r.spots.iter().filter(|sp| sp.kind == "summit" || sp.kind == "pit") {
                     lines.push(words::text_line(
                         Kind::Ok,
                         format!(

@@ -136,6 +136,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yeni sütun genişlikleri; web'in Düzenleme dağıtım taslağında Dış parça no kutusu.
 - MAP-13 / ADR 3100: web'in nokta bulutu işçisinde `pointcloud.transform` (Dönüşüm uygula; 11 ortak durum,
   `fixtures/processing/v1/pointcloud.json`) ve web'in Tarama kaydı'nda Buluta uygula.
+- MAP-14 / ADR 3120: `road.terrains.sheetcontours`'un web işleyicisinde `slopes` (44 ortak durum) ve web'in Pafta
+  eğrileri penceresinde Şevler (ğ) satırı.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

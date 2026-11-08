@@ -3311,6 +3311,7 @@ __all__ = [
     "SheetResourceKind",
     "SheetResourceKindName",
     "SheetSeries",
+    "SheetSlopes",
     "SheetSourceChanges",
     "SheetSpot",
     "SheetTemplateSource",

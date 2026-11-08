@@ -17,6 +17,10 @@
 //!   lowest below it (an earlier vertex among equals; a vertex at the level is on the line; a vertex inside a detail is
 //!   no ground shown), its height written to the decimetre (half up) with the package's spot height (Ek-3 0004)
 //!   beside a point.
+//! - Asked for (`slopes`, docs/adr/3120; Article 78(1)(ğ)'s slopes, their bottoms and tops): every corner of a line or
+//!   polyline on the slopes' top layers, then on their bottom layers, in the drawing's order, once per place, its
+//!   height the surface's there (none off the surface: counted), written as the summits' are. A slope line that is
+//!   one of the surface's breaklines has its corners among the surface's vertices: the same height.
 //! - The auxiliary lines take the package's pattern (Ek-3 0003, docs/adr/2720) as the project line type “Yardımcı eğri
 //!   (‹package›)”, added to the project's types when it has none of the name (the project's own kept when it has); the
 //!   objects name it, their built-in type dashed. The types are a project setting, no undo step (docs/adr/0313): undo
@@ -24,7 +28,7 @@
 
 use kentos_commands::{
     CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType, LineTypeDef, NewObject,
-    PatternElement, PatternUnit, SheetContourLabel, SheetContourLine, SheetSpot, TerrainsSheetContoured,
+    PatternElement, PatternUnit, SheetContourLabel, SheetContourLine, SheetSlopes, SheetSpot, TerrainsSheetContoured,
     TerrainsSheetContours, TextAlign, Vec2, contour_rules_default,
 };
 use kentos_road::surface::Surface;
@@ -99,11 +103,50 @@ fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -
                 x: v[0],
                 y: v[1],
                 z: v[2],
-                text: format!("{:.1}", (v[2] * 10.0 + 0.5).floor() / 10.0),
+                text: decimetre(v[2]),
             });
         }
     }
     out
+}
+
+/// A height to the decimetre as written, half up (docs/adr/2320).
+fn decimetre(z: f64) -> String {
+    format!("{:.1}", (z * 10.0 + 0.5).floor() / 10.0)
+}
+
+/// The slopes' characteristic points (docs/adr/3120): each corner of a line or polyline on the top layers, then on the
+/// bottom ones, in the drawing's order, once per place (the same coordinates), its height the surface's; the corners
+/// off the surface are counted, not written.
+fn slope_spots(doc: &kentos_domain::Document, surface: &Surface, slopes: &SheetSlopes) -> (Vec<SheetSpot>, usize) {
+    let mut out = Vec::new();
+    let mut seen: Vec<P> = Vec::new();
+    let mut off = 0;
+    for (kind, layers) in [("slopeTop", &slopes.top), ("slopeBottom", &slopes.bottom)] {
+        for e in doc.entities().filter(|e| layers.iter().any(|l| l.trim() == e.base().layer_id)) {
+            let corners: Vec<P> = match e {
+                Entity::Line(l) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
+                Entity::Polyline(p) => p
+                    .pts
+                    .iter()
+                    .chain(p.parts.iter().flatten().flat_map(|part| part.pts.iter()))
+                    .map(|v| [v.x, v.y])
+                    .collect(),
+                _ => continue,
+            };
+            for c in corners {
+                if seen.contains(&c) {
+                    continue;
+                }
+                seen.push(c);
+                match surface.height(c[0], c[1]).z {
+                    Some(z) => out.push(SheetSpot { kind: kind.to_owned(), x: c[0], y: c[1], z, text: decimetre(z) }),
+                    None => off += 1,
+                }
+            }
+        }
+    }
+    (out, off)
 }
 
 fn inside(rings: &Detail, p: P) -> bool {
@@ -266,15 +309,18 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         ));
     }
     // Spot heights need the package's text height (Ek-3 0004): without it they are not written (no height invented).
-    let spot_height = match (input.spots.unwrap_or(false), rules.spot_height) {
+    let summits = input.spots.unwrap_or(false);
+    let slopes = input.slopes.as_ref().filter(|s| !s.top.is_empty() || !s.bottom.is_empty());
+    let spot_height = match (summits || slopes.is_some(), rules.spot_height) {
         (false, _) => None,
         (true, Some(h)) if positive(h) => Some(h),
         (true, _) => {
             return Err(fail(
                 codes::INVALID_CONTOURS,
                 format!(
-                    "{} paketi kot noktası yazısının yüksekliğini (spotHeight, Ek-3 0004) vermiyor; tepe ve çukur kotları yazılmaz.",
-                    rules.id
+                    "{} paketi kot noktası yazısının yüksekliğini (spotHeight, Ek-3 0004) vermiyor; {} kotları yazılmaz.",
+                    rules.id,
+                    if summits { "tepe ve çukur" } else { "şev" }
                 ),
                 "rules",
             ));
@@ -307,6 +353,13 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     for d in &input.details {
         if doc.layers().get(d.trim()).is_none() {
             return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", d.trim()), "details"));
+        }
+    }
+    if let Some(s) = slopes {
+        for (at, layers) in [("slopes.top", &s.top), ("slopes.bottom", &s.bottom)] {
+            if let Some(l) = layers.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
+                return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), at));
+            }
         }
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -384,7 +437,14 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     if lines.is_empty() {
         return Err(no_contours());
     }
-    let spots = if spot_height.is_some() { spots_of(surface, &lines, &details) } else { Vec::new() };
+    let mut spots = if summits { spots_of(surface, &lines, &details) } else { Vec::new() };
+    let summit_count = spots.len();
+    let (slope_found, slope_off) = slopes.map_or((Vec::new(), 0), |s| slope_spots(doc, surface, s));
+    let (tops, bottoms) = (
+        slope_found.iter().filter(|s| s.kind == "slopeTop").count(),
+        slope_found.iter().filter(|s| s.kind == "slopeBottom").count(),
+    );
+    spots.extend(slope_found);
     let every = rules.label_every / mm;
     let labels: Vec<SheetContourLabel> = if labels_on {
         lines.iter().filter(|l| l.kind == "major").flat_map(|l| labels(surface, &l.points, l.closed, l.z, every)).collect()
@@ -411,11 +471,20 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     if !input.details.is_empty() {
         notes.push(format!("Detayların içinde kalan {cut:.2} m eğri çizilmedi (m. 78(1)(g))."));
     }
-    if let Some(h) = spot_height {
+    if let (Some(h), true) = (spot_height, summits) {
         notes.push(format!(
-            "Tepe ve çukurlarda {} karakteristik nokta kotu dm'ye kadar yazıldı ({h} mm, m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da en alçak köşe; şev üstü ve dibi işaretlenmedi.",
-            spots.len()
+            "Tepe ve çukurlarda {summit_count} karakteristik nokta kotu dm'ye kadar yazıldı ({h} mm, m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da en alçak köşe{}.",
+            if slopes.is_some() { "" } else { "; şev üstü ve dibi işaretlenmedi" }
         ));
+    }
+    if let (Some(h), Some(_)) = (spot_height, slopes) {
+        let mut note = format!(
+            "Şevlerin üstünde {tops}, dibinde {bottoms} karakteristik nokta kotu dm'ye kadar yazıldı ({h} mm, m. 78(1)(ğ)): şev çizgilerinin köşeleri, kotları yüzeyden."
+        );
+        if slope_off > 0 {
+            note.push_str(&format!(" Yüzeyin dışındaki {slope_off} köşe yazılmadı."));
+        }
+        notes.push(note);
     }
     // docs/adr/2720: the auxiliary lines drawn with the package's pattern as a project line type of its own name.
     let pattern = (!rules.auxiliary_pattern.is_empty() && lines.iter().any(|l| l.kind == "auxiliary"))

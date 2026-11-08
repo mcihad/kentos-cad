@@ -85748,6 +85748,31 @@ class SheetSeries(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetSlopes(_Model):
+    """The slopes whose characteristic points take spot heights (BÖHHBÜY m. 78(1)(ğ), docs/adr/3120): the layers of the
+    slopes' top lines and of their bottom lines. Every corner of a line or polyline there is such a point, its height
+    the surface's at it.
+    """
+    bottom: list[str] | Unset = UNSET
+    top: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.bottom is not UNSET:
+            out["bottom"] = list(self.bottom)
+        if self.top is not UNSET:
+            out["top"] = list(self.top)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetSlopes:
+        return cls(
+            bottom=list(data["bottom"]) if "bottom" in data else UNSET,
+            top=list(data["top"]) if "top" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetSourceChanges(_Model):
     """A published page's sources against the drawing now (docs/adr/1320 §2), by persistent id in drawing order: the
     objects it drew whose content changed, the ones it draws now and did not, the ones it drew and does not now
@@ -85786,9 +85811,10 @@ class SheetSourceChanges(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SheetSpot(_Model):
-    """A characteristic point's height (BÖHHBÜY m. 78(1)(ğ), docs/adr/2320): a `summit` or a `pit`, the surface's vertex
-    with the highest (lowest) height inside an innermost closed major or minor line, its place and height, and the
-    height to the decimetre as written.
+    """A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
+    with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
+    (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there; its place and height, and
+    the height to the decimetre as written.
     Attributes:
         x: Unit: length.
         y: Unit: length.
@@ -100549,12 +100575,14 @@ class TerrainsSheetContours(_Model):
     scale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base
     (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
     the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
-    (`spots`, none: not; docs/adr/2320), the rule package (none: KentOS's BÖHHBÜY 2018).
+    (`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot
+    heights (`slopes`, none: no such heights; docs/adr/3120), the rule package (none: KentOS's BÖHHBÜY 2018).
 
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
-    the package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,
-    `layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,
-    `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.
+    the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
+    their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
+    `slopes.top`, `slopes.bottom`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
+    `invalid_contours` (more than 10 000 levels), `no_contours`.
     Attributes:
         base: Unit: elevation.
         interval: Unit: length.
@@ -100570,6 +100598,7 @@ class TerrainsSheetContours(_Model):
     labels: bool | None | Unset = UNSET
     rules: ContourRules | None | Unset = UNSET
     scale: int | None | Unset = UNSET
+    slopes: SheetSlopes | None | Unset = UNSET
     spots: bool | None | Unset = UNSET
     steep: bool | None | Unset = UNSET
 
@@ -100593,6 +100622,8 @@ class TerrainsSheetContours(_Model):
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
             out["scale"] = self.scale
+        if self.slopes is not UNSET:
+            out["slopes"] = None if self.slopes is None else self.slopes.to_json()
         if self.spots is not UNSET:
             out["spots"] = self.spots
         if self.steep is not UNSET:
@@ -100612,6 +100643,7 @@ class TerrainsSheetContours(_Model):
             labels=data.get("labels", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else ContourRules.from_json(data["rules"]),
             scale=data.get("scale", UNSET),
+            slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else SheetSlopes.from_json(data["slopes"]),
             spots=data.get("spots", UNSET),
             steep=data.get("steep", UNSET),
         )
@@ -132550,6 +132582,7 @@ __all__ = [
     "SheetResourceKind",
     "SheetResourceKindName",
     "SheetSeries",
+    "SheetSlopes",
     "SheetSourceChanges",
     "SheetSpot",
     "SheetTemplateSource",
