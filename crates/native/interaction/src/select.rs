@@ -475,6 +475,17 @@ impl Select {
             .collect()
     }
 
+    /// Where the temporary dimensions' + stand, those that write a permanent dimension
+    /// (docs/adr/3019).
+    pub fn temporary_permanents(&self) -> Vec<Vec2> {
+        self.wall_temporary
+            .squares
+            .iter()
+            .filter(|(_, s)| matches!(s, crate::temporary_refs::Switch::Permanent { .. }))
+            .map(|(at, _)| *at)
+            .collect()
+    }
+
     /// Where the temporary dimensions' padlocks stand, those that write or remove a bond (docs/adr/0770 §3).
     pub fn temporary_locks(&self) -> Vec<Vec2> {
         self.temporary
@@ -504,11 +515,16 @@ impl Select {
         let Some(switch) = crate::temporary_refs::square_at(&squares, screen, cx) else {
             return false;
         };
-        // A padlock writes the bond (docs/adr/0770 §3); the others are the session's.
-        if matches!(switch, crate::temporary_refs::Switch::Bond { .. }) {
-            crate::wall_distance::toggle_bond(switch, cx);
-        } else {
-            switch.apply(&mut self.choices);
+        // A padlock writes the bond (docs/adr/0770 §3), the + a permanent dimension
+        // (docs/adr/3019); the others are the session's.
+        match switch {
+            crate::temporary_refs::Switch::Bond { .. } => {
+                crate::wall_distance::toggle_bond(switch, cx)
+            }
+            crate::temporary_refs::Switch::Permanent { .. } => {
+                crate::wall_distance::make_permanent(switch, cx)
+            }
+            _ => switch.apply(&mut self.choices),
         }
         self.temporary.redraw();
         self.wall_temporary.redraw();

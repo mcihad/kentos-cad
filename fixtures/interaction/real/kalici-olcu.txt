@@ -1,0 +1,57 @@
+# M19 (docs/adr/3019): a temporary distance made permanent in the real window, on malzeme.kcad (headless scales.rs
+# keeps it) opened on Mimari at 1440 × 900, 13 px text. A room is drawn (Duvar ▾ › Dikdörtgen duvar) and a partition in
+# it (Duvar ▾ › Duvar); the partition selected shows its clear distances, a padlock above each number and a + below.
+# The left + writes the distance as a dimension bound to both faces; the partition then moved by its right distance
+# typed as 5: the permanent dimension follows.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 34 104   # Duvar ▾
+wait 600
+click 95 172   # araç: Dikdörtgen duvar
+wait 600
+click 450 250
+wait 400
+click 850 600
+wait 800
+key Escape
+wait 500
+click 34 104   # Duvar ▾ (its face is Dikdörtgen duvar now: the last used)
+wait 600
+click 61 144   # araç: Duvar
+wait 600
+click 620 262
+wait 400
+click 620 588
+wait 400
+key Return
+wait 600
+key Escape
+wait 400
+click 620 420   # the partition
+wait 800
+move 650 430
+wait 800
+shot m19-10-arti
+click 533 444   # the left distance's +
+wait 1000
+shot m19-11-yazildi
+key Escape
+wait 600
+move 300 700
+wait 600
+shot m19-12-kalici-olcu
+click 620 420   # the partition again
+wait 800
+move 650 430
+wait 600
+click 737 425   # the right distance's number
+wait 800
+type 5
+wait 400
+key Return
+wait 1000
+key Escape
+wait 600
+move 300 700
+wait 800
+shot m19-13-izledi

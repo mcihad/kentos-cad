@@ -85,6 +85,10 @@ pub enum Switch {
         value: f64,
         bond: Option<Uuid>,
     },
+    /// A wall's clear distance written as a permanent dimension from `from` (on the wall's face) to `to` (on the face
+    /// it meets), each end bound to its face: it follows the walls (docs/adr/3019; Revit's “make this temporary
+    /// dimension permanent”). Written, not a session choice.
+    Permanent { from: Vec2, to: Vec2 },
 }
 
 impl Switch {
@@ -98,7 +102,7 @@ impl Switch {
                 to,
             } => choices.set_to(uid, edge, side, to),
             Switch::Anchor { uid, edge, anchor } => choices.set_anchor(uid, edge, anchor),
-            Switch::Bond { .. } => {}
+            Switch::Bond { .. } | Switch::Permanent { .. } => {}
         }
     }
 }

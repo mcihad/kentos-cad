@@ -2011,6 +2011,15 @@ impl Session {
         self.select.temporary_locks()
     }
 
+    /// Where the temporary dimensions' + stand, those that write a permanent dimension, while no tool runs
+    /// (docs/adr/3019).
+    pub fn temporary_permanents(&self) -> Vec<Vec2> {
+        if self.tool.is_some() {
+            return Vec::new();
+        }
+        self.select.temporary_permanents()
+    }
+
     /// What to draw over the drawing while a tool runs, or a grip moves.
     pub fn preview(&self, format: &Format) -> Option<Preview> {
         let top = match &self.tool {

@@ -251,8 +251,13 @@ mod tests {
         );
         assert_eq!(
             squares.len(),
-            4,
-            "two reference switches and two bond controls"
+            6,
+            "two reference switches, two bond controls and two + that make a distance permanent (docs/adr/3019)"
+        );
+        assert_eq!(
+            app.session.temporary_permanents().len(),
+            2,
+            "a + beside each face's distance"
         );
 
         let mut app = app_with_drawing();
