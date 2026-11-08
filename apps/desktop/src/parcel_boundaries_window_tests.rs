@@ -124,6 +124,55 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
     assert!(app.parcel_graph_marks().is_none());
 }
 
+/// docs/adr/3020: a row pressed is chosen and marked; Çizimde göster goes to it and the marks bring it forward — a
+/// problem with a double ring at its place, a boundary along its curve (an arc's points along it), found again by its
+/// id when the drawing changes; another table clears the choice; without a choice the whole graph, nothing forward.
+#[test]
+fn the_chosen_row_is_brought_forward_on_the_drawing() {
+    let mut app = opened(Some(PROBLEMS));
+    let _ = app.update(Message::Run("parcels.check"));
+    let _ = app.update(Message::ParcelBoundaries(B::Open));
+    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    // The last problem (the overlap) chosen in the problems' table.
+    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+    let last = g.problems.len() - 1;
+    let _ = app.update(Message::ParcelBoundaries(B::Choose(last)));
+    assert_eq!(app.parcel_boundaries.chosen, Some(last));
+    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let m = app.parcel_graph_marks().expect("the marks");
+    let (pts, name) = m.focus.clone().expect("brought forward");
+    let p = g.problems[last].at;
+    assert_eq!((pts.len(), name.as_str()), (1, "Çakışan kenar"));
+    assert!((pts[0].x - p[0]).abs() < 1e-9 && (pts[0].y - p[1]).abs() < 1e-9);
+    // The view goes to it: a box round its place, narrower than the whole graph's.
+    let all = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
+        let [x, y] = c.at;
+        Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]))
+    });
+    let focus = crate::parcel_boundaries_marks::Focus::of(&g, Show::Problems, last).expect("the row");
+    let b = focus.bounds(&g, all).expect("a box");
+    let a = all.expect("the graph's box");
+    assert!(b[0] < p[0] && p[0] < b[2] && b[1] < p[1] && p[1] < b[3], "{b:?} {p:?}");
+    assert!(b[2] - b[0] < a[2] - a[0], "{b:?} within {a:?}");
+    // A boundary, chosen in the boundaries' table: along its curve; another table clears the choice.
+    let _ = app.update(Message::Run("parcels.check"));
+    let _ = app.update(Message::ParcelBoundaries(B::Open));
+    let _ = app.update(Message::ParcelBoundaries(B::Choose(0)));
+    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Corners)));
+    assert_eq!(app.parcel_boundaries.chosen, None);
+    let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Boundaries)));
+    let _ = app.update(Message::ParcelBoundaries(B::Choose(0)));
+    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    let m = app.parcel_graph_marks().expect("the marks");
+    let (pts, name) = m.focus.clone().expect("brought forward");
+    assert_eq!((name.as_str(), pts.len() >= 2), (g.boundaries[0].id.as_str(), true));
+    // Without a choice: the whole graph, nothing forward.
+    let _ = app.update(Message::Run("parcels.check"));
+    let _ = app.update(Message::ParcelBoundaries(B::Open));
+    let _ = app.update(Message::ParcelBoundaries(B::Draw));
+    assert!(app.parcel_graph_marks().expect("the marks").focus.is_none());
+}
+
 /// `.run/gui-evidence/sinir-grafigi-cizimde-2220/`: the window with Çizimde göster, the block with problems on the
 /// drawing, and the arc whose top is a corner of the parcels above it.
 ///
@@ -237,5 +286,46 @@ fn mismatch_screens() {
             snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
             println!("{}", path.display());
         }
+    }
+}
+
+/// docs/adr/3020: the arc boundary chosen in the table, Çizimde göster: the view on it, the boundary along its curve in
+/// the accent with its id; light wide and dark narrow, `.run/gui-evidence/satir-cizimde-3020/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib parcel_boundaries_window_tests::focus_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn focus_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    const ARC: &str = "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/satir-cizimde-3020");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = opened(Some(ARC));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("parcels.check"));
+        let _ = app.update(Message::ParcelBoundaries(B::Open));
+        let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+        let arc = g.boundaries.iter().position(|b| b.bulge != 0.0).expect("an arc boundary");
+        let _ = app.update(Message::ParcelBoundaries(B::Choose(arc)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::ParcelBoundaries(B::Draw));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("cizimde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
     }
 }

@@ -373,6 +373,41 @@ pub fn sheet<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, hei
     kentos_ui::widget::grow::Held::natural(sheet_in(cols, rows, empty, Length::Fill), height).into()
 }
 
+/// A sheet whose rows are chosen by pressing them, the chosen one marked (Sınır grafiği's row for Çizimde göster,
+/// docs/adr/3020); otherwise [`sheet`].
+pub fn sheet_chosen<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<String>>,
+    empty: &'a str,
+    height: f32,
+    chosen: Option<usize>,
+    on_choose: impl Fn(usize) -> Message + 'a,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::table::{self, Table};
+    if rows.is_empty() {
+        return sheet_in(cols, rows, empty, Length::Shrink);
+    }
+    let height = typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
+    let columns: Vec<table::Column<'a, Message>> = cols
+        .iter()
+        .map(|c| {
+            let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
+            if c.number { column.align_right() } else { column }
+        })
+        .collect();
+    let numbers: Vec<bool> = cols.iter().map(|c| c.number).collect();
+    let count = rows.len();
+    let table = Table::new(columns).horizontal().height(Length::Fill).virtualized(count, move |i| {
+        table::Row::new(rows[i].iter().zip(numbers.iter().copied()).map(|(t, n)| -> Element<'a, Message> {
+            if n { table::number(t.clone()).into() } else { table::text(t.clone()).into() }
+        }))
+        .selected(chosen == Some(i))
+        .on_press(on_choose(i))
+    });
+    let table: Element<'a, Message> = table.into();
+    kentos_ui::widget::grow::Held::natural(table, height).into()
+}
+
 /// A sheet beside a picture that grows (İstinat duvarı's rows by km): it fills the height and is as wide as its
 /// columns, the picture taking the rest of the row.
 pub fn sheet_fill<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {

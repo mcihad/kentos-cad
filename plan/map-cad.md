@@ -38,7 +38,7 @@ sırayla alır.
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -891,6 +891,12 @@ yanlı sınır sayılıyor, aradaki şerit söylenmiyordu. Kanıtlanan: `arcChor
 iki sınırın adı, şeridin alanı (segmentlerin işaretli farkı) ve ortadaki ayrılış; pencerede Fark sütunu, çizimde
 halka. 4 yeni ortak durum (yayın çemberi mpmath'le), MCP, masaüstü ve resimler. Açık: kalıcı parsel kaydı ve sınır
 kimliği, tablodaki satırın çizimde vurgulanması, yayı kirişlerle yaklaşık çizen komşu, erişim denetimli hak/pay.
+
+**9 Kasım 2026, beşinci tur — Sınır grafiği'nde satırın çizimde öne çıkarılması ([ADR 3020](../docs/adr/3020-boundary-graph-row-on-the-drawing.md)).**
+Kapsam: ADR 2000'deki gibi. Kanıtlanan: tabloda satıra basılınca seçilir; Çizimde göster satırın yerine gider ve onu
+vurgu renginde öne çıkarır (sınır eğrisi boyunca, köşe ve sorun çift halkayla, adıyla), kimliğiyle tutulur ve çizim
+değişince yeniden bulunur; masaüstü testi ve resimler. Komut değişmedi. Açık: kalıcı parsel kaydı ve sınır kimliği,
+yaklaşık yay, aynı yerdeki sorunların üst üste binen sözleri, erişim denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

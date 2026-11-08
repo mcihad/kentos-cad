@@ -3,7 +3,8 @@
 //! counts the corners and the boundaries, shared and outer, and the problems by kind; a choice shows the boundaries
 //! (their corners, length, the parcel on each side), the corners (their place and parcels) or the problems (where and
 //! which parcels); Sorunluları seç selects the parcels a problem names; Çizimde göster closes the window and leaves the
-//! graph's marks on the drawing (parcel_boundaries_marks.rs, docs/adr/2220). Nothing is written.
+//! graph's marks on the drawing (parcel_boundaries_marks.rs, docs/adr/2220). A row pressed is chosen: Çizimde göster
+//! then goes to it and the marks bring it forward (docs/adr/3020). Nothing is written.
 
 use iced::{Element, Task};
 use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
@@ -15,7 +16,7 @@ use kentos_ui::widget::{Dialog as Frame, Segmented};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
-use crate::road_dialog::{col, num, sheet};
+use crate::road_dialog::{col, num, sheet_chosen};
 use crate::traces::Control;
 
 pub const TITLE: &str = "Sınır grafiği";
@@ -49,12 +50,16 @@ pub struct State {
     pub uids: Option<Vec<String>>,
     pub show: Show,
     pub answer: Option<Result<ParcelsBounded, String>>,
+    /// The row pressed, in the table shown (docs/adr/3020).
+    pub chosen: Option<usize>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Open,
     Show(Show),
+    /// A row of the table pressed: Çizimde göster goes to it (docs/adr/3020).
+    Choose(usize),
     Select,
     /// Çizimde göster (docs/adr/2220).
     Draw,
@@ -166,7 +171,11 @@ impl App {
     pub(crate) fn parcel_boundaries_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_parcel_boundaries(),
-            Event::Show(v) => self.parcel_boundaries.show = v,
+            Event::Show(v) => {
+                self.parcel_boundaries.show = v;
+                self.parcel_boundaries.chosen = None;
+            }
+            Event::Choose(i) => self.parcel_boundaries.chosen = Some(i),
             Event::Select => {
                 let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -188,13 +197,16 @@ impl App {
                 let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
                 let (corners, problems) = (g.corners.len(), g.problems.len());
-                // The view on the corners, a tenth wider each way.
-                let bounds = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
+                // The view on the corners, a tenth wider each way; on the chosen row's place when one is (docs/adr/3020).
+                let focus = self.parcel_boundaries.chosen.and_then(|i| crate::parcel_boundaries_marks::Focus::of(g, self.parcel_boundaries.show, i));
+                let all = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
                     let [x, y] = c.at;
                     Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]))
                 });
-                self.parcel_graph =
-                    Some(crate::parcel_boundaries_marks::Shown::new(doc.session, self.parcel_boundaries.uids.clone()));
+                let bounds = focus.as_ref().and_then(|f| f.bounds(g, all)).or(all);
+                let mut shown = crate::parcel_boundaries_marks::Shown::new(doc.session, self.parcel_boundaries.uids.clone());
+                shown.focus = focus;
+                self.parcel_graph = Some(shown);
                 self.parcel_boundaries = State::default();
                 self.dialog = None;
                 if let Some([x0, y0, x1, y1]) = bounds {
@@ -252,7 +264,7 @@ impl App {
                 }
                 lines.push(words::text_line(
                     Kind::Info,
-                    "Kimlikler geometriden türetilir (K doğu sonra kuzey sırasıyla, S köşelerine göre); aynı geometri aynı kimlikleri verir. Çizime bir şey yazılmaz; Çizimde göster numaraları ve sorunları yalnız ekranda işaretler.",
+                    "Kimlikler geometriden türetilir (K doğu sonra kuzey sırasıyla, S köşelerine göre); aynı geometri aynı kimlikleri verir. Çizime bir şey yazılmaz; Çizimde göster numaraları ve sorunları yalnız ekranda işaretler, tabloda seçilen satıra gidip onu öne çıkarır.",
                 ));
                 table_rows = rows(g, s.show, &f);
             }
@@ -278,7 +290,7 @@ impl App {
                 col("Fark", 230.0),
             ],
         };
-        let table = sheet(cols, table_rows, "Gösterilecek satır yok.", 300.0);
+        let table = sheet_chosen(cols, table_rows, "Gösterilecek satır yok.", 300.0, s.chosen, |i| msg(Event::Choose(i)));
         let body = Grows::new()
             .spacing(12.0)
             .width(iced::Fill)

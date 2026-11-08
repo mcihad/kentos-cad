@@ -128,6 +128,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   dengelemesi penceresinde Hata elipsleri satırı.
 - MAP-06 / ADR 2980: web'in Eğimle kot ver penceresinde aralığın çizimde işareti (uç halkaları, yolun vurgusu).
 - MAP-07 / ADR 3000: web'in Paralel kaydır önizlemesinde birlikte kayan komşu köşelerin halkaları ve etiket satırı.
+- MAP-08 / ADR 3020: web'in Sınır grafiği penceresinde seçilebilir satır ve Çizimde göster'in satırı öne çıkarması.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

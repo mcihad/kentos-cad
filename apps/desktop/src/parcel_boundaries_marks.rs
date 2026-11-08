@@ -3,7 +3,8 @@
 //! drawing changes, so a fixed corner's ring goes at once. Each problem is a ring in the danger colour with its kind's
 //! words. Each corner is a dot with its number (K…), each boundary's number (S…) stands at its middle on its curve.
 //! On the screen a number that would crowd another is left out (a problem's words never), so the view reads at any
-//! zoom. Nothing is written.
+//! zoom. The row chosen in the window's table, when one was, is brought forward in the accent: a boundary along its
+//! curve, a corner or a problem with a double ring, its name beside it (docs/adr/3020). Nothing is written.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
@@ -31,12 +32,14 @@ const ROOM: (f32, f32) = (34.0, 16.0);
 pub struct Shown {
     pub session: u64,
     pub uids: Option<Vec<String>>,
+    /// The row chosen when Çizimde göster was pressed (docs/adr/3020).
+    pub focus: Option<Focus>,
     made: RefCell<Option<(u64, u64, Option<Arc<GraphMarks>>)>>,
 }
 
 impl Shown {
     pub fn new(session: u64, uids: Option<Vec<String>>) -> Self {
-        Self { session, uids, made: RefCell::new(None) }
+        Self { session, uids, focus: None, made: RefCell::new(None) }
     }
 }
 
@@ -46,6 +49,71 @@ pub struct GraphMarks {
     pub problems: Vec<(Vec2, String)>,
     pub corners: Vec<(Vec2, String)>,
     pub boundaries: Vec<(Vec2, String)>,
+    /// The chosen row's places (a boundary's curve, a corner's or a problem's place) and its name (docs/adr/3020).
+    pub focus: Option<(Vec<Vec2>, String)>,
+}
+
+/// The row Çizimde göster goes to (docs/adr/3020): a boundary or a corner by its id, a problem by its kind and place,
+/// so it is found again when the graph is worked out anew (gone when the drawing no longer has it).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Focus {
+    Boundary(String),
+    Corner(String),
+    Problem(String, [f64; 2]),
+}
+
+impl Focus {
+    /// The row `i` of the table showing `show`.
+    pub fn of(g: &ParcelsBounded, show: crate::parcel_boundaries_window::Show, i: usize) -> Option<Focus> {
+        use crate::parcel_boundaries_window::Show;
+        match show {
+            Show::Boundaries => g.boundaries.get(i).map(|b| Focus::Boundary(b.id.clone())),
+            Show::Corners => g.corners.get(i).map(|c| Focus::Corner(c.id.clone())),
+            Show::Problems => g.problems.get(i).map(|p| Focus::Problem(p.kind.clone(), p.at)),
+        }
+    }
+
+    /// Its places in `g`: a boundary's curve (an arc as points along it), a corner's or a problem's place; none when
+    /// `g` no longer has it.
+    pub fn points(&self, g: &ParcelsBounded) -> Vec<Vec2> {
+        let at = |p: [f64; 2]| Vec2::new(p[0], p[1]);
+        let corner = |id: &str| g.corners.iter().find(|c| c.id == id).map(|c| at(c.at));
+        match self {
+            Focus::Boundary(id) => {
+                let Some(b) = g.boundaries.iter().find(|b| b.id == *id) else { return Vec::new() };
+                let (Some(a), Some(e)) = (corner(&b.from), corner(&b.to)) else { return Vec::new() };
+                if b.bulge == 0.0 {
+                    return vec![a, e];
+                }
+                // A chord's sagitta under a two-thousandth of the boundary: smooth at any view that shows it whole.
+                let tol = ((e.x - a.x).hypot(e.y - a.y) / 2000.0).max(1e-6);
+                kentos_geometry_core::tessellate::bulge_path(&[a, e], Some(&[b.bulge]), false, tol)
+            }
+            Focus::Corner(id) => corner(id).into_iter().collect(),
+            Focus::Problem(kind, p) => {
+                if g.problems.iter().any(|q| q.kind == *kind && q.at == *p) { vec![at(*p)] } else { Vec::new() }
+            }
+        }
+    }
+
+    /// Its name: the boundary's or the corner's id, the problem's words.
+    pub fn name(&self) -> String {
+        match self {
+            Focus::Boundary(id) | Focus::Corner(id) => id.clone(),
+            Focus::Problem(kind, _) => crate::parcel_boundaries_window::problem_word(kind).to_owned(),
+        }
+    }
+
+    /// The view on it: its places' box, at least a tenth of the graph's (`all`) wide each way.
+    pub fn bounds(&self, g: &ParcelsBounded, all: Option<[f64; 4]>) -> Option<[f64; 4]> {
+        let pts = self.points(g);
+        let first = pts.first()?;
+        let b = pts.iter().fold([first.x, first.y, first.x, first.y], |b, p| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]);
+        let least = all.map_or(10.0, |a| ((a[2] - a[0]).max(a[3] - a[1]) * 0.1).max(2.0));
+        let half = ((b[2] - b[0]).max(b[3] - b[1]) / 2.0).max(least / 2.0);
+        let (cx, cy) = ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0);
+        Some([cx - half, cy - half, cx + half, cy + half])
+    }
 }
 
 impl GraphMarks {
@@ -64,6 +132,7 @@ impl GraphMarks {
             })
             .collect();
         Self {
+            focus: None,
             problems: g
                 .problems
                 .iter()
@@ -92,7 +161,12 @@ impl App {
             return made.clone();
         }
         let input = ParcelsBoundaries { uids: shown.uids.clone() };
-        let made = parcels_boundaries::preview(&doc.model, &input).ok().map(|g| Arc::new(GraphMarks::of(&g)));
+        let made = parcels_boundaries::preview(&doc.model, &input).ok().map(|g| {
+            let mut marks = GraphMarks::of(&g);
+            // The chosen row, found again in the graph as it is now (docs/adr/3020).
+            marks.focus = shown.focus.as_ref().map(|f| (f.points(&g), f.name())).filter(|(pts, _)| !pts.is_empty());
+            Arc::new(marks)
+        });
         *shown.made.borrow_mut() = Some((generation, revision, made.clone()));
         made
     }
@@ -248,6 +322,30 @@ pub fn draw(
         if crowd.free(at, width_of(n)) && crowd.take(at) {
             words(frame, at, n, colors.fg, colors.halo, false);
             written += 1;
+        }
+    }
+    // The chosen row over all (docs/adr/3020): a boundary along its curve, a place with a double ring; its name.
+    if let Some((pts, name)) = &m.focus {
+        let on: Vec<Point> = pts.iter().map(|p| screen(*p)).collect();
+        if on.len() >= 2 {
+            let line = Path::new(|b| {
+                b.move_to(on[0]);
+                for q in &on[1..] {
+                    b.line_to(*q);
+                }
+            });
+            frame.stroke(&line, stroke(8.0, colors.halo));
+            frame.stroke(&line, stroke(4.0, accent));
+        } else if let Some(c) = on.first() {
+            let rings = Path::new(|b| {
+                b.circle(*c, 13.0);
+                b.circle(*c, 18.0);
+            });
+            frame.stroke(&rings, stroke(5.0, colors.halo));
+            frame.stroke(&rings, stroke(2.5, accent));
+        }
+        if let Some(c) = on.get(on.len() / 2) {
+            words(frame, *c + Vector::new(20.0, 8.0), name, accent, colors.halo, true);
         }
     }
 }
