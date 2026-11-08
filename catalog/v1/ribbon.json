@@ -2092,7 +2092,7 @@
      },
      {
       "label": "Düzenle",
-      "icon": "wall",
+      "icon": "wallJoins",
       "items": [
        {
         "command": "tool.wallJoins",
@@ -2138,7 +2138,7 @@
      },
      {
       "label": "Belgele",
-      "icon": "tag",
+      "icon": "wallDimensions",
       "items": [
        {
         "key": "archDimensions",

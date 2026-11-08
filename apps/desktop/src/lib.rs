@@ -699,6 +699,8 @@ mod toasts;
 mod tools_scenes;
 #[cfg(test)]
 mod tools_screens;
+#[cfg(test)]
+mod arch_icons;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

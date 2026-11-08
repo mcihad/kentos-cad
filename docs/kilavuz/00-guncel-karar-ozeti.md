@@ -87,6 +87,11 @@
     - Büyükler Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾ (Mutfak, Kitaplık), Ölçü ▾; Etiket ▾ Hepsini etiketle'yi taşır.
     - Proje'de Kat ▾ (Üst kat, Alt kat, kat görünümü); `arch.settings`'in adı "Mimari ayarları" (önce "Katlar").
     - `scripts/ui/ribbon.py` yeniden tek kaynak: Harita ve Yol'un elle yaptığı eklemeler betiğe taşındı, `--check` geçer.
+  - **Mimari ikon seti (M16, [ADR 3016](../adr/3016-architecture-icon-set.md)):**
+    - Mimari sekmesinde iki komut aynı ikonu taşımaz; binanın kendi araçları başka bir çizim aracının ikonunu almaz
+      (`arch_icons.rs`'in üç bekçisi). Yeni mimari komut kendi ikonunu `catalog/v1/additions.json` › `icons`'a çizer.
+    - Çizelgeler solda listelediğinin resmi, sağda liste çizgileriyle çizilir.
+    - İkon tablosu: `cargo test -p kentos-desktop --lib arch_icons::icon_table -- --ignored`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

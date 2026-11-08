@@ -70,7 +70,7 @@ talimatla yapılır.
 | S13 | Tek adımda "oda" (duvar + mahal + etiket) yok. Odayı sürükleyerek büyütme menüde. Mobilya ve vitrifiye Mimari sekmesinde yok; "lavabo" araması sonuç vermiyor | A1 §4.1 | Y | ADV-11, 12 |
 | S14 | Komut geçmişi ham parametre döküyor; Türkçe-İngilizce karışık ve kimlikli ("adopt: evet · frame: corners · wall 01a1b609-…") | M0 resimleri ✓ | O | ADV-08 |
 | S15 | Sağ tık menüsü ve üzerine gelme kartı mimariye özgü değil (kart parsel bilgisi gösteriyor) | A1 S11 | O | ADV-09 |
-| S16 | İkonlar: üç duvar aracı bir ikonu, beş mahal aracı bir ikonu, Etiket ile Mahal numarala bir ikonu paylaşıyor; üç araç genel CAD ikonu ödünç alıyor; ikon turunda Mimari yok | ikon tablosu ✓ (A1 §5) | O | ADV-10 |
+| S16 | İkonlar: üç duvar aracı bir ikonu, beş mahal aracı bir ikonu, Etiket ile Mahal numarala bir ikonu paylaşıyor; üç araç genel CAD ikonu ödünç alıyor; ikon turunda Mimari yok **(M16'da düzeldi: on yeni ikon, yedi çizelge yeniden çizildi; üç bekçi; ikon turunda 15 Mimari sahnesi)** | ikon tablosu ✓ (A1 §5) | O | ADV-10 |
 | S17 | 1100 px genişlikte sekme satırı taşıyor; etkin bağlam sekmesi (Duvar) ekranda görünmüyor | M0 resmi ✓ | O | ADV-09 |
 | S18 | Duvar seçiliyken Öznitelikler'de önce genel CAD alanları geliyor; duvarın kalınlığı, stili ve yüksekliği kaydırmadan görünmüyor | M0 resmi ✓ | O | ADV-09 |
 | S19 | Etiketler duvar çizgisine, geçici ölçüler mahal etiketine biniyor; ölçü yalnız alttaki dış zincir | M0 resimleri ✓ | O | ADV-16 |
@@ -636,7 +636,12 @@ pencereler iş kaybettirmez. Dayanak S3, S6, S15, S17, S18.
 - Şerit sayım testi.
 - Pencere açıkken seçim değiştirilip modüle eklenebilir; zemine tık veri kaybettirmez.
 
-#### ADV-10 — Mimari ikon seti [ ]
+#### ADV-10 — Mimari ikon seti [~]
+
+_Durum (8 Kasım 2026):_ Paylaşılan ve ödünç ikonlar ayrıldı (M16, [ADR 3016](../docs/adr/3016-architecture-icon-set.md)).
+- On yeni ikon; yedi çizelge solda kendi resmi, sağda liste; Düzenle ve Belgele panelleri ilk komutlarının ikonuyla katlanıyor.
+- Bekçiler `arch_icons.rs`'te; ikon tablosu 16, 20 ve 28 px'te iki temada; ikon turunda 15 Mimari sahnesi.
+- Kalanlar: birbirine benzeyen öbür aileler ve yeni araçların ikonları (Oda, Çatı, Kesit üret).
 
 **Kullanıcı sonucu:** Her komutun kendi, anlaşılır ikonu vardır; aileler aynı görsel dili konuşur. Dayanak S16.
 
@@ -1080,7 +1085,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M13+ | Ölçeğe göre çizgi grubu (sahibin onayı) | ADV-15 | Paftanın ölçeğine göre kalem **(ADR 3013: yapıldı; PDF'te duvar 1:200/1:100/1:50/1:20'de 0,25/0,35/0,5/0,7 mm)** |
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım **(M14, ADR 3014: yapıldı; TS 5319 SN46–SN58 kitaplıkta, yalıtım SN55 zikzağı katmana sığar, kolon 1:20'de SN46 ve kolon aracıyla dolu; perdenin 1:20 taraması kaldı)** |
 | M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) **(M15, ADR 3015: yapıldı; 27 düğme, altı büyük, Kat ▾; Oda büyük düğmesi M21'de)** |
-| M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |
+| M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe **(M16, ADR 3016: yapıldı; 10 yeni ikon, 7 çizelge, 3 bekçi, 15 tur sahnesi)** |
 | M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart |
 
 ### Faz 2 — Hızlı çizilsin

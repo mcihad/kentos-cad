@@ -411,14 +411,15 @@ CAD = [
                 {"command": "tool.casework", "title": "Donatı", "label": "Mutfak"},
                 {"command": "block.library", "title": "Donatı", "label": "Kitaplık"},
             ]}]),
-        P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
+        # A panel's icon is its first command's (DESIGN.md §6): Düzenle had Duvar's (docs/adr/3016).
+        P("Düzenle", "wallJoins", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
             S("tool.spaceSplit"), S("tool.gridNumber"), S("tool.openingNumber")],
           overflow=["tool.spaceRebound", "tool.spaceSources", "tool.openingArray", "tool.wallShift", "tool.spaceNumber",
             "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split; Etiket ▾ holds Hepsini etiketle (as
         # Revit's Tag panel holds Tag All), İşaret ▾ (docs/adr/0721) is a small split, Malzeme lejandı with the schedules.
-        P("Belgele", "tag", [{"key": "archDimensions", "size": "large", "split": [
+        P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "large", "split": [
                 {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
                 {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
             ]}, {"key": "archTags", "size": "small", "split": [
