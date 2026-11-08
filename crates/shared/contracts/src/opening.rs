@@ -79,9 +79,19 @@ impl OpeningForm {
     }
 
     /// Drawn cut in plan only where it crosses the plan's cut height (docs/adr/0719 §2): a bare opening, a niche, a
-    /// flue. A door and a window are drawn cut whatever their heights.
+    /// flue, and a window (docs/adr/3012: a high window over the cut leaves its wall whole and shows dashed, as Revit
+    /// draws a window above its view's cut plane). A door, from the floor, is drawn cut whatever its heights.
     pub fn cut_by_height(self) -> bool {
-        matches!(self, OpeningForm::Opening | OpeningForm::Niche | OpeningForm::Flue)
+        !matches!(self, OpeningForm::Door)
+    }
+
+    /// A bare opening, a niche or a flue: what is placed by its face, its sill and its head in the wall (the opening
+    /// tool's Yüz, Alt and Üst), not by a door's or window's construction.
+    pub fn hole_or_recess(self) -> bool {
+        matches!(
+            self,
+            OpeningForm::Opening | OpeningForm::Niche | OpeningForm::Flue
+        )
     }
 }
 

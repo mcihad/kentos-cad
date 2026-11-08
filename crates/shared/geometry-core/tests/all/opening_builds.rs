@@ -256,3 +256,27 @@ fn a_construction_adds_its_parts() {
     .len();
     assert!(mullioned >= window + 3, "{window} → {mullioned}");
 }
+
+/// A window over the plan's cut (docs/adr/3012; İTÜ, Teknik Çizim İlkeleri: plan is cut 1.20–1.50 m over the floor, to
+/// show the windows): a bathroom's high window, sill 1.6, leaves its wall whole and is drawn dashed, every part of it;
+/// one across the cut (sill 0.9) is cut and drawn solid; a door is cut whatever its heights.
+#[test]
+fn a_window_over_the_cut_leaves_its_wall_whole_and_is_drawn_dashed() {
+    let high = spec(r#"{"form":"window","frame":0.06,"sill":1.6,"head":2.2}"#);
+    assert!(!opening::cut_in_plan(&high));
+    assert!(opening::hole(1.5, 1.0, &high).is_none(), "its wall whole");
+    let pieces = opening::pieces(&place(), &high);
+    assert!(
+        !pieces.is_empty() && pieces.iter().all(|m| m.dashed),
+        "{pieces:?}"
+    );
+    let low = spec(r#"{"form":"window","frame":0.06,"sill":0.9,"head":2.2}"#);
+    assert!(opening::cut_in_plan(&low) && opening::hole(1.5, 1.0, &low).is_some());
+    assert!(opening::pieces(&place(), &low).iter().all(|m| !m.dashed));
+    // Without heights a window runs from the floor up: cut, as before.
+    assert!(opening::cut_in_plan(&spec(
+        r#"{"form":"window","frame":0.06}"#
+    )));
+    let door = spec(r#"{"form":"door","frame":0.05,"sill":1.5,"head":2.1}"#);
+    assert!(opening::cut_in_plan(&door));
+}

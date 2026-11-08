@@ -375,12 +375,13 @@ pub fn span(at: f64, anchor: Anchor, width: f64) -> (f64, f64) {
     }
 }
 
-/// Whether plan draws the opening cut (docs/adr/0719 §2): a door or a window always; a bare opening, a niche or a flue
-/// only when it crosses [`PLAN_CUT`] (its sill none: the floor; its head none: full height).
+/// Whether plan draws the opening cut (docs/adr/0719 §2): a door always; a window (docs/adr/3012), a bare opening, a
+/// niche or a flue only when it crosses [`PLAN_CUT`] (its sill none: the floor; its head none: full height). One that
+/// does not leaves its wall whole: a high window over the cut is drawn dashed.
 pub fn cut_in_plan(spec: &Spec) -> bool {
     match spec.form {
-        Form::Door | Form::Window => true,
-        Form::Opening | Form::Niche | Form::Flue => {
+        Form::Door => true,
+        Form::Window | Form::Opening | Form::Niche | Form::Flue => {
             spec.sill.unwrap_or(0.0) < PLAN_CUT && spec.head.is_none_or(|h| h > PLAN_CUT)
         }
     }
@@ -796,16 +797,19 @@ fn across_jambs(place: &[Vec2], right: bool, near: f64, far: f64, thickness: f64
     [at(f0, o0, near), at(f0, o0, far), at(f1, o1, near), at(f1, o1, far)]
 }
 
-/// The opening's pieces from its jambs (docs/adr/0341 §2, 0719 §2): a door's or window's symbol; a cut flue's cross; a
-/// bare opening, a niche or a flue plan does not cut drawn dashed (an opening its jambs and a cross, a niche its
-/// sides and back, a flue its cavity and a cross); a cut bare opening or niche nothing (its wall shows it).
+/// The opening's pieces from its jambs (docs/adr/0341 §2, 0719 §2): a door's or window's symbol, a window over the
+/// plan's cut dashed (docs/adr/3012); a cut flue's cross; a bare opening, a niche or a flue plan does not cut drawn
+/// dashed (an opening its jambs and a cross, a niche its sides and back, a flue its cavity and a cross); a cut bare
+/// opening or niche nothing (its wall shows it).
 pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
     if matches!(spec.form, Form::Door | Form::Window) {
+        // A window over the plan's cut is seen from above, dashed, its wall whole (docs/adr/3012).
+        let over = !cut_in_plan(spec);
         let mut out: Vec<Mark> = symbol_parts(place, spec)
             .into_iter()
             .map(|(part, shape)| Mark {
                 shape,
-                dashed: false,
+                dashed: over,
                 part,
             })
             .collect();

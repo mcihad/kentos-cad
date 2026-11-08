@@ -261,3 +261,93 @@ fn columns_stairs_ramps_and_furniture_print_by_their_maps_scale() {
     assert_eq!(strokes[2], strokes[1], "{strokes:?}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// Kesme düzleminin üstündeki pencere (docs/adr/3012): on one wall a window across the plan's cut (sill 0.9) and a
+/// bathroom's high window over it (sill 1.6), on a 1:50 sheet written as PDF and read back. The low window cuts its
+/// wall and is drawn solid; the high one leaves its wall whole and is drawn dashed: the wall's faces run through it.
+/// Before, both cut their wall and were drawn solid.
+///
+/// `KENTOS_SCALE_PDF_DIR=dir` keeps the PDF there (`kesme-1-50.pdf`).
+#[test]
+fn a_window_over_the_cut_leaves_its_wall_whole_on_paper() {
+    let mut s = Session::new(&NewDrawing {
+        name: "Kesme".into(),
+        srid: 0,
+        plot_scale: 50.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: Some(DrawingUnit::M),
+        annotation: None,
+        cad_work: Some(CadWork::Architecture),
+        heights: None,
+    })
+    .expect("a new building");
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let walls = done(
+        s.call(json!({ "command": "cad.walls.rectangle", "input": {
+            "layerId": layer,
+            "frame": { "kind": "corners", "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 5.0, "y": 4.0 } },
+            "width": 0.25, "lineWeight": 0.5,
+            "arch": { "level": "zemin" }
+        } }))
+        .expect("answers"),
+    );
+    let host = walls["uids"][0].as_str().expect("a wall").to_owned();
+    for (at, sill) in [(1.5, 0.9), (3.5, 1.6)] {
+        done(
+            s.call(json!({ "command": "cad.openings.create", "input": {
+                "layerId": layer,
+                "openings": [{ "host": host, "at": at, "form": "window", "width": 1.0, "sill": sill, "head": 2.2 }],
+                "lineWeight": 0.25
+            } }))
+            .expect("answers"),
+        );
+    }
+    done(
+        s.call(json!({ "command": "cad.sheets.levels", "input": { "options": { "scale": 50 } } }))
+            .expect("answers"),
+    );
+    let dir = std::env::temp_dir().join(format!("kentos-kesme-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let pdf = dir.join("kesme-1-50.pdf");
+    s.export_pdf(&pdf, &[]).expect("the PDF");
+    if let Ok(keep) = std::env::var("KENTOS_SCALE_PDF_DIR") {
+        std::fs::copy(&pdf, std::path::Path::new(&keep).join("kesme-1-50.pdf")).expect("kept");
+    }
+    let page = kentos_formats::pdf::read_page(&std::fs::read(&pdf).expect("written"), 1)
+        .expect("its first page");
+    let strokes: Vec<(f64, bool)> = page
+        .paths
+        .iter()
+        .filter_map(|p| p.stroke.as_ref())
+        .map(|s| ((s.width / PT_PER_MM * 1000.0).round() / 1000.0, s.dashed))
+        .collect();
+    let count = |mm: f64, dashed: bool| {
+        strokes
+            .iter()
+            .filter(|(w, d)| (w - mm).abs() < 0.01 && *d == dashed)
+            .count()
+    };
+    eprintln!(
+        "walls 0.5 mm: {} solid; windows 0.25 mm: {} solid, {} dashed; 0.125 mm: {} solid, {} dashed",
+        count(0.5, false),
+        count(0.25, false),
+        count(0.25, true),
+        count(0.125, false),
+        count(0.125, true)
+    );
+    // The high window's parts dashed at its pen and half its pen; the low one's solid.
+    assert!(
+        count(0.25, true) >= 2 && count(0.125, true) >= 1,
+        "{strokes:?}"
+    );
+    assert!(
+        count(0.25, false) >= 2 && count(0.125, false) >= 1,
+        "{strokes:?}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

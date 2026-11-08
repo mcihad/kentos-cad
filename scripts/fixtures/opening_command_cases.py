@@ -239,8 +239,9 @@ def heights(f):
 
 
 def cut_in_plan(f):
-    """Plan cuts a door or window always; a bare opening, niche or flue where it crosses the cut height (ADR 0719 §2)."""
-    if f["form"] in ("door", "window"):
+    """Plan cuts a door always; a window (ADR 3012), a bare opening, a niche or a flue where it crosses the cut height
+    (ADR 0719 §2)."""
+    if f["form"] == "door":
         return True
     s0, s1 = heights(f)
     return s0 < CUT and s1 > CUT
@@ -829,7 +830,7 @@ def create_cases():
           [made, create_step(d, "execute", one(at=5.0, type="Tesisat boşluğu 20"))])
     d = Drawing()
     made = create_step(d, "execute", one(at=5.0, form="window", sill=1.3, head=2.2))
-    c.add("yüksek pencerenin altında kesmeyi kesen niş: ikisi de kesilir, reddedilir",
+    c.add("yüksek pencerenin altında kesmeyi kesen niş: pencere kesmenin üstünde kalır, kesilmez; niş eklenir",
           [made, create_step(d, "execute", one(at=5.0, form="niche", sill=0.3, head=1.2))])
     d = Drawing()
     made = create_step(d, "execute", one(at=5.0, type="Pencere 120"))

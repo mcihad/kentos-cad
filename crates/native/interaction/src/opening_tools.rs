@@ -208,9 +208,10 @@ impl OpeningTool {
             .or_else(|| builtin_opening_types().into_iter().find(|t| t.form == self.form))
     }
 
-    /// Whether Yüz, Alt and Üst apply: a form plan cuts by its heights (docs/adr/0719 §2).
+    /// Whether Yüz, Alt and Üst apply: a bare opening, a niche or a flue (docs/adr/0719 §2); a window's heights are its
+    /// own rows.
     fn by_height(&self) -> bool {
-        self.form.cut_by_height()
+        self.form.hole_or_recess()
     }
 
     /// The number the next opening takes (docs/adr/0714): none with Yok; the one typed, else after the last numbered
