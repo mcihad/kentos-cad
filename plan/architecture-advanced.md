@@ -846,9 +846,10 @@ _Durum (7 Kasım 2026):_ Kapı ve pencere ölçeğe göre çiziliyor (M11, [ADR 
 
 #### ADV-16 — Otomatik ölçü, kot ve etiket [~]
 
-_Durum (8 Kasım 2026):_ Planı tek komutla ölçülendirme yapıldı (M26, [ADR 3026](../docs/adr/3026-dimension-the-plan-in-one-command.md)).
+_Durum (8 Kasım 2026):_ Planı tek komutla ölçülendirme (M26, [ADR 3026](../docs/adr/3026-dimension-the-plan-in-one-command.md)) ve EK-3 mahal numarasıyla elips etiket (M27, [ADR 3027](../docs/adr/3027-ek3-room-numbers-and-ellipse-tags.md)) yapıldı.
 - Ölçü ▾ › Planı ölçülendir: dış duvarları kendisi bulur; dört cepheye ön projede 3, uygulamada 4 zincir (MO); her mahali enine ve boyuna ikişer kez kesen, binayı baştan başa geçen iç zincirler; önizleme, Enter ile tek adım.
-- Kalanlar: yeniden çalışınca güncelleme, kesenin boşluktan kaçması, kot, mahal etiketi, çakışmasız yerleşim (M27), 90/210 ve doğrama kodları (M28).
+- Mahal numarala'da EK-3 (E): Kat_Bölüm_Sıra, kat kodu Etkin kattan (K00, K01, B01, NNN), kuzeyden saat yönünde; tıklamadan Enter katın bütün mahallerini numaralar. Hepsini etiketle'de Çerçeve (B) "Elips içinde numara": numara elipste, ad ve alan altında (KCAD şema 207).
+- Kalanlar: yeniden çalışınca güncelleme, kesenin boşluktan kaçması, kot, ölçeğe göre etiket içeriği, çakışmasız yerleşim, 90/210 ve doğrama kodları (M28).
 
 **Kullanıcı sonucu:** Tek komut planın dört cephesini ölçülendirir. Etiketler okunur ve hiçbir çizginin üstüne binmez.
 Dayanak S19.
@@ -1124,7 +1125,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M24 | Donatı galerisi ve akıllı yerleşim | ADV-12 | "lavabo" → duvara yaslı yerleşim **(M24, ADR 3024: yapıldı; menü aramasında donatı ve eş anlamlılar, Mimari'de Duvara hizala açık, TEFR katmanları; 3 eylem)** |
 | M25 | Kullanım alanları ve çakışma | ADV-12 | Kapı önü ve klozet önü bulguları **(M25, ADR 3025: yapıldı; Donatılar grubu, kanat ve donatı bulguları, kırmızı alan, sahte çarpışma düzeltildi)** |
 | M26 | Dört cephe dış ölçü ve iç zincirler | ADV-16 | Tek komut; 3/4 dış, 2+2 iç zincir **(M26, ADR 3026: yapıldı; Planı ölçülendir, dış duvarlar kendiliğinden, MO zincirleri, paylaşılan iç kesenler)** |
-| M27 | Kot, mahal etiketi, çakışmasız yerleşim | ADV-16 | Elips etiket, EK-3 numarası |
+| M27 | Kot, mahal etiketi, çakışmasız yerleşim | ADV-16 | Elips etiket, EK-3 numarası **(M27, ADR 3027: yapıldı; Mahal numarala EK-3 ile kat kodu ve saat yönü, Elips içinde numara çerçevesi, KCAD 207. Kot ve çakışmasız yerleşim kaldı: kapı etiketi M28'de)** |
 | M28 | 90/210, doğrama kodları, odaya göre numara | ADV-16, ADV-03 | K01, P01 |
 
 ### Faz 3 — Türkiye'ye uygun proje

@@ -14,6 +14,10 @@ measured advances (the first face's, `paragraph_cases.py` reads them from the da
 - Its leader: from where the line to the point it ties to leaves the frame (a circle its radius; else the nearest
   crossing with the frame's sides, a rounded frame's and none's its rectangle's) to that point; none when the point is
   inside.
+- An ellipse (docs/adr/3027) rounds the first line only: its middle the first line's, its half axes √2 (w₁/2 + pad) and
+  √2 (h/2 + pad) (w₁ the first line's width, never under h), the larger the major axis; the lines under it go down by
+  max(0, eb + 0.2 h − (1.5 h − h/2)); the leader leaves the box ±max(ea, w/2 + pad) across, from the ellipse's top to
+  the lower of its bottom and the last line's bottom less the pad.
 """
 
 import argparse
@@ -49,6 +53,18 @@ def draw(at, text, shape, size, scale, leader, anchor):
     x, y = at
     frame = None
     ring = None
+    extra = 0.0
+    if shape == "ellipse":
+        w1 = max(h, width(lines[0], h))
+        ea, eb = math.sqrt(2) * (w1 / 2 + pad), math.sqrt(2) * (h / 2 + pad)
+        extra = max(0.0, eb + 0.2 * h - (PITCH * h - h / 2))
+        y1 = b - h / 2
+        major, ratio = ([ea, 0.0], eb / ea) if ea >= eb else ([0.0, eb], ea / eb)
+        frame = {"kind": "ellipse", "c": [x, y + y1], "major": major, "ratio": ratio}
+        last = b - h / 2 - (len(lines) - 1) * PITCH * h - (extra if len(lines) > 1 else 0.0)
+        xa = max(ea, a)
+        bottom = min(y1 - eb, last - h / 2 - pad)
+        ring = [(-xa, bottom), (xa, bottom), (xa, y1 + eb), (-xa, y1 + eb)]
     if shape == "circle":
         frame = {"kind": "circle", "c": [x, y], "r": math.hypot(w / 2, b) + pad}
     elif shape == "rectangle":
@@ -62,7 +78,8 @@ def draw(at, text, shape, size, scale, leader, anchor):
         r = min(a, bb) / 2
         pts = [(-a + r, -bb), (a - r, -bb), (a, -bb + r), (a, bb - r), (a - r, bb), (-a + r, bb), (-a, bb - r), (-a, -bb + r)]
         frame = {"kind": "polygon", "pts": [[x + p, y + q] for p, q in pts], "bulges": [0.0, QUARTER] * 4}
-    texts = [{"p": [x, y + b - h / 2 - i * PITCH * h], "text": ln, "height": h} for i, ln in enumerate(lines) if ln]
+    texts = [{"p": [x, y + b - h / 2 - i * PITCH * h - (extra if i > 0 else 0.0)], "text": ln, "height": h}
+             for i, ln in enumerate(lines) if ln]
     lead = None
     if leader and anchor is not None:
         dx, dy = anchor[0] - x, anchor[1] - y
@@ -72,7 +89,7 @@ def draw(at, text, shape, size, scale, leader, anchor):
             if shape == "circle":
                 t = frame["r"]
             else:
-                side = ring if shape == "hexagon" else [(-a, -bb), (a, -bb), (a, bb), (-a, bb)]
+                side = ring if shape in ("hexagon", "ellipse") else [(-a, -bb), (a, -bb), (a, bb), (-a, bb)]
                 t = math.inf
                 for i in range(len(side)):
                     p, q = side[i], side[(i + 1) % len(side)]
@@ -100,6 +117,8 @@ CASES = [
     ("bağ noktası çerçevenin içindeyse kol yok", (0.0, 0.0), "D1", "circle", None, 100, True, (0.05, 0.05)),
     ("dikdörtgen, kol köşeden", (10.0, 10.0), "101", "rectangle", 2.0, 200, True, (13.0, 6.0)),
     ("yuvarlak köşeli, iki satır, boş ikinci satır yazılmaz", (5.0, 5.0), "M1\n", "rounded", None, 50, False, None),
+    ("mahal etiketi: numara elipste, ad ve alan altında, 1:100", (8.0, 4.0), "K00_D01_001\nSalon\n36.00 m²", "ellipse", None, 100, False, None),
+    ("elips, tek satır, kol aşağı", (12.0, 3.0), "101", "ellipse", None, 50, True, (12.0, 1.0)),
 ]
 
 

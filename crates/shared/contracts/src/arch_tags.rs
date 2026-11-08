@@ -76,14 +76,18 @@ pub enum TagShape {
     Rectangle,
     Rounded,
     None,
+    /// Round the first line only (docs/adr/3027): a room's number in its ellipse, its name and area below, as
+    /// Mimarlar Odası's room tag (KCAD schema 207).
+    Ellipse,
 }
 
 impl TagShape {
-    pub const ALL: [TagShape; 5] = [
+    pub const ALL: [TagShape; 6] = [
         TagShape::Circle,
         TagShape::Hexagon,
         TagShape::Rectangle,
         TagShape::Rounded,
+        TagShape::Ellipse,
         TagShape::None,
     ];
 
@@ -94,6 +98,7 @@ impl TagShape {
             TagShape::Rectangle => "Dikdörtgen",
             TagShape::Rounded => "Yuvarlak köşeli",
             TagShape::None => "Çerçevesiz",
+            TagShape::Ellipse => "Elips içinde numara",
         }
     }
 
@@ -104,12 +109,18 @@ impl TagShape {
             TagShape::Rectangle => "rectangle",
             TagShape::Rounded => "rounded",
             TagShape::None => "none",
+            TagShape::Ellipse => "ellipse",
         }
     }
 }
 
 fn is_circle(s: &TagShape) -> bool {
     *s == TagShape::Circle
+}
+
+/// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.
+pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Tag(t) if t.tag.shape == TagShape::Ellipse)
 }
 
 /// Why a tag's words are no longer its object's.

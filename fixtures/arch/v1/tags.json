@@ -561,6 +561,108 @@
     }
    ],
    "leader": null
+  },
+  {
+   "name": "mahal etiketi: numara elipste, ad ve alan altında, 1:100",
+   "shape": {
+    "kind": "tag",
+    "at": {
+     "x": 8.0,
+     "y": 4.0
+    },
+    "text": "K00_D01_001\nSalon\n36.00 m²",
+    "shape": "ellipse"
+   },
+   "scale": 100,
+   "frame": {
+    "kind": "ellipse",
+    "c": [
+     8.0,
+     4.375
+    ],
+    "major": [
+     1.1603622279271246,
+     0.0
+    ],
+    "ratio": 0.2742230347349177
+   },
+   "texts": [
+    {
+     "p": [
+      8.0,
+      4.375
+     ],
+     "text": "K00_D01_001",
+     "height": 0.25
+    },
+    {
+     "p": [
+      8.0,
+      3.8818019484660535
+     ],
+     "text": "Salon",
+     "height": 0.25
+    },
+    {
+     "p": [
+      8.0,
+      3.5068019484660535
+     ],
+     "text": "36.00 m²",
+     "height": 0.25
+    }
+   ],
+   "leader": null
+  },
+  {
+   "name": "elips, tek satır, kol aşağı",
+   "shape": {
+    "kind": "tag",
+    "at": {
+     "x": 12.0,
+     "y": 3.0
+    },
+    "text": "101",
+    "shape": "ellipse",
+    "leader": true,
+    "anchor": {
+     "x": 12.0,
+     "y": 1.0
+    }
+   },
+   "scale": 50,
+   "frame": {
+    "kind": "ellipse",
+    "c": [
+     12.0,
+     3.0
+    ],
+    "major": [
+     0.1829638796320192,
+     0.0
+    ],
+    "ratio": 0.8695652173913043
+   },
+   "texts": [
+    {
+     "p": [
+      12.0,
+      3.0
+     ],
+     "text": "101",
+     "height": 0.125
+    }
+   ],
+   "leader": {
+    "a": [
+     12.0,
+     2.8409009742330267
+    ],
+    "b": [
+     12.0,
+     1.0
+    ]
+   }
   }
  ]
 }

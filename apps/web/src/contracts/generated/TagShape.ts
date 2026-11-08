@@ -3,4 +3,4 @@
 /**
  * A tag's frame.
  */
-export type TagShape = "circle" | "hexagon" | "rectangle" | "rounded" | "none";
+export type TagShape = "circle" | "hexagon" | "rectangle" | "rounded" | "none" | "ellipse";

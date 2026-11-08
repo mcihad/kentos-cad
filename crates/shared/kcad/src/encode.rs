@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 207 (docs/adr/3027): a tag framed by an ellipse (a room's number, Mimarlar Odası's).
+    if objs.iter().any(kentos_contracts::needs_ellipse_tags)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_ellipse_tags))
+    {
+        return crate::SCHEMA_WITH_ELLIPSE_TAGS;
+    }
     // Schema 206 (docs/adr/3013): how the project's plan lines are weighted.
     if doc
         .settings

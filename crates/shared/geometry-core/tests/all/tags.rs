@@ -26,7 +26,9 @@ fn tags_draw_as_the_reference_says() {
         let mut lines = Vec::new();
         for p in &pieces {
             match &p.shape {
-                Shape::Circle { .. } | Shape::Polygon { .. } => frames.push(p.shape.clone()),
+                Shape::Circle { .. } | Shape::Polygon { .. } | Shape::Ellipse { .. } => {
+                    frames.push(p.shape.clone())
+                }
                 Shape::Text {
                     p, text, height, ..
                 } => texts.push((*p, text.clone(), *height)),
@@ -59,6 +61,30 @@ fn tags_draw_as_the_reference_says() {
                     }
                     _ => panic!("{name}: bükümler"),
                 }
+            }
+            (
+                [
+                    Shape::Ellipse {
+                        c: m,
+                        major,
+                        ratio,
+                        t0,
+                        t1,
+                    },
+                ],
+                want,
+            ) => {
+                // docs/adr/3027: round the first line.
+                assert_eq!(want["kind"], "ellipse", "{name}");
+                close(m.x, &want["c"][0], name);
+                close(m.y, &want["c"][1], name);
+                close(major.x, &want["major"][0], name);
+                close(major.y, &want["major"][1], name);
+                close(*ratio, &want["ratio"], name);
+                assert!(
+                    *t0 == 0.0 && (*t1 - std::f64::consts::TAU).abs() < 1e-12,
+                    "{name}: tam elips"
+                );
             }
             (got, want) => panic!("{name}: çerçeve {got:?}, beklenen {want}"),
         }

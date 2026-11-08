@@ -129,6 +129,10 @@
     - `tool.planDimensions`: dış duvarlar duvar gövdelerinin birleşik dış çizgisinden; `around` cephe tarifi, Ön proje
       [Duvarlar, Akslar, Toplam], Uygulama + Açıklıklar (1:50'de kendiliğinden); iç kesenler `cuts_for` (her mahal %70 ve
       %30'undan, paylaşılan, ≥ 6 mm); hepsi tek adım, MM-XXXX-OLCU.
+  - **EK-3 mahal numarası ve elips etiket (M27, [ADR 3027](../adr/3027-ek3-room-numbers-and-ellipse-tags.md)):**
+    - Mahal numarala `ek3` (E): ilk numara `ek3_level` (Zemin/kotu 0'a en yakın K00, K01…, B01…, NNN) + bölüm (B, 3
+      karakter, varsayılan 001) + 001; `clockwise` etiket noktalarının ortası çevresinde kuzeyden; tıklamadan Enter katın
+      mahalleri. `TagShape::Ellipse`: yalnız ilk satır elipste (√2 eksen, `ELLIPSE_GAP` 0,2 h), KCAD şema 207.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

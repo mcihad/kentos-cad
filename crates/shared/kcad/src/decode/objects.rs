@@ -421,6 +421,7 @@ pub(super) struct Features {
     pub(super) multi_slide: bool,
     pub(super) opening_types: bool,
     pub(super) special_doors: bool,
+    pub(super) ellipse_tags: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -701,6 +702,7 @@ impl Features {
             multi_slide: schema >= crate::SCHEMA_WITH_MULTI_SLIDE,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             special_doors: schema >= crate::SCHEMA_WITH_SPECIAL_DOORS,
+            ellipse_tags: schema >= crate::SCHEMA_WITH_ELLIPSE_TAGS,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -2484,8 +2486,17 @@ pub(super) fn object(
             "döner merdivenin bükümü (bulges) şema 117 ister",
         ));
     }
+    // Schema 207 (docs/adr/3027): a tag framed by an ellipse; before it a tag's frame was one of five.
+    if kentos_contracts::needs_ellipse_tags(&entity) && !has.ellipse_tags {
+        return Err(r.fail(
+            Code::UnknownField,
+            "etiketin elips çerçevesi (ellipse) şema 207 ister",
+        ));
+    }
     // Schema 153 (docs/adr/0807): an XOX slide; before it three sliding leaves did not part to both sides.
-    if matches!(&entity, Entity::Opening(o) if kentos_contracts::is_xox(&o.opening)) && !has.slide_more {
+    if matches!(&entity, Entity::Opening(o) if kentos_contracts::is_xox(&o.opening))
+        && !has.slide_more
+    {
         return Err(r.fail(
             Code::BadValue,
             "üç kanatlı sürmenin iki yana açılması (XOX) şema 153 ister",

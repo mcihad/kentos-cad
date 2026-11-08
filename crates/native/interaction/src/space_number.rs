@@ -59,14 +59,19 @@ impl Number {
         self.directional && self.direction.len() < 2
     }
     fn request(&self, cx: &Context<'_>) -> Option<SpacesNumber> {
+        self.request_for(&self.uids, cx)
+    }
+
+    /// The command's input for `uids` (EK-3's preview: every room of the storey before any is clicked).
+    fn request_for(&self, uids: &[String], cx: &Context<'_>) -> Option<SpacesNumber> {
         if self.waiting_direction() {
             return None;
         }
         Some(SpacesNumber {
             uids: if self.clockwise && !self.directional {
-                clockwise(&self.uids, cx)
+                clockwise(uids, cx)
             } else {
-                self.uids.clone()
+                uids.to_vec()
             },
             first: self.first.clone(),
             order: if self.directional {
@@ -177,10 +182,16 @@ impl Number {
                     .extend(Outline::of(&shape(e), Some([5., 3.]), 2., Tone::Accent).strokes);
             }
         }
-        if self.uids.is_empty() {
+        // EK-3 with none clicked: the whole storey's numbers shown before Enter (docs/adr/3027).
+        let uids = if self.ek3 && self.uids.is_empty() {
+            Self::storey_rooms(cx)
+        } else {
+            self.uids.clone()
+        };
+        if uids.is_empty() {
             return;
         }
-        let Some(input) = self.request(cx) else {
+        let Some(input) = self.request_for(&uids, cx) else {
             return;
         };
         match spaces_number::plan_in(cx.doc, &input) {
@@ -264,6 +275,7 @@ impl Tool for Number {
             "mahallere sırayla tıklayın; yeniden tıklama çıkarır, Enter önizlemeyi uygular"
         };
         Prompt::new(LABEL, step)
+            .option_with("EK-3", "E", if self.ek3 { "Açık" } else { "Kapalı" })
             .option("İlk numara", "N")
             .option("Sıralama", "S")
             .option("Yönü seç", "Y")
@@ -408,6 +420,8 @@ impl Tool for Number {
             ),
             "Y" => self.configure("Y", "pick", cx),
             "G" => self.undo_step(cx),
+            // EK-3 on or off from the keyboard (docs/adr/3027).
+            "E" => self.configure("E", if self.ek3 { "no" } else { "yes" }, cx),
             _ if self.waiting_direction() => {
                 if let Some(p) = cx.typed_point(text, self.direction.last().copied(), None) {
                     self.direction_point(p, cx);

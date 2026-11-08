@@ -764,3 +764,57 @@ fn ek3_numbers_the_storey_s_rooms_kat_bolum_sira_clockwise_from_north() {
     assert_eq!(numbers["GB"], "K00_D01_003", "{numbers:?}");
     assert_eq!(numbers["KB"], "K00_D01_004", "{numbers:?}");
 }
+
+/// The MO room tag (M27, docs/adr/3027): Etiket's all-at-once with Elips içinde numara frames the room's number in an
+/// ellipse, its name and net area below it; the drawing then writes KCAD schema 207, and reads back the same.
+#[test]
+fn a_room_tag_in_an_ellipse_writes_schema_207() {
+    let (mut app, _) = building();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    command(
+        &mut app,
+        "cad.tags.create",
+        json!({"layerId": layer, "tags": [], "all": {"kinds": ["space"], "shape": "ellipse", "content": "{number}\n{name}\n{netArea}"}}),
+    );
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let tag = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Tag(t) => Some(t.clone()),
+            _ => None,
+        })
+        .expect("the room's tag");
+    assert_eq!(tag.tag.shape, kentos_commands::TagShape::Ellipse);
+    assert_eq!(tag.tag.text.lines().next(), Some("101"), "{}", tag.tag.text);
+    // Drawn: an ellipse round the number, the name and the area under it.
+    let shape =
+        kentos_native_application::geometry::shape(&kentos_commands::Entity::Tag(tag.clone()));
+    let pieces = kentos_geometry_core::geom::arch::pieces(&shape, doc.settings().plot_scale);
+    assert!(
+        pieces
+            .iter()
+            .any(|p| matches!(p.shape, kentos_geometry_core::entity::Shape::Ellipse { .. }))
+    );
+    let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
+    assert_eq!(
+        bytes
+            .windows(10)
+            .filter(|w| *w == b"\x67version\x18\xcf")
+            .count(),
+        1,
+        "schema 207"
+    );
+    let back = kentos_kcad::decode(&bytes).expect("reads");
+    assert!(
+        back.entities
+            .iter()
+            .any(kentos_commands::needs_ellipse_tags)
+    );
+}

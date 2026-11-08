@@ -192035,14 +192035,23 @@
     },
     "TagShape": {
       "description": "A tag's frame.",
-      "enum": [
-        "circle",
-        "hexagon",
-        "rectangle",
-        "rounded",
-        "none"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "circle",
+            "hexagon",
+            "rectangle",
+            "rounded",
+            "none"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "ellipse",
+          "description": "Round the first line only (docs/adr/3027): a room's number in its ellipse, its name and area below, as\nMimarlar Odası's room tag (KCAD schema 207).",
+          "type": "string"
+        }
+      ]
     },
     "TaggedKind": {
       "description": "The kinds of object a tag is put on.",

@@ -7449,15 +7449,24 @@ TagBreakName = Literal["targetGone"]
 
 
 class TagShape(_StrEnum):
-    """A tag's frame."""
+    """A tag's frame.
+
+    - ``circle``
+    - ``hexagon``
+    - ``rectangle``
+    - ``rounded``
+    - ``none``
+    - ``ellipse``: Round the first line only (docs/adr/3027): a room's number in its ellipse, its name and area below, as
+    """
     CIRCLE = "circle"
     HEXAGON = "hexagon"
     RECTANGLE = "rectangle"
     ROUNDED = "rounded"
     NONE = "none"
+    ELLIPSE = "ellipse"
 
 
-TagShapeName = Literal["circle", "hexagon", "rectangle", "rounded", "none"]
+TagShapeName = Literal["circle", "hexagon", "rectangle", "rounded", "none", "ellipse"]
 """The names of :class:`TagShape`, for a plain string."""
 
 

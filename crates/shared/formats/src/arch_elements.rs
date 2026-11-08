@@ -107,6 +107,7 @@ pub fn core_tag(t: &TagFields) -> Shape {
                 TagShape::Rectangle => Frame::Rectangle,
                 TagShape::Rounded => Frame::Rounded,
                 TagShape::None => Frame::None,
+                TagShape::Ellipse => Frame::Ellipse,
             },
             size: t.size,
             leader: t.leader,

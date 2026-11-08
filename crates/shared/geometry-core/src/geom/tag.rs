@@ -5,6 +5,9 @@
 //! - Its frame round the words with a pad of `PAD × h`: a circle round their box, a hexagon (the box with a point each
 //!   side as deep as half its height times tan 30°), a rectangle, a rectangle with quarter-circle corners of half its
 //!   lesser half-size, or none. Words that are empty still have a frame as wide as `h`, so the tag can be seen and picked.
+//! - An ellipse (docs/adr/3027; Mimarlar Odası: "numara elips içinde yazılır") rounds the first line only, through its
+//!   padded box's corners (its half axes √2 × (half the line's width + pad) and √2 × (h / 2 + pad)); the lines under it
+//!   go down far enough to clear it by `0.2 h` (`ELLIPSE_GAP`): a room's number in its ellipse, its name and area below.
 //! - Its leader: from where the line to the point it ties to leaves the frame (a frameless tag's box) to that point;
 //!   none when the point is inside.
 //!
@@ -27,6 +30,8 @@ pub const PAD: f64 = 0.4;
 const TAN30: f64 = 0.577_350_269_189_625_8;
 /// tan 22.5°: a quarter circle's bulge.
 const QUARTER: f64 = 0.414_213_562_373_095_1;
+/// The gap between an ellipse and the line under it, in words' heights.
+pub const ELLIPSE_GAP: f64 = 0.2;
 
 /// A tag's frame.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -37,6 +42,8 @@ pub enum Frame {
     Rectangle,
     Rounded,
     None,
+    /// Round the first line: a room's number (Mimarlar Odası's room tag).
+    Ellipse,
 }
 
 impl Frame {
@@ -47,6 +54,7 @@ impl Frame {
             "rectangle" => Frame::Rectangle,
             "rounded" => Frame::Rounded,
             "none" => Frame::None,
+            "ellipse" => Frame::Ellipse,
             _ => return None,
         })
     }
@@ -58,6 +66,7 @@ impl Frame {
             Frame::Rectangle => "rectangle",
             Frame::Rounded => "rounded",
             Frame::None => "none",
+            Frame::Ellipse => "ellipse",
         }
     }
 }
@@ -196,8 +205,41 @@ fn ring(at: Vec2, spec: &Spec, scale: f64) -> Option<(Vec<Vec2>, Option<Vec<f64>
                 Some(vec![0.0, QUARTER, 0.0, QUARTER, 0.0, QUARTER, 0.0, QUARTER]),
             )
         }
-        Frame::Circle | Frame::None => return None,
+        Frame::Circle | Frame::None | Frame::Ellipse => return None,
     })
+}
+
+/// An ellipse frame's middle's height over the tag's middle and its half axes (across, up), and how far the lines
+/// under the first go down to clear it.
+fn ellipse(spec: &Spec, scale: f64) -> (f64, f64, f64, f64) {
+    let h = height(spec, scale);
+    let pad = PAD * h;
+    let (_, b) = half_box(spec, scale);
+    let first = spec.text.split('\n').next().unwrap_or("");
+    let w1 = if first.is_empty() {
+        h
+    } else {
+        js_max(h, width_em(first, Font::DEFAULT) * h)
+    };
+    let (ea, eb) = (
+        std::f64::consts::SQRT_2 * (w1 / 2.0 + pad),
+        std::f64::consts::SQRT_2 * (h / 2.0 + pad),
+    );
+    let extra = js_max(0.0, eb + ELLIPSE_GAP * h - (PITCH * h - h / 2.0));
+    (b - h / 2.0, ea, eb, extra)
+}
+
+/// A line's middle's height over the tag's middle: lines `PITCH × h` apart from the first, those under an ellipse
+/// further down by its clearance.
+fn line_y(spec: &Spec, scale: f64, i: usize) -> f64 {
+    let h = height(spec, scale);
+    let (_, b) = half_box(spec, scale);
+    let extra = if spec.frame == Frame::Ellipse && i > 0 {
+        ellipse(spec, scale).3
+    } else {
+        0.0
+    };
+    b - h / 2.0 - i as f64 * PITCH * h - extra
 }
 
 /// A circle frame's radius at 1:`scale`.
@@ -217,6 +259,21 @@ fn exit(at: Vec2, spec: &Spec, scale: f64, d: Vec2) -> f64 {
     let (a, b) = (w + pad, b0 + pad);
     let pts: Vec<Vec2> = match spec.frame {
         Frame::Hexagon => ring(at, spec, scale).map(|r| r.0).unwrap_or_default(),
+        Frame::Ellipse => {
+            // The box of the ellipse and the lines under it.
+            let (y1, ea, eb, _) = ellipse(spec, scale);
+            let h = height(spec, scale);
+            let n = spec.text.split('\n').count().max(1);
+            let x = js_max(ea, a);
+            let top = y1 + eb;
+            let bottom = js_min(y1 - eb, line_y(spec, scale, n - 1) - h / 2.0 - pad);
+            vec![
+                Vec2::new(at.x - x, at.y + bottom),
+                Vec2::new(at.x + x, at.y + bottom),
+                Vec2::new(at.x + x, at.y + top),
+                Vec2::new(at.x - x, at.y + top),
+            ]
+        }
         _ => vec![
             Vec2::new(at.x - a, at.y - b),
             Vec2::new(at.x + a, at.y - b),
@@ -251,6 +308,21 @@ pub fn pieces(at: Vec2, spec: &Spec, scale: f64) -> Vec<Piece> {
             r: radius(spec, scale),
         })),
         Frame::None => {}
+        Frame::Ellipse => {
+            let (y1, ea, eb, _) = ellipse(spec, scale);
+            let (major, ratio) = if ea >= eb {
+                (Vec2::new(ea, 0.0), eb / ea)
+            } else {
+                (Vec2::new(0.0, eb), ea / eb)
+            };
+            out.push(piece(Shape::Ellipse {
+                c: Vec2::new(at.x, at.y + y1),
+                major,
+                ratio,
+                t0: 0.0,
+                t1: std::f64::consts::TAU,
+            }));
+        }
         _ => {
             if let Some((pts, bulges)) = ring(at, spec, scale) {
                 out.push(piece(Shape::Polygon {
@@ -263,13 +335,12 @@ pub fn pieces(at: Vec2, spec: &Spec, scale: f64) -> Vec<Piece> {
         }
     }
     let h = height(spec, scale);
-    let (_, b) = half_box(spec, scale);
     for (i, line) in spec.text.split('\n').enumerate() {
         if line.is_empty() {
             continue;
         }
         out.push(piece(Shape::Text {
-            p: Vec2::new(at.x, at.y + b - h / 2.0 - i as f64 * PITCH * h),
+            p: Vec2::new(at.x, at.y + line_y(spec, scale, i)),
             text: line.to_owned(),
             height: h,
             rotation: 0.0,

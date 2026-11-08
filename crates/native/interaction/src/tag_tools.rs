@@ -624,6 +624,14 @@ impl Tool for TagAllTool {
             if self.refresh { "Yenile" } else { "Koru" }.to_owned(),
         );
         p = p.option_with("Kaynak katı", "F", self.source.label());
+        // The frame from the keyboard too (docs/adr/3027): Elips içinde numara for Mimarlar Odası's room tag.
+        p = p.option_with(
+            "Çerçeve",
+            "B",
+            self.shape
+                .map_or("Mevcut ya da türün", TagShape::label)
+                .to_owned(),
+        );
         p = p.option_with(
             "Hazır içerik",
             "İ",
@@ -655,6 +663,17 @@ impl Tool for TagAllTool {
             true
         } else if key == "E" {
             self.refresh = !self.refresh;
+            self.see(cx);
+            true
+        } else if key == "B" {
+            self.shape = match self.shape {
+                None => Some(TagShape::Circle),
+                Some(s) => TagShape::ALL
+                    .iter()
+                    .skip_while(|x| **x != s)
+                    .nth(1)
+                    .copied(),
+            };
             self.see(cx);
             true
         } else if matches!(key.as_str(), "İ" | "I") {
