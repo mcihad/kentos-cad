@@ -181,6 +181,23 @@ fn number(text: &str, words: &str) -> Result<Option<f64>, String> {
     t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or_else(|| format!("{words} “{t}” bir sayı değil (ondalıktan önce nokta)."))
 }
 
+/// The summary's confidence region line (docs/adr/2560): the largest error ellipse of the marks the stage moved, its
+/// mark, and the confidence; none without one.
+pub(crate) fn region_line(a: &MapSurveyNetworked) -> Option<String> {
+    let (mark, e) = a
+        .stations
+        .iter()
+        .filter_map(|st| st.ellipse.as_ref().map(|e| (st.mark.as_str(), e)))
+        .max_by(|x, y| x.1.major.total_cmp(&y.1.major))?;
+    Some(format!(
+        "Güven bölgesi (%{:.0}): en büyük hata elipsi {mark} noktasında, yarı eksenleri {} ve {} mm; kotun aralığı ±{} mm.",
+        e.confidence * 100.0,
+        mm(e.major),
+        mm(e.minor),
+        mm(e.up)
+    ))
+}
+
 /// The summary's epoch line (docs/adr/2120): where the network's epoch comes from and how far the known points moved.
 pub(crate) fn epoch_line(a: &MapSurveyNetworked) -> String {
     // Points before the decimals, as the window's other numbers (m0, vᵀPv, mm).
@@ -495,6 +512,9 @@ impl App {
                 }
                 let (kind, text) = similarity_line(a);
                 lines.push(words::text_line(kind, text));
+                if let Some(text) = region_line(a) {
+                    lines.push(words::text_line(Kind::Info, text));
+                }
                 if let Some(r) = &a.rules {
                     let confidence = r.confidence.map_or("Baarda α₀ = 0,001".to_owned(), |c| format!("güven {c}"));
                     lines.push(words::text_line(
@@ -535,6 +555,7 @@ impl App {
                             num("σ kuzey (mm)", 90.0),
                             num("σ doğu (mm)", 90.0),
                             num("σ yukarı (mm)", 90.0),
+                            col("Güven bölgesi a/b, yön, kot (mm)", 190.0),
                             num("ΔY (mm)", 80.0),
                             num("ΔX (mm)", 80.0),
                             num("ΔZ (mm)", 80.0),
@@ -555,6 +576,11 @@ impl App {
                                     mm(st.sigma[0]),
                                     mm(st.sigma[1]),
                                     mm(st.sigma[2]),
+                                    // The error ellipse's semi-axes, its direction (a semt), the height's interval.
+                                    st.ellipse.as_ref().map_or(String::new(), |e| {
+                                        let way = e.azimuth.map_or("yönsüz".to_owned(), |d| self.format().bearing(d * 10.0 / 9.0));
+                                        format!("{}/{} · {way} · ±{}", mm(e.major), mm(e.minor), mm(e.up))
+                                    }),
                                     f(st.dx),
                                     f(st.dy),
                                     f(st.dz),

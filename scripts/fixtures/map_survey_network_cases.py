@@ -37,6 +37,13 @@ one every known point says its epoch (one frame) and one at another epoch is mov
 grid by PROJ (geoid_cases.transformed, the deformation step); the shift is east, north, up at its given place. The
 network's epoch is the measurement epoch; without one it is the known points' one epoch, as before.
 
+ADR 2560 adds each mark's confidence region from the stage held by the known points (a mark not held fixed): its east,
+north, up covariance R·Q·Rᵀ·m0²; numpy's eigen decomposition of the north, east 2×2 gives the error ellipse's semi-axes
+(√χ²₂(p)·√λ, scipy's χ²) and the major axis's direction from north clockwise in [0°, 180°), the height's half-interval
+is √χ²₁(p)·σu; p is the class's confidence, else 0.95 (Madde 15(1)(d)). A circle's direction (the axes within a
+millionth of the major one) is not given. A case gives the baselines unequal east and north deviations so the ellipses
+have a direction.
+
 ADR 2520 adds a known point's own velocity (a station's published one: the frame's Earth-centred X, Y, Z, m/yr): with
 it the point goes to the measurement epoch linearly, X(t) = X(t₀) + V·(t − t₀) (IERS Conventions 2010 §4.1), its X, Y,
 Z by PROJ (TUREF 3D → geocentric and back), before the campaign's velocity grid is looked at; `moved` says `by`
@@ -152,13 +159,16 @@ ERRS = {("BN1", "N1"): (0.0012, -0.0008, 0.0021), ("BN2", "N1"): (-0.0009, 0.001
 SIG = (0.0025, 0.0025, 0.005)
 
 
-def vector(f, t, err, sig=SIG):
+def vector(f, t, err, sig=SIG, turn=0.0):
     """f → t: the true difference with an error east, north, up (m) at f, its covariance from deviations east, north,
-    up at f as GVX keeps it: standard deviations and correlations, the covariance made of them again."""
+    up at f (their axes turned `turn` degrees clockwise about up) as GVX keeps it: standard deviations and
+    correlations, the covariance made of them again."""
     lat, lon, _ = geodetic(TRUE[f])
     r = rows(lat, lon)
     d = TRUE[t] - TRUE[f] + r.T @ np.array(err)
-    c = r.T @ np.diag([s * s for s in sig]) @ r
+    a = math.radians(turn)
+    z = np.array([[math.cos(a), math.sin(a), 0.0], [-math.sin(a), math.cos(a), 0.0], [0.0, 0.0, 1.0]])
+    c = r.T @ z @ np.diag([s * s for s in sig]) @ z.T @ r
     sd = [math.sqrt(float(c[k, k])) for k in range(3)]
     p = [float(c[0, 1]) / (sd[0] * sd[1]), float(c[0, 2]) / (sd[0] * sd[2]), float(c[1, 2]) / (sd[1] * sd[2])]
     cov = [sd[0] * sd[0], p[0] * sd[0] * sd[1], p[1] * sd[0] * sd[2], sd[1] * sd[1], p[2] * sd[1] * sd[2], sd[2] * sd[2]]
@@ -410,6 +420,22 @@ def stage(names, xyz, fixed, weights, baselines, scale):
         coords.append(x0[i] + (x[slot[i]:slot[i] + 3] if slot[i] is not None else 0.0))
     return {"slot": slot, "q": q, "x": coords, "v": v, "omega": omega, "f": f, "m0": m0, "s0": s0, "comps": comps,
             "weighted": weighted, "chi2": float(chi2_dist.ppf(0.95, f)) if f > 0 else None}
+
+
+def ellipse(ce, p):
+    """ADR 2560: a mark's confidence region at `p` from its east, north, up covariance — numpy's eigen decomposition
+    of the north, east 2×2 (semi-axes √χ²₂(p)·√λ, scipy's χ²), the major axis's direction from its eigenvector (degrees
+    clockwise from north, in [0, 180)), the height's half-interval √χ²₁(p)·σu."""
+    ne = np.array([[ce[1, 1], ce[1, 0]], [ce[0, 1], ce[0, 0]]])
+    values, vectors = np.linalg.eigh(ne)
+    k2, k1 = math.sqrt(chi2_dist.ppf(p, 2)), math.sqrt(chi2_dist.ppf(p, 1))
+    axis = vectors[:, 1]
+    major, minor = k2 * math.sqrt(max(values[1], 0.0)), k2 * math.sqrt(max(values[0], 0.0))
+    out = {"confidence": p, "major": major, "minor": minor, "up": k1 * math.sqrt(max(ce[2, 2], 0.0))}
+    # A circle's direction is rounding: given only when the axes differ by more than a millionth of the major one.
+    if major - minor > 1e-6 * major:
+        out["azimuth"] = math.degrees(math.atan2(axis[1], axis[0])) % 180.0
+    return out
 
 
 def tests(st, ids, known_ids, limit, held, names, nb):
@@ -743,6 +769,7 @@ def analyse(m, inp, prefix=""):
     for i, x in enumerate(marks):
         lat, lon, h = geodetic(held["x"][i])
         sl = held["slot"][i]
+        ce = None
         if sl is None:
             sne = [0.0, 0.0, 0.0]
         else:
@@ -775,6 +802,8 @@ def analyse(m, inp, prefix=""):
                 row["rules"] = ok
                 failed_s += not ok
             new.append({"mark": x, "lat": lat, "lon": lon, "height": h, "sigma": sne, "placed": pl})
+        if ce is not None:
+            row["ellipse"] = ellipse(ce, klass.get("confidence", 0.95) if klass else 0.95)
         srows.append(row)
     # The same network accepted already: its baselines, known points, held point, factor and class, and every new
     # mark's point carrying that adjustment now.
@@ -889,6 +918,11 @@ def network_cases():
     out = [case("İki bilinen nokta, üç işaret, sekiz baz: serbest ve bilinen noktalara dayalı dengeleme; N1'in kabul "
                 "edilen noktasından farkı", base, [ask(base, {})],
                 "Serbest dengelemede BN1 tutulur, BN2 bilinmeyendir; dayalı dengelemede ikisi de sabittir.")]
+    # ADR 2560: baselines whose east and north deviations differ give the marks' ellipses a direction.
+    oblong = networked(baselines=[record(k + 1, vector(f, t, ERRS[(f, t)], sig=(0.0015, 0.004, 0.005), turn=30.0))
+                                  for k, (f, t) in enumerate(PAIRS)])
+    out.append(case("Bazların sapmaları 1,5 ve 4 mm, eksenleri 30° dönük: noktaların hata elipsi o yöne uzanır, yönü "
+                    "verilir", oblong, [ask(oblong, {})]))
     for klass, note in (("C1", "Güven 0,95: w > 1,96 uyuşumsuz; baz σ'sı serbest dengelemenin (Madde 15)."),
                         ("C2", "Baz σ'sı işlenmiş σ, ≤ 10 mm + 1,5 ppm; nokta σφ, σλ ≤ 4 cm, σh ≤ 5 cm (Madde 20)."),
                         ("C3", "Nokta σφ, σλ ≤ 5 cm, σh ≤ 6 cm (Madde 22).")):

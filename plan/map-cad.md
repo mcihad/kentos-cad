@@ -35,7 +35,7 @@ sırayla alır.
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
@@ -605,6 +605,16 @@ mutlak yöneltme, Student t. Kanıtlanan:
 - 38 ortak durum (Horn ile bağımsız), Python, MCP; pencerede benzerlik satırı ve Artık sütunu.
 
 Açık: ağırlıklı benzerlik, robust kestirim, seyrek çözüm ve büyük ağ, deformasyon. Madde `[ ]` kalır.
+
+**8 Kasım 2026, dördüncü tur — Noktaların güven bölgesi ([ADR 2560](../docs/adr/2560-network-confidence-regions.md)).**
+Kapsam işareti: **Harita + CBS**. Araştırma: TBC'nin hata elipsi tanımı (sözlüğün %95 çarpanı 2,1447 yazılmış; dağılımın
+değeri √χ²₂ = 2,4477), BÖHHBÜY 15(1)(d). Kanıtlanan:
+- çekirdek her istasyonun doğu, kuzey, yukarı kovaryansını verir; `map.survey.network` sabit tutulmayan her işaretin hata
+  elipsini (yarı eksenler, yön, kotun aralığı) sınıfın güveninde (yoksa 0,95) yazar; dairede yön verilmez;
+- pencerede özet satırı ve Noktalar'da Güven bölgesi sütunu (yön semt olarak);
+- 42 ortak durum (1 yeni, 30° dönük sapmalarla), numpy'nin özdeğerleriyle bağımsız; Python, MCP.
+
+Açık: elipslerin çizimde gösterimi, robust kestirim, seyrek çözüm, ağırlıklı benzerlik. Madde `[ ]` kalır.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

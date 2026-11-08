@@ -18,10 +18,10 @@ use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
     BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide, CrsTransform,
-    GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, KnownMovedBy, MapSurvey, MapSurveyNetwork,
-    MapSurveyNetworked,
-    NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkSimilarity, NetworkStage, NetworkStation, SimilarityResidual,
-    SurveyBaseline, SurveyCampaign, SurveyKnown, VelocityModel, gnss_rules_default,
+    ErrorEllipse, GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, KnownMovedBy, MapSurvey,
+    MapSurveyNetwork, MapSurveyNetworked, NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkSimilarity,
+    NetworkStage, NetworkStation, SimilarityResidual, SurveyBaseline, SurveyCampaign, SurveyKnown, VelocityModel,
+    gnss_rules_default,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssResult, GnssStation};
@@ -227,6 +227,35 @@ fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confide
         agrees: t <= quantile,
         residuals,
     })
+}
+
+/// The confidence a region is drawn at without a class's (BÖHHBÜY Madde 15(1)(d)).
+const CONFIDENCE: f64 = 0.95;
+
+/// A mark's confidence region at `p` from its east, north, up covariance (ee, en, eu, nn, nu, uu; docs/adr/2560): the
+/// horizontal ellipse's semi-axes, √χ²₂(p) times the roots of the 2×2's eigenvalues, the major axis's direction from
+/// north clockwise, ½·atan2(2σne, σnn − σee) in [0°, 180°) (none for a circle: the axes within a millionth of the major
+/// one, where the direction is rounding), and the height's half-interval √χ²₁(p)·σu.
+fn error_ellipse(c: [f64; 6], p: f64) -> ErrorEllipse {
+    let (ee, en, nn, uu) = (c[0], c[1], c[3], c[5]);
+    let mid = (nn + ee) / 2.0;
+    let half = ((nn - ee) / 2.0).hypot(en);
+    let (k2, k1) = (chi2_quantile(2.0, p).sqrt(), chi2_quantile(1.0, p).sqrt());
+    let mut azimuth = 0.5 * (2.0 * en).atan2(nn - ee) * RAD;
+    if azimuth < 0.0 {
+        azimuth += 180.0;
+    }
+    if azimuth >= 180.0 {
+        azimuth -= 180.0;
+    }
+    let (major, minor) = (k2 * (mid + half).max(0.0).sqrt(), k2 * (mid - half).max(0.0).sqrt());
+    ErrorEllipse {
+        confidence: p,
+        major,
+        minor,
+        azimuth: (major - minor > 1e-6 * major).then_some(azimuth),
+        up: k1 * uu.max(0.0).sqrt(),
+    }
 }
 
 /// The test value above which a component is a blunder: two-sided at the class's confidence (√χ²₁), else Baarda's.
@@ -701,6 +730,8 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             dy: None,
             dz: None,
             rules: None,
+            // docs/adr/2560: the confidence region of a mark the stage moved.
+            ellipse: (!s.held).then(|| error_ellipse(s.cenu, class.and_then(|c| c.confidence).unwrap_or(CONFIDENCE))),
         };
         if k.is_none() {
             let placed = place(doc, campaign.as_ref(), (lat, lon, h), srid, epoch, "operation").map_err(Stop::into_error);

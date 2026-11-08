@@ -133506,6 +133506,46 @@
       ],
       "type": "string"
     },
+    "ErrorEllipse": {
+      "description": "A mark's confidence region (docs/adr/2560) from its east, north, up covariance as the stage held by the known points\ngives it (by m0²), at a confidence (the class's, else Madde 15(1)(d)'s 0.95): the horizontal error ellipse's semi-\nmajor and semi-minor axes (m, √χ²₂ times the 2×2 covariance's eigenvalues' roots) and the major axis's direction\n(degrees clockwise from north, 0 to 180; none for a circle, the axes within a millionth of the major one), and the\nheight's half-interval (m, √χ²₁ times σ up).",
+      "properties": {
+        "azimuth": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "deg"
+        },
+        "confidence": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "major": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "minor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "up": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "confidence",
+        "major",
+        "minor",
+        "up"
+      ],
+      "type": "object"
+    },
     "EventLink": {
       "additionalProperties": false,
       "description": "A link: the events of one layer on the routes of some others.",
@@ -154427,7 +154467,7 @@
       "type": "object"
     },
     "NetworkStation": {
-      "description": "A mark of the network after the stage held by the known points: its known point (`bn-N`) and whether it is held\nfixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard\ndeviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a\nknown point, when the coordinate chain reaches the project), how far that is from where its accepted point is now\n(project units), and whether the class's limits hold for it.",
+      "description": "A mark of the network after the stage held by the known points: its known point (`bn-N`) and whether it is held\nfixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard\ndeviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a\nknown point, when the coordinate chain reaches the project), how far that is from where its accepted point is now\n(project units), whether the class's limits hold for it, and its confidence region when it is not held fixed\n(docs/adr/2560).",
       "properties": {
         "dx": {
           "format": "double",
@@ -154452,6 +154492,16 @@
             "null"
           ],
           "x-unit": "elevation"
+        },
+        "ellipse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorEllipse"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "height": {
           "format": "double",

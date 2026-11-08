@@ -973,7 +973,8 @@ pub struct NetworkBaseline {
 /// fixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard
 /// deviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a
 /// known point, when the coordinate chain reaches the project), how far that is from where its accepted point is now
-/// (project units), and whether the class's limits hold for it.
+/// (project units), whether the class's limits hold for it, and its confidence region when it is not held fixed
+/// (docs/adr/2560).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1023,6 +1024,34 @@ pub struct NetworkStation {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub ellipse: Option<ErrorEllipse>,
+}
+
+/// A mark's confidence region (docs/adr/2560) from its east, north, up covariance as the stage held by the known points
+/// gives it (by m0²), at a confidence (the class's, else Madde 15(1)(d)'s 0.95): the horizontal error ellipse's semi-
+/// major and semi-minor axes (m, √χ²₂ times the 2×2 covariance's eigenvalues' roots) and the major axis's direction
+/// (degrees clockwise from north, 0 to 180; none for a circle, the axes within a millionth of the major one), and the
+/// height's half-interval (m, √χ²₁ times σ up).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ErrorEllipse {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub confidence: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub major: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub minor: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub azimuth: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub up: f64,
 }
 
 /// What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,

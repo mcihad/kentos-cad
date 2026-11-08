@@ -1090,6 +1090,7 @@ __all__ = [
     "EpochSource",
     "EpochSourceName",
     "EqualConstraintRule",
+    "ErrorEllipse",
     "EventLink",
     "EventLinkKind",
     "EventLinkKindName",

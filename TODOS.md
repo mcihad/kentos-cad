@@ -113,6 +113,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `moved[].by`; web'in `.kcad` okuyucusunda şema 207; Arşivden ağ dengelemesi penceresinde Hız satırı.
 - MAP-04 / ADR 2540: web'in `map.features.reconcile` işleyicisinde sınıf katmanının alan kuralları ve `invalid` (35 ortak
   durum); web'in Adayları uzlaştır penceresinde Alan gir.
+- MAP-05 / ADR 2560: web'in `map.survey.network` işleyicisinde istasyonların `ellipse`'i (42 ortak durum); web'in Arşivden
+  ağ dengelemesi penceresinde güven bölgesi satırı ve sütunu.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

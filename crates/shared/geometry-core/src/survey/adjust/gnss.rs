@@ -49,14 +49,16 @@ pub struct GnssInput {
     pub datum: Datum,
 }
 
-/// A station adjusted: X, Y, Z and their standard deviations (scaled by m0), and the same in the station's local
-/// east, north, up (m).
+/// A station adjusted: X, Y, Z and their standard deviations (scaled by m0), the same in the station's local east,
+/// north, up (m), and its east, north, up covariance ee, en, eu, nn, nu, uu (m², by m0²; a confidence region's source,
+/// docs/adr/2560).
 #[derive(Clone, Debug, PartialEq)]
 pub struct AdjustedStation {
     pub name: String,
     pub xyz: [f64; 3],
     pub sxyz: [f64; 3],
     pub senu: [f64; 3],
+    pub cenu: [f64; 6],
     pub held: bool,
 }
 
@@ -394,26 +396,28 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         .enumerate()
         .map(|(i, s)| {
             let p = coord(i);
-            let (sxyz, senu) = match slot[i] {
-                None => ([0.0; 3], [0.0; 3]),
+            let (sxyz, senu, cenu) = match slot[i] {
+                None => ([0.0; 3], [0.0; 3], [0.0; 6]),
                 Some(t) => {
                     let cov = |a: usize, b: usize| q.get(t + a, t + b) * s0 * s0;
                     let (lat, lon) = geodetic(p);
                     let rr = enu_rows(lat, lon);
-                    let mut senu = [0.0; 3];
-                    for (k, r) in rr.iter().enumerate() {
+                    // R·C·Rᵀ: the covariance in east, north, up.
+                    let m = |k: usize, l: usize| {
                         let mut v = 0.0;
                         for a in 0..3 {
                             for b in 0..3 {
-                                v += r[a] * cov(a, b) * r[b];
+                                v += rr[k][a] * cov(a, b) * rr[l][b];
                             }
                         }
-                        senu[k] = js_max(v, 0.0).sqrt();
-                    }
-                    ([cov(0, 0).sqrt(), cov(1, 1).sqrt(), cov(2, 2).sqrt()], senu)
+                        v
+                    };
+                    let senu = [0, 1, 2].map(|k| js_max(m(k, k), 0.0).sqrt());
+                    let cenu = [m(0, 0), m(0, 1), m(0, 2), m(1, 1), m(1, 2), m(2, 2)];
+                    ([cov(0, 0).sqrt(), cov(1, 1).sqrt(), cov(2, 2).sqrt()], senu, cenu)
                 }
             };
-            AdjustedStation { name: s.name.trim().to_owned(), xyz: p, sxyz, senu, held: fixed[i] }
+            AdjustedStation { name: s.name.trim().to_owned(), xyz: p, sxyz, senu, cenu, held: fixed[i] }
         })
         .collect();
     let mut baselines = Vec::with_capacity(input.baselines.len());

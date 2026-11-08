@@ -207,6 +207,9 @@
 - **Uzlaştırmada alan kuralları ve alan girişi (8 Kasım 2026; MAP-04, [ADR 2540](../../docs/adr/2540-reconcile-field-rules-and-entry.md)).**
   `map.features.reconcile` varlığın değerlerini sınıf katmanının alan kurallarından (`check_value`) geçirir, kanonik
   yazar; uymayan `invalid`'de nedeniyle, grup yazılmaz. Pencerede Alan gir (listeden seçim). Harita.
+- **GNSS ağında güven bölgesi (8 Kasım 2026; MAP-05, [ADR 2560](../../docs/adr/2560-network-confidence-regions.md)).**
+  Yeni noktaların hata elipsi (yarı eksenler √χ²₂, yön, kotun aralığı √χ²₁) sınıfın güveninde, yoksa 0,95; dairede yön
+  yok. Pencerede özet ve Noktalar sütunu. Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

@@ -388,6 +388,8 @@ mod reproject_window_tests;
 #[cfg(test)]
 mod survey_velocity_tests;
 #[cfg(test)]
+mod survey_region_tests;
+#[cfg(test)]
 mod ortho_window_tests;
 #[cfg(test)]
 mod overlap_window_tests;

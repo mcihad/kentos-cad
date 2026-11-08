@@ -34617,6 +34617,47 @@ class EntitiesVertexed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ErrorEllipse(_Model):
+    """A mark's confidence region (docs/adr/2560) from its east, north, up covariance as the stage held by the known points
+    gives it (by m0²), at a confidence (the class's, else Madde 15(1)(d)'s 0.95): the horizontal error ellipse's semi-
+    major and semi-minor axes (m, √χ²₂ times the 2×2 covariance's eigenvalues' roots) and the major axis's direction
+    (degrees clockwise from north, 0 to 180; none for a circle, the axes within a millionth of the major one), and the
+    height's half-interval (m, √χ²₁ times σ up).
+    Attributes:
+        confidence: Unit: 1.
+        major: Unit: m.
+        minor: Unit: m.
+        up: Unit: m.
+        azimuth: Unit: deg.
+    """
+    confidence: float
+    major: float
+    minor: float
+    up: float
+    azimuth: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["confidence"] = float(self.confidence)
+        out["major"] = float(self.major)
+        out["minor"] = float(self.minor)
+        out["up"] = float(self.up)
+        if self.azimuth is not UNSET:
+            out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ErrorEllipse:
+        return cls(
+            confidence=float(data["confidence"]),
+            major=float(data["major"]),
+            minor=float(data["minor"]),
+            up=float(data["up"]),
+            azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EventLink(_Model):
     """A link: the events of one layer on the routes of some others.
     Attributes:
@@ -57135,7 +57176,8 @@ class NetworkStation(_Model):
     fixed, its latitude, longitude (degrees) and ellipsoidal height (m) in the network's frame and epoch, its standard
     deviations north, east, up (m), its accepted point (`kn-N`), where it goes in the project (a mark that is not a
     known point, when the coordinate chain reaches the project), how far that is from where its accepted point is now
-    (project units), and whether the class's limits hold for it.
+    (project units), whether the class's limits hold for it, and its confidence region when it is not held fixed
+    (docs/adr/2560).
     Attributes:
         lat: Unit: deg.
         lon: Unit: deg.
@@ -57157,6 +57199,7 @@ class NetworkStation(_Model):
     dx: float | None | Unset = UNSET
     dy: float | None | Unset = UNSET
     dz: float | None | Unset = UNSET
+    ellipse: ErrorEllipse | None | Unset = UNSET
     known: str | None | Unset = UNSET
     point: str | None | Unset = UNSET
     rules: bool | None | Unset = UNSET
@@ -57178,6 +57221,8 @@ class NetworkStation(_Model):
             out["dy"] = None if self.dy is None else float(self.dy)
         if self.dz is not UNSET:
             out["dz"] = None if self.dz is None else float(self.dz)
+        if self.ellipse is not UNSET:
+            out["ellipse"] = None if self.ellipse is None else self.ellipse.to_json()
         if self.known is not UNSET:
             out["known"] = self.known
         if self.point is not UNSET:
@@ -57204,6 +57249,7 @@ class NetworkStation(_Model):
             dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
             dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
             dz=UNSET if "dz" not in data else None if data["dz"] is None else float(data["dz"]),
+            ellipse=UNSET if "ellipse" not in data else None if data["ellipse"] is None else ErrorEllipse.from_json(data["ellipse"]),
             known=data.get("known", UNSET),
             point=data.get("point", UNSET),
             rules=data.get("rules", UNSET),
@@ -129543,6 +129589,7 @@ __all__ = [
     "EpochSource",
     "EpochSourceName",
     "EqualConstraintRule",
+    "ErrorEllipse",
     "EventLink",
     "EventLinkKind",
     "EventLinkKindName",
