@@ -61880,7 +61880,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point or a polyline on a source's layer whose `field` (`Kod` when not given) names a class\nby its id or one of its codes; `confidence` names a number field (higher is better). Candidates within `radius` (m;\na polyline's distance is the larger of the two Hausdorff ways) are one group. The decisions are a reviewer's\n(`reviewer` is written with them). Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, a decision on\nno candidate or naming no class of the profile, accept with reject), `layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
+        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when\nnot given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).\nCandidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two\nareas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`\n(0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with\nthem). Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not\nbetween 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),\n`layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
         "properties": {
           "confidence": {
             "type": [
@@ -61915,6 +61915,15 @@
           },
           "name": {
             "type": "string"
+          },
+          "overlap": {
+            "description": "The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;\n0.5 when not given (docs/adr/2140).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
           },
           "radius": {
             "format": "double",
@@ -176849,7 +176858,7 @@
       "type": "object"
     },
     "ReconciledCandidate": {
-      "description": "A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its\nconfidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of\nits source in the group; `unknown`: its field names no class; `wrongKind`: a point class on a polyline or the other\nway; `rejected`; `reviewed`: reconciled before, not read again).",
+      "description": "A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its\nconfidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of\nits source in the group; `unknown`: its field names no class; `wrongKind`: a class of another kind than its object\n(a point class on a polyline, an area class on a point …); `rejected`; `reviewed`: reconciled before, not read\nagain).",
       "properties": {
         "class": {
           "type": [
@@ -176898,7 +176907,7 @@
       "type": "object"
     },
     "ReconciledGroup": {
-      "description": "A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two\nsources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset\nof its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a\nline group's chosen polyline's first vertex), how far its representatives lie apart (m), the asset (the one there,\nor the one written), the required fields still missing, and whether execute writes it.",
+      "description": "A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two\nsources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset\nof its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a\nline group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its\nrepresentatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the\none there, or the one written), the required fields still missing, and whether execute writes it.",
       "properties": {
         "asset": {
           "type": [
@@ -176929,6 +176938,15 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "overlap": {
+          "description": "An area group's smallest overlap ratio between two of its representatives (docs/adr/2140).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
         },
         "sources": {
           "items": {

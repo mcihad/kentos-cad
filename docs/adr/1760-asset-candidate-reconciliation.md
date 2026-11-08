@@ -122,7 +122,8 @@ MCP: `{"tool": "map.features.reconcile", ...}` yazar; planı salt okunurdur.
 ## Sonra
 
 - **Pencere:** eksik zorunlu alanın pencerede girilmesi.
-- **Kapsam:** alan sınıflarının (bina izi) örtüşmeyle uzlaştırılması; yaylı adayların yay uzaklığı.
+- **Kapsam:** alan sınıflarının (bina izi) örtüşmeyle uzlaştırılması: yapıldı,
+  [ADR 2140](2140-area-candidates-by-overlap.md); yaylı adayların yay uzaklığı.
 - **Ölçek:** büyük aday kümesinde ızgara dizini (bugün tüm çiftler karşılaştırılır).
 - **İnceleme kaydı:** kararların ayrı bir inceleme kaydı olarak (öznitelik değil) tutulması ve katalog değişikliğinin
   geçiş raporu.

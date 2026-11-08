@@ -143,6 +143,9 @@
 - **GNSS ağı ölçme epokunda (8 Kasım 2026; MAP-03, [ADR 2120](../../docs/adr/2120-network-at-the-measurement-epoch.md)).**
   Ölçme epoku girdiden ya da bazların gözlem zamanlarından; bilinen noktalar arazi ölçümünün hız ızgarasıyla oraya
   taşınır (BÖHHBÜY 15(1)(a)), ızgarasızken ret. Harita + CBS.
+- **Alan adaylarının örtüşmeyle uzlaştırılması (8 Kasım 2026; MAP-04, [ADR 2140](../../docs/adr/2140-area-candidates-by-overlap.md)).**
+  Bina izi ve yeşil alan adayları kesişim/birleşim oranı 0,5'i aşınca (PASCAL VOC) bir gruptur; en güvenilir iz
+  Örtüşme ile yazılır. Harita; komut Python ve MCP'de.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

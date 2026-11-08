@@ -147,14 +147,17 @@ pub struct CandidateDecision {
 
 /// Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several
 /// sources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's
-/// classes. A candidate is a point or a polyline on a source's layer whose `field` (`Kod` when not given) names a class
-/// by its id or one of its codes; `confidence` names a number field (higher is better). Candidates within `radius` (m;
-/// a polyline's distance is the larger of the two Hausdorff ways) are one group. The decisions are a reviewer's
-/// (`reviewer` is written with them). Plan says what would be written; execute writes, in one undo step.
+/// classes. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when
+/// not given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).
+/// Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
+/// areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
+/// (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
+/// them). Plan says what would be written; execute writes, in one undo step.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
-/// `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, a decision on
-/// no candidate or naming no class of the profile, accept with reject), `layer_not_found` (a source's layer),
+/// `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
+/// between 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),
+/// `layer_not_found` (a source's layer),
 /// `invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),
 /// `layer_locked` (a class's layer to write on, or a source's whose candidates are marked).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -176,6 +179,12 @@ pub struct FeaturesReconcile {
     pub confidence: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: f64,
+    /// The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
+    /// 0.5 when not given (docs/adr/2140).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub overlap: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CandidateDecision>>", optional))]
     pub decisions: Vec<CandidateDecision>,
@@ -190,8 +199,9 @@ pub struct FeaturesReconcile {
 
 /// A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its
 /// confidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of
-/// its source in the group; `unknown`: its field names no class; `wrongKind`: a point class on a polyline or the other
-/// way; `rejected`; `reviewed`: reconciled before, not read again).
+/// its source in the group; `unknown`: its field names no class; `wrongKind`: a class of another kind than its object
+/// (a point class on a polyline, an area class on a point …); `rejected`; `reviewed`: reconciled before, not read
+/// again).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -220,8 +230,9 @@ pub struct ReconciledCandidate {
 /// A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two
 /// sources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset
 /// of its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a
-/// line group's chosen polyline's first vertex), how far its representatives lie apart (m), the asset (the one there,
-/// or the one written), the required fields still missing, and whether execute writes it.
+/// line group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its
+/// representatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the
+/// one there, or the one written), the required fields still missing, and whether execute writes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -245,6 +256,11 @@ pub struct ReconciledGroup {
     pub z: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub spread: f64,
+    /// An area group's smallest overlap ratio between two of its representatives (docs/adr/2140).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub overlap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub asset: Option<String>,

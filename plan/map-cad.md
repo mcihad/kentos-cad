@@ -34,7 +34,7 @@ sırayla alır.
 | MAP-01 İş yapısı | 1200, 1201, 2080 | nesne türüne göre bağlamsal araçlar; tipli katman profili; onaydan sonra değişen nesneler | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
-| MAP-04 Nesne kataloğu | 1360, 1760 | alan sınıfları; ayrı inceleme kaydı ve katalog geçiş raporu; pencerede eksik alan girişi | AI çıkarımı; büyük veri |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740 | robust kestirim; m. 15(1)(c) benzerlik dönüşümü; seyrek çözüm | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960 | kalıcı ilişki; çok parçalı nesne; köşeyi sahneden seçmek | — |
 | MAP-07 Topoloji | 1261, 1262, 1980 | hata katmanı; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
@@ -472,6 +472,19 @@ Kanıtlanan alt maddeler:
 
 **Açık:** alan sınıfları, inceleme kaydının özniteliğe değil ayrı kayda yazılması ve katalog geçiş raporu, AI çıkarımı,
 pencerede eksik alan girişi, büyük veri. Madde `[ ]` kalır.
+
+**8 Kasım 2026, üçüncü tur — Alan adaylarının örtüşmeyle uzlaştırılması ([ADR 2140](../docs/adr/2140-area-candidates-by-overlap.md)).**
+Kapsam işareti: **Harita** (pencere ve yazma); komut Python ve MCP'de. Araştırma: PASCAL VOC'un tespit ölçütü (örtüşme
+oranı 0,5'i aşmalı, Everingham ve ark. 2010 §4.4), Esri Compute Accuracy For Object Detection'ın IoU eşiği. Katalog
+geçiş raporu `cad.profiles.migrate`'te (plan ile) zaten vardır. Kanıtlanan:
+- bina izi ve yeşil alan adayları kesişim/birleşim oranıyla eşlenir (`overlap`, öntanımlı 0,5); en güvenilir iz yazılır
+  ve Örtüşme ile işaretlenir;
+- var olan binanın üstündeki aday yeni varlık yapmaz; bina/yeşil alan çelişkisi, nokta çizilmiş bina, alan çizilmiş
+  direk ayrılır;
+- 30 ortak durum (shapely ile bağımsız), Python, MCP; pencerede Yarıçap, örtüşme satırı ve Örtüşme sütunu.
+
+Açık: inceleme kaydının ayrı tutulması, pencerede eksik alan girişi, büyük aday kümesinde dizin, yay uzaklığı, AI
+çıkarımı. Madde `[ ]` kalır.
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

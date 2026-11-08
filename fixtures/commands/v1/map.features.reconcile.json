@@ -4,7 +4,7 @@
  "command": "map.features.reconcile",
  "commandVersion": 1,
  "title": "Harita varlığı adaylarını uzlaştır: iki kaynak, yinelenen, çelişen, tek, var olan, eksik alan, karar",
- "note": "ADR 1760 (MAP-04). Bağımsız başvuru scripts/fixtures/map_features_reconcile_cases.py: kurallar ADR'den, uzaklıklar Python'un math.hypot'uyla, Hausdorff köşe-doğru parçası; KentOS kodu yok. Sınıflar KentOS'un harita-varliklari profilinden (veri).",
+ "note": "ADR 1760 (MAP-04) ve ADR 2140 (alanlar). Bağımsız başvuru scripts/fixtures/map_features_reconcile_cases.py: kurallar ADR'den, uzaklıklar Python'un math.hypot'uyla, Hausdorff köşe-doğru parçası, alanların örtüşme oranı ve ağırlık merkezi shapely (GEOS) ile; KentOS kodu yok. Sınıflar KentOS'un harita-varliklari profilinden (veri).",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -110,6 +110,34 @@
      {
       "id": "hv-brd",
       "name": "Bordürler",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-bna",
+      "name": "Bina izleri",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv-ysl",
+      "name": "Yeşil alanlar",
       "type": "layer",
       "visible": true,
       "locked": false,
@@ -560,6 +588,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -1323,6 +1379,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -2257,6 +2341,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -3320,6 +3432,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -4055,6 +4195,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -4924,6 +5092,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -5592,6 +5788,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -6287,6 +6511,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -6757,6 +7009,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -7240,6 +7520,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -7734,6 +8042,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -8216,6 +8552,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -8679,6 +9043,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -9171,6 +9563,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -9653,6 +10073,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -10125,6 +10573,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -10618,6 +11094,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -11090,6 +11594,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -11587,6 +12119,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -12064,6 +12624,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -12562,6 +13150,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -13050,6 +13666,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -13423,6 +14067,3308 @@
    ]
   },
   {
+   "name": "Alanlar (plan): bina izi iki kaynakta örtüşür (yineleneniyle), 0,25 örtüşen iki iz ayrı tekler, var olan binanın üstündeki aday, yeşil alan/bina çelişkisi, nokta çizilmiş bina, alan çizilmiş direk",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Aday uzlaştırma",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-drk",
+        "name": "Direkler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-kap",
+        "name": "Kapılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "aday-lidar",
+      "name": "Adaylar (LiDAR)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aday-orto",
+      "name": "Adaylar (ortofoto)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "hv-bna",
+      "attrs": {
+       "Kod": "BNA",
+       "Ad": "B-1"
+      },
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.90",
+       "KatSayisi": "3"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.80",
+       "Ad": "A-1"
+      },
+      "pts": [
+       {
+        "x": 500100.5,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400010.3
+       },
+       {
+        "x": 500100.5,
+        "y": 4400010.3
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.50"
+      },
+      "pts": [
+       {
+        "x": 500100.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400009.9
+       },
+       {
+        "x": 500100.2,
+        "y": 4400009.9
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.85"
+      },
+      "pts": [
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.75"
+      },
+      "pts": [
+       {
+        "x": 500136.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500136.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.95"
+      },
+      "pts": [
+       {
+        "x": 500200.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400010.2
+       },
+       {
+        "x": 500200.2,
+        "y": 4400010.2
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "YSL",
+       "Güven": "0.70",
+       "Ad": "Park"
+      },
+      "pts": [
+       {
+        "x": 500160.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400015.0
+       },
+       {
+        "x": 500160.0,
+        "y": 4400015.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.60"
+      },
+      "pts": [
+       {
+        "x": 500161.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400014.5
+       },
+       {
+        "x": 500161.0,
+        "y": 4400014.5
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "DRK",
+       "Güven": "0.66"
+      },
+      "pts": [
+       {
+        "x": 500220.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400001.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400001.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.55"
+      },
+      "p": {
+       "x": 500230.0,
+       "y": 4400005.0
+      },
+      "id": 11
+     }
+    ],
+    "uids": [
+     "0192f5c0-1760-7000-8000-000000000001",
+     "0192f5c0-1760-7000-8000-000000000002",
+     "0192f5c0-1760-7000-8000-000000000003",
+     "0192f5c0-1760-7000-8000-000000000004",
+     "0192f5c0-1760-7000-8000-000000000005",
+     "0192f5c0-1760-7000-8000-000000000006",
+     "0192f5c0-1760-7000-8000-000000000007",
+     "0192f5c0-1760-7000-8000-000000000008",
+     "0192f5c0-1760-7000-8000-000000000009",
+     "0192f5c0-1760-7000-8000-00000000000a",
+     "0192f5c0-1760-7000-8000-00000000000b"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "name": "harita-varliklari",
+      "sources": [
+       {
+        "layer": "aday-lidar",
+        "name": "LiDAR"
+       },
+       {
+        "layer": "aday-orto",
+        "name": "Ortofoto"
+       }
+      ],
+      "confidence": "Güven",
+      "radius": 0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "groups": [
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "agreed",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000002",
+          "0192f5c0-1760-7000-8000-000000000003",
+          "0192f5c0-1760-7000-8000-000000000004"
+         ],
+         "x": 500106.0,
+         "y": 4400005.0,
+         "spread": 0.6403124239760019,
+         "writes": true,
+         "overlap": 0.86649399574261,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "single",
+         "sources": [
+          "LiDAR"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000005"
+         ],
+         "x": 500135.0,
+         "y": 4400005.0,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "single",
+         "sources": [
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000006"
+         ],
+         "x": 500141.0,
+         "y": 4400005.0,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "existing",
+         "sources": [
+          "LiDAR"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000007"
+         ],
+         "x": 500206.1500000001,
+         "y": 4400005.149999999,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi",
+         "asset": "0192f5c0-1760-7000-8000-000000000001"
+        },
+        {
+         "classes": [
+          "bina-izi",
+          "yesil-alan"
+         ],
+         "status": "conflict",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000008",
+          "0192f5c0-1760-7000-8000-000000000009"
+         ],
+         "x": 500170.0,
+         "y": 4400007.5,
+         "spread": 1.118033988749895,
+         "writes": false,
+         "overlap": 0.84
+        }
+       ],
+       "candidates": [
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000002",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.9,
+         "group": 0,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000003",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.8,
+         "group": 0,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000004",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.5,
+         "group": 0,
+         "status": "duplicate"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000005",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.85,
+         "group": 1,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000006",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.75,
+         "group": 2,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000007",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.95,
+         "group": 3,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000008",
+         "source": "LiDAR",
+         "class": "yesil-alan",
+         "read": "YSL",
+         "confidence": 0.7,
+         "group": 4,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000009",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.6,
+         "group": 4,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-00000000000a",
+         "source": "Ortofoto",
+         "class": "direk",
+         "read": "DRK",
+         "confidence": 0.66,
+         "status": "wrongKind"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-00000000000b",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.55,
+         "status": "wrongKind"
+        }
+       ],
+       "marked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Alanlar (uzlaştır): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı işaretlenir; tek adımda geri alınır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Aday uzlaştırma",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-drk",
+        "name": "Direkler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-kap",
+        "name": "Kapılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "aday-lidar",
+      "name": "Adaylar (LiDAR)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aday-orto",
+      "name": "Adaylar (ortofoto)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "hv-bna",
+      "attrs": {
+       "Kod": "BNA",
+       "Ad": "B-1"
+      },
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.90",
+       "KatSayisi": "3"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.80",
+       "Ad": "A-1"
+      },
+      "pts": [
+       {
+        "x": 500100.5,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400010.3
+       },
+       {
+        "x": 500100.5,
+        "y": 4400010.3
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.50"
+      },
+      "pts": [
+       {
+        "x": 500100.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400009.9
+       },
+       {
+        "x": 500100.2,
+        "y": 4400009.9
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.85"
+      },
+      "pts": [
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.75"
+      },
+      "pts": [
+       {
+        "x": 500136.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500136.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.95"
+      },
+      "pts": [
+       {
+        "x": 500200.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400010.2
+       },
+       {
+        "x": 500200.2,
+        "y": 4400010.2
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "YSL",
+       "Güven": "0.70",
+       "Ad": "Park"
+      },
+      "pts": [
+       {
+        "x": 500160.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400015.0
+       },
+       {
+        "x": 500160.0,
+        "y": 4400015.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.60"
+      },
+      "pts": [
+       {
+        "x": 500161.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400014.5
+       },
+       {
+        "x": 500161.0,
+        "y": 4400014.5
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "DRK",
+       "Güven": "0.66"
+      },
+      "pts": [
+       {
+        "x": 500220.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400001.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400001.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.55"
+      },
+      "p": {
+       "x": 500230.0,
+       "y": 4400005.0
+      },
+      "id": 11
+     }
+    ],
+    "uids": [
+     "0192f5c0-1760-7000-8000-000000000001",
+     "0192f5c0-1760-7000-8000-000000000002",
+     "0192f5c0-1760-7000-8000-000000000003",
+     "0192f5c0-1760-7000-8000-000000000004",
+     "0192f5c0-1760-7000-8000-000000000005",
+     "0192f5c0-1760-7000-8000-000000000006",
+     "0192f5c0-1760-7000-8000-000000000007",
+     "0192f5c0-1760-7000-8000-000000000008",
+     "0192f5c0-1760-7000-8000-000000000009",
+     "0192f5c0-1760-7000-8000-00000000000a",
+     "0192f5c0-1760-7000-8000-00000000000b"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "sources": [
+       {
+        "layer": "aday-lidar",
+        "name": "LiDAR"
+       },
+       {
+        "layer": "aday-orto",
+        "name": "Ortofoto"
+       }
+      ],
+      "confidence": "Güven",
+      "radius": 0.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "groups": [
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "agreed",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000002",
+          "0192f5c0-1760-7000-8000-000000000003",
+          "0192f5c0-1760-7000-8000-000000000004"
+         ],
+         "x": 500106.0,
+         "y": 4400005.0,
+         "spread": 0.6403124239760019,
+         "writes": true,
+         "overlap": 0.86649399574261,
+         "class": "bina-izi",
+         "asset": "$uidOf:12"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "single",
+         "sources": [
+          "LiDAR"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000005"
+         ],
+         "x": 500135.0,
+         "y": 4400005.0,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "single",
+         "sources": [
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000006"
+         ],
+         "x": 500141.0,
+         "y": 4400005.0,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "existing",
+         "sources": [
+          "LiDAR"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000007"
+         ],
+         "x": 500206.1500000001,
+         "y": 4400005.149999999,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi",
+         "asset": "0192f5c0-1760-7000-8000-000000000001"
+        },
+        {
+         "classes": [
+          "bina-izi",
+          "yesil-alan"
+         ],
+         "status": "conflict",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000008",
+          "0192f5c0-1760-7000-8000-000000000009"
+         ],
+         "x": 500170.0,
+         "y": 4400007.5,
+         "spread": 1.118033988749895,
+         "writes": false,
+         "overlap": 0.84
+        }
+       ],
+       "candidates": [
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000002",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.9,
+         "group": 0,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000003",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.8,
+         "group": 0,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000004",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.5,
+         "group": 0,
+         "status": "duplicate"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000005",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.85,
+         "group": 1,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000006",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.75,
+         "group": 2,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000007",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.95,
+         "group": 3,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000008",
+         "source": "LiDAR",
+         "class": "yesil-alan",
+         "read": "YSL",
+         "confidence": 0.7,
+         "group": 4,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000009",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.6,
+         "group": 4,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-00000000000a",
+         "source": "Ortofoto",
+         "class": "direk",
+         "read": "DRK",
+         "confidence": 0.66,
+         "status": "wrongKind"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-00000000000b",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.55,
+         "status": "wrongKind"
+        }
+       ],
+       "written": [
+        "$uidOf:12"
+       ],
+       "marked": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "12": {
+        "layerId": "hv-bna",
+        "attrs": {
+         "KatSayisi": "3",
+         "Ad": "A-1",
+         "Kod": "BNA",
+         "Kaynaklar": "LiDAR, Ortofoto",
+         "Adaylar": "0192f5c0-1760-7000-8000-000000000002, 0192f5c0-1760-7000-8000-000000000003, 0192f5c0-1760-7000-8000-000000000004",
+         "Yayılım": "0.640",
+         "Örtüşme": "0.866"
+        },
+        "pts": [
+         {
+          "x": 500100.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500112.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500112.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400010.0
+         }
+        ]
+       },
+       "2": {
+        "attrs": {
+         "Kod": "BNA",
+         "Güven": "0.90",
+         "KatSayisi": "3",
+         "Uzlaştırma": "$uidOf:12"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Kod": "BNA",
+         "Güven": "0.80",
+         "Ad": "A-1",
+         "Uzlaştırma": "$uidOf:12"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Kod": "BNA",
+         "Güven": "0.50",
+         "Uzlaştırma": "$uidOf:12"
+        }
+       },
+       "7": {
+        "attrs": {
+         "Kod": "BNA",
+         "Güven": "0.95",
+         "Uzlaştırma": "0192f5c0-1760-7000-8000-000000000001"
+        }
+       }
+      }
+     },
+     "within": 1e-09
+    },
+    {
+     "op": "undo",
+     "returns": "Adayları uzlaştır",
+     "expect": {
+      "canRedo": true,
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Örtüşme 0,2: 0,25 örtüşen iki iz bir gruptur",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Aday uzlaştırma",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-drk",
+        "name": "Direkler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-kap",
+        "name": "Kapılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "aday-lidar",
+      "name": "Adaylar (LiDAR)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aday-orto",
+      "name": "Adaylar (ortofoto)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "hv-bna",
+      "attrs": {
+       "Kod": "BNA",
+       "Ad": "B-1"
+      },
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.90",
+       "KatSayisi": "3"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.80",
+       "Ad": "A-1"
+      },
+      "pts": [
+       {
+        "x": 500100.5,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400010.3
+       },
+       {
+        "x": 500100.5,
+        "y": 4400010.3
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.50"
+      },
+      "pts": [
+       {
+        "x": 500100.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400009.9
+       },
+       {
+        "x": 500100.2,
+        "y": 4400009.9
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.85"
+      },
+      "pts": [
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.75"
+      },
+      "pts": [
+       {
+        "x": 500136.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500136.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.95"
+      },
+      "pts": [
+       {
+        "x": 500200.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400010.2
+       },
+       {
+        "x": 500200.2,
+        "y": 4400010.2
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "YSL",
+       "Güven": "0.70",
+       "Ad": "Park"
+      },
+      "pts": [
+       {
+        "x": 500160.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400015.0
+       },
+       {
+        "x": 500160.0,
+        "y": 4400015.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.60"
+      },
+      "pts": [
+       {
+        "x": 500161.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400014.5
+       },
+       {
+        "x": 500161.0,
+        "y": 4400014.5
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "DRK",
+       "Güven": "0.66"
+      },
+      "pts": [
+       {
+        "x": 500220.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400001.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400001.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.55"
+      },
+      "p": {
+       "x": 500230.0,
+       "y": 4400005.0
+      },
+      "id": 11
+     }
+    ],
+    "uids": [
+     "0192f5c0-1760-7000-8000-000000000001",
+     "0192f5c0-1760-7000-8000-000000000002",
+     "0192f5c0-1760-7000-8000-000000000003",
+     "0192f5c0-1760-7000-8000-000000000004",
+     "0192f5c0-1760-7000-8000-000000000005",
+     "0192f5c0-1760-7000-8000-000000000006",
+     "0192f5c0-1760-7000-8000-000000000007",
+     "0192f5c0-1760-7000-8000-000000000008",
+     "0192f5c0-1760-7000-8000-000000000009",
+     "0192f5c0-1760-7000-8000-00000000000a",
+     "0192f5c0-1760-7000-8000-00000000000b"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "name": "harita-varliklari",
+      "sources": [
+       {
+        "layer": "aday-lidar",
+        "name": "LiDAR"
+       },
+       {
+        "layer": "aday-orto",
+        "name": "Ortofoto"
+       }
+      ],
+      "confidence": "Güven",
+      "radius": 0.5,
+      "overlap": 0.2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "groups": [
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "agreed",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000002",
+          "0192f5c0-1760-7000-8000-000000000003",
+          "0192f5c0-1760-7000-8000-000000000004"
+         ],
+         "x": 500106.0,
+         "y": 4400005.0,
+         "spread": 0.6403124239760019,
+         "writes": true,
+         "overlap": 0.86649399574261,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "agreed",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000005",
+          "0192f5c0-1760-7000-8000-000000000006"
+         ],
+         "x": 500135.0,
+         "y": 4400005.0,
+         "spread": 6.0,
+         "writes": true,
+         "overlap": 0.25,
+         "class": "bina-izi"
+        },
+        {
+         "classes": [
+          "bina-izi"
+         ],
+         "status": "existing",
+         "sources": [
+          "LiDAR"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000007"
+         ],
+         "x": 500206.1500000001,
+         "y": 4400005.149999999,
+         "spread": 0.0,
+         "writes": false,
+         "class": "bina-izi",
+         "asset": "0192f5c0-1760-7000-8000-000000000001"
+        },
+        {
+         "classes": [
+          "bina-izi",
+          "yesil-alan"
+         ],
+         "status": "conflict",
+         "sources": [
+          "LiDAR",
+          "Ortofoto"
+         ],
+         "candidates": [
+          "0192f5c0-1760-7000-8000-000000000008",
+          "0192f5c0-1760-7000-8000-000000000009"
+         ],
+         "x": 500170.0,
+         "y": 4400007.5,
+         "spread": 1.118033988749895,
+         "writes": false,
+         "overlap": 0.84
+        }
+       ],
+       "candidates": [
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000002",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.9,
+         "group": 0,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000003",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.8,
+         "group": 0,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000004",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.5,
+         "group": 0,
+         "status": "duplicate"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000005",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.85,
+         "group": 1,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000006",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.75,
+         "group": 1,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000007",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.95,
+         "group": 2,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000008",
+         "source": "LiDAR",
+         "class": "yesil-alan",
+         "read": "YSL",
+         "confidence": 0.7,
+         "group": 3,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-000000000009",
+         "source": "Ortofoto",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.6,
+         "group": 3,
+         "status": "member"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-00000000000a",
+         "source": "Ortofoto",
+         "class": "direk",
+         "read": "DRK",
+         "confidence": 0.66,
+         "status": "wrongKind"
+        },
+        {
+         "uid": "0192f5c0-1760-7000-8000-00000000000b",
+         "source": "LiDAR",
+         "class": "bina-izi",
+         "read": "BNA",
+         "confidence": 0.55,
+         "status": "wrongKind"
+        }
+       ],
+       "marked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Örtüşme 0",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Aday uzlaştırma",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-drk",
+        "name": "Direkler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-kap",
+        "name": "Kapılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "aday-lidar",
+      "name": "Adaylar (LiDAR)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aday-orto",
+      "name": "Adaylar (ortofoto)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "hv-bna",
+      "attrs": {
+       "Kod": "BNA",
+       "Ad": "B-1"
+      },
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.90",
+       "KatSayisi": "3"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.80",
+       "Ad": "A-1"
+      },
+      "pts": [
+       {
+        "x": 500100.5,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400010.3
+       },
+       {
+        "x": 500100.5,
+        "y": 4400010.3
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.50"
+      },
+      "pts": [
+       {
+        "x": 500100.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400009.9
+       },
+       {
+        "x": 500100.2,
+        "y": 4400009.9
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.85"
+      },
+      "pts": [
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.75"
+      },
+      "pts": [
+       {
+        "x": 500136.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500136.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.95"
+      },
+      "pts": [
+       {
+        "x": 500200.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400010.2
+       },
+       {
+        "x": 500200.2,
+        "y": 4400010.2
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "YSL",
+       "Güven": "0.70",
+       "Ad": "Park"
+      },
+      "pts": [
+       {
+        "x": 500160.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400015.0
+       },
+       {
+        "x": 500160.0,
+        "y": 4400015.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.60"
+      },
+      "pts": [
+       {
+        "x": 500161.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400014.5
+       },
+       {
+        "x": 500161.0,
+        "y": 4400014.5
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "DRK",
+       "Güven": "0.66"
+      },
+      "pts": [
+       {
+        "x": 500220.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400001.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400001.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.55"
+      },
+      "p": {
+       "x": 500230.0,
+       "y": 4400005.0
+      },
+      "id": 11
+     }
+    ],
+    "uids": [
+     "0192f5c0-1760-7000-8000-000000000001",
+     "0192f5c0-1760-7000-8000-000000000002",
+     "0192f5c0-1760-7000-8000-000000000003",
+     "0192f5c0-1760-7000-8000-000000000004",
+     "0192f5c0-1760-7000-8000-000000000005",
+     "0192f5c0-1760-7000-8000-000000000006",
+     "0192f5c0-1760-7000-8000-000000000007",
+     "0192f5c0-1760-7000-8000-000000000008",
+     "0192f5c0-1760-7000-8000-000000000009",
+     "0192f5c0-1760-7000-8000-00000000000a",
+     "0192f5c0-1760-7000-8000-00000000000b"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "sources": [
+       {
+        "layer": "aday-lidar",
+        "name": "LiDAR"
+       },
+       {
+        "layer": "aday-orto",
+        "name": "Ortofoto"
+       }
+      ],
+      "confidence": "Güven",
+      "radius": 0.5,
+      "overlap": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Örtüşme oranı 0 ile 1 arasında olmalı (kesişimin alanı bölü birleşiminki; verilmezse 0,5).",
+       "path": "overlap"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Örtüşme 1",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Aday uzlaştırma",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "hv",
+      "name": "Harita varlıkları",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "hv-drk",
+        "name": "Direkler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-rog",
+        "name": "Rögarlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-agc",
+        "name": "Ağaçlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-kap",
+        "name": "Kapılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-brd",
+        "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "aday-lidar",
+      "name": "Adaylar (LiDAR)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "aday-orto",
+      "name": "Adaylar (ortofoto)",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "layerId": "hv-bna",
+      "attrs": {
+       "Kod": "BNA",
+       "Ad": "B-1"
+      },
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500212.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 1
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.90",
+       "KatSayisi": "3"
+      },
+      "pts": [
+       {
+        "x": 500100.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500112.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 2
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.80",
+       "Ad": "A-1"
+      },
+      "pts": [
+       {
+        "x": 500100.5,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400000.4
+       },
+       {
+        "x": 500112.4,
+        "y": 4400010.3
+       },
+       {
+        "x": 500100.5,
+        "y": 4400010.3
+       }
+      ],
+      "id": 3
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.50"
+      },
+      "pts": [
+       {
+        "x": 500100.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400000.1
+       },
+       {
+        "x": 500111.8,
+        "y": 4400009.9
+       },
+       {
+        "x": 500100.2,
+        "y": 4400009.9
+       }
+      ],
+      "id": 4
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.85"
+      },
+      "pts": [
+       {
+        "x": 500130.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500140.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 5
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.75"
+      },
+      "pts": [
+       {
+        "x": 500136.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500146.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500136.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 6
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.95"
+      },
+      "pts": [
+       {
+        "x": 500200.2,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400000.1
+       },
+       {
+        "x": 500212.1,
+        "y": 4400010.2
+       },
+       {
+        "x": 500200.2,
+        "y": 4400010.2
+       }
+      ],
+      "id": 7
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "YSL",
+       "Güven": "0.70",
+       "Ad": "Park"
+      },
+      "pts": [
+       {
+        "x": 500160.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500180.0,
+        "y": 4400015.0
+       },
+       {
+        "x": 500160.0,
+        "y": 4400015.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.60"
+      },
+      "pts": [
+       {
+        "x": 500161.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400000.5
+       },
+       {
+        "x": 500179.0,
+        "y": 4400014.5
+       },
+       {
+        "x": 500161.0,
+        "y": 4400014.5
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polygon",
+      "layerId": "aday-orto",
+      "attrs": {
+       "Kod": "DRK",
+       "Güven": "0.66"
+      },
+      "pts": [
+       {
+        "x": 500220.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500221.0,
+        "y": 4400001.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400001.0
+       }
+      ],
+      "id": 10
+     },
+     {
+      "kind": "point",
+      "layerId": "aday-lidar",
+      "attrs": {
+       "Kod": "BNA",
+       "Güven": "0.55"
+      },
+      "p": {
+       "x": 500230.0,
+       "y": 4400005.0
+      },
+      "id": 11
+     }
+    ],
+    "uids": [
+     "0192f5c0-1760-7000-8000-000000000001",
+     "0192f5c0-1760-7000-8000-000000000002",
+     "0192f5c0-1760-7000-8000-000000000003",
+     "0192f5c0-1760-7000-8000-000000000004",
+     "0192f5c0-1760-7000-8000-000000000005",
+     "0192f5c0-1760-7000-8000-000000000006",
+     "0192f5c0-1760-7000-8000-000000000007",
+     "0192f5c0-1760-7000-8000-000000000008",
+     "0192f5c0-1760-7000-8000-000000000009",
+     "0192f5c0-1760-7000-8000-00000000000a",
+     "0192f5c0-1760-7000-8000-00000000000b"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "name": "harita-varliklari",
+      "sources": [
+       {
+        "layer": "aday-lidar",
+        "name": "LiDAR"
+       },
+       {
+        "layer": "aday-orto",
+        "name": "Ortofoto"
+       }
+      ],
+      "confidence": "Güven",
+      "radius": 0.5,
+      "overlap": 1.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Örtüşme oranı 0 ile 1 arasında olmalı (kesişimin alanı bölü birleşiminki; verilmezse 0,5).",
+       "path": "overlap"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
    "name": "Direğin katmanı yok: önce profili uygulayın",
    "setup": {
     "format": "kentos.document",
@@ -13515,6 +17461,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,
@@ -14007,6 +17981,34 @@
          "lineWeight": 0.25
         },
         "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
        }
       ]
      },
@@ -14479,6 +18481,34 @@
        {
         "id": "hv-brd",
         "name": "Bordürler",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-bna",
+        "name": "Bina izleri",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "hv-ysl",
+        "name": "Yeşil alanlar",
         "type": "layer",
         "visible": true,
         "locked": false,

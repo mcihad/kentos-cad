@@ -4,7 +4,8 @@
 //! summary counts the groups by status; the table lists the groups (class, status, sources, candidates, spread, missing
 //! fields, whether it is written). A single's Kabul accepts it, a conflict's Direk/Ağaç… corrects its other
 //! candidates' class to it, Reddet rejects the group's candidates with a reason; the decisions stay in the window until
-//! Uzlaştır writes them all in one undo step. Harita only.
+//! Uzlaştır writes them all in one undo step. Harita only. Areas (building footprints, green areas; docs/adr/2140) are
+//! grouped by their overlap ratio, the table says an area group's smallest one.
 
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
@@ -34,6 +35,8 @@ pub struct State {
     pub field: String,
     pub confidence: String,
     pub radius: f64,
+    /// The overlap ratio two areas must exceed (docs/adr/2140).
+    pub overlap: f64,
     pub reviewer: String,
     pub decisions: Vec<CandidateDecision>,
     pub answer: Option<Result<FeaturesReconciled, String>>,
@@ -46,6 +49,7 @@ pub enum Event {
     Field(String),
     Confidence(String),
     Radius(f64),
+    Overlap(f64),
     Reviewer(String),
     /// A group's candidates: a single accepted, a conflict's corrected to a class, the group rejected.
     Accept(usize),
@@ -86,6 +90,7 @@ impl App {
             field: some(&s.field).filter(|f| f != kentos_commands::DEFAULT_CODE_FIELD),
             confidence: some(&s.confidence),
             radius: s.radius,
+            overlap: (s.overlap != map_features_reconcile::DEFAULT_OVERLAP).then_some(s.overlap),
             decisions: s.decisions.clone(),
             reviewer: some(&s.reviewer),
             expected_revision: None,
@@ -130,6 +135,7 @@ impl App {
             field: kentos_commands::DEFAULT_CODE_FIELD.into(),
             confidence: "Güven".into(),
             radius: 0.5,
+            overlap: map_features_reconcile::DEFAULT_OVERLAP,
             ..State::default()
         };
         self.reconcile_run();
@@ -177,6 +183,12 @@ impl App {
             Event::Radius(v) => {
                 if v > 0.0 {
                     self.features_reconcile.radius = v;
+                    self.reconcile_run();
+                }
+            }
+            Event::Overlap(v) => {
+                if v > 0.0 && v < 1.0 {
+                    self.features_reconcile.overlap = v;
                     self.reconcile_run();
                 }
             }
@@ -239,14 +251,16 @@ impl App {
                 row![text(&s.field, "Kod", Event::Field), text(&s.confidence, "Güven alanı", Event::Confidence)].spacing(8).align_y(Center),
             )
             .field(
-                "Yarıçap (m)",
+                "Yarıçap, örtüşme",
                 row![
                     NumberInput::new(s.radius, |v| msg(Event::Radius(v))).step(0.1).decimals(2).point().width(160),
-                    text(&s.reviewer, "Gözden geçiren", Event::Reviewer)
+                    NumberInput::new(s.overlap, |v| msg(Event::Overlap(v))).step(0.05).decimals(2).point().width(160),
+                    label::caption("Nokta ve çizgi yarıçapla (m), alan örtüşmeyle (kesişim / birleşim) eşlenir.")
                 ]
                 .spacing(8)
                 .align_y(Center),
-            );
+            )
+            .field("Gözden geçiren", text(&s.reviewer, "Ad", Event::Reviewer));
         let mut lines = Vec::new();
         let mut runnable = false;
         let mut table: Element<'_, Message> = label::caption("").into();
@@ -292,13 +306,14 @@ impl App {
                 let rows = a.groups.clone();
                 table = road_dialog::grid_table(
                     vec![
-                        col("Sınıf", 110.0),
-                        col("Durum", 120.0),
-                        col("Kaynaklar", 140.0),
-                        num("Aday", 50.0),
-                        num("Yayılım (mm)", 100.0),
-                        col("Eksik", 90.0),
-                        col("Yazılır", 60.0),
+                        col("Sınıf", 100.0),
+                        col("Durum", 100.0),
+                        col("Kaynaklar", 115.0),
+                        num("Aday", 45.0),
+                        num("Yayılım (mm)", 85.0),
+                        num("Örtüşme", 65.0),
+                        col("Eksik", 70.0),
+                        col("Yazılır", 55.0),
                         col("", 170.0),
                     ],
                     rows.len(),
@@ -317,8 +332,9 @@ impl App {
                             2 => text(g.sources.join(", ")),
                             3 => kentos_ui::widget::table::number(g.candidates.len().to_string()).into(),
                             4 => kentos_ui::widget::table::number(format!("{:.0}", g.spread * 1000.0)).into(),
-                            5 => text(g.missing.join(", ")),
-                            6 => text(if g.writes { "Evet".into() } else { "—".into() }),
+                            5 => kentos_ui::widget::table::number(g.overlap.map_or(String::new(), |o| format!("{o:.2}"))).into(),
+                            6 => text(g.missing.join(", ")),
+                            7 => text(if g.writes { "Evet".into() } else { "—".into() }),
                             _ => {
                                 let mut actions = row![].spacing(2);
                                 match g.status.as_str() {

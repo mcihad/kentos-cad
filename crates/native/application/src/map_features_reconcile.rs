@@ -9,8 +9,16 @@
 //! or more, else `single`. Execute writes the agreed groups and the singles a reviewer accepted, whose required fields
 //! are all given, on their class's layer, and marks the candidates; one undo step “Adayları uzlaştır”. The shared cases
 //! are `fixtures/commands/v1/map.features.reconcile.json`.
+//!
+//! Areas (docs/adr/2140): a closed polygon is a candidate of an area class; two are one group when their overlap ratio,
+//! the area of their intersection over that of their union, exceeds `overlap` (the PASCAL VOC criterion, 0.5), by the
+//! core's area algebra; an area group's footprint is its most trusted representative's, as a line group's polyline.
 
 use std::collections::BTreeMap;
+
+use kentos_geometry_core::geom::arrangement::Area;
+use kentos_geometry_core::geom::region::{intersect_area_sets, net_area};
+use kentos_geometry_core::ops::areas::areas_of_entity;
 
 use kentos_commands::{
     CandidateDecision, CommandResult, DEFAULT_CODE_FIELD, DataProfile, Entity, FeaturesReconcile, FeaturesReconciled,
@@ -25,7 +33,19 @@ use crate::profile_files::Shelf;
 use crate::profiles::{Place, find, path_words, profile_only};
 
 /// The attributes an asset's provenance is written in; a candidate's are not copied into them.
-const PROVENANCE: [&str; 5] = ["Kaynaklar", "Adaylar", "Yayılım", "İnceleme", "Gözden geçiren"];
+const PROVENANCE: [&str; 6] = ["Kaynaklar", "Adaylar", "Yayılım", "Örtüşme", "İnceleme", "Gözden geçiren"];
+
+/// The overlap ratio two area candidates must exceed when the input gives none: PASCAL VOC's detection criterion
+/// (Everingham et al. 2010, §4.4: “must exceed 0.5”).
+pub const DEFAULT_OVERLAP: f64 = 0.5;
+
+/// What a candidate's object is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Kind {
+    Point,
+    Line,
+    Area,
+}
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -39,12 +59,16 @@ struct Candidate {
     class: Option<usize>,
     read: Option<String>,
     confidence: Option<f64>,
-    line: bool,
+    kind: Kind,
     status: &'static str,
     attrs: BTreeMap<String, String>,
     p: Vec2,
     z: Option<f64>,
+    /// A point's place, a polyline's vertices, an area's outer ring closed (its first vertex again at its end).
     pts: Vec<Vec2>,
+    /// An area's regions and their net area (m²), for the overlap ratio.
+    areas: Vec<Area>,
+    area: f64,
 }
 
 /// A group worked out: its members (indices into the candidates), its representatives, the rest of the answer, and
@@ -117,7 +141,55 @@ fn hausdorff(a: &[Vec2], b: &[Vec2]) -> f64 {
 }
 
 fn apart(a: &Candidate, b: &Candidate) -> f64 {
-    if a.line { hausdorff(&a.pts, &b.pts) } else { distance(a.p, b.p) }
+    if a.kind == Kind::Point { distance(a.p, b.p) } else { hausdorff(&a.pts, &b.pts) }
+}
+
+/// The box round a ring's vertices: west, south, east, north.
+fn bounds(pts: &[Vec2]) -> [f64; 4] {
+    pts.iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
+        [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+    })
+}
+
+/// The overlap ratio of two areas (docs/adr/2140): their intersection's area over their union's, 0 when their boxes
+/// are apart.
+fn overlap_of(a: (&[Vec2], &[Area], f64), b: (&[Vec2], &[Area], f64)) -> f64 {
+    let (p, q) = (bounds(a.0), bounds(b.0));
+    if p[0] > q[2] || q[0] > p[2] || p[1] > q[3] || q[1] > p[3] {
+        return 0.0;
+    }
+    let shared = intersect_area_sets(&[a.1.to_vec(), b.1.to_vec()]).iter().map(net_area).fold(0.0, |s, v| s + v);
+    let union = a.2 + b.2 - shared;
+    if union > 0.0 { shared / union } else { 0.0 }
+}
+
+fn overlap(a: &Candidate, b: &Candidate) -> f64 {
+    overlap_of((&a.pts, &a.areas, a.area), (&b.pts, &b.areas, b.area))
+}
+
+/// A closed ring's centroid by the shoelace formula (its first vertex again at its end), worked from its first vertex
+/// so that map coordinates (500 000 m) lose no digits.
+fn centroid(ring: &[Vec2]) -> Vec2 {
+    let o = ring[0];
+    let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
+    for w in ring.windows(2) {
+        let (p, q) = ((w[0].x - o.x, w[0].y - o.y), (w[1].x - o.x, w[1].y - o.y));
+        let cross = p.0 * q.1 - q.0 * p.1;
+        a += cross;
+        cx += (p.0 + q.0) * cross;
+        cy += (p.1 + q.1) * cross;
+    }
+    if a == 0.0 {
+        return o;
+    }
+    Vec2 { x: o.x + cx / (3.0 * a), y: o.y + cy / (3.0 * a) }
+}
+
+/// An area's regions and their net area, by the core's algebra.
+fn regions(e: &Entity) -> (Vec<Area>, f64) {
+    let areas = areas_of_entity(&crate::geometry::shape(e));
+    let total = areas.iter().map(net_area).fold(0.0, |s, v| s + v);
+    (areas, total)
 }
 
 /// The higher confidence first (none last), then the earlier.
@@ -162,6 +234,14 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
     if !(input.radius.is_finite() && input.radius > 0.0) {
         return Err(fail(codes::INVALID_INPUT, "Eşleme yarıçapı 0'dan büyük olmalı (m).".into(), "radius"));
     }
+    let overlap_min = input.overlap.unwrap_or(DEFAULT_OVERLAP);
+    if !(overlap_min.is_finite() && overlap_min > 0.0 && overlap_min < 1.0) {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Örtüşme oranı 0 ile 1 arasında olmalı (kesişimin alanı bölü birleşiminki; verilmezse 0,5).".into(),
+            "overlap",
+        ));
+    }
     let source_of = |layer: &str| input.sources.iter().position(|s| s.layer == layer);
     // The decisions, each on a candidate of a source.
     let mut decided: BTreeMap<String, &CandidateDecision> = BTreeMap::new();
@@ -197,11 +277,19 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
     let mut candidates: Vec<Candidate> = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
         let Some(source) = source_of(&e.base().layer_id) else { continue };
-        let (line, p, z, pts) = match e {
-            Entity::Point(pt) => (false, pt.p, pt.z, vec![pt.p]),
-            Entity::Polyline(pl) if !pl.closed && pl.pts.len() >= 2 => (true, pl.pts[0], None, pl.pts.clone()),
+        let (kind, p, z, mut pts) = match e {
+            Entity::Point(pt) => (Kind::Point, pt.p, pt.z, vec![pt.p]),
+            Entity::Polyline(pl) if !pl.closed && pl.pts.len() >= 2 => (Kind::Line, pl.pts[0], None, pl.pts.clone()),
+            Entity::Polygon(pg) if pg.pts.len() >= 3 => (Kind::Area, pg.pts[0], None, pg.pts.clone()),
             _ => continue,
         };
+        let (areas, area) = if kind == Kind::Area { regions(e) } else { (Vec::new(), 0.0) };
+        if kind == Kind::Area {
+            if !(area > 0.0) {
+                continue;
+            }
+            pts.push(pts[0]);
+        }
         let Some(slot) = doc.slot_of(uid) else { continue };
         let attrs = e.base().attrs.clone();
         let uid = uid.to_string();
@@ -224,12 +312,13 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         } else {
             match class.map(|c| profile.classes[c].geometry) {
                 None => "unknown",
-                Some(ProfileGeometry::Point) if !line => "member",
-                Some(ProfileGeometry::Line) if line => "member",
+                Some(ProfileGeometry::Point) if kind == Kind::Point => "member",
+                Some(ProfileGeometry::Line) if kind == Kind::Line => "member",
+                Some(ProfileGeometry::Area) if kind == Kind::Area => "member",
                 Some(_) => "wrongKind",
             }
         };
-        candidates.push(Candidate { slot, uid, source, class, read, confidence, line, status, attrs, p, z, pts });
+        candidates.push(Candidate { slot, uid, source, class, read, confidence, kind, status, attrs, p, z, pts, areas, area });
     }
     // Groups: joined within the radius, the same kind.
     let eligible: Vec<usize> = (0..candidates.len()).filter(|&i| candidates[i].status == "member").collect();
@@ -247,9 +336,13 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         }
         r
     }
+    let near = |a: &Candidate, b: &Candidate| match a.kind {
+        Kind::Area => overlap(a, b) > overlap_min,
+        _ => apart(a, b) <= input.radius,
+    };
     for (a, &i) in eligible.iter().enumerate() {
         for &j in &eligible[a + 1..] {
-            if candidates[i].line == candidates[j].line && apart(&candidates[i], &candidates[j]) <= input.radius {
+            if candidates[i].kind == candidates[j].kind && near(&candidates[i], &candidates[j]) {
                 let (ri, rj) = (root(&mut parent, i), root(&mut parent, j));
                 if ri != rj {
                     let (lo, hi) = if ri < rj { (ri, rj) } else { (rj, ri) };
@@ -294,11 +387,21 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         let mut classes: Vec<usize> = members.iter().filter_map(|&m| candidates[m].class).collect();
         classes.sort_unstable();
         classes.dedup();
-        let line = candidates[members[0]].line;
+        let kind = candidates[members[0]].kind;
         let mut sources: Vec<usize> = reps.iter().map(|&x| candidates[x].source).collect();
         sources.sort_unstable();
+        // An area group's smallest overlap ratio between its representatives.
+        let mut smallest: Option<f64> = None;
+        if kind == Kind::Area {
+            for (a, &i) in reps.iter().enumerate() {
+                for &j in &reps[a + 1..] {
+                    let o = overlap(&candidates[i], &candidates[j]);
+                    smallest = Some(smallest.map_or(o, |s: f64| s.min(o)));
+                }
+            }
+        }
         // The place and the spread.
-        let (x, y, z, spread) = if line {
+        let (x, y, z, spread) = if kind != Kind::Point {
             let mut chosen = reps[0];
             for &k in &reps[1..] {
                 let (a, b) = (&candidates[k], &candidates[chosen]);
@@ -315,7 +418,9 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             let c = &candidates[chosen];
             reps.retain(|&k| k != chosen);
             reps.insert(0, chosen);
-            (c.pts[0].x, c.pts[0].y, None, most)
+            // A line group's place is its polyline's first vertex; an area group's its footprint's centroid.
+            let at = if kind == Kind::Area { centroid(&c.pts) } else { c.pts[0] };
+            (at.x, at.y, None, most)
         } else {
             let n = reps.len() as f64;
             let (mut sx, mut sy) = (0.0, 0.0);
@@ -345,10 +450,20 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                 if e.base().layer_id != layer || candidate_uids.contains(&uid.to_string()) {
                     continue;
                 }
-                let near = match (e, line) {
-                    (Entity::Point(pt), false) => reps.iter().any(|&k| distance(candidates[k].p, pt.p) <= input.radius),
-                    (Entity::Polyline(pl), true) if pl.pts.len() >= 2 => {
+                let near = match (e, kind) {
+                    (Entity::Point(pt), Kind::Point) => reps.iter().any(|&k| distance(candidates[k].p, pt.p) <= input.radius),
+                    (Entity::Polyline(pl), Kind::Line) if pl.pts.len() >= 2 => {
                         reps.iter().any(|&k| hausdorff(&candidates[k].pts, &pl.pts) <= input.radius)
+                    }
+                    (Entity::Polygon(pg), Kind::Area) if pg.pts.len() >= 3 => {
+                        let (areas, area) = regions(e);
+                        let mut ring = pg.pts.clone();
+                        ring.push(pg.pts[0]);
+                        area > 0.0
+                            && reps.iter().any(|&k| {
+                                let c = &candidates[k];
+                                overlap_of((&c.pts, &c.areas, c.area), (&ring, &areas, area)) > overlap_min
+                            })
                     }
                     _ => false,
                 };
@@ -451,6 +566,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             y,
             z,
             spread,
+            overlap: smallest,
             asset: existing,
             missing,
             writes,
@@ -549,6 +665,9 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
                 attrs.insert("Kaynaklar".into(), g.row.sources.join(", "));
                 attrs.insert("Adaylar".into(), g.row.candidates.join(", "));
                 attrs.insert("Yayılım".into(), format!("{:.3}", g.row.spread));
+                if let Some(o) = g.row.overlap {
+                    attrs.insert("Örtüşme".into(), format!("{o:.3}"));
+                }
                 if !g.review.is_empty() {
                     attrs.insert("İnceleme".into(), g.review.join("; "));
                     if let Some(r) = &reviewer {

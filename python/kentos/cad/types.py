@@ -36436,18 +36436,23 @@ class FeaturesCoded(_Model):
 class FeaturesReconcile(_Model):
     """Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several
     sources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's
-    classes. A candidate is a point or a polyline on a source's layer whose `field` (`Kod` when not given) names a class
-    by its id or one of its codes; `confidence` names a number field (higher is better). Candidates within `radius` (m;
-    a polyline's distance is the larger of the two Hausdorff ways) are one group. The decisions are a reviewer's
-    (`reviewer` is written with them). Plan says what would be written; execute writes, in one undo step.
+    classes. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when
+    not given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).
+    Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
+    areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
+    (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
+    them). Plan says what would be written; execute writes, in one undo step.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
-    `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, a decision on
-    no candidate or naming no class of the profile, accept with reject), `layer_not_found` (a source's layer),
+    `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
+    between 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),
+    `layer_not_found` (a source's layer),
     `invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),
     `layer_locked` (a class's layer to write on, or a source's whose candidates are marked).
     Attributes:
         radius: Unit: m.
+        overlap: The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
+            0.5 when not given (docs/adr/2140). Unit: 1.
     """
     name: str
     sources: list[CandidateSource]
@@ -36457,6 +36462,7 @@ class FeaturesReconcile(_Model):
     drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     field: str | None | Unset = UNSET
+    overlap: float | None | Unset = UNSET
     reviewer: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -36474,6 +36480,8 @@ class FeaturesReconcile(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.field is not UNSET:
             out["field"] = self.field
+        if self.overlap is not UNSET:
+            out["overlap"] = None if self.overlap is None else float(self.overlap)
         if self.reviewer is not UNSET:
             out["reviewer"] = self.reviewer
         return out
@@ -36489,6 +36497,7 @@ class FeaturesReconcile(_Model):
             drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
             field=data.get("field", UNSET),
+            overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
             reviewer=data.get("reviewer", UNSET),
         )
 
@@ -76638,8 +76647,9 @@ class ReconcileTake(_Model):
 class ReconciledCandidate(_Model):
     """A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its
     confidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of
-    its source in the group; `unknown`: its field names no class; `wrongKind`: a point class on a polyline or the other
-    way; `rejected`; `reviewed`: reconciled before, not read again).
+    its source in the group; `unknown`: its field names no class; `wrongKind`: a class of another kind than its object
+    (a point class on a polyline, an area class on a point …); `rejected`; `reviewed`: reconciled before, not read
+    again).
     Attributes:
         confidence: Unit: 1.
         group: Unit: index.
@@ -76685,12 +76695,14 @@ class ReconciledGroup(_Model):
     """A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two
     sources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset
     of its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a
-    line group's chosen polyline's first vertex), how far its representatives lie apart (m), the asset (the one there,
-    or the one written), the required fields still missing, and whether execute writes it.
+    line group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its
+    representatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the
+    one there, or the one written), the required fields still missing, and whether execute writes it.
     Attributes:
         x: Unit: length.
         y: Unit: length.
         spread: Unit: m.
+        overlap: An area group's smallest overlap ratio between two of its representatives (docs/adr/2140). Unit: 1.
         z: Unit: elevation.
     """
     classes: list[str]
@@ -76704,6 +76716,7 @@ class ReconciledGroup(_Model):
     asset: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
     missing: list[str] | Unset = UNSET
+    overlap: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -76722,6 +76735,8 @@ class ReconciledGroup(_Model):
             out["class"] = self.class_
         if self.missing is not UNSET:
             out["missing"] = list(self.missing)
+        if self.overlap is not UNSET:
+            out["overlap"] = None if self.overlap is None else float(self.overlap)
         if self.z is not UNSET:
             out["z"] = None if self.z is None else float(self.z)
         return out
@@ -76740,6 +76755,7 @@ class ReconciledGroup(_Model):
             asset=data.get("asset", UNSET),
             class_=data.get("class", UNSET),
             missing=list(data["missing"]) if "missing" in data else UNSET,
+            overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
         )
 

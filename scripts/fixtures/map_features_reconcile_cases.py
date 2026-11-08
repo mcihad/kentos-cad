@@ -2,8 +2,8 @@
 """The shared cases of `map.features.reconcile` (plan/map-cad.md MAP-04, docs/adr/1760), written from the ADR without
 KentOS code.
 
-    python3 scripts/fixtures/map_features_reconcile_cases.py           # writes fixtures/commands/v1/map.features.reconcile.json
-    python3 scripts/fixtures/map_features_reconcile_cases.py --check   # writes nothing; compares
+    uv run --with shapely==2.0.6 python3 scripts/fixtures/map_features_reconcile_cases.py           # writes the cases
+    uv run --with shapely==2.0.6 python3 scripts/fixtures/map_features_reconcile_cases.py --check   # compares
 
 The drawing is a map project with the KentOS profile `harita-varliklari`'s layers for poles, manholes, trees, doors and
 kerbs, an accepted pole already on its layer, and the candidates of a LiDAR and an orthophoto extraction on their own
@@ -30,6 +30,14 @@ pole). The rules (ADR 1760), written here by hand:
   class field = the class's first code, Kaynaklar, Adaylar, Yayılım (3 decimals), İnceleme and Gözden geçiren (with
   decisions); every member of a written or existing group marked `Uzlaştırma` = the asset, a rejected one
   `Reddedildi: reason`. One undo step “Adayları uzlaştır”; nothing to write or mark writes nothing.
+
+ADR 2140 adds areas, by shapely (GEOS): a closed polygon (three vertices or more, area above 0) is a candidate of an area
+class; two are one group when their overlap ratio, intersection area over union area, exceeds `overlap` (0.5 when not
+given; it must lie strictly between 0 and 1); an area group's footprint is its most trusted representative's (as a
+line group's), its place that footprint's centroid, its spread the largest Hausdorff between the representatives'
+closed outer rings, `overlap` the smallest ratio between two representatives (none with one); an area of the class's
+layer overlapping a representative above the ratio makes it `existing`; the written asset is the footprint with
+`Örtüşme` (3 decimals) beside Yayılım.
 """
 
 import copy
@@ -37,6 +45,8 @@ import json
 import math
 import sys
 from pathlib import Path
+
+from shapely.geometry import Polygon
 
 sys.dont_write_bytecode = True
 
@@ -46,8 +56,9 @@ PROFILE = json.loads((ROOT / "catalog/v1/profiles/harita-varliklari.json").read_
 CLASSES = PROFILE["classes"]
 X0, Y0 = 500000.0, 4400000.0
 G = "Harita varlıkları"
-CLASS_LAYERS = {"direk": "hv-drk", "rogar": "hv-rog", "agac": "hv-agc", "kapi": "hv-kap", "bordur": "hv-brd"}
-PROVENANCE = ("Kaynaklar", "Adaylar", "Yayılım", "İnceleme", "Gözden geçiren")
+CLASS_LAYERS = {"direk": "hv-drk", "rogar": "hv-rog", "agac": "hv-agc", "kapi": "hv-kap", "bordur": "hv-brd",
+                "bina-izi": "hv-bna", "yesil-alan": "hv-ysl"}
+PROVENANCE = ("Kaynaklar", "Adaylar", "Yayılım", "Örtüşme", "İnceleme", "Gözden geçiren")
 SOURCES = [{"layer": "aday-lidar", "name": "LiDAR"}, {"layer": "aday-orto", "name": "Ortofoto"}]
 WITHIN = 1e-9
 
@@ -76,6 +87,12 @@ def line(layer_id, attrs, pts):
     return {"kind": "polyline", "layerId": layer_id, "attrs": attrs, "pts": [pt(x, y) for x, y in pts]}
 
 
+def area(layer_id, attrs, x0, y0, x1, y1):
+    """A rectangle's footprint, counter-clockwise."""
+    return {"kind": "polygon", "layerId": layer_id, "attrs": attrs,
+            "pts": [pt(x0, y0), pt(x1, y0), pt(x1, y1), pt(x0, y1)]}
+
+
 L, O = "aday-lidar", "aday-orto"
 OBJECTS = [
     point("hv-drk", {"Kod": "DRK", "Ad": "D-90", "Tur": "Aydınlatma"}, 90.0, 5.0),           # 1 an accepted pole
@@ -95,6 +112,21 @@ OBJECTS = [
     line(O, {"Kod": "BRD", "Güven": "0.93", "Ad": "Bordür 1"}, [(0.10, 0.15), (20.05, 0.10), (39.90, 0.20)]),  # 15
     point(L, {"Kod": "DRK", "Güven": "0.95", "Uzlaştırma": uid(0x99)}, 150.0, 5.0),          # 16 reconciled before
     line(L, {"Kod": "DRK", "Güven": "0.60"}, [(170.0, 0.0), (172.0, 0.0)]),                  # 17 a pole drawn as a line
+]
+
+# ADR 2140: building footprints and green areas from the two extractions.
+AREAS = [
+    area("hv-bna", {"Kod": "BNA", "Ad": "B-1"}, 200.0, 0.0, 212.0, 10.0),                    # 1 an accepted building
+    area(L, {"Kod": "BNA", "Güven": "0.90", "KatSayisi": "3"}, 100.0, 0.0, 112.0, 10.0),     # 2 a building …
+    area(O, {"Kod": "BNA", "Güven": "0.80", "Ad": "A-1"}, 100.5, 0.4, 112.4, 10.3),          # 3 … the orthophoto's
+    area(L, {"Kod": "BNA", "Güven": "0.50"}, 100.2, 0.1, 111.8, 9.9),                        # 4 … a duplicate
+    area(L, {"Kod": "BNA", "Güven": "0.85"}, 130.0, 0.0, 140.0, 10.0),                       # 5 a building …
+    area(O, {"Kod": "BNA", "Güven": "0.75"}, 136.0, 0.0, 146.0, 10.0),                       # 6 … overlapping 0.25
+    area(L, {"Kod": "BNA", "Güven": "0.95"}, 200.2, 0.1, 212.1, 10.2),                       # 7 on the accepted one
+    area(L, {"Kod": "YSL", "Güven": "0.70", "Ad": "Park"}, 160.0, 0.0, 180.0, 15.0),         # 8 a green area …
+    area(O, {"Kod": "BNA", "Güven": "0.60"}, 161.0, 0.5, 179.0, 14.5),                       # 9 … or a building
+    area(O, {"Kod": "DRK", "Güven": "0.66"}, 220.0, 0.0, 221.0, 1.0),                        # 10 a pole drawn as an area
+    point(L, {"Kod": "BNA", "Güven": "0.55"}, 230.0, 5.0),                                   # 11 a building as a point
 ]
 
 
@@ -172,6 +204,13 @@ def hausdorff(a, b):
     return max(one_way(a, b), one_way(b, a))
 
 
+def iou(a, b):
+    """Two polygons' overlap ratio: their intersection's area over their union's (shapely, GEOS)."""
+    shared = a.intersection(b).area
+    union = a.area + b.area - shared
+    return shared / union if union > 0 else 0.0
+
+
 def better(a, b):
     ca, cb = a["confidence"], b["confidence"]
     if ca is not None and cb is not None:
@@ -239,6 +278,10 @@ def analyse(d, inp):
     radius = inp["radius"]
     if not (math.isfinite(radius) and radius > 0):
         raise Refused("invalid_input", "Eşleme yarıçapı 0'dan büyük olmalı (m).", "radius")
+    least = inp.get("overlap", 0.5)
+    if not (math.isfinite(least) and 0.0 < least < 1.0):
+        raise Refused("invalid_input", "Örtüşme oranı 0 ile 1 arasında olmalı (kesişimin alanı bölü birleşiminki; "
+                                       "verilmezse 0,5).", "overlap")
     src = {s["layer"]: i for i, s in enumerate(sources)}
     by_uid = {u: e for u, e in zip(d["uids"], d["entities"])}
     decided = {}
@@ -262,12 +305,20 @@ def analyse(d, inp):
     for u, e in zip(d["uids"], d["entities"]):
         if e["layerId"] not in src:
             continue
+        poly = None
         if e["kind"] == "point":
-            is_line, pts = False, [xy(e["p"])]
+            kind, pts = "point", [xy(e["p"])]
         elif e["kind"] == "polyline" and not e.get("closed") and len(e["pts"]) >= 2:
-            is_line, pts = True, [xy(p) for p in e["pts"]]
+            kind, pts = "line", [xy(p) for p in e["pts"]]
+        elif e["kind"] == "polygon" and len(e["pts"]) >= 3:
+            ring = [xy(p) for p in e["pts"]]
+            poly = Polygon(ring)
+            if not poly.area > 0:
+                continue
+            kind, pts = "area", ring + [ring[0]]
         else:
             continue
+        is_line = kind == "line"
         attrs = e.get("attrs", {})
         read = attrs.get(field, "").strip() or None
         dc = decided.get(u)
@@ -291,9 +342,10 @@ def analyse(d, inp):
             status = "unknown"
         else:
             g = CLASSES[ci]["geometry"]
-            status = "member" if (g == "point" and not is_line) or (g == "line" and is_line) else "wrongKind"
+            status = "member" if g == kind else "wrongKind"
         cands.append({"uid": u, "source": src[e["layerId"]], "class": ci, "read": read, "confidence": confidence,
-                      "line": is_line, "status": status, "attrs": attrs, "pts": pts, "z": e.get("z"), "entity": e})
+                      "line": is_line, "kind": kind, "poly": poly, "status": status, "attrs": attrs, "pts": pts,
+                      "z": e.get("z"), "entity": e})
     eligible = [i for i, c in enumerate(cands) if c["status"] == "member"]
     # Components by breadth-first search from each candidate not reached, in order.
     seen, comps = set(), []
@@ -306,11 +358,15 @@ def analyse(d, inp):
             k = queue.pop(0)
             comp.append(k)
             for j in eligible:
-                if j in seen or cands[j]["line"] != cands[k]["line"]:
+                if j in seen or cands[j]["kind"] != cands[k]["kind"]:
                     continue
                 a, b = cands[k], cands[j]
-                gap = hausdorff(a["pts"], b["pts"]) if a["line"] else dist(a["pts"][0], b["pts"][0])
-                if gap <= radius:
+                if a["kind"] == "area":
+                    joined = iou(a["poly"], b["poly"]) > least
+                else:
+                    gap = hausdorff(a["pts"], b["pts"]) if a["line"] else dist(a["pts"][0], b["pts"][0])
+                    joined = gap <= radius
+                if joined:
                     seen.add(j)
                     queue.append(j)
         comps.append(sorted(comp))
@@ -326,8 +382,15 @@ def analyse(d, inp):
                 reps[k] = m
         classes = sorted({cands[m]["class"] for m in members})
         is_line = cands[members[0]]["line"]
+        kind = cands[members[0]]["kind"]
         srcs = sorted({cands[r]["source"] for r in reps})
-        if is_line:
+        smallest = None
+        if kind == "area":
+            for a in range(len(reps)):
+                for b in range(a + 1, len(reps)):
+                    o = iou(cands[reps[a]]["poly"], cands[reps[b]]["poly"])
+                    smallest = o if smallest is None else min(smallest, o)
+        if kind != "point":
             chosen = reps[0]
             for r in reps[1:]:
                 a, b = cands[r], cands[chosen]
@@ -337,7 +400,11 @@ def analyse(d, inp):
             for a in range(len(reps)):
                 for b in range(a + 1, len(reps)):
                     spread = max(spread, hausdorff(cands[reps[a]]["pts"], cands[reps[b]]["pts"]))
-            x, y = cands[chosen]["pts"][0]
+            if kind == "area":
+                c = cands[chosen]["poly"].centroid
+                x, y = c.x, c.y
+            else:
+                x, y = cands[chosen]["pts"][0]
             z = None
             reps = [chosen] + [r for r in reps if r != chosen]
         else:
@@ -361,10 +428,13 @@ def analyse(d, inp):
                 for u, e in zip(d["uids"], d["entities"]):
                     if e["layerId"] != lid or u in cand_uids:
                         continue
-                    if e["kind"] == "point" and not is_line:
+                    if e["kind"] == "point" and kind == "point":
                         near = any(dist(cands[r]["pts"][0], xy(e["p"])) <= radius for r in reps)
                     elif e["kind"] == "polyline" and is_line and len(e["pts"]) >= 2:
                         near = any(hausdorff(cands[r]["pts"], [xy(p) for p in e["pts"]]) <= radius for r in reps)
+                    elif e["kind"] == "polygon" and kind == "area" and len(e["pts"]) >= 3:
+                        there = Polygon([xy(p) for p in e["pts"]])
+                        near = there.area > 0 and any(iou(cands[r]["poly"], there) > least for r in reps)
                     else:
                         near = False
                     if near:
@@ -408,6 +478,8 @@ def analyse(d, inp):
         row = {"classes": [CLASSES[c]["id"] for c in classes], "status": status,
                "sources": [sources[s]["name"] for s in srcs], "candidates": [cands[m]["uid"] for m in members],
                "x": x, "y": y, "spread": spread, "writes": writes}
+        if smallest is not None:
+            row["overlap"] = smallest
         if klass is not None:
             row["class"] = CLASSES[klass]["id"]
         if z is not None:
@@ -481,13 +553,15 @@ def executed(d, inp):
             attrs["Kaynaklar"] = ", ".join(g["row"]["sources"])
             attrs["Adaylar"] = ", ".join(g["row"]["candidates"])
             attrs["Yayılım"] = f"{g['row']['spread']:.3f}"
+            if "overlap" in g["row"]:
+                attrs["Örtüşme"] = f"{g['row']['overlap']:.3f}"
             if g["review"]:
                 attrs["İnceleme"] = "; ".join(g["review"])
                 if reviewer:
                     attrs["Gözden geçiren"] = reviewer
             first = cands[g["reps"][0]]
             f = {"layerId": class_layer(d, g["class"]), "attrs": attrs}
-            if first["line"]:
+            if first["kind"] != "point":
                 f["pts"] = copy.deepcopy(first["entity"]["pts"])
             else:
                 f["p"] = {"x": g["row"]["x"], "y": g["row"]["y"]}
@@ -617,6 +691,16 @@ def cases():
     out.append(case("Karar: profilde olmayan sınıf", d, step(d, dict(BASE, decisions=[{"candidate": uid(8), "class": "kopru"}]))))
     out.append(case("Karar: hem kabul hem ret", d, step(d, dict(BASE, decisions=[{"candidate": uid(9), "accept": True,
                                                                                    "reject": "?"}]))))
+    # ADR 2140: areas by their overlap ratio.
+    da = setup(objects=AREAS)
+    out.append(case("Alanlar (plan): bina izi iki kaynakta örtüşür (yineleneniyle), 0,25 örtüşen iki iz ayrı tekler, var "
+                    "olan binanın üstündeki aday, yeşil alan/bina çelişkisi, nokta çizilmiş bina, alan çizilmiş direk",
+                    da, step(da, BASE, op="plan")))
+    out.append(case("Alanlar (uzlaştır): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı "
+                    "işaretlenir; tek adımda geri alınır", da, step(da, BASE)))
+    out.append(case("Örtüşme 0,2: 0,25 örtüşen iki iz bir gruptur", da, step(da, dict(BASE, overlap=0.2), op="plan")))
+    out.append(case("Örtüşme 0", da, step(da, dict(BASE, overlap=0.0))))
+    out.append(case("Örtüşme 1", da, step(da, dict(BASE, overlap=1.0))))
     nolayer = setup(missing_layers=("direk",))
     out.append(case("Direğin katmanı yok: önce profili uygulayın", nolayer, step(nolayer, BASE)))
     locked = setup(locked=("hv-drk",))
@@ -640,15 +724,26 @@ def assert_cases():
     assert st[uid(5)] == "duplicate" and st[uid(11)] == "unknown" and st[uid(16)] == "reviewed" and st[uid(17)] == "wrongKind", st
     narrow = {tuple(g["row"]["candidates"]): g["row"]["status"] for g in analyse(setup(), dict(BASE, radius=0.1))[1]}
     assert narrow.get((uid(2),)) == "single" and narrow.get((uid(3),)) == "single", narrow
+    # ADR 2140's areas.
+    cands, groups = analyse(setup(objects=AREAS), BASE)
+    by = {tuple(g["row"]["candidates"]): g["row"] for g in groups}
+    assert by[(uid(2), uid(3), uid(4))]["status"] == "agreed" and by[(uid(2), uid(3), uid(4))]["overlap"] > 0.85, by
+    assert by[(uid(5),)]["status"] == "single" and by[(uid(6),)]["status"] == "single", by
+    assert by[(uid(7),)]["status"] == "existing" and by[(uid(8), uid(9))]["status"] == "conflict", by
+    st = {c["uid"]: c["status"] for c in cands}
+    assert st[uid(4)] == "duplicate" and st[uid(10)] == "wrongKind" and st[uid(11)] == "wrongKind", st
+    wide = {tuple(g["row"]["candidates"]): g["row"]["status"] for g in analyse(setup(objects=AREAS), dict(BASE, overlap=0.2))[1]}
+    assert wide[(uid(5), uid(6))] == "agreed", wide
 
 
 def main():
     assert_cases()
     doc = {"format": "kentos.command-cases", "version": 1, "command": "map.features.reconcile", "commandVersion": 1,
            "title": "Harita varlığı adaylarını uzlaştır: iki kaynak, yinelenen, çelişen, tek, var olan, eksik alan, karar",
-           "note": "ADR 1760 (MAP-04). Bağımsız başvuru scripts/fixtures/map_features_reconcile_cases.py: kurallar ADR'den, "
-                   "uzaklıklar Python'un math.hypot'uyla, Hausdorff köşe-doğru parçası; KentOS kodu yok. Sınıflar KentOS'un "
-                   "harita-varliklari profilinden (veri).",
+           "note": "ADR 1760 (MAP-04) ve ADR 2140 (alanlar). Bağımsız başvuru scripts/fixtures/map_features_reconcile_cases.py: "
+                   "kurallar ADR'den, uzaklıklar Python'un math.hypot'uyla, Hausdorff köşe-doğru parçası, alanların örtüşme "
+                   "oranı ve ağırlık merkezi shapely (GEOS) ile; KentOS kodu yok. Sınıflar KentOS'un harita-varliklari "
+                   "profilinden (veri).",
            "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:

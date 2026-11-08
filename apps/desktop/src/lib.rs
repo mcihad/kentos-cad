@@ -339,6 +339,8 @@ mod map_work_stamps_tests;
 #[cfg(test)]
 mod survey_epoch_tests;
 #[cfg(test)]
+mod features_reconcile_areas_tests;
+#[cfg(test)]
 mod scale_summary_tests;
 #[cfg(test)]
 mod features_window_tests;

@@ -4,7 +4,12 @@
  * A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two
  * sources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset
  * of its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a
- * line group's chosen polyline's first vertex), how far its representatives lie apart (m), the asset (the one there,
- * or the one written), the required fields still missing, and whether execute writes it.
+ * line group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its
+ * representatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the
+ * one there, or the one written), the required fields still missing, and whether execute writes it.
  */
-export type ReconciledGroup = { class?: string, classes: Array<string>, status: string, sources: Array<string>, candidates: Array<string>, x: number, y: number, z?: number, spread: number, asset?: string, missing?: Array<string>, writes: boolean, };
+export type ReconciledGroup = { class?: string, classes: Array<string>, status: string, sources: Array<string>, candidates: Array<string>, x: number, y: number, z?: number, spread: number, 
+/**
+ * An area group's smallest overlap ratio between two of its representatives (docs/adr/2140).
+ */
+overlap?: number, asset?: string, missing?: Array<string>, writes: boolean, };

@@ -3,7 +3,8 @@
 /**
  * A candidate as read: its object, its source's name, its class (after a correction) and what its field said, its
  * confidence, its group, and what it is (`member`: its source's representative in the group; `duplicate`: another of
- * its source in the group; `unknown`: its field names no class; `wrongKind`: a point class on a polyline or the other
- * way; `rejected`; `reviewed`: reconciled before, not read again).
+ * its source in the group; `unknown`: its field names no class; `wrongKind`: a class of another kind than its object
+ * (a point class on a polyline, an area class on a point …); `rejected`; `reviewed`: reconciled before, not read
+ * again).
  */
 export type ReconciledCandidate = { uid: string, source: string, class?: string, read?: string, confidence?: number, group?: number, status: string, };

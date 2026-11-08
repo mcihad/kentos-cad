@@ -228,6 +228,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        overlap: float | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -263,6 +264,8 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             drawing:
             expected_revision:
             field:
+            overlap: The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
+                0.5 when not given (docs/adr/2140). Unit: 1.
             reviewer:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -285,6 +288,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             drawing=drawing,
             expected_revision=expected_revision,
             field=field,
+            overlap=overlap,
             reviewer=reviewer,
         ), request_id=request_id, expected=expected)
 
@@ -301,6 +305,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        overlap: float | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
     ) -> FeaturesReconciled:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -315,6 +320,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             drawing=drawing,
             expected_revision=expected_revision,
             field=field,
+            overlap=overlap,
             reviewer=reviewer,
         ))
 
@@ -331,6 +337,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        overlap: float | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -345,6 +352,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             drawing=drawing,
             expected_revision=expected_revision,
             field=field,
+            overlap=overlap,
             reviewer=reviewer,
         ))
 
@@ -361,6 +369,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         drawing: str | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
+        overlap: float | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -380,6 +389,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             drawing=drawing,
             expected_revision=expected_revision,
             field=field,
+            overlap=overlap,
             reviewer=reviewer,
         ), op=op, request_id=request_id, expected=expected)
 
