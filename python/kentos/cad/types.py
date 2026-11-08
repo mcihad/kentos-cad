@@ -5362,6 +5362,16 @@ PinMatchName = Literal["key", "geometry", "nearest"]
 """The names of :class:`PinMatch`, for a plain string."""
 
 
+class PipeAbove(_StrEnum):
+    """Which pipe of a crossing: the checked network's or the other's."""
+    PIPE = "pipe"
+    OTHER = "other"
+
+
+PipeAboveName = Literal["pipe", "other"]
+"""The names of :class:`PipeAbove`, for a plain string."""
+
+
 class PipeRunEnd(_StrEnum):
     """Why the run ends: at the pipe asked (`end`), where the flow leaves the network (`outlet`), or at a node more than one
     pipe leaves (`split`).
@@ -65877,6 +65887,49 @@ class PipeCheck(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PipeClearanceAsk(_Model):
+    """The other network of the clearance check (docs/adr/2360): its id or name, where its inverts and diameters are read
+    (as the checked network's), the least vertical clearance at a crossing and the least horizontal clearance between
+    pipes that do not cross (metres, outside to outside by the diameters; none: clashes only), and which of the two must
+    be above where they cross (none: either).
+    Attributes:
+        horizontal: Unit: length.
+        vertical: Unit: length.
+    """
+    network: str
+    inverts: PipeInverts
+    above: PipeAbove | PipeAboveName | None | Unset = UNSET
+    diameter: PipeDiameter | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["network"] = self.network
+        out["inverts"] = self.inverts.to_json()
+        if self.above is not UNSET:
+            out["above"] = None if self.above is None else _enum_out(self.above)
+        if self.diameter is not UNSET:
+            out["diameter"] = None if self.diameter is None else self.diameter.to_json()
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeClearanceAsk:
+        return cls(
+            network=data["network"],
+            inverts=PipeInverts.from_json(data["inverts"]),
+            above=UNSET if "above" not in data else None if data["above"] is None else _enum_in(PipeAbove, data["above"]),
+            diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PipeCount(_Model):
     """A kind's count.
     Attributes:
@@ -65896,6 +65949,54 @@ class PipeCount(_Model):
         return cls(
             kind=data["kind"],
             count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeCrossing(_Model):
+    """A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each
+    one's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;
+    below zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an
+    invert or an asked diameter is not known.
+    Attributes:
+        at: Unit: system.
+        clearance: Unit: length.
+        invert: Unit: elevation.
+        other_invert: Unit: elevation.
+    """
+    pipe: str
+    other: str
+    at: list[float]
+    above: PipeAbove | PipeAboveName | None | Unset = UNSET
+    clearance: float | None | Unset = UNSET
+    invert: float | None | Unset = UNSET
+    other_invert: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pipe"] = self.pipe
+        out["other"] = self.other
+        out["at"] = [float(e0) for e0 in self.at]
+        if self.above is not UNSET:
+            out["above"] = None if self.above is None else _enum_out(self.above)
+        if self.clearance is not UNSET:
+            out["clearance"] = None if self.clearance is None else float(self.clearance)
+        if self.invert is not UNSET:
+            out["invert"] = None if self.invert is None else float(self.invert)
+        if self.other_invert is not UNSET:
+            out["otherInvert"] = None if self.other_invert is None else float(self.other_invert)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeCrossing:
+        return cls(
+            pipe=data["pipe"],
+            other=data["other"],
+            at=[float(e0) for e0 in data["at"]],
+            above=UNSET if "above" not in data else None if data["above"] is None else _enum_in(PipeAbove, data["above"]),
+            clearance=UNSET if "clearance" not in data else None if data["clearance"] is None else float(data["clearance"]),
+            invert=UNSET if "invert" not in data else None if data["invert"] is None else float(data["invert"]),
+            other_invert=UNSET if "otherInvert" not in data else None if data["otherInvert"] is None else float(data["otherInvert"]),
         )
 
 
@@ -65959,6 +66060,48 @@ class PipeFinding(_Model):
             at=[float(e0) for e0 in data["at"]],
             unit=data.get("unit", UNSET),
             value=UNSET if "value" not in data else None if data["value"] is None else float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PipeNear(_Model):
+    """A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross
+    (docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance
+    (the distance less the two radii; none where an asked diameter is not known: then listed only when the axes
+    themselves are closer than the least).
+    Attributes:
+        at: Unit: system.
+        other_at: Unit: system.
+        distance: Unit: length.
+        clearance: Unit: length.
+    """
+    pipe: str
+    other: str
+    at: list[float]
+    other_at: list[float]
+    distance: float
+    clearance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pipe"] = self.pipe
+        out["other"] = self.other
+        out["at"] = [float(e0) for e0 in self.at]
+        out["otherAt"] = [float(e0) for e0 in self.other_at]
+        out["distance"] = float(self.distance)
+        if self.clearance is not UNSET:
+            out["clearance"] = None if self.clearance is None else float(self.clearance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PipeNear:
+        return cls(
+            pipe=data["pipe"],
+            other=data["other"],
+            at=[float(e0) for e0 in data["at"]],
+            other_at=[float(e0) for e0 in data["otherAt"]],
+            distance=float(data["distance"]),
+            clearance=UNSET if "clearance" not in data else None if data["clearance"] is None else float(data["clearance"]),
         )
 
 
@@ -66111,9 +66254,13 @@ class PipesCheck(_Model):
     greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
     name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
     surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
-    `tools_unavailable`.
+    `tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's
+    (`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),
+    its network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is
+    the network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).
     Attributes:
         network: The network's id or name.
+        clearance: Another network's pipes and the clearances to them (docs/adr/2360).
         max_cover: Unit: length.
         max_slope: Unit: grade.
         min_cover: The least and the greatest cover over the crown (metres). Unit: length.
@@ -66121,6 +66268,7 @@ class PipesCheck(_Model):
     """
     network: str
     inverts: PipeInverts
+    clearance: PipeClearanceAsk | None | Unset = UNSET
     diameter: PipeDiameter | None | Unset = UNSET
     ground: PipeGround | None | Unset = UNSET
     max_cover: float | None | Unset = UNSET
@@ -66132,6 +66280,8 @@ class PipesCheck(_Model):
         out: dict[str, Any] = {}
         out["network"] = self.network
         out["inverts"] = self.inverts.to_json()
+        if self.clearance is not UNSET:
+            out["clearance"] = None if self.clearance is None else self.clearance.to_json()
         if self.diameter is not UNSET:
             out["diameter"] = None if self.diameter is None else self.diameter.to_json()
         if self.ground is not UNSET:
@@ -66151,6 +66301,7 @@ class PipesCheck(_Model):
         return cls(
             network=data["network"],
             inverts=PipeInverts.from_json(data["inverts"]),
+            clearance=UNSET if "clearance" not in data else None if data["clearance"] is None else PipeClearanceAsk.from_json(data["clearance"]),
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else PipeDiameter.from_json(data["diameter"]),
             ground=UNSET if "ground" not in data else None if data["ground"] is None else PipeGround.from_json(data["ground"]),
             max_cover=UNSET if "maxCover" not in data else None if data["maxCover"] is None else float(data["maxCover"]),
@@ -66168,6 +66319,10 @@ class PipesChecked(_Model):
     Attributes:
         parts: Unit: count.
         length: Unit: length.
+        crossings: Where the pipes cross the other network's, pipe by pipe and along each (asked for, docs/adr/2360; at most
+            [`PIPE_FINDING_LIMIT`]).
+        near: The pipes closer than the least horizontal clearance to the other network's (asked for; at most
+            [`PIPE_FINDING_LIMIT`]).
     """
     network: str
     cover_to: str
@@ -66176,6 +66331,8 @@ class PipesChecked(_Model):
     counts: list[PipeCount]
     parts: int
     length: float
+    crossings: list[PipeCrossing] | Unset = UNSET
+    near: list[PipeNear] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -66186,6 +66343,10 @@ class PipesChecked(_Model):
         out["counts"] = [e0.to_json() for e0 in self.counts]
         out["parts"] = self.parts
         out["length"] = float(self.length)
+        if self.crossings is not UNSET:
+            out["crossings"] = [e0.to_json() for e0 in self.crossings]
+        if self.near is not UNSET:
+            out["near"] = [e0.to_json() for e0 in self.near]
         return out
 
     @classmethod
@@ -66198,6 +66359,8 @@ class PipesChecked(_Model):
             counts=[PipeCount.from_json(e0) for e0 in data["counts"]],
             parts=data["parts"],
             length=float(data["length"]),
+            crossings=[PipeCrossing.from_json(e0) for e0 in data["crossings"]] if "crossings" in data else UNSET,
+            near=[PipeNear.from_json(e0) for e0 in data["near"]] if "near" in data else UNSET,
         )
 
 
@@ -130383,13 +130546,18 @@ __all__ = [
     "PinMatchName",
     "PinMove",
     "PinnedObject",
+    "PipeAbove",
+    "PipeAboveName",
     "PipeCheck",
+    "PipeClearanceAsk",
     "PipeCount",
+    "PipeCrossing",
     "PipeCulvertShapeDef",
     "PipeDiameter",
     "PipeFinding",
     "PipeGround",
     "PipeInverts",
+    "PipeNear",
     "PipeProfileGround",
     "PipeProfilePipe",
     "PipeProfileStructure",

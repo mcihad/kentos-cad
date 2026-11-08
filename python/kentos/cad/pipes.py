@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
+    PipeClearanceAsk,
     PipeDiameter,
     PipeGround,
     PipeInverts,
@@ -34,11 +35,18 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
     cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat,
     lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter,
     diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin
-    üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). Sınırlar
-    (minCover, maxCover, minSlope, maxSlope) kullanıcınındır; program varsayılan sınır
-    koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler:
-    invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project,
-    unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.
+    üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse
+    (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda
+    kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi;
+    crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa
+    uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey
+    açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside
+    (yatay açıklık en azdan küçük). Et kalınlığı bilinmez; çaplar iç çaptır. Sınırlar
+    (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal)
+    kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez.
+    Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network,
+    not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
+    invalid_network, tools_unavailable.
     """
     __slots__ = ()
     id = "cad.pipes.check"
@@ -56,6 +64,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         *,
         network: str,
         inverts: PipeInverts,
+        clearance: PipeClearanceAsk | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         ground: PipeGround | None | Unset = UNSET,
         max_cover: float | None | Unset = UNSET,
@@ -74,16 +83,24 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope,
         steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit,
         notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow,
-        deep, curved (yaylı boruda örtü yalnız köşelerde). Sınırlar (minCover, maxCover,
-        minSlope, maxSlope) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen
-        sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check,
-        unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain,
-        terrain_unbuildable, invalid_network, tools_unavailable.
+        deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir
+        altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey
+        açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden
+        geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap;
+        near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük),
+        wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan
+        küçük). Et kalınlığı bilinmez; çaplar iç çaptır. Sınırlar (minCover, maxCover,
+        minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır;
+        program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası
+        önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network,
+        not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
+        invalid_network, tools_unavailable.
 
         Args:
             doc: The drawing it works on.
             network: The network's id or name.
             inverts:
+            clearance: Another network's pipes and the clearances to them (docs/adr/2360).
             diameter:
             ground:
             max_cover: Unit: length.
@@ -105,6 +122,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         return self.execute_input(doc, PipesCheck(
             network=network,
             inverts=inverts,
+            clearance=clearance,
             diameter=diameter,
             ground=ground,
             max_cover=max_cover,
@@ -120,6 +138,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         *,
         network: str,
         inverts: PipeInverts,
+        clearance: PipeClearanceAsk | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         ground: PipeGround | None | Unset = UNSET,
         max_cover: float | None | Unset = UNSET,
@@ -133,6 +152,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         return self.plan_input(doc, PipesCheck(
             network=network,
             inverts=inverts,
+            clearance=clearance,
             diameter=diameter,
             ground=ground,
             max_cover=max_cover,
@@ -148,6 +168,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         *,
         network: str,
         inverts: PipeInverts,
+        clearance: PipeClearanceAsk | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         ground: PipeGround | None | Unset = UNSET,
         max_cover: float | None | Unset = UNSET,
@@ -161,6 +182,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         return self.validate_input(doc, PipesCheck(
             network=network,
             inverts=inverts,
+            clearance=clearance,
             diameter=diameter,
             ground=ground,
             max_cover=max_cover,
@@ -176,6 +198,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         *,
         network: str,
         inverts: PipeInverts,
+        clearance: PipeClearanceAsk | None | Unset = UNSET,
         diameter: PipeDiameter | None | Unset = UNSET,
         ground: PipeGround | None | Unset = UNSET,
         max_cover: float | None | Unset = UNSET,
@@ -194,6 +217,7 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         return self.answer_input(doc, PipesCheck(
             network=network,
             inverts=inverts,
+            clearance=clearance,
             diameter=diameter,
             ground=ground,
             max_cover=max_cover,

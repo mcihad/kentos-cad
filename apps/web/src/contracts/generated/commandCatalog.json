@@ -59281,12 +59281,14 @@
       "id": "cad.pipes.check",
       "version": 1,
       "title": "Boru hattı denetimi",
-      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). Sınırlar (minCover, maxCover, minSlope, maxSlope) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
+      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan küçük). Et kalınlığı bilinmez; çaplar iç çaptır. Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
       "aliases": [
         "borudenetimi",
         "kanaldenetimi",
         "boruortusu",
-        "tersegim"
+        "tersegim",
+        "boruacikligi",
+        "altyapicakismasi"
       ],
       "effect": "query",
       "hosts": [
@@ -59302,8 +59304,19 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a\ngreatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`.",
+        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a\ngreatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's\n(`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),\nits network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is\nthe network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).",
         "properties": {
+          "clearance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PipeClearanceAsk"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Another network's pipes and the clearances to them (docs/adr/2360)."
+          },
           "diameter": {
             "anyOf": [
               {
@@ -59386,6 +59399,13 @@
           "coverTo": {
             "type": "string"
           },
+          "crossings": {
+            "description": "Where the pipes cross the other network's, pipe by pipe and along each (asked for, docs/adr/2360; at most\n[`PIPE_FINDING_LIMIT`]).",
+            "items": {
+              "$ref": "#/$defs/PipeCrossing"
+            },
+            "type": "array"
+          },
           "findings": {
             "items": {
               "$ref": "#/$defs/PipeFinding"
@@ -59396,6 +59416,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "near": {
+            "description": "The pipes closer than the least horizontal clearance to the other network's (asked for; at most\n[`PIPE_FINDING_LIMIT`]).",
+            "items": {
+              "$ref": "#/$defs/PipeNear"
+            },
+            "type": "array"
           },
           "network": {
             "type": "string"
@@ -59438,6 +59465,13 @@
           "coverTo": {
             "type": "string"
           },
+          "crossings": {
+            "description": "Where the pipes cross the other network's, pipe by pipe and along each (asked for, docs/adr/2360; at most\n[`PIPE_FINDING_LIMIT`]).",
+            "items": {
+              "$ref": "#/$defs/PipeCrossing"
+            },
+            "type": "array"
+          },
           "findings": {
             "items": {
               "$ref": "#/$defs/PipeFinding"
@@ -59448,6 +59482,13 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "near": {
+            "description": "The pipes closer than the least horizontal clearance to the other network's (asked for; at most\n[`PIPE_FINDING_LIMIT`]).",
+            "items": {
+              "$ref": "#/$defs/PipeNear"
+            },
+            "type": "array"
           },
           "network": {
             "type": "string"
@@ -169413,6 +169454,14 @@
       ],
       "type": "object"
     },
+    "PipeAbove": {
+      "description": "Which pipe of a crossing: the checked network's or the other's.",
+      "enum": [
+        "pipe",
+        "other"
+      ],
+      "type": "string"
+    },
     "PipeCheck": {
       "description": "A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's\ndirection field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its\ndiameter (metres), the least cover and where, the greatest cover, and its findings' kinds.",
       "properties": {
@@ -169506,6 +169555,59 @@
       ],
       "type": "object"
     },
+    "PipeClearanceAsk": {
+      "additionalProperties": false,
+      "description": "The other network of the clearance check (docs/adr/2360): its id or name, where its inverts and diameters are read\n(as the checked network's), the least vertical clearance at a crossing and the least horizontal clearance between\npipes that do not cross (metres, outside to outside by the diameters; none: clashes only), and which of the two must\nbe above where they cross (none: either).",
+      "properties": {
+        "above": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PipeAbove"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diameter": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PipeDiameter"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "inverts": {
+          "$ref": "#/$defs/PipeInverts"
+        },
+        "network": {
+          "type": "string"
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "network",
+        "inverts"
+      ],
+      "type": "object"
+    },
     "PipeCount": {
       "description": "A kind's count.",
       "properties": {
@@ -169522,6 +169624,67 @@
       "required": [
         "kind",
         "count"
+      ],
+      "type": "object"
+    },
+    "PipeCrossing": {
+      "description": "A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each\none's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;\nbelow zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an\ninvert or an asked diameter is not known.",
+      "properties": {
+        "above": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PipeAbove"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "clearance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "invert": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "other": {
+          "type": "string"
+        },
+        "otherInvert": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "pipe": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pipe",
+        "other",
+        "at"
       ],
       "type": "object"
     },
@@ -169672,6 +169835,58 @@
           "type": "object"
         }
       ]
+    },
+    "PipeNear": {
+      "description": "A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross\n(docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance\n(the distance less the two radii; none where an asked diameter is not known: then listed only when the axes\nthemselves are closer than the least).",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "clearance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "other": {
+          "type": "string"
+        },
+        "otherAt": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "pipe": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pipe",
+        "other",
+        "at",
+        "otherAt",
+        "distance"
+      ],
+      "type": "object"
     },
     "PipeProfileGround": {
       "description": "A place of the ground line: its distance and height (none: off the surface).",

@@ -9706,10 +9706,11 @@ pub fn catalog() -> CommandCatalog {
             title: "Boru hattı denetimi".into(),
             summary: "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). \
                       Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). \
-                      Sınırlar (minCover, maxCover, minSlope, maxSlope) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. \
+                      İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan küçük). Et kalınlığı bilinmez; çaplar iç çaptır. \
+                      Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. \
                       Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable."
                 .into(),
-            aliases: vec!["borudenetimi".into(), "kanaldenetimi".into(), "boruortusu".into(), "tersegim".into()],
+            aliases: vec!["borudenetimi".into(), "kanaldenetimi".into(), "boruortusu".into(), "tersegim".into(), "boruacikligi".into(), "altyapicakismasi".into()],
             effect: CommandEffect::Query,
             hosts: vec![CommandHost::Desktop],
             headless: true,

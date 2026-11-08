@@ -2,8 +2,11 @@
 """The shared cases of `cad.pipes.check` (Boru hattı denetimi; plan/map-cad.md MAP-16, docs/adr/1640), without KentOS
 code.
 
-    python3 scripts/fixtures/pipes_check_cases.py           # writes fixtures/commands/v1/cad.pipes.check.json
-    python3 scripts/fixtures/pipes_check_cases.py --check   # writes nothing; compares
+    .run/py/bin/python scripts/fixtures/pipes_check_cases.py           # writes fixtures/commands/v1/cad.pipes.check.json
+    .run/py/bin/python scripts/fixtures/pipes_check_cases.py --check   # writes nothing; compares
+
+The clearances (docs/adr/2360) are measured with mpmath 1.4.1 at 50 digits, imported only for them: the profile's
+generator imports this file with the standard library alone.
 
 The drawing is a Harita project with a ground lattice (corners every 10 m over [0, 200] × [0, 100] from X0, Y0):
 
@@ -28,6 +31,17 @@ the least shallow, above the greatest deep; an end's invert that misses the cove
 or /1000 (mm) invertUnit, as a depth (cover = value − diameter) invertIsDepth; a diameter not in the catalogue that is
 there in another unit diameterUnit, else notInCatalog; parts are the pipes joined at shared ends, all but the longest
 detached; an end at no structure noStructure; an outlet invert above the lowest inlet invert at a node outletAbove.
+
+İçme suyu (water, docs/adr/2360): 3D polylines on `su`, `Çap` in mm, no structures; W1–W3 cross P2, P3 and P1 (a
+clash, the water below, the water above), W4 crosses the arc Q3, W5 passes P3 and W6 passes under Q3 without crossing,
+W7 has no heights. The clearances by hand: the crossings of segments and arcs solved in closed form (a line and a
+circle: the quadratic; the arc's centre from its included angle θ = 4·atan b and r = c / (2 sin(θ/2)), at r·cos(θ/2)
+from the chord's middle, on its left for b > 0); the stations along each pipe; the inverts there (the attributes or
+the heights, never one for the other); the upper pipe the one whose bore's middle (invert + D/2) is higher, the
+pipe checked when level; the clearance the upper invert less the lower crown; below zero clash, below the least
+closeCrossing, the asked pipe below wrongSide. Pipes that do not cross: the least distance at an end of one edge or
+where the common normal meets both (checked against a dense sampling), less the two radii; below the least
+closeAlongside.
 """
 
 import copy
@@ -43,7 +57,7 @@ X0, Y0 = 487000.0, 4420000.0
 W = 1e-6
 KINDS = ["detached", "noStructure", "noInvert", "invertUnit", "invertIsDepth", "reverseSlope", "flat", "lowSlope",
          "steepSlope", "outletAbove", "noDiameter", "diameterUnit", "notInCatalog", "noGround", "offSurface",
-         "aboveGround", "shallow", "deep", "curved"]
+         "aboveGround", "shallow", "deep", "curved", "clash", "closeCrossing", "wrongSide", "closeAlongside"]
 UNITS = {"mm": 0.001, "cm": 0.01, "m": 1.0}
 
 
@@ -93,13 +107,27 @@ STORM = [
 ]
 
 
+# Water pipes (İçme suyu): (name, points, heights or none, Çap in mm), drawn after the road line.
+WATER = [
+    ("W1", [(75, 90), (75, 30)], [97.8, 97.6], "100"),
+    ("W2", [(125, 90), (125, 30)], [96.2, 96.0], "200"),
+    ("W3", [(25, 90), (25, 30)], [98.6, 98.4], "100"),
+    ("W4", [(120, 10), (120, 30)], [98.5, 98.3], "100"),
+    ("W5", [(105, 53), (145, 54)], [98.0, 97.9], "100"),
+    ("W6", [(110, 13), (130, 13)], [98.0, 97.9], "100"),
+    ("W7", [(175, 60), (175, 40)], None, "100"),
+]
+
+
 def P(p):
     return {"x": X0 + p[0], "y": Y0 + p[1]}
 
 
-def setup(work="map"):
+def setup(work="map", water=False):
     layers = [layer("0", "0"), layer("zemin", "Zemin"), layer("atiksu", "Atıksu"), layer("baca", "Baca"),
               layer("yagmur", "Yağmursuyu"), layer("izgara", "Izgara"), layer("yol", "Yol"), layer("bos", "Boş")]
+    if water:
+        layers.append(layer("su", "İçme suyu"))
     ents, uids, n = [], [], 0
 
     def add(e):
@@ -137,6 +165,12 @@ def setup(work="map"):
             e["bulges"] = bulges + [0.0]
         add(e)
     add({"kind": "line", "layerId": "yol", "attrs": {}, "a": P((0, 0)), "b": P((50, 0))})
+    if water:
+        for name, pts, zs, d in WATER:
+            e = {"kind": "polyline", "layerId": "su", "attrs": {"Ad": name, "Çap": d}, "pts": [P(q) for q in pts]}
+            if zs:
+                e["zs"] = zs
+            add(e)
     networks = [
         {"id": "atiksu", "name": "Atıksu", "kind": "utility", "edges": [{"layer": "atiksu"}],
          "junctions": [{"layer": "baca", "role": "junction"}], "connect": "ends", "tolerance": 0.01,
@@ -147,6 +181,9 @@ def setup(work="map"):
         {"id": "yollar", "name": "Yollar", "kind": "road", "edges": [{"layer": "yol"}], "connect": "ends",
          "tolerance": 0.01, "direction": {"kind": "both"}},
     ]
+    if water:
+        networks.append({"id": "su", "name": "İçme suyu", "kind": "utility", "edges": [{"layer": "su"}],
+                         "connect": "ends", "tolerance": 0.01, "direction": {"kind": "digitized"}})
     settings = {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": work, "drawingFont": "barlow",
                 "networks": networks}
@@ -255,11 +292,16 @@ def drawing():
         if flow:
             attrs["Akış"] = flow
         storm.append(Pipe(n, name, pts, bulges, attrs, zs, "yagmur"))
+    n += 1  # the road line
+    water = []
+    for name, pts, zs, d in WATER:
+        n += 1
+        water.append(Pipe(n, name, pts, None, {"Ad": name, "Çap": d}, zs, "su"))
     return {"atiksu": (sewer, {p: {} for p in baca}), "yagmur": (storm, {p: {"Kapak kotu": c} for p, c in
-                                                                          izgara.items()})}
+                                                                          izgara.items()}), "su": (water, {})}
 
 
-def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=None, smax=None):
+def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=None, smax=None, clearance=None):
     pipes, structures = drawing()[net]
     found, rows = [], []
     key = lambda p: (round(p[0], 6), round(p[1], 6))
@@ -423,6 +465,10 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
         for i, o, at in outs:
             if o > low:
                 mark(i, "outletAbove", at, o - low)
+    # The attributes the report reads the checked pipes' inverts from (above), or their heights.
+    asked_inverts = {"from": "fields", "start": "Akar baş", "end": "Akar son"} if inverts == "fields" else \
+        {"from": "heights"}
+    crossings, near = clearances(pipes, asked_inverts, diameter, clearance, mark) if clearance else ([], [])
     found.sort(key=lambda t: (t[0], t[1], t[2]))
     for row in rows:
         kinds = []
@@ -431,9 +477,254 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
                 kinds.append(f["kind"])
         row["findings"] = kinds
     counts = [{"kind": kk, "count": sum(1 for t in found if t[3]["kind"] == kk)} for kk in KINDS]
-    return {"network": net, "coverTo": "crown" if diameter else "invert", "pipes": rows,
-            "findings": [t[3] for t in found], "counts": [c for c in counts if c["count"]],
-            "parts": len(part_len), "length": sum(p.length for p in pipes)}
+    out = {"network": net, "coverTo": "crown" if diameter else "invert", "pipes": rows,
+           "findings": [t[3] for t in found], "counts": [c for c in counts if c["count"]],
+           "parts": len(part_len), "length": sum(p.length for p in pipes)}
+    if crossings:
+        out["crossings"] = crossings
+    if near:
+        out["near"] = near
+    return out
+
+
+# ── The clearances (docs/adr/2360) ────────────────────────────────────────────────────────────────────────────────
+class Plan:
+    """A pipe as the clearances take it: its edges in mpmath (local coordinates), where its inverts come from and half
+    its diameter (0 with no diameter asked, none when asked and missing)."""
+
+    def __init__(self, mp, pipe, inverts, diameter):
+        self.mp, self.pipe = mp, pipe
+        self.edges = []
+        for i in range(len(pipe.pts) - 1):
+            (ax, ay), (bx, by) = [tuple(mp.mpf(v) for v in q) for q in (pipe.pts[i], pipe.pts[i + 1])]
+            b = pipe.bulges[i]
+            s0, s1 = mp.mpf(pipe.st[i]), mp.mpf(pipe.st[i + 1])
+            if b == 0.0:
+                self.edges.append(("seg", (ax, ay), (bx, by), s0, s1))
+                continue
+            c = mp.hypot(bx - ax, by - ay)
+            th = 4 * mp.atan(mp.mpf(b))
+            r = c / (2 * mp.sin(abs(th) / 2))
+            ux, uy = (bx - ax) / c, (by - ay) / c
+            h = r * mp.cos(th / 2) * (1 if th > 0 else -1)
+            cx, cy = (ax + bx) / 2 - uy * h, (ay + by) / 2 + ux * h
+            self.edges.append(("arc", (cx, cy), r, mp.atan2(ay - cy, ax - cx), th, s0, s1))
+        if inverts["from"] == "fields":
+            a, b = number(pipe.attrs.get(inverts["start"])), number(pipe.attrs.get(inverts["end"]))
+            self.ends = (a, b) if a is not None and b is not None else None
+            self.mode = "fields"
+        else:
+            self.ends, self.mode = None, "heights"
+        if diameter is None:
+            self.radius = 0.0
+        else:
+            v = number(pipe.attrs.get(diameter["field"]))
+            self.radius = v * UNITS[diameter["unit"]] / 2.0 if v is not None and v > 0 else None
+        self.length = pipe.length
+
+    def invert(self, s):
+        """The invert at station s: only from where the question says, never the heights for missing attributes."""
+        if self.mode == "fields":
+            return self.pipe.invert(self.ends, s) if self.ends is not None else None
+        return self.pipe.invert(None, s) if self.pipe.heights is not None else None
+
+
+def travelled(mp, a0, sweep, phi):
+    """How far along an arc (0..1 of its sweep) the angle phi is; none off the arc."""
+    k = 1 if sweep > 0 else -1
+    t = mp.fmod(k * (phi - a0), 2 * mp.pi)
+    if t < 0:
+        t += 2 * mp.pi
+    if t > abs(sweep) + mp.mpf(10) ** -30:
+        if 2 * mp.pi - t < mp.mpf(10) ** -30:
+            return mp.mpf(0)
+        return None
+    return t / abs(sweep)
+
+
+def on_edge(mp, e, q):
+    """The fraction along edge e of a place q on its line or circle; none off the edge."""
+    if e[0] == "seg":
+        (ax, ay), (bx, by) = e[1], e[2]
+        d2 = (bx - ax) ** 2 + (by - ay) ** 2
+        t = ((q[0] - ax) * (bx - ax) + (q[1] - ay) * (by - ay)) / d2
+        return t if 0 <= t <= 1 else None
+    (cx, cy), _, a0, th = e[1], e[2], e[3], e[4]
+    return travelled(mp, a0, th, mp.atan2(q[1] - cy, q[0] - cx))
+
+
+def hits(mp, e, f):
+    """The places two edges cross: (fraction along e, fraction along f, place)."""
+    out = []
+    if e[0] == "seg" and f[0] == "seg":
+        (px, py), (qx, qy) = e[1], f[1]
+        rx, ry = e[2][0] - px, e[2][1] - py
+        sx, sy = f[2][0] - qx, f[2][1] - qy
+        den = rx * sy - ry * sx
+        if den == 0:
+            return out
+        t = ((qx - px) * sy - (qy - py) * sx) / den
+        u = ((qx - px) * ry - (qy - py) * rx) / den
+        if 0 <= t <= 1 and 0 <= u <= 1:
+            out.append((t, u, (px + t * rx, py + t * ry)))
+        return out
+    if e[0] == "arc" and f[0] == "seg":
+        return [(u, t, q) for t, u, q in hits(mp, f, e)]
+    if e[0] == "seg":
+        (ax, ay), (bx, by) = e[1], e[2]
+        (cx, cy), r = f[1], f[2]
+        dx, dy, fx, fy = bx - ax, by - ay, ax - cx, ay - cy
+        A, B, C = dx * dx + dy * dy, 2 * (fx * dx + fy * dy), fx * fx + fy * fy - r * r
+        disc = B * B - 4 * A * C
+        if disc < 0:
+            return out
+        for t in sorted({(-B - mp.sqrt(disc)) / (2 * A), (-B + mp.sqrt(disc)) / (2 * A)}):
+            if 0 <= t <= 1:
+                q = (ax + t * dx, ay + t * dy)
+                u = on_edge(mp, f, q)
+                if u is not None:
+                    out.append((t, u, q))
+        return out
+    (c1x, c1y), r1, (c2x, c2y), r2 = e[1], e[2], f[1], f[2]
+    d = mp.hypot(c2x - c1x, c2y - c1y)
+    if d == 0 or d > r1 + r2 or d < abs(r1 - r2):
+        return out
+    a = (r1 * r1 - r2 * r2 + d * d) / (2 * d)
+    h = mp.sqrt(max(r1 * r1 - a * a, 0))
+    mx, my = c1x + a * (c2x - c1x) / d, c1y + a * (c2y - c1y) / d
+    for k in (1, -1):
+        q = (mx + k * h * (c2y - c1y) / d, my - k * h * (c2x - c1x) / d)
+        t, u = on_edge(mp, e, q), on_edge(mp, f, q)
+        if t is not None and u is not None:
+            out.append((t, u, q))
+    return out
+
+
+def point(mp, e, t):
+    if e[0] == "seg":
+        return (e[1][0] + t * (e[2][0] - e[1][0]), e[1][1] + t * (e[2][1] - e[1][1]))
+    (cx, cy), r, a0, th = e[1], e[2], e[3], e[4]
+    return (cx + r * mp.cos(a0 + th * t), cy + r * mp.sin(a0 + th * t))
+
+
+def nearest_on(mp, e, q):
+    """The place of edge e nearest to q, and the distance."""
+    if e[0] == "seg":
+        (ax, ay), (bx, by) = e[1], e[2]
+        d2 = (bx - ax) ** 2 + (by - ay) ** 2
+        t = min(max(((q[0] - ax) * (bx - ax) + (q[1] - ay) * (by - ay)) / d2, 0), 1)
+        w = (ax + t * (bx - ax), ay + t * (by - ay))
+        return mp.hypot(q[0] - w[0], q[1] - w[1]), w
+    (cx, cy), r = e[1], e[2]
+    if on_edge(mp, e, q) is not None:
+        g = mp.hypot(q[0] - cx, q[1] - cy)
+        return abs(g - r), (cx + r * (q[0] - cx) / g, cy + r * (q[1] - cy) / g)
+    ends = [point(mp, e, 0), point(mp, e, 1)]
+    return min((mp.hypot(q[0] - w[0], q[1] - w[1]), w) for w in ends)
+
+
+def least(mp, e, f):
+    """The least distance between two edges that do not cross: (distance, place on e, place on f)."""
+    cands = []
+    for t in (0, 1):
+        q = point(mp, e, t)
+        d, w = nearest_on(mp, f, q)
+        cands.append((d, q, w))
+        q = point(mp, f, t)
+        d, w = nearest_on(mp, e, q)
+        cands.append((d, w, q))
+    kinds = (e[0], f[0])
+    if kinds in (("seg", "arc"), ("arc", "seg")):
+        sg, ar = (e, f) if e[0] == "seg" else (f, e)
+        (ax, ay), (bx, by) = sg[1], sg[2]
+        l = mp.hypot(bx - ax, by - ay)
+        nx, ny = -(by - ay) / l, (bx - ax) / l
+        (cx, cy), r = ar[1], ar[2]
+        for k in (1, -1):
+            pa = (cx + k * r * nx, cy + k * r * ny)
+            if on_edge(mp, ar, pa) is None:
+                continue
+            t = ((pa[0] - ax) * (bx - ax) + (pa[1] - ay) * (by - ay)) / (l * l)
+            if 0 <= t <= 1:
+                ps = (ax + t * (bx - ax), ay + t * (by - ay))
+                d = mp.hypot(pa[0] - ps[0], pa[1] - ps[1])
+                cands.append((d, ps, pa) if e[0] == "seg" else (d, pa, ps))
+    if kinds == ("arc", "arc"):
+        (c1x, c1y), r1, (c2x, c2y), r2 = e[1], e[2], f[1], f[2]
+        d = mp.hypot(c2x - c1x, c2y - c1y)
+        if d > 0:
+            ux, uy = (c2x - c1x) / d, (c2y - c1y) / d
+            for k1 in (1, -1):
+                q1 = (c1x + k1 * r1 * ux, c1y + k1 * r1 * uy)
+                if on_edge(mp, e, q1) is None:
+                    continue
+                for k2 in (1, -1):
+                    q2 = (c2x + k2 * r2 * ux, c2y + k2 * r2 * uy)
+                    if on_edge(mp, f, q2) is not None:
+                        cands.append((mp.hypot(q1[0] - q2[0], q1[1] - q2[1]), q1, q2))
+    return min(cands, key=lambda x: x[0])
+
+
+def sampled_least(mp, a, b, n=600):
+    """The least distance of two plans by dense sampling, the closed form's check."""
+    pa = [point(mp, e, mp.mpf(i) / n) for e in a.edges for i in range(n + 1)]
+    pb = [point(mp, e, mp.mpf(i) / n) for e in b.edges for i in range(n + 1)]
+    return min(float(mp.hypot(x[0] - y[0], x[1] - y[1])) for x in pa for y in pb)
+
+
+def clearances(pipes, inverts, diameter, c, mark):
+    """The checked pipes' crossings with the other network's and their near passes, marking the findings."""
+    import mpmath as mp
+    mp.mp.dps = 50
+    others, _ = drawing()[c["network"]]
+    mine = [Plan(mp, p, inverts, diameter) for p in pipes]
+    theirs = [Plan(mp, p, c["inverts"], c.get("diameter")) for p in others]
+    crossings, near = [], []
+    xy = lambda q: [X0 + float(q[0]), Y0 + float(q[1])]
+    for i, a in enumerate(mine):
+        for b in theirs:
+            found = []
+            for ea in a.edges:
+                for eb in b.edges:
+                    for t, u, q in hits(mp, ea, eb):
+                        sa = ea[-2] + t * (ea[-1] - ea[-2])
+                        sb = eb[-2] + u * (eb[-1] - eb[-2])
+                        found.append((sa, sb, q))
+            found.sort(key=lambda x: x[0])
+            for sa, sb, q in found:
+                ia, ib = a.invert(float(sa)), b.invert(float(sb))
+                row = {"pipe": uid(a.pipe.n), "other": uid(b.pipe.n), "at": xy(q)}
+                if ia is not None:
+                    row["invert"] = ia
+                if ib is not None:
+                    row["otherInvert"] = ib
+                if None not in (ia, ib, a.radius, b.radius):
+                    up = ia + a.radius >= ib + b.radius
+                    gap = ia - (ib + 2 * b.radius) if up else ib - (ia + 2 * a.radius)
+                    row["clearance"] = gap
+                    row["above"] = "pipe" if up else "other"
+                    local = (float(q[0]), float(q[1]))
+                    if gap < 0:
+                        mark(i, "clash", local, gap)
+                    elif c.get("vertical") is not None and gap < c["vertical"]:
+                        mark(i, "closeCrossing", local, gap)
+                    if c.get("above") is not None and c["above"] != row["above"]:
+                        mark(i, "wrongSide", local, gap)
+                crossings.append(row)
+            if c.get("horizontal") is None or found:
+                continue
+            d, qa, qb = min((least(mp, ea, eb) for ea in a.edges for eb in b.edges), key=lambda x: x[0])
+            got = sampled_least(mp, a, b) if float(d) < 50 else float(d)
+            assert -1e-9 <= got - float(d) < 1e-3, (a.pipe.name, b.pipe.name, got, float(d))
+            gap = None if None in (a.radius, b.radius) else float(d) - a.radius - b.radius
+            if (gap if gap is not None else float(d)) < c["horizontal"]:
+                mark(i, "closeAlongside", (float(qa[0]), float(qa[1])), gap)
+                row = {"pipe": uid(a.pipe.n), "other": uid(b.pipe.n), "at": xy(qa), "otherAt": xy(qb),
+                       "distance": float(d)}
+                if gap is not None:
+                    row["clearance"] = gap
+                near.append(row)
+    return crossings, near
 
 
 # ── The cases ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -481,7 +772,7 @@ def sewer_input(**over):
 def sewer(**over):
     inp = sewer_input(**over)
     return inp, report("atiksu", "fields", inp.get("diameter"), inp.get("ground"), inp.get("minCover"),
-                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"))
+                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"))
 
 
 def storm(**over):
@@ -489,7 +780,7 @@ def storm(**over):
     inp = {k_: v for k_, v in inp.items() if v is not None}
     inv = inp["inverts"]["from"]
     return inp, report("yagmur", inv, inp.get("diameter"), inp.get("ground"), inp.get("minCover"),
-                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"))
+                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"))
 
 
 def cases():
@@ -555,7 +846,64 @@ def cases():
                 "$any", None),
         refused("CBS projesinde yüzey", sewer_input(), NOT_MAP[0], NOT_MAP[1], None, setup_=setup("gis")),
     ]
+    out += clearance_cases()
     return out
+
+
+WATER_ASK = {"network": "su", "inverts": {"from": "heights"}, "diameter": {"field": "Çap", "unit": "mm"}}
+
+
+def clearance_cases():
+    """The clearances to the water network (docs/adr/2360)."""
+    base_in, base = sewer(clearance=WATER_ASK)
+    by_pipe = {(c["pipe"], c["other"]): c for c in base["crossings"]}
+    assert len(base["crossings"]) == 4, base["crossings"]
+    w = {name: uid(258 + k) for k, (name, *_rest) in enumerate(WATER)}
+    p = {name: uid(240 + k + 1) for k, (name, *_rest) in enumerate(SEWER)}
+    assert by_pipe[(p["P2"], w["W1"])]["clearance"] < 0 and by_pipe[(p["P2"], w["W1"])]["above"] == "other"
+    assert by_pipe[(p["P3"], w["W2"])]["above"] == "pipe"
+    assert "clearance" not in by_pipe[(p["P4"], w["W7"])] and "otherInvert" not in by_pipe[(p["P4"], w["W7"])]
+    least_in, least = sewer(clearance={**WATER_ASK, "vertical": 0.5, "above": "other"})
+    kinds = {(f["uid"], f["kind"]) for f in least["findings"]}
+    assert {(p["P1"], "closeCrossing"), (p["P2"], "clash"), (p["P3"], "wrongSide")} <= kinds, kinds
+    side_in, side = sewer(clearance={**WATER_ASK, "horizontal": 3.0})
+    assert [(n["pipe"], n["other"]) for n in side["near"]] == [(p["P3"], w["W5"])], side.get("near")
+    storm_in, storm_ = storm(clearance={**WATER_ASK, "horizontal": 3.0})
+    assert len(storm_["crossings"]) == 1 and len(storm_["near"]) == 1, (storm_.get("crossings"), storm_.get("near"))
+    thin_in, thin = sewer(clearance={"network": "su", "inverts": {"from": "heights"}})
+    fields_in, fields = sewer(clearance={**WATER_ASK, "inverts": {"from": "fields", "start": "Akar baş",
+                                                                  "end": "Akar son"}})
+    assert all("otherInvert" not in c for c in fields["crossings"])
+    bad = "invalid_pipe_check"
+    return [
+        ok("açıklık: içme suyu boruları atıksuyu kesiyor; düşey açıklık ve üstteki boru", base_in, base),
+        ok("açıklık: en az düşey açıklık ve suyun üstte olması", least_in, least),
+        ok("açıklık: en az yatay açıklık; kesişmeden yakın geçen boru", side_in, side),
+        ok("açıklık: yağmursuyunun yaylı borusunda kesişim ve yanından geçiş", storm_in, storm_),
+        ok("açıklık: su borularının çapı sorulmadan; kalınlıksız sayılır", thin_in, thin),
+        ok("açıklık: su borularında akar özniteliği yok; köşe kotları yerine geçmez", fields_in, fields),
+        refused("açıklık: denetlenen ağın kendisi", sewer_input(clearance={**WATER_ASK, "network": "atiksu"}), bad,
+                "Açıklık başka bir ağın borularına ölçülür; “Atıksu” denetlenen ağın kendisi.", "clearance.network"),
+        refused("açıklık: sıfır en az düşey açıklık", sewer_input(clearance={**WATER_ASK, "vertical": 0.0}), bad,
+                "En az düşey açıklık 0'dan büyük bir sayı olmalı; yalnız çakışmalar aranacaksa boş bırakın.",
+                "clearance.vertical"),
+        refused("açıklık: eksi en az yatay açıklık", sewer_input(clearance={**WATER_ASK, "horizontal": -1.0}), bad,
+                "En az yatay açıklık 0'dan büyük bir sayı olmalı; yatay açıklık denetlenmeyecekse boş bırakın.",
+                "clearance.horizontal"),
+        refused("açıklık: boş akar kotu özniteliği", sewer_input(clearance={
+            **WATER_ASK, "inverts": {"from": "fields", "start": " ", "end": "x"}}), bad,
+                "Baş akar kotunun özniteliği boş; özniteliğin adını yazın.", "clearance.inverts.start"),
+        refused("açıklık: katalogda sıfır çap", sewer_input(clearance={
+            **WATER_ASK, "diameter": {"field": "Çap", "unit": "mm", "catalog": [0.0]}}), bad,
+                "Katalogdaki çaplar 0'dan büyük olmalı.", "clearance.diameter.catalog[0]"),
+        refused("açıklık: olmayan ağ", sewer_input(clearance={**WATER_ASK, "network": "gaz"}), "unknown_network",
+                "“gaz” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.", "clearance.network"),
+        refused("açıklık: yol ağı", sewer_input(clearance={**WATER_ASK, "network": "yollar"}), "not_a_pipe_network",
+                "“Yollar” bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.", "clearance.network"),
+        refused("açıklık: önce denetlenen ağın sorusu", sewer_input(minCover=0.0, clearance={**WATER_ASK,
+                                                                                         "vertical": 0.0}), bad,
+                "En az örtü 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın.", "minCover"),
+    ]
 
 
 def main():
@@ -563,8 +911,9 @@ def main():
            "title": "Boru hattı denetimi",
            "note": "ADR 1640. Bağımsız başvuru scripts/fixtures/pipes_check_cases.py: zemin kapalı biçimli kafes "
                    "(her kare tek düzlem), örtü köşelerde ve kafes çizgisi kesişimlerinde, eğim, birim ve bağlantı "
-                   "kuralları elle; KentOS kodu yok. Sınırlar durumların kendi değerleridir, yönetmelik değeri değil.",
-           "setup": setup(), "cases": cases()}
+                   "kuralları elle; KentOS kodu yok. Sınırlar durumların kendi değerleridir, yönetmelik değeri değil. "
+                   "ADR 2360: içme suyu ağına açıklıklar, kesişim ve en yakın yer mpmath ile kapalı biçimde.",
+           "setup": setup(water=True), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         ok_ = OUT.exists() and OUT.read_text("utf-8") == text

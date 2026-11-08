@@ -94,6 +94,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   penceresinde Tepe ve çukur kotları kutusu.
 - MAP-15 / ADR 2340: `road.terrains.cutfill`'in web işleyicisinde `labels` ve `table` (38 ortak durum); web'in Yüzey
   analizi › Fark'ında Bölgelere satırı.
+- MAP-16 / ADR 2360: `cad.pipes.check`'in web işleyicisinde `clearance` (44 ortak durum); web'in Boru hattı denetimi
+  penceresinde Diğer ağ satırları, Kesişim ve Yakın geçiş tabloları.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

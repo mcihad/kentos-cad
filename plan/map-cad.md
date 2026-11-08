@@ -46,7 +46,7 @@ sırayla alır.
 | MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
-| MAP-16 Altyapı | 1640, 1860 | disiplinler arası açıklık; profilin canlı güncellenmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
+| MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880 | blok, ilişki ve tablo örnekleri; teslim paketinin matrisi taşıması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900 | ölçme kalite notu; atlas sayfalarının kaynak dökümü | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920 | iş türleri ve zaman serisi; dönen kaydın pakete eşlenmesi | canlı cihaz; cihaz biçimleri |
@@ -1256,6 +1256,16 @@ akış yönünde hattı izler (bitiş borusu, çıkış ya da çatal), değerler
 boykesiti yol boykesitinin kurallarıyla çizer: çerçeve ve kot ızgarası, zemin, akar ve tepe, bacalar, dokuz bant; 35
 bağımsız durum (çizilen nesneler sayılır); Boru hattı denetimi penceresinde Hat profilini çiz. Açık: profilin canlı
 güncellenmesi, disiplinler arası açıklık, EPANET/SWMM adaptörleri, tasarlanan/uygulanan/ölçülen revizyonlar.
+
+**8 Kasım 2026, üçüncü tur — başka bir ağın borularına açıklık ([ADR 2360](../docs/adr/2360-pipe-clearance-to-another-network.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: Civil 3D'nin Interference Check'i (iki ağ arasında fiziksel çakışma ve 3B
+yakınlık uzaklığı), Utah R309-550-7 (kesişimde su üstte, paralelde yatay uzaklık, kenardan kenara); Türk şartnamesinin
+değeri okunamadı, sınırlar kullanıcının. Kanıtlanan: `cad.pipes.check`'e `clearance`: planda kesişimde düşey açıklık
+(üstteki akar − alttaki tepe, üstteki iç çapın ortasıyla), kesişmeyen çiftte kesin en kısa yatay uzaklık eksi
+yarıçaplar, istenen üst tarafın denetimi; bulgular clash, closeCrossing, wrongSide, closeAlongside; yaylı borular dahil;
+44 ortak durum (mpmath), MCP; Boru hattı denetimi'nde Diğer ağ satırları, Kesişim ve Yakın geçiş tabloları. Açık: yüzey
+kaplaması, 3B en kısa uzaklık, et kalınlığı, kesişimlerin çizimde ve hat profilinde gösterilmesi, profilin canlı
+güncellenmesi.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 

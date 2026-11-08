@@ -314,6 +314,7 @@ pub mod topology_clean;
 pub mod parcels_boundaries;
 pub mod parcels_check;
 pub mod pipes_check;
+mod pipes_clearance;
 pub mod pipes_profile;
 pub mod asbuilt_check;
 pub mod field_package;

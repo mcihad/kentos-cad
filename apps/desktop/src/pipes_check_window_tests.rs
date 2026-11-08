@@ -1,14 +1,14 @@
 //! Boru hattı denetimi (pipes_check_window.rs, docs/adr/1640) on the shared cases' drawing of `cad.pipes.check`: the
 //! window opens on the first utility network with the attributes the pipes have and the project's surface, no limit;
 //! limits typed in the form find more, Bulgulu shows only the pipes with findings, Bulgulu boruları seç selects them,
-//! CSV kaydet writes the table, nothing is written to the drawing. Harita, Yol and GIS offer it, Mimari does not. And
-//! its pictures.
+//! CSV kaydet writes the table, nothing is written to the drawing. Harita, Yol and GIS offer it, Mimari does not. Diğer
+//! ağ measures the clearances to the water network as the shared cases do (docs/adr/2360). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
 
 use crate::app::{App, Dialog, Message};
-use crate::pipes_check_window::{Event as P, Ground, Show};
+use crate::pipes_check_window::{Above, Event as P, Ground, Show};
 
 fn cases() -> Value {
     serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.pipes.check.json")).expect("cases")
@@ -193,7 +193,7 @@ fn profile_screens() {
         let doc = &app.document.as_ref().expect("a drawing").model;
         let n = doc.entities().count();
         let slots: Vec<kentos_domain::Slot> =
-            doc.entities().skip(n.saturating_sub(400)).filter(|e| e.base().id > 257).map(|e| kentos_domain::Slot(e.base().id)).collect();
+            doc.entities().skip(n.saturating_sub(400)).filter(|e| e.base().id > 264).map(|e| kentos_domain::Slot(e.base().id)).collect();
         app.selection.set(slots);
         let _ = app.update(Message::Run("view.zoomSelection"));
         app.selection.clear();
@@ -201,5 +201,125 @@ fn profile_screens() {
         let file = out.join(format!("2-profil-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
+    }
+}
+
+fn case_output(name: &str) -> Value {
+    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect(name)["steps"][0]["result"]
+        ["output"]
+        .clone()
+}
+
+/// The window's limits set as the shared cases' (the sewer's full question).
+fn with_case_limits(app: &mut App) {
+    for e in [P::MinCover("0,8".into()), P::MaxCover("3".into()), P::MinSlope("9".into()), P::MaxSlope("50".into())] {
+        let _ = app.update(Message::PipesCheck(e));
+    }
+    let _ = app.update(Message::PipesCheck(P::Catalog("200 300 400 500".into())));
+}
+
+fn same_list(got: &Value, want: &Value, what: &str) {
+    let (g, w) = (got.as_array().cloned().unwrap_or_default(), want.as_array().cloned().unwrap_or_default());
+    assert_eq!(g.len(), w.len(), "{what}: {got}");
+    for (g, w) in g.iter().zip(&w) {
+        for key in ["pipe", "other", "above"] {
+            assert_eq!(g[key], w[key], "{what} {key}");
+        }
+        for key in ["clearance", "distance", "invert", "otherInvert"] {
+            match (g[key].as_f64(), w[key].as_f64()) {
+                (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{what} {key}: {a} {b}"),
+                (a, b) => assert_eq!(a.is_some(), b.is_some(), "{what} {key}"),
+            }
+        }
+    }
+}
+
+/// docs/adr/2360: Diğer ağ picks the water network (its heights and Çap guessed from its pipes); the least vertical
+/// clearance and the water above give the shared case's crossings and findings, the least horizontal one its near
+/// pass; Kesişim lists the four crossings; nothing is written.
+#[test]
+fn the_clearances_to_the_water_network_are_the_shared_cases() {
+    let mut app = opened(Some(Module::Map));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("pipes.check"));
+    with_case_limits(&mut app);
+    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+    assert_eq!(app.pipes_check.other_from, crate::pipes_check_window::From::Heights, "the water pipes have no Akar baş");
+    assert_eq!(app.pipes_check.other_diameter, "Çap");
+    let _ = app.update(Message::PipesCheck(P::Vertical("0,5".into())));
+    let _ = app.update(Message::PipesCheck(P::Above(Above::Other)));
+    let r = serde_json::to_value(app.pipes_check.answer.clone().expect("an answer").expect("checked")).expect("json");
+    let want = case_output("açıklık: en az düşey açıklık ve suyun üstte olması");
+    same_list(&r["crossings"], &want["crossings"], "crossings");
+    assert_eq!(r["counts"], want["counts"]);
+    assert_eq!(r["findings"].as_array().map(Vec::len), want["findings"].as_array().map(Vec::len));
+    let _ = app.update(Message::PipesCheck(P::Show(Show::Crossings)));
+    assert_eq!(app.pipes_check.show, Show::Crossings);
+    // The least horizontal clearance alone: the near pass of the case.
+    for e in [P::Vertical(String::new()), P::Above(Above::Either), P::Horizontal("3".into())] {
+        let _ = app.update(Message::PipesCheck(e));
+    }
+    let r = serde_json::to_value(app.pipes_check.answer.clone().expect("an answer").expect("checked")).expect("json");
+    let want = case_output("açıklık: en az yatay açıklık; kesişmeden yakın geçen boru");
+    same_list(&r["near"], &want["near"], "near");
+    assert_eq!(r["counts"], want["counts"]);
+    // No other network: no clearance, the table back to the pipes.
+    let _ = app.update(Message::PipesCheck(P::Show(Show::Near)));
+    let _ = app.update(Message::PipesCheck(P::Other(String::new())));
+    assert_eq!(app.pipes_check.show, Show::All);
+    let r = app.pipes_check.answer.clone().expect("an answer").expect("checked");
+    assert!(r.crossings.is_empty() && r.near.is_empty());
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+#[test]
+fn a_clearance_that_is_no_number_is_said() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+    let _ = app.update(Message::PipesCheck(P::Horizontal("üç".into())));
+    assert_eq!(app.pipes_check.answer, Some(Err("En az yatay açıklık “üç” bir sayı değil.".into())));
+}
+
+/// `.run/gui-evidence/boru-acikligi-2360/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib pipes_check_window_tests::clearance_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn clearance_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/boru-acikligi-2360");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pipes.check"));
+        with_case_limits(&mut app);
+        for e in [
+            P::Other("su".into()),
+            P::Vertical("0,5".into()),
+            P::Horizontal("3".into()),
+            P::Above(Above::Other),
+            P::Show(Show::Crossings),
+        ] {
+            let _ = app.update(Message::PipesCheck(e));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        for (show, file) in [(Show::Crossings, "1-kesisim"), (Show::Near, "2-yakin-gecis"), (Show::Found, "3-bulgulu")] {
+            let _ = app.update(Message::PipesCheck(P::Show(show)));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
     }
 }

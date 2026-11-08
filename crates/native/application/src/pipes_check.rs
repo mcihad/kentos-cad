@@ -13,7 +13,8 @@
 //!   read in centimetres or millimetres, or as a depth, is a likely unit mistake;
 //! - how it meets the others: a part not connected to the longest, an end at no structure (when the network has
 //!   structures), an outlet higher than the lowest inlet at a node (Civil 3D's Pipe Drop Across Structure rule's
-//!   question, with no drop asked).
+//!   question, with no drop asked);
+//! - asked for, its clearances to another network's pipes (`pipes_clearance`, docs/adr/2360).
 //!
 //! Nothing is corrected or written, and no limit is the program's (CLAUDE.md: değer uydurulmaz). The shared cases are
 //! `fixtures/commands/v1/cad.pipes.check.json`.
@@ -32,10 +33,11 @@ use kentos_road::surface::Surface;
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
 use crate::codes;
+use crate::pipes_clearance as clearance;
 use crate::processing_host::host;
 use crate::road_terrains as terrains;
 
-fn refuse(code: &str, message: String, path: &str) -> Stop {
+pub(crate) fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
@@ -59,7 +61,11 @@ pub(crate) fn attr(e: &Entity, field: &str) -> Option<f64> {
 /// The question's own rules, before the drawing is read.
 fn asked(input: &PipesCheck) -> Result<(), Stop> {
     asked_values(&input.inverts, input.diameter.as_ref(), input.ground.as_ref())?;
-    limits_of(input)
+    limits_of(input)?;
+    match &input.clearance {
+        Some(c) => clearance::asked(c),
+        None => Ok(()),
+    }
 }
 
 /// The rules of where the values are read (`cad.pipes.check`'s and `cad.pipes.profile`'s): attributes named, a
@@ -213,6 +219,7 @@ struct Ask<'a> {
     input: &'a PipesCheck,
     def: &'a NetworkDef,
     surface: Option<&'a Surface>,
+    other: Option<&'a clearance::Other<'a>>,
 }
 
 struct Found {
@@ -229,13 +236,8 @@ impl Found {
     }
 }
 
-/// A utility network asked by its id or name, the terrain surface the ground is read from (made, when asked) and the
-/// network built; refused as `cad.pipes.check`'s contract says.
-pub(crate) fn load(
-    doc: &Document,
-    network: &str,
-    ground: Option<&PipeGround>,
-) -> Result<(NetworkDef, Option<terrains::Made>, kentos_geometry_core::ops::network::NetworkSession), Stop> {
+/// A utility network's definition by its id or name; refused (`network`) when there is none or it is a road network.
+pub(crate) fn network_def(doc: &Document, network: &str) -> Result<NetworkDef, Stop> {
     let key = network_caseless(network);
     let def = doc
         .settings()
@@ -258,6 +260,17 @@ pub(crate) fn load(
             "network",
         ));
     }
+    Ok(def)
+}
+
+/// A utility network asked by its id or name, the terrain surface the ground is read from (made, when asked) and the
+/// network built; refused as `cad.pipes.check`'s contract says.
+pub(crate) fn load(
+    doc: &Document,
+    network: &str,
+    ground: Option<&PipeGround>,
+) -> Result<(NetworkDef, Option<terrains::Made>, kentos_geometry_core::ops::network::NetworkSession), Stop> {
+    let def = network_def(doc, network)?;
     let made = match ground {
         Some(PipeGround::Surface { surface }) => {
             terrains::terrain_project(doc)?;
@@ -290,7 +303,15 @@ fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
             "network",
         ));
     }
-    Ok(check(doc, g, &Ask { input, def: &def, surface }))
+    let other = match &input.clearance {
+        Some(c) => Some(clearance::load(doc, c, &def)?),
+        None => None,
+    };
+    let ready = match (&input.clearance, &other) {
+        (Some(c), Some((_, session))) => Some(clearance::Other::new(doc, c, session)),
+        _ => None,
+    };
+    Ok(check(doc, g, &Ask { input, def: &def, surface, other: ready.as_ref() }))
 }
 
 fn root(parent: &mut [u32], mut x: u32) -> u32 {
@@ -541,6 +562,14 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             }
         }
     }
+    // The clearances to the other network's pipes (docs/adr/2360).
+    let measured = ask.other.map(|o| clearance::measure(doc, g, &input.inverts, input.diameter.as_ref(), o));
+    if let Some(m) = &measured {
+        for mark in &m.marks {
+            found.add(mark.kind, &mark.uid, mark.at, mark.value, None);
+        }
+    }
+    let (crossings, near) = measured.map(|m| (m.crossings, m.near)).unwrap_or_default();
     // Pipe by pipe, each pipe's in the kinds' order (a kind twice: in the order found).
     let index: HashMap<String, usize> = pipes.iter().enumerate().map(|(k, p)| (p.uid.clone(), k)).collect();
     let mut list = found.findings;
@@ -567,6 +596,8 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
         counts,
         parts: part_count.min(u32::MAX as usize) as u32,
         length: total,
+        crossings,
+        near,
     }
 }
 

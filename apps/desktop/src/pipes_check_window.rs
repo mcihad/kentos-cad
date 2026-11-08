@@ -5,6 +5,9 @@
 //! the form. The summary counts the findings by kind, the table lists every pipe with its slope, diameter, cover and
 //! findings (Bulgulu: only those with one); Bulgulu boruları seç selects them, CSV kaydet writes the table. Hat profili
 //! draws the run from a pipe along the flow as a longitudinal profile under the drawing (`cad.pipes.profile`, docs/adr/1860).
+//! Diğer ağ (docs/adr/2360) measures the clearances to another utility network's pipes: where they cross, the vertical
+//! clearance and which is above; where they pass, the horizontal one. The least clearances and the side that must be
+//! above are the user's; Kesişim and Yakın geçiş list them.
 
 use std::path::PathBuf;
 
@@ -12,8 +15,8 @@ use iced::widget::{container, row};
 use kentos_ui::widget::grow::Grows;
 use iced::{Center, Element, Task};
 use kentos_commands::{
-    CommandResult, NetworkKind, PipeCheck, PipeDiameter, PipeGround, PipeInverts, PipeUnit, PipesCheck, PipesChecked,
-    PipesProfile,
+    CommandResult, NetworkKind, PipeAbove, PipeCheck, PipeClearanceAsk, PipeCrossing, PipeDiameter, PipeGround,
+    PipeInverts, PipeNear, PipeUnit, PipesCheck, PipesChecked, PipesProfile,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -70,12 +73,14 @@ impl std::fmt::Display for Ground {
     }
 }
 
-/// Which pipes the table shows.
+/// What the table shows: every pipe, those with a finding, the crossings with the other network, its near passes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Show {
     #[default]
     All,
     Found,
+    Crossings,
+    Near,
 }
 
 impl std::fmt::Display for Show {
@@ -83,6 +88,27 @@ impl std::fmt::Display for Show {
         f.write_str(match self {
             Show::All => "Tümü",
             Show::Found => "Bulgulu",
+            Show::Crossings => "Kesişim",
+            Show::Near => "Yakın geçiş",
+        })
+    }
+}
+
+/// Which network's pipe must be above where the two cross (docs/adr/2360).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Above {
+    #[default]
+    Either,
+    This,
+    Other,
+}
+
+impl std::fmt::Display for Above {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Above::Either => "Fark etmez",
+            Above::This => "Bu ağ",
+            Above::Other => "Diğer ağ",
         })
     }
 }
@@ -115,6 +141,17 @@ pub struct State {
     pub profile_end: String,
     pub profile_layer: String,
     pub layers: Vec<(String, String)>,
+    /// Diğer ağ (docs/adr/2360): the other network's id (empty: no clearance), where its inverts and diameters are,
+    /// the least vertical and horizontal clearances (metres) and the side that must be above.
+    pub other: String,
+    pub other_from: From,
+    pub other_start: String,
+    pub other_end: String,
+    pub other_diameter: String,
+    pub other_unit: String,
+    pub vertical: String,
+    pub horizontal: String,
+    pub above: Above,
 }
 
 #[derive(Clone, Debug)]
@@ -138,6 +175,15 @@ pub enum Event {
     ProfileEnd(String),
     ProfileLayer(String),
     DrawProfile,
+    Other(String),
+    OtherFrom(From),
+    OtherStart(String),
+    OtherEnd(String),
+    OtherDiameter(String),
+    OtherUnit(String),
+    Vertical(String),
+    Horizontal(String),
+    Above(Above),
     Select,
     Save,
     Saved(Option<PathBuf>),
@@ -170,6 +216,10 @@ pub fn kind_word(kind: &str) -> &'static str {
         "shallow" => "Örtü az",
         "deep" => "Örtü çok",
         "curved" => "Yay: örtü köşelerde",
+        "clash" => "Çakışma",
+        "closeCrossing" => "Düşey açıklık az",
+        "wrongSide" => "Üstte olması gereken altta",
+        "closeAlongside" => "Yatay açıklık az",
         _ => "—",
     }
 }
@@ -191,6 +241,14 @@ fn catalog(text: &str) -> Result<Vec<f64>, String> {
             t.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()).ok_or_else(|| format!("Katalogdaki “{t}” bir sayı değil."))
         })
         .collect()
+}
+
+fn unit_of(text: &str) -> PipeUnit {
+    match text {
+        "cm" => PipeUnit::Cm,
+        "m" => PipeUnit::M,
+        _ => PipeUnit::Mm,
+    }
 }
 
 fn per_mille(v: f64) -> String {
@@ -242,12 +300,31 @@ pub fn csv(r: &PipesChecked, names: &[String]) -> String {
 impl App {
     fn pipes_check_input(&self) -> Result<PipesCheck, String> {
         let s = &self.pipes_check;
-        let unit = match s.unit.as_str() {
-            "cm" => PipeUnit::Cm,
-            "m" => PipeUnit::M,
-            _ => PipeUnit::Mm,
-        };
+        let unit = unit_of(&s.unit);
         let slope = |t: &str, w: &str| limit(t, w).map(|v| v.map(|v| v / 1000.0));
+        let clearance = if s.other.is_empty() {
+            None
+        } else {
+            Some(PipeClearanceAsk {
+                network: s.other.clone(),
+                inverts: match s.other_from {
+                    From::Fields => PipeInverts::Fields { start: s.other_start.clone(), end: s.other_end.clone() },
+                    From::Heights => PipeInverts::Heights,
+                },
+                diameter: (!s.other_diameter.trim().is_empty()).then(|| PipeDiameter {
+                    field: s.other_diameter.clone(),
+                    unit: unit_of(&s.other_unit),
+                    catalog: Vec::new(),
+                }),
+                vertical: limit(&s.vertical, "En az düşey açıklık")?,
+                horizontal: limit(&s.horizontal, "En az yatay açıklık")?,
+                above: match s.above {
+                    Above::Either => None,
+                    Above::This => Some(PipeAbove::Pipe),
+                    Above::Other => Some(PipeAbove::Other),
+                },
+            })
+        };
         Ok(PipesCheck {
             network: s.network.clone(),
             inverts: match s.from {
@@ -266,6 +343,7 @@ impl App {
             max_cover: limit(&s.max_cover, "En çok örtü")?,
             min_slope: slope(&s.min_slope, "En az eğim")?,
             max_slope: slope(&s.max_slope, "En çok eğim")?,
+            clearance,
         })
     }
 
@@ -340,6 +418,9 @@ impl App {
             surface: surfaces.first().map(|s| s.0.clone()).unwrap_or_default(),
             surfaces,
             cover_field: "Kapak kotu".into(),
+            other_start: "Akar baş".into(),
+            other_end: "Akar son".into(),
+            other_unit: "mm".into(),
             ..State::default()
         };
         self.pipes_check_run();
@@ -397,6 +478,28 @@ impl App {
         }
     }
 
+    /// Diğer ağ chosen: where its inverts and diameters are, guessed from its pipes' own attributes (Akar baş, Çap;
+    /// else the vertices' heights), as the checked network's are when the window opens.
+    fn pipes_check_other(&mut self, id: String) {
+        let guess = self.document.as_ref().and_then(|doc| {
+            let net = doc.model.settings().networks.iter().find(|n| n.id == id)?;
+            let layers: Vec<&str> = net.edges.iter().map(|l| l.layer.as_str()).collect();
+            let has = |field: &str| {
+                doc.model.entities().any(|e| layers.contains(&e.base().layer_id.as_str()) && e.base().attrs.contains_key(field))
+            };
+            Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap")))
+        });
+        let s = &mut self.pipes_check;
+        if let Some((from, diameter)) = guess {
+            s.other_from = from;
+            s.other_diameter = if diameter { "Çap".into() } else { String::new() };
+        }
+        if id.is_empty() && matches!(s.show, Show::Crossings | Show::Near) {
+            s.show = Show::All;
+        }
+        s.other = id;
+    }
+
     fn pipes_check_names(&self) -> Vec<String> {
         match &self.pipes_check.answer {
             Some(Ok(r)) => r.pipes.iter().map(|p| name_of(self, &p.uid)).collect(),
@@ -451,6 +554,15 @@ impl App {
                 self.pipes_profile_draw();
                 return Task::none();
             }
+            Event::Other(v) => self.pipes_check_other(v),
+            Event::OtherFrom(v) => s.other_from = v,
+            Event::OtherStart(v) => s.other_start = v,
+            Event::OtherEnd(v) => s.other_end = v,
+            Event::OtherDiameter(v) => s.other_diameter = v,
+            Event::OtherUnit(v) => s.other_unit = v,
+            Event::Vertical(v) => s.vertical = v,
+            Event::Horizontal(v) => s.horizontal = v,
+            Event::Above(v) => s.above = v,
             Event::Select => {
                 let Some(Ok(r)) = &self.pipes_check.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -569,6 +681,50 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             );
+        // Diğer ağ (docs/adr/2360): the other utility networks; none chosen, no clearance.
+        let others: Vec<(String, String)> = std::iter::once((String::new(), "Yok".to_owned()))
+            .chain(s.networks.iter().filter(|(id, _)| *id != s.network).cloned())
+            .collect();
+        let other_from = Segmented::new([From::Fields, From::Heights], s.other_from, |v| msg(Event::OtherFrom(v)));
+        let mut other = row![container(fields::select_owned(others, &s.other, |v| msg(Event::Other(v)))).width(170)]
+            .spacing(8)
+            .align_y(Center);
+        if !s.other.is_empty() {
+            other = other.push(label::caption("akar")).push(other_from);
+            if s.other_from == From::Fields {
+                other = other
+                    .push(text(&s.other_start, "Baş", Event::OtherStart, 100.0))
+                    .push(text(&s.other_end, "Son", Event::OtherEnd, 100.0));
+            }
+        }
+        let form = form.field("Diğer ağ", other);
+        let form = if s.other.is_empty() {
+            form
+        } else {
+            let units: Vec<(String, String)> = ["mm", "cm", "m"].iter().map(|u| (u.to_string(), u.to_string())).collect();
+            form.field(
+                "Diğer ağın çapı",
+                row![
+                    text(&s.other_diameter, "Öznitelik", Event::OtherDiameter, 110.0),
+                    container(fields::select_owned(units, &s.other_unit, |v| msg(Event::OtherUnit(v)))).width(70)
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            .field(
+                "Açıklık (m)",
+                row![
+                    label::caption("düşey en az"),
+                    text(&s.vertical, "—", Event::Vertical, 80.0),
+                    label::caption("yatay en az"),
+                    text(&s.horizontal, "—", Event::Horizontal, 80.0),
+                    label::caption("üstte"),
+                    Segmented::new([Above::Either, Above::This, Above::Other], s.above, |v| msg(Event::Above(v)))
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+        };
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let mut found = 0;
@@ -600,37 +756,80 @@ impl App {
                         if r.cover_to == "crown" { "tepesinin (akar + iç çap)" } else { "akarının" }
                     ),
                 ));
+                if !s.other.is_empty() {
+                    lines.push(words::text_line(Kind::Info, clearance_line(r)));
+                }
                 let names = self.pipes_check_names();
-                for (p, name) in r.pipes.iter().zip(names) {
-                    if s.show == Show::Found && p.findings.is_empty() {
-                        continue;
+                match s.show {
+                    Show::Crossings => rows.extend(r.crossings.iter().map(|c| crossing_row(self, c, &f))),
+                    Show::Near => rows.extend(r.near.iter().map(|n| near_row(self, n, &f))),
+                    Show::All | Show::Found => {
+                        for (p, name) in r.pipes.iter().zip(names) {
+                            if s.show == Show::Found && p.findings.is_empty() {
+                                continue;
+                            }
+                            rows.push(pipe_row(p, name, &f));
+                        }
                     }
-                    rows.push(pipe_row(p, name, &f));
                 }
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
         }
-        let table = sheet(
-            vec![
-                col("Boru", 80.0),
-                num("Uzunluk", 80.0),
-                num("Eğim ‰", 70.0),
-                num("Çap (mm)", 70.0),
-                num("En az örtü", 80.0),
-                col("Bulgular", 420.0),
-            ],
-            rows,
-            "Bu süzgeçte boru yok.",
-            260.0,
-        );
+        let (east, north) = (f.east_label(), f.north_label());
+        let (columns, empty) = match s.show {
+            Show::Crossings => (
+                vec![
+                    col("Boru", 80.0),
+                    col("Diğer boru", 90.0),
+                    num(east, 110.0),
+                    num(north, 110.0),
+                    num("Akar (m)", 80.0),
+                    num("Diğer akar (m)", 100.0),
+                    num("Açıklık (m)", 90.0),
+                    col("Üstte", 90.0),
+                ],
+                "Diğer ağın borularıyla kesişim yok.",
+            ),
+            Show::Near => (
+                vec![
+                    col("Boru", 80.0),
+                    col("Diğer boru", 90.0),
+                    num(east, 110.0),
+                    num(north, 110.0),
+                    num("Eksenler (m)", 100.0),
+                    num("Açıklık (m)", 90.0),
+                ],
+                if s.horizontal.trim().is_empty() {
+                    "Yakın geçişler için en az yatay açıklığı yazın."
+                } else {
+                    "En az yatay açıklıktan yakın geçen boru yok."
+                },
+            ),
+            Show::All | Show::Found => (
+                vec![
+                    col("Boru", 80.0),
+                    num("Uzunluk", 80.0),
+                    num("Eğim ‰", 70.0),
+                    num("Çap (mm)", 70.0),
+                    num("En az örtü", 80.0),
+                    col("Bulgular", 420.0),
+                ],
+                "Bu süzgeçte boru yok.",
+            ),
+        };
+        let table = sheet(columns, rows, empty, 260.0);
         // The table takes the height the rest leaves, at least a head and three rows; its rows scroll inside it.
         let body = Grows::new()
             .spacing(12.0)
             .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([Show::All, Show::Found], s.show, |v| msg(Event::Show(v))))
+            .push(if s.other.is_empty() {
+                Segmented::new(vec![Show::All, Show::Found], s.show, |v| msg(Event::Show(v)))
+            } else {
+                Segmented::new(vec![Show::All, Show::Found, Show::Crossings, Show::Near], s.show, |v| msg(Event::Show(v)))
+            })
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.pipes.is_empty());
         // Hat profili (docs/adr/1860): from a pipe along the flow, to a pipe or where the flow ends or splits.
@@ -672,6 +871,54 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// The clearances' line: the crossings, the clashes and those whose clearance is not known, the near passes.
+fn clearance_line(r: &PipesChecked) -> String {
+    let clash = r.crossings.iter().filter(|c| c.clearance.is_some_and(|v| v < 0.0)).count();
+    let unknown = r.crossings.iter().filter(|c| c.clearance.is_none()).count();
+    let mut out = format!("Diğer ağ: {} kesişim, {clash} çakışma", r.crossings.len());
+    if unknown > 0 {
+        out.push_str(&format!(", {unknown} kesişimde açıklık bilinmiyor (akar ya da çap yok)"));
+    }
+    out.push_str(&format!(
+        "; {} yakın geçiş. Açıklık iç çaplarla ölçülür, et kalınlığı katılmaz; sınırlar sizin.",
+        r.near.len()
+    ));
+    out
+}
+
+fn above_word(a: Option<PipeAbove>) -> &'static str {
+    match a {
+        Some(PipeAbove::Pipe) => "Bu ağ",
+        Some(PipeAbove::Other) => "Diğer ağ",
+        None => "",
+    }
+}
+
+fn crossing_row(app: &App, c: &PipeCrossing, f: &kentos_interaction::Format) -> Vec<String> {
+    let bare = |v: Option<f64>| v.map(|v| f.length_bare(v)).unwrap_or_default();
+    vec![
+        name_of(app, &c.pipe),
+        name_of(app, &c.other),
+        f.coord(c.at[0]),
+        f.coord(c.at[1]),
+        bare(c.invert),
+        bare(c.other_invert),
+        bare(c.clearance),
+        above_word(c.above).to_owned(),
+    ]
+}
+
+fn near_row(app: &App, n: &PipeNear, f: &kentos_interaction::Format) -> Vec<String> {
+    vec![
+        name_of(app, &n.pipe),
+        name_of(app, &n.other),
+        f.coord(n.at[0]),
+        f.coord(n.at[1]),
+        f.length_bare(n.distance),
+        n.clearance.map(|v| f.length_bare(v)).unwrap_or_default(),
+    ]
 }
 
 fn pipe_row(p: &PipeCheck, name: String, f: &kentos_interaction::Format) -> Vec<String> {

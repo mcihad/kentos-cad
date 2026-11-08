@@ -8,7 +8,9 @@
 //!
 //! No limit is the program's: the least and the greatest cover and slope are the user's (the regulation's annexes,
 //! the administration's specification or the project's own), and with none given only what is wrong in any project is
-//! reported (a rising pipe, a crown above the ground, a pipe not connected). Nothing is written. The shared cases are
+//! reported (a rising pipe, a crown above the ground, a pipe not connected). Asked for (docs/adr/2360), the clearances
+//! to another network's pipes: vertical where they cross in plan, horizontal where they pass without crossing, and
+//! which must be above; the least clearances are the user's too. Nothing is written. The shared cases are
 //! `fixtures/commands/v1/cad.pipes.check.json`.
 
 use serde::{Deserialize, Serialize};
@@ -25,7 +27,7 @@ pub const PIPE_FINDING_LIMIT: usize = 5000;
 pub const PIPE_CATALOG_LIMIT: usize = 200;
 
 /// The findings' kinds, in the order a pipe's are listed.
-pub const PIPE_FINDINGS: [&str; 19] = [
+pub const PIPE_FINDINGS: [&str; 23] = [
     "detached",
     "noStructure",
     "noInvert",
@@ -45,6 +47,10 @@ pub const PIPE_FINDINGS: [&str; 19] = [
     "shallow",
     "deep",
     "curved",
+    "clash",
+    "closeCrossing",
+    "wrongSide",
+    "closeAlongside",
 ];
 
 /// Where a pipe's inverts (the inside bottom's heights, metres) are read.
@@ -129,7 +135,10 @@ pub enum PipeGround {
 /// greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
 /// name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
 /// surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
-/// `tools_unavailable`.
+/// `tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's
+/// (`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),
+/// its network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is
+/// the network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -163,6 +172,104 @@ pub struct PipesCheck {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
     pub max_slope: Option<f64>,
+    /// Another network's pipes and the clearances to them (docs/adr/2360).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub clearance: Option<PipeClearanceAsk>,
+}
+
+/// The other network of the clearance check (docs/adr/2360): its id or name, where its inverts and diameters are read
+/// (as the checked network's), the least vertical clearance at a crossing and the least horizontal clearance between
+/// pipes that do not cross (metres, outside to outside by the diameters; none: clashes only), and which of the two must
+/// be above where they cross (none: either).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PipeClearanceAsk {
+    pub network: String,
+    pub inverts: PipeInverts,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub diameter: Option<PipeDiameter>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub vertical: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub horizontal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub above: Option<PipeAbove>,
+}
+
+/// Which pipe of a crossing: the checked network's or the other's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PipeAbove {
+    Pipe,
+    Other,
+}
+
+/// A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each
+/// one's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;
+/// below zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an
+/// invert or an asked diameter is not known.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PipeCrossing {
+    pub pipe: String,
+    pub other: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub invert: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub other_invert: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub clearance: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub above: Option<PipeAbove>,
+}
+
+/// A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross
+/// (docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance
+/// (the distance less the two radii; none where an asked diameter is not known: then listed only when the axes
+/// themselves are closer than the least).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PipeNear {
+    pub pipe: String,
+    pub other: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub at: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub other_at: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub clearance: Option<f64>,
 }
 
 /// A finding: its kind (one of [`PIPE_FINDINGS`]), the pipe, where, its measure (a gap in height, a cover, a slope, a
@@ -263,4 +370,14 @@ pub struct PipesChecked {
     pub parts: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub length: f64,
+    /// Where the pipes cross the other network's, pipe by pipe and along each (asked for, docs/adr/2360; at most
+    /// [`PIPE_FINDING_LIMIT`]).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PipeCrossing>>", optional))]
+    pub crossings: Vec<PipeCrossing>,
+    /// The pipes closer than the least horizontal clearance to the other network's (asked for; at most
+    /// [`PIPE_FINDING_LIMIT`]).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PipeNear>>", optional))]
+    pub near: Vec<PipeNear>,
 }

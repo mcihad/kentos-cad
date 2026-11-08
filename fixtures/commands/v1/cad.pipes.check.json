@@ -4,7 +4,7 @@
  "command": "cad.pipes.check",
  "commandVersion": 1,
  "title": "Boru hattı denetimi",
- "note": "ADR 1640. Bağımsız başvuru scripts/fixtures/pipes_check_cases.py: zemin kapalı biçimli kafes (her kare tek düzlem), örtü köşelerde ve kafes çizgisi kesişimlerinde, eğim, birim ve bağlantı kuralları elle; KentOS kodu yok. Sınırlar durumların kendi değerleridir, yönetmelik değeri değil.",
+ "note": "ADR 1640. Bağımsız başvuru scripts/fixtures/pipes_check_cases.py: zemin kapalı biçimli kafes (her kare tek düzlem), örtü köşelerde ve kafes çizgisi kesişimlerinde, eğim, birim ve bağlantı kuralları elle; KentOS kodu yok. Sınırlar durumların kendi değerleridir, yönetmelik değeri değil. ADR 2360: içme suyu ağına açıklıklar, kesişim ve en yakın yer mpmath ile kapalı biçimde.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -81,6 +81,21 @@
      "tolerance": 0.01,
      "direction": {
       "kind": "both"
+     }
+    },
+    {
+     "id": "su",
+     "name": "İçme suyu",
+     "kind": "utility",
+     "edges": [
+      {
+       "layer": "su"
+      }
+     ],
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "digitized"
      }
     }
    ],
@@ -213,6 +228,20 @@
    {
     "id": "bos",
     "name": "Boş",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "su",
+    "name": "İçme suyu",
     "type": "layer",
     "visible": true,
     "locked": false,
@@ -3188,6 +3217,163 @@
      "y": 4420000.0
     },
     "id": 257
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W1",
+     "Çap": "100"
+    },
+    "pts": [
+     {
+      "x": 487075.0,
+      "y": 4420090.0
+     },
+     {
+      "x": 487075.0,
+      "y": 4420030.0
+     }
+    ],
+    "zs": [
+     97.8,
+     97.6
+    ],
+    "id": 258
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W2",
+     "Çap": "200"
+    },
+    "pts": [
+     {
+      "x": 487125.0,
+      "y": 4420090.0
+     },
+     {
+      "x": 487125.0,
+      "y": 4420030.0
+     }
+    ],
+    "zs": [
+     96.2,
+     96.0
+    ],
+    "id": 259
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W3",
+     "Çap": "100"
+    },
+    "pts": [
+     {
+      "x": 487025.0,
+      "y": 4420090.0
+     },
+     {
+      "x": 487025.0,
+      "y": 4420030.0
+     }
+    ],
+    "zs": [
+     98.6,
+     98.4
+    ],
+    "id": 260
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W4",
+     "Çap": "100"
+    },
+    "pts": [
+     {
+      "x": 487120.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4420030.0
+     }
+    ],
+    "zs": [
+     98.5,
+     98.3
+    ],
+    "id": 261
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W5",
+     "Çap": "100"
+    },
+    "pts": [
+     {
+      "x": 487105.0,
+      "y": 4420053.0
+     },
+     {
+      "x": 487145.0,
+      "y": 4420054.0
+     }
+    ],
+    "zs": [
+     98.0,
+     97.9
+    ],
+    "id": 262
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W6",
+     "Çap": "100"
+    },
+    "pts": [
+     {
+      "x": 487110.0,
+      "y": 4420013.0
+     },
+     {
+      "x": 487130.0,
+      "y": 4420013.0
+     }
+    ],
+    "zs": [
+     98.0,
+     97.9
+    ],
+    "id": 263
+   },
+   {
+    "kind": "polyline",
+    "layerId": "su",
+    "attrs": {
+     "Ad": "W7",
+     "Çap": "100"
+    },
+    "pts": [
+     {
+      "x": 487175.0,
+      "y": 4420060.0
+     },
+     {
+      "x": 487175.0,
+      "y": 4420040.0
+     }
+    ],
+    "id": 264
    }
   ],
   "uids": [
@@ -3447,7 +3633,14 @@
    "0192f640-1640-7000-8000-0000000000fe",
    "0192f640-1640-7000-8000-0000000000ff",
    "0192f640-1640-7000-8000-000000000100",
-   "0192f640-1640-7000-8000-000000000101"
+   "0192f640-1640-7000-8000-000000000101",
+   "0192f640-1640-7000-8000-000000000102",
+   "0192f640-1640-7000-8000-000000000103",
+   "0192f640-1640-7000-8000-000000000104",
+   "0192f640-1640-7000-8000-000000000105",
+   "0192f640-1640-7000-8000-000000000106",
+   "0192f640-1640-7000-8000-000000000107",
+   "0192f640-1640-7000-8000-000000000108"
   ],
   "styles": {
    "items": [],
@@ -19267,6 +19460,3523 @@
      "categories": []
     }
    }
+  },
+  {
+   "name": "açıklık: içme suyu boruları atıksuyu kesiyor; düşey açıklık ve üstteki boru",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "network": "atiksu",
+       "coverTo": "crown",
+       "pipes": [
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f1",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 98.0,
+         "downstream": 97.5,
+         "slope": 0.01,
+         "diameter": 0.3,
+         "minCover": 1.2000000000000028,
+         "minCoverAt": [
+          487050.0,
+          4420050.0
+         ],
+         "maxCover": 1.7000000000000028,
+         "findings": []
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.5,
+         "downstream": 97.6,
+         "slope": -0.0019999999999998864,
+         "diameter": 0.3,
+         "minCover": 0.4000000000000057,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 1.2000000000000028,
+         "findings": [
+          "reverseSlope",
+          "shallow",
+          "clash"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.0,
+         "downstream": 96.6,
+         "slope": 0.008000000000000113,
+         "diameter": 0.3,
+         "minCover": 0.30000000000001137,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 1.0,
+         "findings": [
+          "lowSlope",
+          "shallow"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 96.7,
+         "downstream": 92.0,
+         "slope": 0.09400000000000006,
+         "diameter": 0.4,
+         "minCover": 0.09999999999999432,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 3.5999999999999943,
+         "findings": [
+          "steepSlope",
+          "outletAbove",
+          "shallow",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 9800.0,
+         "downstream": 97.60000000000036,
+         "slope": 323.4133333333333,
+         "diameter": 0.0002,
+         "minCover": -9700.700200000001,
+         "minCoverAt": [
+          487050.0,
+          4420080.0
+         ],
+         "maxCover": 1.3997999999996296,
+         "findings": [
+          "invertUnit",
+          "steepSlope",
+          "diameterUnit",
+          "aboveGround"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 1.5,
+         "downstream": 97.1,
+         "slope": -3.1866666666666665,
+         "diameter": 0.25,
+         "minCover": 0.9500000000000028,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 96.85,
+         "findings": [
+          "invertIsDepth",
+          "reverseSlope",
+          "notInCatalog",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "layer": "atiksu",
+         "length": 20.0,
+         "diameter": 0.3,
+         "findings": [
+          "detached",
+          "noStructure",
+          "noInvert"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 92.0,
+         "downstream": 92.0,
+         "slope": 0.0,
+         "diameter": 0.3,
+         "minCover": 3.700000000000003,
+         "minCoverAt": [
+          487200.0,
+          4420050.0
+         ],
+         "maxCover": 4.0,
+         "findings": [
+          "flat",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 91.9,
+         "downstream": 91.6,
+         "slope": 0.010000000000000378,
+         "diameter": 0.3,
+         "minCover": 4.099999999999994,
+         "minCoverAt": [
+          487200.0,
+          4420020.0
+         ],
+         "maxCover": 4.099999999999994,
+         "findings": [
+          "offSurface",
+          "deep"
+         ]
+        }
+       ],
+       "findings": [
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "value": -0.0019999999999998864
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.4000000000000057
+        },
+        {
+         "kind": "clash",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "value": -0.18333333333333712
+        },
+        {
+         "kind": "lowSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.008000000000000113
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.30000000000001137
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09400000000000006
+        },
+        {
+         "kind": "outletAbove",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.10000000000000853
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09999999999999432
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 3.5999999999999943
+        },
+        {
+         "kind": "invertUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 9800.0,
+         "unit": "cm"
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 323.4133333333333
+        },
+        {
+         "kind": "diameterUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 0.2,
+         "unit": "m"
+        },
+        {
+         "kind": "aboveGround",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": -9700.700200000001
+        },
+        {
+         "kind": "invertIsDepth",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 1.5
+        },
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": -3.1866666666666665
+        },
+        {
+         "kind": "notInCatalog",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 250.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 96.85
+        },
+        {
+         "kind": "detached",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ],
+         "value": 20.0
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487200.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noInvert",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "flat",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 0.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.0
+        },
+        {
+         "kind": "offSurface",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487230.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.099999999999994
+        }
+       ],
+       "counts": [
+        {
+         "kind": "detached",
+         "count": 1
+        },
+        {
+         "kind": "noStructure",
+         "count": 2
+        },
+        {
+         "kind": "noInvert",
+         "count": 1
+        },
+        {
+         "kind": "invertUnit",
+         "count": 1
+        },
+        {
+         "kind": "invertIsDepth",
+         "count": 1
+        },
+        {
+         "kind": "reverseSlope",
+         "count": 2
+        },
+        {
+         "kind": "flat",
+         "count": 1
+        },
+        {
+         "kind": "lowSlope",
+         "count": 1
+        },
+        {
+         "kind": "steepSlope",
+         "count": 2
+        },
+        {
+         "kind": "outletAbove",
+         "count": 1
+        },
+        {
+         "kind": "diameterUnit",
+         "count": 1
+        },
+        {
+         "kind": "notInCatalog",
+         "count": 1
+        },
+        {
+         "kind": "offSurface",
+         "count": 1
+        },
+        {
+         "kind": "aboveGround",
+         "count": 1
+        },
+        {
+         "kind": "shallow",
+         "count": 3
+        },
+        {
+         "kind": "deep",
+         "count": 4
+        },
+        {
+         "kind": "clash",
+         "count": 1
+        }
+       ],
+       "parts": 2,
+       "length": 340.0,
+       "crossings": [
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f1",
+         "other": "0192f640-1640-7000-8000-000000000104",
+         "at": [
+          487025.0,
+          4420050.0
+         ],
+         "invert": 97.75,
+         "otherInvert": 98.46666666666667,
+         "clearance": 0.4166666666666714,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f2",
+         "other": "0192f640-1640-7000-8000-000000000102",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "invert": 97.55,
+         "otherInvert": 97.66666666666666,
+         "clearance": -0.18333333333333712,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f3",
+         "other": "0192f640-1640-7000-8000-000000000103",
+         "at": [
+          487125.0,
+          4420050.0
+         ],
+         "invert": 96.8,
+         "otherInvert": 96.06666666666666,
+         "clearance": 0.5333333333333314,
+         "above": "pipe"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f4",
+         "other": "0192f640-1640-7000-8000-000000000108",
+         "at": [
+          487175.0,
+          4420050.0
+         ],
+         "invert": 94.35
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "açıklık: en az düşey açıklık ve suyun üstte olması",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       },
+       "vertical": 0.5,
+       "above": "other"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "network": "atiksu",
+       "coverTo": "crown",
+       "pipes": [
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f1",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 98.0,
+         "downstream": 97.5,
+         "slope": 0.01,
+         "diameter": 0.3,
+         "minCover": 1.2000000000000028,
+         "minCoverAt": [
+          487050.0,
+          4420050.0
+         ],
+         "maxCover": 1.7000000000000028,
+         "findings": [
+          "closeCrossing"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.5,
+         "downstream": 97.6,
+         "slope": -0.0019999999999998864,
+         "diameter": 0.3,
+         "minCover": 0.4000000000000057,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 1.2000000000000028,
+         "findings": [
+          "reverseSlope",
+          "shallow",
+          "clash"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.0,
+         "downstream": 96.6,
+         "slope": 0.008000000000000113,
+         "diameter": 0.3,
+         "minCover": 0.30000000000001137,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 1.0,
+         "findings": [
+          "lowSlope",
+          "shallow",
+          "wrongSide"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 96.7,
+         "downstream": 92.0,
+         "slope": 0.09400000000000006,
+         "diameter": 0.4,
+         "minCover": 0.09999999999999432,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 3.5999999999999943,
+         "findings": [
+          "steepSlope",
+          "outletAbove",
+          "shallow",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 9800.0,
+         "downstream": 97.60000000000036,
+         "slope": 323.4133333333333,
+         "diameter": 0.0002,
+         "minCover": -9700.700200000001,
+         "minCoverAt": [
+          487050.0,
+          4420080.0
+         ],
+         "maxCover": 1.3997999999996296,
+         "findings": [
+          "invertUnit",
+          "steepSlope",
+          "diameterUnit",
+          "aboveGround"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 1.5,
+         "downstream": 97.1,
+         "slope": -3.1866666666666665,
+         "diameter": 0.25,
+         "minCover": 0.9500000000000028,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 96.85,
+         "findings": [
+          "invertIsDepth",
+          "reverseSlope",
+          "notInCatalog",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "layer": "atiksu",
+         "length": 20.0,
+         "diameter": 0.3,
+         "findings": [
+          "detached",
+          "noStructure",
+          "noInvert"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 92.0,
+         "downstream": 92.0,
+         "slope": 0.0,
+         "diameter": 0.3,
+         "minCover": 3.700000000000003,
+         "minCoverAt": [
+          487200.0,
+          4420050.0
+         ],
+         "maxCover": 4.0,
+         "findings": [
+          "flat",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 91.9,
+         "downstream": 91.6,
+         "slope": 0.010000000000000378,
+         "diameter": 0.3,
+         "minCover": 4.099999999999994,
+         "minCoverAt": [
+          487200.0,
+          4420020.0
+         ],
+         "maxCover": 4.099999999999994,
+         "findings": [
+          "offSurface",
+          "deep"
+         ]
+        }
+       ],
+       "findings": [
+        {
+         "kind": "closeCrossing",
+         "uid": "0192f640-1640-7000-8000-0000000000f1",
+         "at": [
+          487025.0,
+          4420050.0
+         ],
+         "value": 0.4166666666666714
+        },
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "value": -0.0019999999999998864
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.4000000000000057
+        },
+        {
+         "kind": "clash",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "value": -0.18333333333333712
+        },
+        {
+         "kind": "lowSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.008000000000000113
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.30000000000001137
+        },
+        {
+         "kind": "wrongSide",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487125.0,
+          4420050.0
+         ],
+         "value": 0.5333333333333314
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09400000000000006
+        },
+        {
+         "kind": "outletAbove",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.10000000000000853
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09999999999999432
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 3.5999999999999943
+        },
+        {
+         "kind": "invertUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 9800.0,
+         "unit": "cm"
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 323.4133333333333
+        },
+        {
+         "kind": "diameterUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 0.2,
+         "unit": "m"
+        },
+        {
+         "kind": "aboveGround",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": -9700.700200000001
+        },
+        {
+         "kind": "invertIsDepth",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 1.5
+        },
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": -3.1866666666666665
+        },
+        {
+         "kind": "notInCatalog",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 250.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 96.85
+        },
+        {
+         "kind": "detached",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ],
+         "value": 20.0
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487200.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noInvert",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "flat",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 0.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.0
+        },
+        {
+         "kind": "offSurface",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487230.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.099999999999994
+        }
+       ],
+       "counts": [
+        {
+         "kind": "detached",
+         "count": 1
+        },
+        {
+         "kind": "noStructure",
+         "count": 2
+        },
+        {
+         "kind": "noInvert",
+         "count": 1
+        },
+        {
+         "kind": "invertUnit",
+         "count": 1
+        },
+        {
+         "kind": "invertIsDepth",
+         "count": 1
+        },
+        {
+         "kind": "reverseSlope",
+         "count": 2
+        },
+        {
+         "kind": "flat",
+         "count": 1
+        },
+        {
+         "kind": "lowSlope",
+         "count": 1
+        },
+        {
+         "kind": "steepSlope",
+         "count": 2
+        },
+        {
+         "kind": "outletAbove",
+         "count": 1
+        },
+        {
+         "kind": "diameterUnit",
+         "count": 1
+        },
+        {
+         "kind": "notInCatalog",
+         "count": 1
+        },
+        {
+         "kind": "offSurface",
+         "count": 1
+        },
+        {
+         "kind": "aboveGround",
+         "count": 1
+        },
+        {
+         "kind": "shallow",
+         "count": 3
+        },
+        {
+         "kind": "deep",
+         "count": 4
+        },
+        {
+         "kind": "clash",
+         "count": 1
+        },
+        {
+         "kind": "closeCrossing",
+         "count": 1
+        },
+        {
+         "kind": "wrongSide",
+         "count": 1
+        }
+       ],
+       "parts": 2,
+       "length": 340.0,
+       "crossings": [
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f1",
+         "other": "0192f640-1640-7000-8000-000000000104",
+         "at": [
+          487025.0,
+          4420050.0
+         ],
+         "invert": 97.75,
+         "otherInvert": 98.46666666666667,
+         "clearance": 0.4166666666666714,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f2",
+         "other": "0192f640-1640-7000-8000-000000000102",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "invert": 97.55,
+         "otherInvert": 97.66666666666666,
+         "clearance": -0.18333333333333712,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f3",
+         "other": "0192f640-1640-7000-8000-000000000103",
+         "at": [
+          487125.0,
+          4420050.0
+         ],
+         "invert": 96.8,
+         "otherInvert": 96.06666666666666,
+         "clearance": 0.5333333333333314,
+         "above": "pipe"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f4",
+         "other": "0192f640-1640-7000-8000-000000000108",
+         "at": [
+          487175.0,
+          4420050.0
+         ],
+         "invert": 94.35
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "açıklık: en az yatay açıklık; kesişmeden yakın geçen boru",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       },
+       "horizontal": 3.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "network": "atiksu",
+       "coverTo": "crown",
+       "pipes": [
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f1",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 98.0,
+         "downstream": 97.5,
+         "slope": 0.01,
+         "diameter": 0.3,
+         "minCover": 1.2000000000000028,
+         "minCoverAt": [
+          487050.0,
+          4420050.0
+         ],
+         "maxCover": 1.7000000000000028,
+         "findings": []
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.5,
+         "downstream": 97.6,
+         "slope": -0.0019999999999998864,
+         "diameter": 0.3,
+         "minCover": 0.4000000000000057,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 1.2000000000000028,
+         "findings": [
+          "reverseSlope",
+          "shallow",
+          "clash"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.0,
+         "downstream": 96.6,
+         "slope": 0.008000000000000113,
+         "diameter": 0.3,
+         "minCover": 0.30000000000001137,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 1.0,
+         "findings": [
+          "lowSlope",
+          "shallow",
+          "closeAlongside"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 96.7,
+         "downstream": 92.0,
+         "slope": 0.09400000000000006,
+         "diameter": 0.4,
+         "minCover": 0.09999999999999432,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 3.5999999999999943,
+         "findings": [
+          "steepSlope",
+          "outletAbove",
+          "shallow",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 9800.0,
+         "downstream": 97.60000000000036,
+         "slope": 323.4133333333333,
+         "diameter": 0.0002,
+         "minCover": -9700.700200000001,
+         "minCoverAt": [
+          487050.0,
+          4420080.0
+         ],
+         "maxCover": 1.3997999999996296,
+         "findings": [
+          "invertUnit",
+          "steepSlope",
+          "diameterUnit",
+          "aboveGround"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 1.5,
+         "downstream": 97.1,
+         "slope": -3.1866666666666665,
+         "diameter": 0.25,
+         "minCover": 0.9500000000000028,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 96.85,
+         "findings": [
+          "invertIsDepth",
+          "reverseSlope",
+          "notInCatalog",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "layer": "atiksu",
+         "length": 20.0,
+         "diameter": 0.3,
+         "findings": [
+          "detached",
+          "noStructure",
+          "noInvert"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 92.0,
+         "downstream": 92.0,
+         "slope": 0.0,
+         "diameter": 0.3,
+         "minCover": 3.700000000000003,
+         "minCoverAt": [
+          487200.0,
+          4420050.0
+         ],
+         "maxCover": 4.0,
+         "findings": [
+          "flat",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 91.9,
+         "downstream": 91.6,
+         "slope": 0.010000000000000378,
+         "diameter": 0.3,
+         "minCover": 4.099999999999994,
+         "minCoverAt": [
+          487200.0,
+          4420020.0
+         ],
+         "maxCover": 4.099999999999994,
+         "findings": [
+          "offSurface",
+          "deep"
+         ]
+        }
+       ],
+       "findings": [
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "value": -0.0019999999999998864
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.4000000000000057
+        },
+        {
+         "kind": "clash",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "value": -0.18333333333333712
+        },
+        {
+         "kind": "lowSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.008000000000000113
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.30000000000001137
+        },
+        {
+         "kind": "closeAlongside",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487105.0,
+          4420050.0
+         ],
+         "value": 2.8000000000000003
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09400000000000006
+        },
+        {
+         "kind": "outletAbove",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.10000000000000853
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09999999999999432
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 3.5999999999999943
+        },
+        {
+         "kind": "invertUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 9800.0,
+         "unit": "cm"
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 323.4133333333333
+        },
+        {
+         "kind": "diameterUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 0.2,
+         "unit": "m"
+        },
+        {
+         "kind": "aboveGround",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": -9700.700200000001
+        },
+        {
+         "kind": "invertIsDepth",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 1.5
+        },
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": -3.1866666666666665
+        },
+        {
+         "kind": "notInCatalog",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 250.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 96.85
+        },
+        {
+         "kind": "detached",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ],
+         "value": 20.0
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487200.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noInvert",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "flat",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 0.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.0
+        },
+        {
+         "kind": "offSurface",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487230.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.099999999999994
+        }
+       ],
+       "counts": [
+        {
+         "kind": "detached",
+         "count": 1
+        },
+        {
+         "kind": "noStructure",
+         "count": 2
+        },
+        {
+         "kind": "noInvert",
+         "count": 1
+        },
+        {
+         "kind": "invertUnit",
+         "count": 1
+        },
+        {
+         "kind": "invertIsDepth",
+         "count": 1
+        },
+        {
+         "kind": "reverseSlope",
+         "count": 2
+        },
+        {
+         "kind": "flat",
+         "count": 1
+        },
+        {
+         "kind": "lowSlope",
+         "count": 1
+        },
+        {
+         "kind": "steepSlope",
+         "count": 2
+        },
+        {
+         "kind": "outletAbove",
+         "count": 1
+        },
+        {
+         "kind": "diameterUnit",
+         "count": 1
+        },
+        {
+         "kind": "notInCatalog",
+         "count": 1
+        },
+        {
+         "kind": "offSurface",
+         "count": 1
+        },
+        {
+         "kind": "aboveGround",
+         "count": 1
+        },
+        {
+         "kind": "shallow",
+         "count": 3
+        },
+        {
+         "kind": "deep",
+         "count": 4
+        },
+        {
+         "kind": "clash",
+         "count": 1
+        },
+        {
+         "kind": "closeAlongside",
+         "count": 1
+        }
+       ],
+       "parts": 2,
+       "length": 340.0,
+       "crossings": [
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f1",
+         "other": "0192f640-1640-7000-8000-000000000104",
+         "at": [
+          487025.0,
+          4420050.0
+         ],
+         "invert": 97.75,
+         "otherInvert": 98.46666666666667,
+         "clearance": 0.4166666666666714,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f2",
+         "other": "0192f640-1640-7000-8000-000000000102",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "invert": 97.55,
+         "otherInvert": 97.66666666666666,
+         "clearance": -0.18333333333333712,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f3",
+         "other": "0192f640-1640-7000-8000-000000000103",
+         "at": [
+          487125.0,
+          4420050.0
+         ],
+         "invert": 96.8,
+         "otherInvert": 96.06666666666666,
+         "clearance": 0.5333333333333314,
+         "above": "pipe"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f4",
+         "other": "0192f640-1640-7000-8000-000000000108",
+         "at": [
+          487175.0,
+          4420050.0
+         ],
+         "invert": 94.35
+        }
+       ],
+       "near": [
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f3",
+         "other": "0192f640-1640-7000-8000-000000000106",
+         "at": [
+          487105.0,
+          4420050.0
+         ],
+         "otherAt": [
+          487105.0,
+          4420053.0
+         ],
+         "distance": 3.0,
+         "clearance": 2.8000000000000003
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "açıklık: yağmursuyunun yaylı borusunda kesişim ve yanından geçiş",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "network": "yagmur",
+      "inverts": {
+       "from": "heights"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "m"
+      },
+      "ground": {
+       "from": "structures",
+       "field": "Kapak kotu"
+      },
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       },
+       "horizontal": 3.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "network": "yagmur",
+       "coverTo": "crown",
+       "pipes": [
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000fe",
+         "layer": "yagmur",
+         "length": 60.0,
+         "upstream": 99.0,
+         "downstream": 98.5,
+         "slope": 0.008333333333333333,
+         "diameter": 0.4,
+         "minCover": 0.19999999999998863,
+         "minCoverAt": [
+          487060.0,
+          4420020.0
+         ],
+         "maxCover": 0.8999999999999915,
+         "findings": []
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000ff",
+         "layer": "yagmur",
+         "length": 40.0,
+         "reversed": true,
+         "upstream": 98.3,
+         "downstream": 98.0,
+         "slope": 0.007499999999999929,
+         "diameter": 0.4,
+         "minCover": 0.19999999999998863,
+         "minCoverAt": [
+          487100.0,
+          4420020.0
+         ],
+         "maxCover": 0.3999999999999915,
+         "findings": []
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-000000000100",
+         "layer": "yagmur",
+         "length": 41.058276448775196,
+         "upstream": 97.9,
+         "downstream": 97.5,
+         "slope": 0.00974225015263489,
+         "diameter": 0.5,
+         "minCover": 0.19999999999998863,
+         "minCoverAt": [
+          487100.0,
+          4420020.0
+         ],
+         "maxCover": 0.19999999999998863,
+         "findings": [
+          "noGround",
+          "curved",
+          "closeAlongside"
+         ]
+        }
+       ],
+       "findings": [
+        {
+         "kind": "noGround",
+         "uid": "0192f640-1640-7000-8000-000000000100",
+         "at": [
+          487140.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "curved",
+         "uid": "0192f640-1640-7000-8000-000000000100",
+         "at": [
+          487100.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "closeAlongside",
+         "uid": "0192f640-1640-7000-8000-000000000100",
+         "at": [
+          487120.0,
+          4420016.0
+         ],
+         "value": 2.7
+        }
+       ],
+       "counts": [
+        {
+         "kind": "noGround",
+         "count": 1
+        },
+        {
+         "kind": "curved",
+         "count": 1
+        },
+        {
+         "kind": "closeAlongside",
+         "count": 1
+        }
+       ],
+       "parts": 1,
+       "length": 141.0582764487752,
+       "crossings": [
+        {
+         "pipe": "0192f640-1640-7000-8000-000000000100",
+         "other": "0192f640-1640-7000-8000-000000000105",
+         "at": [
+          487120.0,
+          4420016.0
+         ],
+         "invert": 97.7,
+         "otherInvert": 98.44,
+         "clearance": 0.23999999999999488,
+         "above": "other"
+        }
+       ],
+       "near": [
+        {
+         "pipe": "0192f640-1640-7000-8000-000000000100",
+         "other": "0192f640-1640-7000-8000-000000000107",
+         "at": [
+          487120.0,
+          4420016.0
+         ],
+         "otherAt": [
+          487120.0,
+          4420013.0
+         ],
+         "distance": 3.0,
+         "clearance": 2.7
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "açıklık: su borularının çapı sorulmadan; kalınlıksız sayılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "network": "atiksu",
+       "coverTo": "crown",
+       "pipes": [
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f1",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 98.0,
+         "downstream": 97.5,
+         "slope": 0.01,
+         "diameter": 0.3,
+         "minCover": 1.2000000000000028,
+         "minCoverAt": [
+          487050.0,
+          4420050.0
+         ],
+         "maxCover": 1.7000000000000028,
+         "findings": []
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.5,
+         "downstream": 97.6,
+         "slope": -0.0019999999999998864,
+         "diameter": 0.3,
+         "minCover": 0.4000000000000057,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 1.2000000000000028,
+         "findings": [
+          "reverseSlope",
+          "shallow",
+          "clash"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.0,
+         "downstream": 96.6,
+         "slope": 0.008000000000000113,
+         "diameter": 0.3,
+         "minCover": 0.30000000000001137,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 1.0,
+         "findings": [
+          "lowSlope",
+          "shallow"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 96.7,
+         "downstream": 92.0,
+         "slope": 0.09400000000000006,
+         "diameter": 0.4,
+         "minCover": 0.09999999999999432,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 3.5999999999999943,
+         "findings": [
+          "steepSlope",
+          "outletAbove",
+          "shallow",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 9800.0,
+         "downstream": 97.60000000000036,
+         "slope": 323.4133333333333,
+         "diameter": 0.0002,
+         "minCover": -9700.700200000001,
+         "minCoverAt": [
+          487050.0,
+          4420080.0
+         ],
+         "maxCover": 1.3997999999996296,
+         "findings": [
+          "invertUnit",
+          "steepSlope",
+          "diameterUnit",
+          "aboveGround"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 1.5,
+         "downstream": 97.1,
+         "slope": -3.1866666666666665,
+         "diameter": 0.25,
+         "minCover": 0.9500000000000028,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 96.85,
+         "findings": [
+          "invertIsDepth",
+          "reverseSlope",
+          "notInCatalog",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "layer": "atiksu",
+         "length": 20.0,
+         "diameter": 0.3,
+         "findings": [
+          "detached",
+          "noStructure",
+          "noInvert"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 92.0,
+         "downstream": 92.0,
+         "slope": 0.0,
+         "diameter": 0.3,
+         "minCover": 3.700000000000003,
+         "minCoverAt": [
+          487200.0,
+          4420050.0
+         ],
+         "maxCover": 4.0,
+         "findings": [
+          "flat",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 91.9,
+         "downstream": 91.6,
+         "slope": 0.010000000000000378,
+         "diameter": 0.3,
+         "minCover": 4.099999999999994,
+         "minCoverAt": [
+          487200.0,
+          4420020.0
+         ],
+         "maxCover": 4.099999999999994,
+         "findings": [
+          "offSurface",
+          "deep"
+         ]
+        }
+       ],
+       "findings": [
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "value": -0.0019999999999998864
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.4000000000000057
+        },
+        {
+         "kind": "clash",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "value": -0.11666666666666003
+        },
+        {
+         "kind": "lowSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.008000000000000113
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.30000000000001137
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09400000000000006
+        },
+        {
+         "kind": "outletAbove",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.10000000000000853
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09999999999999432
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 3.5999999999999943
+        },
+        {
+         "kind": "invertUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 9800.0,
+         "unit": "cm"
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 323.4133333333333
+        },
+        {
+         "kind": "diameterUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 0.2,
+         "unit": "m"
+        },
+        {
+         "kind": "aboveGround",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": -9700.700200000001
+        },
+        {
+         "kind": "invertIsDepth",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 1.5
+        },
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": -3.1866666666666665
+        },
+        {
+         "kind": "notInCatalog",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 250.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 96.85
+        },
+        {
+         "kind": "detached",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ],
+         "value": 20.0
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487200.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noInvert",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "flat",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 0.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.0
+        },
+        {
+         "kind": "offSurface",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487230.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.099999999999994
+        }
+       ],
+       "counts": [
+        {
+         "kind": "detached",
+         "count": 1
+        },
+        {
+         "kind": "noStructure",
+         "count": 2
+        },
+        {
+         "kind": "noInvert",
+         "count": 1
+        },
+        {
+         "kind": "invertUnit",
+         "count": 1
+        },
+        {
+         "kind": "invertIsDepth",
+         "count": 1
+        },
+        {
+         "kind": "reverseSlope",
+         "count": 2
+        },
+        {
+         "kind": "flat",
+         "count": 1
+        },
+        {
+         "kind": "lowSlope",
+         "count": 1
+        },
+        {
+         "kind": "steepSlope",
+         "count": 2
+        },
+        {
+         "kind": "outletAbove",
+         "count": 1
+        },
+        {
+         "kind": "diameterUnit",
+         "count": 1
+        },
+        {
+         "kind": "notInCatalog",
+         "count": 1
+        },
+        {
+         "kind": "offSurface",
+         "count": 1
+        },
+        {
+         "kind": "aboveGround",
+         "count": 1
+        },
+        {
+         "kind": "shallow",
+         "count": 3
+        },
+        {
+         "kind": "deep",
+         "count": 4
+        },
+        {
+         "kind": "clash",
+         "count": 1
+        }
+       ],
+       "parts": 2,
+       "length": 340.0,
+       "crossings": [
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f1",
+         "other": "0192f640-1640-7000-8000-000000000104",
+         "at": [
+          487025.0,
+          4420050.0
+         ],
+         "invert": 97.75,
+         "otherInvert": 98.46666666666667,
+         "clearance": 0.4166666666666714,
+         "above": "other"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f2",
+         "other": "0192f640-1640-7000-8000-000000000102",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "invert": 97.55,
+         "otherInvert": 97.66666666666666,
+         "clearance": -0.11666666666666003,
+         "above": "pipe"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f3",
+         "other": "0192f640-1640-7000-8000-000000000103",
+         "at": [
+          487125.0,
+          4420050.0
+         ],
+         "invert": 96.8,
+         "otherInvert": 96.06666666666666,
+         "clearance": 0.7333333333333343,
+         "above": "pipe"
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f4",
+         "other": "0192f640-1640-7000-8000-000000000108",
+         "at": [
+          487175.0,
+          4420050.0
+         ],
+         "invert": 94.35
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "açıklık: su borularında akar özniteliği yok; köşe kotları yerine geçmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "fields",
+        "start": "Akar baş",
+        "end": "Akar son"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "network": "atiksu",
+       "coverTo": "crown",
+       "pipes": [
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f1",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 98.0,
+         "downstream": 97.5,
+         "slope": 0.01,
+         "diameter": 0.3,
+         "minCover": 1.2000000000000028,
+         "minCoverAt": [
+          487050.0,
+          4420050.0
+         ],
+         "maxCover": 1.7000000000000028,
+         "findings": []
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.5,
+         "downstream": 97.6,
+         "slope": -0.0019999999999998864,
+         "diameter": 0.3,
+         "minCover": 0.4000000000000057,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 1.2000000000000028,
+         "findings": [
+          "reverseSlope",
+          "shallow"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 97.0,
+         "downstream": 96.6,
+         "slope": 0.008000000000000113,
+         "diameter": 0.3,
+         "minCover": 0.30000000000001137,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 1.0,
+         "findings": [
+          "lowSlope",
+          "shallow"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "layer": "atiksu",
+         "length": 50.0,
+         "upstream": 96.7,
+         "downstream": 92.0,
+         "slope": 0.09400000000000006,
+         "diameter": 0.4,
+         "minCover": 0.09999999999999432,
+         "minCoverAt": [
+          487150.0,
+          4420050.0
+         ],
+         "maxCover": 3.5999999999999943,
+         "findings": [
+          "steepSlope",
+          "outletAbove",
+          "shallow",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 9800.0,
+         "downstream": 97.60000000000036,
+         "slope": 323.4133333333333,
+         "diameter": 0.0002,
+         "minCover": -9700.700200000001,
+         "minCoverAt": [
+          487050.0,
+          4420080.0
+         ],
+         "maxCover": 1.3997999999996296,
+         "findings": [
+          "invertUnit",
+          "steepSlope",
+          "diameterUnit",
+          "aboveGround"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 1.5,
+         "downstream": 97.1,
+         "slope": -3.1866666666666665,
+         "diameter": 0.25,
+         "minCover": 0.9500000000000028,
+         "minCoverAt": [
+          487100.0,
+          4420050.0
+         ],
+         "maxCover": 96.85,
+         "findings": [
+          "invertIsDepth",
+          "reverseSlope",
+          "notInCatalog",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "layer": "atiksu",
+         "length": 20.0,
+         "diameter": 0.3,
+         "findings": [
+          "detached",
+          "noStructure",
+          "noInvert"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 92.0,
+         "downstream": 92.0,
+         "slope": 0.0,
+         "diameter": 0.3,
+         "minCover": 3.700000000000003,
+         "minCoverAt": [
+          487200.0,
+          4420050.0
+         ],
+         "maxCover": 4.0,
+         "findings": [
+          "flat",
+          "deep"
+         ]
+        },
+        {
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "layer": "atiksu",
+         "length": 30.0,
+         "upstream": 91.9,
+         "downstream": 91.6,
+         "slope": 0.010000000000000378,
+         "diameter": 0.3,
+         "minCover": 4.099999999999994,
+         "minCoverAt": [
+          487200.0,
+          4420020.0
+         ],
+         "maxCover": 4.099999999999994,
+         "findings": [
+          "offSurface",
+          "deep"
+         ]
+        }
+       ],
+       "findings": [
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487050.0,
+          4420050.0
+         ],
+         "value": -0.0019999999999998864
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f2",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.4000000000000057
+        },
+        {
+         "kind": "lowSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487100.0,
+          4420050.0
+         ],
+         "value": 0.008000000000000113
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f3",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.30000000000001137
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09400000000000006
+        },
+        {
+         "kind": "outletAbove",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.10000000000000853
+        },
+        {
+         "kind": "shallow",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487150.0,
+          4420050.0
+         ],
+         "value": 0.09999999999999432
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f4",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 3.5999999999999943
+        },
+        {
+         "kind": "invertUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 9800.0,
+         "unit": "cm"
+        },
+        {
+         "kind": "steepSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 323.4133333333333
+        },
+        {
+         "kind": "diameterUnit",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": 0.2,
+         "unit": "m"
+        },
+        {
+         "kind": "aboveGround",
+         "uid": "0192f640-1640-7000-8000-0000000000f5",
+         "at": [
+          487050.0,
+          4420080.0
+         ],
+         "value": -9700.700200000001
+        },
+        {
+         "kind": "invertIsDepth",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 1.5
+        },
+        {
+         "kind": "reverseSlope",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": -3.1866666666666665
+        },
+        {
+         "kind": "notInCatalog",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 250.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f6",
+         "at": [
+          487100.0,
+          4420080.0
+         ],
+         "value": 96.85
+        },
+        {
+         "kind": "detached",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ],
+         "value": 20.0
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noStructure",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487200.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "noInvert",
+         "uid": "0192f640-1640-7000-8000-0000000000f7",
+         "at": [
+          487180.0,
+          4420090.0
+         ]
+        },
+        {
+         "kind": "flat",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420050.0
+         ],
+         "value": 0.0
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f8",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.0
+        },
+        {
+         "kind": "offSurface",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487230.0,
+          4420020.0
+         ]
+        },
+        {
+         "kind": "deep",
+         "uid": "0192f640-1640-7000-8000-0000000000f9",
+         "at": [
+          487200.0,
+          4420020.0
+         ],
+         "value": 4.099999999999994
+        }
+       ],
+       "counts": [
+        {
+         "kind": "detached",
+         "count": 1
+        },
+        {
+         "kind": "noStructure",
+         "count": 2
+        },
+        {
+         "kind": "noInvert",
+         "count": 1
+        },
+        {
+         "kind": "invertUnit",
+         "count": 1
+        },
+        {
+         "kind": "invertIsDepth",
+         "count": 1
+        },
+        {
+         "kind": "reverseSlope",
+         "count": 2
+        },
+        {
+         "kind": "flat",
+         "count": 1
+        },
+        {
+         "kind": "lowSlope",
+         "count": 1
+        },
+        {
+         "kind": "steepSlope",
+         "count": 2
+        },
+        {
+         "kind": "outletAbove",
+         "count": 1
+        },
+        {
+         "kind": "diameterUnit",
+         "count": 1
+        },
+        {
+         "kind": "notInCatalog",
+         "count": 1
+        },
+        {
+         "kind": "offSurface",
+         "count": 1
+        },
+        {
+         "kind": "aboveGround",
+         "count": 1
+        },
+        {
+         "kind": "shallow",
+         "count": 3
+        },
+        {
+         "kind": "deep",
+         "count": 4
+        }
+       ],
+       "parts": 2,
+       "length": 340.0,
+       "crossings": [
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f1",
+         "other": "0192f640-1640-7000-8000-000000000104",
+         "at": [
+          487025.0,
+          4420050.0
+         ],
+         "invert": 97.75
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f2",
+         "other": "0192f640-1640-7000-8000-000000000102",
+         "at": [
+          487075.0,
+          4420050.0
+         ],
+         "invert": 97.55
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f3",
+         "other": "0192f640-1640-7000-8000-000000000103",
+         "at": [
+          487125.0,
+          4420050.0
+         ],
+         "invert": 96.8
+        },
+        {
+         "pipe": "0192f640-1640-7000-8000-0000000000f4",
+         "other": "0192f640-1640-7000-8000-000000000108",
+         "at": [
+          487175.0,
+          4420050.0
+         ],
+         "invert": 94.35
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "açıklık: denetlenen ağın kendisi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "atiksu",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pipe_check",
+       "message": "Açıklık başka bir ağın borularına ölçülür; “Atıksu” denetlenen ağın kendisi.",
+       "path": "clearance.network"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: sıfır en az düşey açıklık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       },
+       "vertical": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pipe_check",
+       "message": "En az düşey açıklık 0'dan büyük bir sayı olmalı; yalnız çakışmalar aranacaksa boş bırakın.",
+       "path": "clearance.vertical"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: eksi en az yatay açıklık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       },
+       "horizontal": -1.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pipe_check",
+       "message": "En az yatay açıklık 0'dan büyük bir sayı olmalı; yatay açıklık denetlenmeyecekse boş bırakın.",
+       "path": "clearance.horizontal"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: boş akar kotu özniteliği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "fields",
+        "start": " ",
+        "end": "x"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pipe_check",
+       "message": "Baş akar kotunun özniteliği boş; özniteliğin adını yazın.",
+       "path": "clearance.inverts.start"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: katalogda sıfır çap",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm",
+        "catalog": [
+         0.0
+        ]
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pipe_check",
+       "message": "Katalogdaki çaplar 0'dan büyük olmalı.",
+       "path": "clearance.diameter.catalog[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: olmayan ağ",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "gaz",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_network",
+       "message": "“gaz” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.",
+       "path": "clearance.network"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: yol ağı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.8,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "yollar",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pipe_network",
+       "message": "“Yollar” bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.",
+       "path": "clearance.network"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "açıklık: önce denetlenen ağın sorusu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "network": "atiksu",
+      "inverts": {
+       "from": "fields",
+       "start": "Akar baş",
+       "end": "Akar son"
+      },
+      "diameter": {
+       "field": "Çap",
+       "unit": "mm",
+       "catalog": [
+        200.0,
+        300.0,
+        400.0,
+        500.0
+       ]
+      },
+      "ground": {
+       "from": "surface",
+       "surface": "Zemin"
+      },
+      "minCover": 0.0,
+      "maxCover": 3.0,
+      "minSlope": 0.009,
+      "maxSlope": 0.05,
+      "clearance": {
+       "network": "su",
+       "inverts": {
+        "from": "heights"
+       },
+       "diameter": {
+        "field": "Çap",
+        "unit": "mm"
+       },
+       "vertical": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pipe_check",
+       "message": "En az örtü 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın.",
+       "path": "minCover"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
   }
  ]
 }
