@@ -160,7 +160,11 @@
    "tools": {
     "topology.check": {
      "rules": "",
-     "exceptions": false
+     "exceptions": false,
+     "write": false,
+     "layer": {
+      "newName": "Topoloji bulguları"
+     }
     }
    }
   }
@@ -2813,6 +2817,157 @@
     "selection": [
      5
     ]
+   }
+  },
+  {
+   "id": "topology-check-errors",
+   "title": "Topolojiyi kurallarla denetle: bulgular yerlerinde nokta olarak hata katmanına yazılır, tek geri alma adımı",
+   "document": "topology.kcad",
+   "run": {
+    "tool": "topology.check"
+   },
+   "values": {
+    "write": true,
+    "layer": {
+     "newName": "Topoloji bulguları"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); 3 bulgu hata katmanına yazıldı.",
+    "undo": "Topolojiyi kurallarla denetle",
+    "layers": [
+     {
+      "id": "islem-topoloji-bulgulari",
+      "name": "Topoloji bulguları",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "ring",
+        "size": 10
+       }
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "point",
+      "layerId": "islem-topoloji-bulgulari",
+      "attrs": {
+       "Kural": "r1",
+       "Sorun": "Çakışma",
+       "Durum": "Değerlendirilmedi",
+       "Nesneler": "0192f5c0-2200-7000-8000-000000000001, 0192f5c0-2200-7000-8000-000000000002",
+       "Ölçü": "12.00 m²",
+       "Anahtar": "e1a22300132dd479"
+      },
+      "parts": 1,
+      "holes": 0,
+      "points": [
+       {
+        "x": 487009,
+        "y": 4420005
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-topoloji-bulgulari",
+      "attrs": {
+       "Kural": "r1",
+       "Sorun": "Çakışma",
+       "Durum": "Değerlendirilmedi",
+       "Nesneler": "0192f5c0-2200-7000-8000-000000000003, 0192f5c0-2200-7000-8000-000000000004",
+       "Ölçü": "10.00 m²",
+       "Anahtar": "b4a88376f52312cd"
+      },
+      "parts": 1,
+      "holes": 0,
+      "points": [
+       {
+        "x": 487029.5,
+        "y": 4420005
+       }
+      ]
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-topoloji-bulgulari",
+      "attrs": {
+       "Kural": "r2",
+       "Sorun": "Kısa kenar",
+       "Durum": "Değerlendirilmedi",
+       "Nesneler": "0192f5c0-2200-7000-8000-000000000005",
+       "Ölçü": "0.500 m",
+       "Anahtar": "e07af139899d9a69"
+      },
+      "parts": 1,
+      "holes": 0,
+      "points": [
+       {
+        "x": 487050.25,
+        "y": 4420010
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "open": 3,
+     "objects": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "findings": {
+      "columns": [
+       "Kural",
+       "Sorun",
+       "Durum",
+       "Nesneler",
+       "Doğu",
+       "Kuzey",
+       "Ölçü",
+       "Gerekçe"
+      ],
+      "rows": [
+       [
+        "r1",
+        "Çakışma",
+        "Değerlendirilmedi",
+        "#1, #2",
+        "487009.000",
+        "4420005.000",
+        "12.00 m²",
+        ""
+       ],
+       [
+        "r1",
+        "Çakışma",
+        "Değerlendirilmedi",
+        "#3, #4",
+        "487029.500",
+        "4420005.000",
+        "10.00 m²",
+        ""
+       ],
+       [
+        "r2",
+        "Kısa kenar",
+        "Değerlendirilmedi",
+        "#5",
+        "487050.250",
+        "4420010.000",
+        "0.500 m",
+        ""
+       ]
+      ]
+     }
+    }
    }
   },
   {

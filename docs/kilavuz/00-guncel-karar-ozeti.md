@@ -151,6 +151,9 @@
   ±3 ppm sınırı (kural paketi sürüm 2). Harita + CBS.
 - **Eğimle kot ver'de aralık sahneden (8 Kasım 2026; MAP-06, [ADR 2180](../../docs/adr/2180-grade-range-picked-on-the-drawing.md)).**
   Sahneden seç iki tıkla başlangıç ve bitiş köşesini alır; komut numarayla aynı kalır. CAD (Harita + Yol).
+- **Topoloji bulguları hata katmanında (8 Kasım 2026; MAP-07, [ADR 2200](../../docs/adr/2200-topology-findings-on-an-error-layer.md)).**
+  Topolojiyi kurallarla denetle istenirse bulguları yerlerinde halka nokta olarak yazar: nesnelerin kalıcı kimlikleri
+  ve bulgunun anahtarıyla, tek geri alma adımı (QGIS Check validity, ArcGIS Export Topology Errors). Harita + Yol + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

@@ -36,8 +36,15 @@ fn fixture(name: &str) -> String {
         .unwrap_or_else(|e| panic!("fixtures/processing/v1/{name}: {e}"))
 }
 
+/// A case's drawing: the v1 form, or the v2 form with its objects' lasting ids (topology.kcad, docs/adr/2200).
 fn load(name: &str) -> Document {
-    let snapshot = DocumentSnapshotV1::from_json(&fixture(name)).expect("the drawing reads");
+    let text = fixture(name);
+    let version = serde_json::from_str::<serde_json::Value>(&text).ok().and_then(|v| v["version"].as_u64());
+    if version == Some(2) {
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(&text).expect("the drawing reads");
+        return Document::from_snapshot_v2(snapshot).expect("the drawing opens");
+    }
+    let snapshot = DocumentSnapshotV1::from_json(&text).expect("the drawing reads");
     Document::from_snapshot(snapshot).expect("the drawing opens")
 }
 

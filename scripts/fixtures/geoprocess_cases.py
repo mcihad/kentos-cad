@@ -13,6 +13,8 @@ Two files come out of it:
   cases' format (fixtures/processing/README.md), their objects measured (`addedShapes`); and Topolojiyi kurallarla
   denetle (docs/adr/1980) on topology.kcad, five parcels and two rules: each pair of rectangles that overlap, the
   overlap's area and centroid; each edge shorter than the rule's length, its length and middle; in the rules' order.
+  Asked to (docs/adr/2200), the findings go to an error layer as points: the drawing is in the v2 form, so the
+  objects' lasting ids are known, and each finding's key is ADR 0524 §1's FNV-1a written again here.
 
 Closed forms in mpmath at 50 digits; distances of sample places from a shape in mpmath (a point's, a segment's, an
 arc's, a ring's boundary; inside by crossing number). A sample place stands at least 1 mm inside or outside.
@@ -764,9 +766,10 @@ TOPO_PARCELS = [
     [(50, 0), (60, 0), (60, 10), (50.5, 10), (50, 10)],
 ]
 TOPO_SHORT = 1.0
+TOPO_UIDS = [f"0192f5c0-2200-7000-8000-{k:012x}" for k in range(1, len(TOPO_PARCELS) + 1)]
 TOPO_DOCUMENT = {
     "format": "kentos.document",
-    "version": 1,
+    "version": 2,
     "name": "İşlem durumları: topoloji kuralları",
     "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000,
                  "workspace": "hybrid", "drawingFont": "barlow",
@@ -779,8 +782,32 @@ TOPO_DOCUMENT = {
     "activeLayer": "parsel",
     "entities": [{"kind": "polygon", "id": k + 1, "layerId": "parsel", "attrs": {}, "pts": [{"x": E + x, "y": N + y} for x, y in pts]}
                  for k, pts in enumerate(TOPO_PARCELS)],
+    # The v2 form (docs/adr/2200): the objects' lasting ids are the ones written here, so the error layer's fields and
+    # the findings' keys are known.
+    "uids": TOPO_UIDS,
     "styles": {"items": [], "categories": []},
 }
+
+
+def finding_key(rule, uids, at, tolerance=0.001):
+    """A finding's lasting key (docs/adr/0524 §1): FNV-1a over the rule, the objects' ids and the place rounded to the
+    tolerance (JS round, half up), each part closed by 0xff; 16 hex digits."""
+    h = 0xcbf29ce484222325
+    prime, mask = 0x100000001b3, (1 << 64) - 1
+
+    def eat(bs):
+        nonlocal h
+        for b in bs:
+            h ^= b
+            h = (h * prime) & mask
+        h ^= 0xff
+        h = (h * prime) & mask
+    eat(rule.encode())
+    for u in uids:
+        eat(u.encode())
+    for v in at:
+        eat(int(math.floor(v / tolerance + 0.5)).to_bytes(8, "little", signed=True))
+    return f"{h:016x}"
 
 
 def topology_rows(rules):
@@ -804,6 +831,23 @@ def topology_rows(rules):
                     rows.append(["r2", "Kısa kenar", "Değerlendirilmedi", f"#{k + 1}", f"{E + (a[0] + b[0]) / 2:.3f}",
                                  f"{N + (a[1] + b[1]) / 2:.3f}", f"{d:.3f} m", ""])
     return rows
+
+
+def exact_place(row):
+    """A finding's place exactly, not as the table writes it: an overlap's box centre, a short edge's middle."""
+    rule = row[0]
+    if rule == "r1":
+        i, j = (int(t[1:]) - 1 for t in row[3].split(", "))
+        boxes = [(min(x for x, _ in p), min(y for _, y in p), max(x for x, _ in p), max(y for _, y in p)) for p in TOPO_PARCELS]
+        x0, y0 = max(boxes[i][0], boxes[j][0]), max(boxes[i][1], boxes[j][1])
+        x1, y1 = min(boxes[i][2], boxes[j][2]), min(boxes[i][3], boxes[j][3])
+        return (E + (x0 + x1) / 2, N + (y0 + y1) / 2)
+    k = int(row[3][1:]) - 1
+    p = TOPO_PARCELS[k]
+    for a, b in zip(p, p[1:] + p[:1]):
+        if math.hypot(b[0] - a[0], b[1] - a[1]) < TOPO_SHORT:
+            return (E + (a[0] + b[0]) / 2, N + (a[1] + b[1]) / 2)
+    raise AssertionError(row)
 
 
 def topology_case(cid, title, values, rules):
@@ -1062,6 +1106,27 @@ def build_processing():
     cases.append(topology_case("topology-check", "Topolojiyi kurallarla denetle: iki çakışma ve kısa kenar, yer ve ölçüleriyle; bulgulu nesneler seçilir, çizim değişmez",
                                {}, ["r1", "r2"]))
     cases.append(topology_case("topology-check-one-rule", "Topolojiyi kurallarla denetle: yalnız kısa kenar kuralı", {"rules": "r2"}, ["r2"]))
+    # docs/adr/2200: the findings written as points on an error layer, their fields the table's with the lasting ids.
+    rows = topology_rows(["r1", "r2"])
+    errors = []
+    for r in rows:
+        objs = [TOPO_UIDS[int(t[1:]) - 1] for t in r[3].split(", ")]
+        at = (float(r[4]), float(r[5]))
+        attrs = {"Kural": r[0], "Sorun": r[1], "Durum": r[2], "Nesneler": ", ".join(objs), "Ölçü": r[6],
+                 "Anahtar": finding_key(r[0], objs, exact_place(r))}
+        errors.append(shape("point", "Topoloji bulguları", attrs, parts=1, points=[exact_place(r)]))
+    said = f"2 kural {len(TOPO_PARCELS)} nesnede {len(rows)} bulgu verdi ({len(rows)} değerlendirilmedi); {len(rows)} bulgu hata katmanına yazıldı."
+    cases.append({"id": "topology-check-errors", "title": "Topolojiyi kurallarla denetle: bulgular yerlerinde nokta olarak hata katmanına yazılır, tek geri alma adımı",
+                  "document": "topology.kcad", "run": {"tool": "topology.check"},
+                  "values": {"write": True, "layer": {"newName": "Topoloji bulguları"}},
+                  "expect": ok(said, "Topolojiyi kurallarla denetle",
+                               [{"id": layer_id("Topoloji bulguları"), "name": "Topoloji bulguları",
+                                 "style": {"color": "#E5484D", "lineType": "continuous", "lineWeight": 0.25,
+                                           "point": {"symbol": "ring", "size": 10}}}], errors,
+                               outputs={"count": len(rows), "open": len(rows),
+                                        "objects": sorted({int(t[1:]) for r in rows for t in r[3].split(", ")}),
+                                        "findings": {"columns": ["Kural", "Sorun", "Durum", "Nesneler", "Doğu", "Kuzey",
+                                                                 "Ölçü", "Gerekçe"], "rows": rows}})})
     cases.append({"id": "refuse-topology-rule", "title": "Projede olmayan kural söylenir", "document": "topology.kcad",
                   "run": {"tool": "topology.check"}, "values": {"rules": "r9"},
                   "expect": {"status": "error", "message": "Projede “r9” kimlikli topoloji kuralı yok."}})
@@ -1072,7 +1137,9 @@ def build_processing():
         "tolerance": 1e-6,
         "measureTolerance": 1e-6,
         "documents": {"geometry.kcad": {"defaults": defaults, "tools": tools},
-                      "topology.kcad": {"defaults": topo_defaults, "tools": {"topology.check": {"rules": "", "exceptions": False}}}},
+                      "topology.kcad": {"defaults": topo_defaults, "tools": {"topology.check": {"rules": "", "exceptions": False,
+                                                                                               "write": False,
+                                                                                               "layer": {"newName": "Topoloji bulguları"}}}}},
         "cases": cases,
     }
 

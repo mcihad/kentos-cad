@@ -3,8 +3,8 @@
 //! a layer of their own in one step, Geçerliliği denetle's table and
 //! selection, Koordinat sistemine dönüştür's refusal of the project's own
 //! system, Topolojiyi kurallarla denetle's findings on the topology drawing
-//! (fixtures/processing/v1/topology.kcad, docs/adr/1980), and the pictures for
-//! the owner.
+//! (fixtures/processing/v1/topology.kcad, docs/adr/1980) and, asked to, on an
+//! error layer in one step (docs/adr/2200), and the pictures for the owner.
 
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
@@ -21,11 +21,18 @@ fn app_with_geometry() -> App {
     app_with(GEOMETRY)
 }
 
-/// The app with a processing drawing open.
+/// The app with a processing drawing open: the v1 form, or the v2 form with its objects' lasting ids (topology.kcad,
+/// docs/adr/2200).
 fn app_with(text: &str) -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = DocumentSnapshotV1::from_json(text).expect("the drawing reads");
-    let doc = Document::new(snapshot, None).expect("the drawing opens");
+    let v2 = serde_json::from_str::<serde_json::Value>(text).ok().and_then(|v| v["version"].as_u64()) == Some(2);
+    let doc = if v2 {
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(text).expect("the drawing reads");
+        Document::from_v2(snapshot, None).expect("the drawing opens")
+    } else {
+        let snapshot = DocumentSnapshotV1::from_json(text).expect("the drawing reads");
+        Document::new(snapshot, None).expect("the drawing opens")
+    };
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
 }
@@ -132,6 +139,46 @@ fn the_topology_rules_from_the_toolbox_give_the_commands_findings() {
     assert!(!app.document.as_ref().expect("open").model.can_undo());
 }
 
+/// Bulguları hata katmanına yaz (docs/adr/2200): each finding a point at its place on Topoloji bulguları, with the
+/// table's fields, the objects' lasting ids and the finding's key; one undo step, nothing selected.
+#[test]
+fn the_findings_go_to_an_error_layer_in_one_step() {
+    let mut app = app_with(TOPOLOGY);
+    let _ = app.update(Message::Run("processing.run.topology.check"));
+    value(&mut app, "write", json!(true));
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, table, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert_eq!(text, "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); 3 bulgu hata katmanına yazıldı.");
+    assert_eq!(table.expect("the table").rows.len(), 3);
+    assert!(app.selection.ids().is_empty(), "the points are the result, not the objects' selection");
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Topoloji bulguları")
+        .map(|l| l.id.clone())
+        .expect("the error layer");
+    let points: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    assert_eq!(points.len(), 3);
+    let kentos_commands::Entity::Point(short) = &points[2] else {
+        panic!("{:?}", points[2]);
+    };
+    assert_eq!((short.p.x, short.p.y), (487050.25, 4420010.0));
+    let attrs = &short.base.attrs;
+    assert_eq!(attrs["Kural"], "r2");
+    assert_eq!(attrs["Sorun"], "Kısa kenar");
+    assert_eq!(attrs["Ölçü"], "0.500 m");
+    assert_eq!(attrs["Nesneler"], "0192f5c0-2200-7000-8000-000000000005");
+    assert_eq!(attrs["Anahtar"].len(), 16);
+    assert!(!attrs.contains_key("Gerekçe"));
+    assert_eq!(doc.undo().as_deref(), Some("Topolojiyi kurallarla denetle"));
+    assert!(doc.layers().leaves().iter().all(|l| l.name != "Topoloji bulguları"));
+    assert!(!doc.can_undo());
+}
+
 #[test]
 fn reprojecting_from_the_projects_own_system_is_refused() {
     let mut app = app_with_geometry();
@@ -172,6 +219,8 @@ fn screens() {
         "sadelestir",
         "donustur",
         "topoloji",
+        "topoloji-hata",
+        "topoloji-hata-cizim",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -182,7 +231,8 @@ fn screens() {
                 {
                     continue;
                 }
-                let mut app = if name == "topoloji" { app_with(TOPOLOGY) } else { app_with_geometry() };
+                let mut app =
+                    if name.starts_with("topoloji") { app_with(TOPOLOGY) } else { app_with_geometry() };
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
@@ -224,6 +274,12 @@ fn screens() {
                         let _ = app.update(Message::Run("processing.run.topology.check"));
                         event(&mut app, Event::Run);
                     }
+                    "topoloji-hata" | "topoloji-hata-cizim" => {
+                        let _ = app.update(Message::Run("view.zoomExtents"));
+                        let _ = app.update(Message::Run("processing.run.topology.check"));
+                        value(&mut app, "write", json!(true));
+                        event(&mut app, Event::Run);
+                    }
                     "sadelestir" => {
                         let _ = app.update(Message::Run("processing.run.geometry.simplify"));
                         value(&mut app, "input", layer("sinir"));
@@ -238,7 +294,12 @@ fn screens() {
                     }
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
-                if name.ends_with("-cizim") {
+                if name == "topoloji-hata-cizim" {
+                    // The window closed: the three error points on the parcels.
+                    event(&mut app, Event::Close);
+                    let _ = app.update(Message::Run("view.zoomExtents"));
+                    snapshot.settle(&mut app, App::view, &mut update);
+                } else if name.ends_with("-cizim") {
                     // The window closed, the view on everything but the old sheet (17 km away).
                     event(&mut app, Event::Close);
                     let near: Vec<kentos_domain::Slot> = app

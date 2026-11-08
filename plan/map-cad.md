@@ -37,7 +37,7 @@ sırayla alır.
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
-| MAP-07 Topoloji | 1261, 1262, 1980 | hata katmanı; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000 | kalıcı parsel kaydı ve sınır kimliği; sahnede gösterim; yaylı sınırda eksik köşe | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020 | plan değişikliği taslağı; sembolün karardan seçilmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
@@ -685,6 +685,14 @@ bulgular kural, sorun, durum, nesneler, yer, ölçü ve gerekçeyle tabloda, bul
 durumları elle hesaplanan bulgularla (doğrudan ve kopya üstünde); masaüstü penceresi. Ortak sınırın atomik düzenlenmesi
 yaylı ortak kenar dahil ADR 1960 ile geldi. Açık: veri formu yolu, hata katmanı, taşınmaların sahnede işaretlenmesi,
 üçlü birleşim ve çoklu köşe reddi, büyük veri ölçümü.
+
+**8 Kasım 2026, üçüncü tur — bulgular hata katmanında ([ADR 2200](../docs/adr/2200-topology-findings-on-an-error-layer.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: QGIS Check validity'nin nokta hata çıktısı, ArcGIS Pro Export Topology
+Errors'ın hata sınıfları ve alanları. Kanıtlanan: Topolojiyi kurallarla denetle'de “Bulguları hata katmanına yaz”;
+tablodaki her bulgu yerinde halka nokta olarak “Topoloji bulguları”na, kural, sorun, durum, nesnelerin kalıcı
+kimlikleri, ölçü, gerekçe ve bulgunun anahtarıyla; tek geri alma adımı. Ortak durum (anahtar Python'da yeniden yazıldı,
+topoloji çizimi v2), MCP ve masaüstü. Açık: veri formu yolu, taşınmaların sahnede işaretlenmesi, üçlü birleşim ve
+çoklu köşe reddi, büyük veri ölçümü; hata katmanının GeoPackage/PostGIS'e yazılması.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 

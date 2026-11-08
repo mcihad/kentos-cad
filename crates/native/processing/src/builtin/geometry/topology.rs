@@ -2,11 +2,15 @@
 //! üzerinden aynı denetim sonucu erişilir”): the project's topology rules run from İşlem araç kutusu, a model or a
 //! script, read only. The check is `cad.topology.check`'s own (`topology_check::check_on`): the same findings, keys,
 //! places, measures, life cycle (Değerlendirilmedi, Hata, İstisna, Yeniden değerlendir) and lapsed exceptions. The
-//! findings go to a table, their objects are selected, the counts are numbers; nothing is written.
+//! findings go to a table, their objects are selected, the counts are numbers. Asked to (docs/adr/2200), the listed
+//! findings are also written as points at their places on an error layer, one undo step, as QGIS's Check validity
+//! writes its error output and ArcGIS's Export Topology Errors its error features; otherwise nothing is written.
 
 use std::collections::BTreeMap;
 
-use kentos_commands::{TopologyCheck, TopologyFindingState};
+use kentos_commands::{
+    Entity, EntityBase, PointEntity, PointStyle, PointSymbol, TopologyCheck, TopologyFindingState,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::ops::topology_rules::problem_label;
 use kentos_native_application::topology_check::check_on;
@@ -14,7 +18,8 @@ use serde_json::{Value, json};
 
 use crate::text::to_fixed;
 use crate::types::{
-    Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext, RunResult, Target, Tool,
+    Feedback, NewLayerStyle, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext, RunResult, Target,
+    Tool,
 };
 
 /// The findings' table.
@@ -35,11 +40,12 @@ pub fn tool() -> Tool {
         id: "topology.check".into(),
         label: "Topolojiyi kurallarla denetle".into(),
         category: "geometry".into(),
-        description: "Projenin topoloji kurallarını çalıştırır; bulguları durumlarıyla tabloda gösterir ve bulgulu nesneleri seçer; çizim değişmez.".into(),
+        description: "Projenin topoloji kurallarını çalıştırır; bulguları durumlarıyla tabloda gösterir ve bulgulu nesneleri seçer; istenirse bulguları hata katmanına nokta olarak yazar.".into(),
         help: Some([
             "Denetim Topoloji kuralları penceresinin ve cad.topology.check komutunun denetimidir: aynı kurallar, aynı bulgular, aynı yerler ve ölçüler. Kurallar projenin kalite profiliyle birlikte Topoloji kuralları penceresinde tanımlanır.",
             "Her bulgunun durumu yaşam döngüsündendir: Değerlendirilmedi, Hata (gözden geçirilip doğrulanmış), İstisna (bilerek bırakılmış) ya da Yeniden değerlendir (işaretlendikten sonra nesnesi ya da kuralı değişmiş). İstisnalar istenmedikçe tabloya girmez, sayılır.",
             "Ölçü çakışma ve boşlukta alan (m²), kısa kenarda uzunluk (m), açıda derecedir. Bulguyu düzeltmek ya da istisna işaretlemek Topoloji kuralları penceresindedir.",
+            "Bulguları hata katmanına yaz açıksa tablodaki her bulgu yerinde bir nokta olarak hata katmanına yazılır; noktanın öznitelikleri kural, sorun, durum, nesnelerin kalıcı kimlikleri, ölçü, gerekçe ve bulgunun anahtarıdır. Yazım tek geri alma adımıdır; kapalıyken çizim değişmez.",
         ]
         .join("\n\n")),
         keywords: [
@@ -59,6 +65,27 @@ pub fn tool() -> Tool {
             .optional()
             .describe("Çalıştırılacak kuralların kimlikleri, virgülle (r1, r2); boş: projenin bütün kuralları."),
             ParamDef::new("exceptions", "İstisnaları da listele", ParamKind::Boolean).default_value(json!(false)),
+            ParamDef::new("write", "Bulguları hata katmanına yaz", ParamKind::Boolean)
+                .default_value(json!(false))
+                .describe("Açıksa tablodaki bulgular yerlerinde nokta olarak hata katmanına yazılır (tek geri alma adımı)."),
+            // The error layer's points are rings, so they stand apart from the lines they sit on.
+            ParamDef::new(
+                "layer",
+                "Hata katmanı",
+                ParamKind::Layer {
+                    new_layer_style: NewLayerStyle {
+                        color: Some("#E5484D".into()),
+                        line_weight: Some(0.25),
+                        point: Some(PointStyle { symbol: PointSymbol::Ring, size: 10.0 }),
+                        ..NewLayerStyle::default()
+                    },
+                    above: None,
+                    below: None,
+                },
+            )
+            .default_value(json!({ "newName": "Topoloji bulguları" }))
+            .describe("Bu adda katman yoksa oluşturulur.")
+            .shown_when(|v| v.get("write").and_then(Value::as_bool) == Some(true)),
         ],
         outputs: vec![
             OutputDef::new("findings", "Bulgular", OutputKind::Table),
@@ -163,8 +190,64 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     ]
     .into_iter()
     .collect();
+    // The error layer (docs/adr/2200): each listed finding a point at its place, its fields the table's with the
+    // objects' lasting ids and the finding's key, so a later check matches it.
+    let errors: Vec<Entity> = if v.flag("write") {
+        let layer = v.layer("layer");
+        listed
+            .iter()
+            .map(|f| {
+                let mut attrs = BTreeMap::new();
+                attrs.insert("Kural".to_owned(), f.rule.clone());
+                attrs.insert("Sorun".to_owned(), problem_label(&f.problem).to_owned());
+                attrs.insert("Durum".to_owned(), state_word(f.state).to_owned());
+                attrs.insert("Nesneler".to_owned(), f.uids.join(", "));
+                let measure = measure_text(f.measure, f.measure_kind.as_deref(), ctx);
+                if !measure.is_empty() {
+                    attrs.insert("Ölçü".to_owned(), measure);
+                }
+                if let Some(r) = f.reason.as_ref().filter(|r| !r.is_empty()) {
+                    attrs.insert("Gerekçe".to_owned(), r.clone());
+                }
+                attrs.insert("Anahtar".to_owned(), f.key.clone());
+                Entity::Point(PointEntity {
+                    base: EntityBase {
+                        look: Default::default(),
+                        id: 0,
+                        layer_id: layer.id.clone(),
+                        color: None,
+                        attrs,
+                        label: None,
+                        symbol: None,
+                        line_weight: None,
+                        label_pins: Vec::new(),
+                        attachments: Vec::new(),
+                    },
+                    p: f.at,
+                    z: None,
+                    parts: None,
+                })
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let wrote = errors.len();
+    // Written: the findings' points are what the run leaves, not the objects' selection.
+    let summary = if wrote > 0 {
+        format!(
+            "{} kural {} nesnede {} bulgu verdi ({}); {wrote} bulgu hata katmanına yazıldı.",
+            checked.rules,
+            checked.objects,
+            checked.total,
+            said.join(", ")
+        )
+    } else {
+        summary
+    };
     RunResult {
-        select: (!ids.is_empty()).then(|| ids.iter().map(|id| Slot(*id)).collect()),
+        select: (!ids.is_empty() && wrote == 0).then(|| ids.iter().map(|id| Slot(*id)).collect()),
+        changes: (wrote > 0).then(|| crate::types::ChangeSet { add: errors, ..Default::default() }),
         outputs,
         summary: Some(summary),
         ..RunResult::default()
