@@ -109,3 +109,68 @@ fn screens() {
         }
     }
 }
+
+const SIMILAR: &str = "Üç bilinen nokta: 15(1)(c) benzerlik dönüşümü; ölçek C1'in ±3 ppm'i içinde, istatistikle uyumlu";
+const STRETCHED: &str = "Bilinen noktalar 5 ppm ölçekli: benzerlik dönüşümünün ölçeği C1'in sınırını aşar";
+
+/// The window on one of the shared cases' drawings (Madde 15(1)(c), docs/adr/2160), with class C1.
+fn opened_case(name: &str) -> App {
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/map.survey.network.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Run("map.survey.adjustment"));
+    let _ = app.update(Message::SurveyNetwork(N::Class(crate::survey_network_window::Class::C1)));
+    app
+}
+
+#[test]
+fn three_known_points_give_article_15_1_c_s_similarity() {
+    let app = opened_case(SIMILAR);
+    let a = answer(&app);
+    let s = a.similarity.clone().expect("three known points: the similarity");
+    assert_eq!((s.known.len(), s.dof), (3, 2));
+    assert!(s.scale.abs() < 3.0 && s.agrees, "{s:?}");
+    assert_eq!(a.rules.as_ref().and_then(|r| r.similarity), Some(true));
+    // Stretched by 5 ppm: the scale passes C1's limit, said in the rules.
+    let app = opened_case(STRETCHED);
+    let a = answer(&app);
+    let s = a.similarity.clone().expect("the similarity");
+    assert!(s.scale > 3.0 && !s.agrees, "{s:?}");
+    assert_eq!(a.rules.as_ref().map(|r| (r.similarity, r.passed)), Some((Some(false), false)));
+}
+
+/// The window with three known points: the summary's similarity line and Bilinen noktalar's residuals, light wide,
+/// `.run/gui-evidence/ag-benzerlik-2160/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib survey_epoch_tests::similarity_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn similarity_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ag-benzerlik-2160");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (case, file) in [(SIMILAR, "1-uc-bilinen-nokta"), (STRETCHED, "2-olcek-asar")] {
+        let size = Size::new(1440.0, 900.0);
+        let mut app = opened_case(case);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("light"))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::SurveyNetwork(N::View(View::Known)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("{file}-acik-genis.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

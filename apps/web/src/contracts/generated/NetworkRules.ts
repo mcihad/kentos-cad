@@ -3,6 +3,7 @@ import type { BaselineSigmaOf } from "./BaselineSigmaOf";
 
 /**
  * What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,
- * whose baseline standard deviations were checked, whether all holds, and how many baselines and stations do not.
+ * whose baseline standard deviations were checked, whether all holds, how many baselines and stations do not, and
+ * whether the similarity's scale holds when the class limits it (docs/adr/2160).
  */
-export type NetworkRules = { package: string, release: number, class: string, articles: string, confidence?: number, baselineOf: BaselineSigmaOf, passed: boolean, baselines: number, stations: number, };
+export type NetworkRules = { package: string, release: number, class: string, articles: string, confidence?: number, baselineOf: BaselineSigmaOf, passed: boolean, baselines: number, stations: number, similarity?: boolean, };

@@ -9,18 +9,22 @@
 //!
 //! The measurement epoch (docs/adr/2120): given, or the mean of the baselines' observation mid-times; the known points
 //! are moved to it along the campaign's velocity grid by the coordinate chain itself (BÖHHBÜY Madde 15(1)(a)).
+//!
+//! With three known points or more the given coordinates and the free stage's are related by a 3D similarity and its
+//! scale tested (Madde 15(1)(c), docs/adr/2160).
 
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
     BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide, CrsTransform,
     GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, MapSurvey, MapSurveyNetwork, MapSurveyNetworked,
-    NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkStage, NetworkStation, SurveyBaseline, SurveyCampaign,
-    SurveyKnown, VelocityModel, gnss_rules_default,
+    NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkSimilarity, NetworkStage, NetworkStation, SimilarityResidual,
+    SurveyBaseline, SurveyCampaign, SurveyKnown, VelocityModel, gnss_rules_default,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssResult, GnssStation};
-use kentos_geometry_core::survey::adjust::{W_LIMIT, chi2_quantile};
+use kentos_geometry_core::survey::adjust::Normal;
+use kentos_geometry_core::survey::adjust::{W_LIMIT, chi2_quantile, t_quantile};
 
 use crate::ExecutionContext;
 use crate::checks::Stop;
@@ -82,8 +86,145 @@ fn rules_problem(r: &GnssRules) -> Option<&'static str> {
         if c.confidence.is_some_and(|p| !(p.is_finite() && p > 0.0 && p < 1.0)) {
             return Some("Sınıfın güveni 0 ile 1 arasında olmalı.");
         }
+        if c.similarity.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
+            return Some("Sınıfın benzerlik ölçeği sınırı 0'dan büyük sonlu bir sayı olmalı (ppm).");
+        }
     }
     None
+}
+
+/// The confidence the similarity's scale is tested at when the class gives none: BÖHHBÜY Madde 15(1)(d)'s 1 − α = 0.95.
+const SIMILARITY_CONFIDENCE: f64 = 0.95;
+
+/// Arc-seconds in a radian.
+const ARCSEC: f64 = 180.0 * 3600.0 / std::f64::consts::PI;
+
+/// The 3D similarity given = T + λ·R·free of three known points or more (BÖHHBÜY Madde 15(1)(c), docs/adr/2160): least
+/// squares with unit weights by Gauss–Newton from λ = 1, R = I, each step linearised about the transformed points
+/// reduced to their mean (map coordinates lose no digits) and R kept a rotation (Rodrigues), until the steps vanish;
+/// the rotations reported are R's antisymmetric part (position vector convention). σ0² = vᵀv/(3n − 7), the scale's σ
+/// from the linearised normals on the free points reduced to their mean; t = |λ − 1|/σ against Student's t at
+/// (1 + confidence)/2. `points` are (id, mark, given, free, given latitude and longitude).
+fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confidence: f64) -> Option<NetworkSimilarity> {
+    let n = points.len();
+    if n < 3 {
+        return None;
+    }
+    let mean = |v: &dyn Fn(usize) -> [f64; 3]| {
+        let mut s = [0.0; 3];
+        for i in 0..n {
+            let x = v(i);
+            for k in 0..3 {
+                s[k] += x[k];
+            }
+        }
+        s.map(|x| x / n as f64)
+    };
+    let rows = |x: [f64; 3]| -> [[f64; 7]; 3] {
+        [
+            [1.0, 0.0, 0.0, x[0], 0.0, x[2], -x[1]],
+            [0.0, 1.0, 0.0, x[1], -x[2], 0.0, x[0]],
+            [0.0, 0.0, 1.0, x[2], x[1], -x[0], 0.0],
+        ]
+    };
+    let mul = |r: &[[f64; 3]; 3], x: [f64; 3]| [0, 1, 2].map(|i| r[i][0] * x[0] + r[i][1] * x[1] + r[i][2] * x[2]);
+    // λ and R, then T = mean(given) − λ·R·mean(free).
+    let (mut lambda, mut r) = (1.0f64, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]);
+    let gm = mean(&|i| points[i].2);
+    let fm = mean(&|i| points[i].3);
+    for _ in 0..20 {
+        // The free points as the current transformation puts them, reduced to their mean.
+        let moved: Vec<[f64; 3]> = points.iter().map(|p| mul(&r, [p.3[0] - fm[0], p.3[1] - fm[1], p.3[2] - fm[2]]).map(|v| lambda * v)).collect();
+        let mut normal = Normal::new(7);
+        let mut b = [0.0; 7];
+        for (p, x) in points.iter().zip(&moved) {
+            let a = rows(*x);
+            for (k, row) in a.iter().enumerate() {
+                let l = (p.2[k] - gm[k]) - x[k];
+                for i in 0..7 {
+                    b[i] += row[i] * l;
+                    for j in 0..7 {
+                        normal.add(i, j, row[i] * row[j]);
+                    }
+                }
+            }
+        }
+        let step = normal.cholesky().ok()?.solve(&b);
+        let (dd, w) = (step[3], [step[4], step[5], step[6]]);
+        // R ← exp([w]×)·R by Rodrigues; λ ← λ·(1 + dd).
+        let angle = (w[0] * w[0] + w[1] * w[1] + w[2] * w[2]).sqrt();
+        let turn = if angle > 0.0 {
+            let k = w.map(|v| v / angle);
+            let (s, c) = angle.sin_cos();
+            let kk = [[0.0, -k[2], k[1]], [k[2], 0.0, -k[0]], [-k[1], k[0], 0.0]];
+            let mut m = [[0.0; 3]; 3];
+            for i in 0..3 {
+                for j in 0..3 {
+                    let k2 = (0..3).map(|q| kk[i][q] * kk[q][j]).fold(0.0, |a, b| a + b);
+                    m[i][j] = f64::from(u8::from(i == j)) + s * kk[i][j] + (1.0 - c) * k2;
+                }
+            }
+            m
+        } else {
+            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+        };
+        let mut next = [[0.0; 3]; 3];
+        for i in 0..3 {
+            for j in 0..3 {
+                next[i][j] = (0..3).map(|q| turn[i][q] * r[q][j]).fold(0.0, |a, b| a + b);
+            }
+        }
+        r = next;
+        lambda *= 1.0 + dd;
+        if dd.abs() < 1e-15 && angle < 1e-15 {
+            break;
+        }
+    }
+    let rf = mul(&r, fm);
+    let translation = [0, 1, 2].map(|k| gm[k] - lambda * rf[k]);
+    // The residuals, given − transformed, east, north, up at the given places.
+    let mut vv = 0.0;
+    let mut residuals = Vec::with_capacity(n);
+    for p in points {
+        let x = mul(&r, p.3);
+        let v: [f64; 3] = [0, 1, 2].map(|k| p.2[k] - (translation[k] + lambda * x[k]));
+        vv += v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        let e = gnss::enu_rows(p.4 / RAD, p.5 / RAD);
+        let enu = [0, 1, 2].map(|i| e[i][0] * v[0] + e[i][1] * v[1] + e[i][2] * v[2]);
+        residuals.push(SimilarityResidual { id: p.0.clone(), mark: p.1.clone(), enu });
+    }
+    // The scale's σ from the linearised normals on the free points reduced to their mean.
+    let mut normal = Normal::new(7);
+    for p in points {
+        let a = rows([p.3[0] - fm[0], p.3[1] - fm[1], p.3[2] - fm[2]]);
+        for row in &a {
+            for i in 0..7 {
+                for j in 0..7 {
+                    normal.add(i, j, row[i] * row[j]);
+                }
+            }
+        }
+    }
+    let q = normal.cholesky().ok()?.inverse();
+    let dof = 3 * n - 7;
+    let s0 = (vv / dof as f64).sqrt();
+    let sigma = s0 * q.get(3, 3).sqrt();
+    let d = lambda - 1.0;
+    let t = if sigma > 0.0 { d.abs() / sigma } else { 0.0 };
+    let quantile = t_quantile(dof as f64, (1.0 + confidence) / 2.0);
+    let rotation = [(r[2][1] - r[1][2]) / 2.0, (r[0][2] - r[2][0]) / 2.0, (r[1][0] - r[0][1]) / 2.0].map(|v| v * ARCSEC);
+    Some(NetworkSimilarity {
+        known: points.iter().map(|p| p.0.clone()).collect(),
+        translation,
+        rotation,
+        scale: d * 1e6,
+        sigma: sigma * 1e6,
+        dof: u32::try_from(dof).unwrap_or(u32::MAX),
+        t,
+        quantile,
+        agrees: t <= quantile,
+        residuals,
+    })
 }
 
 /// The test value above which a component is a blunder: two-sided at the class's confidence (√χ²₁), else Baarda's.
@@ -473,6 +614,16 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let known_ids: Vec<Option<String>> = marks.iter().map(|m| known_of(m).map(|k| k.id.clone())).collect();
     let froms: Vec<usize> = used.iter().map(|b| marks.iter().position(|m| *m == b.from).unwrap_or(0)).collect();
     let (free_stage, free_tests) = stage(&free, &ids, &froms, &known_ids, limit, vec![hold.mark.clone()]);
+    // Madde 15(1)(c): the known points' given coordinates (at the measurement epoch) against the free stage's.
+    let common: Vec<(String, String, [f64; 3], [f64; 3], f64, f64)> = known
+        .iter()
+        .filter_map(|k| {
+            let i = marks.iter().position(|m| *m == k.mark)?;
+            let at = place_of(k);
+            Some((k.id.clone(), k.mark.clone(), ecef(at, shape), free.stations[i].xyz, at.0, at.1))
+        })
+        .collect();
+    let similar = similarity(&common, class.and_then(|c| c.confidence).unwrap_or(SIMILARITY_CONFIDENCE));
     let fixed: Vec<String> = known.iter().filter(|k| k.sigma.is_none()).map(|k| k.mark.clone()).collect();
     let (held_stage, held_tests) = stage(&held, &ids, &froms, &known_ids, limit, fixed);
     let mut failed_baselines = 0u32;
@@ -556,16 +707,21 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         }
         stations.push(row);
     }
-    let rules = class.map(|c| NetworkRules {
-        package: package.id.clone(),
-        release: package.release,
-        class: c.id.clone(),
-        articles: c.articles.clone(),
-        confidence: c.confidence,
-        baseline_of: c.baseline_of,
-        passed: failed_baselines == 0 && failed_stations == 0,
-        baselines: failed_baselines,
-        stations: failed_stations,
+    let rules = class.map(|c| {
+        // The similarity's scale against the class's limit (Madde 15(1)(c): C1's 3 ppm), when both are there.
+        let similar_holds = c.similarity.zip(similar.as_ref()).map(|(limit, s)| s.scale.abs() <= limit);
+        NetworkRules {
+            package: package.id.clone(),
+            release: package.release,
+            class: c.id.clone(),
+            articles: c.articles.clone(),
+            confidence: c.confidence,
+            baseline_of: c.baseline_of,
+            passed: failed_baselines == 0 && failed_stations == 0 && similar_holds != Some(false),
+            baselines: failed_baselines,
+            stations: failed_stations,
+            similarity: similar_holds,
+        }
     });
     // The same network already accepted: the same baselines, known points, held point, factor and class, and every
     // new mark's point carrying that adjustment now.
@@ -628,6 +784,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         stations,
         free: free_stage,
         constrained: held_stage,
+        similarity: similar,
         rules,
         current,
         acceptable: why.is_empty(),
@@ -662,10 +819,17 @@ pub(crate) fn warnings_of(out: &MapSurveyNetworked, prefix: &str) -> Vec<Command
     if let Some(r) = out.rules.as_ref().filter(|r| !r.passed) {
         w.push(CommandWarning {
             code: codes::NETWORK_RULES_FAILED.into(),
-            message: format!(
-                "{} sınıfı ({} {}) tutmuyor: {} baz ve {} nokta sınırı aşıyor.",
-                r.class, r.package, r.articles, r.baselines, r.stations
-            ),
+            message: {
+                // Madde 15(1)(c)'s scale, when it is what fails (docs/adr/2160).
+                let scale = match (r.similarity, out.similarity.as_ref()) {
+                    (Some(false), Some(s)) => format!("; benzerlik dönüşümünün ölçeği sınırı aşıyor (|1 − λ| = {:.2} ppm)", s.scale.abs()),
+                    _ => String::new(),
+                };
+                format!(
+                    "{} sınıfı ({} {}) tutmuyor: {} baz ve {} nokta sınırı aşıyor{scale}.",
+                    r.class, r.package, r.articles, r.baselines, r.stations
+                )
+            },
             path: Some(format!("{prefix}class")),
         });
     }

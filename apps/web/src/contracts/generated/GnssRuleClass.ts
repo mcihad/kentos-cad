@@ -9,6 +9,11 @@ import type { BaselineSigmaOf } from "./BaselineSigmaOf";
  */
 export type GnssRuleClass = { id: string, constant: number, ppm: number, baselineOf: BaselineSigmaOf, horizontal: number, height: number, confidence?: number, 
 /**
+ * The largest |1 − λ| (ppm) of the 3D similarity between the known points' given coordinates and the free stage's
+ * (docs/adr/2160; BÖHHBÜY Madde 15(1)(c): C1's 3).
+ */
+similarity?: number, 
+/**
  * The articles the class's numbers come from.
  */
 articles: string, };

@@ -3,14 +3,16 @@ import type { KnownMoved } from "./KnownMoved";
 import type { NetworkBaseline } from "./NetworkBaseline";
 import type { NetworkEpochFrom } from "./NetworkEpochFrom";
 import type { NetworkRules } from "./NetworkRules";
+import type { NetworkSimilarity } from "./NetworkSimilarity";
 import type { NetworkStage } from "./NetworkStage";
 import type { NetworkStation } from "./NetworkStation";
 
 /**
  * Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where
  * the epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,
- * the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
- * result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
- * be accepted and, if not, why, and the drawing's revision.
+ * the baselines in the archive's order, the marks in the order the baselines name them, both stages, the 3D
+ * similarity of the known points (three or more, more than seven coordinates; docs/adr/2160), the class's result, the
+ * adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can be accepted
+ * and, if not, why, and the drawing's revision.
  */
-export type MapSurveyNetworked = { srid: number, epoch?: number, epochFrom: NetworkEpochFrom, moved?: Array<KnownMoved>, known: Array<string>, baselines: Array<NetworkBaseline>, stations: Array<NetworkStation>, free: NetworkStage, constrained: NetworkStage, rules?: NetworkRules, current?: string, acceptable: boolean, why?: Array<string>, revision: string, };
+export type MapSurveyNetworked = { srid: number, epoch?: number, epochFrom: NetworkEpochFrom, moved?: Array<KnownMoved>, known: Array<string>, baselines: Array<NetworkBaseline>, stations: Array<NetworkStation>, free: NetworkStage, constrained: NetworkStage, similarity?: NetworkSimilarity, rules?: NetworkRules, current?: string, acceptable: boolean, why?: Array<string>, revision: string, };

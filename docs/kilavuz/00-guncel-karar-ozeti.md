@@ -146,6 +146,9 @@
 - **Alan adaylarının örtüşmeyle uzlaştırılması (8 Kasım 2026; MAP-04, [ADR 2140](../../docs/adr/2140-area-candidates-by-overlap.md)).**
   Bina izi ve yeşil alan adayları kesişim/birleşim oranı 0,5'i aşınca (PASCAL VOC) bir gruptur; en güvenilir iz
   Örtüşme ile yazılır. Harita; komut Python ve MCP'de.
+- **GNSS ağında Madde 15(1)(c) (8 Kasım 2026; MAP-05, [ADR 2160](../../docs/adr/2160-network-similarity-article-15-1-c.md)).**
+  Üç ya da daha çok bilinen noktada verilen ve serbest koordinatlar arasında 3B benzerlik; ölçeğin t testi ve C1'in
+  ±3 ppm sınırı (kural paketi sürüm 2). Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

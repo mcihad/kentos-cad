@@ -40417,6 +40417,8 @@ class GnssRuleClass(_Model):
         height: Unit: m.
         articles: The articles the class's numbers come from.
         confidence: Unit: 1.
+        similarity: The largest |1 − λ| (ppm) of the 3D similarity between the known points' given coordinates and the free stage's
+            (docs/adr/2160; BÖHHBÜY Madde 15(1)(c): C1's 3). Unit: ppm.
     """
     id: str
     constant: float
@@ -40426,6 +40428,7 @@ class GnssRuleClass(_Model):
     height: float
     articles: str
     confidence: float | None | Unset = UNSET
+    similarity: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -40438,6 +40441,8 @@ class GnssRuleClass(_Model):
         out["articles"] = self.articles
         if self.confidence is not UNSET:
             out["confidence"] = None if self.confidence is None else float(self.confidence)
+        if self.similarity is not UNSET:
+            out["similarity"] = None if self.similarity is None else float(self.similarity)
         return out
 
     @classmethod
@@ -40451,6 +40456,7 @@ class GnssRuleClass(_Model):
             height=float(data["height"]),
             articles=data["articles"],
             confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+            similarity=UNSET if "similarity" not in data else None if data["similarity"] is None else float(data["similarity"]),
         )
 
 
@@ -53306,9 +53312,10 @@ class MapSurveyNetwork(_Model):
 class MapSurveyNetworked(_Model):
     """Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where
     the epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,
-    the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
-    result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
-    be accepted and, if not, why, and the drawing's revision.
+    the baselines in the archive's order, the marks in the order the baselines name them, both stages, the 3D
+    similarity of the known points (three or more, more than seven coordinates; docs/adr/2160), the class's result, the
+    adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can be accepted
+    and, if not, why, and the drawing's revision.
     Attributes:
         srid: Unit: epsg.
         epoch: Unit: year.
@@ -53326,6 +53333,7 @@ class MapSurveyNetworked(_Model):
     epoch: float | None | Unset = UNSET
     moved: list[KnownMoved] | Unset = UNSET
     rules: NetworkRules | None | Unset = UNSET
+    similarity: NetworkSimilarity | None | Unset = UNSET
     why: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -53347,6 +53355,8 @@ class MapSurveyNetworked(_Model):
             out["moved"] = [e0.to_json() for e0 in self.moved]
         if self.rules is not UNSET:
             out["rules"] = None if self.rules is None else self.rules.to_json()
+        if self.similarity is not UNSET:
+            out["similarity"] = None if self.similarity is None else self.similarity.to_json()
         if self.why is not UNSET:
             out["why"] = list(self.why)
         return out
@@ -53367,6 +53377,7 @@ class MapSurveyNetworked(_Model):
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             moved=[KnownMoved.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
             rules=UNSET if "rules" not in data else None if data["rules"] is None else NetworkRules.from_json(data["rules"]),
+            similarity=UNSET if "similarity" not in data else None if data["similarity"] is None else NetworkSimilarity.from_json(data["similarity"]),
             why=list(data["why"]) if "why" in data else UNSET,
         )
 
@@ -56711,7 +56722,8 @@ class NetworkProfile(_Model):
 @dataclass(kw_only=True, slots=True)
 class NetworkRules(_Model):
     """What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,
-    whose baseline standard deviations were checked, whether all holds, and how many baselines and stations do not.
+    whose baseline standard deviations were checked, whether all holds, how many baselines and stations do not, and
+    whether the similarity's scale holds when the class limits it (docs/adr/2160).
     Attributes:
         release: Unit: version.
         baselines: Unit: count.
@@ -56727,6 +56739,7 @@ class NetworkRules(_Model):
     baselines: int
     stations: int
     confidence: float | None | Unset = UNSET
+    similarity: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -56740,6 +56753,8 @@ class NetworkRules(_Model):
         out["stations"] = self.stations
         if self.confidence is not UNSET:
             out["confidence"] = None if self.confidence is None else float(self.confidence)
+        if self.similarity is not UNSET:
+            out["similarity"] = self.similarity
         return out
 
     @classmethod
@@ -56754,6 +56769,64 @@ class NetworkRules(_Model):
             baselines=data["baselines"],
             stations=data["stations"],
             confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
+            similarity=data.get("similarity", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkSimilarity(_Model):
+    """The 3D similarity between the known points' given coordinates (at the measurement epoch) and the free stage's
+    (BÖHHBÜY Madde 15(1)(c), docs/adr/2160): given = T + λ·R·free, R the small rotations in the position vector
+    convention. The translation (m), the rotations (arc-seconds), the scale's difference λ − 1 and its standard deviation
+    (ppm), the degrees of freedom 3n − 7, the scale's test value |λ − 1|/σ against Student's t at the confidence, whether
+    the scale agrees, and the residuals.
+    Attributes:
+        translation: Unit: m.
+        rotation: Unit: arcsec.
+        scale: Unit: ppm.
+        sigma: Unit: ppm.
+        dof: Unit: count.
+        t: Unit: 1.
+        quantile: Unit: 1.
+    """
+    known: list[str]
+    translation: list[float]
+    rotation: list[float]
+    scale: float
+    sigma: float
+    dof: int
+    t: float
+    quantile: float
+    agrees: bool
+    residuals: list[SimilarityResidual]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["known"] = list(self.known)
+        out["translation"] = [float(e0) for e0 in self.translation]
+        out["rotation"] = [float(e0) for e0 in self.rotation]
+        out["scale"] = float(self.scale)
+        out["sigma"] = float(self.sigma)
+        out["dof"] = self.dof
+        out["t"] = float(self.t)
+        out["quantile"] = float(self.quantile)
+        out["agrees"] = self.agrees
+        out["residuals"] = [e0.to_json() for e0 in self.residuals]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkSimilarity:
+        return cls(
+            known=list(data["known"]),
+            translation=[float(e0) for e0 in data["translation"]],
+            rotation=[float(e0) for e0 in data["rotation"]],
+            scale=float(data["scale"]),
+            sigma=float(data["sigma"]),
+            dof=data["dof"],
+            t=float(data["t"]),
+            quantile=float(data["quantile"]),
+            agrees=data["agrees"],
+            residuals=[SimilarityResidual.from_json(e0) for e0 in data["residuals"]],
         )
 
 
@@ -85121,6 +85194,32 @@ class SimilarCriteria(_Model):
             layer=data["layer"],
             color=data["color"],
             symbol=data["symbol"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SimilarityResidual(_Model):
+    """A known point's residual in the similarity (docs/adr/2160): east, north, up (m) at its given place.
+    Attributes:
+        enu: Unit: m.
+    """
+    id: str
+    mark: str
+    enu: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["mark"] = self.mark
+        out["enu"] = [float(e0) for e0 in self.enu]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SimilarityResidual:
+        return cls(
+            id=data["id"],
+            mark=data["mark"],
+            enu=[float(e0) for e0 in data["enu"]],
         )
 
 
@@ -129554,6 +129653,7 @@ __all__ = [
     "NetworkPeriod",
     "NetworkProfile",
     "NetworkRules",
+    "NetworkSimilarity",
     "NetworkStage",
     "NetworkStation",
     "NetworkSubnetworks",
@@ -130798,6 +130898,7 @@ __all__ = [
     "SimilarCriteria",
     "SimilarSelectRegion",
     "SimilarityCrsPlane",
+    "SimilarityResidual",
     "SimilarityTransform",
     "SimplifyShapeWork",
     "SinkColumn",

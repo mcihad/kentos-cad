@@ -766,6 +766,12 @@ pub struct GnssRuleClass {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub confidence: Option<f64>,
+    /// The largest |1 − λ| (ppm) of the 3D similarity between the known points' given coordinates and the free stage's
+    /// (docs/adr/2160; BÖHHBÜY Madde 15(1)(c): C1's 3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
+    pub similarity: Option<f64>,
     /// The articles the class's numbers come from.
     pub articles: String,
 }
@@ -1002,7 +1008,8 @@ pub struct NetworkStation {
 }
 
 /// What a rule class said: the package and its release, the class, the tests' confidence when the class gives one,
-/// whose baseline standard deviations were checked, whether all holds, and how many baselines and stations do not.
+/// whose baseline standard deviations were checked, whether all holds, how many baselines and stations do not, and
+/// whether the similarity's scale holds when the class limits it (docs/adr/2160).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1024,13 +1031,60 @@ pub struct NetworkRules {
     pub baselines: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stations: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub similarity: Option<bool>,
+}
+
+/// A known point's residual in the similarity (docs/adr/2160): east, north, up (m) at its given place.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SimilarityResidual {
+    pub id: String,
+    pub mark: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub enu: [f64; 3],
+}
+
+/// The 3D similarity between the known points' given coordinates (at the measurement epoch) and the free stage's
+/// (BÖHHBÜY Madde 15(1)(c), docs/adr/2160): given = T + λ·R·free, R the small rotations in the position vector
+/// convention. The translation (m), the rotations (arc-seconds), the scale's difference λ − 1 and its standard deviation
+/// (ppm), the degrees of freedom 3n − 7, the scale's test value |λ − 1|/σ against Student's t at the confidence, whether
+/// the scale agrees, and the residuals.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkSimilarity {
+    pub known: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub translation: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "arcsec")))]
+    pub rotation: [f64; 3],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
+    pub scale: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ppm")))]
+    pub sigma: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub dof: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub t: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub quantile: f64,
+    pub agrees: bool,
+    pub residuals: Vec<SimilarityResidual>,
 }
 
 /// Output of `map.survey.network` v1: the network's frame and epoch (the measurement epoch, or its known points'), where
 /// the epoch comes from and the known points moved to it (docs/adr/2120), the known points it rests on,
-/// the baselines in the archive's order, the marks in the order the baselines name them, both stages, the class's
-/// result, the adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can
-/// be accepted and, if not, why, and the drawing's revision.
+/// the baselines in the archive's order, the marks in the order the baselines name them, both stages, the 3D
+/// similarity of the known points (three or more, more than seven coordinates; docs/adr/2160), the class's result, the
+/// adjustment (`da-N`) this same network was accepted with when its points still carry it, whether it can be accepted
+/// and, if not, why, and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1052,6 +1106,9 @@ pub struct MapSurveyNetworked {
     pub stations: Vec<NetworkStation>,
     pub free: NetworkStage,
     pub constrained: NetworkStage,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub similarity: Option<NetworkSimilarity>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<NetworkRules>,

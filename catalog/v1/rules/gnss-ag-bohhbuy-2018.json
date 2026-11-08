@@ -1,8 +1,8 @@
 {
  "id": "bohhbuy-2018-gnss",
- "release": 1,
+ "release": 2,
  "jurisdiction": "Türkiye: Büyük Ölçekli Harita ve Harita Bilgileri Üretim Yönetmeliği",
- "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 15, 20, 22; metin Çanakkale Onsekiz Mart Üniversitesi Harita Mühendisliği'nin yayımladığı kopyadan (Yönetmelikler, Nisan 2018, s. 6966–6969) 7 Kasım 2026'da okundu",
+ "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 15, 20, 22; metin Çanakkale Onsekiz Mart Üniversitesi Harita Mühendisliği'nin yayımladığı kopyadan (Yönetmelikler, Nisan 2018, s. 6966–6969) 7 Kasım 2026'da okundu; Madde 15(1)(c)'nin benzerlik dönüşümü 8 Kasım 2026'da eklendi",
  "effective": "2018-06-26",
  "classes": [
   {
@@ -13,7 +13,8 @@
    "horizontal": 0.030,
    "height": 0.050,
    "confidence": 0.95,
-   "articles": "Madde 15(1)(b), (ç), (d)"
+   "similarity": 3.0,
+   "articles": "Madde 15(1)(b), (c), (ç), (d)"
   },
   {
    "id": "C2",

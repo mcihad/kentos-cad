@@ -9,7 +9,8 @@
 //!
 //! The measurement epoch (docs/adr/2120): typed, or the mean of the baselines' observation times; the known points at
 //! another epoch are moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)), said in the summary and
-//! in Bilinen noktalar.
+//! in Bilinen noktalar. With three known points or more the summary says BÖHHBÜY Madde 15(1)(c)'s similarity (the
+//! scale, its test and the class's limit) and Bilinen noktalar its residuals (docs/adr/2160).
 
 use std::path::PathBuf;
 
@@ -195,6 +196,33 @@ fn epoch_line(a: &MapSurveyNetworked) -> String {
         ));
     }
     line
+}
+
+/// The summary's similarity line (Madde 15(1)(c), docs/adr/2160): the scale, its test, the class's limit.
+fn similarity_line(a: &MapSurveyNetworked) -> (Kind, String) {
+    let Some(s) = &a.similarity else {
+        return (Kind::Info, "Benzerlik dönüşümü (Madde 15(1)(c)) için en az üç bilinen nokta gerekir.".to_owned());
+    };
+    let test = if s.agrees {
+        format!("t = {:.2} ≤ {:.2}, ölçek uyumlu", s.t, s.quantile)
+    } else {
+        format!("t = {:.2} > {:.2}, ölçek uyumsuz", s.t, s.quantile)
+    };
+    let limit = match a.rules.as_ref().and_then(|r| r.similarity.map(|h| (r.class.clone(), h))) {
+        Some((class, true)) => format!("; {class} sınırı tutar"),
+        Some((class, false)) => format!("; {class} sınırını aşar"),
+        None => String::new(),
+    };
+    let kind = if s.agrees && !limit.contains("aşar") { Kind::Ok } else { Kind::Warn };
+    (
+        kind,
+        format!(
+            "Benzerlik dönüşümü (Madde 15(1)(c), {} bilinen nokta): ölçek {:.2} ppm (σ {:.2}); {test}{limit}.",
+            s.known.len(),
+            s.scale,
+            s.sigma
+        ),
+    )
 }
 
 /// A row of Bazlar: an archive baseline and, when it went into the network, its free stage's test.
@@ -445,6 +473,8 @@ impl App {
                     let (kind, text) = stage_line(name, st);
                     lines.push(words::text_line(kind, text));
                 }
+                let (kind, text) = similarity_line(a);
+                lines.push(words::text_line(kind, text));
                 if let Some(r) = &a.rules {
                     let confidence = r.confidence.map_or("Baarda α₀ = 0,001".to_owned(), |c| format!("güven {c}"));
                     lines.push(words::text_line(
@@ -452,7 +482,15 @@ impl App {
                         if r.passed {
                             format!("{} ({}; {confidence}): bazların ve noktaların standart sapmaları sınırların içinde.", r.class, r.articles)
                         } else {
-                            format!("{} ({}; {confidence}): {} baz ve {} nokta sınırı aşıyor.", r.class, r.articles, r.baselines, r.stations)
+                            // What does not hold: the baselines, the stations, the similarity's scale (docs/adr/2160).
+                            let mut parts = Vec::new();
+                            if r.baselines + r.stations > 0 {
+                                parts.push(format!("{} baz ve {} nokta sınırı aşıyor", r.baselines, r.stations));
+                            }
+                            if r.similarity == Some(false) {
+                                parts.push("benzerlik dönüşümünün ölçeği sınırı aşıyor".to_owned());
+                            }
+                            format!("{} ({}; {confidence}): {}.", r.class, r.articles, parts.join("; "))
                         },
                     ));
                 }
@@ -586,13 +624,14 @@ impl App {
                         vec![
                             col("Kimlik", 50.0),
                             col("İşaret", 70.0),
-                            num("Enlem (°)", 105.0),
-                            num("Boylam (°)", 105.0),
-                            num("h (m)", 80.0),
+                            num("Enlem (°)", 100.0),
+                            num("Boylam (°)", 100.0),
+                            num("h (m)", 75.0),
                             num("EPSG", 50.0),
-                            num("Epok", 60.0),
-                            num("Taşınma D/K/Y (mm)", 140.0),
-                            col("Ağırlık", 100.0),
+                            num("Epok", 55.0),
+                            num("Taşınma D/K/Y (mm)", 130.0),
+                            num("Artık D/K/Y (mm)", 120.0),
+                            col("Ağırlık", 90.0),
                             road_dialog::Col { title: "Kaynak", width: None, number: false },
                         ],
                         survey
@@ -612,6 +651,11 @@ impl App {
                                             a.moved.iter().find(|m| m.id == k.id).map_or(String::new(), |m| {
                                                 format!("{}/{}/{}", mm(m.shift[0]), mm(m.shift[1]), mm(m.shift[2]))
                                             }),
+                                            // The similarity's residual (Madde 15(1)(c), docs/adr/2160).
+                                            a.similarity
+                                                .as_ref()
+                                                .and_then(|s| s.residuals.iter().find(|r| r.id == k.id))
+                                                .map_or(String::new(), |r| format!("{}/{}/{}", mm(r.enu[0]), mm(r.enu[1]), mm(r.enu[2]))),
                                             match (&k.excluded, k.sigma) {
                                                 (Some(_), _) => "Dışlandı".to_owned(),
                                                 (None, Some(g)) => format!("σ {}/{}/{} mm", mm(g[0]), mm(g[1]), mm(g[2])),

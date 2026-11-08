@@ -35,7 +35,7 @@ sırayla alır.
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
-| MAP-05 Ağ kalitesi | 1380, 1740 | robust kestirim; m. 15(1)(c) benzerlik dönüşümü; seyrek çözüm | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960 | kalıcı ilişki; çok parçalı nesne; köşeyi sahneden seçmek | — |
 | MAP-07 Topoloji | 1261, 1262, 1980 | hata katmanı; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000 | kalıcı parsel kaydı ve sınır kimliği; sahnede gösterim; yaylı sınırda eksik köşe | erişim denetimli hak/pay; resmî kapsam |
@@ -543,6 +543,17 @@ kestirim, iç kısıtlı serbest ağ, GVX/SINEX, arşivden ağ kurma, kabul edil
 Kabulün “kabul ve Undo bütün etkileri kapsasın” satırı kanıtlandı (ortak durumlar ve masaüstü testi). **Açık:** seyrek
 çözüm ve 1500 bilinmeyen üstü ölçüm, robust kestirim, Madde 15(1)(c) benzerlik dönüşümü, deformasyon. Madde `[ ]`
 kalır.
+
+**8 Kasım 2026, üçüncü tur — Madde 15(1)(c)'nin benzerlik dönüşümü ([ADR 2160](../docs/adr/2160-network-similarity-article-15-1-c.md)).**
+Kapsam işareti: **Harita + CBS**. Araştırma: BÖHHBÜY Madde 15(1)(c) ve (d) metni (Çanakkale kopyası, s. 6967), Horn 1987
+mutlak yöneltme, Student t. Kanıtlanan:
+- üç ya da daha çok bilinen noktada verilen ve serbest koordinatlar arasında 3B benzerlik (Gauss–Newton, kesin en küçük
+  kareler);
+- ölçeğin t testi 0,95 güvende (çekirdeğe Student t nicemi; scipy'yle 10⁻⁹);
+- C1'in |1 − λ| ≤ 3 ppm sınırı kural paketinde veri (sürüm 2); sınıf sonucu ve uyarı;
+- 38 ortak durum (Horn ile bağımsız), Python, MCP; pencerede benzerlik satırı ve Artık sütunu.
+
+Açık: ağırlıklı benzerlik, robust kestirim, seyrek çözüm ve büyük ağ, deformasyon. Madde `[ ]` kalır.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

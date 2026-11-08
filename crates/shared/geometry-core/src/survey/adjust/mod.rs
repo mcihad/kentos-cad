@@ -12,12 +12,14 @@ pub mod chi2;
 pub mod gnss;
 pub mod horizontal;
 pub mod levelling;
+pub mod student;
 mod linalg;
 
 use crate::api::Op;
 use crate::text::edit::fold;
 
 pub use chi2::chi2_quantile;
+pub use student::t_quantile;
 pub use linalg::Normal;
 
 /// The a priori standard deviations (docs/adr/0203 §1), as the window

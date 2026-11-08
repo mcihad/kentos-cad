@@ -36,6 +36,13 @@ GPS time a decimal year: the year and the share of its seconds gone) when every 
 one every known point says its epoch (one frame) and one at another epoch is moved to it along the campaign's velocity
 grid by PROJ (geoid_cases.transformed, the deformation step); the shift is east, north, up at its given place. The
 network's epoch is the measurement epoch; without one it is the known points' one epoch, as before.
+
+ADR 2160 adds BÖHHBÜY Madde 15(1)(c): with three known points or more, the 3D similarity given = T + λ·R·free between
+their given coordinates (at the measurement epoch) and the free stage's, by Horn's closed-form absolute orientation
+(unit quaternions; Horn 1987), the scale λ = Σ g'·Rf' / Σ|f'|²; the rotations from R's antisymmetric part (arc-seconds);
+σ of the scale from the linearised normal equations at the solution with σ0² = vᵀv/(3n − 7); t = |λ − 1|/σ against
+scipy's Student t at (1 + confidence)/2 (confidence: the class's, else 0.95, Madde 15(1)(d)); the residuals east, north,
+up at the given places; a class with `similarity` (C1: 3 ppm) holds when |λ − 1| ≤ it.
 """
 
 import copy
@@ -68,6 +75,7 @@ import numpy as np  # noqa: E402
 import pyproj  # noqa: E402
 from scipy.stats import chi2 as chi2_dist  # noqa: E402
 from scipy.stats import norm  # noqa: E402
+from scipy.stats import t as student  # noqa: E402
 
 import map_survey_cases as ms  # noqa: E402
 
@@ -471,6 +479,65 @@ def rules_problem(r):
     return None
 
 
+def similarity(common, conf):
+    """ADR 2160: Madde 15(1)(c)'s 3D similarity given = T + λ·R·free of three known points or more, by Horn's
+    closed-form absolute orientation; σ of the scale from the linearised normals at the solution."""
+    n = len(common)
+    if n < 3:
+        return None
+    g = np.array([c[2] for c in common], dtype=float)
+    f = np.array([c[3] for c in common], dtype=float)
+    gm, fm = g.mean(axis=0), f.mean(axis=0)
+    gp, fp = g - gm, f - fm
+    m = fp.T @ gp
+    sxx, sxy, sxz = m[0]
+    syx, syy, syz = m[1]
+    szx, szy, szz = m[2]
+    nq = np.array([[sxx + syy + szz, syz - szy, szx - sxz, sxy - syx],
+                   [syz - szy, sxx - syy - szz, sxy + syx, szx + sxz],
+                   [szx - sxz, sxy + syx, -sxx + syy - szz, syz + szy],
+                   [sxy - syx, szx + sxz, syz + szy, -sxx - syy + szz]])
+    w, v = np.linalg.eigh(nq)
+    q0, qx, qy, qz = v[:, np.argmax(w)]
+    r = np.array([[q0 * q0 + qx * qx - qy * qy - qz * qz, 2 * (qx * qy - q0 * qz), 2 * (qx * qz + q0 * qy)],
+                  [2 * (qy * qx + q0 * qz), q0 * q0 - qx * qx + qy * qy - qz * qz, 2 * (qy * qz - q0 * qx)],
+                  [2 * (qz * qx - q0 * qy), 2 * (qz * qy + q0 * qx), q0 * q0 - qx * qx - qy * qy + qz * qz]])
+    rf = fp @ r.T
+    lam = float((gp * rf).sum() / (fp * fp).sum())
+    tr = gm - lam * (r @ fm)
+    res = g - (tr + lam * (f @ r.T))
+    vv = float((res * res).sum())
+    dof = 3 * n - 7
+    a = []
+    for x in fp:
+        a += [[1, 0, 0, x[0], 0, x[2], -x[1]], [0, 1, 0, x[1], -x[2], 0, x[0]], [0, 0, 1, x[2], x[1], -x[0], 0]]
+    a = np.array(a, dtype=float)
+    q = np.linalg.inv(a.T @ a)
+    sigma = math.sqrt(vv / dof) * math.sqrt(q[3, 3])
+    d = lam - 1.0
+    tval = abs(d) / sigma if sigma > 0 else 0.0
+    quant = float(student.ppf((1.0 + conf) / 2.0, dof))
+    rad = 180.0 * 3600.0 / math.pi
+    rot = [(r[2, 1] - r[1, 2]) / 2.0 * rad, (r[0, 2] - r[2, 0]) / 2.0 * rad, (r[1, 0] - r[0, 1]) / 2.0 * rad]
+    residuals = []
+    for (kid, mark, _, _, (lat, lon, _)), vec in zip(common, res):
+        residuals.append({"id": kid, "mark": mark, "enu": [float(x) for x in rows(lat, lon) @ vec]})
+    return {"known": [c[0] for c in common], "translation": [float(x) for x in tr], "rotation": rot,
+            "scale": d * 1e6, "sigma": sigma * 1e6, "dof": dof, "t": tval, "quantile": quant, "agrees": tval <= quant,
+            "residuals": residuals}
+
+
+def scaled_known(points, ppm):
+    """Known points whose coordinates are their own scaled about their mean by `ppm`, published as given() rounds."""
+    xs = [ecef(p["lat"], p["lon"], p["height"]) for p in points]
+    c = sum(xs) / len(xs)
+    out = []
+    for p, x in zip(points, xs):
+        lat, lon, h = given(c + (1.0 + ppm * 1e-6) * (x - c))
+        out.append(dict(p, lat=lat, lon=lon, height=h))
+    return out
+
+
 def decimal_year(t):
     """A GPS time YYYY-MM-DDTHH:MM:SS(.f)(Z) as a decimal year (ADR 2120 §1)."""
     t = t[:-1] if t.endswith("Z") else t
@@ -626,6 +693,11 @@ def analyse(m, inp, prefix=""):
     except Refused as e:
         raise Refused(e.code, e.message, held_wrong)
     free_s, free_t = tests(free, ids, known_ids, limit, [hold["mark"]], marks, len(used))
+    # ADR 2160: Madde 15(1)(c)'s similarity of the known points' given coordinates and the free stage's.
+    common = [(k["id"], k["mark"], ecef(*at[k["id"]]), np.array(free["x"][marks.index(k["mark"])]), at[k["id"]])
+              for k in kn]
+    conf = klass["confidence"] if klass and "confidence" in klass else 0.95
+    similar = similarity(common, conf)
     held_s, held_t = tests(held, ids, known_ids, limit, [k["mark"] for k in kn if "sigma" not in k], marks, len(used))
     failed_b = failed_s = 0
     brows = []
@@ -724,13 +796,18 @@ def analyse(m, inp, prefix=""):
     if moved:
         out["moved"] = moved
     out.update(known=[k["id"] for k in kn], baselines=brows, stations=srows, free=free_s, constrained=held_s)
+    if similar:
+        out["similarity"] = similar
     if klass:
         r = {"package": package["id"], "release": package["release"], "class": klass["id"],
              "articles": klass["articles"]}
         if "confidence" in klass:
             r["confidence"] = klass["confidence"]
-        r.update(baselineOf=klass["baselineOf"], passed=not failed_b and not failed_s, baselines=failed_b,
-                 stations=failed_s)
+        holds = abs(similar["scale"]) <= klass["similarity"] if similar and "similarity" in klass else None
+        r.update(baselineOf=klass["baselineOf"], passed=not failed_b and not failed_s and holds is not False,
+                 baselines=failed_b, stations=failed_s)
+        if holds is not None:
+            r["similarity"] = holds
         out["rules"] = r
     if current:
         out["current"] = current
@@ -747,9 +824,12 @@ def warnings_of(out, prefix=""):
     w = []
     r = out.get("rules")
     if r and not r["passed"]:
+        scale = ""
+        if r.get("similarity") is False and "similarity" in out:
+            scale = f"; benzerlik dönüşümünün ölçeği sınırı aşıyor (|1 − λ| = {abs(out['similarity']['scale']):.2f} ppm)"
         w.append({"code": "network_rules_failed", "message": f"{r['class']} sınıfı ({r['package']} {r['articles']}) "
                                                              f"tutmuyor: {r['baselines']} baz ve {r['stations']} "
-                                                             "nokta sınırı aşıyor.", "path": prefix + "class"})
+                                                             f"nokta sınırı aşıyor{scale}.", "path": prefix + "class"})
     if out["free"]["dof"] == 0:
         w.append({"code": "network_unchecked", "message": "Ağda fazla ölçü yok; uyuşumsuz baz ve model sınanamaz."})
     return w
@@ -768,13 +848,13 @@ def failed(e):
     return {"status": "failed", "error": err}
 
 
-def ask(m, inp, op="execute"):
+def ask(m, inp, op="execute", within=WITHIN):
     try:
         out, _ = analyse(m, inp)
     except Refused as e:
         return {"op": op, "input": inp, "result": failed(e), "expect": SAME}
     result = {"status": "completed", "output": None if op == "validate" else out, "warnings": warnings_of(out)}
-    return {"op": op, "input": inp, "result": result, "expect": SAME, "within": WITHIN}
+    return {"op": op, "input": inp, "result": result, "expect": SAME, "within": within}
 
 
 def case(name, m, steps, note=None):
@@ -833,6 +913,18 @@ def network_cases():
     later = accepted.clone()
     later.survey["baselines"][7]["excluded"] = "Yeniden işlenecek"
     out.append(case("Kabulden sonra bir baz dışlandı: ağ değişti, yeniden kabul edilebilir", later, [ask(later, {})]))
+    # ADR 2160: Madde 15(1)(c)'s similarity with three known points; and the same points scaled by 5 ppm.
+    three_known = KNOWN + [known(3, "N5", source="TUSAGA-Aktif koordinatı (örnek), TUREF, 2005,0")]
+    three = networked(known_points=three_known)
+    out.append(case("Üç bilinen nokta: 15(1)(c) benzerlik dönüşümü; ölçek C1'in ±3 ppm'i içinde, istatistikle uyumlu",
+                    three, [ask(three, {"class": "C1"}, within=1e-5)],
+                    "t, ölçek farkının (10⁻⁷) kendi σ'sına (10⁻⁸) bölümüdür: serbest aşamanın koordinatlarındaki 10⁻⁹ m'lik "
+                    "çözücü farkı onda 10⁻⁶'yı aşar; sayılar 1e-5 içinde karşılaştırılır."))
+    stretched = networked(known_points=scaled_known(three_known, 5.0))
+    out.append(case("Bilinen noktalar 5 ppm ölçekli: benzerlik dönüşümünün ölçeği C1'in sınırını aşar", stretched,
+                    [ask(stretched, {"class": "C1"}, within=1e-4)],
+                    "Uyuşmayan ağda vᵀPv yüzlerce olur; çözücülerin yuvarlaması orada 1e-6'yı aşabildiği için sayılar "
+                    "1e-4 içinde karşılaştırılır."))
     # ADR 2120: the measurement epoch from the baselines' observation times (or given) and the known points moved to
     # it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); the new marks go back to the decision, 2005.0.
     for name, m, inp in timed_cases():
