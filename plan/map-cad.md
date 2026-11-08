@@ -41,7 +41,7 @@ sırayla alır.
 | MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060 | m. 8(5) yanılma sınırı; ayırma çapının çizimi; değer esaslı dağıtım | ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800 | dönüşümün buluta uygulanması; çoklu tarama demeti; kaba hatayı atan ağırlıklar | gerçek veri ölçümü |
 | MAP-14 Yüzey | 1520, 1560, 1820 | yardımcı eğrinin 5/1 mm deseni; m. 78(1)(ğ) karakteristik kotlar; yüzey birleştirme | gerçek veri ölçümü |
@@ -915,6 +915,14 @@ tescilli, kısmen girende giren kısmın hesaplananı, hata girmeyende); belirsi
 kayıt yok, politikadan ince, girmeyen hatayı taşımıyor, şerit); masaüstünde seçili sınırdan Kapsam ve Esas alanları
 kayıtlara yaz; Python ve MCP. Açık: m. 8(5) yanılma sınırı, ayırma çapının çizimi, değer esaslı dağıtım,
 kamulaştırma/toplulaştırma, itiraz/sürüm, yetkiler ve ikinci kabul.
+
+**8 Kasım 2026, üçüncü tur — ayırma çapının parçaları ve koordinatları ([ADR 2280](../docs/adr/2280-separation-sheet-parts-and-coordinates.md)).**
+Kapsam: **Harita + CBS**. Dayanak: Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 4(c), 13(2), 13(3) (ADR 2060'ın
+okuduğu metin). Kanıtlanan: `cad.readjustment.scope` kısmen giren parselin parçalarını sınırları ve koordinatlarıyla
+verir (kanonik halkalar: dış saat yönünün tersine, delik saat yönünde, en batı-güney köşeden, doğrusal köşe yok);
+bağımsız başvuru dışarıdaki parçayı hücrelerin birleşimiyle kurar (L ve delikli parça durumları); MCP; masaüstünde
+Ayırma çapı görünümü (köşe köşe Y, X) ve Çapı çizime yaz (yeni katmana tek adım). Açık: çapın paftası, değer esaslı
+dağıtım; m. 8(5)'in tablosu resim olarak duruyor, ikinci kabul uzman ister.
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 

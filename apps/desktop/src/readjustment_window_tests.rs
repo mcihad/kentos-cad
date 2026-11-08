@@ -3,7 +3,9 @@
 //! shown with its place, nothing written; Harita and GIS offer it, Yol and Mimari do not. The scope (docs/adr/2060)
 //! on the shared cases' drawing of `cad.readjustment.scope`: the selected boundary gives the case's statuses and bases,
 //! Esas alanları kayıtlara yaz writes the bases into the records and says what did not match, the rule package's
-//! places and the piece tolerance run it again; without a selected area there is no scope. And its pictures.
+//! places and the piece tolerance run it again; without a selected area there is no scope. Ayırma çapı (docs/adr/2280)
+//! lists the partial parcels' parts corner by corner as the case gives them, and Çapı çizime yaz writes them on their
+//! own layer in one undo step. And its pictures.
 
 use kentos_launch::Module;
 
@@ -138,6 +140,34 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
     assert_eq!(status(&app, "101/9"), ("computed".to_owned(), Some("30.00".to_owned())), "the 4 mm piece counts");
 }
 
+/// docs/adr/2280: Ayırma çapı's rows are the case's parts' corners; Çapı çizime yaz writes each part as an area on
+/// “Ayırma çapı” with its parcel, name and area; one undo step takes the parts and the new layer away.
+#[test]
+fn the_separation_sheet_lists_the_parts_and_writes_them() {
+    let mut app = bounded(true);
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let k = app.readjustment.scope.clone().expect("a scope").expect("read");
+    let parts: Vec<(&str, usize)> =
+        k.parcels.iter().flat_map(|p| p.parts.iter().map(move |q| (p.parcel.as_str(), q.rings.iter().map(|r| r.pts.len()).sum()))).collect();
+    let corners: usize = parts.iter().map(|(_, n)| n).sum();
+    let rows = crate::readjustment_sheet::rows(&k, &app.format());
+    assert_eq!(rows.len(), corners);
+    assert_eq!(parts.len(), 9, "101/3, 101/6, 11 two each, 101/10 three");
+    assert_eq!((rows[0][0].as_str(), rows[0][1].as_str(), rows[0][2].as_str()), ("101/3", "Giren", "1"));
+    let ten: Vec<&str> = rows.iter().filter(|r| r[0] == "101/10" && r[2] == "1").map(|r| r[1].as_str()).collect();
+    assert_eq!(ten, ["Giren", "Girmeyen 1", "Girmeyen 2"]);
+    let _ = app.update(Message::Readjustment(R::WriteSheet));
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Ayırma çapı").map(|l| l.id.clone()).expect("the layer");
+    let written: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    assert_eq!(written.len(), 9);
+    let attrs = &written[0].base().attrs;
+    assert_eq!((attrs["Parsel"].as_str(), attrs["Kısım"].as_str()), ("101/3", "Giren"));
+    assert_eq!(doc.undo().as_deref(), Some("Ayırma çapı"));
+    assert!(doc.layers().leaves().iter().all(|l| l.name != "Ayırma çapı"), "one step");
+}
+
 #[test]
 fn without_a_selected_area_there_is_no_scope() {
     let mut app = bounded(false);
@@ -154,6 +184,51 @@ fn without_a_selected_area_there_is_no_scope() {
 fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
     for (module, yes) in [(Module::Map, true), (Module::Gis, true), (Module::Road, false), (Module::Architecture, false)] {
         assert_eq!(opened(Some(module)).offers("readjustment.distribute"), yes, "{module:?}");
+    }
+}
+
+/// `.run/gui-evidence/ayirma-capi-2280/`: Ayırma çapı's corners, and the drawing after Çapı çizime yaz.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::sheet_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn sheet_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ayirma-capi-2280");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (write, stem) in [(false, "1-capin-koseleri"), (true, "2-cizimde")] {
+            let mut app = bounded(true);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("readjustment.distribute"));
+            let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+            if write {
+                let _ = app.update(Message::Readjustment(R::WriteSheet));
+                let _ = app.update(Message::Readjustment(R::Close));
+                // The other layers hidden: the sheet's parts alone.
+                let doc = &mut app.document.as_mut().expect("open").model;
+                let others: Vec<String> =
+                    doc.layers().leaves().into_iter().filter(|l| l.name != "Ayırma çapı").map(|l| l.id.clone()).collect();
+                for id in others {
+                    doc.set_layer_visible(&id, false);
+                }
+                app.selection.clear();
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
     }
 }
 

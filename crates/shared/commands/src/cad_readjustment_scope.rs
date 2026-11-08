@@ -62,7 +62,8 @@ pub struct ReadjustmentScope {
 /// the pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square
 /// metres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,
 /// `outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,
-/// `noIdentity` when Ada or Parsel is missing.
+/// `noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their
+/// boundaries and coordinates (Article 13(2), docs/adr/2280).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -112,6 +113,41 @@ pub struct ReadjustmentScopeParcel {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub no_identity: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ScopePart>>", optional))]
+    pub parts: Vec<ScopePart>,
+}
+
+/// A part of a partial parcel as its separation sheet shows it (Article 13(2), docs/adr/2280): `inside` or `outside`
+/// the boundary, its area (square metres), its rings. The parts: those inside, then those outside, each side's in the
+/// order of their first corner (east, then north); only the pieces the tolerance counts.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ScopePart {
+    pub side: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    pub rings: Vec<ScopeRing>,
+}
+
+/// A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The
+/// outer ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at
+/// its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ScopeRing {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub pts: Vec<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub bulges: Option<Vec<f64>>,
 }
 
 /// Output of `cad.readjustment.scope` v1: the tolerance's rule (`cad.parcels.check`'s), the registered area's

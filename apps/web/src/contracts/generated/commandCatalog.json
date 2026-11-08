@@ -176659,7 +176659,7 @@
       "type": "object"
     },
     "ReadjustmentScopeParcel": {
-      "description": "A parcel in the scope: its uid and its records' name (`Ada/Parsel`), its identity's parts as written, how the\nboundary takes it (`whole`, `partial`, `outside`), its registered area's text as written, its computed area, the\ndifference (computed − registered) and the tolerance (from the computed area) and whether it is within; the parts\ninside and outside (square metres), the outside pieces counted (each gets its own parcel number, Article 13(3)) and\nthe pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square\nmetres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,\n`outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,\n`noIdentity` when Ada or Parsel is missing.",
+      "description": "A parcel in the scope: its uid and its records' name (`Ada/Parsel`), its identity's parts as written, how the\nboundary takes it (`whole`, `partial`, `outside`), its registered area's text as written, its computed area, the\ndifference (computed − registered) and the tolerance (from the computed area) and whether it is within; the parts\ninside and outside (square metres), the outside pieces counted (each gets its own parcel number, Article 13(3)) and\nthe pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square\nmetres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,\n`outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,\n`noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their\nboundaries and coordinates (Article 13(2), docs/adr/2280).",
       "properties": {
         "ada": {
           "type": "string"
@@ -176727,6 +176727,12 @@
         },
         "parsel": {
           "type": "string"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/ScopePart"
+          },
+          "type": "array"
         },
         "pieces": {
           "format": "uint32",
@@ -181436,6 +181442,64 @@
         "relations"
       ],
       "type": "string"
+    },
+    "ScopePart": {
+      "description": "A part of a partial parcel as its separation sheet shows it (Article 13(2), docs/adr/2280): `inside` or `outside`\nthe boundary, its area (square metres), its rings. The parts: those inside, then those outside, each side's in the\norder of their first corner (east, then north); only the pieces the tolerance counts.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "rings": {
+          "items": {
+            "$ref": "#/$defs/ScopeRing"
+          },
+          "type": "array"
+        },
+        "side": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "side",
+        "area",
+        "rings"
+      ],
+      "type": "object"
+    },
+    "ScopeRing": {
+      "description": "A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The\nouter ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at\nits westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.",
+      "properties": {
+        "bulges": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "pts": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "pts"
+      ],
+      "type": "object"
     },
     "SectionCrossing": {
       "description": "Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far\nout on each.",

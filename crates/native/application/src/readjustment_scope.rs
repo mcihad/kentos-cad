@@ -6,16 +6,20 @@
 //! (`entity_area`), the difference and the tolerance of `cad.parcels.check` (the 2022 regulation's Article 8(2)
 //! table); the basis: the registered area of a whole parcel within the tolerance, the computed area of a partial
 //! parcel's part inside rounded once by the given policy from the area's own shortest decimal form, the error left to
-//! the part outside. Where the rule needs a person, no basis. The shared cases are
+//! the part outside. Where the rule needs a person, no basis. A partial parcel's parts carry their rings, so the
+//! separation sheet's boundaries and coordinates come from here too (docs/adr/2280). The shared cases are
 //! `fixtures/commands/v1/cad.readjustment.scope.json`.
 
 use kentos_commands::{
     CommandResult, Entity, PARCEL_AREA_RULE, PARCEL_LAYER, ReadjustmentScope, ReadjustmentScopeParcel,
-    ReadjustmentScoped,
+    ReadjustmentScoped, ScopePart, ScopeRing,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::entity_area;
-use kentos_geometry_core::geom::arrangement::{Area, edge_len};
+use kentos_geometry_core::geom::arrangement::{Area, Ring, edge_len};
+use kentos_geometry_core::geom::bulge::bulge_ring_area;
+use kentos_geometry_core::predicates::orientation;
+use kentos_geometry_core::vec2::Vec2;
 use kentos_geometry_core::geom::region::{intersect_area_sets, net_area, subtract_areas};
 use kentos_geometry_core::numeric::{RoundingMode, parse_decimal, round_decimal, subtract_exact, sum_exact};
 use kentos_geometry_core::ops::areas::areas_of_entity;
@@ -59,6 +63,54 @@ fn width(a: &Area) -> f64 {
 /// The pieces with an area, as the overlay gives them.
 fn pieces(list: Vec<Area>) -> Vec<Area> {
     list.into_iter().filter(|a| net_area(a) > 0.0).collect()
+}
+
+/// A ring as the separation sheet writes it (docs/adr/2280): counter-clockwise when `outer`, else clockwise; a corner
+/// where two straight edges go on in one direction left out (the exact predicate); from its westmost, then southmost
+/// corner.
+fn sheet_ring(r: &Ring, outer: bool) -> ScopeRing {
+    let n = r.pts.len();
+    let mut pts: Vec<Vec2> = r.pts.clone();
+    let mut bulges: Vec<f64> = (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
+    if n >= 3 && (bulge_ring_area(&pts, Some(&bulges)) > 0.0) != outer {
+        // Reversed: the edge after corner i is the old edge before it, bowing the other way.
+        pts = (0..n).map(|i| r.pts[n - 1 - i]).collect();
+        bulges = (0..n).map(|i| -bulges[(2 * n - 2 - i) % n]).collect();
+    }
+    while pts.len() > 3 {
+        let m = pts.len();
+        let straight_on = |i: usize| {
+            let (p, q) = ((i + m - 1) % m, (i + 1) % m);
+            let (a, b, c) = (pts[p], pts[i], pts[q]);
+            bulges[p] == 0.0
+                && bulges[i] == 0.0
+                && orientation(a, b, c) == 0
+                && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) > 0.0
+        };
+        let Some(k) = (0..m).find(|&i| straight_on(i)) else { break };
+        pts.remove(k);
+        bulges.remove(k);
+    }
+    let start = (0..pts.len()).min_by(|&a, &b| pts[a].x.total_cmp(&pts[b].x).then(pts[a].y.total_cmp(&pts[b].y)));
+    let s = start.unwrap_or(0);
+    let m = pts.len();
+    let order: Vec<usize> = (0..m).map(|i| (s + i) % m).collect();
+    ScopeRing {
+        pts: order.iter().map(|&i| [pts[i].x, pts[i].y]).collect(),
+        bulges: bulges.iter().any(|b| *b != 0.0).then(|| order.iter().map(|&i| bulges[i]).collect()),
+    }
+}
+
+/// A piece as a part of the separation sheet: its side, area and rings (the holes in the order of their first corner).
+fn sheet_part(a: &Area, side: &str) -> ScopePart {
+    let mut holes: Vec<ScopeRing> = a.holes.iter().map(|h| sheet_ring(h, false)).collect();
+    holes.sort_by(|p, q| {
+        let (a, b) = (p.pts.first().copied().unwrap_or_default(), q.pts.first().copied().unwrap_or_default());
+        a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1]))
+    });
+    let mut rings = vec![sheet_ring(&a.outer, true)];
+    rings.extend(holes);
+    ScopePart { side: side.to_owned(), area: net_area(a), rings }
 }
 
 /// The pieces' areas added from +0 (an empty `sum` of floats is −0).
@@ -190,6 +242,20 @@ fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, 
         let limit = limit_of(calculated);
         let within = difference.map(|d| d.abs() <= limit);
         let (status, basis, outside_recorded) = basis_of(kind, counted_in, slivers, text.as_deref(), within, inside, input.scale, mode);
+        // The separation sheet's parts (docs/adr/2280): a partial parcel's counted pieces, inside then outside.
+        let mut parts = Vec::new();
+        if kind == "partial" {
+            for (list, side) in [(&inside_pieces, "inside"), (&outside_pieces, "outside")] {
+                let mut these: Vec<ScopePart> =
+                    list.iter().filter(|a| width(a) > tolerance).map(|a| sheet_part(a, side)).collect();
+                these.sort_by(|p, q| {
+                    let first = |s: &ScopePart| s.rings.first().and_then(|r| r.pts.first().copied()).unwrap_or_default();
+                    let (a, b) = (first(p), first(q));
+                    a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1]))
+                });
+                parts.extend(these);
+            }
+        }
         let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
         let (ada, parsel) = (attr("Ada"), attr("Parsel"));
         let parcel = match (ada.is_empty(), parsel.is_empty()) {
@@ -220,6 +286,7 @@ fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, 
             outside_recorded,
             status: status.to_owned(),
             duplicate: false,
+            parts,
         });
     }
     // The records name a parcel by Ada/Parsel: two in the answer with one name cannot both take a record.

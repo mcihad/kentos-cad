@@ -25,7 +25,12 @@ The rules, by hand (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, 31
   (written with the record's places or the policy's, the more): outsideTooSmall when that is below zero, else
   computed;
 - duplicate: two parcels in the answer with one Ada/Parsel; the totals: the boundary's exact area, the parts inside,
-  what is left, the bases' exact sum written with their most places, the counts.
+  what is left, the bases' exact sum written with their most places, the counts;
+- a partial parcel's parts (docs/adr/2280): its counted pieces inside, then outside, each side's by its first corner
+  (east, then north); a piece outside is the union of its cells (each made counter-clockwise, its edges cut at every
+  other corner lying on them, the stretches that run both ways dropped, the rest joined into rings); every ring
+  counter-clockwise (holes clockwise, after the outer ring in the order of their first corner), a corner where two
+  edges go on in one direction left out, from its westmost, then southmost corner.
 """
 
 import json
@@ -91,6 +96,12 @@ PARCELS = [
     area_entity(rect(-30, 30, -10, 40), "parsel", ident(12, "200.00")),                  # P12 touches the west edge
 ]
 LINE = {"kind": "line", "layerId": "yol", "attrs": {}, "a": P(-10, -15), "b": P(80, -15)}
+# docs/adr/2280: a boundary that cuts a parcel's corner off (the part outside an L of two cells) and one inside a
+# parcel (the part outside a ring with a hole).
+CORNER = [area_entity(rect(0, 0, 100, 100), "duzenleme", {"Ad": "Düzenleme sınırı"}),
+          area_entity(rect(80, 80, 120, 120), "parsel", ident(21, "1600.00"))]
+HOLED = [area_entity(rect(10, 10, 20, 20), "duzenleme", {"Ad": "Düzenleme sınırı"}),
+         area_entity(rect(0, 0, 30, 30), "parsel", ident(22, "900.00"))]
 
 
 def setup(entities, work="map"):
@@ -178,12 +189,13 @@ def shared(c1, c2):
 
 
 def inside_pieces(poly, edge):
+    """The piece inside: (area, perimeter, its cells), none when empty."""
     rest = poly
     for i in range(len(edge)):
         rest = clip(rest, edge[i], edge[(i + 1) % len(edge)], 1)
         if area(rest) == 0:
             return []
-    return [(area(rest), perimeter(rest))]
+    return [(area(rest), perimeter(rest), [rest])]
 
 
 def outside_pieces(poly, edge):
@@ -213,17 +225,85 @@ def outside_pieces(poly, edge):
                 links[(i, j)] = s
     out = {}
     for i, c in enumerate(cells):
-        a_, p_ = out.get(top(i), (F(0), 0.0))
-        out[top(i)] = (a_ + area(c), p_ + perimeter(c))
+        a_, p_, cs = out.get(top(i), (F(0), 0.0, []))
+        out[top(i)] = (a_ + area(c), p_ + perimeter(c), cs + [c])
     for (i, j), s in links.items():
-        a_, p_ = out[top(i)]
-        out[top(i)] = (a_, p_ - 2 * s)
+        a_, p_, cs = out[top(i)]
+        out[top(i)] = (a_, p_ - 2 * s, cs)
     return list(out.values())
 
 
 def width(piece):
-    a, p = piece
+    a, p = piece[0], piece[1]
     return 2 * float(a) / p if p > 0 else 0.0
+
+
+def signed(poly):
+    n = len(poly)
+    return sum(poly[i][0] * poly[(i + 1) % n][1] - poly[(i + 1) % n][0] * poly[i][1] for i in range(n)) / 2
+
+
+def union_rings(cells):
+    """The rings of a union of convex cells that meet along stretches of edge, exact (docs/adr/2280)."""
+    ccw = [c if signed(c) > 0 else c[::-1] for c in cells]
+    corners = {q for c in ccw for q in c}
+    edges = []
+    for c in ccw:
+        for a, b in edges_of(c):
+            on = [q for q in corners if q not in (a, b) and side(a, b, q) == 0
+                  and min(a[0], b[0]) <= q[0] <= max(a[0], b[0]) and min(a[1], b[1]) <= q[1] <= max(a[1], b[1])]
+            on.sort(key=lambda q: (q[0] - a[0]) * (b[0] - a[0]) + (q[1] - a[1]) * (b[1] - a[1]))
+            seq = [a] + on + [b]
+            edges += list(zip(seq, seq[1:]))
+    both = set(edges)
+    kept = [e for e in edges if (e[1], e[0]) not in both]
+    after = {}
+    for a, b in kept:
+        after.setdefault(a, []).append(b)
+    rings, used = [], set()
+    for start in kept:
+        if start in used:
+            continue
+        ring, cur = [start[0]], start
+        while cur not in used:
+            used.add(cur)
+            ring.append(cur[1])
+            nxt = [b for b in after.get(cur[1], []) if (cur[1], b) not in used]
+            if not nxt:
+                break
+            cur = (cur[1], nxt[0])
+        rings.append(ring[:-1])
+    return rings
+
+
+def sheet_ring(ring, outer):
+    """A ring as the separation sheet writes it: counter-clockwise when outer, else clockwise; a corner where two
+    edges go on in one direction left out; from its westmost, then southmost corner."""
+    pts = list(ring)
+    if (signed(pts) > 0) != outer:
+        pts = pts[::-1]
+    gone = True
+    while len(pts) > 3 and gone:
+        gone = False
+        for i in range(len(pts)):
+            a, b, c = pts[i - 1], pts[i], pts[(i + 1) % len(pts)]
+            if side(a, b, c) == 0 and (b[0] - a[0]) * (c[0] - b[0]) + (b[1] - a[1]) * (c[1] - b[1]) > 0:
+                pts.pop(i)
+                gone = True
+                break
+    s = min(range(len(pts)), key=lambda i: (pts[i][0], pts[i][1]))
+    pts = pts[s:] + pts[:s]
+    return {"pts": [[float(x), float(y)] for x, y in pts]}
+
+
+def sheet_part(piece, where):
+    a, _, cells = piece
+    rings = union_rings(cells) if len(cells) > 1 else [cells[0]]
+    outer = [r for r in rings if signed(r) > 0]
+    holes = [r for r in rings if signed(r) < 0]
+    assert len(outer) == 1, rings
+    hs = sorted((sheet_ring(h, False) for h in holes), key=lambda r: tuple(r["pts"][0]))
+    return {"side": where, "area": float(a), "rings": [sheet_ring(outer[0], True)] + hs}
 
 
 # ── Numbers ────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -362,6 +442,12 @@ def scope(entities, boundary_index, chosen, scale=2, mode="half_even", tolerance
         if rest is not None:
             p["outsideRecorded"] = rest
         p["status"] = status
+        if kind == "partial":
+            parts = []
+            for pieces_, where in ((ins, "inside"), (outs, "outside")):
+                these = [sheet_part(q, where) for q in pieces_ if width(q) > tolerance]
+                parts += sorted(these, key=lambda s: tuple(s["rings"][0]["pts"][0]))
+            p["parts"] = parts
         p["_noIdentity"] = not ada or not parsel
         parcels.append(p)
     names = [p["parcel"] for p in parcels if not p["_noIdentity"]]
@@ -370,6 +456,8 @@ def scope(entities, boundary_index, chosen, scale=2, mode="half_even", tolerance
             p["duplicate"] = True
         if p.pop("_noIdentity"):
             p["noIdentity"] = True
+        if "parts" in p:
+            p["parts"] = p.pop("parts")
     bases = [p["basis"] for p in parcels if "basis" in p]
     total = sum((F(b) for b in bases), F(0))
     most = max((places(b) for b in bases), default=0)
@@ -437,6 +525,9 @@ def cases():
         ok("tamamı giren parselin 4 mm'lik parçası dışarıda: şerit, esas yok", chosen=[P_(9)]),
         ok("tolerans 3 mm: 4 mm'lik parça sayılır, parsel kısmen giren olur", chosen=[P_(9)], tolerance=0.003),
         ok("iki parçası dışarıda kalan parsel: iki parça, hata ikisinde birlikte", chosen=[P_(10)]),
+        # docs/adr/2280: the separation sheet's parts, their boundaries and coordinates.
+        ok("köşesi sınırın dışında kalan parsel: girmeyen kısım L biçiminde tek parça", CORNER, setup_=setup(CORNER)),
+        ok("sınır parselin içinde: girmeyen kısım delikli tek parça", HOLED, setup_=setup(HOLED)),
         ok("girmeyen kısım hatayı taşıyamıyor: esas yok, eksik söylenir", chosen=[P_(11)]),
         ok("sınıra kenarından değen komşu: içeride kısmı yok", chosen=[P_(12)]),
         ok("sıfırdan uzağa: 1000/3 m² → 333,34", chosen=[P_(3)], mode="away_from_zero"),

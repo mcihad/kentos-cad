@@ -76342,7 +76342,8 @@ class ReadjustmentScopeParcel(_Model):
     the pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square
     metres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,
     `outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,
-    `noIdentity` when Ada or Parsel is missing.
+    `noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their
+    boundaries and coordinates (Article 13(2), docs/adr/2280).
     Attributes:
         calculated: Unit: area.
         limit: Unit: area.
@@ -76372,6 +76373,7 @@ class ReadjustmentScopeParcel(_Model):
     duplicate: bool | Unset = UNSET
     no_identity: bool | Unset = UNSET
     outside_recorded: str | None | Unset = UNSET
+    parts: list[ScopePart] | Unset = UNSET
     recorded_text: str | None | Unset = UNSET
     within: bool | None | Unset = UNSET
 
@@ -76402,6 +76404,8 @@ class ReadjustmentScopeParcel(_Model):
             out["noIdentity"] = self.no_identity
         if self.outside_recorded is not UNSET:
             out["outsideRecorded"] = self.outside_recorded
+        if self.parts is not UNSET:
+            out["parts"] = [e0.to_json() for e0 in self.parts]
         if self.recorded_text is not UNSET:
             out["recordedText"] = self.recorded_text
         if self.within is not UNSET:
@@ -76431,6 +76435,7 @@ class ReadjustmentScopeParcel(_Model):
             duplicate=data.get("duplicate", UNSET),
             no_identity=data.get("noIdentity", UNSET),
             outside_recorded=data.get("outsideRecorded", UNSET),
+            parts=[ScopePart.from_json(e0) for e0 in data["parts"]] if "parts" in data else UNSET,
             recorded_text=data.get("recordedText", UNSET),
             within=data.get("within", UNSET),
         )
@@ -81924,6 +81929,61 @@ class SchemaItem(_Model):
             detail=data.get("detail", UNSET),
             layer=data.get("layer", UNSET),
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScopePart(_Model):
+    """A part of a partial parcel as its separation sheet shows it (Article 13(2), docs/adr/2280): `inside` or `outside`
+    the boundary, its area (square metres), its rings. The parts: those inside, then those outside, each side's in the
+    order of their first corner (east, then north); only the pieces the tolerance counts.
+    Attributes:
+        area: Unit: area.
+    """
+    side: str
+    area: float
+    rings: list[ScopeRing]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["side"] = self.side
+        out["area"] = float(self.area)
+        out["rings"] = [e0.to_json() for e0 in self.rings]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScopePart:
+        return cls(
+            side=data["side"],
+            area=float(data["area"]),
+            rings=[ScopeRing.from_json(e0) for e0 in data["rings"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ScopeRing(_Model):
+    """A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The
+    outer ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at
+    its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.
+    Attributes:
+        pts: Unit: length.
+        bulges: Unit: 1.
+    """
+    pts: list[list[float]]
+    bulges: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [[float(e1) for e1 in e0] for e0 in self.pts]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ScopeRing:
+        return cls(
+            pts=[[float(e1) for e1 in e0] for e0 in data["pts"]],
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
         )
 
 
@@ -130797,6 +130857,8 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "ScopePart",
+    "ScopeRing",
     "SectionCrossing",
     "SectionGround",
     "SectionLayer",

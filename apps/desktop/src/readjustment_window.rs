@@ -49,6 +49,8 @@ pub enum View {
     Holders,
     Parcels,
     Scope,
+    /// Ayırma çapı (docs/adr/2280): the partial parcels' parts, corner by corner.
+    Sheet,
 }
 
 impl std::fmt::Display for View {
@@ -57,6 +59,7 @@ impl std::fmt::Display for View {
             View::Holders => "Hak sahipleri",
             View::Parcels => "Parseller",
             View::Scope => "Kapsam",
+            View::Sheet => "Ayırma çapı",
         })
     }
 }
@@ -120,6 +123,8 @@ pub enum Event {
     View(View),
     Tolerance(f64),
     Apply,
+    /// Çapı çizime yaz (docs/adr/2280).
+    WriteSheet,
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -364,6 +369,7 @@ impl App {
                 self.readjustment_scope_run();
                 return Task::none();
             }
+            Event::WriteSheet => self.readjustment_sheet_write(),
             Event::Apply => {
                 if let Some(Ok(scope)) = &self.readjustment.scope {
                     let scope = scope.clone();
@@ -549,7 +555,7 @@ impl App {
                 ));
                 table = match s.view {
                     // Kapsam's table is the scope's, set below.
-                    View::Scope => words::empty("Düzenleme sınırı seçili değil."),
+                    View::Scope | View::Sheet => words::empty("Düzenleme sınırı seçili değil."),
                     View::Holders => sheet(
                         vec![col("Hak sahibi", 160.0), num("Toplam hak (m²)", 160.0)],
                         a.holders.iter().map(|h| vec![h.holder.clone(), h.value.clone()]).collect(),
@@ -586,6 +592,18 @@ impl App {
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
+        }
+        if s.view == View::Sheet {
+            table = match &s.scope {
+                Some(Ok(k)) => sheet(
+                    vec![col("Parsel", 70.0), col("Kısım", 150.0), num("Köşe", 55.0), num("Y", 130.0), num("X", 130.0), num("Alan (m²)", 100.0)],
+                    crate::readjustment_sheet::rows(k, &f),
+                    "Kısmen giren parsel yok: ayırma çapı gerekmez.",
+                    240.0,
+                ),
+                Some(Err(_)) => words::empty("Kapsam hesaplanamadı."),
+                None => words::empty("Düzenleme sınırı seçili değil."),
+            };
         }
         if s.view == View::Scope {
             table = match &s.scope {
@@ -639,12 +657,19 @@ impl App {
             .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Holders, View::Parcels, View::Scope], s.view, |v| msg(Event::View(v))))
+            .push(Segmented::new([View::Holders, View::Parcels, View::Scope, View::Sheet], s.view, |v| msg(Event::View(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(200.0));
         let ready = matches!(s.answer, Some(Ok(_)));
-        Frame::new(TITLE)
-            .scroll(body)
-            .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
+        let parts = matches!(&s.scope, Some(Ok(k)) if crate::readjustment_sheet::has_parts(k));
+        let sheet_button = (s.view == View::Sheet).then(|| {
+            words::secondary(crate::readjustment_sheet::WRITE, parts.then(|| msg(Event::WriteSheet)))
+        });
+        let frame = Frame::new(TITLE).scroll(body).aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))));
+        let frame = match sheet_button {
+            Some(b) => frame.aside(b),
+            None => frame,
+        };
+        frame
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
             .modal(msg(Event::Close))
@@ -656,6 +681,7 @@ impl App {
             Control::Press(OPEN) => Some(msg(Event::Pick)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
+            Control::Press(crate::readjustment_sheet::WRITE) => Some(msg(Event::WriteSheet)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

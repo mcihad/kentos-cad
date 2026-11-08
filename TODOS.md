@@ -86,6 +86,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   penceresinde Yola giren karar.
 - MAP-10 / ADR 2260: `cad.scenarios.impact`'in web işleyicisinde `reach`; web'in Senaryo ölçüleri penceresinde Erişimi
   çizimde göster.
+- MAP-11 / ADR 2280: `cad.readjustment.scope`'un web işleyicisinde `parts` (kanonik halkalar, 33 ortak durum); web'in
+  Düzenleme dağıtım taslağında Ayırma çapı görünümü ve Çapı çizime yaz.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

@@ -3169,6 +3169,8 @@ __all__ = [
     "SchemaItem",
     "SchemaKind",
     "SchemaKindName",
+    "ScopePart",
+    "ScopeRing",
     "SectionCrossing",
     "SectionGround",
     "SectionLayer",
