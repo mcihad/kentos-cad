@@ -1,8 +1,8 @@
 {
  "id": "bohhbuy-2018-m78",
- "release": 1,
+ "release": 2,
  "jurisdiction": "Türkiye: Büyük Ölçekli Harita ve Harita Bilgileri Üretim Yönetmeliği",
- "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 78(1)(c)–(g) ve Ek-3 0001–0005; metin 7 Kasım 2026'da okundu",
+ "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 78(1)(c)–(ğ) ve Ek-3 0001–0005; metin 7 Kasım 2026'da okundu, (ğ) 8 Kasım 2026'da",
  "effective": "2018-06-26",
  "intervals": [
   {"scale": 500, "interval": 1.0},
@@ -17,5 +17,6 @@
  "steepBelow": 2.0,
  "auxiliaryAbove": 20.0,
  "labelEvery": 200.0,
- "labelHeight": 1.4
+ "labelHeight": 1.4,
+ "spotHeight": 1.2
 }

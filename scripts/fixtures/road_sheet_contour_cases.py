@@ -21,7 +21,11 @@ The rules, by hand (BÖHHBÜY 2018 m. 78(1)(c)–(g), Ek-3 0001–0005, the pack
   a closed line cut opens, its last part joined to its first through the closing segment;
 - along each major part from its first place a height every `labelEvery` paper mm, the first at half that: in the
   middle of its segment's place, turned along it, its top uphill (against the fall direction of the triangle strictly
-  around the segment's middle), its text three decimals at most.
+  around the segment's middle), its text three decimals at most;
+- asked for (docs/adr/2320; m. 78(1)(ğ)), the characteristic points: inside each innermost closed major or minor line
+  (no other such line's first place inside it, even-odd), the surface's vertex highest above the level, else the one
+  lowest below it (the earlier vertex among equals; a vertex at the level is on the line; one inside a detail is no
+  ground shown), its height to the decimetre (half up, one decimal) beside a point. A second surface, a bowl of 81 shaken points beside the first, has a pit.
 """
 
 import copy
@@ -68,8 +72,24 @@ ROAD = [(-10.0, 58.5), (410.0, 70.5), (410.0, 82.5), (-10.0, 70.5)]
 SLOPE = [(85.0, 205.0), (118.0, 205.0), (118.0, 236.0), (85.0, 236.0)]
 TWO = [(500.0, 500.0, 850.0), (510.0, 500.0, 851.0)]
 
+
+def bowl_points():
+    """A bowl (docs/adr/2320): a 9 × 9 grid of 20 m shaken by up to 4 m, 8 m deep, its bottom 892.3 m."""
+    rnd = random.Random(2320)
+    out = []
+    for j in range(9):
+        for i in range(9):
+            x = round(600.0 + i * 20.0 + rnd.uniform(-4.0, 4.0), 3)
+            y = round(j * 20.0 + rnd.uniform(-4.0, 4.0), 3)
+            out.append((x, y, round(900.3 - 8.0 * math.exp(-((x - 680.0) ** 2 + (y - 80.0) ** 2) / (2 * 40.0 ** 2)), 3)))
+    return out
+
+
+BOWL = bowl_points()
+
 LAYERS = [rt.node("0", "0"), rt.node("zemin", "Zemin"), rt.node("bina", "Bina"), rt.node("yol", "Yol"),
-          rt.node("sev", "Şev sınırı"), rt.node("az", "Az nokta"), rt.node("esyukselti", "Eş yükselti"),
+          rt.node("sev", "Şev sınırı"), rt.node("az", "Az nokta"), rt.node("cukur", "Çukur"),
+          rt.node("esyukselti", "Eş yükselti"),
           rt.node("arazi", "Arazi", [rt.node("ek", "Ek")]), {**rt.node("kilitli", "Kilitli"), "locked": True},
           {**rt.node("gizli", "Gizli"), "visible": False}]
 
@@ -84,12 +104,14 @@ def entities():
     ents.append(("polygon", "yol", {"pts": [P(*p) for p in ROAD]}))
     ents.append(("polyline", "sev", {"pts": [P(*p) for p in SLOPE], "closed": True}))
     ents += [("point", "az", {"p": P(x, y), "z": z}) for x, y, z in TWO]
+    ents += [("point", "cukur", {"p": P(x, y), "z": z}) for x, y, z in BOWL]
     return ents
 
 
 ENTS = entities()
 SURFACES = [{"id": "t-1", "name": "Mevcut zemin", "points": {"layers": ["zemin"]}},
-            {"id": "t-9", "name": "Az nokta", "points": {"layers": ["az"]}}]
+            {"id": "t-9", "name": "Az nokta", "points": {"layers": ["az"]}},
+            {"id": "t-3", "name": "Çukur", "points": {"layers": ["cukur"]}}]
 
 
 def setup(work="map"):
@@ -112,6 +134,49 @@ def surface_of(points):
 
 
 S = surface_of(POINTS)
+# The bowl's points come after the first surface's and the details in the drawing: their ids follow.
+S3 = rt.build({"points": [(x, y, z, U(len(ENTS) - len(BOWL) + i + 1)) for i, (x, y, z) in enumerate(BOWL)],
+               "breaklines": [], "boundary": None, "voids": [], "tolerance": None, "maxEdge": None, "edges": [],
+               "removed": []})
+
+
+def ring_holds(ring, p):
+    """Even-odd: whether p lies inside the closed ring (the crossing to its right)."""
+    holds = False
+    n = len(ring)
+    for i in range(n):
+        a, b = ring[i], ring[(i + 1) % n]
+        if (a[1] > p[1]) != (b[1] > p[1]):
+            x = a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+            if x > p[0]:
+                holds = not holds
+    return holds
+
+
+def spots_of(s, lines, dets=()):
+    """The characteristic points (docs/adr/2320)."""
+    regular = [l for l in lines if l["closed"] and l["kind"] in ("major", "minor") and len(l["points"]) >= 3]
+    used = sorted({i for tri in s["tris"] for i in tri})
+    out = []
+    for k, l in enumerate(regular):
+        if any(j != k and ring_holds(l["points"], m["points"][0]) for j, m in enumerate(regular)):
+            continue
+        held = [i for i in used if s["z"][i] != l["z"] and ring_holds(l["points"], s["xy"][i])
+                and not any(inside(d, s["xy"][i]) for d in dets)]
+        if not held:
+            continue
+        top = max(held, key=lambda i: (s["z"][i], -i))
+        bottom = min(held, key=lambda i: (s["z"][i], i))
+        if s["z"][top] > l["z"]:
+            kind, i = "summit", top
+        elif s["z"][bottom] < l["z"]:
+            kind, i = "pit", bottom
+        else:
+            continue
+        z = s["z"][i]
+        out.append({"kind": kind, "x": s["xy"][i][0], "y": s["xy"][i][1], "z": z,
+                    "text": f"{math.floor(z * 10.0 + 0.5) / 10.0:.1f}"})
+    return out
 
 
 def level_lines(s, z, keep):
@@ -283,11 +348,12 @@ def details_of(layers):
     return [d for d in out if d]
 
 
-def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary=True, labels=True, rules=None):
+def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary=True, labels=True, rules=None,
+          spots=False, surface=None):
     rules = rules or RULES
     if interval is None:
         interval = next(i["interval"] for i in rules["intervals"] if i["scale"] == scale)
-    s = S
+    s = surface or S
     used = {i for t in s["tris"] for i in t}
     lo, hi = min(s["z"][i] for i in used), max(s["z"][i] for i in used)
     first, last = math.ceil((lo - base) / interval), math.floor((hi - base) / interval)
@@ -335,8 +401,16 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
                      f"({num(rules['labelHeight'])} mm); yazının kutusu maskelenir, eğri bölünmez.")
     if details:
         notes.append(f"Detayların içinde kalan {cut:.2f} m eğri çizilmedi (m. 78(1)(g)).")
-    return {"rules": rules["id"], "source": rules["source"], "scale": scale, "interval": interval, "lines": lines,
-            "labels": labs, "steep": n_steep, "gentle": n_gentle, "cut": cut, "revision": "$current", "notes": notes}
+    found = spots_of(s, lines, dets) if spots else []
+    if spots:
+        notes.append(f"Tepe ve çukurlarda {len(found)} karakteristik nokta kotu dm'ye kadar yazıldı "
+                     f"({num(rules['spotHeight'])} mm, m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da "
+                     "en alçak köşe; şev üstü ve dibi işaretlenmedi.")
+    out = {"rules": rules["id"], "source": rules["source"], "scale": scale, "interval": interval, "lines": lines,
+           "labels": labs, "steep": n_steep, "gentle": n_gentle, "cut": cut, "revision": "$current", "notes": notes}
+    if found:
+        out["spots"] = found
+    return out
 
 
 N = len(ENTS)
@@ -347,7 +421,7 @@ def drawn(cases, name, input_, op="execute", layer="esyukselti", warns=(), note=
     written = op == "execute"
     if written:
         out["uids"] = "$any"
-    count = len(out["lines"]) + len(out["labels"])
+    count = len(out["lines"]) + len(out["labels"]) + 2 * len(out.get("spots", []))
     expect = ({"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed",
                "ids": list(range(1, N + count + 1)), "road": rt.road_of(SURFACES)}
               if written else {**rt.UNCHANGED, "ids": list(range(1, N + 1))})
@@ -386,6 +460,17 @@ def cases():
     other = dict(copy.deepcopy(RULES), id="deneme-10-50", source="Deneme paketi (sentetik)", steepBelow=10.0,
                  auxiliaryAbove=50.0)
     drawn(out, "Başka kural paketi: dik 10 mm, yardımcı 50 mm", {"rules": other}, rules=other)
+    # docs/adr/2320: the summits' and pits' heights (m. 78(1)(ğ)).
+    top = drawn(out, "Tepe kotu: tepenin en içteki kapalı eğrisinde en yüksek köşe dm'ye kadar", {"spots": True},
+                spots=True)
+    assert [s_["kind"] for s_ in top["spots"]] == ["summit"], top.get("spots")
+    pit = drawn(out, "Çukur kotu: çukurun en içteki kapalı eğrisinde en alçak köşe", {"surface": "t-3", "spots": True},
+                spots=True, surface=S3)
+    assert [s_["kind"] for s_ in pit["spots"]] == ["pit"], pit.get("spots")
+    drawn(out, "Tepe kotu planı yazmaz", {"spots": True}, op="plan", spots=True)
+    walled = drawn(out, "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz", {"spots": True, "details": all3},
+                   spots=True, details=all3)
+    assert walled["spots"] and walled["spots"][0]["z"] < top["spots"][0]["z"], walled.get("spots")
     drawn(out, "Gizli katmana uyarıyla", {}, layer="gizli",
           warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
                   "path": "layerId"}])
@@ -400,6 +485,10 @@ def cases():
     refused(out, "Kural paketi eksik", {"rules": dict(copy.deepcopy(RULES), id="")},
             rt.failed("invalid_contours", "Eğri kural paketi eksik: kimliği ve kaynağı yazılı, her değeri sonlu ve "
                       "sıfırdan büyük olmalı.", "rules"))
+    no_spot = {k: v for k, v in copy.deepcopy(RULES).items() if k != "spotHeight"}
+    refused(out, "Kot noktası yazı yüksekliği vermeyen paket", {"spots": True, "rules": no_spot},
+            rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi kot noktası yazısının yüksekliğini (spotHeight, "
+                      "Ek-3 0004) vermiyor; tepe ve çukur kotları yazılmaz.", "rules"))
     refused(out, "Çok sık düzey", {"interval": 0.001},
             rt.failed("invalid_contours", "Bu aralıkla yüzeyi 10 000'den çok düzey keser; aralığı büyütün.", "interval"))
     refused(out, "Kesen düzey yok", {"interval": 1000.0},

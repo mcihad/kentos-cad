@@ -12,10 +12,15 @@
 //! - Along each major part, from its first place, a height every `labelEvery` paper mm, the first half that from the
 //!   start: the text in the middle, turned along the segment it falls on, its top towards the uphill side (the fall
 //!   direction of the triangle under the segment's middle; a flat one keeps the segment's way), its box masked.
+//! - Asked for (`spots`, docs/adr/2320; Article 78(1)(ğ)): inside each innermost closed major or minor line (no other
+//!   such line's first place inside it, even-odd), the surface's vertex highest above the line's level, else the one
+//!   lowest below it (an earlier vertex among equals; a vertex at the level is on the line; a vertex inside a detail is
+//!   no ground shown), its height written to the decimetre (half up) with the package's spot height (Ek-3 0004)
+//!   beside a point.
 
 use kentos_commands::{
     CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType, NewObject,
-    SheetContourLabel, SheetContourLine, TerrainsSheetContoured, TerrainsSheetContours, TextAlign, Vec2,
+    SheetContourLabel, SheetContourLine, SheetSpot, TerrainsSheetContoured, TerrainsSheetContours, TextAlign, Vec2,
     contour_rules_default,
 };
 use kentos_road::surface::Surface;
@@ -36,6 +41,66 @@ struct Checked {
 
 /// A detail's rings.
 type Detail = Vec<Vec<P>>;
+
+/// Whether `p` lies inside the closed `ring` (even-odd, the crossing to the right of `p`).
+fn ring_holds(ring: &[P], p: P) -> bool {
+    let n = ring.len();
+    let mut holds = false;
+    for i in 0..n {
+        let (a, b) = (ring[i], ring[(i + 1) % n]);
+        if (a[1] > p[1]) != (b[1] > p[1]) {
+            let x = a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+            if x > p[0] {
+                holds = !holds;
+            }
+        }
+    }
+    holds
+}
+
+/// The characteristic points (docs/adr/2320): a summit or a pit inside each innermost closed major or minor line.
+fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -> Vec<SheetSpot> {
+    let regular: Vec<&SheetContourLine> =
+        lines.iter().filter(|l| l.closed && (l.kind == "major" || l.kind == "minor") && l.points.len() >= 3).collect();
+    let mut used: Vec<usize> = surface.triangles.iter().flatten().map(|&i| i as usize).collect();
+    used.sort_unstable();
+    used.dedup();
+    let mut out = Vec::new();
+    for (k, l) in regular.iter().enumerate() {
+        let holds_another =
+            regular.iter().enumerate().any(|(j, m)| j != k && m.points.first().is_some_and(|q| ring_holds(&l.points, *q)));
+        if holds_another {
+            continue;
+        }
+        let held: Vec<usize> = used
+            .iter()
+            .copied()
+            .filter(|&i| {
+                let v = surface.vertices[i];
+                v[2] != l.z && ring_holds(&l.points, [v[0], v[1]]) && !details.iter().any(|d| inside(d, [v[0], v[1]]))
+            })
+            .collect();
+        let z = |i: usize| surface.vertices[i][2];
+        let top = held.iter().copied().max_by(|&a, &b| z(a).total_cmp(&z(b)).then(b.cmp(&a)));
+        let bottom = held.iter().copied().min_by(|&a, &b| z(a).total_cmp(&z(b)).then(a.cmp(&b)));
+        let found = match (top, bottom) {
+            (Some(t), _) if z(t) > l.z => Some(("summit", t)),
+            (_, Some(b)) if z(b) < l.z => Some(("pit", b)),
+            _ => None,
+        };
+        if let Some((kind, i)) = found {
+            let v = surface.vertices[i];
+            out.push(SheetSpot {
+                kind: kind.to_owned(),
+                x: v[0],
+                y: v[1],
+                z: v[2],
+                text: format!("{:.1}", (v[2] * 10.0 + 0.5).floor() / 10.0),
+            });
+        }
+    }
+    out
+}
 
 fn inside(rings: &Detail, p: P) -> bool {
     let mut odd = false;
@@ -192,6 +257,21 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             "rules",
         ));
     }
+    // Spot heights need the package's text height (Ek-3 0004): without it they are not written (no height invented).
+    let spot_height = match (input.spots.unwrap_or(false), rules.spot_height) {
+        (false, _) => None,
+        (true, Some(h)) if positive(h) => Some(h),
+        (true, _) => {
+            return Err(fail(
+                codes::INVALID_CONTOURS,
+                format!(
+                    "{} paketi kot noktası yazısının yüksekliğini (spotHeight, Ek-3 0004) vermiyor; tepe ve çukur kotları yazılmaz.",
+                    rules.id
+                ),
+                "rules",
+            ));
+        }
+    };
     let scale = match input.scale {
         Some(0) => return Err(fail(codes::INVALID_CONTOURS, "Ölçek paydası 0 olamaz.".into(), "scale")),
         Some(s) => s,
@@ -296,6 +376,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     if lines.is_empty() {
         return Err(no_contours());
     }
+    let spots = if spot_height.is_some() { spots_of(surface, &lines, &details) } else { Vec::new() };
     let every = rules.label_every / mm;
     let labels: Vec<SheetContourLabel> = if labels_on {
         lines.iter().filter(|l| l.kind == "major").flat_map(|l| labels(surface, &l.points, l.closed, l.z, every)).collect()
@@ -322,6 +403,12 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     if !input.details.is_empty() {
         notes.push(format!("Detayların içinde kalan {cut:.2} m eğri çizilmedi (m. 78(1)(g))."));
     }
+    if let Some(h) = spot_height {
+        notes.push(format!(
+            "Tepe ve çukurlarda {} karakteristik nokta kotu dm'ye kadar yazıldı ({h} mm, m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da en alçak köşe; şev üstü ve dibi işaretlenmedi.",
+            spots.len()
+        ));
+    }
     Ok(Checked {
         out: TerrainsSheetContoured {
             rules: rules.id.clone(),
@@ -333,6 +420,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             steep: n_steep,
             gentle: n_gentle,
             cut,
+            spots,
             uids: Vec::new(),
             revision: doc.revision().to_string(),
             notes,
@@ -387,6 +475,31 @@ fn objects(c: &Checked) -> Vec<NewObject> {
         })
         .collect();
     let height = r.label_height * f64::from(c.out.scale) / 1000.0;
+    // The spot heights (docs/adr/2320): a point at the vertex and its height beside it, half the text's height right.
+    let spot = r.spot_height.unwrap_or(0.0) * f64::from(c.out.scale) / 1000.0;
+    for s in &c.out.spots {
+        out.push(plain(EntityGeometry::Point { p: Vec2 { x: s.x, y: s.y }, z: Some(s.z), parts: None }, None, false));
+        out.push(plain(
+            EntityGeometry::Text {
+                layout: None,
+                annotative: None,
+                p: Vec2 { x: s.x + spot / 2.0, y: s.y },
+                text: s.text.clone(),
+                height: spot,
+                rotation: 0.0,
+                align: Some(TextAlign::MiddleLeft),
+                width_factor: None,
+                mask: true,
+                box_width: None,
+                line_spacing: None,
+                runs: Vec::new(),
+                face: Default::default(),
+                path: None,
+            },
+            None,
+            false,
+        ));
+    }
     out.extend(c.out.labels.iter().map(|l| {
         plain(
             EntityGeometry::Text {

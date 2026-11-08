@@ -2232,7 +2232,7 @@ repair = _RoadTerrainsRepair()
 
 class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsSheetContoured, TerrainsSheetContoured]):
     """``road.terrains.sheetcontours`` v1. Pafta eş yükselti eğrileri: Bir yüzeyin eş
-    yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3 0001–0005'e göre çizer;
+    yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer;
     değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c:
     1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri
     kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den
@@ -2240,8 +2240,11 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
     çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu
     yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri
     bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan
-    olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. 3B
-    çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler:
+    olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ)
+    İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin
+    içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye
+    kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu
+    çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler:
     not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked,
     invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable,
     no_contours.
@@ -2270,12 +2273,13 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         labels: bool | None | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        spots: bool | None | Unset = UNSET,
         steep: bool | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TerrainsSheetContoured:
         """Pafta eş yükselti eğrileri: Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m.
-        78(1)(c)–(g) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk
+        78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk
         değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000
         5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d).
         (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi
@@ -2283,7 +2287,10 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan
         eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının
         (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı)
-        içinden eğri geçmez; kalan uzunluk cut. 3B çoklu çizgi ve yazı olarak tek geri alma
+        içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları:
+        en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi,
+        detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin
+        spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu çizgi ve yazı olarak tek geri alma
         adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours,
         layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
         unknown_terrain, terrain_unbuildable, no_contours.
@@ -2300,6 +2307,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             labels:
             rules:
             scale: Unit: scale.
+            spots:
             steep:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -2324,6 +2332,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             labels=labels,
             rules=rules,
             scale=scale,
+            spots=spots,
             steep=steep,
         ), request_id=request_id, expected=expected)
 
@@ -2342,6 +2351,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         labels: bool | None | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        spots: bool | None | Unset = UNSET,
         steep: bool | None | Unset = UNSET,
     ) -> TerrainsSheetContoured:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -2358,6 +2368,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             labels=labels,
             rules=rules,
             scale=scale,
+            spots=spots,
             steep=steep,
         ))
 
@@ -2376,6 +2387,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         labels: bool | None | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        spots: bool | None | Unset = UNSET,
         steep: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -2392,6 +2404,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             labels=labels,
             rules=rules,
             scale=scale,
+            spots=spots,
             steep=steep,
         ))
 
@@ -2410,6 +2423,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         labels: bool | None | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        spots: bool | None | Unset = UNSET,
         steep: bool | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -2431,6 +2445,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             labels=labels,
             rules=rules,
             scale=scale,
+            spots=spots,
             steep=steep,
         ), op=op, request_id=request_id, expected=expected)
 

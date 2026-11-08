@@ -90,6 +90,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Düzenleme dağıtım taslağında Ayırma çapı görünümü ve Çapı çizime yaz.
 - MAP-13 / ADR 2300: `cad.pointclouds.register`'ın web işleyicisinde `robust` (40 ortak durum); web'in Tarama kaydı
   penceresinde Ağırlık satırı.
+- MAP-14 / ADR 2320: `road.terrains.sheetcontours`'un web işleyicisinde `spots` (32 ortak durum); web'in Pafta eğrileri
+  penceresinde Tepe ve çukur kotları kutusu.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

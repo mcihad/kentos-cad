@@ -44,7 +44,7 @@ sırayla alır.
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
-| MAP-14 Yüzey | 1520, 1560, 1820 | yardımcı eğrinin 5/1 mm deseni; m. 78(1)(ğ) karakteristik kotlar; yüzey birleştirme | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840 | bölge yazısı ve miktar tablosu; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860 | disiplinler arası açıklık; profilin canlı güncellenmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880 | blok, ilişki ve tablo örnekleri; teslim paketinin matrisi taşıması | kurum profilleri |
@@ -1125,6 +1125,13 @@ birleştirme, bölgesel yeniden kurma. Madde `[ ]` kalır.
 kaynak nokta revizyonu içeren yüzey kur. Kırık hat korunumu, sınır dışı
 üçgenler, kot sorgusu ve kontur bağımsız başvuruyla doğrulansın. Save–reopen
 ve tariften yeniden kurma aynı sonucu versin; iptalde eski geçerli yüzey kalsın.
+
+**8 Kasım 2026, üçüncü tur — tepe ve çukur kotları ([ADR 2320](../docs/adr/2320-sheet-summit-and-pit-heights.md)).**
+Kapsam: **Harita** (Arazi › Yüzey). Dayanak: BÖHHBÜY m. 78(1)(ğ) (PDF'in metni 8 Kasım 2026'da okundu), Ek-3 0004.
+Kanıtlanan: `road.terrains.sheetcontours`'a `spots`: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek
+(çukurda en alçak) yüzey köşesi, detayın içindeki köşe sayılmadan, kotu dm'ye kadar; paket sürüm 2 `spotHeight` 1,2 mm;
+yeni çanak yüzeyiyle çukur durumu; 32 ortak durum, MCP; Pafta eğrileri'nde kutu. Açık: şev üstü ve dibi kotları,
+yardımcı eğrinin 5/1 mm deseni (komutun nesne biçimi önce `linePattern` almalı), yüzey birleştirme.
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

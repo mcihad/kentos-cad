@@ -37498,7 +37498,7 @@
       "id": "road.terrains.sheetcontours",
       "version": 1,
       "title": "Pafta eş yükselti eğrileri",
-      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
+      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
       "aliases": [
         "paftaegrileri",
         "esyukseltipafta"
@@ -37517,7 +37517,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the\nscale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base\n(none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,\nthe auxiliary lines and the labels apply (none: they do), the rule package (none: KentOS's BÖHHBÜY 2018).\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none\nthe package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,\n`layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,\n`unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.",
+        "description": "Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the\nscale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base\n(none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,\nthe auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written\n(`spots`, none: not; docs/adr/2320), the rule package (none: KentOS's BÖHHBÜY 2018).\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none\nthe package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,\n`layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,\n`unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.",
         "properties": {
           "auxiliary": {
             "type": [
@@ -37580,6 +37580,12 @@
               "null"
             ],
             "x-unit": "scale"
+          },
+          "spots": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "steep": {
             "type": [
@@ -37651,6 +37657,12 @@
           },
           "source": {
             "type": "string"
+          },
+          "spots": {
+            "items": {
+              "$ref": "#/$defs/SheetSpot"
+            },
+            "type": "array"
           },
           "steep": {
             "format": "uint32",
@@ -37734,6 +37746,12 @@
           },
           "source": {
             "type": "string"
+          },
+          "spots": {
+            "items": {
+              "$ref": "#/$defs/SheetSpot"
+            },
+            "type": "array"
           },
           "steep": {
             "format": "uint32",
@@ -121499,7 +121517,7 @@
     },
     "ContourRules": {
       "additionalProperties": false,
-      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm).",
+      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), and the spot\nheights' text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused,\ndocs/adr/2320).",
       "properties": {
         "auxiliaryAbove": {
           "format": "double",
@@ -121560,6 +121578,14 @@
         },
         "source": {
           "type": "string"
+        },
+        "spotHeight": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
         },
         "steepBelow": {
           "format": "double",
@@ -184347,6 +184373,40 @@
         "removed",
         "sheet",
         "parts"
+      ],
+      "type": "object"
+    },
+    "SheetSpot": {
+      "description": "A characteristic point's height (BÖHHBÜY m. 78(1)(ğ), docs/adr/2320): a `summit` or a `pit`, the surface's vertex\nwith the highest (lowest) height inside an innermost closed major or minor line, its place and height, and the\nheight to the decimetre as written.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "kind",
+        "x",
+        "y",
+        "z",
+        "text"
       ],
       "type": "object"
     },

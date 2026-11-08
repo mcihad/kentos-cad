@@ -23431,7 +23431,9 @@ class ContourInterval(_Model):
 class ContourRules(_Model):
     """A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,
     every how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major
-    lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm).
+    lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), and the spot
+    heights' text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused,
+    docs/adr/2320).
     Attributes:
         release: Unit: count.
         major_every: Unit: count.
@@ -23442,6 +23444,7 @@ class ContourRules(_Model):
         auxiliary_above: Unit: paper-mm.
         label_every: Unit: paper-mm.
         label_height: Unit: paper-mm.
+        spot_height: Unit: paper-mm.
     """
     id: str
     release: int
@@ -23457,6 +23460,7 @@ class ContourRules(_Model):
     auxiliary_above: float
     label_every: float
     label_height: float
+    spot_height: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23474,6 +23478,8 @@ class ContourRules(_Model):
         out["auxiliaryAbove"] = float(self.auxiliary_above)
         out["labelEvery"] = float(self.label_every)
         out["labelHeight"] = float(self.label_height)
+        if self.spot_height is not UNSET:
+            out["spotHeight"] = None if self.spot_height is None else float(self.spot_height)
         return out
 
     @classmethod
@@ -23493,6 +23499,7 @@ class ContourRules(_Model):
             auxiliary_above=float(data["auxiliaryAbove"]),
             label_every=float(data["labelEvery"]),
             label_height=float(data["labelHeight"]),
+            spot_height=UNSET if "spotHeight" not in data else None if data["spotHeight"] is None else float(data["spotHeight"]),
         )
 
 
@@ -84539,6 +84546,42 @@ class SheetSourceChanges(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SheetSpot(_Model):
+    """A characteristic point's height (BÖHHBÜY m. 78(1)(ğ), docs/adr/2320): a `summit` or a `pit`, the surface's vertex
+    with the highest (lowest) height inside an innermost closed major or minor line, its place and height, and the
+    height to the decimetre as written.
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    kind: str
+    x: float
+    y: float
+    z: float
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SheetSpot:
+        return cls(
+            kind=data["kind"],
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SheetsCreate(_Model):
     """
     Attributes:
@@ -99134,6 +99177,7 @@ class TerrainsSheetContoured(_Model):
     cut: float
     revision: str
     notes: list[str]
+    spots: list[SheetSpot] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -99149,6 +99193,8 @@ class TerrainsSheetContoured(_Model):
         out["cut"] = float(self.cut)
         out["revision"] = self.revision
         out["notes"] = list(self.notes)
+        if self.spots is not UNSET:
+            out["spots"] = [e0.to_json() for e0 in self.spots]
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
         return out
@@ -99167,6 +99213,7 @@ class TerrainsSheetContoured(_Model):
             cut=float(data["cut"]),
             revision=data["revision"],
             notes=list(data["notes"]),
+            spots=[SheetSpot.from_json(e0) for e0 in data["spots"]] if "spots" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
@@ -99176,7 +99223,8 @@ class TerrainsSheetContours(_Model):
     """Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the
     scale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base
     (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
-    the auxiliary lines and the labels apply (none: they do), the rule package (none: KentOS's BÖHHBÜY 2018).
+    the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
+    (`spots`, none: not; docs/adr/2320), the rule package (none: KentOS's BÖHHBÜY 2018).
 
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
     the package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,
@@ -99197,6 +99245,7 @@ class TerrainsSheetContours(_Model):
     labels: bool | None | Unset = UNSET
     rules: ContourRules | None | Unset = UNSET
     scale: int | None | Unset = UNSET
+    spots: bool | None | Unset = UNSET
     steep: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -99219,6 +99268,8 @@ class TerrainsSheetContours(_Model):
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
             out["scale"] = self.scale
+        if self.spots is not UNSET:
+            out["spots"] = self.spots
         if self.steep is not UNSET:
             out["steep"] = self.steep
         return out
@@ -99236,6 +99287,7 @@ class TerrainsSheetContours(_Model):
             labels=data.get("labels", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else ContourRules.from_json(data["rules"]),
             scale=data.get("scale", UNSET),
+            spots=data.get("spots", UNSET),
             steep=data.get("steep", UNSET),
         )
 
@@ -131050,6 +131102,7 @@ __all__ = [
     "SheetResourceKindName",
     "SheetSeries",
     "SheetSourceChanges",
+    "SheetSpot",
     "SheetTemplateSource",
     "SheetsCreate",
     "SheetsDetailed",

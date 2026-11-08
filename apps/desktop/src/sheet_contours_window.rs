@@ -34,6 +34,8 @@ pub struct State {
     pub steep: bool,
     pub auxiliary: bool,
     pub labels: bool,
+    /// The summits' and pits' heights (ğ, docs/adr/2320).
+    pub spots: bool,
     /// The detail layers ticked (g).
     pub details: Vec<String>,
     pub answer: Option<Result<TerrainsSheetContoured, String>>,
@@ -48,6 +50,7 @@ pub enum Event {
     Steep(bool),
     Auxiliary(bool),
     Labels(bool),
+    Spots(bool),
     Detail(String, bool),
     Draw,
     Close,
@@ -72,6 +75,7 @@ impl State {
             steep: Some(self.steep),
             auxiliary: Some(self.auxiliary),
             labels: Some(self.labels),
+            spots: Some(self.spots),
             ..Default::default()
         })
     }
@@ -138,6 +142,7 @@ impl App {
             steep: true,
             auxiliary: true,
             labels: true,
+            spots: false,
             details,
             answer: None,
         };
@@ -157,7 +162,12 @@ impl App {
         if let Some(out) = self.answered(result) {
             self.say(
                 Level::Success,
-                format!("{TITLE}: {} eğri ve {} kot yazısı çizildi.", out.lines.len(), out.labels.len()),
+                format!(
+                    "{TITLE}: {} eğri, {} kot yazısı ve {} tepe ya da çukur kotu çizildi.",
+                    out.lines.len(),
+                    out.labels.len(),
+                    out.spots.len()
+                ),
             );
             self.sheet_contours = State::default();
             self.dialog = None;
@@ -174,6 +184,7 @@ impl App {
             Event::Steep(v) => s.steep = v,
             Event::Auxiliary(v) => s.auxiliary = v,
             Event::Labels(v) => s.labels = v,
+            Event::Spots(v) => s.spots = v,
             Event::Detail(id, on) => {
                 s.details.retain(|d| *d != id);
                 if on {
@@ -235,7 +246,8 @@ impl App {
                 row![
                     words::check(s.steep, "Dik yerde yalnız kalın (e)", Some(msg(Event::Steep(!s.steep)))),
                     words::check(s.auxiliary, "Yardımcı eğri (e)", Some(msg(Event::Auxiliary(!s.auxiliary)))),
-                    words::check(s.labels, "Kot yazısı (f)", Some(msg(Event::Labels(!s.labels))))
+                    words::check(s.labels, "Kot yazısı (f)", Some(msg(Event::Labels(!s.labels)))),
+                    words::check(s.spots, "Tepe ve çukur kotları (ğ)", Some(msg(Event::Spots(!s.spots))))
                 ]
                 .spacing(14)
                 .align_y(Center),
@@ -258,6 +270,18 @@ impl App {
                         r.interval
                     ),
                 ));
+                for sp in &r.spots {
+                    lines.push(words::text_line(
+                        Kind::Ok,
+                        format!(
+                            "{} kotu {} (Y {}, X {}).",
+                            if sp.kind == "summit" { "Tepe" } else { "Çukur" },
+                            sp.text,
+                            self.format().coord(sp.x),
+                            self.format().coord(sp.y)
+                        ),
+                    ));
+                }
                 for n in r.notes.iter().skip(1) {
                     lines.push(words::text_line(Kind::Info, n.clone()));
                 }

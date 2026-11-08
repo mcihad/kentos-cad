@@ -5,11 +5,12 @@ import type { ContourRules } from "./ContourRules";
  * Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the
  * scale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base
  * (none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,
- * the auxiliary lines and the labels apply (none: they do), the rule package (none: KentOS's BÖHHBÜY 2018).
+ * the auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written
+ * (`spots`, none: not; docs/adr/2320), the rule package (none: KentOS's BÖHHBÜY 2018).
  *
  * Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
  * the package gives for the scale, a base not finite, a package not whole), `layer_not_found`, `not_a_layer`,
  * `layer_locked` (`layerId`), `layer_not_found` (`details`), `invalid_revision`, `revision_conflict`,
  * `unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`.
  */
-export type TerrainsSheetContours = { surface: string, layerId: string, scale?: number, interval?: number, base?: number, details?: Array<string>, steep?: boolean, auxiliary?: boolean, labels?: boolean, rules?: ContourRules, expectedRevision?: string, };
+export type TerrainsSheetContours = { surface: string, layerId: string, scale?: number, interval?: number, base?: number, details?: Array<string>, steep?: boolean, auxiliary?: boolean, labels?: boolean, spots?: boolean, rules?: ContourRules, expectedRevision?: string, };

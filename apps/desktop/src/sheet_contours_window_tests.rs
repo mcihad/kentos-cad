@@ -1,7 +1,7 @@
 //! Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820) on the shared cases' drawing of
 //! `road.terrains.sheetcontours`: the window guesses the contour layer and the detail layers, its plan is the shared
-//! case's; a rule unticked changes the plan; Çiz writes the lines and heights in one undo step; Harita offers it. And
-//! its pictures.
+//! case's; a rule unticked changes the plan; Çiz writes the lines and heights in one undo step; Harita offers it; the
+//! summit's height ticked is the shared case's, the building's vertices left out (docs/adr/2320). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -47,6 +47,66 @@ fn the_plan_is_the_shared_case_s_and_draw_writes_in_one_step() {
     assert_eq!(app.dialog, None);
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Pafta eş yükselti eğrileri"));
+}
+
+/// docs/adr/2320: Tepe ve çukur kotları ticked gives the shared case's summit (the details ticked: the building's
+/// vertices left out); Çiz writes its point and height beside the lines and labels.
+#[test]
+fn the_summit_height_is_the_shared_case_s() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    let _ = app.update(Message::SheetContours(E::Spots(true)));
+    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz")
+        .expect("the case")["steps"][0]["result"]["output"]["spots"]
+        .clone();
+    assert_eq!(r.spots.len(), 1);
+    assert_eq!(serde_json::to_value(&r.spots).expect("json"), case);
+    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let _ = app.update(Message::SheetContours(E::Draw));
+    let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    assert_eq!(after, before + r.lines.len() + r.labels.len() + 2);
+}
+
+/// `.run/gui-evidence/tepe-kotu-2320/`: the window with the summit's height, and the drawing at the hilltop after Çiz.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib sheet_contours_window_tests::spot_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn spot_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tepe-kotu-2320");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("terrain.sheetContours"));
+        let _ = app.update(Message::SheetContours(E::Spots(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let spot = app.sheet_contours.answer.clone().and_then(Result::ok).and_then(|r| r.spots.first().cloned());
+        let _ = app.update(Message::SheetContours(E::Draw));
+        if let Some(s) = spot {
+            let b = kentos_commands::Bounds { min_x: s.x - 70.0, min_y: s.y - 45.0, max_x: s.x + 70.0, max_y: s.y + 45.0 };
+            app.navigating(|a| a.zoom_to_bounds(&b));
+        }
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-tepede-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 #[test]
