@@ -240,6 +240,9 @@
 - **Eğimle kot ver'de aralık çizimde (9 Kasım 2026; MAP-06, [ADR 2980](../../docs/adr/2980-grade-range-marked-on-the-drawing.md)).**
   Pencere açıkken başlangıç ve bitiş köşeleri halkalı, aradaki yol (yayıyla) vurgulu; Sahneden seç'te bitiş beklenirken
   yalnız başlangıç. Komut değişmedi. CAD (Harita + Yol).
+- **Paralel kaydır önizlemesinde birlikte kayan komşu köşeler (9 Kasım 2026; MAP-07, [ADR 3000](../../docs/adr/3000-shift-preview-marks-carried-vertices.md)).**
+  Topolojik düzenleme açıkken yer değiştirecek her komşu köşe gideceği yerde halkalı, etiket sayısını söyler. Komut
+  değişmedi. CAD + CBS'nin tipli katman düzenlemesi.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

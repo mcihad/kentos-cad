@@ -32,7 +32,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tag, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Marker, MarkerShape, Pointer, Preview, Stroke, Tag, Tone, Tool};
 
 /// The tool's id: its command is `tool.edgeShift`.
 pub const ID: &str = "edgeShift";
@@ -92,8 +92,40 @@ enum Amount {
 }
 
 /// Where the cursor moves the edge: the place, the distance, the shape moved there (or why not) and, while
-/// Topolojik düzenleme is on, the neighbours moved with it (their shapes, each area's size before and after).
-type At = (Vec2, f64, Result<Shape, String>, Vec<(Shape, Option<(f64, f64)>)>);
+/// Topolojik düzenleme is on, the neighbours moved with it (their shapes, each area's size before and after) and their
+/// vertices that move, where they go (docs/adr/3000).
+type At = (Vec2, f64, Result<Shape, String>, Vec<(Shape, Option<(f64, f64)>)>, Vec<Vec2>);
+
+/// A shape's vertices in order: a point's, a line's ends, a path's or an area's outer ring and holes.
+fn vertices(s: &Shape) -> Vec<Vec2> {
+    match s {
+        Shape::Point { p, .. } => vec![*p],
+        Shape::Line { a, b } => vec![*a, *b],
+        Shape::Polyline { pts, holes, .. } | Shape::Polygon { pts, holes, .. } => {
+            let mut out = pts.clone();
+            for h in holes.iter().flatten() {
+                out.extend(h.pts.iter().copied());
+            }
+            out
+        }
+        _ => Vec::new(),
+    }
+}
+
+/// The places a neighbour's vertices move to (docs/adr/3000): each vertex of `now` that is not where `then` had it,
+/// the two shapes having the same vertices in the same order (as the topology's follow writes them).
+fn moved_vertices(then: &Shape, now: &Shape, out: &mut Vec<Vec2>) {
+    let (a, b) = (vertices(then), vertices(now));
+    if a.len() != b.len() {
+        return;
+    }
+    for (p, q) in a.iter().zip(&b) {
+        let gone = (q.x - p.x).abs() > 1e-9 || (q.y - p.y).abs() > 1e-9;
+        if gone && !out.iter().any(|o| (o.x - q.x).abs() <= 1e-9 && (o.y - q.y).abs() <= 1e-9) {
+            out.push(*q);
+        }
+    }
+}
 
 pub struct EdgeShift {
     edge: Option<Picking>,
@@ -443,6 +475,7 @@ impl Tool for EdgeShift {
                 None
             }
         };
+        let mut carried = Vec::new();
         let around = match &moved {
             Ok(_) => found
                 .map(|n| {
@@ -459,6 +492,9 @@ impl Tool for EdgeShift {
                                     .map(shape),
                                 _ => None,
                             };
+                            if let Some(t) = &then {
+                                moved_vertices(t, &now, &mut carried);
+                            }
                             let sizes = then.and_then(|t| Some((rules::area_of(&t)?, rules::area_of(&now)?)));
                             (now, sizes)
                         })
@@ -467,7 +503,7 @@ impl Tool for EdgeShift {
                 .unwrap_or_default(),
             Err(_) => Vec::new(),
         };
-        self.at = Some((p.world, d, moved, around));
+        self.at = Some((p.world, d, moved, around, carried));
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -635,7 +671,7 @@ impl Tool for EdgeShift {
                 tone: Tone::Snap,
             });
         }
-        let Some((at, d, moved, around)) = &self.at else {
+        let Some((at, d, moved, around, carried)) = &self.at else {
             return out;
         };
         let mut lines = match self.from_reference(*at) {
@@ -679,6 +715,13 @@ impl Tool for EdgeShift {
                             signed(format.area_bare(after - before), after - before)
                         ));
                     }
+                }
+                // Where the neighbours' vertices go, each ringed once (docs/adr/3000).
+                for &p in carried {
+                    out.markers.push(Marker { at: p, shape: MarkerShape::Ring(5.0), tone: Tone::Snap });
+                }
+                if !carried.is_empty() {
+                    lines.push(format!("komşunun {} köşesi birlikte kayar", carried.len()));
                 }
             }
             Ok(_) => {

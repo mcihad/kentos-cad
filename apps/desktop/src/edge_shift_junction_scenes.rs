@@ -1,8 +1,9 @@
 //! The pictures and checks of docs/adr/2600 (Paralel kaydır's shared edge with the vertices inside it) in a CAD
 //! project at 1:500: parcel A west of two parcels B1 and B2 that meet on A's east edge (a T junction), and a branch line
 //! ending on the same edge inside B2. Topolojik düzenleme on, A's east edge 3 m east: the preview draws B1, B2 and the
-//! branch following, their shared corner and the branch's end on the moved edge; written, the message says the two
-//! places inside the edge went with it. `tools_screens` takes them:
+//! branch following, their shared corner and the branch's end on the moved edge, each place a neighbour's vertex goes
+//! ringed (docs/adr/3000); written, the message says the two places inside the edge went with it. `tools_screens`
+//! takes them:
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=paralel-kaydir-ucuncu-birlesim,paralel-kaydir-ucuncu-birlesim-yazildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
@@ -83,10 +84,39 @@ fn has(pts: &[[f64; 2]], p: [f64; 2]) -> bool {
 #[test]
 fn a_shared_edge_carries_the_t_junction_and_the_branch_s_end() {
     let mut app = App::boot(None).0;
-    shown(&mut app);
+    // A window drawn once (the drawing area gets its place on the screen), then the camera on the parcels again: the
+    // cursor's place on the screen is a place on the drawing.
+    let size = iced::Size::new(1440.0, 900.0);
+    let _ = app.update(crate::app::Message::WindowResized(size));
+    opened(&mut app);
+    let mut screen = crate::files_testing::offscreen(size);
+    let mut update = |app: &mut App, m: crate::app::Message| {
+        let _ = app.update(m);
+    };
+    screen.settle(&mut app, App::view, &mut update);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E + 192.0, min_y: N - 16.0, max_x: E + 232.0, max_y: N + 16.0 },
+        24.0,
+    );
+    click(&mut app, [209.9, -6.0]);
+    hover(&mut app, [213.0, -6.0]);
     // The preview draws the three neighbours (their outlines) beside the shape.
     let preview = app.session.preview(&app.format()).expect("a preview");
     assert!(preview.strokes.len() >= 4, "the edge, the moved shape and the neighbours: {}", preview.strokes.len());
+    // Where the neighbours' vertices go, each ringed once (docs/adr/3000): B1's and B2's corners on the edge, their
+    // shared one, the branch's end; the tag counts them.
+    let rings: Vec<[f64; 2]> = preview
+        .markers
+        .iter()
+        .filter(|m| matches!(m.shape, kentos_interaction::MarkerShape::Ring(_)))
+        .map(|m| [m.at.x - E, m.at.y - N])
+        .collect();
+    assert_eq!(rings.len(), 4, "{rings:?} {:?}", preview.tag.as_ref().map(|t| t.lines.clone()));
+    for p in [[213.0, -10.0], [213.0, 0.0], [213.0, 10.0], [213.0, 5.0]] {
+        assert!(has(&rings, p), "{p:?} in {rings:?}");
+    }
+    let lines = preview.tag.as_ref().map(|t| t.lines.join(" · ")).unwrap_or_default();
+    assert!(lines.contains("komşunun 4 köşesi birlikte kayar"), "{lines}");
     typed(&mut app, "3");
     assert!(has(&corners(&app, 2), [213.0, 0.0]) && has(&corners(&app, 3), [213.0, 0.0]), "the T junction moved");
     assert!(has(&corners(&app, 4), [213.0, 5.0]), "the branch's end moved: {:?}", corners(&app, 4));

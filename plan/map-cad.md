@@ -37,7 +37,7 @@ sırayla alır.
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
@@ -818,6 +818,12 @@ Noktalar da ile nokta) kenara dik aynı uzaklıkla kayar, `carried` sayısı; k�
 kenarın ortasındaki köşe açıklamayla reddedilir; kilitli komşunun köşesi ayrılır ya da durdurur. 21 ortak durum, MCP,
 masaüstü ve resimler. Açık: tutamaç ve Esnet'te kenar içindeki köşe, veri formu yolu, taşınmaların sahnede
 işaretlenmesi, büyük veri ölçümü.
+
+**9 Kasım 2026, beşinci tur — Paralel kaydır önizlemesinde birlikte kayan komşu köşeler ([ADR 3000](../docs/adr/3000-shift-preview-marks-carried-vertices.md)).**
+Kapsam: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Kanıtlanan: önizleme, komutun kendi kuralının
+yazacağı komşu şekillerinden, yer değiştirecek her komşu köşeyi gideceği yerde bir halkayla işaretler, etiket sayısını
+söyler (üçlü birleşimli sahnede dört köşe); test pencereyi bir kez çizip tıklar (eskiden önizleme 0 m'de kalıyordu).
+Komut değişmedi. Açık: tutamaç ve Esnet'te kenar içindeki köşe, veri formu yolu, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
