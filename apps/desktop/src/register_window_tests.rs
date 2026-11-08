@@ -1,14 +1,15 @@
 //! Tarama kaydı (register_window.rs, docs/adr/1800) on the shared cases' drawing of `cad.pointclouds.register`: the
 //! drawing's first two scans, the GNSS layer guessed; the moved scan fitted as the shared case says, its control
 //! points' KOH_Z down from 5 cm; the flat pair's plan shift loose; the CSV with the matrix; nothing written; Harita
-//! and GIS offer it. And its pictures.
+//! and GIS offer it; the weights row's Huber and trimmed fits as the shared cases give them (docs/adr/2300). And its
+//! pictures.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
 
 use crate::app::{App, Dialog, Message};
-use crate::register_window::{Event as R, View};
+use crate::register_window::{Event as R, View, Weights};
 
 fn cases() -> Value {
     serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.pointclouds.register.json")).expect("cases")
@@ -24,6 +25,83 @@ fn opened(program: Option<Module>) -> App {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
+}
+
+/// The output of the shared case named `name`.
+fn case_output(name: &str) -> Value {
+    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case")["steps"][0]["result"]
+        ["output"]
+        .clone()
+}
+
+/// docs/adr/2300: the scan with the raised patch fitted plainly, with Huber's weights and trimmed, as the shared cases
+/// give them; the weights' report in the answer.
+#[test]
+fn the_weights_hold_the_fit_against_gross_mismatches() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let (a, e) = (app.register.clouds[0].0.clone(), app.register.clouds[4].0.clone());
+    let _ = app.update(Message::Register(R::Fixed(a)));
+    let _ = app.update(Message::Register(R::Moving(e)));
+    let same = |app: &App, name: &str| {
+        let r = app.register.answer.clone().expect("an answer").expect("registered");
+        let want = case_output(name);
+        for (i, t) in r.translation.iter().enumerate() {
+            assert!((t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7, "{name} {i}: {t}");
+        }
+        match (&r.robust, want.get("robust")) {
+            (Some(w), Some(x)) => {
+                assert_eq!(Value::from(w.lighter), x["lighter"], "{name}");
+                if let Some(s) = w.scale {
+                    assert!((s - x["scale"].as_f64().expect("a scale")).abs() < 1e-9, "{name}");
+                }
+            }
+            (None, None) => {}
+            other => panic!("{name}: {other:?}"),
+        }
+    };
+    same(&app, "kaba hatalı eşleşmeler: 0,5 m yüksekteki yama düz ICP'yi aşağı çeker");
+    let _ = app.update(Message::Register(R::Weights(Weights::Huber)));
+    same(&app, "Huber ağırlıkları (k 1,345) kaba hatayı bastırır");
+    let _ = app.update(Message::Register(R::Weights(Weights::Trimmed)));
+    let _ = app.update(Message::Register(R::Ratio(0.9)));
+    same(&app, "kırpılmış ICP: eşleşmelerin en iyi %90'ı");
+}
+
+/// `.run/gui-evidence/tarama-agirlik-2300/`: the scan with the raised patch, plain and with Huber's weights.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib register_window_tests::weights_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn weights_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-agirlik-2300");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (weights, stem) in [(Weights::Plain, "1-esit"), (Weights::Huber, "2-huber")] {
+            let mut app = opened(Some(Module::Map));
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("pointcloud.register"));
+            let (a, e) = (app.register.clouds[0].0.clone(), app.register.clouds[4].0.clone());
+            let _ = app.update(Message::Register(R::Fixed(a)));
+            let _ = app.update(Message::Register(R::Moving(e)));
+            let _ = app.update(Message::Register(R::Weights(weights)));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
 }
 
 #[test]

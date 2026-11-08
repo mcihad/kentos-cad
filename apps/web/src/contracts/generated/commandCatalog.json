@@ -56346,7 +56346,7 @@
       "id": "cad.pointclouds.register",
       "version": 1,
       "title": "Tarama kaydı denetimi",
-      "summary": "İkinci nokta bulutunu (hareketli) birinciye (sabit) örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler, salt okunur: iki bulut tam çözünürlükte okunup voksel başına bir noktaya (noktalarının ortalaması, spacing, ilk değer 0,5 m) indirilir; sabit bulutun normali en yakın komşularından (neighbours, ilk değer 8), her hareketli nokta erişim içindeki (reach, ilk değer 1 m) en yakın sabit noktayla eşlenir; adım Low'un (2004) doğrusal en küçük kareleriyle, adım toleransın (ilk değer 0,1 mm) altına inince ya da yineleme sınırında (ilk değer 30) durur. Cevap: dönüşüm tarifi (merkez, dönüklük ω φ κ, öteleme ve projenin koordinatlarında 4×4 matris), önce ve sonra nokta-düzlem RMS'i, eşleşen pay (örtüşme), geometrinin altı parametreyi tutma gücü ve yatay öteleme gücü (düz zeminde yatay bilinmez), kapsam hücrelerinin güvenilir alanı (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.",
+      "summary": "İkinci nokta bulutunu (hareketli) birinciye (sabit) örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler, salt okunur: iki bulut tam çözünürlükte okunup voksel başına bir noktaya (noktalarının ortalaması, spacing, ilk değer 0,5 m) indirilir; sabit bulutun normali en yakın komşularından (neighbours, ilk değer 8), her hareketli nokta erişim içindeki (reach, ilk değer 1 m) en yakın sabit noktayla eşlenir; adım Low'un (2004) doğrusal en küçük kareleriyle, adım toleransın (ilk değer 0,1 mm) altına inince ya da yineleme sınırında (ilk değer 30) durur. Cevap: dönüşüm tarifi (merkez, dönüklük ω φ κ, öteleme ve projenin koordinatlarında 4×4 matris), önce ve sonra nokta-düzlem RMS'i, eşleşen pay (örtüşme), geometrinin altı parametreyi tutma gücü ve yatay öteleme gücü (düz zeminde yatay bilinmez), kapsam hücrelerinin güvenilir alanı (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz. robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345; ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı birden küçük eşleşmeleri verir. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.",
       "aliases": [
         "taramakaydi",
         "icp"
@@ -56365,7 +56365,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.pointclouds.register` v1: the two clouds (persistent ids: the fixed first, the moving second); the\nvoxel's side (`spacing`, none: 0.5 m), the farthest pair (`reach`, none: 1 m), the most iterations (none: 30) and\nthe step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell\nof the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control\npoints' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the\nscale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`) and the open\ndrawing's file (the host gives it).\n\nRefusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`),\n`invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more\nvoxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.",
+        "description": "Input of `cad.pointclouds.register` v1: the two clouds (persistent ids: the fixed first, the moving second); the\nvoxel's side (`spacing`, none: 0.5 m), the farthest pair (`reach`, none: 1 m), the most iterations (none: 30) and\nthe step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell\nof the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control\npoints' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the\nscale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open\ndrawing's file (the host gives it) and robust weights against gross mismatches (`robust`, none: every pair weighs\none; docs/adr/2300).\n\nRefusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,\n`robust.k`, `robust.ratio`),\n`invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more\nvoxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.",
         "properties": {
           "cell": {
             "format": "double",
@@ -56448,6 +56448,16 @@
               "null"
             ],
             "x-unit": "length"
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRobust"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rules": {
             "anyOf": [
@@ -56638,6 +56648,16 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRobustReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rotation": {
             "items": {
@@ -56859,6 +56879,16 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRobustReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rotation": {
             "items": {
@@ -177939,6 +177969,78 @@
       "required": [
         "name",
         "z"
+      ],
+      "type": "object"
+    },
+    "RegisterRobust": {
+      "additionalProperties": false,
+      "description": "Robust weights of each ICP step (docs/adr/2300): `huber`, a pair's weight 1 within `k` times the residuals' scale\n(1.4826 × their median absolute value) and `k`·scale / |residual| beyond it (`k` none: 1.345, Holland and Welsch\n1977); or `trimmed`, the `ratio` (above 0, at most 1; the user's overlap, no default) of pairs with the smallest\nabsolute residuals weighing 1 and the rest 0 (Chetverikov et al. 2002).",
+      "properties": {
+        "k": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "ratio": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "measure"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "RegisterRobustReport": {
+      "description": "What the robust weights did at the last step (docs/adr/2300): the kind, its `k` or `ratio`, the residuals' scale\nthen (Huber, metres), and the pairs that weighed less than one.",
+      "properties": {
+        "k": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "lighter": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "ratio": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "measure"
+        },
+        "scale": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "kind",
+        "lighter"
       ],
       "type": "object"
     },

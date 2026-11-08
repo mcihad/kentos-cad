@@ -67726,10 +67726,12 @@ class PointCloudsRegister(_Model):
     the step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell
     of the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control
     points' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the
-    scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`) and the open
-    drawing's file (the host gives it).
+    scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open
+    drawing's file (the host gives it) and robust weights against gross mismatches (`robust`, none: every pair weighs
+    one; docs/adr/2300).
 
-    Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`),
+    Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,
+    `robust.k`, `robust.ratio`),
     `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more
     voxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.
     Attributes:
@@ -67755,6 +67757,7 @@ class PointCloudsRegister(_Model):
     neighbours: int | None | Unset = UNSET
     radius: float | None | Unset = UNSET
     reach: float | None | Unset = UNSET
+    robust: RegisterRobust | None | Unset = UNSET
     rules: CloudRules | None | Unset = UNSET
     scale: int | None | Unset = UNSET
     spacing: float | None | Unset = UNSET
@@ -67783,6 +67786,8 @@ class PointCloudsRegister(_Model):
             out["radius"] = None if self.radius is None else float(self.radius)
         if self.reach is not UNSET:
             out["reach"] = None if self.reach is None else float(self.reach)
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         if self.rules is not UNSET:
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
@@ -67807,6 +67812,7 @@ class PointCloudsRegister(_Model):
             neighbours=data.get("neighbours", UNSET),
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
             reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobust.from_json(data["robust"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else CloudRules.from_json(data["rules"]),
             scale=data.get("scale", UNSET),
             spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
@@ -67879,6 +67885,7 @@ class PointCloudsRegistered(_Model):
     control_after: OverlapControlStats | None | Unset = UNSET
     control_before: OverlapControlStats | None | Unset = UNSET
     control_fixed: OverlapControlStats | None | Unset = UNSET
+    robust: RegisterRobustReport | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -67913,6 +67920,8 @@ class PointCloudsRegistered(_Model):
             out["controlBefore"] = None if self.control_before is None else self.control_before.to_json()
         if self.control_fixed is not UNSET:
             out["controlFixed"] = None if self.control_fixed is None else self.control_fixed.to_json()
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         return out
 
     @classmethod
@@ -67946,6 +67955,7 @@ class PointCloudsRegistered(_Model):
             control_after=UNSET if "controlAfter" not in data else None if data["controlAfter"] is None else OverlapControlStats.from_json(data["controlAfter"]),
             control_before=UNSET if "controlBefore" not in data else None if data["controlBefore"] is None else OverlapControlStats.from_json(data["controlBefore"]),
             control_fixed=UNSET if "controlFixed" not in data else None if data["controlFixed"] is None else OverlapControlStats.from_json(data["controlFixed"]),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobustReport.from_json(data["robust"]),
         )
 
 
@@ -77773,6 +77783,77 @@ class RegisterControl(_Model):
             dz_after=UNSET if "dzAfter" not in data else None if data["dzAfter"] is None else float(data["dzAfter"]),
             dz_before=UNSET if "dzBefore" not in data else None if data["dzBefore"] is None else float(data["dzBefore"]),
             dz_fixed=UNSET if "dzFixed" not in data else None if data["dzFixed"] is None else float(data["dzFixed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisterRobust(_Model):
+    """Robust weights of each ICP step (docs/adr/2300): `huber`, a pair's weight 1 within `k` times the residuals' scale
+    (1.4826 × their median absolute value) and `k`·scale / |residual| beyond it (`k` none: 1.345, Holland and Welsch
+    1977); or `trimmed`, the `ratio` (above 0, at most 1; the user's overlap, no default) of pairs with the smallest
+    absolute residuals weighing 1 and the rest 0 (Chetverikov et al. 2002).
+    Attributes:
+        k: Unit: value.
+        ratio: Unit: measure.
+    """
+    kind: str
+    k: float | None | Unset = UNSET
+    ratio: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        if self.k is not UNSET:
+            out["k"] = None if self.k is None else float(self.k)
+        if self.ratio is not UNSET:
+            out["ratio"] = None if self.ratio is None else float(self.ratio)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisterRobust:
+        return cls(
+            kind=data["kind"],
+            k=UNSET if "k" not in data else None if data["k"] is None else float(data["k"]),
+            ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else float(data["ratio"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisterRobustReport(_Model):
+    """What the robust weights did at the last step (docs/adr/2300): the kind, its `k` or `ratio`, the residuals' scale
+    then (Huber, metres), and the pairs that weighed less than one.
+    Attributes:
+        lighter: Unit: count.
+        k: Unit: value.
+        ratio: Unit: measure.
+        scale: Unit: length.
+    """
+    kind: str
+    lighter: int
+    k: float | None | Unset = UNSET
+    ratio: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["lighter"] = self.lighter
+        if self.k is not UNSET:
+            out["k"] = None if self.k is None else float(self.k)
+        if self.ratio is not UNSET:
+            out["ratio"] = None if self.ratio is None else float(self.ratio)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisterRobustReport:
+        return cls(
+            kind=data["kind"],
+            lighter=data["lighter"],
+            k=UNSET if "k" not in data else None if data["k"] is None else float(data["k"]),
+            ratio=UNSET if "ratio" not in data else None if data["ratio"] is None else float(data["ratio"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
 
 
@@ -130594,6 +130675,8 @@ __all__ = [
     "RegionsLedgerBy",
     "RegisterCell",
     "RegisterControl",
+    "RegisterRobust",
+    "RegisterRobustReport",
     "RegisteredArea",
     "RegistryDatum",
     "RegistryDatumName",

@@ -2,6 +2,7 @@
 import type { OverlapControlStats } from "./OverlapControlStats";
 import type { RegisterCell } from "./RegisterCell";
 import type { RegisterControl } from "./RegisterControl";
+import type { RegisterRobustReport } from "./RegisterRobustReport";
 
 /**
  * Output of `cad.pointclouds.register` v1:
@@ -19,4 +20,4 @@ import type { RegisterControl } from "./RegisterControl";
  * - the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;
  * - notes.
  */
-export type PointCloudsRegistered = { rules: string, source: string, read: [bigint, bigint], used: [number, number], iterations: number, converged: boolean, centre: [number, number, number], rotation: [number, number, number], translation: [number, number, number], matrix: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number], pairs: number, overlap: number, rmsBefore: number, rmsAfter: number, meanAfter: number, strength: number, horizontal: number, cell: number, covered: number, reliable: number, limit: number, worst: Array<RegisterCell>, control: Array<RegisterControl>, controlFixed?: OverlapControlStats, controlBefore?: OverlapControlStats, controlAfter?: OverlapControlStats, limitZ: number, notes: Array<string>, };
+export type PointCloudsRegistered = { rules: string, source: string, read: [bigint, bigint], used: [number, number], iterations: number, converged: boolean, centre: [number, number, number], rotation: [number, number, number], translation: [number, number, number], matrix: [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number], pairs: number, overlap: number, rmsBefore: number, rmsAfter: number, meanAfter: number, strength: number, horizontal: number, cell: number, covered: number, reliable: number, limit: number, worst: Array<RegisterCell>, control: Array<RegisterControl>, controlFixed?: OverlapControlStats, controlBefore?: OverlapControlStats, controlAfter?: OverlapControlStats, limitZ: number, robust?: RegisterRobustReport, notes: Array<string>, };

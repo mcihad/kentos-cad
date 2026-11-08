@@ -5,6 +5,8 @@ without KentOS code.
     python3 scripts/fixtures/pointcloud_register_cases.py           # writes the clouds and the cases
     python3 scripts/fixtures/pointcloud_register_cases.py --check   # writes nothing; compares
 
+Run it with Homebrew's python3 and its numpy: uv's numpy wheel gives eigenvalues 1e-8 apart, which moves the cases.
+
 The clouds are text clouds written here (fixtures/pointcloud/v1/files/kayit-*.xyz, 3 decimals) of one ground: a
 slope, a mound, a ridge across it and a gable roof, sampled twice at random with ±1 cm of noise. The second sampling
 is moved by a known rigid transform (ω 0.02°, φ −0.03°, κ 0.05° about the area's middle, then 0.30, −0.20, 0.06 m),
@@ -25,7 +27,13 @@ The rules, by hand (numpy for the eigenvalues; every nearest search a full one):
   over L; horizontal √(λmin(N[3:5, 3:5]) / N[5, 5]); plan cells (floor(x/cell), floor(y/cell)) of the moving points
   now, those with `least` pairs covered, those with RMS ≤ the package's swath-to-swath value reliable; the 20 worst
   (RMS down, then the key); around a control point each set's plane z = c₀ + c₁u + c₂v within the radius (Cramer, as
-  cad.pointclouds.overlap's reference); KOH_Z's limit from BÖHHBÜY m. 91(2) by the package.
+  cad.pointclouds.overlap's reference); KOH_Z's limit from BÖHHBÜY m. 91(2) by the package;
+- robust weights (docs/adr/2300), each step's pairs weighed before the solve (N = Σ w a aᵀ, Σ w a r; a pair of weight
+  0 left out): huber, 1 within k·s and k·s/|r| beyond, s = 1.4826 × the median |r| (the middle one, or the mean of the
+  two middle ones), k none: 1.345; trimmed, 1 for the ⌈ratio·n⌉ pairs of the smallest |r| (the earlier first among
+  equals), 0 for the rest; the report: the last pairs' scale and the pairs under 1; the strength unweighted.
+  A fifth cloud, kayit-e, is kayit-b's ground sampled again and moved the same way with an 8 m × 6 m patch of points
+  0.5 m above the ground (a parked vehicle, low vegetation): pairs within the reach that are gross mismatches.
 """
 
 import copy
@@ -92,9 +100,25 @@ def scan(seed, moved, flat=False):
     return rows
 
 
+def raised(seed):
+    """A moved sampling of the ground with a patch of points 0.5 m above it (docs/adr/2300)."""
+    rows = scan(seed, True)
+    rnd = random.Random(seed + 1)
+    r = rot(MIS_W)
+    for _ in range(8 * 6 * 6):
+        x, y = rnd.uniform(4.0, 12.0), rnd.uniform(2.0, 8.0)
+        p = [X0 + x, Y0 + y, ground(x, y) + 0.5 + rnd.uniform(-0.01, 0.01)]
+        d = [p[i] - MID[i] for i in range(3)]
+        p = [sum(r[i][j] * d[j] for j in range(3)) + MID[i] + MIS_T[i] for i in range(3)]
+        rows.append((round(p[0], 3), round(p[1], 3), round(p[2], 3)))
+    return rows
+
+
 CLOUDS = {"kayit-a.xyz": scan(1800, False), "kayit-b.xyz": scan(1801, True),
-          "kayit-c.xyz": scan(1802, False, flat=True), "kayit-d.xyz": scan(1803, True, flat=True)}
-IDS = {"kayit-a.xyz": 1, "kayit-b.xyz": 2, "kayit-c.xyz": 3, "kayit-d.xyz": 4}
+          "kayit-c.xyz": scan(1802, False, flat=True), "kayit-d.xyz": scan(1803, True, flat=True),
+          "kayit-e.xyz": raised(1804)}
+# kayit-e came after the control points (5–9): its id is 10.
+IDS = {"kayit-a.xyz": 1, "kayit-b.xyz": 2, "kayit-c.xyz": 3, "kayit-d.xyz": 4, "kayit-e.xyz": 10}
 # On the plain slope, away from the mound, the ridge and the roof: a plane over 2 m is the ground there.
 CONTROL = [("K1", 27.2, 3.1), ("K2", 3.4, 21.7), ("K3", 28.1, 21.6), ("K4", 17.3, 2.2), ("K5", 2.3, 11.8)]
 
@@ -128,9 +152,10 @@ def layer(id_, name):
 
 
 def setup():
-    ents = [cloud(IDS[n], n) for n in CLOUDS]
+    ents = [cloud(IDS[n], n) for n in CLOUDS if IDS[n] <= 4]
     for k, (n, x, y) in enumerate(CONTROL):
         ents.append(control_point(5 + k, n, x, y, round(ground(x, y), 3)))
+    ents.append(cloud(IDS["kayit-e.xyz"], "kayit-e.xyz"))
     return {"format": "kentos.document", "version": 2, "name": "Tarama kaydı",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                          "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
@@ -224,18 +249,45 @@ def pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach):
     return out
 
 
-def normal_matrix(ps, normals, c):
+def normal_matrix(ps, normals, c, weights=None):
     m = [[0.0] * 6 for _ in range(6)]
     v = [0.0] * 6
-    for at, i, r in ps:
+    for k, (at, i, r) in enumerate(ps):
+        wk = 1.0 if weights is None else weights[k]
+        if wk == 0.0:
+            continue
         n = normals[i]
         w = cross(sub(at, c), n)
         a = [w[0], w[1], w[2], n[0], n[1], n[2]]
         for p in range(6):
-            v[p] += a[p] * r
+            v[p] += wk * a[p] * r
             for q in range(6):
-                m[p][q] += a[p] * a[q]
+                m[p][q] += wk * a[p] * a[q]
     return m, v
+
+
+HUBER_K = 1.345
+MAD_SIGMA = 1.4826
+
+
+def weights_of(ps, robust):
+    """The pairs' weights and Huber's scale (docs/adr/2300)."""
+    n = len(ps)
+    order = sorted(range(n), key=lambda i: (abs(ps[i][2]), i))
+    if robust["kind"] == "huber":
+        if n == 0:
+            return [], None
+        k = robust.get("k", HUBER_K)
+        a = lambda i: abs(ps[order[i]][2])  # noqa: E731
+        med = a(n // 2) if n % 2 == 1 else (a(n // 2 - 1) + a(n // 2)) / 2.0
+        s = MAD_SIGMA * med
+        cut = k * s
+        return [1.0 if cut <= 0.0 or abs(p[2]) <= cut else cut / abs(p[2]) for p in ps], s
+    keep = min(math.ceil(robust["ratio"] * n), n)
+    w = [0.0] * n
+    for i in order[:keep]:
+        w[i] = 1.0
+    return w, None
 
 
 def step(m, v):
@@ -254,7 +306,7 @@ def step(m, v):
 
 
 def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, neighbours=8, cell=2.0, least=4,
-             classes=None, control=None, radius=None, scale=1000, rules=None):
+             classes=None, control=None, radius=None, scale=1000, rules=None, robust=None):
     rules = rules or RULES
     radius = radius if radius is not None else cell
     rows = [CLOUDS[n] for n in names]
@@ -327,7 +379,7 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
             break
         if it == 0:
             rms_before = math.sqrt(seq_sum(p[2] * p[2] for p in ps) / len(ps))
-        m, v = normal_matrix(ps, normals, c)
+        m, v = normal_matrix(ps, normals, c, weights_of(ps, robust)[0] if robust else None)
         x = step(m, v)
         s = rot(x[:3])
         r = [[s[i][0] * r[0][j] + s[i][1] * r[1][j] + s[i][2] * r[2][j] for j in range(3)] for i in range(3)]
@@ -429,13 +481,24 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
         if s_ is not None:
             out[name] = s_
     out["limitZ"] = limit_z
+    if robust:
+        w_, s_ = weights_of(last, robust)
+        rep = {"kind": robust["kind"]}
+        if robust["kind"] == "huber":
+            rep["k"] = robust.get("k", HUBER_K)
+        else:
+            rep["ratio"] = robust["ratio"]
+        if s_ is not None:
+            rep["scale"] = s_
+        rep["lighter"] = sum(1 for x_ in w_ if x_ < 1.0)
+        out["robust"] = rep
     out["notes"] = notes
     return out
 
 
 SAME = {"revision": "same", "canUndo": False}
 ARGS = ("spacing", "reach", "iterations", "tolerance", "neighbours", "cell", "least", "classes", "control", "radius",
-        "scale", "rules")
+        "scale", "rules", "robust")
 
 
 def ok(name, clouds=("kayit-a.xyz", "kayit-b.xyz"), op="plan", within=1e-7, **kw):
@@ -462,6 +525,14 @@ def cases():
     apart = register(["kayit-a.xyz", "kayit-c.xyz"])
     assert apart["pairs"] == 0 and apart["read"] == [0, 0], apart
     other = dict(copy.deepcopy(RULES), id="deneme-3cm", source="Deneme paketi (sentetik): 3 cm", interswath=0.03)
+    # docs/adr/2300: the raised patch pulls a plain fit down; Huber's weights and the trimmed pairs hold it.
+    true_z = base["translation"][2]
+    gross = ("kayit-a.xyz", "kayit-e.xyz")
+    plain = register(list(gross))
+    huber = register(list(gross), robust={"kind": "huber"})
+    trimmed = register(list(gross), robust={"kind": "trimmed", "ratio": 0.9})
+    off = [abs(x["translation"][2] - true_z) for x in (plain, huber, trimmed)]
+    assert off[0] > 0.01 and off[1] < off[0] / 3 and off[2] < 0.005, off
     two = [uid(1), uid(2)]
     return [
         ok("A'ya B: kaydırılmış tarama sabitine oturur; GNSS kontrolü önce ve sonra", control="gnss"),
@@ -480,6 +551,12 @@ def cases():
         ok("başka kural paketi: güvenilir sınır 3 cm", rules=other),
         ok("16 komşulu normaller, 4 m kapsam hücresi", neighbours=16, cell=4.0),
         ok("1/500: KOH_Z sınırı daha sıkı, kontrol çevresi 1,5 m", control="gnss", scale=500, radius=1.5),
+        # docs/adr/2300: robust weights against gross mismatches.
+        ok("kaba hatalı eşleşmeler: 0,5 m yüksekteki yama düz ICP'yi aşağı çeker", gross),
+        ok("Huber ağırlıkları (k 1,345) kaba hatayı bastırır", gross, robust={"kind": "huber"}),
+        ok("Huber k = 3", gross, robust={"kind": "huber", "k": 3.0}),
+        ok("kırpılmış ICP: eşleşmelerin en iyi %90'ı", gross, robust={"kind": "trimmed", "ratio": 0.9}),
+        ok("temiz taramada Huber düz ICP'ye yakın kalır", robust={"kind": "huber"}),
         refused("tek bulut", {"uids": [uid(1)]}, "invalid_input",
                 "İki ayrı nokta bulutu verin: sabit tarama ve ona oturtulacak tarama.", "uids"),
         refused("aynı bulut iki kez", {"uids": [uid(1), uid(1)]}, "invalid_input",
@@ -517,6 +594,15 @@ def cases():
                 "yapılmaz.", "rules"),
         refused("kontrol katmanı yok", {"uids": two, "control": "yok"}, "layer_not_found",
                 "“yok” katmanı çizimde yok.", "control"),
+        refused("bilinmeyen ağırlık türü", {"uids": two, "robust": {"kind": "lms"}}, "invalid_input",
+                "“lms” bir ağırlık türü değil; huber ya da trimmed yazın.", "robust.kind"),
+        refused("Huber k 0", {"uids": two, "robust": {"kind": "huber", "k": 0.0}}, "invalid_input",
+                f"Huber'in k'si sonlu ve sıfırdan büyük olmalı (yazılan {num(0.0)}).", "robust.k"),
+        refused("kırpılmış ICP payı verilmemiş", {"uids": two, "robust": {"kind": "trimmed"}}, "invalid_input",
+                "Kırpılmış ICP için tutulacak eşleşme payını (ratio, 0'dan büyük, en çok 1) verin; KentOS örtüşmeyi "
+                "tahmin etmez.", "robust.ratio"),
+        refused("kırpılmış ICP payı 1,5", {"uids": two, "robust": {"kind": "trimmed", "ratio": 1.5}}, "invalid_input",
+                f"Tutulacak eşleşme payı 0'dan büyük, en çok 1 olmalı (yazılan {num(1.5)}).", "robust.ratio"),
     ]
 
 
@@ -533,7 +619,7 @@ def main():
             path.write_text(t, "utf-8")
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.pointclouds.register", "commandVersion": 1,
            "title": "Tarama kaydı denetimi",
-           "note": "ADR 1800. Bağımsız başvuru scripts/fixtures/pointcloud_register_cases.py: voksel, normal, nokta-düzlem "
+           "note": "ADR 1800, 2300. Bağımsız başvuru scripts/fixtures/pointcloud_register_cases.py: voksel, normal, nokta-düzlem "
                    "ICP (Low 2004), güç, kapsam ve kontrol elle (numpy yalnız öz değerler için); bulutlar sentetik metin "
                    "bulutlarıdır; KentOS kodu yok.",
            "setup": setup(), "cases": cases()}

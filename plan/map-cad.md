@@ -43,7 +43,7 @@ sırayla alır.
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800 | dönüşümün buluta uygulanması; çoklu tarama demeti; kaba hatayı atan ağırlıklar | gerçek veri ölçümü |
+| MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
 | MAP-14 Yüzey | 1520, 1560, 1820 | yardımcı eğrinin 5/1 mm deseni; m. 78(1)(ğ) karakteristik kotlar; yüzey birleştirme | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840 | bölge yazısı ve miktar tablosu; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860 | disiplinler arası açıklık; profilin canlı güncellenmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
@@ -1049,6 +1049,14 @@ Kanıtlanan alt maddeler:
 
 **Açık:** dönüşümün buluta uygulanması, çoklu tarama demeti, kaba hatalı eşleşmeyi atan ağırlıklar, kalıcı kayıt
 kimliği ve sınıf düzeltme katmanı, kesit düzenleme, çıkarım, gerçek veri ölçümü. Madde `[ ]` kalır.
+
+**8 Kasım 2026, üçüncü tur — kaba hatayı atan ağırlıklar ([ADR 2300](../docs/adr/2300-scan-registration-robust-weights.md)).**
+Kapsam: **Harita + CBS**. Araştırma: MathWorks `robustfit` (Huber k 1,345, %95 verim, s = MAD/0,6745), CloudCompare'in
+“Final overlap”i (kırpılmış ICP). Kanıtlanan: `cad.pointclouds.register`'a `robust`: her adımda Huber ağırlıkları
+(ölçek 1,4826 × ortanca |artık|) ya da en iyi eşleşmelerin kullanıcının verdiği payı; cevapta son adımın ölçeği ve
+hafifletilen eşleşmeler; 0,5 m yüksek yamalı yeni taramada düz ICP 2,4 cm kayarken Huber 0,9 mm, kırpılmış 0,1 mm
+(40 ortak durum, eski 31'i aynı); MCP; Tarama kaydı'nda Ağırlık satırı. Açık: dönüşümün buluta uygulanması, çoklu
+tarama demeti, kenar ve örtülme ayıklaması, gerçek veriyle ölçüm.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

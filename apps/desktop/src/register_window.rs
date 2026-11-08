@@ -4,12 +4,14 @@
 //! after, the transform (east, north, height and the three small angles in the project's unit), how firmly the
 //! geometry holds it (a flat ground: the plan shift unknown), the reliable coverage and each set's KOH_Z at the
 //! control points; a choice shows the worst cells or the control points. CSV kaydet writes the answer and the matrix.
+//! The weights row (docs/adr/2300) asks for Huber's weights (its k, 1.345 at first) or the trimmed ICP (the share of
+//! pairs kept, 1 at first: nothing trimmed until the user says how much of the scans overlap).
 
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, Entity, PointCloudsRegister, PointCloudsRegistered};
+use kentos_commands::{CommandResult, Entity, PointCloudsRegister, PointCloudsRegistered, RegisterRobust};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, pointcloud_register};
 use kentos_ui::label;
@@ -27,6 +29,25 @@ const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
 /// The control layer's choice when there is none.
 const NONE: &str = "";
+
+/// The robust weights of each step (docs/adr/2300).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Weights {
+    #[default]
+    Plain,
+    Huber,
+    Trimmed,
+}
+
+impl std::fmt::Display for Weights {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Weights::Plain => "Eşit",
+            Weights::Huber => "Huber",
+            Weights::Trimmed => "Kırpılmış",
+        })
+    }
+}
 
 /// What the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -59,6 +80,10 @@ pub struct State {
     pub control: String,
     pub radius: f64,
     pub scale: f64,
+    /// docs/adr/2300: the weights, Huber's k and the trimmed share.
+    pub weights: Weights,
+    pub k: f64,
+    pub ratio: f64,
     pub view: View,
     pub answer: Option<Result<PointCloudsRegistered, String>>,
 }
@@ -73,6 +98,9 @@ pub enum Event {
     Control(String),
     Radius(f64),
     Scale(f64),
+    Weights(Weights),
+    K(f64),
+    Ratio(f64),
     View(View),
     Save,
     Saved(Option<PathBuf>),
@@ -136,6 +164,11 @@ impl App {
             radius: Some(s.radius),
             scale: Some(s.scale.max(1.0) as u32),
             drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.to_string_lossy().into_owned()),
+            robust: match s.weights {
+                Weights::Plain => None,
+                Weights::Huber => Some(RegisterRobust { kind: "huber".into(), k: Some(s.k), ratio: None }),
+                Weights::Trimmed => Some(RegisterRobust { kind: "trimmed".into(), k: None, ratio: Some(s.ratio) }),
+            },
             ..Default::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -209,6 +242,9 @@ impl App {
             control,
             radius: 2.0,
             scale: doc.model.settings().plot_scale.round().max(1.0),
+            weights: Weights::Plain,
+            k: pointcloud_register::HUBER_K,
+            ratio: 1.0,
             view: View::Worst,
             answer: None,
         };
@@ -237,6 +273,9 @@ impl App {
             Event::Control(v) => s.control = v,
             Event::Radius(v) => s.radius = v,
             Event::Scale(v) => s.scale = v,
+            Event::Weights(v) => s.weights = v,
+            Event::K(v) => s.k = v,
+            Event::Ratio(v) => s.ratio = v,
             Event::View(v) => {
                 s.view = v;
                 return Task::none();
@@ -339,6 +378,24 @@ impl App {
                 });
             }
         }
+        // docs/adr/2300: what the weights did at the last step.
+        if let Some(w) = &r.robust {
+            let said = match (w.kind.as_str(), w.k, w.ratio) {
+                ("huber", Some(k), _) => format!(
+                    "Ağırlıklar Huber (k {}, artıkların ölçeği {} cm): son adımda {} eşleşme hafifletildi; RMS bütün eşleşmelerden.",
+                    format!("{k}").replace('.', ","),
+                    cm(w.scale.unwrap_or(0.0)),
+                    w.lighter
+                ),
+                (_, _, Some(ratio)) => format!(
+                    "Kırpılmış ICP (eşleşmelerin en iyi %{:.0}'i): son adımda {} eşleşme dışarıda bırakıldı; RMS bütün eşleşmelerden.",
+                    ratio * 100.0,
+                    w.lighter
+                ),
+                _ => String::new(),
+            };
+            lines.push(words::text_line(Kind::Info, said));
+        }
         lines.push(words::text_line(Kind::Info, r.notes[0].clone()));
         for n in r.notes.iter().skip(3) {
             lines.push(words::text_line(Kind::Info, n.clone()));
@@ -375,7 +432,25 @@ impl App {
                 ]
                 .spacing(10)
                 .align_y(Center),
-            );
+            )
+            .field("Ağırlık", {
+                let choice = Segmented::new([Weights::Plain, Weights::Huber, Weights::Trimmed], s.weights, |v| msg(Event::Weights(v)));
+                match s.weights {
+                    Weights::Plain => row![choice],
+                    Weights::Huber => row![
+                        choice,
+                        label::caption("k"),
+                        NumberInput::new(s.k, |v| msg(Event::K(v))).step(0.1).decimals(3).point().width(90)
+                    ],
+                    Weights::Trimmed => row![
+                        choice,
+                        label::caption("Tutulan pay"),
+                        NumberInput::new(s.ratio, |v| msg(Event::Ratio(v))).step(0.05).decimals(2).point().width(90)
+                    ],
+                }
+                .spacing(10)
+                .align_y(Center)
+            });
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Sonuç yok.");
         match &s.answer {

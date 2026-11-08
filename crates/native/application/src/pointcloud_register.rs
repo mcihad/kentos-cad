@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, HashMap};
 use kentos_commands::{
     CloudRules, CommandResult, CommandWarning, Entity, LayerNodeType, OverlapControlStats, PointCloudsRegister,
     PointCloudsRegistered, REGISTER_MOST_ITERATIONS, REGISTER_MOST_POINTS, RegisterCell, RegisterControl,
-    cloud_rules_default,
+    RegisterRobustReport, cloud_rules_default,
 };
 use kentos_domain::Document;
 
@@ -266,22 +266,67 @@ fn pairs(moving: &[P], now: &Rigid, c: P, grid: &Grid<'_>, normals: &[Option<P>]
     out
 }
 
-/// The normal matrix Σ a aᵀ and Σ a r of the pairs.
-fn normal_matrix(ps: &[Pair], normals: &[Option<P>], c: P) -> ([[f64; 6]; 6], [f64; 6]) {
+/// The normal matrix Σ w a aᵀ and Σ w a r of the pairs, each pair's weight `weights[k]` (none: 1).
+fn normal_matrix(ps: &[Pair], normals: &[Option<P>], c: P, weights: Option<&[f64]>) -> ([[f64; 6]; 6], [f64; 6]) {
     let mut m = [[0.0; 6]; 6];
     let mut v = [0.0; 6];
-    for p in ps {
+    for (k, p) in ps.iter().enumerate() {
+        let wk = weights.map_or(1.0, |w| w[k]);
+        if wk == 0.0 {
+            continue;
+        }
         let n = normals[p.fixed].unwrap_or([0.0; 3]);
         let w = cross(sub(p.at, c), n);
         let a = [w[0], w[1], w[2], n[0], n[1], n[2]];
         for i in 0..6 {
-            v[i] += a[i] * p.r;
+            v[i] += wk * a[i] * p.r;
             for j in 0..6 {
-                m[i][j] += a[i] * a[j];
+                m[i][j] += wk * a[i] * a[j];
             }
         }
     }
     (m, v)
+}
+
+/// Huber's tuning constant when none is given: 95 % efficiency at the normal distribution (Holland and Welsch 1977).
+pub const HUBER_K: f64 = 1.345;
+/// The median absolute residual over this is the normal distribution's σ (1 / Φ⁻¹(3/4)).
+const MAD_SIGMA: f64 = 1.4826;
+
+/// The robust weights asked (docs/adr/2300).
+enum Robust {
+    Huber(f64),
+    Trimmed(f64),
+}
+
+/// The pairs' weights by `robust`, and the residuals' scale (Huber's): `huber` 1 within k·s and k·s / |r| beyond it,
+/// s = 1.4826 × the median |r| (the middle one, or the mean of the two middle ones); `trimmed` 1 for the ⌈ratio·n⌉
+/// pairs of the smallest |r| (the earlier pair first among equals) and 0 for the rest.
+fn weights(ps: &[Pair], robust: &Robust) -> (Vec<f64>, Option<f64>) {
+    let n = ps.len();
+    let mut order: Vec<usize> = (0..n).collect();
+    order.sort_by(|&a, &b| ps[a].r.abs().total_cmp(&ps[b].r.abs()).then(a.cmp(&b)));
+    match robust {
+        Robust::Huber(k) => {
+            if n == 0 {
+                return (Vec::new(), None);
+            }
+            let abs = |i: usize| ps[order[i]].r.abs();
+            let median = if n % 2 == 1 { abs(n / 2) } else { (abs(n / 2 - 1) + abs(n / 2)) / 2.0 };
+            let s = MAD_SIGMA * median;
+            let cut = k * s;
+            let w = ps.iter().map(|p| if cut <= 0.0 || p.r.abs() <= cut { 1.0 } else { cut / p.r.abs() }).collect();
+            (w, Some(s))
+        }
+        Robust::Trimmed(ratio) => {
+            let keep = ((ratio * n as f64).ceil() as usize).min(n);
+            let mut w = vec![0.0; n];
+            for &i in order.iter().take(keep) {
+                w[i] = 1.0;
+            }
+            (w, None)
+        }
+    }
 }
 
 /// The least-squares step: −(Σ a aᵀ)⁺ Σ a r over its eigenvalues above 10⁻¹² of the largest.
@@ -339,6 +384,39 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
         Some(0) => return Err(fail(codes::INVALID_INPUT, "Ölçek paydası 0 olamaz.".into(), "scale")),
         Some(s) => s,
         None => doc.settings().plot_scale.round().max(1.0) as u32,
+    };
+    // Robust weights (docs/adr/2300): the user's kind and value; Huber's k the literature's when not given.
+    let robust = match &input.robust {
+        None => None,
+        Some(r) => match r.kind.trim() {
+            "huber" => {
+                let k = r.k.unwrap_or(HUBER_K);
+                if !(k.is_finite() && k > 0.0) {
+                    return Err(fail(codes::INVALID_INPUT, format!("Huber'in k'si sonlu ve sıfırdan büyük olmalı (yazılan {k})."), "robust.k"));
+                }
+                Some(Robust::Huber(k))
+            }
+            "trimmed" => {
+                let Some(ratio) = r.ratio else {
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        "Kırpılmış ICP için tutulacak eşleşme payını (ratio, 0'dan büyük, en çok 1) verin; KentOS örtüşmeyi tahmin etmez.".into(),
+                        "robust.ratio",
+                    ));
+                };
+                if !(ratio.is_finite() && ratio > 0.0 && ratio <= 1.0) {
+                    return Err(fail(codes::INVALID_INPUT, format!("Tutulacak eşleşme payı 0'dan büyük, en çok 1 olmalı (yazılan {ratio})."), "robust.ratio"));
+                }
+                Some(Robust::Trimmed(ratio))
+            }
+            other => {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!("“{other}” bir ağırlık türü değil; huber ya da trimmed yazın."),
+                    "robust.kind",
+                ));
+            }
+        },
     };
     let rules: CloudRules = match &input.rules {
         Some(r) => r.clone(),
@@ -462,7 +540,8 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
         if it == 0 {
             rms_before = (ps.iter().map(|p| p.r * p.r).sum::<f64>() / ps.len() as f64).sqrt();
         }
-        let (m, v) = normal_matrix(&ps, &normals, c);
+        let weighed = robust.as_ref().map(|r| weights(&ps, r).0);
+        let (m, v) = normal_matrix(&ps, &normals, c, weighed.as_deref());
         let x = step(m, v);
         now = now.then([x[0], x[1], x[2]], [x[3], x[4], x[5]]);
         done += 1;
@@ -479,8 +558,17 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
     } else {
         ((last.iter().map(|p| p.r * p.r).sum::<f64>() / np).sqrt(), last.iter().map(|p| p.r).sum::<f64>() / np)
     };
-    // How firmly the pairs hold the six parameters: the angles as metres at the RMS radius.
-    let (m, _) = normal_matrix(&last, &normals, c);
+    // What the robust weights did at the last pairs.
+    let robust_report = robust.as_ref().map(|r| {
+        let (w, s) = weights(&last, r);
+        let (kind, k, ratio) = match r {
+            Robust::Huber(k) => ("huber", Some(*k), None),
+            Robust::Trimmed(ratio) => ("trimmed", None, Some(*ratio)),
+        };
+        RegisterRobustReport { kind: kind.to_owned(), k, ratio, scale: s, lighter: w.iter().filter(|x| **x < 1.0).count() as u32 }
+    });
+    // How firmly the pairs hold the six parameters: the angles as metres at the RMS radius (every pair weighing one).
+    let (m, _) = normal_matrix(&last, &normals, c, None);
     let mut scaled = m;
     for i in 0..6 {
         for j in 0..6 {
@@ -603,6 +691,7 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
             control_before,
             control_after,
             limit_z,
+            robust: robust_report,
             notes,
         },
         warnings,

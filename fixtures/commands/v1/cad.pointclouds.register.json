@@ -4,7 +4,7 @@
  "command": "cad.pointclouds.register",
  "commandVersion": 1,
  "title": "Tarama kaydı denetimi",
- "note": "ADR 1800. Bağımsız başvuru scripts/fixtures/pointcloud_register_cases.py: voksel, normal, nokta-düzlem ICP (Low 2004), güç, kapsam ve kontrol elle (numpy yalnız öz değerler için); bulutlar sentetik metin bulutlarıdır; KentOS kodu yok.",
+ "note": "ADR 1800, 2300. Bağımsız başvuru scripts/fixtures/pointcloud_register_cases.py: voksel, normal, nokta-düzlem ICP (Low 2004), güç, kapsam ve kontrol elle (numpy yalnız öz değerler için); bulutlar sentetik metin bulutlarıdır; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -273,6 +273,41 @@
      "y": 4420011.8
     },
     "z": 850.397
+   },
+   {
+    "kind": "pointcloud",
+    "id": 10,
+    "layerId": "tarama",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/kayit-e.xyz",
+      "format": "xyz",
+      "count": 4608,
+      "bounds": [
+       487000.302,
+       4419999.806,
+       850.104,
+       487030.297,
+       4420023.802,
+       858.122
+      ]
+     }
+    ],
+    "bounds": [
+     487000.302,
+     4419999.806,
+     850.104,
+     487030.297,
+     4420023.802,
+     858.122
+    ],
+    "count": 4608,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
    }
   ],
   "uids": [
@@ -284,7 +319,8 @@
    "0192f5c0-1800-7000-8000-000000000006",
    "0192f5c0-1800-7000-8000-000000000007",
    "0192f5c0-1800-7000-8000-000000000008",
-   "0192f5c0-1800-7000-8000-000000000009"
+   "0192f5c0-1800-7000-8000-000000000009",
+   "0192f5c0-1800-7000-8000-00000000000a"
   ],
   "styles": {
    "items": [],
@@ -3011,6 +3047,1099 @@
    ]
   },
   {
+   "name": "kaba hatalı eşleşmeler: 0,5 m yüksekteki yama düz ICP'yi aşağı çeker",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-00000000000a"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "read": [
+        4320,
+        4608
+       ],
+       "used": [
+        2317,
+        2560
+       ],
+       "iterations": 30,
+       "converged": false,
+       "centre": [
+        487015.1144564476,
+        4420011.993840112,
+        851.6430012814179
+       ],
+       "rotation": [
+        0.0031885280595399606,
+        -0.001788387212917945,
+        -0.0058610991161156594
+       ],
+       "translation": [
+        -0.2879052911645413,
+        0.27058559791523284,
+        -0.08446347954810846
+       ],
+       "matrix": [
+        0.9999812246712272,
+        0.005855333552936549,
+        -0.001807034591431377,
+        -25870.249619951064,
+        -0.005861056186150524,
+        0.9999777739653872,
+        -0.003177986094227858,
+        2955.639384110458,
+        0.0017883862596097023,
+        0.003188517557764797,
+        0.9999933174928587,
+        -14964.335759175454,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "pairs": 2557,
+       "overlap": 0.998828125,
+       "rmsBefore": 0.16075835841348293,
+       "rmsAfter": 0.11024456575159804,
+       "meanAfter": 0.00022475010468619414,
+       "strength": 0.12128061422134416,
+       "horizontal": 0.14111869628811438,
+       "cell": 2.0,
+       "covered": 720.0,
+       "reliable": 628.0,
+       "limit": 0.08,
+       "worst": [
+        {
+         "x": 487007.0,
+         "y": 4420007.0,
+         "n": 27,
+         "rms": 0.31287108681774595
+        },
+        {
+         "x": 487011.0,
+         "y": 4420003.0,
+         "n": 27,
+         "rms": 0.3120164946987777
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "n": 26,
+         "rms": 0.30134369022574586
+        },
+        {
+         "x": 487005.0,
+         "y": 4420003.0,
+         "n": 27,
+         "rms": 0.29232298996363515
+        },
+        {
+         "x": 487005.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.28838510997956
+        },
+        {
+         "x": 487009.0,
+         "y": 4420005.0,
+         "n": 21,
+         "rms": 0.2870368652414611
+        },
+        {
+         "x": 487007.0,
+         "y": 4420003.0,
+         "n": 22,
+         "rms": 0.2864215522528184
+        },
+        {
+         "x": 487009.0,
+         "y": 4420003.0,
+         "n": 27,
+         "rms": 0.2775945207537197
+        },
+        {
+         "x": 487005.0,
+         "y": 4420005.0,
+         "n": 29,
+         "rms": 0.275603735474125
+        },
+        {
+         "x": 487009.0,
+         "y": 4420007.0,
+         "n": 31,
+         "rms": 0.273589351180306
+        },
+        {
+         "x": 487007.0,
+         "y": 4420005.0,
+         "n": 24,
+         "rms": 0.2682421457858131
+        },
+        {
+         "x": 487005.0,
+         "y": 4420009.0,
+         "n": 10,
+         "rms": 0.24664685429389155
+        },
+        {
+         "x": 487011.0,
+         "y": 4420007.0,
+         "n": 30,
+         "rms": 0.2371124055706732
+        },
+        {
+         "x": 487003.0,
+         "y": 4420003.0,
+         "n": 15,
+         "rms": 0.1568512341452442
+        },
+        {
+         "x": 487009.0,
+         "y": 4420009.0,
+         "n": 16,
+         "rms": 0.15670192898842733
+        },
+        {
+         "x": 487001.0,
+         "y": 4420003.0,
+         "n": 15,
+         "rms": 0.1361172242565614
+        },
+        {
+         "x": 487001.0,
+         "y": 4420001.0,
+         "n": 11,
+         "rms": 0.12115702702290401
+        },
+        {
+         "x": 487003.0,
+         "y": 4420001.0,
+         "n": 13,
+         "rms": 0.09844758299533447
+        },
+        {
+         "x": 487005.0,
+         "y": 4420001.0,
+         "n": 15,
+         "rms": 0.09353891131694814
+        },
+        {
+         "x": 487007.0,
+         "y": 4420001.0,
+         "n": 13,
+         "rms": 0.08369797380253752
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "notes": [
+        "Dönüşüm hareketli buluta uygulanmadı; bulut yerinde durur. Tarif: p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω).",
+        "RMS nokta-düzlem uzaklığıdır ve yalnız erişim içinde eşleşen noktalardan hesaplanır; eşleşmeyen kısım örtüşme payında görünür.",
+        "Güvenilir kapsamın sınırı lidar-uyum-ornek paketinin şeritler arası örnek değeridir; kurum kendi değerini verir.",
+        "Yineleme sınırına varıldı; son adım toleransın üstünde kaldı.",
+        "Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-07
+    }
+   ]
+  },
+  {
+   "name": "Huber ağırlıkları (k 1,345) kaba hatayı bastırır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-00000000000a"
+      ],
+      "robust": {
+       "kind": "huber"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "read": [
+        4320,
+        4608
+       ],
+       "used": [
+        2317,
+        2560
+       ],
+       "iterations": 6,
+       "converged": true,
+       "centre": [
+        487015.1144564476,
+        4420011.993840112,
+        851.6430012814179
+       ],
+       "rotation": [
+        -0.0002523104427055832,
+        0.00043482442982544894,
+        -0.0012611177473770684
+       ],
+       "translation": [
+        -0.29836231990902573,
+        0.20652563894565046,
+        -0.06112761346678905
+       ],
+       "matrix": [
+        0.9999991102550535,
+        0.001261007662298796,
+        0.00043514224959585713,
+        -5573.904620619316,
+        -0.0012611172938718667,
+        0.999999173099223,
+        0.00025176187476368676,
+        617.8302089711651,
+        -0.000434824416123241,
+        -0.00025231041617609055,
+        0.9999998736335824,
+        1326.9201084614374,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "pairs": 2557,
+       "overlap": 0.998828125,
+       "rmsBefore": 0.16075835841348293,
+       "rmsAfter": 0.11903401160161244,
+       "meanAfter": 0.028288846129490737,
+       "strength": 0.12119135408154441,
+       "horizontal": 0.1406503086356492,
+       "cell": 2.0,
+       "covered": 720.0,
+       "reliable": 668.0,
+       "limit": 0.08,
+       "worst": [
+        {
+         "x": 487007.0,
+         "y": 4420007.0,
+         "n": 24,
+         "rms": 0.35098931987948057
+        },
+        {
+         "x": 487007.0,
+         "y": 4420003.0,
+         "n": 24,
+         "rms": 0.3486936845602555
+        },
+        {
+         "x": 487011.0,
+         "y": 4420003.0,
+         "n": 32,
+         "rms": 0.34869016658980045
+        },
+        {
+         "x": 487005.0,
+         "y": 4420003.0,
+         "n": 33,
+         "rms": 0.34163402418001265
+        },
+        {
+         "x": 487005.0,
+         "y": 4420007.0,
+         "n": 27,
+         "rms": 0.33715397253584933
+        },
+        {
+         "x": 487009.0,
+         "y": 4420003.0,
+         "n": 27,
+         "rms": 0.3307202769156279
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "n": 23,
+         "rms": 0.33015791277319595
+        },
+        {
+         "x": 487009.0,
+         "y": 4420005.0,
+         "n": 26,
+         "rms": 0.32674083063957865
+        },
+        {
+         "x": 487007.0,
+         "y": 4420005.0,
+         "n": 25,
+         "rms": 0.32291566156731294
+        },
+        {
+         "x": 487009.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.32026807018042036
+        },
+        {
+         "x": 487005.0,
+         "y": 4420005.0,
+         "n": 30,
+         "rms": 0.318721153736774
+        },
+        {
+         "x": 487011.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.28973184337396607
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "n": 16,
+         "rms": 0.0866873704716036
+        },
+        {
+         "x": 487019.0,
+         "y": 4420013.0,
+         "n": 11,
+         "rms": 0.047209712652513884
+        },
+        {
+         "x": 487027.0,
+         "y": 4420017.0,
+         "n": 16,
+         "rms": 0.040665447369286366
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "n": 9,
+         "rms": 0.035315439787342695
+        },
+        {
+         "x": 487023.0,
+         "y": 4420011.0,
+         "n": 13,
+         "rms": 0.03202175452684904
+        },
+        {
+         "x": 487029.0,
+         "y": 4420017.0,
+         "n": 16,
+         "rms": 0.03190644312749584
+        },
+        {
+         "x": 487001.0,
+         "y": 4420003.0,
+         "n": 14,
+         "rms": 0.03050706892731445
+        },
+        {
+         "x": 487023.0,
+         "y": 4420009.0,
+         "n": 11,
+         "rms": 0.027588858916773325
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "robust": {
+        "kind": "huber",
+        "k": 1.345,
+        "scale": 0.0090714660659681,
+        "lighter": 542
+       },
+       "notes": [
+        "Dönüşüm hareketli buluta uygulanmadı; bulut yerinde durur. Tarif: p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω).",
+        "RMS nokta-düzlem uzaklığıdır ve yalnız erişim içinde eşleşen noktalardan hesaplanır; eşleşmeyen kısım örtüşme payında görünür.",
+        "Güvenilir kapsamın sınırı lidar-uyum-ornek paketinin şeritler arası örnek değeridir; kurum kendi değerini verir.",
+        "Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-07
+    }
+   ]
+  },
+  {
+   "name": "Huber k = 3",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-00000000000a"
+      ],
+      "robust": {
+       "kind": "huber",
+       "k": 3.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "read": [
+        4320,
+        4608
+       ],
+       "used": [
+        2317,
+        2560
+       ],
+       "iterations": 7,
+       "converged": true,
+       "centre": [
+        487015.1144564476,
+        4420011.993840112,
+        851.6430012814179
+       ],
+       "rotation": [
+        -0.00011241842008431394,
+        0.00033954349280903743,
+        -0.0014734781196463977
+       ],
+       "translation": [
+        -0.29773166041010857,
+        0.20919974086051232,
+        -0.06197093972868768
+       ],
+       "matrix": [
+        0.9999988567864831,
+        0.00147343940624753,
+        0.00033970876156333874,
+        -6512.65012779861,
+        -0.0014734775015206674,
+        0.9999989081686119,
+        0.00011191798809610134,
+        722.5456074513495,
+        -0.0003395434862847215,
+        -0.00011241841336717756,
+        0.9999999360361587,
+        662.1916287819245,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "pairs": 2557,
+       "overlap": 0.998828125,
+       "rmsBefore": 0.16075835841348293,
+       "rmsAfter": 0.11830742691983398,
+       "meanAfter": 0.027218684130798695,
+       "strength": 0.12128574017935703,
+       "horizontal": 0.14067716641251768,
+       "cell": 2.0,
+       "covered": 720.0,
+       "reliable": 664.0,
+       "limit": 0.08,
+       "worst": [
+        {
+         "x": 487007.0,
+         "y": 4420007.0,
+         "n": 24,
+         "rms": 0.34969179479988716
+        },
+        {
+         "x": 487011.0,
+         "y": 4420003.0,
+         "n": 32,
+         "rms": 0.34692249163563443
+        },
+        {
+         "x": 487007.0,
+         "y": 4420003.0,
+         "n": 25,
+         "rms": 0.33935886359618317
+        },
+        {
+         "x": 487005.0,
+         "y": 4420003.0,
+         "n": 33,
+         "rms": 0.33866657284104545
+        },
+        {
+         "x": 487005.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.3384880529254178
+        },
+        {
+         "x": 487009.0,
+         "y": 4420003.0,
+         "n": 27,
+         "rms": 0.3288733096717709
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "n": 23,
+         "rms": 0.32718280205575123
+        },
+        {
+         "x": 487009.0,
+         "y": 4420005.0,
+         "n": 26,
+         "rms": 0.32451772492065933
+        },
+        {
+         "x": 487007.0,
+         "y": 4420005.0,
+         "n": 25,
+         "rms": 0.3203106621115553
+        },
+        {
+         "x": 487005.0,
+         "y": 4420005.0,
+         "n": 29,
+         "rms": 0.3126846994521553
+        },
+        {
+         "x": 487009.0,
+         "y": 4420007.0,
+         "n": 27,
+         "rms": 0.31235574288916473
+        },
+        {
+         "x": 487011.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.28773216329004375
+        },
+        {
+         "x": 487009.0,
+         "y": 4420009.0,
+         "n": 15,
+         "rms": 0.1179268496697181
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "n": 16,
+         "rms": 0.08707030559423953
+        },
+        {
+         "x": 487019.0,
+         "y": 4420013.0,
+         "n": 11,
+         "rms": 0.04722433714747504
+        },
+        {
+         "x": 487027.0,
+         "y": 4420017.0,
+         "n": 16,
+         "rms": 0.04043034184148663
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "n": 9,
+         "rms": 0.03535761252692226
+        },
+        {
+         "x": 487023.0,
+         "y": 4420011.0,
+         "n": 13,
+         "rms": 0.032027468999010954
+        },
+        {
+         "x": 487001.0,
+         "y": 4420003.0,
+         "n": 14,
+         "rms": 0.03193267134135975
+        },
+        {
+         "x": 487029.0,
+         "y": 4420017.0,
+         "n": 16,
+         "rms": 0.031406797134801795
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "robust": {
+        "kind": "huber",
+        "k": 3.0,
+        "scale": 0.009696639282824791,
+        "lighter": 229
+       },
+       "notes": [
+        "Dönüşüm hareketli buluta uygulanmadı; bulut yerinde durur. Tarif: p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω).",
+        "RMS nokta-düzlem uzaklığıdır ve yalnız erişim içinde eşleşen noktalardan hesaplanır; eşleşmeyen kısım örtüşme payında görünür.",
+        "Güvenilir kapsamın sınırı lidar-uyum-ornek paketinin şeritler arası örnek değeridir; kurum kendi değerini verir.",
+        "Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-07
+    }
+   ]
+  },
+  {
+   "name": "kırpılmış ICP: eşleşmelerin en iyi %90'ı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-00000000000a"
+      ],
+      "robust": {
+       "kind": "trimmed",
+       "ratio": 0.9
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "read": [
+        4320,
+        4608
+       ],
+       "used": [
+        2317,
+        2560
+       ],
+       "iterations": 4,
+       "converged": true,
+       "centre": [
+        487015.1144564476,
+        4420011.993840112,
+        851.6430012814179
+       ],
+       "rotation": [
+        -0.00038050545471708647,
+        0.0005260716454645678,
+        -0.0009164835363600625
+       ],
+       "translation": [
+        -0.2990354789027121,
+        0.20262379902322075,
+        -0.06034561650675379
+       ],
+       "matrix": [
+        0.9999994416533663,
+        0.0009162831686824303,
+        0.0005264200891086086,
+        -4050.458029543981,
+        -0.0009164832812422018,
+        0.9999995078202792,
+        0.00038002314985657745,
+        448.39563012402505,
+        -0.0005260716211993928,
+        -0.00038050539288250914,
+        0.9999997892321254,
+        1937.9830649547243,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "pairs": 2557,
+       "overlap": 0.998828125,
+       "rmsBefore": 0.16075835841348293,
+       "rmsAfter": 0.11973876306042072,
+       "meanAfter": 0.029319361988246737,
+       "strength": 0.12115583734869954,
+       "horizontal": 0.14066923958942432,
+       "cell": 2.0,
+       "covered": 720.0,
+       "reliable": 668.0,
+       "limit": 0.08,
+       "worst": [
+        {
+         "x": 487007.0,
+         "y": 4420007.0,
+         "n": 24,
+         "rms": 0.3519284405347714
+        },
+        {
+         "x": 487007.0,
+         "y": 4420003.0,
+         "n": 24,
+         "rms": 0.35108835340023137
+        },
+        {
+         "x": 487011.0,
+         "y": 4420003.0,
+         "n": 32,
+         "rms": 0.3503366974271378
+        },
+        {
+         "x": 487005.0,
+         "y": 4420003.0,
+         "n": 33,
+         "rms": 0.3449084920245748
+        },
+        {
+         "x": 487005.0,
+         "y": 4420007.0,
+         "n": 27,
+         "rms": 0.3374490683727347
+        },
+        {
+         "x": 487009.0,
+         "y": 4420003.0,
+         "n": 27,
+         "rms": 0.3324183137421123
+        },
+        {
+         "x": 487011.0,
+         "y": 4420005.0,
+         "n": 23,
+         "rms": 0.3318299782235823
+        },
+        {
+         "x": 487009.0,
+         "y": 4420005.0,
+         "n": 26,
+         "rms": 0.32922414524183374
+        },
+        {
+         "x": 487007.0,
+         "y": 4420005.0,
+         "n": 25,
+         "rms": 0.325905603184865
+        },
+        {
+         "x": 487009.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.32211530048875114
+        },
+        {
+         "x": 487005.0,
+         "y": 4420005.0,
+         "n": 30,
+         "rms": 0.3212795129997083
+        },
+        {
+         "x": 487011.0,
+         "y": 4420007.0,
+         "n": 28,
+         "rms": 0.2920924125277873
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "n": 16,
+         "rms": 0.08627061968284759
+        },
+        {
+         "x": 487019.0,
+         "y": 4420013.0,
+         "n": 11,
+         "rms": 0.047215029139889224
+        },
+        {
+         "x": 487027.0,
+         "y": 4420017.0,
+         "n": 16,
+         "rms": 0.04084915109354975
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "n": 9,
+         "rms": 0.03524038108178609
+        },
+        {
+         "x": 487029.0,
+         "y": 4420017.0,
+         "n": 16,
+         "rms": 0.032469439587014336
+        },
+        {
+         "x": 487023.0,
+         "y": 4420011.0,
+         "n": 13,
+         "rms": 0.032034169536642065
+        },
+        {
+         "x": 487001.0,
+         "y": 4420003.0,
+         "n": 14,
+         "rms": 0.029949345485958578
+        },
+        {
+         "x": 487023.0,
+         "y": 4420009.0,
+         "n": 11,
+         "rms": 0.027473633186281148
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "robust": {
+        "kind": "trimmed",
+        "ratio": 0.9,
+        "lighter": 255
+       },
+       "notes": [
+        "Dönüşüm hareketli buluta uygulanmadı; bulut yerinde durur. Tarif: p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω).",
+        "RMS nokta-düzlem uzaklığıdır ve yalnız erişim içinde eşleşen noktalardan hesaplanır; eşleşmeyen kısım örtüşme payında görünür.",
+        "Güvenilir kapsamın sınırı lidar-uyum-ornek paketinin şeritler arası örnek değeridir; kurum kendi değerini verir.",
+        "Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-07
+    }
+   ]
+  },
+  {
+   "name": "temiz taramada Huber düz ICP'ye yakın kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-000000000002"
+      ],
+      "robust": {
+       "kind": "huber"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "lidar-uyum-ornek",
+       "source": "Şeritler arası: USGS NGP Lidar Base Specification v1.3, QL2 (≤ 8 cm RMSDz örtüşmede), USGS görev belgelerinden; Türkiye'de bağlayıcı değildir, kurum kendi değerini verir. Kontrol noktaları: BÖHHBÜY (RG 26.06.2018/30460 Mük.) m. 91(2) KOH_Z ≤ 1,33·KOH_X,Y",
+       "read": [
+        4320,
+        4320
+       ],
+       "used": [
+        2317,
+        2378
+       ],
+       "iterations": 6,
+       "converged": true,
+       "centre": [
+        487015.1144564476,
+        4420011.993840112,
+        851.6430012814179
+       ],
+       "rotation": [
+        -0.0003992553718429299,
+        0.0005061691703888195,
+        -0.0007019127768788802
+       ],
+       "translation": [
+        -0.30087531271542034,
+        0.19856323011034602,
+        -0.060205170638843356
+       ],
+       "matrix": [
+        0.9999996255556568,
+        0.0007017105726016001,
+        0.0005064492261580704,
+        -3102.118976300524,
+        -0.0007019126293247484,
+        0.9999996740986818,
+        0.00039889997634755654,
+        343.1413901010528,
+        -0.0005061691487747863,
+        -0.00039925531008966895,
+        0.9999997921939734,
+        2011.1652569314745,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+       ],
+       "pairs": 2378,
+       "overlap": 1.0,
+       "rmsBefore": 0.08412897194483347,
+       "rmsAfter": 0.01471575808470869,
+       "meanAfter": -0.0005726002327911075,
+       "strength": 0.1285169445037151,
+       "horizontal": 0.1378392616114227,
+       "cell": 2.0,
+       "covered": 720.0,
+       "reliable": 716.0,
+       "limit": 0.08,
+       "worst": [
+        {
+         "x": 487029.0,
+         "y": 4420017.0,
+         "n": 18,
+         "rms": 0.08005916499135728
+        },
+        {
+         "x": 487023.0,
+         "y": 4420013.0,
+         "n": 11,
+         "rms": 0.07674043976933201
+        },
+        {
+         "x": 487023.0,
+         "y": 4420009.0,
+         "n": 15,
+         "rms": 0.048302692527643035
+        },
+        {
+         "x": 487023.0,
+         "y": 4420007.0,
+         "n": 14,
+         "rms": 0.043524229306036784
+        },
+        {
+         "x": 487023.0,
+         "y": 4420011.0,
+         "n": 13,
+         "rms": 0.04293433398045636
+        },
+        {
+         "x": 487001.0,
+         "y": 4420003.0,
+         "n": 17,
+         "rms": 0.03872153274855552
+        },
+        {
+         "x": 487021.0,
+         "y": 4420013.0,
+         "n": 16,
+         "rms": 0.03482178623334868
+        },
+        {
+         "x": 487023.0,
+         "y": 4420015.0,
+         "n": 14,
+         "rms": 0.029713109695765547
+        },
+        {
+         "x": 487019.0,
+         "y": 4420013.0,
+         "n": 15,
+         "rms": 0.02135093534226844
+        },
+        {
+         "x": 487027.0,
+         "y": 4420017.0,
+         "n": 15,
+         "rms": 0.02133310083399515
+        },
+        {
+         "x": 487015.0,
+         "y": 4420011.0,
+         "n": 17,
+         "rms": 0.02062456786858407
+        },
+        {
+         "x": 487005.0,
+         "y": 4420007.0,
+         "n": 9,
+         "rms": 0.02040963844060543
+        },
+        {
+         "x": 487017.0,
+         "y": 4420011.0,
+         "n": 15,
+         "rms": 0.019125212449673457
+        },
+        {
+         "x": 487027.0,
+         "y": 4420019.0,
+         "n": 15,
+         "rms": 0.018528762356904566
+        },
+        {
+         "x": 487025.0,
+         "y": 4420015.0,
+         "n": 15,
+         "rms": 0.01837392783649073
+        },
+        {
+         "x": 487015.0,
+         "y": 4420009.0,
+         "n": 14,
+         "rms": 0.017896482791782936
+        },
+        {
+         "x": 487009.0,
+         "y": 4420007.0,
+         "n": 11,
+         "rms": 0.017813192217106383
+        },
+        {
+         "x": 487021.0,
+         "y": 4420015.0,
+         "n": 18,
+         "rms": 0.015835168098401714
+        },
+        {
+         "x": 487019.0,
+         "y": 4420015.0,
+         "n": 11,
+         "rms": 0.015071974302798965
+        },
+        {
+         "x": 487017.0,
+         "y": 4420013.0,
+         "n": 11,
+         "rms": 0.014650624100569483
+        }
+       ],
+       "control": [],
+       "limitZ": 0.1944327,
+       "robust": {
+        "kind": "huber",
+        "k": 1.345,
+        "scale": 0.008213143645563479,
+        "lighter": 463
+       },
+       "notes": [
+        "Dönüşüm hareketli buluta uygulanmadı; bulut yerinde durur. Tarif: p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω).",
+        "RMS nokta-düzlem uzaklığıdır ve yalnız erişim içinde eşleşen noktalardan hesaplanır; eşleşmeyen kısım örtüşme payında görünür.",
+        "Güvenilir kapsamın sınırı lidar-uyum-ornek paketinin şeritler arası örnek değeridir; kurum kendi değerini verir.",
+        "Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz."
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-07
+    }
+   ]
+  },
+  {
    "name": "tek bulut",
    "steps": [
     {
@@ -3467,6 +4596,124 @@
        "code": "layer_not_found",
        "message": "“yok” katmanı çizimde yok.",
        "path": "control"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "bilinmeyen ağırlık türü",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-000000000002"
+      ],
+      "robust": {
+       "kind": "lms"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“lms” bir ağırlık türü değil; huber ya da trimmed yazın.",
+       "path": "robust.kind"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Huber k 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-000000000002"
+      ],
+      "robust": {
+       "kind": "huber",
+       "k": 0.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Huber'in k'si sonlu ve sıfırdan büyük olmalı (yazılan 0).",
+       "path": "robust.k"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kırpılmış ICP payı verilmemiş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-000000000002"
+      ],
+      "robust": {
+       "kind": "trimmed"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kırpılmış ICP için tutulacak eşleşme payını (ratio, 0'dan büyük, en çok 1) verin; KentOS örtüşmeyi tahmin etmez.",
+       "path": "robust.ratio"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kırpılmış ICP payı 1,5",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-1800-7000-8000-000000000001",
+       "0192f5c0-1800-7000-8000-000000000002"
+      ],
+      "robust": {
+       "kind": "trimmed",
+       "ratio": 1.5
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Tutulacak eşleşme payı 0'dan büyük, en çok 1 olmalı (yazılan 1.5).",
+       "path": "robust.ratio"
       }
      },
      "expect": {

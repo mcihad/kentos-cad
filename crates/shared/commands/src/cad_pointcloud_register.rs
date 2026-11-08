@@ -27,10 +27,12 @@ pub const REGISTER_MOST_ITERATIONS: u32 = 200;
 /// the step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell
 /// of the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control
 /// points' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the
-/// scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`) and the open
-/// drawing's file (the host gives it).
+/// scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open
+/// drawing's file (the host gives it) and robust weights against gross mismatches (`robust`, none: every pair weighs
+/// one; docs/adr/2300).
 ///
-/// Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`),
+/// Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,
+/// `robust.k`, `robust.ratio`),
 /// `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more
 /// voxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -92,6 +94,55 @@ pub struct PointCloudsRegister {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub robust: Option<RegisterRobust>,
+}
+
+/// Robust weights of each ICP step (docs/adr/2300): `huber`, a pair's weight 1 within `k` times the residuals' scale
+/// (1.4826 × their median absolute value) and `k`·scale / |residual| beyond it (`k` none: 1.345, Holland and Welsch
+/// 1977); or `trimmed`, the `ratio` (above 0, at most 1; the user's overlap, no default) of pairs with the smallest
+/// absolute residuals weighing 1 and the rest 0 (Chetverikov et al. 2002).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RegisterRobust {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub k: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
+    pub ratio: Option<f64>,
+}
+
+/// What the robust weights did at the last step (docs/adr/2300): the kind, its `k` or `ratio`, the residuals' scale
+/// then (Huber, metres), and the pairs that weighed less than one.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RegisterRobustReport {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub k: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "measure")))]
+    pub ratio: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub scale: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub lighter: u32,
 }
 
 /// A coverage cell: its centre, the moving cloud's paired points in it and their RMS residual after the fit (metres).
@@ -208,5 +259,8 @@ pub struct PointCloudsRegistered {
     pub control_after: Option<OverlapControlStats>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub limit_z: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub robust: Option<RegisterRobustReport>,
     pub notes: Vec<String>,
 }

@@ -24,6 +24,7 @@ from .types import (  # noqa: F401
     PointCloudsRegioned,
     PointCloudsRegister,
     PointCloudsRegistered,
+    RegisterRobust,
     Vec2,
     Vec2Like,
 )
@@ -835,8 +836,11 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
     (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler
     ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si
     (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır
-    sayılmaz. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input,
-    layer_not_found, too_many_cloud_points.
+    sayılmaz. robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer
+    1,345; ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı
+    eşleşmelerin tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini
+    ve ağırlığı birden küçük eşleşmeleri verir. Retler: invalid_uid, entity_not_found,
+    not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.
     """
     __slots__ = ()
     id = "cad.pointclouds.register"
@@ -863,6 +867,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
@@ -884,8 +889,11 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol
         noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m.
         91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz.
-        Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input,
-        layer_not_found, too_many_cloud_points.
+        robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345;
+        ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin
+        tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı
+        birden küçük eşleşmeleri verir. Retler: invalid_uid, entity_not_found,
+        not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.
 
         Args:
             doc: The drawing it works on.
@@ -900,6 +908,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours: Unit: count.
             radius: Unit: length.
             reach: Unit: length.
+            robust:
             rules:
             scale: Unit: scale.
             spacing: Unit: length.
@@ -928,6 +937,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            robust=robust,
             rules=rules,
             scale=scale,
             spacing=spacing,
@@ -950,6 +960,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
@@ -970,6 +981,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            robust=robust,
             rules=rules,
             scale=scale,
             spacing=spacing,
@@ -992,6 +1004,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
@@ -1012,6 +1025,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            robust=robust,
             rules=rules,
             scale=scale,
             spacing=spacing,
@@ -1034,6 +1048,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         spacing: float | None | Unset = UNSET,
@@ -1059,6 +1074,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            robust=robust,
             rules=rules,
             scale=scale,
             spacing=spacing,

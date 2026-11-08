@@ -88,6 +88,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   çizimde göster.
 - MAP-11 / ADR 2280: `cad.readjustment.scope`'un web işleyicisinde `parts` (kanonik halkalar, 33 ortak durum); web'in
   Düzenleme dağıtım taslağında Ayırma çapı görünümü ve Çapı çizime yaz.
+- MAP-13 / ADR 2300: `cad.pointclouds.register`'ın web işleyicisinde `robust` (40 ortak durum); web'in Tarama kaydı
+  penceresinde Ağırlık satırı.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.
