@@ -37,7 +37,7 @@ sırayla alır.
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
@@ -765,6 +765,16 @@ tablodaki her bulgu yerinde halka nokta olarak “Topoloji bulguları”na, kura
 kimlikleri, ölçü, gerekçe ve bulgunun anahtarıyla; tek geri alma adımı. Ortak durum (anahtar Python'da yeniden yazıldı,
 topoloji çizimi v2), MCP ve masaüstü. Açık: veri formu yolu, taşınmaların sahnede işaretlenmesi, üçlü birleşim ve
 çoklu köşe reddi, büyük veri ölçümü; hata katmanının GeoPackage/PostGIS'e yazılması.
+
+**8 Kasım 2026, dördüncü tur — ortak kenarın ortasındaki köşeler ([ADR 2600](../docs/adr/2600-shared-edge-junctions-and-inner-vertices.md)).**
+Kapsam: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Araştırma: ArcGIS Pro'nun “topologically connected
+edges stretch and remain connected”ı, QGIS'in ortak köşe ve kenarı komşularda da taşıması. Bulunan kusur: Paralel kaydır'ın
+ortak sınırı kenarın ortasındaki komşu köşeyi bırakıyordu (üçlü birleşim kırılıyor, komşunun ara köşesi V oluyor, T ile
+bağlanan çizgi kopuyordu). Kanıtlanan: kenarın içindeki görünen komşu köşeleri (üçlü birleşim, ara köşe, delik, çizgi ucu,
+Noktalar da ile nokta) kenara dik aynı uzaklıkla kayar, `carried` sayısı; kısalan kenarın dışına düşen köşe ve yaylı
+kenarın ortasındaki köşe açıklamayla reddedilir; kilitli komşunun köşesi ayrılır ya da durdurur. 21 ortak durum, MCP,
+masaüstü ve resimler. Açık: tutamaç ve Esnet'te kenar içindeki köşe, veri formu yolu, taşınmaların sahnede
+işaretlenmesi, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 

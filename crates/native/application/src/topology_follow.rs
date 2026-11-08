@@ -10,7 +10,8 @@
 
 use kentos_commands::EntityEdit;
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::entity::{Part, Shape};
+use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::topology_edit::{self, Change, Neighbour, SAME};
@@ -103,8 +104,30 @@ pub fn put_right(doc: &Document, points: bool, found: &Found, changes: &[Change]
 }
 
 /// A path whose bulges are all zero as the drawing keeps it: without them
-/// (the core's `apply` gives every edge's).
+/// (the core's `apply` gives every edge's), its holes' and parts' too.
 pub(crate) fn straight(shape: Shape) -> Shape {
+    let bent = |b: Option<Vec<f64>>| b.filter(|b| has_bulges(Some(b)));
+    let rings = |hs: Option<Vec<Ring>>| {
+        hs.map(|hs| {
+            hs.into_iter()
+                .map(|r| Ring {
+                    pts: r.pts,
+                    bulges: bent(r.bulges),
+                })
+                .collect()
+        })
+    };
+    let parts_of = |ps: Option<Vec<Part>>| {
+        ps.map(|ps| {
+            ps.into_iter()
+                .map(|p| Part {
+                    pts: p.pts,
+                    bulges: bent(p.bulges),
+                    holes: rings(p.holes),
+                })
+                .collect()
+        })
+    };
     match shape {
         Shape::Polyline {
             pts,
@@ -115,9 +138,9 @@ pub(crate) fn straight(shape: Shape) -> Shape {
             widths,
         } => Shape::Polyline {
             pts,
-            bulges: bulges.filter(|b| has_bulges(Some(b))),
-            holes,
-            parts,
+            bulges: bent(bulges),
+            holes: rings(holes),
+            parts: parts_of(parts),
             closed,
             widths,
         },
@@ -128,9 +151,9 @@ pub(crate) fn straight(shape: Shape) -> Shape {
             parts,
         } => Shape::Polygon {
             pts,
-            bulges: bulges.filter(|b| has_bulges(Some(b))),
-            holes,
-            parts,
+            bulges: bent(bulges),
+            holes: rings(holes),
+            parts: parts_of(parts),
         },
         other => other,
     }
@@ -145,10 +168,23 @@ pub fn neighbours(
     points: bool,
     edits: &[(Slot, Shape, Shape)],
 ) -> Option<Neighbours> {
+    neighbours_with(doc, store, points, edits, &[])
+}
+
+/// [`neighbours`] with `extra` moves besides the edits' own: Paralel kaydır's vertices inside a shared edge
+/// ([`along_edge`], docs/adr/2600).
+pub fn neighbours_with(
+    doc: &Document,
+    store: &Store,
+    points: bool,
+    edits: &[(Slot, Shape, Shape)],
+    extra: &[Change],
+) -> Option<Neighbours> {
     let changes: Vec<Change> = edits
         .iter()
         .filter(|(_, before, _)| points || !matches!(before, Shape::Point { .. }))
         .flat_map(|(_, before, after)| topology_edit::changes(before, after))
+        .chain(extra.iter().cloned())
         .collect();
     if changes.is_empty() {
         return None;
@@ -166,4 +202,131 @@ pub fn anchor(c: &Change) -> Vec2 {
         Change::Move { at, .. } | Change::Remove { at, .. } => at,
         Change::Insert { a, .. } | Change::Bulge { a, .. } => a,
     }
+}
+
+/// Paralel kaydır's refusal when a neighbour's vertex inside the shared edge cannot go with it (docs/adr/2600).
+pub const OFF_EDGE: &str = "Kenarın ortasındaki ortak köşe kaydırılan kenarın dışına düşüyor: kenar o köşeyi geçecek kadar kısalıyor. Daha kısa bir uzaklık yazın ya da Topolojik düzenlemeyi kapatın.";
+/// The same inside a shared arc edge: an arc's shift does not carry a vertex on it.
+pub const ON_ARC: &str = "Yaylı ortak kenarın ortasında komşu nesnenin köşesi var; yay kaydırılınca o köşe kenardan ayrılır. Topolojik düzenlemeyi kapatın ya da o köşeyi kaldırın.";
+
+/// A ring's edge `edge`: its ends and bulge (ring 0 an area's outer ring or a path, 1… an area's holes).
+fn ring_edge(s: &Shape, ring: usize, edge: usize) -> Option<(Vec2, Vec2, f64)> {
+    let (pts, bulges, closed) = match (s, ring) {
+        (Shape::Polygon { pts, bulges, .. }, 0) => (pts, bulges.as_deref(), true),
+        (Shape::Polygon { holes, .. }, k) => {
+            let h = holes.as_ref()?.get(k - 1)?;
+            (&h.pts, h.bulges.as_deref(), true)
+        }
+        (Shape::Polyline { pts, bulges, closed, .. }, 0) => (pts, bulges.as_deref(), *closed),
+        _ => return None,
+    };
+    let n = pts.len();
+    if edge >= n || (!closed && edge + 1 >= n) {
+        return None;
+    }
+    let bulge = bulges.and_then(|b| b.get(edge)).copied().unwrap_or(0.0);
+    Some((pts[edge], pts[(edge + 1) % n], bulge))
+}
+
+/// The shown objects within [`SAME`] of `near` (lines, paths, areas; points with `points`), the `edited` ones left out,
+/// in the drawing's order.
+fn within(doc: &Document, store: &Store, points: bool, near: &Bounds, edited: &[Slot]) -> Found {
+    let rect = Bounds {
+        min_x: near.min_x - SAME,
+        min_y: near.min_y - SAME,
+        max_x: near.max_x + SAME,
+        max_y: near.max_y + SAME,
+    };
+    let mut found = Found::new();
+    for s in store.in_rect(&rect, true).into_iter().filter_map(slot) {
+        if edited.contains(&s) || found.iter().any(|(f, _)| *f == s) {
+            continue;
+        }
+        let Some(e) = doc.get(s) else {
+            continue;
+        };
+        let shape = shape(e);
+        let shares = match shape {
+            Shape::Line { .. } | Shape::Polyline { .. } | Shape::Polygon { .. } => true,
+            Shape::Point { .. } => points,
+            _ => false,
+        };
+        if shares {
+            let locked = doc.layers().is_locked(&e.base().layer_id);
+            found.push((s, Neighbour { shape, locked }));
+        }
+    }
+    found.sort_by_key(|(s, _)| *s);
+    found
+}
+
+/// What Paralel kaydır's shared edge carries (docs/adr/2600; ArcGIS Pro's “topologically connected edges stretch and
+/// remain connected”): the shown neighbours' vertices strictly inside edge `edge` of ring `ring` of object `slot`
+/// (`before`; `after` the object with the edge moved), a third object's corner on it (a T junction) or a neighbour's
+/// own vertex along it, each moved square to the edge by as much as the edge moved, as moves for [`neighbours_with`];
+/// and how many of these places an unlocked neighbour has (a locked one's stay, as its corners do). Refused, with the
+/// input's path: a vertex the shortened edge no longer reaches ([`OFF_EDGE`]), a vertex inside an arc edge
+/// ([`ON_ARC`]). Nothing inside: no moves.
+#[allow(clippy::too_many_arguments)]
+pub fn along_edge(
+    doc: &Document,
+    store: &Store,
+    points: bool,
+    slot: Slot,
+    before: &Shape,
+    after: &Shape,
+    ring: usize,
+    edge: usize,
+) -> Result<(Vec<Change>, usize), (&'static str, &'static str)> {
+    let (Some((a, b, bulge)), Some((a2, b2, _))) = (ring_edge(before, ring, edge), ring_edge(after, ring, edge)) else {
+        return Ok((Vec::new(), 0));
+    };
+    if bulge != 0.0 {
+        let Some(arc) = kentos_geometry_core::geom::bulge::bulge_arc(a, b, bulge) else {
+            return Ok((Vec::new(), 0));
+        };
+        let near = Bounds {
+            min_x: arc.c.x - arc.r,
+            min_y: arc.c.y - arc.r,
+            max_x: arc.c.x + arc.r,
+            max_y: arc.c.y + arc.r,
+        };
+        let found = within(doc, store, points, &near, &[slot]);
+        let list: Vec<Neighbour> = found.into_iter().map(|(_, n)| n).collect();
+        return if topology_edit::inside_arc(&list, arc.c, arc.r, arc.a0, arc.sweep, points).is_empty() {
+            Ok((Vec::new(), 0))
+        } else {
+            Err((ON_ARC, "work.at"))
+        };
+    }
+    let near = Bounds {
+        min_x: a.x.min(b.x),
+        min_y: a.y.min(b.y),
+        max_x: a.x.max(b.x),
+        max_y: a.y.max(b.y),
+    };
+    let found = within(doc, store, points, &near, &[slot]);
+    let list: Vec<Neighbour> = found.into_iter().map(|(_, n)| n).collect();
+    let inside = topology_edit::inside_segment(&list, a, b, points);
+    if inside.is_empty() {
+        return Ok((Vec::new(), 0));
+    }
+    // The edge's move square to itself: the new line's distance from the old one along the old one's left normal.
+    let l = (b.x - a.x).hypot(b.y - a.y);
+    let n = Vec2::new(-(b.y - a.y) / l, (b.x - a.x) / l);
+    let by = (a2.x - a.x) * n.x + (a2.y - a.y) * n.y;
+    let (ex, ey) = (b2.x - a2.x, b2.y - a2.y);
+    let l2 = ex.hypot(ey);
+    let mut moves = Vec::with_capacity(inside.len());
+    for v in inside {
+        let to = Vec2::new(v.x + n.x * by, v.y + n.y * by);
+        let along = ((to.x - a2.x) * ex + (to.y - a2.y) * ey) / l2;
+        if !(along > SAME && l2 - along > SAME) {
+            return Err((OFF_EDGE, "work.distance"));
+        }
+        moves.push(Change::Move { at: v, to });
+    }
+    let unlocked: Vec<Neighbour> = list.into_iter().filter(|n| !n.locked).collect();
+    let carried = topology_edit::inside_segment(&unlocked, a, b, points).len();
+    Ok((moves, carried))
 }

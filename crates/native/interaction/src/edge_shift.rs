@@ -297,9 +297,13 @@ impl EdgeShift {
             return false;
         };
         if !out.neighbours.is_empty() {
+            let inside = match out.carried {
+                0 => String::new(),
+                n => format!("; kenarın ortasındaki {n} ortak köşe de kenarla kaydı"),
+            };
             cx.say(
                 Level::Info,
-                format!("Topolojik düzenleme: {} komşu nesne de değişti.", out.neighbours.len()),
+                format!("Topolojik düzenleme: {} komşu nesne de değişti{inside}.", out.neighbours.len()),
             );
         }
         let moved_area = picking.area.map(|_| out.after);
@@ -425,10 +429,22 @@ impl Tool for EdgeShift {
             return;
         };
         let k = &picking.picked;
-        let moved = rules::shifted(&picking.shape, k.ring, k.edge, d);
-        // The neighbours that go with it while Topolojik düzenleme is on (the command's own rule).
+        let mut moved = rules::shifted(&picking.shape, k.ring, k.edge, d);
+        // The neighbours that go with it while Topolojik düzenleme is on (the command's own rule), the vertices inside
+        // the shared edge too (docs/adr/2600); the command's refusal when one cannot go.
+        let found = match &moved {
+            Ok(after) => crate::neighbours::shifted_neighbours(cx, picking.slot, &picking.shape, after, (k.ring, k.edge)),
+            Err(_) => Ok(None),
+        };
+        let found = match found {
+            Ok(n) => n,
+            Err(why) => {
+                moved = Err(why.to_owned());
+                None
+            }
+        };
         let around = match &moved {
-            Ok(after) => crate::neighbours::neighbours_of(cx, &[(picking.slot, picking.shape.clone(), after.clone())])
+            Ok(_) => found
                 .map(|n| {
                     n.changes
                         .iter()

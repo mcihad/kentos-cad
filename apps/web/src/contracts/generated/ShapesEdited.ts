@@ -39,4 +39,9 @@ neighbours?: Array<ShapeNeighbour>,
 /**
  * Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).
  */
-bonds?: Array<string>, revision: string, };
+bonds?: Array<string>, 
+/**
+ * Paralel kaydır with `topology` (docs/adr/2600): the places inside the shared edge where a neighbour had a vertex
+ * (a third object's corner on it, a neighbour's own vertex along it), carried with the edge.
+ */
+carried?: number, revision: string, };

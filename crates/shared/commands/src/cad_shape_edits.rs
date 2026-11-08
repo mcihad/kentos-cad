@@ -106,7 +106,9 @@ pub enum ShapeWork {
     /// lengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects
     /// sharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what
     /// the edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with
-    /// `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. With
+    /// `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. The
+    /// neighbours' vertices inside the shared edge (a T junction, a neighbour's own vertex) go with it square to it
+    /// (docs/adr/2600), refused when the shortened edge no longer reaches one or the edge is an arc with one inside. With
     /// `reference` (docs/adr/2580) `distance` is the distance from the reference's line, and `keep` writes it as a bond.
     EdgeShift {
         id: String,
@@ -218,8 +220,18 @@ pub struct ShapesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub bonds: Vec<String>,
+    /// Paralel kaydır with `topology` (docs/adr/2600): the places inside the shared edge where a neighbour had a vertex
+    /// (a third object's corner on it, a neighbour's own vertex along it), carried with the edge.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub carried: u32,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// A neighbour that moved with Paralel kaydır's edge (docs/adr/1960): its id and its size before and after.

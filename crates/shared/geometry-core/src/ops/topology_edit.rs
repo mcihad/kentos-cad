@@ -283,6 +283,86 @@ pub(crate) fn shape_of(paths: Vec<Path>, plan: Plan) -> Shape {
     }
 }
 
+/// Every vertex of a shape: a path's and an area's with their holes' and parts', a line's two ends, a point's (and its
+/// parts') only with `points`.
+fn vertices(shape: &Shape, points: bool) -> Vec<Vec2> {
+    let mut out = Vec::new();
+    match shape {
+        Shape::Line { a, b } => {
+            out.push(*a);
+            out.push(*b);
+        }
+        Shape::Polyline {
+            pts, holes, parts, ..
+        }
+        | Shape::Polygon {
+            pts, holes, parts, ..
+        } => {
+            out.extend_from_slice(pts);
+            for h in holes.iter().flatten() {
+                out.extend_from_slice(&h.pts);
+            }
+            for p in parts.iter().flatten() {
+                out.extend_from_slice(&p.pts);
+                for h in p.holes.iter().flatten() {
+                    out.extend_from_slice(&h.pts);
+                }
+            }
+        }
+        Shape::Point { p, parts, .. } if points => {
+            out.push(*p);
+            out.extend(parts.iter().flatten().map(|q| q.p));
+        }
+        _ => {}
+    }
+    out
+}
+
+/// The places of `neighbours`' vertices strictly inside the straight edge from `a` to `b`: within [`SAME`] of it and
+/// farther than [`SAME`] from both its ends, each place once, in the neighbours' order. Paralel kaydır carries them with
+/// a shared edge (docs/adr/2600): a third object's corner on the edge (a T junction) and a neighbour's own vertex
+/// along it. A point counts only with `points`.
+pub fn inside_segment(neighbours: &[Neighbour], a: Vec2, b: Vec2, points: bool) -> Vec<Vec2> {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let l2 = dx * dx + dy * dy;
+    let mut out: Vec<Vec2> = Vec::new();
+    if !(l2 > 0.0) {
+        return out;
+    }
+    let l = l2.sqrt();
+    for n in neighbours {
+        for v in vertices(&n.shape, points) {
+            let along = ((v.x - a.x) * dx + (v.y - a.y) * dy) / l;
+            let off = ((v.x - a.x) * dy - (v.y - a.y) * dx).abs() / l;
+            if off <= SAME && along > SAME && l - along > SAME && !out.iter().any(|q| same(*q, v)) {
+                out.push(v);
+            }
+        }
+    }
+    out
+}
+
+/// The same inside an arc edge (centre `c`, radius `r`, from angle `a0` sweeping `sweep`, signed, between its ends `a`
+/// and `b`): the places within [`SAME`] of the arc, farther than [`SAME`] from both ends along it.
+pub fn inside_arc(neighbours: &[Neighbour], c: Vec2, r: f64, a0: f64, sweep: f64, points: bool) -> Vec<Vec2> {
+    use crate::geom::arc::norm_angle;
+    let mut out: Vec<Vec2> = Vec::new();
+    let span = sweep.abs();
+    for n in neighbours {
+        for v in vertices(&n.shape, points) {
+            if (dist(v, c) - r).abs() > SAME {
+                continue;
+            }
+            let theta = crate::jsmath::atan2(v.y - c.y, v.x - c.x);
+            let d = if sweep > 0.0 { norm_angle(theta - a0) } else { norm_angle(a0 - theta) };
+            if d < span && d * r > SAME && (span - d) * r > SAME && !out.iter().any(|q| same(*q, v)) {
+                out.push(v);
+            }
+        }
+    }
+    out
+}
+
 fn same(p: Vec2, q: Vec2) -> bool {
     dist(p, q) <= SAME
 }
@@ -534,6 +614,56 @@ pub(crate) static OPS: &[Op] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn area(pts: &[(f64, f64)]) -> Neighbour {
+        Neighbour {
+            shape: Shape::Polygon {
+                pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+                bulges: None,
+                holes: None,
+                parts: None,
+            },
+            locked: false,
+        }
+    }
+
+    /// docs/adr/2600: a T junction's corner and a neighbour's own vertex inside the edge, each once; the edge's ends,
+    /// a vertex on its line beyond them and one a millimetre off it are not inside; a point only with `points`.
+    #[test]
+    fn the_vertices_strictly_inside_an_edge_each_once() {
+        let b1 = area(&[(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)]);
+        let b2 = area(&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]);
+        let beyond = Neighbour {
+            shape: Shape::Line { a: Vec2::new(10.0, 25.0), b: Vec2::new(15.0, 30.0) },
+            locked: false,
+        };
+        let off = Neighbour {
+            shape: Shape::Line { a: Vec2::new(10.001, 16.0), b: Vec2::new(20.0, 16.0) },
+            locked: false,
+        };
+        let stone = Neighbour {
+            shape: Shape::Point { p: Vec2::new(10.0, 5.0), z: None, parts: None },
+            locked: false,
+        };
+        let all = [b1, b2, beyond, off, stone];
+        let (a, b) = (Vec2::new(10.0, 0.0), Vec2::new(10.0, 20.0));
+        assert_eq!(inside_segment(&all, a, b, false), vec![Vec2::new(10.0, 10.0)]);
+        assert_eq!(inside_segment(&all, a, b, true), vec![Vec2::new(10.0, 10.0), Vec2::new(10.0, 5.0)]);
+    }
+
+    /// An arc's middle vertex is inside it; its ends and the chord's middle are not.
+    #[test]
+    fn a_vertex_on_an_arc_between_its_ends_is_inside_it() {
+        let (a, b) = (Vec2::new(0.0, 0.0), Vec2::new(0.0, 20.0));
+        let arc = crate::geom::bulge::bulge_arc(a, b, 0.25).expect("an arc");
+        let mid = crate::geom::bulge::segment_mid(a, b, 0.25);
+        let on = Neighbour { shape: Shape::Line { a: mid, b: Vec2::new(9.0, 10.0) }, locked: false };
+        let chord = Neighbour { shape: Shape::Line { a: Vec2::new(0.0, 10.0), b: Vec2::new(-5.0, 10.0) }, locked: false };
+        let ends = Neighbour { shape: Shape::Line { a, b }, locked: false };
+        let got = inside_arc(&[on, chord, ends], arc.c, arc.r, arc.a0, arc.sweep, false);
+        assert_eq!(got.len(), 1);
+        assert!(dist(got[0], mid) < 1e-12);
+    }
 
     /// The reference's cases (scripts/fixtures/topology_edit_cases.py): the
     /// neighbours put right, bit for bit, and the counts.

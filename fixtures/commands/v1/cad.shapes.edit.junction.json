@@ -1,0 +1,3744 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.shapes.edit",
+ "commandVersion": 1,
+ "title": "Paralel kaydır'da ortak kenarın ortasındaki köşeler: üçlü birleşim, ara köşe, delik (ADR 2600)",
+ "note": "Beklenenler scripts/fixtures/edge_shift_junction_cases.py'den: ADR 0191'in Paralel kaydır kuralı, ADR 1960'ın ortak köşeleri ve ADR 2600'ün kenar içindeki köşeleri kesirlerle; KentOS kodu kullanılmadı.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Ortak kenarın köşeleri",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 500,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli katman",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487010.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420010.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487010.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420010.0
+     },
+     {
+      "x": 487020.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487010.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {},
+    "p": {
+     "x": 487010.0,
+     "y": 4420005.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487040.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487050.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420010.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487050.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487060.0,
+     "y": 4420010.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487080.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487090.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487090.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 9,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487090.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487100.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487100.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487090.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487090.0,
+      "y": 4420010.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 10,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487120.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487130.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487130.0,
+      "y": 4420016.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 11,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487130.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4420016.0
+     },
+     {
+      "x": 487130.0,
+      "y": 4420016.0
+     },
+     {
+      "x": 487130.0,
+      "y": 4420005.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 12,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487210.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487230.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487230.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487210.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 13,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487200.0,
+      "y": 4419990.0
+     },
+     {
+      "x": 487240.0,
+      "y": 4419990.0
+     },
+     {
+      "x": 487240.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487200.0,
+      "y": 4420030.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487210.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487210.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487230.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487230.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487230.0,
+        "y": 4420000.0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 14,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487150.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487160.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487160.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487150.0,
+      "y": 4420020.0
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.25,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 15,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487160.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487162.5,
+      "y": 4420010.0
+     },
+     {
+      "x": 487160.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487170.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487170.0,
+      "y": 4420020.0
+     }
+    ],
+    "bulges": [
+     -0.12310562561766054,
+     -0.12310562561766054,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 16,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487300.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487310.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487310.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487300.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 17,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487310.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487320.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487320.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487310.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 18,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487310.0,
+     "y": 4420005.0
+    },
+    "b": {
+     "x": 487320.0,
+     "y": 4420005.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 19,
+    "layerId": "yol",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487305.0,
+      "y": 4420012.0
+     },
+     {
+      "x": 487310.0,
+      "y": 4420012.0
+     },
+     {
+      "x": 487315.0,
+      "y": 4420014.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 20,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487310.0,
+     "y": 4420025.0
+    },
+    "b": {
+     "x": 487315.0,
+     "y": 4420030.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 21,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487310.001,
+     "y": 4420016.0
+    },
+    "b": {
+     "x": 487320.0,
+     "y": 4420016.0
+    }
+   },
+   {
+    "kind": "line",
+    "id": 22,
+    "layerId": "gizli",
+    "attrs": {},
+    "a": {
+     "x": 487310.0,
+     "y": 4420018.0
+    },
+    "b": {
+     "x": 487320.0,
+     "y": 4420018.0
+    }
+   },
+   {
+    "kind": "polygon",
+    "id": 23,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487340.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487350.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487350.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487340.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 24,
+    "layerId": "parsel",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487350.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487360.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487360.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487350.0,
+      "y": 4420020.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 25,
+    "layerId": "kilitli",
+    "attrs": {},
+    "a": {
+     "x": 487350.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487360.0,
+     "y": 4420010.0
+    }
+   },
+   {
+    "kind": "polyline",
+    "id": 26,
+    "layerId": "yol",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487400.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487400.0,
+      "y": 4420020.0
+     },
+     {
+      "x": 487410.0,
+      "y": 4420030.0
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 27,
+    "layerId": "yol",
+    "attrs": {},
+    "a": {
+     "x": 487400.0,
+     "y": 4420010.0
+    },
+    "b": {
+     "x": 487390.0,
+     "y": 4420010.0
+    }
+   }
+  ],
+  "uids": [
+   "0192f5a6-2600-7000-8000-000000000001",
+   "0192f5a6-2600-7000-8000-000000000002",
+   "0192f5a6-2600-7000-8000-000000000003",
+   "0192f5a6-2600-7000-8000-000000000004",
+   "0192f5a6-2600-7000-8000-000000000005",
+   "0192f5a6-2600-7000-8000-000000000006",
+   "0192f5a6-2600-7000-8000-000000000007",
+   "0192f5a6-2600-7000-8000-000000000008",
+   "0192f5a6-2600-7000-8000-000000000009",
+   "0192f5a6-2600-7000-8000-00000000000a",
+   "0192f5a6-2600-7000-8000-00000000000b",
+   "0192f5a6-2600-7000-8000-00000000000c",
+   "0192f5a6-2600-7000-8000-00000000000d",
+   "0192f5a6-2600-7000-8000-00000000000e",
+   "0192f5a6-2600-7000-8000-00000000000f",
+   "0192f5a6-2600-7000-8000-000000000010",
+   "0192f5a6-2600-7000-8000-000000000011",
+   "0192f5a6-2600-7000-8000-000000000012",
+   "0192f5a6-2600-7000-8000-000000000013",
+   "0192f5a6-2600-7000-8000-000000000014",
+   "0192f5a6-2600-7000-8000-000000000015",
+   "0192f5a6-2600-7000-8000-000000000016",
+   "0192f5a6-2600-7000-8000-000000000017",
+   "0192f5a6-2600-7000-8000-000000000018",
+   "0192f5a6-2600-7000-8000-000000000019",
+   "0192f5a6-2600-7000-8000-00000000001a",
+   "0192f5a6-2600-7000-8000-00000000001b"
+  ]
+ },
+ "cases": [
+  {
+   "name": "Üçlü birleşim: A'nın doğu kenarı 3 m doğuya; B1 ile B2'nin köşeleri ve kenarın ortasındaki ortak köşeleri birlikte kayar, alanların toplamı korunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487010.0,
+        "y": 4420015.0
+       },
+       "distance": 3,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "before": 200,
+       "after": 260,
+       "objects": 3,
+       "skipped": 0,
+       "count": 0,
+       "distance": 3,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:2",
+         "before": 100,
+         "after": 70
+        },
+        {
+         "uid": "$uidOf:3",
+         "before": 100,
+         "after": 70
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "2": {
+        "pts": [
+         {
+          "x": 487013.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "pts": [
+         {
+          "x": 487013.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "p": {
+         "x": 487010.0,
+         "y": 4420005.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Noktalar da: kenarın üstündeki sınır taşı da kenarla kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487010.0,
+        "y": 4420015.0
+       },
+       "distance": 3,
+       "topology": {
+        "points": true
+       }
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4"
+       ],
+       "before": 200,
+       "after": 260,
+       "objects": 4,
+       "skipped": 0,
+       "count": 0,
+       "distance": 3,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:2",
+         "before": 100,
+         "after": 70
+        },
+        {
+         "uid": "$uidOf:3",
+         "before": 100,
+         "after": 70
+        },
+        {
+         "uid": "$uidOf:4",
+         "before": 0,
+         "after": 0
+        }
+       ],
+       "carried": 2
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "2": {
+        "pts": [
+         {
+          "x": 487013.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "pts": [
+         {
+          "x": 487013.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "4": {
+        "p": {
+         "x": 487013.0,
+         "y": 4420005.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu köşe: komşunun kenar üstündeki ara köşesi ve oraya bağlanan çizgi kenarla birlikte kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:5",
+       "at": {
+        "x": 487050.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "before": 200,
+       "after": 240,
+       "objects": 3,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:6",
+         "before": 200,
+         "after": 160
+        },
+        {
+         "uid": "$uidOf:7",
+         "before": 10,
+         "after": 8
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "5": {
+        "pts": [
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487052.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487052.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "pts": [
+         {
+          "x": 487052.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487052.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487052.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "7": {
+        "a": {
+         "x": 487052.0,
+         "y": 4420010.0
+        },
+        "b": {
+         "x": 487060.0,
+         "y": 4420010.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli komşunun kenar üstündeki köşesi de yerinde kalır, sınırın ayrıldığı söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:8",
+       "at": {
+        "x": 487090.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:8"
+       ],
+       "before": 200,
+       "after": 240,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "neighbour_locked",
+        "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı.",
+        "path": "work.topology"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "8": {
+        "pts": [
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487092.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487092.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli komşuda durdur: kenar üstündeki köşesi olan kilitli komşuyla hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:8",
+       "at": {
+        "x": 487090.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {
+        "stopOnLocked": true
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "shared_boundary_locked",
+       "message": "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.",
+       "path": "work.topology"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kısalan kenar: kenarın ortasındaki ortak köşe kenarın dışına düşer, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:10",
+       "at": {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       "distance": 5,
+       "topology": {}
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Kenarın ortasındaki ortak köşe kaydırılan kenarın dışına düşüyor: kenar o köşeyi geçecek kadar kısalıyor. Daha kısa bir uzaklık yazın ya da Topolojik düzenlemeyi kapatın.",
+       "path": "work.distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kısalan kenarda içeride kalan ortak köşe kenarla birlikte kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:10",
+       "at": {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "before": 160,
+       "after": 182.4,
+       "objects": 2,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:11",
+         "before": 120,
+         "after": 89.6
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "10": {
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487132.0,
+          "y": 4420004.8
+         },
+         {
+          "x": 487132.0,
+          "y": 4420015.2
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "11": {
+        "pts": [
+         {
+          "x": 487132.0,
+          "y": 4420004.8
+         },
+         {
+          "x": 487140.0,
+          "y": 4420004.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420016.0
+         },
+         {
+          "x": 487132.0,
+          "y": 4420015.2
+         },
+         {
+          "x": 487132.0,
+          "y": 4420005.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Delik: içteki parselin kenarı kayınca dıştakinin deliğindeki ara köşe de kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:12",
+       "at": {
+        "x": 487230.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "before": 400,
+       "after": 440,
+       "objects": 2,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:13",
+         "before": 1200,
+         "after": 1160
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "12": {
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487232.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487232.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "13": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4419990.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4419990.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420030.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487210.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487210.0,
+            "y": 4420020.0
+           },
+           {
+            "x": 487232.0,
+            "y": 4420020.0
+           },
+           {
+            "x": 487232.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487232.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı ortak kenarın ortasında komşu köşesi: yay kaydırılınca köşe kenardan ayrılır, reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:14",
+       "at": {
+        "x": 487162.5,
+        "y": 4420010.0
+       },
+       "distance": 1,
+       "topology": {}
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Yaylı ortak kenarın ortasında komşu nesnenin köşesi var; yay kaydırılınca o köşe kenardan ayrılır. Topolojik düzenlemeyi kapatın ya da o köşeyi kaldırın.",
+       "path": "work.at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Üçlü birleşim içeri: A'nın kenarı 2 m batıya, B1 ile B2 büyür, ortadaki köşe kenarla gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487010.0,
+        "y": 4420015.0
+       },
+       "distance": -2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "before": 200,
+       "after": 160,
+       "objects": 3,
+       "skipped": 0,
+       "count": 0,
+       "distance": -2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:2",
+         "before": 100,
+         "after": 120
+        },
+        {
+         "uid": "$uidOf:3",
+         "before": 100,
+         "after": 120
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487008.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487008.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "2": {
+        "pts": [
+         {
+          "x": 487008.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487008.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "pts": [
+         {
+          "x": 487008.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487008.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef alan 240 m²: kenar 2 m kayar, ortadaki ortak köşe de",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487010.0,
+        "y": 4420015.0
+       },
+       "topology": {},
+       "area": 240
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "before": 200,
+       "after": 240,
+       "objects": 3,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:2",
+         "before": 100,
+         "after": 80
+        },
+        {
+         "uid": "$uidOf:3",
+         "before": 100,
+         "after": 80
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "2": {
+        "pts": [
+         {
+          "x": 487012.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "pts": [
+         {
+          "x": 487012.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki T birleşimi ve çoklu çizginin ara köşesi kenarla kayar; kenarın uzantısındaki, 1 mm uzaktaki ve gizli katmandaki uçlar yerinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:16",
+       "at": {
+        "x": 487310.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18",
+        "$uidOf:19"
+       ],
+       "before": 200,
+       "after": 240,
+       "objects": 4,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:17",
+         "before": 200,
+         "after": 160
+        },
+        {
+         "uid": "$uidOf:18",
+         "before": 10,
+         "after": 8
+        },
+        {
+         "uid": "$uidOf:19",
+         "before": 10.385164807134505,
+         "after": 10.60555127546399
+        }
+       ],
+       "carried": 2
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "16": {
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487312.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487312.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487300.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "17": {
+        "pts": [
+         {
+          "x": 487312.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487312.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "18": {
+        "a": {
+         "x": 487312.0,
+         "y": 4420005.0
+        },
+        "b": {
+         "x": 487320.0,
+         "y": 4420005.0
+        }
+       },
+       "19": {
+        "pts": [
+         {
+          "x": 487305.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487312.0,
+          "y": 4420012.0
+         },
+         {
+          "x": 487315.0,
+          "y": 4420014.0
+         }
+        ]
+       },
+       "20": {
+        "a": {
+         "x": 487310.0,
+         "y": 4420025.0
+        },
+        "b": {
+         "x": 487315.0,
+         "y": 4420030.0
+        }
+       },
+       "21": {
+        "a": {
+         "x": 487310.001,
+         "y": 4420016.0
+        },
+        "b": {
+         "x": 487320.0,
+         "y": 4420016.0
+        }
+       },
+       "22": {
+        "a": {
+         "x": 487310.0,
+         "y": 4420018.0
+        },
+        "b": {
+         "x": 487320.0,
+         "y": 4420018.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kısalan kenarın ucuna düşen ortak köşe de reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:10",
+       "at": {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       "distance": 2.5,
+       "topology": {}
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Kenarın ortasındaki ortak köşe kaydırılan kenarın dışına düşüyor: kenar o köşeyi geçecek kadar kısalıyor. Daha kısa bir uzaklık yazın ya da Topolojik düzenlemeyi kapatın.",
+       "path": "work.distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef alanla kısalan kenarda da ortak köşe dışarı düşerse reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:10",
+       "at": {
+        "x": 487130.0,
+        "y": 4420010.0
+       },
+       "topology": {},
+       "area": 210
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "edge_shift_refused",
+       "message": "Kenarın ortasındaki ortak köşe kaydırılan kenarın dışına düşüyor: kenar o köşeyi geçecek kadar kısalıyor. Daha kısa bir uzaklık yazın ya da Topolojik düzenlemeyi kapatın.",
+       "path": "work.distance"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli çizginin ucu kenarın ortasında: kenar ve komşu kayar, çizgi yerinde kalır, ayrıldığı söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:23",
+       "at": {
+        "x": 487350.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:23",
+        "$uidOf:24"
+       ],
+       "before": 200,
+       "after": 240,
+       "objects": 2,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:24",
+         "before": 200,
+         "after": 160
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "neighbour_locked",
+        "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı.",
+        "path": "work.topology"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "23": {
+        "pts": [
+         {
+          "x": 487340.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487352.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487352.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487340.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "24": {
+        "pts": [
+         {
+          "x": 487352.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487360.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487360.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487352.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "25": {
+        "a": {
+         "x": 487350.0,
+         "y": 4420010.0
+        },
+        "b": {
+         "x": 487360.0,
+         "y": 4420010.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli çizginin ucu kenarın ortasında, Kilitli komşuda durdur açık: hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:23",
+       "at": {
+        "x": 487350.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {
+        "stopOnLocked": true
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "shared_boundary_locked",
+       "message": "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.",
+       "path": "work.topology"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yolun çoklu çizgisi: ilk kenar 2 m sağa, kenara bağlanan kol da kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:26",
+       "at": {
+        "x": 487400.0,
+        "y": 4420015.0
+       },
+       "distance": 2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:26",
+        "$uidOf:27"
+       ],
+       "before": 34.14213562373095,
+       "after": 33.31370849898476,
+       "objects": 2,
+       "skipped": 0,
+       "count": 0,
+       "distance": 2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:27",
+         "before": 10,
+         "after": 12
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "26": {
+        "pts": [
+         {
+          "x": 487402.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487402.0,
+          "y": 4420022.0
+         },
+         {
+          "x": 487410.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "27": {
+        "a": {
+         "x": 487402.0,
+         "y": 4420010.0
+        },
+        "b": {
+         "x": 487390.0,
+         "y": 4420010.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu köşe içeri: komşu büyür, ara köşesi ve çizginin ucu kenarla gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:5",
+       "at": {
+        "x": 487050.0,
+        "y": 4420015.0
+       },
+       "distance": -2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "before": 200,
+       "after": 160,
+       "objects": 3,
+       "skipped": 0,
+       "count": 0,
+       "distance": -2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:6",
+         "before": 200,
+         "after": 240
+        },
+        {
+         "uid": "$uidOf:7",
+         "before": 10,
+         "after": 12
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "5": {
+        "pts": [
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487048.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487048.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "6": {
+        "pts": [
+         {
+          "x": 487048.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487048.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487048.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "7": {
+        "a": {
+         "x": 487048.0,
+         "y": 4420010.0
+        },
+        "b": {
+         "x": 487060.0,
+         "y": 4420010.0
+        }
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Delik içeri: içteki parsel küçülür, dıştakinin deliğindeki ara köşe kenarla gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:12",
+       "at": {
+        "x": 487230.0,
+        "y": 4420015.0
+       },
+       "distance": -2,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "before": 400,
+       "after": 360,
+       "objects": 2,
+       "skipped": 0,
+       "count": 0,
+       "distance": -2,
+       "revision": "$current",
+       "neighbours": [
+        {
+         "uid": "$uidOf:13",
+         "before": 1200,
+         "after": 1240
+        }
+       ],
+       "carried": 1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "12": {
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487228.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487228.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "13": {
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4419990.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4419990.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420030.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487210.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487210.0,
+            "y": 4420020.0
+           },
+           {
+            "x": 487228.0,
+            "y": 4420020.0
+           },
+           {
+            "x": 487228.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487228.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Komşusuz kenar: Topolojik düzenleme açıkken de yalnız kenar kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487000.0,
+        "y": 4420015.0
+       },
+       "distance": 1,
+       "topology": {}
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 200,
+       "after": 220,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 486999.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 486999.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Topolojik düzenleme kapalı: yalnız kenar kayar, ortadaki ortak köşe yerinde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "work": {
+       "kind": "edgeShift",
+       "id": "$uidOf:1",
+       "at": {
+        "x": 487010.0,
+        "y": 4420015.0
+       },
+       "distance": 3
+      }
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "before": 200,
+       "after": 260,
+       "objects": 1,
+       "skipped": 0,
+       "count": 0,
+       "distance": 3,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "fields": {
+       "1": {
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487013.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ]
+       },
+       "2": {
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420020.0
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Paralel kaydır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  }
+ ]
+}

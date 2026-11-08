@@ -102,6 +102,8 @@ struct Prepared {
     warnings: Vec<CommandWarning>,
     /// Paralel kaydır's Bu uzaklığı koru: the bond written after the shift (docs/adr/2580).
     keep: Option<crate::edge_shift_reference::Kept>,
+    /// Paralel kaydır with Topolojik düzenleme: the places inside the shared edge carried with it (docs/adr/2600).
+    carried: usize,
 }
 
 impl Prepared {
@@ -119,6 +121,7 @@ impl Prepared {
             neighbours: Vec::new(),
             warnings: Vec::new(),
             keep: None,
+            carried: 0,
         }
     }
 }
@@ -350,7 +353,13 @@ fn edge_shift_of(
     if let Some(t) = topology
         && !p.changes.is_empty()
     {
-        follow(doc, &mut p, t, (slot, s, moved))?;
+        // The neighbours' vertices inside the shared edge go with it (docs/adr/2600).
+        let store = crate::geometry_store::store_of(doc);
+        let (extra, carried) =
+            crate::topology_follow::along_edge(doc, &store, t.points, slot, &s, &moved, picked.ring, picked.edge)
+                .map_err(|(why, path)| refused(why.to_owned(), path))?;
+        p.carried = carried;
+        follow(doc, &mut p, t, (slot, s, moved), &extra)?;
     }
     Ok(p)
 }
@@ -387,9 +396,15 @@ fn neighbour_size(s: &Shape) -> f64 {
 /// Topolojik düzenleme (docs/adr/0160, 1960): the shown objects sharing the edge's moved corners and edges put right
 /// with it (`topology_follow`, Esnet's and the grips' rule), written in the same step; a locked one stays, the boundary
 /// split and said, or with `stopOnLocked` nothing is written.
-fn follow(doc: &Document, p: &mut Prepared, t: StretchTopology, (slot, before, after): (Slot, Shape, Shape)) -> Result<(), Stop> {
+fn follow(
+    doc: &Document,
+    p: &mut Prepared,
+    t: StretchTopology,
+    (slot, before, after): (Slot, Shape, Shape),
+    extra: &[kentos_geometry_core::ops::topology_edit::Change],
+) -> Result<(), Stop> {
     let store = crate::geometry_store::store_of(doc);
-    let Some(n) = crate::topology_follow::neighbours(doc, &store, t.points, &[(slot, before, after)]) else {
+    let Some(n) = crate::topology_follow::neighbours_with(doc, &store, t.points, &[(slot, before, after)], extra) else {
         return Ok(());
     };
     if t.stop_on_locked && n.locked > 0 {
@@ -770,6 +785,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         created: if p.creates { created } else { Vec::new() },
         neighbours: p.neighbours.clone(),
         bonds,
+        carried: u32::try_from(p.carried).unwrap_or(u32::MAX),
         revision,
     };
     // Okunur yap with every text readable already: nothing to write, nothing refused.

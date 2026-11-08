@@ -52,6 +52,31 @@ pub(crate) fn neighbours_of(
     neighbours_in(cx.doc, cx.spatial, cx.draft.topology_points, edits)
 }
 
+/// Paralel kaydır's neighbours (docs/adr/2600): [`neighbours_of`] with the neighbours' vertices inside the shared edge
+/// `edge` of ring `ring` carried with it, as the command does; or why the command refuses the shift. `None` while the
+/// mode is off or nothing is shared.
+pub(crate) fn shifted_neighbours(
+    cx: &Context<'_>,
+    slot: Slot,
+    before: &Shape,
+    after: &Shape,
+    (ring, edge): (usize, usize),
+) -> Result<Option<Neighbours>, &'static str> {
+    if !cx.draft.topology {
+        return Ok(None);
+    }
+    let (store, points) = (cx.spatial.store(), cx.draft.topology_points);
+    let (extra, _) = topology_follow::along_edge(cx.doc, store, points, slot, before, after, ring, edge)
+        .map_err(|(why, _)| why)?;
+    Ok(topology_follow::neighbours_with(
+        cx.doc,
+        store,
+        points,
+        &[(slot, before.clone(), after.clone())],
+        &extra,
+    ))
+}
+
 /// The neighbours the edited objects (each its slot, its shape before and
 /// after) put right together in `doc`, found by `spatial` (in step with it),
 /// for a host writing outside a tool while the mode is on (Köşe tablosu,

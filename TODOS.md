@@ -120,6 +120,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-06 / ADR 2580: web'in `cad.shapes.edit` işleyicisinde `edgeShift`'in `reference`'ı ve `keep`'i, bağ çözümünde sınır
   kenarı (`boundary`; 22 ortak durum); web'in `.kcad` okuyucusunda şema 208; Paralel kaydır aracında Referans (R) ve Koru
   (K), bağın işareti.
+- MAP-07 / ADR 2600: web'in `cad.shapes.edit` işleyicisinde ve Paralel kaydır önizlemesinde kenar içindeki komşu
+  köşelerin taşınması (`topology_edit::inside_segment`, `along_edge`; 21 ortak durum) ve `carried`.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

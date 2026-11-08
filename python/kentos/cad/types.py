@@ -84490,6 +84490,8 @@ class ShapesEdited(_Model):
         count: Sürdür: the vertices added. Sadeleştir: the vertices dropped. Okunur yap: the texts turned. Parçala: the pieces. Unit: count.
         distance: Paralel kaydır: the distance the edge moved. Sadeleştir: the largest deviation. Both in the drawing's unit. Unit: length.
         bonds: Paralel kaydır with a kept reference (docs/adr/2580): the bonds written (constraint ids).
+        carried: Paralel kaydır with `topology` (docs/adr/2600): the places inside the shared edge where a neighbour had a vertex
+            (a third object's corner on it, a neighbour's own vertex along it), carried with the edge. Unit: count.
         created: Parçala: the new objects, the pieces after each object's first, in order.
         neighbours: Paralel kaydır with `topology` (docs/adr/1960): the neighbours that moved with the edge, in the drawing's order,
             each with its size before and after (as `before` and `after`: an area's net area, a path's length, a point 0).
@@ -84503,6 +84505,7 @@ class ShapesEdited(_Model):
     distance: float
     revision: str
     bonds: list[str] | Unset = UNSET
+    carried: int | Unset = UNSET
     created: list[str] | Unset = UNSET
     neighbours: list[ShapeNeighbour] | Unset = UNSET
 
@@ -84518,6 +84521,8 @@ class ShapesEdited(_Model):
         out["revision"] = self.revision
         if self.bonds is not UNSET:
             out["bonds"] = list(self.bonds)
+        if self.carried is not UNSET:
+            out["carried"] = self.carried
         if self.created is not UNSET:
             out["created"] = list(self.created)
         if self.neighbours is not UNSET:
@@ -84536,6 +84541,7 @@ class ShapesEdited(_Model):
             distance=float(data["distance"]),
             revision=data["revision"],
             bonds=list(data["bonds"]) if "bonds" in data else UNSET,
+            carried=data.get("carried", UNSET),
             created=list(data["created"]) if "created" in data else UNSET,
             neighbours=[ShapeNeighbour.from_json(e0) for e0 in data["neighbours"]] if "neighbours" in data else UNSET,
         )
@@ -124361,7 +124367,9 @@ class EdgeShiftShapeWork(ShapeWork):
     lengthen or shorten to meet it. With `topology` (Topolojik düzenleme, docs/adr/0160, 1960) the shown objects
     sharing the edge's moved corners and edges move with them in the same step: a neighbour parcel gives up what
     the edited one takes; one on a locked layer stays, the boundary split and said (`neighbour_locked`), or with
-    `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. With
+    `stopOnLocked` nothing is written (`shared_boundary_locked`); `points`: the points at the corners too. The
+    neighbours' vertices inside the shared edge (a T junction, a neighbour's own vertex) go with it square to it
+    (docs/adr/2600), refused when the shortened edge no longer reaches one or the edge is an arc with one inside. With
     `reference` (docs/adr/2580) `distance` is the distance from the reference's line, and `keep` writes it as a bond.
     Attributes:
         at: Unit: length.

@@ -218,6 +218,9 @@
   `edgeShift`'in `reference`'ı kenarı başka bir düz kenara uzaklıkla getirir; `keep` uzaklığı harita bağı yazar (sınır
   kenarı `boundary`, mimari bağların çözümüyle izler; dönen referans, kilitli komşu, çelişki hiçbir şey yazmaz). `.kcad`
   şema 208. Araçta Referans (R), Koru (K). CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi.
+- **Ortak kenarın ortasındaki köşeler (8 Kasım 2026; MAP-07, [ADR 2600](../../docs/adr/2600-shared-edge-junctions-and-inner-vertices.md)).**
+  Paralel kaydır'ın Topolojik düzenlemesi kenarın içindeki komşu köşeleri (üçlü birleşim, ara köşe, delik, çizgi ucu)
+  kenarla taşır (`carried`); kısalan kenarın dışına düşen ve yayın ortasındaki köşe açıklamayla reddedilir.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.
