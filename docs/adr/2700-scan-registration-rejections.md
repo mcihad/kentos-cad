@@ -76,6 +76,7 @@ yol ve çoklu tarama içeren veriyle işle”. ADR 2300'ün “Sonra”sındaki 
 
 ## Sonra
 
-- Dönüşümün buluta uygulanması; çoklu tarama demeti; gerçek veriyle süre, bellek ve yoğunluk ölçümü (MAP-13'ün öbür
-  maddeleri).
+- Dönüşümün buluta uygulanması yapıldı: [ADR 3100](3100-apply-a-transform-to-a-point-cloud.md) (Dönüşüm uygula,
+  Tarama kaydı'nda Buluta uygula).
+- Çoklu tarama demeti; gerçek veriyle süre, bellek ve yoğunluk ölçümü (MAP-13'ün öbür maddeleri).
 - Web (TODOS §0.2).

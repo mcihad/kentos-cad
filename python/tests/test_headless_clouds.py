@@ -8,7 +8,9 @@ shared reader, `kentos_processing::cloud_files`). Here:
   files the Mesh hesaplayıcı writes byte for byte as the reference's;
 - the village's cloud (fixtures/interaction/v1/pointclouds.kcad) thinned to LAZ and to COPC (the index built by the
   headless server) and its ground filtered, the counts those of the independent reference
-  (fixtures/pointcloud/v1/ops.json), read back from the written files' headers with the standard library.
+  (fixtures/pointcloud/v1/ops.json), read back from the written files' headers with the standard library;
+- Dönüşüm uygula's shared cases (fixtures/processing/v1/pointcloud.json, docs/adr/3100): each summary and refusal, the
+  written file's count and box from its header, and a LAS's points' whole numbers as the reference's FNV-1a.
 
 Both drawings are copied into a scratch folder first: the tools write beside their sources.
 """
@@ -29,6 +31,7 @@ from kentos.cad.errors import CommandFailed
 ROOT = Path(__file__).resolve().parents[2]
 MULTIDIM = json.loads((ROOT / "fixtures/processing/v1/multidim.json").read_text(encoding="utf-8"))
 OPS = json.loads((ROOT / "fixtures/pointcloud/v1/ops.json").read_text(encoding="utf-8"))["cases"]
+PROCESSING = json.loads((ROOT / "fixtures/processing/v1/pointcloud.json").read_text(encoding="utf-8"))
 
 
 def las_count(path: Path) -> tuple[int, int]:
@@ -100,6 +103,59 @@ class CloudTests(unittest.TestCase):
             ran = cad.processing.run(doc, tool="pointcloud.ground", parameters={"input": koy, "output": str(out)})
             self.assertIn("57.461 nokta zemin", ran.summary)
             self.assertEqual(las_count(out)[0], 71_212)
+
+
+def las_box(path: Path) -> list[float]:
+    """A LAS, LAZ or COPC file's box from its header: min X, Y, Z, max X, Y, Z."""
+    mx, nx, my, ny, mz, nz = struct.unpack("<6d", path.read_bytes()[179:227])
+    return [nx, ny, nz, mx, my, mz]
+
+
+def las_points_fnv(path: Path) -> str:
+    """An uncompressed LAS's points' X, Y, Z whole numbers in the file's order, as FNV-1a 64."""
+    b = path.read_bytes()
+    start = struct.unpack("<I", b[96:100])[0]
+    size = struct.unpack("<H", b[105:107])[0]
+    count, _ = las_count(path)
+    h = 0xCBF29CE484222325
+    for i in range(count):
+        for byte in b[start + i * size:start + i * size + 12]:
+            h ^= byte
+            h = (h * 0x100000001B3) & 0xFFFFFFFFFFFFFFFF
+    return f"{h:016x}"
+
+
+class TransformTests(unittest.TestCase):
+    def test_the_shared_cases_run_headless(self) -> None:
+        cases = [c for c in PROCESSING["cases"] if c["run"]["tool"] == "pointcloud.transform"]
+        self.assertGreaterEqual(len(cases), 10)
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            shutil.copy(ROOT / "fixtures/processing/v1/pointcloud.kcad", folder / "pointcloud.kcad")
+            for name, rel in PROCESSING["rasters"].items():
+                shutil.copy((ROOT / "fixtures/processing/v1" / rel).resolve(), folder / name)
+            doc = cad.Document.open(folder / "pointcloud.kcad")
+            for case in cases:
+                with self.subTest(case["id"]):
+                    expect: dict[str, Any] = case["expect"]
+                    values = dict(case["values"])
+                    if expect["status"] == "error":
+                        with self.assertRaises(CommandFailed) as caught:
+                            cad.processing.run(doc, tool="pointcloud.transform", parameters=values)
+                        self.assertIn(expect["message"], str(caught.exception))
+                        continue
+                    (name, check), = expect["cloudOf"].items()
+                    out = folder / name
+                    values["output"] = str(out)
+                    ran = cad.processing.run(doc, tool="pointcloud.transform", parameters=values)
+                    self.assertEqual(ran.summary.replace(str(out), name), expect["summary"])
+                    self.assertEqual(ran.outputs, expect["outputs"])
+                    self.assertEqual(las_count(out)[0], check["count"])
+                    for added in expect.get("added", []):
+                        for got, want in zip(las_box(out), added["bounds"]):
+                            self.assertAlmostEqual(got, want, places=9)
+                    if name.endswith(".las"):
+                        self.assertEqual(las_points_fnv(out), check["points"])
 
 
 if __name__ == "__main__":

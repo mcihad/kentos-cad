@@ -483,6 +483,7 @@
     "processing.run.pointcloud.tile",
     "processing.run.pointcloud.rasterize",
     "processing.run.pointcloud.boundary",
+    "processing.run.pointcloud.transform",
     "basemap.osmStandard",
     "basemap.osmTopo",
     "basemap.osmHot",

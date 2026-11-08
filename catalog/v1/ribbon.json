@@ -6604,6 +6604,10 @@
        "size": "small"
       },
       {
+       "command": "processing.run.pointcloud.transform",
+       "size": "small"
+      },
+      {
        "command": "processing.run.pointcloud.tile",
        "size": "small"
       },

@@ -717,6 +717,7 @@ pub const PORTED: &[&str] = &[
     "processing.run.pointcloud.tile",
     "processing.run.pointcloud.rasterize",
     "processing.run.pointcloud.boundary",
+    "processing.run.pointcloud.transform",
     // docs/adr/0208: Harita servisleri (services/): the ready basemaps, Altlığı kaldır and Bağlantılar.
     "basemap.osmStandard",
     "basemap.osmTopo",

@@ -7,7 +7,8 @@
 KentOS kodu kullanılmaz. Bulutlar bağımsız başvurunun dosyalarıdır (köyün LiDAR'ı fixtures/interaction/v1/pointclouds/koy.laz;
 fixtures/pointcloud/v1/ops/sinir.laz ve ikinci.laz); her durumun sonucu başvurunun işlevleriyle (scripts/fixtures/
 pointcloud_ops_cases.py: Seyrelt, SMRF, yüksekliğe göre sınıf, alanlar, Rasterleştir, Sınır çıkar, Birleştir) laspy ve numpy'la
-yeniden hesaplanır. Yazılan bulut dosyasının denetimi (`cloudOf`): nokta sayısı ve noktaların X, Y, Z tam sayılarının FNV-1a
+yeniden hesaplanır; Dönüşüm uygula'nın (docs/adr/3100) taşınmış noktaları burada, matrisin satırları ve ızgaraya yarım
+sıfırdan uzağa yuvarlamayla. Yazılan bulut dosyasının denetimi (`cloudOf`): nokta sayısı ve noktaların X, Y, Z tam sayılarının FNV-1a
 64'ü dosyanın sırasıyla (COPC'de sıralanmış), sınıfların ya da kayıtların özeti; raster (`cloudRasterOf`) hücrelerinin float32
 bitlerinin özeti. Sayılar özetlerin kuralıyla (binler noktayla).
 """
@@ -478,6 +479,192 @@ def merge_case(fmt="laz"):
                 selection=[IDS["koy"], IDS["ikinci"]])
 
 
+# ── Dönüşüm uygula (docs/adr/3100) ───────────────────────────────────────
+
+def rz(k):
+    c, s = math.cos(k), math.sin(k)
+    return [[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]]
+
+
+def ry(f):
+    c, s = math.cos(f), math.sin(f)
+    return [[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]]
+
+
+def rx(w):
+    c, s = math.cos(w), math.sin(w)
+    return [[1.0, 0.0, 0.0], [0.0, c, -s], [0.0, s, c]]
+
+
+def mul(a, b):
+    return [[a[i][0] * b[0][j] + a[i][1] * b[1][j] + a[i][2] * b[2][j] for j in range(3)] for i in range(3)]
+
+
+def middle(c):
+    return [(c.mins[k] + c.maxs[k]) / 2 for k in range(3)]
+
+
+def about(r, c, t):
+    """Tarama kaydı's recipe p ↦ R(p − c) + c + t as one matrix in the project's coordinates, row-major."""
+    m = []
+    for i in range(3):
+        rc = r[i][0] * c[0] + r[i][1] * c[1] + r[i][2] * c[2]
+        m += [r[i][0], r[i][1], r[i][2], c[i] + t[i] - rc]
+    return m + [0.0, 0.0, 0.0, 1.0]
+
+
+def matrix_text(m):
+    """Row by row, the numbers as Python writes them (they read back the same)."""
+    return "\n".join(" ".join(repr(float(v)) for v in m[i * 4:i * 4 + 4]) for i in range(4))
+
+
+def apply(m, p):
+    return [m[0] * p[0] + m[1] * p[1] + m[2] * p[2] + m[3],
+            m[4] * p[0] + m[5] * p[1] + m[6] * p[2] + m[7],
+            m[8] * p[0] + m[9] * p[1] + m[10] * p[2] + m[11]]
+
+
+def round_away(n):
+    """The half away from zero, exactly (Rust's f64::round): n − trunc(n) is exact."""
+    t = np.trunc(n)
+    return t + np.where(np.abs(n - t) >= 0.5, np.copysign(1.0, n), 0.0)
+
+
+def moved(c, m):
+    """The cloud's points moved by `m`: their whole numbers on the cloud's own grid, rounded half away from zero."""
+    q = apply(m, [c.x, c.y, c.z])
+    ints = []
+    for k in range(3):
+        n = round_away((q[k] - c.offset[k]) / c.scale[k])
+        assert n.min() >= -2 ** 31 and n.max() <= 2 ** 31 - 1
+        ints.append(n.astype(np.int64))
+    return ints
+
+
+def rigid(m):
+    cols = [[m[j], m[4 + j], m[8 + j]] for j in range(3)]
+    for i in range(3):
+        for j in range(3):
+            dot = sum(cols[i][k] * cols[j][k] for k in range(3))
+            if abs(dot - (1.0 if i == j else 0.0)) > 1e-9:
+                return False
+    det = (m[0] * (m[5] * m[10] - m[6] * m[9]) - m[1] * (m[4] * m[10] - m[6] * m[8])
+           + m[2] * (m[4] * m[9] - m[5] * m[8]))
+    return det > 0
+
+
+def angle(m):
+    ax, ay, az = m[9] - m[6], m[2] - m[8], m[4] - m[1]
+    return math.atan2(math.sqrt(ax * ax + ay * ay + az * az), m[0] + m[5] + m[10] - 1.0) * (180.0 / math.pi)
+
+
+def shift(m, c):
+    q = apply(m, c)
+    dx, dy, dz = q[0] - c[0], q[1] - c[1], q[2] - c[2]
+    return math.sqrt(dx * dx + dy * dy + dz * dz)
+
+
+def half_scales(c):
+    def t(v):
+        w = js(v)
+        assert "e" not in w, w
+        return w.replace(".", ",")
+    h = [s / 2 for s in c.scale]
+    return f"{t(h[0])} m" if h[0] == h[1] == h[2] else f"X {t(h[0])}, Y {t(h[1])}, Z {t(h[2])} m"
+
+
+ROTATED = about(rz(0.002), middle(KOY), [0.35, -0.2, 0.05])
+REGISTERED = about(mul(rz(0.0021), mul(ry(-0.0003), rx(0.0004))), middle(KOY), [-0.12, 0.08, 0.031])
+MOVED_ONLY = [1.0, 0.0, 0.0, 12.5, 0.0, 1.0, 0.0, -3.25, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+SCALED = about([[1.0001, 0.0, 0.0], [0.0, 1.0001, 0.0], [0.0, 0.0, 1.0001]], middle(KOY), [0.0, 0.0, 0.0])
+IKINCI_TURNED = about(mul(rz(-0.0015), rx(0.0002)), middle(IKINCI), [0.05, 0.02, -0.01])
+
+
+def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=True, style=KOY_STYLE, srid=SRID,
+                     text=None):
+    kind, ext = FORMAT[fmt]
+    path = (output + ext) if output else f"{file}-donusmus{ext}"
+    X, Y, Z = moved(c, m)
+    triples = list(zip(X.tolist(), Y.tolist(), Z.tolist()))
+    if fmt == "copc":
+        triples.sort()
+    check = {"count": c.n, "points": ref.fnv(b"".join(struct.pack("<iii", *t) for t in triples))}
+    if fmt == "copc":
+        check["copc"] = True
+    values = {"input": on(lid), "matrix": text if text is not None else matrix_text(m)}
+    if fmt != "laz":
+        values["format"] = fmt
+    if output:
+        values["output"] = output
+    if not add:
+        values["add"] = False
+    turned = rigid(m)
+    s = shift(m, middle(c))
+    outputs = {"count": c.n, "shift": s}
+    tail = ""
+    if turned:
+        a = angle(m)
+        outputs["angle"] = a
+        tail = f", dönüklük {fixed(a, 4)}°"
+    log = []
+    if not turned:
+        log.append({"level": "warn", "text": "Matris katı bir dönüşüm değil (ölçek ya da kayma içeriyor): uzunluklar ve açılar değişir."})
+    log.append({"level": "info", "text": f"Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok {half_scales(c)} değişir."})
+    expect = {"status": "ok", "summary": f"{words(c.n)} nokta taşındı; bulutun ortası {fixed(s, 3)} m kaydı{tail}; “{path}” yazıldı.",
+              "outputs": outputs, "log": log, "cloudOf": {path: check}}
+    if add:
+        layer = new_layer("Dönüştürülmüş bulut", "#7A5BA6")
+        values["layer"] = {"newName": "Dönüştürülmüş bulut"}
+        nx, ny, nz = (X * c.scale[0] + c.offset[0], Y * c.scale[1] + c.offset[1], Z * c.scale[2] + c.offset[2])
+        b = [float(nx.min()), float(ny.min()), float(nz.min()), float(nx.max()), float(ny.max()), float(nz.max())]
+        expect.update({"undo": "Dönüşüm uygula", "layers": [layer], "added": [
+            {"kind": "pointcloud", "layerId": layer["id"], "attrs": {},
+             "sources": [{"file": path, "format": kind, "count": c.n, "bounds": b}],
+             "bounds": b, "count": c.n, "srid": srid, "style": style}]})
+    else:
+        expect["undo"] = None
+    return case(id_, title, "pointcloud.transform", values, expect)
+
+
+def transform_cases():
+    def refused(id_, title, text, message):
+        return case(id_, title, "pointcloud.transform", {"input": on("koy"), "matrix": text},
+                    {"status": "error", "message": message})
+
+    far = list(MOVED_ONLY)
+    far[3], far[7] = 0.0, 3.0e6
+    return [
+        transformed_case("transform-rotated", "Dönüşüm uygula, ortası çevresinde 0,002 rad dönen ve 0,35 m, −0,2 m, 5 cm "
+                         "ötelenen matris: noktalar ızgaraya yarım sıfırdan uzağa; LAZ, çizime eklenir",
+                         KOY, "koy", "koy", ROTATED),
+        transformed_case("transform-registered", "Dönüşüm uygula, Tarama kaydı'nın tarifi Rz(κ)·Ry(φ)·Rx(ω) ortası "
+                         "çevresinde, öteleme ile; çizime eklenmez", KOY, "koy", "koy", REGISTERED, add=False),
+        transformed_case("transform-translation-las", "Dönüşüm uygula, yalnız öteleme (12,5 m, −3,25 m): ızgaranın katı, "
+                         "tam sayılar aynen kayar; LAS, virgüllü ve köşeli yazım", KOY, "koy", "koy", MOVED_ONLY,
+                         fmt="las", add=False, text="[1, 0, 0, 12.5; 0, 1, 0, -3.25; 0, 0, 1, 0; 0, 0, 0, 1]"),
+        transformed_case("transform-copc", "Dönüşüm uygula, COPC adı verilen dosyaya, dizini kurularak", KOY, "koy",
+                         "koy", ROTATED, fmt="copc", output="kayitli", add=False),
+        transformed_case("transform-scaled", "Dönüşüm uygula, ortası çevresinde 1,0001 ölçek: katı değil, uyarılır; "
+                         "dönüklük söylenmez", KOY, "koy", "koy", SCALED, add=False),
+        transformed_case("transform-second-grid", "Dönüşüm uygula, X ve Y'si 0,4 mm'lik ızgaradaki ikinci bulut: kendi "
+                         "ızgarasında kalır, yuvarlama eksen eksen söylenir", IKINCI, "ikinci", "ikinci", IKINCI_TURNED,
+                         style=GREY_STYLE),
+        refused("transform-count", "Dönüşüm uygula, 12 sayı: ret", "1 0 0 0\n0 1 0 0\n0 0 1 0",
+                "Matris 16 sayıdır (4 satır, 4 sütun, satır satır); 12 sayı verildi."),
+        refused("transform-word", "Dönüşüm uygula, sayı olmayan söz: ret", "1 0 0 a\n0 1 0 0\n0 0 1 0\n0 0 0 1",
+                "Matriste “a” bir sayı değil; sayıları boşlukla ayırın, ondalık için nokta kullanın."),
+        refused("transform-perspective", "Dönüşüm uygula, son satırı 0 0 0 1 olmayan matris: ret",
+                "1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0.001 1",
+                "Matrisin son satırı 0 0 0 1 olmalı: yalnız afin dönüşüm uygulanır (perspektif yok)."),
+        refused("transform-singular", "Dönüşüm uygula, kotu ezen tekil matris: ret", "1 0 0 0\n0 1 0 0\n0 0 0 850\n0 0 0 1",
+                "Matrisin dönüklük kısmı tekil (determinantı sıfır): noktaları bir düzleme ya da doğruya ezer."),
+        refused("transform-off-grid", "Dönüşüm uygula, 3000 km kuzeye öteleme: ızgaranın 32 bitine sığmaz, hiçbir şey "
+                "yazılmadan ret", matrix_text(far),
+                "Dönüşen bulut dosyanın ızgarasına sığmıyor: Y ekseninde kayıtların 32 bitlik tam sayılarına sığmayacak "
+                "kadar uzağa gidiyor. Matrisin ötelemesini denetleyin."),
+    ]
+
+
 def refusals():
     def refused(id_, title, tool, values, message, selection=()):
         return case(id_, title, tool, values, {"status": "error", "message": message}, selection)
@@ -497,7 +684,8 @@ def refusals():
 
 def cases():
     return (thin_cases() + ground_cases() + classify_cases() + clip_cases() + [area_stats_case()] + tile_cases()
-            + rasterize_cases() + [boundary_case(), merge_case(), merge_case("las"), merge_case("copc")] + refusals())
+            + rasterize_cases() + [boundary_case(), merge_case(), merge_case("las"), merge_case("copc")] + transform_cases()
+            + refusals())
 
 
 def build():

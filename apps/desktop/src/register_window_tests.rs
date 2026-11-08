@@ -2,7 +2,8 @@
 //! drawing's first two scans, the GNSS layer guessed; the moved scan fitted as the shared case says, its control
 //! points' KOH_Z down from 5 cm; the flat pair's plan shift loose; the CSV with the matrix; nothing written; Harita
 //! and GIS offer it; the weights row's Huber and trimmed fits as the shared cases give them (docs/adr/2300); the
-//! rejections row's angle and edges as the shared cases give them (docs/adr/2700). And its pictures.
+//! rejections row's angle and edges as the shared cases give them (docs/adr/2700); Buluta uygula's Dönüşüm uygula on
+//! the moving scan with the answer's matrix, after which nothing is left to fit (docs/adr/3100). And its pictures.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -213,6 +214,59 @@ fn the_moved_scan_is_fitted_as_the_shared_case_says() {
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
 }
 
+/// docs/adr/3100: Buluta uygula selects the moving scan and opens Dönüşüm uygula with the answer's matrix and a layer
+/// of its own; run, the moved scan is a new cloud there (the source untouched), and Tarama kaydı between the fixed scan
+/// and it finds nothing left to move.
+#[test]
+fn the_fit_is_applied_to_the_moving_scan() {
+    use crate::processing::{Event as P, RunStatus};
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let r = app.register.answer.clone().expect("an answer").expect("registered");
+    let (fixed, moving) = (app.register.fixed.clone(), app.register.moving.clone());
+    let _ = app.update(Message::Register(R::Apply));
+    assert_eq!(app.dialog, Some(Dialog::Processing));
+    let window = app.processing.dialog.as_ref().expect("the tool's window");
+    assert_eq!(window.tool.id, "pointcloud.transform");
+    assert_eq!(window.values.get("matrix"), Some(&Value::from(crate::register_window::matrix_text(&r.matrix))));
+    let slot = |app: &App, uid: &str| {
+        app.document.as_ref().and_then(|d| d.model.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))).expect("on the drawing")
+    };
+    assert_eq!(app.selection.ids(), [slot(&app, &moving)], "the moving scan is the tool's input");
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/pointcloud/v1/files/kayit-b.xyz");
+    let before = std::fs::read(&source).expect("the source");
+    let dir = crate::files_testing::scratch("buluta-uygula");
+    let out = dir.join("kayitli.laz");
+    let _ = app.update(Message::Processing(P::Value("output".into(), Value::from(out.to_string_lossy().into_owned()))));
+    let task = app.update(Message::Processing(P::Run));
+    crate::files_testing::drive(&mut app, task);
+    let status = app.processing.dialog.as_ref().map(|w| w.status.clone());
+    let Some(RunStatus::Ok { text, .. }) = status else { panic!("{status:?}") };
+    assert!(text.contains("4.320 nokta taşındı") && text.contains("dönüklük"), "{text}");
+    assert_eq!(std::fs::read(&source).expect("the source"), before, "the source untouched");
+    let doc = &app.document.as_ref().expect("open").model;
+    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Kaydedilmiş bulut").expect("its layer").id.clone();
+    let (moved, _) = doc
+        .entities_with_uids()
+        .find(|(_, e)| e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_)))
+        .expect("the moved scan");
+    let moved = moved.to_string();
+    // Fitted again against the fixed scan: nothing left to move.
+    let _ = app.update(Message::Processing(P::Close));
+    app.selection.set([slot(&app, &fixed), slot(&app, &moved)]);
+    let _ = app.update(Message::Run("pointcloud.register"));
+    assert_eq!((app.register.fixed.as_str(), app.register.moving.as_str()), (fixed.as_str(), moved.as_str()));
+    let again = app.register.answer.clone().expect("an answer").expect("registered");
+    // The moved scan starts where the first fit left it (its RMS, rounded to the file's grid), the height is held and
+    // the control points' KOH_Z is the fitted one; what a second fit still turns in the plan (a flat ground, strength
+    // about 0.13) lowers the RMS by less than a tenth of a millimetre.
+    assert!((again.rms_before - r.rms_after).abs() < 0.0005, "{} vs {}", again.rms_before, r.rms_after);
+    assert!(again.rms_before - again.rms_after < 0.0001, "{} -> {}", again.rms_before, again.rms_after);
+    assert!(again.translation[2].abs() < 0.0005, "{:?}", again.translation);
+    let (fitted, moved_koh) = (r.control_after.clone().expect("after"), again.control_before.clone().expect("before"));
+    assert!((fitted.koh_z - moved_koh.koh_z).abs() < 0.001, "{} vs {}", fitted.koh_z, moved_koh.koh_z);
+}
+
 #[test]
 fn harita_and_gis_offer_it() {
     for module in [Module::Map, Module::Gis] {
@@ -256,6 +310,57 @@ fn screens() {
             println!("{}", file.display());
         }
     }
+    // docs/adr/3100: Buluta uygula, Dönüşüm uygula's window with the matrix, and the moved scan on the drawing.
+    let out3100 = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/donusum-uygula-3100");
+    std::fs::create_dir_all(&out3100).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pointcloud.register"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, stem: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out3100.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "1-tarama-kaydi");
+        let _ = app.update(Message::Register(R::Apply));
+        shot(&mut app, "2-donusum-uygula");
+        let dir = crate::files_testing::scratch(&format!("buluta-uygula-resim-{name}"));
+        let out = dir.join("kayitli.laz");
+        let _ = app.update(Message::Processing(crate::processing::Event::Value(
+            "output".into(),
+            Value::from(out.to_string_lossy().into_owned()),
+        )));
+        let task = app.update(Message::Processing(crate::processing::Event::Run));
+        crate::files_testing::drive(&mut app, task);
+        shot(&mut app, "3-sonuc");
+        let _ = app.update(Message::Processing(crate::processing::Event::Close));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        shot(&mut app, "4-cizimde");
+    }
+    // Where it sits: the point cloud's context tab, Dönüşüm uygula in İşlemler.
+    let mut app = opened(Some(Module::Map));
+    let size = Size::new(1920.0, 1000.0);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    app.selection.set([Slot(2)]);
+    app.follow_selection_tab();
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out3100.join("5-menu-bulut-sekmesi.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
     // Where it sits: the point cloud's context tab, beside Tarama uyumu.
     let mut app = opened(Some(Module::Map));
     let size = Size::new(1920.0, 1000.0);

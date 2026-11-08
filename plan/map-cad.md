@@ -43,7 +43,7 @@ sırayla alır.
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
@@ -1273,6 +1273,15 @@ boşluk) ve normalleri kullanıcının açısından çok ayrılan eşleşmeler h
 taramada duvar: düz ICP 5 cm kayar, 30° düzeltir; bordür arkası gölge (m²'de 24 nokta): düz ICP 2 cm kayar, kenar
 düzeltir (52 ortak durum, eski 40'ı aynı); MCP; Tarama kaydı'nda Ayıkla satırı. Seyrek taramada kenar ölçütü çok eşleşme
 atar (voksel yoğunluğa göre seçilmeli). Açık: dönüşümün buluta uygulanması, çoklu tarama demeti, gerçek veriyle ölçüm.
+
+**9 Kasım 2026, beşinci tur — dönüşümün buluta uygulanması ([ADR 3100](../docs/adr/3100-apply-a-transform-to-a-point-cloud.md)).**
+Kapsam: **Harita + CBS**. Araştırma: PDAL filters.transformation (16 sayılık satır sıralı matris, `invert`, mekânsal
+başvuruya dokunmaz), CloudCompare Apply Transformation (alt satır 0 0 0 1, ters seçeneği, nesnenin dönüşüm geçmişi).
+Kanıtlanan: İşlemler aracı `pointcloud.transform` (Dönüşüm uygula): noktalar afin matrisle taşınır, kaynağın ızgarasına
+yarım sıfırdan uzağa yuvarlanır, öbür alanlar aynen; LAS, LAZ, COPC; kutunun köşeleriyle yazmadan önce ızgara denetimi;
+beş ret; özet ortanın kayması ve dönüklük; 11 yeni ortak durum (41), Python, MCP; Tarama kaydı'nda Buluta uygula, yeniden
+kayıtta RMS, kot ve KOH_Z aynı kalır. Açık: ters matris, nesnenin dönüşüm geçmişi, normallerin döndürülmesi, çoklu tarama
+demeti, gerçek veriyle ölçüm.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

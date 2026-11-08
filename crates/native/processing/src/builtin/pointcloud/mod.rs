@@ -1,7 +1,7 @@
 //! Nokta bulutu işlemleri (docs/adr/0207 §7; the desktop's, the web's side
 //! waiting): Nokta bulutu alan sorgusu, Seyrelt, Zemin süzgeci, Yüksekliğe
-//! göre sınıfla, Bulutu kırp, Bulutları birleştir, Karola, Rasterleştir and
-//! Sınır çıkar. Each reads its
+//! göre sınıfla, Bulutu kırp, Bulutları birleştir, Karola, Rasterleştir,
+//! Sınır çıkar and Dönüşüm uygula. Each reads its
 //! clouds whole, file by file in their order, through the host's files
 //! ([`crate::files::Files`]); the decisions are the point cloud core's
 //! machines (`kentos_pointcloud::ops`), the same for every host. They run in
@@ -18,6 +18,7 @@ pub mod merge;
 pub mod rasterize;
 pub mod thin;
 pub mod tile;
+pub mod transform;
 
 use std::collections::BTreeMap;
 use std::sync::Arc;

@@ -8,7 +8,8 @@
 //! - [`convert`]: the result's file for one or more sources, their records moved to it;
 //! - [`thin`]: Seyrelt; [`grid`], [`ground`] and [`height`]: Zemin süzgeci and
 //!   Yüksekliğe göre sınıfla;
-//! - [`tile`]: Karola's tiles; [`raster`] and [`boundary`]: Rasterleştir and Sınır çıkar.
+//! - [`tile`]: Karola's tiles; [`raster`] and [`boundary`]: Rasterleştir and Sınır çıkar;
+//! - [`transform`]: Dönüşüm uygula's affine matrix (docs/adr/3100).
 
 pub mod boundary;
 pub mod convert;
@@ -21,3 +22,4 @@ pub mod region;
 pub mod stats;
 pub mod thin;
 pub mod tile;
+pub mod transform;

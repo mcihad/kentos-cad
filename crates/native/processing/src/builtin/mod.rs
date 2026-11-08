@@ -131,6 +131,7 @@ pub fn tools() -> Vec<Tool> {
         pointcloud::tile::tool(),
         pointcloud::rasterize::tool(),
         pointcloud::boundary::tool(),
+        pointcloud::transform::tool(),
         // Yüzey analizi (docs/adr/0231): both platforms.
         surface::slope(),
         surface::aspect(),

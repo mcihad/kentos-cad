@@ -7009,6 +7009,22 @@
    "tests": 0
   },
   {
+   "id": "processing.run.pointcloud.transform",
+   "kind": "command",
+   "title": "Dönüşüm uygula…",
+   "level": "processing",
+   "via": [
+    "cad.processing.run"
+   ],
+   "operation": null,
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "processing.run.points.numberVertices",
    "kind": "command",
    "title": "Köşe noktalarını numarala…",

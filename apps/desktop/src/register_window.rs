@@ -8,6 +8,8 @@
 //! pairs kept, 1 at first: nothing trimmed until the user says how much of the scans overlap). The rejections row
 //! (docs/adr/2700) leaves out the pairs at the fixed scan's edge and those whose normals lie further apart than an
 //! angle (off at first; the angle's box is the user's, 30° until changed), and the summary counts what it left out.
+//! Buluta uygula (docs/adr/3100) selects the moving scan and opens Dönüşüm uygula (`pointcloud.transform`) with the
+//! answer's matrix: the cloud is moved only when that tool runs, into a new file beside the source.
 
 use std::path::PathBuf;
 
@@ -30,6 +32,9 @@ use crate::traces::Control;
 pub const TITLE: &str = "Tarama kaydı";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
+const APPLY: &str = "Buluta uygula…";
+/// Dönüşüm uygula's result layer from here.
+const REGISTERED_LAYER: &str = "Kaydedilmiş bulut";
 /// The control layer's choice when there is none.
 const NONE: &str = "";
 
@@ -114,6 +119,8 @@ pub enum Event {
     View(View),
     Save,
     Saved(Option<PathBuf>),
+    /// docs/adr/3100: Dönüşüm uygula with the answer's matrix.
+    Apply,
     Close,
 }
 
@@ -123,6 +130,15 @@ fn msg(e: Event) -> Message {
 
 fn cm(v: f64) -> String {
     format!("{:.1}", v * 100.0)
+}
+
+/// The answer's matrix as Dönüşüm uygula reads it (docs/adr/3100): its rows apart by semicolons, each number as Rust
+/// writes it, which reads back the same.
+pub fn matrix_text(m: &[f64; 16]) -> String {
+    m.chunks(4)
+        .map(|row| row.iter().map(f64::to_string).collect::<Vec<_>>().join(" "))
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 /// The answer as CSV: the summary, the matrix, the worst cells and the control points (metres as computed).
@@ -267,6 +283,30 @@ impl App {
         Task::none()
     }
 
+    /// Buluta uygula (docs/adr/3100): the moving scan selected (the tool's input), Tarama kaydı closed and Dönüşüm
+    /// uygula's window opened with the answer's matrix and a layer of its own. Nothing is written until that tool runs.
+    pub(crate) fn register_apply(&mut self) {
+        let Some(Ok(r)) = &self.register.answer else { return };
+        let matrix = matrix_text(&r.matrix);
+        let slot = self.document.as_ref().and_then(|d| {
+            kentos_domain::Uuid::parse_str(&self.register.moving).ok().and_then(|u| d.model.slot_of(u))
+        });
+        let Some(slot) = slot else {
+            self.warn(format!("{TITLE}: oturtulan bulut çizimde bulunamadı."));
+            return;
+        };
+        self.selection.set([slot]);
+        self.register = State::default();
+        self.dialog = None;
+        let values = serde_json::from_value(serde_json::json!({
+            "input": { "scope": "selection" },
+            "matrix": matrix,
+            "layer": { "newName": REGISTERED_LAYER },
+        }))
+        .ok();
+        self.open_processing("pointcloud.transform", values);
+    }
+
     /// The answer written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn register_save(&mut self, path: PathBuf) {
         let Some(Ok(r)) = &self.register.answer else { return };
@@ -316,6 +356,10 @@ impl App {
                 return Task::none();
             }
             Event::Saved(None) => return Task::none(),
+            Event::Apply => {
+                self.register_apply();
+                return Task::none();
+            }
             Event::Close => {
                 self.register = State::default();
                 self.dialog = None;
@@ -544,6 +588,7 @@ impl App {
         Frame::new(TITLE)
             .push(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
+            .aside(words::secondary(APPLY, ready.then(|| msg(Event::Apply))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(880.0)
             .modal(msg(Event::Close))
@@ -553,6 +598,7 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(APPLY) => Some(msg(Event::Apply)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
