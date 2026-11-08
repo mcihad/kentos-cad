@@ -13,4 +13,10 @@ import type { WallEnd } from "./WallEnd";
 /**
  * What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
  */
-export type OpeningsOperation = { "kind": "set" } & OpeningChange | { "kind": "move", by?: number, at?: number, } | { "kind": "flip", what: OpeningFlip, } | { "kind": "rehost", to: string, point?: Vec2, } | { "kind": "replaceType", from?: string, to: string, level?: string | null, } | { "kind": "detach" } | { "kind": "push", fields?: Array<OpeningTypeField>, } | { "kind": "refresh" } | { "kind": "reset", fields?: Array<OpeningTypeField>, } | { "kind": "renumber", prefix: string, start: number, form?: OpeningForm, } | { "kind": "array", layout: OpeningArrayLayout, numbering?: OpeningArrayNumbering, } | { "kind": "copy", offsets: Array<number>, } | { "kind": "distance", side: WallEnd, face: DimensionSetFace, distance: number, to?: DistanceTo, };
+export type OpeningsOperation = { "kind": "set" } & OpeningChange | { "kind": "move", by?: number, at?: number, } | { "kind": "flip", what: OpeningFlip, } | { "kind": "rehost", to: string, point?: Vec2, } | { "kind": "replaceType", from?: string, to: string, level?: string | null, } | { "kind": "detach" } | { "kind": "push", fields?: Array<OpeningTypeField>, } | { "kind": "refresh" } | { "kind": "reset", fields?: Array<OpeningTypeField>, } | { "kind": "renumber", prefix: string, start: number, form?: OpeningForm, 
+/**
+ * Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens
+ * into, else its other side's; another's the room on either side), and when that room has more than one of
+ * them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
+ */
+byRoom?: boolean, } | { "kind": "array", layout: OpeningArrayLayout, numbering?: OpeningArrayNumbering, } | { "kind": "copy", offsets: Array<number>, } | { "kind": "distance", side: WallEnd, face: DimensionSetFace, distance: number, to?: DistanceTo, };

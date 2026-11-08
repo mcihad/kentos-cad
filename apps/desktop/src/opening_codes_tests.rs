@@ -133,6 +133,44 @@ fn the_apartment_s_doors_and_windows_get_their_joinery_codes_and_tags_in_one_ste
             );
         }
     }
+    // The door and window schedule shows the codes: a Kod column after No.
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let table = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Table(t)
+                if matches!(
+                    &t.source,
+                    Some(kentos_commands::TableSource::Schedule {
+                        of: kentos_commands::ScheduleOf::Openings,
+                        ..
+                    })
+                ) =>
+            {
+                Some(t.clone())
+            }
+            _ => None,
+        })
+        .expect("the door and window schedule");
+    assert_eq!(
+        table.cells[0].get(1).map(String::as_str),
+        Some("Kod"),
+        "{:?}",
+        table.cells[0]
+    );
+    let codes_in_table: Vec<&str> = table
+        .cells
+        .iter()
+        .skip(1)
+        .filter_map(|r| r.get(1).map(String::as_str))
+        .collect();
+    assert!(
+        codes_in_table.contains(&"K01")
+            && codes_in_table.contains(&"GK01")
+            && codes_in_table.contains(&"P02"),
+        "{codes_in_table:?}"
+    );
+    assert!(crate::files_testing::last_said(&app).contains("çizelgeye Kod sütunu eklendi"));
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(tags(&app).len(), before, "one undo takes the tags");
     let doc = &app.document.as_ref().expect("a drawing").model;
@@ -178,4 +216,76 @@ fn an_untyped_door_in_the_outer_wall_gets_a_type_and_gk01() {
         })
         .expect("its tag");
     assert!(tag.starts_with("GK01\n90/"), "{tag}");
+}
+
+/// Mahale göre (M28, docs/adr/3028): Açıklıkları numarala gives each door its room's number (the room it opens into),
+/// each window its room's, with -A, -B … where a room has more than one; K for the doors, P for the windows; the numbers
+/// show before Enter; one undo takes them back.
+#[cfg(unix)]
+#[test]
+fn numbering_by_room_gives_each_opening_its_room_s_number() {
+    use kentos_commands::Entity;
+    let (mut app, _dir) = crate::acceptance_flat_tests::opened("odaya-gore-numara");
+    let _ = crate::acceptance_flat_tests::drawn(&mut app);
+    let numbers = |app: &App| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let mut out: Vec<(String, String)> = doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Opening(o) => Some((
+                    format!("{:?}", o.opening.form),
+                    o.opening.number.clone().unwrap_or_default(),
+                )),
+                _ => None,
+            })
+            .collect();
+        out.sort();
+        out
+    };
+    let before = numbers(&app);
+    let _ = app.update(Message::Run("tool.openingNumber"));
+    assert_eq!(app.session.tool_id(), "openingNumber");
+    assert_eq!(
+        app.with_tool(|s, cx| s.input("M", cx)),
+        Some(true),
+        "M turns Mahale göre on"
+    );
+    let format = app.format();
+    let shown: Vec<String> = app
+        .session
+        .preview(&format)
+        .map(|p| p.labels.into_iter().map(|l| l.text).collect())
+        .unwrap_or_default();
+    let _ = app.submit_line("");
+    let after = numbers(&app);
+    // The scenario's doors open into the corridor; each is the room's it serves: the Salon's 01, the first bedroom's
+    // 02, the entrance the corridor's 04 (outside on its other side), the bathroom's two (one from the corridor, one
+    // from the second bedroom opening into the bathroom: between two rooms the one it opens into) 05-A and 05-B.
+    let want: Vec<(String, String)> = [
+        ("Door", "K01"),
+        ("Door", "K02"),
+        ("Door", "K04"),
+        ("Door", "K05-A"),
+        ("Door", "K05-B"),
+        ("Window", "P01-A"),
+        ("Window", "P01-B"),
+        ("Window", "P02"),
+        ("Window", "P03"),
+        ("Window", "P05"),
+    ]
+    .into_iter()
+    .map(|(f, n)| (f.to_owned(), n.to_owned()))
+    .collect();
+    assert_eq!(after, want);
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "10 açıklık mahalinin numarasını aldı."
+    );
+    let mut seen: Vec<&str> = after.iter().map(|(_, n)| n.as_str()).collect();
+    seen.sort_unstable();
+    let mut planned: Vec<&str> = shown.iter().map(String::as_str).collect();
+    planned.sort_unstable();
+    assert_eq!(seen, planned, "the preview showed the numbers written");
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(numbers(&app), before, "one undo");
 }

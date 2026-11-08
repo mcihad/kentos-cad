@@ -1006,6 +1006,8 @@ pub struct OpeningEditTool {
     start: u32,
     /// What Numarala waits for: the prefix (true) or the first number.
     asking: Option<bool>,
+    /// Mahale göre (docs/adr/3028): each opening its room's number, a door K, a window P, a bare opening B.
+    by_room: bool,
     hover: Option<(Slot, Vec2)>,
     drawn: Preview,
 }
@@ -1018,6 +1020,7 @@ impl OpeningEditTool {
             prefix: "K".into(),
             start: 1,
             asking: None,
+            by_room: false,
             hover: None,
             drawn: Preview::default(),
         }
@@ -1066,6 +1069,82 @@ impl OpeningEditTool {
             })
     }
 
+    /// Numarala's calls: the selected openings, else all; Mahale göre one call for each form with its letter (K a door,
+    /// P a window, B a bare opening; docs/adr/0714's), so that a room's door and window do not share a number.
+    fn number_runs(&self, cx: &Context<'_>) -> Vec<(Vec<String>, OpeningsOperation)> {
+        use kentos_commands::OpeningForm;
+        let picked: Vec<(String, OpeningForm)> = cx
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| match cx.doc.get(*s) {
+                Some(Entity::Opening(o)) => cx.doc.uid(*s).map(|u| (u.to_string(), o.opening.form)),
+                _ => None,
+            })
+            .collect();
+        if !self.by_room {
+            return vec![(
+                picked.into_iter().map(|(u, _)| u).collect(),
+                OpeningsOperation::Renumber {
+                    prefix: self.prefix.clone(),
+                    start: self.start,
+                    form: None,
+                    by_room: false,
+                },
+            )];
+        }
+        let mut out = Vec::new();
+        for (form, letter) in [
+            (OpeningForm::Door, "K"),
+            (OpeningForm::Window, "P"),
+            (OpeningForm::Opening, "B"),
+        ] {
+            let op = OpeningsOperation::Renumber {
+                prefix: letter.into(),
+                start: 1,
+                form: Some(form),
+                by_room: true,
+            };
+            if picked.is_empty() {
+                let any = cx
+                    .doc
+                    .entities()
+                    .any(|e| matches!(e, Entity::Opening(o) if o.opening.form == form));
+                if any {
+                    out.push((Vec::new(), op));
+                }
+            } else {
+                let uids: Vec<String> = picked
+                    .iter()
+                    .filter(|(_, f)| *f == form)
+                    .map(|(u, _)| u.clone())
+                    .collect();
+                if !uids.is_empty() {
+                    out.push((uids, op));
+                }
+            }
+        }
+        out
+    }
+
+    /// Every opening's number, by its object.
+    fn numbers(doc: &kentos_domain::Document) -> std::collections::BTreeMap<Slot, String> {
+        doc.entities()
+            .filter_map(|e| match e {
+                Entity::Opening(o) => Some((
+                    Slot(o.base.id),
+                    o.opening.number.clone().unwrap_or_default(),
+                )),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Whether an opening has a numbered room beside it (Mahale göre gave it its number).
+    fn room_numbered(&self, doc: &kentos_domain::Document, slot: Slot) -> bool {
+        matches!(doc.get(slot), Some(Entity::Opening(o)) if kentos_native_application::opening_codes::has_room(doc, &o.opening))
+    }
+
     fn run(&self, uids: Vec<String>, operation: OpeningsOperation, cx: &mut Context<'_>) -> bool {
         let input = OpeningsEdit {
             uids,
@@ -1078,6 +1157,38 @@ impl OpeningEditTool {
 
     fn see(&mut self, cx: &Context<'_>) {
         let mut out = Preview::default();
+        // Numarala: the numbers to come beside the openings before Enter (docs/adr/3028).
+        if self.action == Action::Number && self.asking.is_none() {
+            for (uids, operation) in self.number_runs(cx) {
+                let input = OpeningsEdit {
+                    uids,
+                    operation,
+                    expected_revision: None,
+                };
+                if let CommandResult::Completed { output, .. } =
+                    openings_edit::plan_in(cx.doc, &input)
+                {
+                    for e in &output.openings {
+                        let Entity::Opening(o) = e else { continue };
+                        let p = &o.opening.place;
+                        if p.len() != 4 {
+                            continue;
+                        }
+                        let at = Vec2::new(
+                            (p[0].x + p[1].x + p[2].x + p[3].x) / 4.0,
+                            (p[0].y + p[1].y + p[2].y + p[3].y) / 4.0,
+                        );
+                        out.labels.push(crate::tool::Label {
+                            at,
+                            text: o.opening.number.clone().unwrap_or_default(),
+                            offset: [6.0, -6.0],
+                            tone: Tone::Accent,
+                        });
+                        out.marks.push(at);
+                    }
+                }
+            }
+        }
         if let Some(e) = self.picked.and_then(|s| cx.doc.get(s)) {
             let o = Outline::of(&shape(e), Some([6.0, 4.0]), 2.5, Tone::Accent);
             out.strokes.extend(o.strokes);
@@ -1156,9 +1267,13 @@ impl Tool for OpeningEditTool {
             (Action::Number, Some(false)) => {
                 Prompt::new(self.name(), "ilk numarayı yazın").option("Geri", "G")
             }
+            (Action::Number, None) if self.by_room => Prompt::new(self.name(), self.step())
+                .option_with("Mahale göre", "M", "Açık")
+                .option("Numarala", "Enter"),
             (Action::Number, None) => Prompt::new(self.name(), self.step())
                 .option_with("Önek", "Ö", self.prefix.clone())
                 .option_with("Başlangıç", "B", self.start.to_string())
+                .option_with("Mahale göre", "M", "Kapalı")
                 .option("Numarala", "Enter"),
             _ => Prompt::new(self.name(), self.step()).option("Bitir", "Enter"),
         }
@@ -1252,8 +1367,13 @@ impl Tool for OpeningEditTool {
                 Err(_) => cx.say(Level::Warn, "İlk numara bir tam sayı olmalı."),
             },
             None => match key.as_str() {
-                "Ö" | "O" => self.asking = Some(true),
-                "B" => self.asking = Some(false),
+                "Ö" | "O" if !self.by_room => self.asking = Some(true),
+                "B" if !self.by_room => self.asking = Some(false),
+                // Mahale göre on or off (docs/adr/3028).
+                "M" => {
+                    self.by_room = !self.by_room;
+                    self.see(cx);
+                }
                 _ => return false,
             },
         }
@@ -1268,28 +1388,62 @@ impl Tool for OpeningEditTool {
         if self.action != Action::Number {
             return Flow::Exit;
         }
-        let uids: Vec<String> = cx
+        let runs = self.number_runs(cx);
+        if runs.is_empty() {
+            cx.say(Level::Warn, "Numaralanacak açıklık yok.");
+            return Flow::Exit;
+        }
+        // The openings it numbers: the selected ones, else all of a lettered form (Mahale göre) or all.
+        let selected: Vec<Slot> = cx
             .selection
             .ids()
             .iter()
-            .filter(|s| matches!(cx.doc.get(**s), Some(Entity::Opening(_))))
-            .filter_map(|s| cx.doc.uid(*s).map(|u| u.to_string()))
+            .copied()
+            .filter(|s| matches!(cx.doc.get(*s), Some(Entity::Opening(_))))
             .collect();
-        let op = OpeningsOperation::Renumber {
-            prefix: self.prefix.clone(),
-            start: self.start,
-            form: None,
-        };
-        let n = if uids.is_empty() {
+        let targets: Vec<Slot> = if selected.is_empty() {
             cx.doc
                 .entities()
-                .filter(|e| matches!(e, Entity::Opening(_)))
-                .count()
+                .filter(|e| matches!(e, Entity::Opening(o) if !self.by_room || !o.opening.form.is_recess()))
+                .map(|e| Slot(e.base().id))
+                .collect()
         } else {
-            uids.len()
+            selected
         };
-        if self.run(uids, op, cx) {
-            cx.say(Level::Success, format!("{n} açıklık numaralandı."));
+        let before = Self::numbers(cx.doc);
+        let group = cx.doc.begin_group("Numarala");
+        let mut ok = true;
+        for (uids, op) in runs {
+            ok &= self.run(uids, op, cx);
+            if !ok {
+                break;
+            }
+        }
+        if !ok {
+            cx.doc.cancel_group(group);
+            return Flow::Exit;
+        }
+        cx.doc.end_group(group);
+        let after = Self::numbers(cx.doc);
+        let changed = after
+            .iter()
+            .filter(|(s, n)| before.get(s) != Some(n))
+            .count();
+        if self.by_room {
+            let left = targets
+                .iter()
+                .filter(|s| !self.room_numbered(cx.doc, **s))
+                .count();
+            cx.say(
+                Level::Success,
+                if left > 0 {
+                    format!("{changed} açıklık mahalinin numarasını aldı; {left} açıklığın yanında numaralı mahal yok, numarası kaldı.")
+                } else {
+                    format!("{changed} açıklık mahalinin numarasını aldı.")
+                },
+            );
+        } else {
+            cx.say(Level::Success, format!("{changed} açıklık numaralandı."));
         }
         Flow::Exit
     }

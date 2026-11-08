@@ -451,6 +451,8 @@ OPENING_TYPE_FIELDS = ("width", "leaves", "operation", "swing", "showSwing", "fr
                        "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard",
                        "mullions", "transoms", "useZone")
 SCHEDULE_SIZED_FIELDS = ("roughWidth", "unitWidth", "leafWidth", "clearWidth")
+# Schema 208 (docs/adr/3028): an opening's type's joinery code as a schedule's column.
+SCHEDULE_CODE_FIELDS = ("code",)
 # Schema 140 (docs/adr/0773): the building program (`arch.program`: buildings, wings, units, design brief, fixture
 # clearances), a space's group (`unit`) and a schedule's program fields (`unit`, `target`, `targetDiff`); written only
 # when the project or a space has one.
@@ -8933,7 +8935,8 @@ class _Schema:
                                                   + (SCHEDULE_SPECIAL_FIELDS if self.special_doors else ())
                                                   + (SCHEDULE_SHARE_FIELDS if self.program_shares else ())
                                                   + (SCHEDULE_MULTI_SLIDE_FIELDS if self.multi_slide else ())
-                                                  + (SCHEDULE_UNIT_FIELDS if self.unit_schedules else ())), True),
+                                                  + (SCHEDULE_UNIT_FIELDS if self.unit_schedules else ())
+                                                  + (SCHEDULE_CODE_FIELDS if self.opening_codes else ())), True),
                               "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
                            "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False),

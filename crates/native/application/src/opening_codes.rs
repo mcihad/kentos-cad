@@ -123,6 +123,109 @@ pub(crate) fn in_room(rooms: &Rooms, level: &Option<String>, p: V) -> bool {
     })
 }
 
+/// A numbered room: its level, number, whether people only pass through it, and its areas.
+pub(crate) type NumberedRoom = (
+    Option<String>,
+    String,
+    bool,
+    Vec<kentos_geometry_core::geom::arrangement::Area>,
+);
+
+/// The words a room people pass through is called by (geçiş mahalleri): a door between one and a room is the room's.
+const PASSAGES: [&str; 7] = [
+    "KORIDOR", "HOL", "ANTRE", "GIRIS", "SAHANLIK", "MERDIVEN", "GECIT",
+];
+
+/// Whether a room's name or use is one people pass through (Koridor, Hol, Antre, Giriş …).
+fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
+    let fold = |t: &str| {
+        t.chars()
+            .map(|c| match c {
+                'ç' | 'Ç' => 'C',
+                'ğ' | 'Ğ' => 'G',
+                'ı' | 'I' | 'İ' | 'i' => 'I',
+                'ö' | 'Ö' => 'O',
+                'ş' | 'Ş' => 'S',
+                'ü' | 'Ü' => 'U',
+                c => c.to_ascii_uppercase(),
+            })
+            .collect::<String>()
+    };
+    [name, usage].into_iter().flatten().map(fold).any(|t| {
+        PASSAGES
+            .iter()
+            .any(|p| t.split(|c: char| !c.is_alphanumeric()).any(|w| w == *p))
+    })
+}
+
+/// The rooms that have a number, each level's, with their areas (docs/adr/3028's Mahale göre).
+pub(crate) fn numbered_rooms(doc: &Document) -> Vec<NumberedRoom> {
+    doc.entities()
+        .filter_map(|e| match e {
+            Entity::Space(s) => s
+                .space
+                .number
+                .clone()
+                .filter(|n| !n.trim().is_empty())
+                .map(|n| {
+                    (
+                        e.own_level().map(str::to_owned),
+                        n,
+                        passage(s.space.name.as_deref(), s.space.usage.as_deref()),
+                        kentos_domain::arch_values::core_areas(&s.space.parts),
+                    )
+                }),
+            _ => None,
+        })
+        .collect()
+}
+
+/// An opening's room's number, the room it serves (docs/adr/3028): a door between a room and a corridor, hall or the
+/// like is the room's; between two rooms the one it opens into (Revit's To Room); by one room only, that one's. A
+/// window's or another's the room on either side, its left first. None: no numbered room by it.
+pub(crate) fn room_of(doc: &Document, f: &OpeningFields, rooms: &[NumberedRoom]) -> Option<String> {
+    let (_, left, right) = sides(f)?;
+    let level = crate::opening_types::level_of(doc, f);
+    let at = |p: V| {
+        rooms.iter().find(|(l, _, _, areas)| {
+            *l == level
+                && areas
+                    .iter()
+                    .any(|a| kentos_geometry_core::geom::region::inside_area(a, p))
+        })
+    };
+    let (l, r) = (at(left), at(right));
+    let pick = match (l, r) {
+        (Some(a), Some(b)) if f.form == OpeningForm::Door => match (a.2, b.2) {
+            (true, false) => b,
+            (false, true) => a,
+            _ if f.side == kentos_commands::OpeningSide::Right => b,
+            _ => a,
+        },
+        (Some(a), _) => a,
+        (_, Some(b)) => b,
+        (None, None) => return None,
+    };
+    Some(pick.1.clone())
+}
+
+/// Whether an opening has a numbered room beside it (Mahale göre numbers it).
+pub fn has_room(doc: &Document, f: &OpeningFields) -> bool {
+    room_of(doc, f, &numbered_rooms(doc)).is_some()
+}
+
+/// The letters after a room's number for its `n`th opening (1: A … 26: Z, 27: AA …).
+pub(crate) fn letters(n: usize) -> String {
+    let mut n = n;
+    let mut out = Vec::new();
+    while n > 0 {
+        n -= 1;
+        out.push(char::from(b'A' + (n % 26) as u8));
+        n /= 26;
+    }
+    out.iter().rev().collect()
+}
+
 /// Whether a door has a room on one side only: it is in the building's outer wall.
 fn outer(doc: &Document, f: &OpeningFields, rooms: &Rooms) -> bool {
     let Some((_, left, right)) = sides(f) else {
@@ -289,6 +392,23 @@ mod tests {
         assert_eq!(next_code(&types, "GK"), "GK02");
         assert_eq!(next_code(&types, "P"), "P02");
         assert_eq!(next_code(&types, "B"), "B01");
+    }
+
+    #[test]
+    fn corridors_and_halls_are_passed_through() {
+        assert!(passage(Some("Koridor"), None));
+        assert!(passage(None, Some("Giriş holü")));
+        assert!(passage(Some("ANTRE"), None));
+        assert!(!passage(Some("Salon"), Some("Yatak odası")));
+        assert!(!passage(Some("Holding"), None), "a word, not a part of one");
+    }
+
+    #[test]
+    fn a_room_s_openings_take_letters_after_its_number() {
+        assert_eq!(letters(1), "A");
+        assert_eq!(letters(2), "B");
+        assert_eq!(letters(26), "Z");
+        assert_eq!(letters(27), "AA");
     }
 
     #[test]

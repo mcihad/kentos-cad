@@ -1,0 +1,35 @@
+# M28 part 2 (docs/adr/3028): Açıklıkları numarala's Mahale göre in the real window, on the 2+1 apartment the
+# acceptance test keeps, on Mimari at 1440 × 900, 13 px text. Before Enter the tool shows the numbers to come: K1 … in
+# the walls' order, then with M each opening its room's number (a door the room it serves, K; a window P; -A, -B where a
+# room has more than one); Enter writes them, the schedule's No column fills; Hepsini etiketle then writes them.
+fit KentOS Mimari — Daire
+wait 3000
+click 600 450 middle   # orta tuşa çift tık: tümünü göster
+click 600 450 middle
+wait 1500
+click 845 110   # Açıklıkları numarala
+wait 1200
+move 560 470
+wait 600
+shot m28-20-sirayla-onizleme
+key m   # Mahale göre
+wait 1200
+move 560 470
+wait 600
+shot m28-21-mahale-gore-onizleme
+key Return
+wait 1500
+move 560 470
+wait 600
+shot m28-22-numaralandi
+click 1165 20   # Menülerde ara
+wait 500
+type hepsini etiketle
+wait 1000
+key Return
+wait 1500
+key Return
+wait 1500
+move 560 470
+wait 600
+shot m28-23-etiketlendi

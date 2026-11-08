@@ -100,6 +100,8 @@ impl ScheduleOf {
 pub enum ScheduleField {
     #[default]
     Number,
+    /// An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.
+    Code,
     Type,
     Form,
     Width,
@@ -168,8 +170,9 @@ pub enum ScheduleField {
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 48] = [
+    pub const ALL: [ScheduleField; 49] = [
         ScheduleField::Number,
+        ScheduleField::Code,
         ScheduleField::Type,
         ScheduleField::Form,
         ScheduleField::Width,
@@ -223,6 +226,7 @@ impl ScheduleField {
     pub fn title(self) -> &'static str {
         match self {
             ScheduleField::Number => "No",
+            ScheduleField::Code => "Kod",
             ScheduleField::Type => "Tür",
             ScheduleField::Form => "Biçim",
             ScheduleField::Width => "Genişlik",
@@ -276,6 +280,7 @@ impl ScheduleField {
     pub fn name(self) -> &'static str {
         match self {
             ScheduleField::Number => "number",
+            ScheduleField::Code => "code",
             ScheduleField::Type => "type",
             ScheduleField::Form => "form",
             ScheduleField::Width => "width",
@@ -369,11 +374,9 @@ impl ScheduleField {
                     ScheduleOf::Openings | ScheduleOf::Spaces | ScheduleOf::Walls
                 ) && !(self == Volume && of == ScheduleOf::Openings)
             }
-            Form | Sill | Head | Wall => of == ScheduleOf::Openings,
-            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard | Unit
-            | Target | TargetDiff | Share | Gross => {
-                of == ScheduleOf::Spaces
-            }
+            Form | Sill | Head | Wall | Code => of == ScheduleOf::Openings,
+            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish
+            | Baseboard | Unit | Target | TargetDiff | Share | Gross => of == ScheduleOf::Spaces,
             Tag | Place => of == ScheduleOf::Columns,
             Length | Thickness => of == ScheduleOf::Walls,
             Category | Space => of == ScheduleOf::Fixtures,
@@ -475,6 +478,11 @@ impl ScheduleField {
     /// Whether it is one of the shares' fields (docs/adr/0784, `.kcad` schema 147).
     pub fn is_share(self) -> bool {
         matches!(self, ScheduleField::Share | ScheduleField::Gross)
+    }
+
+    /// Whether it is an opening's type's joinery code (docs/adr/3028, `.kcad` schema 208).
+    pub fn is_opening_code(self) -> bool {
+        self == ScheduleField::Code
     }
 
     /// Whether it is one of a units schedule's own fields (docs/adr/0795, `.kcad` schema 151).

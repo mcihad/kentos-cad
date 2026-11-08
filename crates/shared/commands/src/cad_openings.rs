@@ -506,6 +506,12 @@ pub enum OpeningsOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         form: Option<OpeningForm>,
+        /// Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens
+        /// into, else its other side's; another's the room on either side), and when that room has more than one of
+        /// them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
+        #[serde(default, rename = "byRoom", skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(rename = "byRoom", as = "Option<bool>", optional))]
+        by_room: bool,
     },
     /// Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,
     /// source unchanged. Optional unique numbering belongs to these copies only.

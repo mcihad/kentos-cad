@@ -2635,8 +2635,11 @@ def document(d):
         schema = max(schema, 207)
     if (any("code" in t for t in (d["settings"].get("arch") or {}).get("openingTypes") or [])
             or any(e["kind"] == "tag" and ("{code}" in e.get("content", "") or "{size}" in e.get("content", ""))
+                   or e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
+                   and any(isinstance(c, dict) and c.get("field") == "code" for c in e["source"].get("columns", []))
                    for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
-        # A door or window type's joinery code, a tag naming it or an opening's size (docs/adr/3028).
+        # A door or window type's joinery code, a tag naming it or an opening's size, a schedule's Kod column
+        # (docs/adr/3028).
         schema = max(schema, 208)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"

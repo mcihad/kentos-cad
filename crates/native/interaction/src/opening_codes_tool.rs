@@ -7,10 +7,12 @@
 //! layer and rewrites those that have one (`cad.tags.create`, `{code}` over `{size}`): one undo step.
 
 use kentos_commands::{
-    Entity, NewTag, OpeningTypesEdit, OpeningTypesOperation, TagAll, TaggedKind, TagsCreate,
+    Entity, NewTag, OpeningTypesEdit, OpeningTypesOperation, ScheduleChange, ScheduleColumn,
+    ScheduleField, ScheduleOf, ScheduleOperation, SchedulesEdit, TableSource, TagAll, TaggedKind,
+    TagsCreate,
 };
 use kentos_native_application::opening_codes::{self, Plan};
-use kentos_native_application::{ExecutionContext, opening_types_edit, tags};
+use kentos_native_application::{ExecutionContext, opening_types_edit, schedules_edit, tags};
 
 use crate::Vec2;
 use crate::arch_layer::Kind;
@@ -186,6 +188,61 @@ impl OpeningCodes {
                 tagged
             });
         }
+        // The drawing's door and window schedules show the codes: a Kod column after No where they have none.
+        let mut schedules = 0usize;
+        if ok {
+            let lacking: Vec<(String, Vec<ScheduleColumn>)> = cx
+                .doc
+                .entities()
+                .filter(|e| !cx.doc.layers().is_locked(&e.base().layer_id))
+                .filter_map(|e| match e {
+                    Entity::Table(t) => match &t.source {
+                        Some(TableSource::Schedule {
+                            of: ScheduleOf::Openings,
+                            columns,
+                            ..
+                        }) if !columns.iter().any(|c| c.field == ScheduleField::Code)
+                            && columns.len() < 30 =>
+                        {
+                            cx.doc
+                                .uid(kentos_domain::Slot(t.base.id))
+                                .map(|u| (u.to_string(), columns.clone()))
+                        }
+                        _ => None,
+                    },
+                    _ => None,
+                })
+                .collect();
+            for (uid, mut columns) in lacking {
+                let at = columns
+                    .iter()
+                    .position(|c| c.field == ScheduleField::Number)
+                    .map_or(0, |i| i + 1);
+                columns.insert(
+                    at,
+                    ScheduleColumn {
+                        field: ScheduleField::Code,
+                        title: None,
+                        attr: None,
+                    },
+                );
+                let input = SchedulesEdit {
+                    uid,
+                    operation: ScheduleOperation::Set(Box::new(ScheduleChange {
+                        columns: Some(columns),
+                        ..Default::default()
+                    })),
+                    expected_revision: None,
+                };
+                let result = schedules_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+                if crate::points::written(result, cx).is_some() {
+                    schedules += 1;
+                } else {
+                    ok = false;
+                    break;
+                }
+            }
+        }
         if !ok {
             cx.doc.cancel_group(group);
             self.seen = None;
@@ -201,9 +258,14 @@ impl OpeningCodes {
         cx.say(
             Level::Success,
             format!(
-                "Doğrama kodları verildi: {list}{}; tek geri almayla gider.",
+                "Doğrama kodları verildi: {list}{}{}; tek geri almayla gider.",
                 if tagged {
                     "; açıklıklar etiketlendi"
+                } else {
+                    ""
+                },
+                if schedules > 0 {
+                    "; çizelgeye Kod sütunu eklendi"
                 } else {
                     ""
                 }

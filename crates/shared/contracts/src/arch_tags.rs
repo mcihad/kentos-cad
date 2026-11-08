@@ -121,9 +121,19 @@ fn is_circle(s: &TagShape) -> bool {
     *s == TagShape::Circle
 }
 
-/// Whether `e` is a tag whose template names an opening's joinery code or size (docs/adr/3028): KCAD schema 208.
+/// Whether `e` is a tag whose template names an opening's joinery code or size, or a schedule with a Kod column
+/// (docs/adr/3028): KCAD schema 208.
 pub fn needs_opening_codes(e: &crate::Entity) -> bool {
-    matches!(e, crate::Entity::Tag(t) if t.tag.content.as_deref().is_some_and(|c| c.contains("{code}") || c.contains("{size}")))
+    match e {
+        crate::Entity::Tag(t) => t
+            .tag
+            .content
+            .as_deref()
+            .is_some_and(|c| c.contains("{code}") || c.contains("{size}")),
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_opening_code())),
+        _ => false,
+    }
 }
 
 /// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.

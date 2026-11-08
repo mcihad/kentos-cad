@@ -1,6 +1,6 @@
 # 3028 — Doğrama kodları, 90/210 ve etiketin yeri
 
-Tarih: 2026-11-08. Durum: kabul (M28 birinci bölüm, ADV-16 ve ADV-03; plan S19, G10).
+Tarih: 2026-11-08. Durum: kabul (M28, ADV-16 ve ADV-03; plan S19, G10).
 
 ## Sorun
 
@@ -74,8 +74,28 @@ Tarih: 2026-11-08. Durum: kabul (M28 birinci bölüm, ADV-16 ve ADV-03; plan S19
     İlk denemede kural komutun içindeydi; ortak örneklerden 33'ü (komutların Python başvurusu) eski yerle yazılmıştı.
     Kuralın Python'a taşınması sonraki adımlardadır.
   - Hepsini etiketle'de etiketsiz açıklıkların yeri de böyle bulunur (en çok 500; üstünde komutun yeri).
-- **KCAD şema 208:** Kodlu bir tip ya da `{code}`, `{size}` adlı bir etiket şablonu şema 208 ister; eski sürüm dosyayı
-  `UnknownField` ile reddeder. Python başvurusu (`tools/kcad`, `kcad_v2_reference.py`) aynı kuralı yazar.
+- **Çizelgede Kod sütunu** (`ScheduleField::Code`, "Kod"; yalnız kapı-pencere çizelgesinde, çizelgede düzenlenmez):
+  - Sahibin sorusu: "Numaraları tabloda neden gözükmüyor". Birinci gönderimde kod tipteydi ama çizelgede sütunu yoktu;
+    tablo yalnız tipin adını ("İç kapı 90") gösteriyordu.
+  - Doğrama kodları, çizimdeki kapı-pencere çizelgelerine No'dan sonra Kod sütununu aynı geri alma adımında ekler
+    (`cad.schedules.edit`'in `set`'i; kilitli katmandakine dokunmaz).
+  - Çizelge aracının "Kapı ve pencere" hazırı: No, Kod, Biçim, Tür, Genişlik, Yükseklik, Denizlik, Duvar. Gruplu hâli
+    Kod, Tür, Biçim, Genişlik, Yükseklik, Adet: doğrama listesi, kod başına bir satır.
+  - Komutun varsayılan sütunları (Python ve ajan için) değişmedi.
+- **Mahale göre numara** (Açıklıkları numarala, M tuşu; `cad.openings.edit`'in Numarala işleminde `byRoom`):
+  - Her açıklık hizmet ettiği mahalin numarasını alır: kapı bir oda ile koridor, hol, antre, giriş, sahanlık, merdiven
+    ya da geçit arasındaysa odanın; iki oda arasındaysa açıldığı odanın (Revit'in To Room'u); bir yanında yalnız bir
+    mahal varsa onun. Pencere iki yanından birindeki mahalin (önce sol).
+  - Mahalde birden çok açıklık varsa duvar sırasıyla -A, -B … eklenir (101-A; ADR 0714'ün "101-A gibi"si).
+  - Önek türden gelir: kapı K, pencere P, boşluk B. Bir odanın kapısı ve penceresi aynı numarayı almaz. Önek ve
+    Başlangıç bu kipte kullanılmaz.
+  - Yanında numaralı mahal olmayan açıklığın numarası değişmez; araç kaç tane olduğunu söyler.
+  - Numaralar Enter'dan önce açıklıkların yanında görünür (sıralı kipte de); hepsi tek geri alma adımıdır.
+  - Revit'in kuralı ("açıldığı oda") kabul dairesinde koridora açılan dört kapıya da koridorun numarasını veriyordu
+    (K04-A … D). Mimar yatak odasının kapısını yatak odasınınki sayar; geçiş mahali bu yüzden ayrıldı.
+- **KCAD şema 208:** Kodlu bir tip, `{code}` ya da `{size}` adlı bir etiket şablonu ya da Kod sütunlu bir çizelge şema 208
+  ister; eski sürüm dosyayı `UnknownField` ile reddeder. Python başvurusu (`tools/kcad`, `kcad_v2_reference.py`) aynı
+  kuralı yazar.
 
 ## Ölçüm
 
@@ -94,7 +114,16 @@ Tarih: 2026-11-08. Durum: kabul (M28 birinci bölüm, ADV-16 ve ADV-03; plan S19
     lentosuz 90.5.
   - Ortak örnekler: `cad.openingtypes.edit`'e üç durum eklendi (kod verme, rakamla başlayan kod reddi, kodu olmayan
     tip). `TAG_PLACES` iletisi ve 19 277 durumun hepsi geçiyor.
-  - KCAD: `opening-codes.kcad`; kırık `opening-codes-in-schema-207`, `-twice`, `-digit-first`. 239 geçerli dosya.
+  - KCAD: `opening-codes.kcad` (kodlu iki tip, kodu yazan etiket, Kod sütunlu çizelge); kırık
+    `opening-codes-in-schema-207`, `-twice`, `-digit-first`. 239 geçerli dosya.
+  - Çizelge: aynı testte Doğrama kodları'ndan sonra kapı-pencere çizelgesinin ikinci sütunu "Kod"; hücrelerde K01,
+    GK01, P02. İleti "… çizelgeye Kod sütunu eklendi".
+  - `opening_codes_tests::numbering_by_room_gives_each_opening_its_room_s_number` (kabul dairesi, M):
+    - Kapılar K01 (Salon), K02 (Yatak odası 1), K04 (giriş; öbür yanı dış), K05-A ve K05-B (Banyo: koridordan
+      ve banyoya açılan ikinci yatak odası kapısı).
+    - Pencereler P01-A, P01-B, P02, P03, P05.
+    - Önizlemedeki numaralar yazılanlarla aynı; "10 açıklık mahalinin numarasını aldı."; tek geri alma.
+  - `opening_codes::tests`: geçiş mahalleri (Koridor, "Giriş holü", ANTRE; "Holding" değil), harfler A, B, Z, AA.
 - **Gerçek pencere** (`fixtures/interaction/real/dograma-kodlari.txt`; kabul dairesi, 1440×900, sahibin ayarlarının
   kopyası):
   - Etiket ▾'de yeni satır ve ikon görünüyor.
@@ -102,14 +131,19 @@ Tarih: 2026-11-08. Durum: kabul (M28 birinci bölüm, ADV-16 ve ADV-03; plan S19
     açıklıklar etiketlendi".
   - 10 etiketin hiçbiri duvar çizgisine, kapı yayına, oda etiketine ya da ölçü yazısına binmiyor.
   - Hepsini etiketle aynı dairede de çakışmasız.
-  - Resim: `.run/gui-evidence/mimari-m28/m28-once-sonra.png`, ikon `ikon/ikonlar.png`.
+  - Kapı-pencere çizelgesinde Kod sütunu: K01 ×4, GK01, P01 ×4, P02 (`m28-cizelge-kod-yakin.png`).
+  - Mahale göre (`fixtures/interaction/real/mahale-gore-numara.txt`):
+    - Sıralı önizleme K1 … K10, pencereler de K.
+    - M ile K01, K02, K04, K05-A, K05-B, P01-A, P01-B, P02, P03, P05.
+    - Enter: çizelgenin No sütunu doluyor; Hepsini etiketle numaraları yazıyor.
+  - Resimler: `.run/gui-evidence/mimari-m28/m28-once-sonra.png`, `m28b-once-sonra.png`; ikon `ikon/ikonlar.png`.
 
 ## Sonraki adımlar
 
-- **Odaya göre numara** (bu maddenin ikinci bölümü): Açıklıkları numarala'da kapı, açıldığı odanın numarasını alır,
-  odada birden çok kapı varsa harf eklenir.
 - Ölçü zincirinde açıklığın yüksekliği (İçmimarlar Odası: "çizgi üzerinde genişlik, çizgi altında yükseklik").
-- Çizelgede Kod sütunu; doğrama listesinin kod başına satırı (M38).
+- Grafik doğrama listesi: kod başına doğramanın görünüşü (M38).
+- Mahale göre numaranın Python başvurusu ve `codes` işleminin ortak örnekleri.
+- Ek bina ve kat önekleri; EK-3 mahal numarasıyla kapı numarasının kısaltılması (bugün K + mahalin tam numarası).
 - CK (camlı kapı) ve CMK (camekân) türlerinin kendiliğinden ayrılması; bugün kod elle verilir.
 - Pencerenin parapet yüksekliğinin etikette yazılması.
 - `cad.tags.create`'te yerleştirme kuralının seçenek olması ve Python başvurusuna taşınması.

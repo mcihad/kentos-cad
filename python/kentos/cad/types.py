@@ -6311,6 +6311,7 @@ class ScheduleField(_StrEnum):
     - ``wing``
     - ``recordedArea``
     - ``shareWeight``
+    - ``code``: An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
     - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
@@ -6360,6 +6361,7 @@ class ScheduleField(_StrEnum):
     WING = "wing"
     RECORDED_AREA = "recordedArea"
     SHARE_WEIGHT = "shareWeight"
+    CODE = "code"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
     BASEBOARD = "baseboard"
@@ -6376,7 +6378,7 @@ class ScheduleField(_StrEnum):
     UNIT_KIND = "unitKind"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -115933,15 +115935,21 @@ class RenumberOpeningsOperation(OpeningsOperation):
     """Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every
     opening of the form `form` (all forms: absent).
     Attributes:
+        by_room: Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens
+            into, else its other side's; another's the room on either side), and when that room has more than one of
+            them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
         start: Unit: count.
     """
     TAG_VALUE: ClassVar[str] = "renumber"
+    by_room: bool | Unset = UNSET
     form: OpeningForm | OpeningFormName | None | Unset = UNSET
     prefix: str = ""
     start: int = 1
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "renumber"}
+        if self.by_room is not UNSET:
+            out["byRoom"] = self.by_room
         if self.form is not UNSET:
             out["form"] = None if self.form is None else _enum_out(self.form)
         out["prefix"] = self.prefix
@@ -115951,6 +115959,7 @@ class RenumberOpeningsOperation(OpeningsOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> RenumberOpeningsOperation:
         return cls(
+            by_room=data.get("byRoom", UNSET),
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             prefix=data["prefix"] if "prefix" in data else "",
             start=data["start"] if "start" in data else 1,

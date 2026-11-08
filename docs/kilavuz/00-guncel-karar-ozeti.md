@@ -138,6 +138,9 @@
       odasız kapı, P, B; tipsiz açıklığa biçim+ölçü tipi). Etiket `{code}`, `{size}` (cm, 90/210). `tool.openingCodes`
       kodlar + etiketler tek adım. `tags::opening_places`: araçlar etiketin yerini ağırlıkla seçer (duvar, yay, ölçü,
       etiket, uzaklık, başka duvarın ardı) ve `at` verir; komutun varsayılan yeri ADR 0344'teki gibi.
+    - `ScheduleField::Code` (Kod; araç var olan kapı-pencere çizelgesine ekler, Çizelge hazırında var). Numarala
+      `byRoom` (M): `opening_codes::room_of` hizmet edilen mahal (geçiş mahalli `PASSAGES` ayrılır), -A, -B …; araç
+      türe göre K, P, B önekleriyle tek adımda çalışır.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

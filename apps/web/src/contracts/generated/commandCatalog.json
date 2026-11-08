@@ -155278,6 +155278,10 @@
         {
           "description": "Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every\nopening of the form `form` (all forms: absent).",
           "properties": {
+            "byRoom": {
+              "description": "Mahale göre (docs/adr/3028): each opening `prefix` and its room's number instead (a door's the room it opens\ninto, else its other side's; another's the room on either side), and when that room has more than one of\nthem -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.",
+              "type": "boolean"
+            },
             "form": {
               "anyOf": [
                 {
@@ -177031,6 +177035,11 @@
             "recordedArea",
             "shareWeight"
           ],
+          "type": "string"
+        },
+        {
+          "const": "code",
+          "description": "An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.",
           "type": "string"
         },
         {

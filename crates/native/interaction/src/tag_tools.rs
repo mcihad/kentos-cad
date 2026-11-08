@@ -907,8 +907,13 @@ impl SchedulePreset {
             (SchedulePreset::Finishes, _) => {
                 &[Number, Name, FloorFinish, BaseFinish, WallFinish, CeilingFinish, Area, Baseboard]
             }
+            // A door and window schedule starts with its number and its type's joinery code (docs/adr/3028);
+            // grouped, by code: the joinery list.
+            (SchedulePreset::Openings, false) => {
+                &[Number, Code, Form, Type, Width, Height, Sill, Wall]
+            }
             (_, false) => return None,
-            (SchedulePreset::Openings, true) => &[Type, Form, Width, Height, Count],
+            (SchedulePreset::Openings, true) => &[Code, Type, Form, Width, Height, Count],
             (SchedulePreset::Spaces, true) => &[Usage, Count, Area],
             (SchedulePreset::Columns, true) => &[Type, Width, Count],
             (SchedulePreset::Walls, true) => &[Type, Thickness, Count, Length, Area],
