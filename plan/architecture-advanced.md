@@ -67,7 +67,7 @@ talimatla yapılır.
 | S10 | Duvar çizerken imleç etiketi CAD projesinde de "Semt" yazıyor | `crates/native/interaction/src/path.rs:2447` ✓ | Y | ADV-08 |
 | S11 | Seçenekler komut satırına odaklanıp harfle giriliyor (`E` Enter `0.25`): 2+1 izinde 15 odak değişimi. İmleç yanı değer kutusu var ama aracın seçeneklerini taşımıyor | `fixtures/interaction/v1/acceptance-flat.json` ✓ | Y | ADV-11 |
 | S12 | Başlangıç zayıf: Mimari, Giriş sekmesiyle açılıyor; yeni projede kat yok; şablon cm ve 1:50, proje başlangıcı m ve 1:100 (ADR 0626); örnek proje yok | `catalog/v1/templates/mimari.json:7-8` ✓, A1 S10 | Y | ADV-13 |
-| S13 | Tek adımda "oda" (duvar + mahal + etiket) yok. Odayı sürükleyerek büyütme menüde. Mobilya ve vitrifiye Mimari sekmesinde yok; "lavabo" araması sonuç vermiyor | A1 §4.1 | Y | ADV-11, 12 |
+| S13 | Tek adımda "oda" (duvar + mahal + etiket) yok. Odayı sürükleyerek büyütme menüde. Mobilya ve vitrifiye Mimari sekmesinde yok; "lavabo" araması sonuç vermiyor **(M21'de Oda aracı geldi; M23'te oda döşemesinden seçilip kenar tutamacıyla büyüyor)** | A1 §4.1 | Y | ADV-11, 12 |
 | S14 | Komut geçmişi ham parametre döküyor; Türkçe-İngilizce karışık ve kimlikli ("adopt: evet · frame: corners · wall 01a1b609-…") | M0 resimleri ✓ | O | ADV-08 |
 | S15 | Sağ tık menüsü ve üzerine gelme kartı mimariye özgü değil (kart parsel bilgisi gösteriyor) **(M17'de düzeldi: sağ tıkın ilk bölümü bina sekmesinin kendi paneli; kartta duvarın stili, kalınlığı ve katı, mahalin numarası, adı ve alanı)** | A1 S11 | O | ADV-09 |
 | S16 | İkonlar: üç duvar aracı bir ikonu, beş mahal aracı bir ikonu, Etiket ile Mahal numarala bir ikonu paylaşıyor; üç araç genel CAD ikonu ödünç alıyor; ikon turunda Mimari yok **(M16'da düzeldi: on yeni ikon, yedi çizelge yeniden çizildi; üç bekçi; ikon turunda 15 Mimari sahnesi)** | ikon tablosu ✓ (A1 §5) | O | ADV-10 |
@@ -244,7 +244,7 @@ durum ve kalan işin hangi yeni pakete ya da sıraya (§5) geçtiği.
 
 ### ADV-01 — Bağlantılı odaları net ölçüyle kur ve güvenle değiştir [~]
 
-**7 Kasım:** bağlar, önizleme ve çelişki kartı kodda var. Kalanlar: ölçülü bölme oluştururken kalıcı bağ yazmıyor (`walls_partition.rs:229-235`; ARCH-DRAW-02'nin `[ ]`'i) ve bağların yay kenar, kolon, aks ve döşeme kapsamı (ADR 0770 sınırları) → M49; odayı sürükleyerek büyütme → M23; gerçek pencerede kabul → ADV-26.
+**7 Kasım:** bağlar, önizleme ve çelişki kartı kodda var. Kalanlar: ölçülü bölme oluştururken kalıcı bağ yazmıyor (`walls_partition.rs:229-235`; ARCH-DRAW-02'nin `[ ]`'i) ve bağların yay kenar, kolon, aks ve döşeme kapsamı (ADR 0770 sınırları) → M49; odayı sürükleyerek büyütme → M23 (yapıldı, ADR 3023); gerçek pencerede kabul → ADV-26.
 
 _Durum (31 Ekim 2026, [ADR 0770](../docs/adr/0770-linked-rooms-and-architectural-bonds.md), [ADR 0780](../docs/adr/0780-bonds-in-the-way.md), [ADR 0790](../docs/adr/0790-bonds-while-dragging-and-together.md)):_ ortak duvarı benimseyen
 Dikdörtgen duvar, kaydırmanın etkisi (önizleme kartı), Bu ölçüyü koru (kilit karesi), duvar çizgisi ve pervaz bağları
@@ -671,6 +671,7 @@ _Durum (8 Kasım 2026):_ İmleç yanı seçenekler yapıldı (M18, [ADR 3018](..
 - Kenet dili (M20, [ADR 3020](../docs/adr/3020-snap-names-in-a-building-s-words.md)): kenet işareti duvarın çizgisini (Duvar yüzü, Çekirdek yüzü, Katman sınırı, Duvar ekseni, Taban çizgisi) ve açıklığın yerini (Açıklık ortası, kenarı) söyler.
 - Oda aracı (M21, [ADR 3021](../docs/adr/3021-room-tool.md)): dikdörtgen duvarlar, mahal ve etiketi tek adımda; mahal adı listeden ya da yazılarak; Duvar panelinde büyük düğme.
 - Kapanınca mahal ve canlı döngü alanı (M22, [ADR 3022](../docs/adr/3022-room-on-closing-and-live-loop-area.md)): Duvar'da Kapat mahali de yazar (M, isteğe bağlı); çizerken etikette döngünün alanı.
+- Odayı kenarından büyütme (M23, [ADR 3023](../docs/adr/3023-room-edge-grips.md)): oda döşemesine tıklanınca seçilir; her duvar kenarında çift oklu tutamaç duvarı kaydırır, kartta iç ölçü ve alan; yazılan sayı yeni iç ölçü (+/− ile ne kadar).
 - Kalanlar: çokgen oda, odaya çift tık, program hedefiyle fark; 2+1 izinin yeniden yazımı; açıklık ve kolonun geçici ölçüsünden kalıcı ölçü; mimari kenet süzgeci.
 
 **Kullanıcı sonucu:** "4,20 × 3,60 bir yatak odası, yanına 1,20'lik koridor" fareyle ve birkaç sayıyla çizilir; komut
@@ -1108,7 +1109,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M20 | Mimari kenet türleri ve kenet dili | ADV-11 | Yüz, eksen, çekirdek; imleç yanında yazı **(M20, ADR 3020: yapıldı; ad noktadan bulunur, kenet değişmez; süzgeç sonraya)** |
 | M21 | Oda aracı | ADV-11 | Duvar + mahal + etiket tek adımda **(M21, ADR 3021: yapıldı; dikdörtgen oda, tek geri alma, mahal adı açık seçim; çokgen oda M22'yle)** |
 | M22 | Kendiliğinden mahal ve canlı alan | ADV-11 | Döngü kapanınca mahal; sürüklerken alan **(M22, ADR 3022: yapıldı; Kapanınca mahal M ile, canlı döngü alanı; çift tık ve hedef farkı sonraya)** |
-| M23 | Odayı sürükleyerek büyütme | ADV-11, ADV-01 | Mahal kenarından |
+| M23 | Odayı sürükleyerek büyütme | ADV-11, ADV-01 | Mahal kenarından **(M23, ADR 3023: yapıldı; oda döşemesinden seçilir, kenar tutamacı Duvarı kaydır'ın planıyla, yazılan iç ölçü)** |
 | M24 | Donatı galerisi ve akıllı yerleşim | ADV-12 | "lavabo" → duvara yaslı yerleşim |
 | M25 | Kullanım alanları ve çakışma | ADV-12 | Kapı önü ve klozet önü bulguları |
 | M26 | Dört cephe dış ölçü ve iç zincirler | ADV-16 | Tek komut; 3/4 dış, 2+2 iç zincir |

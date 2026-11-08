@@ -216,6 +216,7 @@ pub mod regular;
 pub mod reshape;
 pub mod reshape_by;
 pub mod revcloud;
+pub mod room_grip;
 pub mod symbols;
 pub mod rotate;
 pub mod rotated;

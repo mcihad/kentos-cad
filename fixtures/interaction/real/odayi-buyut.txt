@@ -1,0 +1,51 @@
+# M23 (docs/adr/3023): Odayı büyüt in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on Mimari
+# at 1440 × 900, 13 px text. Oda draws a room; a click on its floor selects it and each of its edges shows a grip (a
+# pair of arrowheads). Resting on the right one tells what it does; clicked, it follows the pointer: the card says
+# the room's inner size and area; a click there moves the wall and the room grows. Ctrl+Z puts it back in one step;
+# the top grip clicked and +1 typed grows the room a metre up.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 88 75   # araç: Oda
+wait 800
+click 500 300
+wait 500
+move 800 550
+wait 300
+click 800 550
+wait 1200
+key Escape
+wait 500
+key Escape
+wait 500
+click 580 360   # odanın döşemesi: mahal seçilir
+wait 1000
+shot m23-10-oda-secili
+move 790 430
+wait 300
+move 800 425   # sağ kenarın tutamacı
+wait 1500
+shot m23-11-tutamac-ipucu
+click 800 425   # tutamaç tıklanır, imleci izler
+wait 500
+move 850 425
+wait 300
+move 880 425
+wait 1200
+shot m23-12-surukle-kart
+click 880 425   # yerine: duvar kayar, oda büyür
+wait 1200
+shot m23-13-oda-buyudu
+key ctrl+z
+wait 1200
+shot m23-14-geri-al
+move 640 310
+wait 300
+move 650 300   # üst kenarın tutamacı
+wait 800
+click 650 300
+wait 500
+type +1
+wait 300
+key Return
+wait 1200
+shot m23-15-yazilan-deger

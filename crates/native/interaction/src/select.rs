@@ -147,6 +147,10 @@ pub struct Select {
     hot: Vec<HotGrip>,
     /// A dynamic block's parameter grip being moved (docs/adr/0319 §1).
     param: Option<crate::param_grip::ParamDrag>,
+    /// A room's edge grip being moved (Odayı büyüt, docs/adr/3023).
+    room: Option<crate::room_grip::RoomDrag>,
+    /// The pointer rests on a room's edge grip: where, and what it is told (docs/adr/3023).
+    hover_room: Option<(Vec2, Vec<String>)>,
     /// A transform mode's ghosts of the selection, and their point marks.
     ghosts: Vec<Stroke>,
     marks: Vec<Vec2>,
@@ -207,6 +211,15 @@ impl Select {
     /// a click or a box starts here.
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover_grip = None;
+        self.hover_room = None;
+        // A room's edge grip (docs/adr/3023): a hot one is placed.
+        if self.room.as_ref().is_some_and(|g| g.hot) {
+            if let Some(mut g) = self.room.take() {
+                g.follow(p.world, cx);
+                g.commit(None, cx);
+            }
+            return;
+        }
         // A parameter's grip (docs/adr/0319 §1): a hot one is placed; one under the pointer is taken, a flip's turns.
         if self.param.as_ref().is_some_and(|g| g.hot) {
             if let Some(mut g) = self.param.take() {
@@ -226,6 +239,16 @@ impl Select {
                 self.param = Some(crate::param_grip::ParamDrag::start(slot, g, p.screen, cx));
                 cx.selection.set_hover(None);
             }
+            return;
+        }
+        // A room's edge grip under the pointer is taken (docs/adr/3023).
+        if self.grip.is_none()
+            && !p.shift
+            && let Some(g) = crate::room_grip::grip_at(p.screen, cx)
+        {
+            self.hot.clear();
+            self.room = Some(crate::room_grip::RoomDrag::start(g, p.screen, cx));
+            cx.selection.set_hover(None);
             return;
         }
         if self.grip.as_ref().is_some_and(|g| g.hot) {
@@ -289,6 +312,10 @@ impl Select {
             g.follow(p.world, cx);
             return;
         }
+        if let Some(g) = self.room.as_mut() {
+            g.follow(p.world, cx);
+            return;
+        }
         if let Some(g) = &self.grip {
             let (point, tracking) = points::constrain(Some(g.modes.anchor()), p, cx);
             self.grip_point = Some(point);
@@ -305,13 +332,17 @@ impl Select {
             // What a click would select: the selection filter's kinds (docs/adr/0187 §5).
             let hit = crate::selectable::hover(cx, p.raw);
             self.hover_grip = grip_tag_at(p, cx);
+            // On a room's edge grip: what dragging it does (docs/adr/3023).
+            self.hover_room = crate::room_grip::grip_at(p.screen, cx)
+                .map(|g| (p.raw, crate::room_grip::hover_lines(&g, cx)));
             // On a tagged grip the pointer is on the vertex, not on the object: it is not
             // hovered, and no rollover card opens over the tag (docs/adr/0142, 0160).
             cx.selection
-                .set_hover(hit.filter(|_| self.hover_grip.is_none()));
+                .set_hover(hit.filter(|_| self.hover_grip.is_none() && self.hover_room.is_none()));
             return;
         };
         self.hover_grip = None;
+        self.hover_room = None;
         // The box's first corner stays on the drawing through a pan or a zoom (docs/adr/0277).
         let start = At {
             screen: cx.view.to_screen(start.world),
@@ -337,6 +368,17 @@ impl Select {
                 if let Some(mut g) = self.param.take() {
                     g.follow(p.world, cx);
                     g.commit(cx);
+                }
+            } else {
+                g.hot = true;
+            }
+            return;
+        }
+        if let Some(g) = self.room.as_mut().filter(|g| !g.hot) {
+            if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
+                if let Some(mut g) = self.room.take() {
+                    g.follow(p.world, cx);
+                    g.commit(None, cx);
                 }
             } else {
                 g.hot = true;
@@ -440,7 +482,7 @@ impl Select {
 
     /// The temporary dimensions brought up to date for the selection (docs/adr/0701).
     pub fn see_temporary(&mut self, cx: &Context<'_>) {
-        if self.grip.is_none() && self.param.is_none() {
+        if self.grip.is_none() && self.param.is_none() && self.room.is_none() {
             self.temporary.see(self.pointer, &self.choices, cx);
             self.wall_temporary.see(self.pointer, &self.choices, cx);
             self.column_temporary.see(&self.choices, cx);
@@ -501,7 +543,11 @@ impl Select {
     /// A click on a temporary dimension's square: its reference or fixed end switched for the session, drawn again;
     /// whether one was there (docs/adr/0728 §2).
     pub fn switch_at(&mut self, screen: [f64; 2], cx: &mut Context<'_>) -> bool {
-        if self.grip.is_some() || self.param.is_some() || self.start.is_some() {
+        if self.grip.is_some()
+            || self.param.is_some()
+            || self.room.is_some()
+            || self.start.is_some()
+        {
             return false;
         }
         let squares: Vec<_> = self
@@ -539,7 +585,11 @@ impl Select {
         screen: [f64; 2],
         cx: &Context<'_>,
     ) -> Option<Box<dyn crate::tool::Tool>> {
-        if self.grip.is_some() || self.param.is_some() || self.start.is_some() {
+        if self.grip.is_some()
+            || self.param.is_some()
+            || self.room.is_some()
+            || self.start.is_some()
+        {
             return None;
         }
         if let Some(field) = self.temporary.at(screen, cx) {
@@ -556,7 +606,7 @@ impl Select {
     /// Whether a grip is being moved: the select tool then takes points,
     /// Enter and Esc, and snaps (the web's `snaps`).
     pub fn grip_active(&self) -> bool {
-        self.grip.is_some() || self.param.is_some()
+        self.grip.is_some() || self.param.is_some() || self.room.is_some()
     }
 
     /// The grip being moved, drawn larger (the web's `activeGrip`).
@@ -566,11 +616,17 @@ impl Select {
 
     /// Where perpendicular and tangent snaps are taken from: where the grip was.
     pub fn snap_from(&self) -> Option<Vec2> {
-        self.grip.as_ref().map(|g| g.origin)
+        self.grip
+            .as_ref()
+            .map(|g| g.origin)
+            .or_else(|| self.room.as_ref().map(|r| r.grip.at))
     }
 
     pub fn prompt(&self) -> Prompt {
         if let Some(g) = &self.param {
+            return g.prompt();
+        }
+        if let Some(g) = &self.room {
             return g.prompt();
         }
         match &self.grip {
@@ -589,6 +645,15 @@ impl Select {
                 return true;
             }
             self.param = Some(g);
+            return false;
+        }
+        // A room's edge grip: the room's new inner size, or by how much (docs/adr/3023).
+        if let Some(g) = self.room.take() {
+            if let Some(out) = g.typed_out(text, cx) {
+                g.commit(Some(out), cx);
+                return true;
+            }
+            self.room = Some(g);
             return false;
         }
         let Some(g) = self.grip.as_mut() else {
@@ -623,6 +688,11 @@ impl Select {
             g.commit(cx);
             return true;
         }
+        if let Some(mut g) = self.room.take() {
+            g.follow(p, cx);
+            g.commit(None, cx);
+            return true;
+        }
         if self.grip.is_none() {
             return false;
         }
@@ -637,6 +707,10 @@ impl Select {
             g.commit(cx);
             return true;
         }
+        if let Some(g) = self.room.take() {
+            g.commit(None, cx);
+            return true;
+        }
         let Some(g) = &self.grip else {
             return false;
         };
@@ -647,8 +721,12 @@ impl Select {
 
     /// Esc: the grip stays where it was. False when no grip moves.
     pub fn cancel(&mut self) -> bool {
-        let moving = self.grip.is_some() || self.param.is_some() || !self.hot.is_empty();
+        let moving = self.grip.is_some()
+            || self.param.is_some()
+            || self.room.is_some()
+            || !self.hot.is_empty();
         self.param = None;
+        self.room = None;
         self.end_grip();
         self.hot.clear();
         moving
@@ -993,7 +1071,20 @@ impl Select {
         if let Some(g) = &self.param {
             return Some(g.preview(format));
         }
+        if let Some(g) = &self.room {
+            return Some(g.preview(format));
+        }
         let (Some(g), Some(at)) = (self.grip.as_ref(), self.grip_point) else {
+            // Resting on a room's edge grip: what dragging it does (docs/adr/3023).
+            if let Some((at, lines)) = &self.hover_room {
+                return Some(Preview {
+                    tag: Some(Tag {
+                        at: *at,
+                        lines: lines.clone(),
+                    }),
+                    ..Preview::default()
+                });
+            }
             // Resting on the grip of a vertex: its elevation and its shared corner (docs/adr/0142, 0160).
             let Some(tag) = self.hover_grip else {
                 // The selected opening's or wall's temporary dimensions (docs/adr/0701, 0710).

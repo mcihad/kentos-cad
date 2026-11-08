@@ -113,6 +113,10 @@
   - **Kapanınca mahal ve canlı döngü alanı (M22, [ADR 3022](../adr/3022-room-on-closing-and-live-loop-area.md)):**
     - Duvar'ın `Memory::wall_room` (M): Kapat kapalı duvarı ve kutup noktasından tohumlanan mahali tek adımda yazar; ilk
       değeri Kapalı. Çizerken etikette "Döngü alanı" (yol üzerinden, imleçten ilk köşeye kapanan halka).
+  - **Odayı kenarından büyütme (M23, [ADR 3023](../adr/3023-room-edge-grips.md)):**
+    - Mahal döşemesinden seçilir (`store/pick.rs`: net alanıyla alan isabeti; kenarlar ve daha küçük alanlar önce; döşeme
+      hariç). Seçili mahalin duvar yüzündeki her düz kenarında `room_grip` tutamacı: Duvarı kaydır'ın planı, kart iç
+      ölçü + alan; yazılan sayı yeni iç ölçü, +/− ile fark. Sınırı çizilmiş mahalde ve kilitli duvarda tutamaç yok.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

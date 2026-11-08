@@ -66,6 +66,40 @@ fn a_rooms_outline_on_a_walls_face_does_not_take_a_click_in_the_wall() {
     assert_eq!(s.hits(Vec2::new(E + 4.70, N + 3.0), tol), vec![2.0, 3.0]);
 }
 
+/// docs/adr/3023: a room is picked on its floor, as its net area, so it can be selected for its edge grips; a line
+/// drawn in it goes first (edges before areas).
+#[test]
+fn a_click_on_a_rooms_floor_picks_the_room_and_a_line_in_it_first() {
+    let mut s = store();
+    let objects = format!(
+        r#"[{{ "kind": "space", "id": 3, "layerId": "0", "attrs": {{}},
+            "parts": [{{ "outer": {{ "pts": [{{ "x": {a}, "y": {n0} }}, {{ "x": {b}, "y": {n0} }}, {{ "x": {b}, "y": {n1} }}, {{ "x": {a}, "y": {n1} }}] }}, "holes": [] }}] }},
+          {{ "kind": "line", "id": 5, "layerId": "0", "attrs": {{}}, "a": {{ "x": {l0}, "y": {m} }}, "b": {{ "x": {l1}, "y": {m} }} }}]"#,
+        a = E + 4.65,
+        b = E + 11.0,
+        n0 = N,
+        n1 = N + 8.0,
+        l0 = E + 6.0,
+        l1 = E + 9.0,
+        m = N + 6.0
+    );
+    s.put_json(&objects).expect("the room and a line");
+    let tol = 0.08;
+    assert_eq!(
+        s.hits(Vec2::new(E + 8.0, N + 3.0), tol),
+        vec![3.0],
+        "its floor"
+    );
+    assert_eq!(s.hit(Vec2::new(E + 8.0, N + 3.0), tol), Some(3.0));
+    assert_eq!(
+        s.hits(Vec2::new(E + 7.0, N + 6.0), tol),
+        vec![5.0, 3.0],
+        "the line, then the room"
+    );
+    // Left of the partition there is no space: nothing there, as before.
+    assert!(s.hits(Vec2::new(E + 2.0, N + 3.0), tol).is_empty());
+}
+
 /// docs/adr/0798 §3: the wall's body runs on through its openings as an area; a click in a door's gap, between its
 /// jambs, picks the door (the smaller area) and the wall after it, where Sıradakini seç finds it.
 #[test]

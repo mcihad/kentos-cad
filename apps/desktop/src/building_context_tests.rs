@@ -464,3 +464,210 @@ fn duvar_shows_the_loop_s_area_and_kapat_writes_its_room_when_asked() {
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(counts(&app), (0, 0, 0), "one undo takes both");
 }
+
+fn escape(app: &mut App) {
+    use iced::keyboard::key::{Code, Named, Physical};
+    let _ = app.update(Message::Key(crate::keys::KeyPress {
+        key: iced::keyboard::Key::Named(Named::Escape),
+        physical: Physical::Code(Code::Escape),
+        modifiers: iced::keyboard::Modifiers::default(),
+        text: None,
+        repeat: false,
+    }));
+}
+
+fn room_area(app: &App) -> f64 {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let room = doc
+        .entities()
+        .find(|e| e.kind() == "space")
+        .expect("the room");
+    match doc.arch_value(room, "area", None) {
+        Some(kentos_domain::arch_values::ArchValue::Area(a)) => a,
+        other => panic!("an area: {other:?}"),
+    }
+}
+
+/// Odayı büyüt (M23, docs/adr/3023): Oda's room is picked on its floor; each of its four edges has a grip. The right
+/// one dragged a metre out moves the wall behind it and the room grows 4 × 3 → 5 × 3 in one undo step; the top one
+/// given 3.5 makes it 3,50 across, and the right one given −0.5 takes half a metre off.
+#[test]
+fn a_room_s_edge_grip_moves_its_wall_and_the_room_grows() {
+    use crate::viewport::Event;
+    let mut app = fresh_mimari();
+    let _ = app.update(Message::WindowResized(iced::Size::new(1440.0, 900.0)));
+    let _ = app.update(Message::Run("tool.room"));
+    app.with_tool(|s, cx| s.configure("A", "Salon", cx));
+    app.with_tool(|s, cx| s.configure("B", "4,3", cx));
+    let _ = app.submit_line("10,10");
+    let _ = app.submit_line("12,12");
+    assert_eq!(counts(&app), (1, 1, 1), "the walls, the room and its tag");
+    assert!((room_area(&app) - 12.0).abs() < 1e-6);
+    escape(&mut app);
+    escape(&mut app);
+    app.viewport.camera.set_size(1100.0, 600.0);
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: 8.0,
+            min_y: 8.0,
+            max_x: 17.0,
+            max_y: 15.0,
+        },
+        24.0,
+    );
+    let click = |app: &mut App, at: iced::Point| {
+        let _ = app.update(Message::Viewport(Event::Moved(at)));
+        let _ = app.update(Message::Viewport(Event::Pressed(at)));
+        let _ = app.update(Message::Viewport(Event::Released(at)));
+    };
+    // Its floor, away from its tag in its middle: the room.
+    let at = screen(&app, 10.5, 12.6);
+    click(&mut app, at);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let room = doc
+        .entities()
+        .find(|e| e.kind() == "space")
+        .map(|e| Slot(e.base().id))
+        .expect("the room");
+    assert_eq!(
+        app.selection.ids(),
+        [room],
+        "a click on its floor picks the room"
+    );
+    let grips = |app: &App| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        kentos_interaction::room_grip::grips(doc, &app.spatial, app.selection.ids())
+    };
+    let found = grips(&app);
+    assert_eq!(found.len(), 4, "a grip on each edge: {found:?}");
+    let right = found
+        .iter()
+        .max_by(|a, b| a.at.x.total_cmp(&b.at.x))
+        .cloned()
+        .expect("the right edge's");
+    assert!((right.outward.x - 1.0).abs() < 1e-9, "{right:?}");
+    // Dragged a metre out: the card says the inner size and the area, the release writes it.
+    let from = screen(&app, right.at.x, right.at.y);
+    let to = screen(&app, right.at.x + 1.0, right.at.y);
+    let _ = app.update(Message::Viewport(Event::Moved(from)));
+    let _ = app.update(Message::Viewport(Event::Pressed(from)));
+    let _ = app.update(Message::Viewport(Event::Moved(to)));
+    let format = app.format();
+    let lines = app
+        .session
+        .preview(&format)
+        .and_then(|p| p.tag)
+        .map(|t| t.lines)
+        .unwrap_or_default();
+    assert!(
+        lines.first().is_some_and(|l| l.starts_with("İç ölçü")),
+        "{lines:?}"
+    );
+    assert!(lines.iter().any(|l| l.contains("Salon")), "{lines:?}");
+    let _ = app.update(Message::Viewport(Event::Released(to)));
+    assert!(
+        (room_area(&app) - 15.0).abs() < 1e-6,
+        "5 × 3: {}",
+        room_area(&app)
+    );
+    assert!(crate::files_testing::last_said(&app).contains("Oda büyütüldü"));
+    let _ = app.update(Message::Run("edit.undo"));
+    assert!(
+        (room_area(&app) - 12.0).abs() < 1e-6,
+        "one undo: {}",
+        room_area(&app)
+    );
+    // The top one clicked, then 3.5 typed: 3,50 across.
+    app.selection.set([room]);
+    let top = grips(&app)
+        .into_iter()
+        .max_by(|a, b| a.at.y.total_cmp(&b.at.y))
+        .expect("the top edge's");
+    let at = screen(&app, top.at.x, top.at.y);
+    click(&mut app, at);
+    let _ = app.submit_line("3.5");
+    assert!(
+        (room_area(&app) - 14.0).abs() < 1e-6,
+        "4 × 3,5: {}",
+        room_area(&app)
+    );
+    // The right one given −0.5: half a metre off.
+    app.selection.set([room]);
+    let right = grips(&app)
+        .into_iter()
+        .max_by(|a, b| a.at.x.total_cmp(&b.at.x))
+        .expect("the right edge's");
+    let at = screen(&app, right.at.x, right.at.y);
+    click(&mut app, at);
+    let _ = app.submit_line("-0.5");
+    assert!(
+        (room_area(&app) - 12.25).abs() < 1e-6,
+        "3,5 × 3,5: {}",
+        room_area(&app)
+    );
+    assert!(crate::files_testing::last_said(&app).contains("Oda küçültüldü"));
+}
+
+/// A room's edge has a grip only where a wall it follows stands (docs/adr/3023): none on a locked wall's layer, none on
+/// a room whose boundary was drawn (it does not follow its walls).
+#[test]
+fn a_room_s_edge_grips_need_an_unlocked_wall_and_a_room_that_follows_it() {
+    let mut app = fresh_mimari();
+    let _ = app.update(Message::Run("tool.room"));
+    app.with_tool(|s, cx| s.configure("B", "4,3", cx));
+    let _ = app.submit_line("10,10");
+    let _ = app.submit_line("12,12");
+    escape(&mut app);
+    escape(&mut app);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let room = doc
+        .entities()
+        .find(|e| e.kind() == "space")
+        .expect("the room");
+    let (slot, level, parts) = match room {
+        kentos_commands::Entity::Space(s) => (
+            Slot(s.base.id),
+            s.space.arch.level.clone(),
+            serde_json::to_value(&s.space.parts).expect("its parts"),
+        ),
+        _ => unreachable!(),
+    };
+    let walls = doc
+        .entities()
+        .find(|e| e.kind() == "wall")
+        .map(|e| e.base().layer_id.clone())
+        .expect("the walls' layer");
+    let rooms = doc
+        .entities()
+        .find(|e| e.kind() == "space")
+        .map(|e| e.base().layer_id.clone())
+        .expect("its layer");
+    let grips = |app: &App, slot: Slot| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        kentos_interaction::room_grip::grips(doc, &app.spatial, &[slot]).len()
+    };
+    assert_eq!(grips(&app, slot), 4);
+    command(
+        &mut app,
+        "cad.layers.set",
+        json!({"operation": "locked", "layer": walls, "value": true}),
+    );
+    assert_eq!(grips(&app, slot), 0, "the walls locked");
+    command(
+        &mut app,
+        "cad.layers.set",
+        json!({"operation": "locked", "layer": walls, "value": false}),
+    );
+    assert_eq!(grips(&app, slot), 4);
+    // The same boundary drawn: it does not follow the walls, no grips.
+    let drawn = command(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": rooms, "spaces": [{"parts": parts, "arch": {"level": level}}]}),
+    );
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let drawn = doc
+        .slot_of(uids(&drawn)[0].parse().expect("an id"))
+        .expect("the drawn room");
+    assert_eq!(grips(&app, drawn), 0, "a drawn boundary");
+}

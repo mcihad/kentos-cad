@@ -890,25 +890,38 @@ pub fn effect_lines(
             ));
         }
     }
-    for space in &e.spaces {
-        let name = [space.number.as_str(), space.name.as_str()]
-            .iter()
-            .filter(|t| !t.is_empty())
-            .copied()
-            .collect::<Vec<_>>()
-            .join(" ");
-        let name = if name.is_empty() {
-            "Mahal".to_owned()
-        } else {
-            format!("Mahal {name}")
-        };
-        let broken = if space.broken { " (kapanmıyor)" } else { "" };
-        lines.push(format!(
-            "{name}: {} → {}{broken}",
-            f.area(space.before),
-            f.area(space.after)
-        ));
+    lines.extend(e.spaces.iter().map(|space| space_line(space, f)));
+    lines.extend(count_lines(e, joined));
+    if lines.is_empty() {
+        lines.push("Başka bir şey değişmez.".to_owned());
     }
+    lines
+}
+
+/// A room's area before and after a move: “Mahal 1 Salon: 12,00 m² → 14,00 m²” (Odayı büyüt's card too,
+/// docs/adr/3023).
+pub(crate) fn space_line(space: &kentos_commands::SpaceAreaChange, f: &Format) -> String {
+    let name = [space.number.as_str(), space.name.as_str()]
+        .iter()
+        .filter(|t| !t.is_empty())
+        .copied()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let name = if name.is_empty() {
+        "Mahal".to_owned()
+    } else {
+        format!("Mahal {name}")
+    };
+    let broken = if space.broken { " (kapanmıyor)" } else { "" };
+    format!(
+        "{name}: {} → {}{broken}",
+        f.area(space.before),
+        f.area(space.after)
+    )
+}
+
+/// How many walls, openings, dimensions and fixtures follow a move.
+pub(crate) fn count_lines(e: &kentos_commands::WallEffects, joined: usize) -> Vec<String> {
     let counts = [
         (joined, "bitişik duvar izler"),
         (e.bonded.len(), "bağlı duvar kayar"),
@@ -916,15 +929,11 @@ pub fn effect_lines(
         (e.dimensions.len(), "ölçü yenilenir"),
         (e.fixtures.len(), "donatı izler"),
     ];
-    for (n, what) in counts {
-        if n > 0 {
-            lines.push(format!("{n} {what}"));
-        }
-    }
-    if lines.is_empty() {
-        lines.push("Başka bir şey değişmez.".to_owned());
-    }
-    lines
+    counts
+        .into_iter()
+        .filter(|(n, _)| *n > 0)
+        .map(|(n, what)| format!("{n} {what}"))
+        .collect()
 }
 
 /// The + beside a wall's clear distance (docs/adr/3019): the distance written as a permanent dimension, one undo step,

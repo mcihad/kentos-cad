@@ -728,16 +728,38 @@ impl App {
         ids.iter().map(|id| self.checked(id)).collect()
     }
 
-    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips.
+    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips; and the
+    /// selected rooms' edge grips (Odayı büyüt, docs/adr/3023), drawn as a linear parameter's pair of arrowheads square
+    /// to the edge.
     fn param_grip_marks(&self) -> Vec<kentos_geometry_core::block_dynamic::ParamGrip> {
+        use kentos_geometry_core::block_dynamic::{GripKind, ParamGrip};
         if self.selection.len() > kentos_interaction::select::GRIP_LIMIT {
             return Vec::new();
         }
-        self.spatial
+        let mut marks: Vec<ParamGrip> = self
+            .spatial
             .param_grips(self.selection.ids())
             .into_iter()
             .map(|(_, g)| g)
-            .collect()
+            .collect();
+        if let Some(doc) = self.document.as_ref() {
+            marks.extend(
+                kentos_interaction::room_grip::grips(
+                    &doc.model,
+                    &self.spatial,
+                    self.selection.ids(),
+                )
+                .into_iter()
+                .map(|g| ParamGrip {
+                    name: kentos_interaction::room_grip::LABEL.to_owned(),
+                    kind: GripKind::Linear,
+                    at: g.at,
+                    from: None,
+                    along: Some(g.outward),
+                }),
+            );
+        }
+        marks
     }
 
     fn drawing_area(&self) -> Element<'_, Message> {
