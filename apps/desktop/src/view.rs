@@ -758,6 +758,7 @@ impl App {
                     extent: self.extent_mark(),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     graph: self.parcel_graph_marks(),
+                    reach: self.impact_reach_marks(),
                     broken: self.broken_marks(),
                     missing: self.missing_pictures(),
                     clips: self.clip_marks(),
@@ -954,6 +955,7 @@ impl App {
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
             graph: self.parcel_graph_marks(),
+            reach: self.impact_reach_marks(),
             broken: self.broken_marks(),
             missing: self.missing_pictures(),
             clips: self.clip_marks(),

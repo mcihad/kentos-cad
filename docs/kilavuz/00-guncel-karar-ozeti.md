@@ -160,6 +160,9 @@
 - **İmar planında yola giren karar (8 Kasım 2026; MAP-09, [ADR 2240](../../docs/adr/2240-zoning-decision-inside-road-width.md)).**
   `cad.zoning.check`'in `roadWidth`'i: genişliği yazılmış yolun şeridine (aksın iki yanında yarı genişlik) yolun
   planının yol olmayan kararı giremez (PAİY m. 9(1)(b)). Harita + CBS.
+- **Senaryo ölçülerinde erişim çizimde (8 Kasım 2026; MAP-10, [ADR 2260](../../docs/adr/2260-scenario-access-on-the-drawing.md)).**
+  Cevapta `reach` erişen, erişmeyen ve hedef alanları adlandırır; Erişimi çizimde göster senaryonun tarafını yeşil,
+  kırmızı ve kesikli çerçeveyle bırakır, İşareti kaldır siler. Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

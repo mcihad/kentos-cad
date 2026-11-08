@@ -1540,6 +1540,8 @@ pub struct App {
     pub(crate) parcel_boundaries: crate::parcel_boundaries_window::State,
     /// Sınır grafiği left on the drawing by Çizimde göster (docs/adr/2220), until İşareti kaldır.
     pub(crate) parcel_graph: Option<crate::parcel_boundaries_marks::Shown>,
+    /// Senaryo ölçüleri's access left on the drawing (docs/adr/2260), until İşareti kaldır.
+    pub(crate) impact_reach: Option<crate::impact_reach_marks::Shown>,
     pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) asbuilt: crate::asbuilt_window::State,
@@ -2006,6 +2008,7 @@ impl App {
             parcels_check: Default::default(),
             parcel_boundaries: Default::default(),
             parcel_graph: None,
+            impact_reach: None,
             pipes_check: Default::default(),
             exchange_check: Default::default(),
             asbuilt: Default::default(),
@@ -3660,6 +3663,7 @@ impl App {
                 self.address_unmark();
                 self.sources.extent_mark = None;
                 self.parcel_graph = None;
+                self.impact_reach = None;
                 return self.data_event(crate::search::Event::Unmark);
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
@@ -4205,7 +4209,10 @@ impl App {
             "edit.cycleSelection" => self.selection.cycle().is_some(),
             // Only while a place is marked (search/, docs/adr/0178 §6).
             "data.unmark" => {
-                self.data_mark().is_some() || self.extent_mark().is_some() || self.parcel_graph_marks().is_some()
+                self.data_mark().is_some()
+                    || self.extent_mark().is_some()
+                    || self.parcel_graph_marks().is_some()
+                    || self.impact_reach_marks().is_some()
             }
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),

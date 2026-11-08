@@ -40,7 +40,7 @@ sırayla alır.
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060 | m. 8(5) yanılma sınırı; ayırma çapının çizimi; değer esaslı dağıtım | ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800 | dönüşümün buluta uygulanması; çoklu tarama demeti; kaba hatayı atan ağırlıklar | gerçek veri ölçümü |
@@ -856,6 +856,13 @@ uzaklığının kurum kararı olduğu (KentOS değer vermez). Kanıtlanan: `cad.
 olan alan ve payı, yaylar kesin; hedefi olmayan taraf eksik) verir; 30 bağımsız durum (Rust, Python); pencerede
 “Ölçüler (değerler sizin)” bölümü. Açık: eğim, altyapıya yakınlık, risk, ağ üzerinden erişim, damganın çizimde
 saklanması, zarf ve harita gösterimi.
+
+**8 Kasım 2026, üçüncü tur — erişim çizimde ([ADR 2260](../docs/adr/2260-scenario-access-on-the-drawing.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Urban'ın göstergeyi görünümde açması. Kanıtlanan: `cad.scenarios.impact`
+erişim sorulunca `reach` ile erişen, erişmeyen ve hedef alanları iki tarafta da kalıcı kimlikleriyle adlandırır (ortak
+durumlar, MCP); Senaryo ölçüleri'nde Erişimi çizimde göster senaryonun erişimini yeşil, kırmızı ve kesikli çerçeveyle
+çizimde bırakır, çizim değiştikçe yeniden, İşareti kaldır'a dek. Açık: mevcut durumun gösterimi, ağ üzerinden erişim
+(ağ oluşturucusu işlem katmanında), eğim, altyapıya yakınlık, damganın çizimde saklanması.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

@@ -6,15 +6,16 @@
 //! comparison's stamp says whether the field state has changed since. Asked for, two measures more with the user's
 //! values (docs/adr/2040): the impervious area (each use's area × its share) and the area reached (a `from` area whose
 //! centroid, the core's `shape_centroid`, lies within the distance of a `to` area by the core's exact distance,
-//! arcs included) with its share. The shared cases are `fixtures/commands/v1/cad.scenarios.impact.json`.
+//! arcs included) with its share, and which areas it reached on each side (docs/adr/2260). The shared cases are
+//! `fixtures/commands/v1/cad.scenarios.impact.json`.
 
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, Entity, ImpactChange, ImpactLayer, ImpactMeasure, ImpactUse, LayerNodeType, ScenariosImpact,
-    ScenariosImpacted, scenario_pairs,
+    CommandResult, Entity, ImpactChange, ImpactLayer, ImpactMeasure, ImpactReach, ImpactUse, LayerNodeType,
+    ScenariosImpact, ScenariosImpacted, scenario_pairs,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length};
 use kentos_geometry_core::geom::centroid::shape_centroid;
 use kentos_geometry_core::ops::spatial_query::{distance, geometry_of};
@@ -76,8 +77,8 @@ struct Side<'a> {
     no_key: usize,
     uses: BTreeMap<String, f64>,
     keyed: Vec<(String, &'a Entity, f64)>,
-    /// Every area: its shape, use and area (docs/adr/2040's measures).
-    areas: Vec<(Shape, String, f64)>,
+    /// Every area: its shape, use, area and persistent id (docs/adr/2040's measures, 2260's ids).
+    areas: Vec<(Shape, String, f64, String)>,
 }
 
 fn side<'a>(doc: &'a Document, layers: &[String], field: &str, key: &str) -> Side<'a> {
@@ -91,7 +92,8 @@ fn side<'a>(doc: &'a Document, layers: &[String], field: &str, key: &str) -> Sid
                     let area = entity_area(&shape(e)).unwrap_or(0.0);
                     s.area += area;
                     let usage = attr(field);
-                    s.areas.push((shape(e), usage.clone(), area));
+                    let uid = doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
+                    s.areas.push((shape(e), usage.clone(), area, uid));
                     if usage.is_empty() {
                         s.no_use += 1;
                     }
@@ -130,7 +132,7 @@ fn capacity(e: &Entity, area: f64, field: &str) -> Option<f64> {
 fn impervious(s: &Side<'_>, shares: &BTreeMap<String, f64>) -> (f64, Vec<String>) {
     let mut out = 0.0;
     let mut missing = Vec::new();
-    for (_, usage, area) in &s.areas {
+    for (_, usage, area, _) in &s.areas {
         match shares.get(usage) {
             Some(k) => out += area * k,
             None if *area > 0.0 && !missing.contains(usage) => missing.push(usage.clone()),
@@ -140,21 +142,40 @@ fn impervious(s: &Side<'_>, shares: &BTreeMap<String, f64>) -> (f64, Vec<String>
     (out, missing)
 }
 
-/// The area reached on a side: the `from` areas whose centroid lies within `d` of a `to` area; the `from` areas'
-/// whole; whether the side has a `to` area at all.
-fn reached(s: &Side<'_>, access: &kentos_commands::ImpactAccess) -> (f64, f64, bool) {
-    let targets: Vec<_> =
-        s.areas.iter().filter(|(_, u, _)| access.to.contains(u)).filter_map(|(sh, _, _)| geometry_of(sh)).collect();
-    let (mut got, mut whole) = (0.0, 0.0);
-    for (sh, _, area) in s.areas.iter().filter(|(_, u, _)| access.from.contains(u)) {
-        whole += area;
-        let Some(c) = shape_centroid(sh) else { continue };
-        let Some(point) = geometry_of(&Shape::Point { p: c, z: None, parts: None }) else { continue };
-        if targets.iter().map(|t| distance(&point, t)).any(|d| d <= access.distance) {
-            got += area;
+/// What the access found on a side: the area reached, the `from` areas' whole, and by persistent id the `from` areas
+/// reached, those not, and the `to` areas (whether the side has one at all).
+struct Reached {
+    got: f64,
+    whole: f64,
+    reached: Vec<String>,
+    unreached: Vec<String>,
+    targets: Vec<String>,
+}
+
+/// The access on a side: the `from` areas whose centroid lies within `d` of a `to` area.
+fn reached(s: &Side<'_>, access: &kentos_commands::ImpactAccess) -> Reached {
+    let to: Vec<_> = s.areas.iter().filter(|(_, u, _, _)| access.to.contains(u)).collect();
+    let targets: Vec<_> = to.iter().filter_map(|(sh, _, _, _)| geometry_of(sh)).collect();
+    let mut r = Reached {
+        got: 0.0,
+        whole: 0.0,
+        reached: Vec::new(),
+        unreached: Vec::new(),
+        targets: to.iter().map(|(_, _, _, uid)| uid.clone()).collect(),
+    };
+    for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| access.from.contains(u)) {
+        r.whole += area;
+        let near = shape_centroid(sh)
+            .and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }))
+            .is_some_and(|point| targets.iter().map(|t| distance(&point, t)).any(|d| d <= access.distance));
+        if near {
+            r.got += area;
+            r.reached.push(uid.clone());
+        } else {
+            r.unreached.push(uid.clone());
         }
     }
-    (got, whole, !targets.is_empty())
+    r
 }
 
 /// The asked measures' own checks.
@@ -251,8 +272,18 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
             asked_gaps.push(format!("Geçirimsizlik payı verilmemiş kullanım: {}; geçirimsiz alan onlarsız hesaplandı.", words.join(", ")));
         }
     }
+    let mut reach = None;
     if let Some(access) = &input.access {
-        let ((xg, xw, xt), (yg, yw, yt)) = (reached(&b, access), reached(&a, access));
+        let (x, y) = (reached(&b, access), reached(&a, access));
+        let (xg, xw, xt, yg, yw, yt) = (x.got, x.whole, !x.targets.is_empty(), y.got, y.whole, !y.targets.is_empty());
+        reach = Some(ImpactReach {
+            base_reached: x.reached,
+            base_unreached: x.unreached,
+            base_targets: x.targets,
+            alternative_reached: y.reached,
+            alternative_unreached: y.unreached,
+            alternative_targets: y.targets,
+        });
         let (from, to) = (access.from.join(", "), access.to.join(", "));
         measures.push(measure(
             "access",
@@ -381,6 +412,7 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         gaps,
         assumptions,
         stale: input.since.as_deref().map(|s| s.trim() != now),
+        reach,
         stamp: now,
         revision: doc.revision().to_string(),
     })
@@ -394,6 +426,11 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ScenariosImpact) -> CommandRe
 }
 
 /// The answer; reads only.
+/// The answer for a window or the drawing's marks (docs/adr/2260), or why it does not read.
+pub fn preview(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, String> {
+    run(doc, input).map_err(crate::road_corridors::words)
+}
+
 pub fn plan(cx: &ExecutionContext<'_>, input: &ScenariosImpact) -> CommandResult<ScenariosImpacted> {
     match run(cx.doc, input) {
         Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },

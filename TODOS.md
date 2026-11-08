@@ -84,6 +84,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Sınır grafiği penceresinde Çizimde göster.
 - MAP-09 / ADR 2240: `cad.zoning.check`'in web işleyicisinde `roadWidth` (40 ortak durum); web'in İmar planı denetimi
   penceresinde Yola giren karar.
+- MAP-10 / ADR 2260: `cad.scenarios.impact`'in web işleyicisinde `reach`; web'in Senaryo ölçüleri penceresinde Erişimi
+  çizimde göster.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

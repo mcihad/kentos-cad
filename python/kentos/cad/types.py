@@ -44707,6 +44707,40 @@ class ImpactOwn(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactReach(_Model):
+    """Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in
+    the drawing's order, the `from` areas reached, those not reached, and the `to` areas.
+    """
+    base_reached: list[str]
+    base_unreached: list[str]
+    base_targets: list[str]
+    alternative_reached: list[str]
+    alternative_unreached: list[str]
+    alternative_targets: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["baseReached"] = list(self.base_reached)
+        out["baseUnreached"] = list(self.base_unreached)
+        out["baseTargets"] = list(self.base_targets)
+        out["alternativeReached"] = list(self.alternative_reached)
+        out["alternativeUnreached"] = list(self.alternative_unreached)
+        out["alternativeTargets"] = list(self.alternative_targets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactReach:
+        return cls(
+            base_reached=list(data["baseReached"]),
+            base_unreached=list(data["baseUnreached"]),
+            base_targets=list(data["baseTargets"]),
+            alternative_reached=list(data["alternativeReached"]),
+            alternative_unreached=list(data["alternativeUnreached"]),
+            alternative_targets=list(data["alternativeTargets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactRegion(_Model):
     """A corridor region over a change: the region's index and the stations of it that change.
     Attributes:
@@ -81250,7 +81284,8 @@ class ScenariosImpact(_Model):
 class ScenariosImpacted(_Model):
     """Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by
     code, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it
-    changed since the stamp given (none when none was given), and the drawing's revision.
+    changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
+    asked, docs/adr/2260), and the drawing's revision.
     """
     scenario: str
     name: str
@@ -81264,6 +81299,7 @@ class ScenariosImpacted(_Model):
     assumptions: list[str]
     stamp: str
     revision: str
+    reach: ImpactReach | None | Unset = UNSET
     stale: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -81280,6 +81316,8 @@ class ScenariosImpacted(_Model):
         out["assumptions"] = list(self.assumptions)
         out["stamp"] = self.stamp
         out["revision"] = self.revision
+        if self.reach is not UNSET:
+            out["reach"] = None if self.reach is None else self.reach.to_json()
         if self.stale is not UNSET:
             out["stale"] = self.stale
         return out
@@ -81299,6 +81337,7 @@ class ScenariosImpacted(_Model):
             assumptions=list(data["assumptions"]),
             stamp=data["stamp"],
             revision=data["revision"],
+            reach=UNSET if "reach" not in data else None if data["reach"] is None else ImpactReach.from_json(data["reach"]),
             stale=data.get("stale", UNSET),
         )
 
@@ -129118,6 +129157,7 @@ __all__ = [
     "ImpactLayer",
     "ImpactMeasure",
     "ImpactOwn",
+    "ImpactReach",
     "ImpactRegion",
     "ImpactSections",
     "ImpactTarget",

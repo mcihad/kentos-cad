@@ -98,6 +98,8 @@ pub struct Marks {
     pub problem: Option<crate::topology::ProblemMark>,
     /// Sınır grafiği left on the drawing (docs/adr/2220).
     pub graph: Option<std::sync::Arc<crate::parcel_boundaries_marks::GraphMarks>>,
+    /// Senaryo ölçüleri's access left on the drawing (docs/adr/2260).
+    pub reach: Option<std::sync::Arc<crate::impact_reach_marks::ReachMarks>>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
@@ -214,6 +216,7 @@ impl Marks {
             && self.extent.is_none()
             && self.problem.is_none()
             && self.graph.is_none()
+            && self.reach.is_none()
             && self.broken.is_empty()
             && self.missing.is_empty()
             && self.clips.is_empty()
@@ -274,6 +277,10 @@ impl<Message> canvas::Program<Message> for Marks {
             &self.colors,
             Tokens::of(theme).danger,
         );
+        if let Some(r) = &self.reach {
+            let tokens = Tokens::of(theme);
+            crate::impact_reach_marks::draw(&mut frame, r, &self.camera, &self.colors, &tokens);
+        }
         if let Some(g) = &self.graph {
             let tokens = Tokens::of(theme);
             crate::parcel_boundaries_marks::draw(&mut frame, g, &self.camera, &self.colors, tokens.accent, tokens.danger);
@@ -621,7 +628,7 @@ fn extent_frame(
 }
 
 /// An edge as points along it on the screen (arcs every 7.5° at most).
-fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Camera) -> Vec<Point> {
+pub(crate) fn edge_points(e: &kentos_geometry_core::geom::intersect::Edge, camera: &Camera) -> Vec<Point> {
     use kentos_geometry_core::geom::intersect::Edge;
     let screen = |x: f64, y: f64| {
         let s = camera.world_to_screen(Vec2::new(x, y));

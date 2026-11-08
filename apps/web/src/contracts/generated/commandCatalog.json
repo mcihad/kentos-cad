@@ -58128,7 +58128,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by\ncode, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it\nchanged since the stamp given (none when none was given), and the drawing's revision.",
+        "description": "Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by\ncode, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it\nchanged since the stamp given (none when none was given), which areas the access reached (only when `access` is\nasked, docs/adr/2260), and the drawing's revision.",
         "properties": {
           "assumptions": {
             "items": {
@@ -58168,6 +58168,16 @@
           },
           "name": {
             "type": "string"
+          },
+          "reach": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactReach"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "revision": {
             "type": "string"
@@ -58210,7 +58220,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by\ncode, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it\nchanged since the stamp given (none when none was given), and the drawing's revision.",
+        "description": "Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by\ncode, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it\nchanged since the stamp given (none when none was given), which areas the access reached (only when `access` is\nasked, docs/adr/2260), and the drawing's revision.",
         "properties": {
           "assumptions": {
             "items": {
@@ -58250,6 +58260,16 @@
           },
           "name": {
             "type": "string"
+          },
+          "reach": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactReach"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "revision": {
             "type": "string"
@@ -142132,6 +142152,56 @@
       "required": [
         "property",
         "count"
+      ],
+      "type": "object"
+    },
+    "ImpactReach": {
+      "description": "Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in\nthe drawing's order, the `from` areas reached, those not reached, and the `to` areas.",
+      "properties": {
+        "alternativeReached": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "alternativeTargets": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "alternativeUnreached": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseReached": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseTargets": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseUnreached": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "baseReached",
+        "baseUnreached",
+        "baseTargets",
+        "alternativeReached",
+        "alternativeUnreached",
+        "alternativeTargets"
       ],
       "type": "object"
     },

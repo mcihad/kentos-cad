@@ -145,9 +145,26 @@ pub struct ImpactChange {
     pub alternative_capacity: Option<f64>,
 }
 
+/// Which areas the access measure reached (docs/adr/2260), so a host can show them: on each side, by persistent id in
+/// the drawing's order, the `from` areas reached, those not reached, and the `to` areas.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactReach {
+    pub base_reached: Vec<String>,
+    pub base_unreached: Vec<String>,
+    pub base_targets: Vec<String>,
+    pub alternative_reached: Vec<String>,
+    pub alternative_unreached: Vec<String>,
+    pub alternative_targets: Vec<String>,
+}
+
 /// Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by
 /// code, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it
-/// changed since the stamp given (none when none was given), and the drawing's revision.
+/// changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
+/// asked, docs/adr/2260), and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -168,5 +185,8 @@ pub struct ScenariosImpacted {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub stale: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reach: Option<ImpactReach>,
     pub revision: String,
 }

@@ -7845,6 +7845,26 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [],
+        "baseUnreached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeUnreached": [
+         "0192f5c0-1440-7000-8000-000000000007"
+        ],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ]
+       },
        "revision": "$current"
       },
       "warnings": []
@@ -8035,6 +8055,25 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseUnreached": [],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeUnreached": [],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ]
+       },
        "revision": "$current"
       },
       "warnings": []
@@ -8226,6 +8265,20 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [],
+        "baseUnreached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseTargets": [],
+        "alternativeReached": [],
+        "alternativeUnreached": [
+         "0192f5c0-1440-7000-8000-000000000007",
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeTargets": []
+       },
        "revision": "$current"
       },
       "warnings": []
@@ -8433,6 +8486,26 @@
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer."
        ],
        "stamp": "9825692c3bf05e6e",
+       "reach": {
+        "baseReached": [],
+        "baseUnreached": [
+         "0192f5c0-1440-7000-8000-000000000001"
+        ],
+        "baseTargets": [
+         "0192f5c0-1440-7000-8000-000000000003"
+        ],
+        "alternativeReached": [
+         "0192f5c0-1440-7000-8000-000000000008",
+         "0192f5c0-1440-7000-8000-00000000000c"
+        ],
+        "alternativeUnreached": [
+         "0192f5c0-1440-7000-8000-000000000007"
+        ],
+        "alternativeTargets": [
+         "0192f5c0-1440-7000-8000-000000000009",
+         "0192f5c0-1440-7000-8000-00000000000b"
+        ]
+       },
        "revision": "$current"
       },
       "warnings": []

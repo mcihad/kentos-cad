@@ -1,7 +1,8 @@
 //! Senaryo ölçüleri (impact_window.rs, docs/adr/1440) on the shared cases' drawing of `cad.scenarios.impact`: the
 //! scenario's measures and changed decisions; Raporu kaydet writes the CSV and keeps the stamp, so after the
 //! field state changes the comparison says the scenario is stale; nothing is written to the drawing; the impervious
-//! shares and the access typed give the shared case's measures, a share that does not read is said (docs/adr/2040).
+//! shares and the access typed give the shared case's measures, a share that does not read is said (docs/adr/2040);
+//! Erişimi çizimde göster leaves the scenario's access on the drawing until İşareti kaldır (docs/adr/2260).
 //! Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
 use kentos_launch::Module;
@@ -83,6 +84,85 @@ fn the_impervious_shares_and_the_access_typed_give_the_case_s_measures() {
     }
     let _ = app.update(Message::Impact(I::Shares("konut altmış".into())));
     assert_eq!(app.impact.answer.clone().expect("an answer"), Err("“altmış” bir sayı değil (geçirimsizlik payı).".into()));
+}
+
+/// The access typed in the form: housing to park and green area within 40 m (the shared case's question).
+fn access_asked(app: &mut App) {
+    let _ = app.update(Message::Run("scenario.impact"));
+    for e in [I::From("konut".into()), I::To("park, yesil".into()), I::Distance("40".into())] {
+        let _ = app.update(Message::Impact(e));
+    }
+}
+
+/// docs/adr/2260: Erişimi çizimde göster leaves the scenario's access on the drawing as the shared case says; with
+/// the targets deleted the marks are worked out again and nothing is reached; İşareti kaldır takes them away.
+#[test]
+fn the_access_stays_on_the_drawing_until_unmarked() {
+    let mut app = opened(Some(Module::Map));
+    access_asked(&mut app);
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.scenarios.impact.json")).expect("cases");
+    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "erişim: konuttan parka ve yeşil alana 40 m")
+        .expect("the case")["steps"][0]["result"]["output"]["reach"]
+        .clone();
+    let count = |k: &str| want[k].as_array().map_or(0, Vec::len);
+    let _ = app.update(Message::Impact(I::DrawAccess));
+    assert_eq!(app.dialog, None);
+    let m = app.impact_reach_marks().expect("the marks");
+    assert_eq!(
+        (m.reached.len(), m.unreached.len(), m.targets.len()),
+        (count("alternativeReached"), count("alternativeUnreached"), count("alternativeTargets"))
+    );
+    assert!(!m.reached.is_empty() && !m.unreached.is_empty());
+    let targets: Vec<kentos_domain::Slot> = want["alternativeTargets"]
+        .as_array()
+        .expect("targets")
+        .iter()
+        .filter_map(|u| u.as_str().and_then(|u| kentos_domain::Uuid::parse_str(u).ok()))
+        .filter_map(|u| app.document.as_ref().and_then(|d| d.model.slot_of(u)))
+        .collect();
+    app.selection.set(targets);
+    let _ = app.update(Message::Run("tool.erase"));
+    let m = app.impact_reach_marks().expect("the marks again");
+    assert!(m.reached.is_empty() && m.targets.is_empty(), "{m:?}");
+    let _ = app.update(Message::Run("data.unmark"));
+    assert!(app.impact_reach_marks().is_none());
+}
+
+/// `.run/gui-evidence/senaryo-erisim-2260/`: the window with Erişimi çizimde göster, and the scenario's access on the
+/// drawing.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib impact_window_tests::access_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn access_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/senaryo-erisim-2260");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        for (draw, stem) in [(false, "1-pencere"), (true, "2-cizimde")] {
+            let mut app = opened(Some(Module::Map));
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            access_asked(&mut app);
+            if draw {
+                let _ = app.update(Message::Impact(I::DrawAccess));
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
 }
 
 #[test]

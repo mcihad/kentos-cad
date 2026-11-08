@@ -2,11 +2,13 @@
 import type { ImpactChange } from "./ImpactChange";
 import type { ImpactLayer } from "./ImpactLayer";
 import type { ImpactMeasure } from "./ImpactMeasure";
+import type { ImpactReach } from "./ImpactReach";
 import type { ImpactUse } from "./ImpactUse";
 
 /**
  * Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by
  * code, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it
- * changed since the stamp given (none when none was given), and the drawing's revision.
+ * changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
+ * asked, docs/adr/2260), and the drawing's revision.
  */
-export type ScenariosImpacted = { scenario: string, name: string, layers: Array<ImpactLayer>, field: string, key: string, measures: Array<ImpactMeasure>, uses: Array<ImpactUse>, changes: Array<ImpactChange>, gaps: Array<string>, assumptions: Array<string>, stamp: string, stale?: boolean, revision: string, };
+export type ScenariosImpacted = { scenario: string, name: string, layers: Array<ImpactLayer>, field: string, key: string, measures: Array<ImpactMeasure>, uses: Array<ImpactUse>, changes: Array<ImpactChange>, gaps: Array<string>, assumptions: Array<string>, stamp: string, stale?: boolean, reach?: ImpactReach, revision: string, };

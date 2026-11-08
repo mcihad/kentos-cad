@@ -18,7 +18,8 @@ The rules, by hand:
 - asked for (docs/adr/2040), the user's values: the impervious area Σ area × the share of its use (a use with area and
   no share a gap), and the area reached, a `from` area whose centroid (a rectangle's middle) lies within the distance
   of a `to` area (the distance to a rectangle: 0 inside, else to its box), with its share of the `from` areas (0 with
-  none); a side with `from` areas and no `to` area a gap.
+  none); a side with `from` areas and no `to` area a gap; and on each side, by persistent id in the drawing's order,
+  the `from` areas reached, those not and the `to` areas (`reach`, docs/adr/2260).
 """
 
 import copy
@@ -206,8 +207,12 @@ def impervious(sd, shares):
 
 
 def reached(sd, access):
-    targets = [box(e) for e, u, _ in sd["areas"] if u in access["to"]]
+    """The area reached, the `from` areas' whole, and by persistent id the `from` areas reached, those not and the `to`
+    areas (docs/adr/2260), in the drawing's order."""
+    to = [e for e, u, _ in sd["areas"] if u in access["to"]]
+    targets = [box(e) for e in to]
     got = whole = 0.0
+    yes, no = [], []
     for e, u, a in sd["areas"]:
         if u not in access["from"]:
             continue
@@ -217,7 +222,10 @@ def reached(sd, access):
         near = lambda t: (max(t[0] - cx, 0, cx - t[2]) ** 2 + max(t[1] - cy, 0, cy - t[3]) ** 2) ** 0.5  # noqa: E731
         if any(near(t) <= access["distance"] for t in targets):
             got += a
-    return got, whole, bool(targets)
+            yes.append(uid(e["id"]))
+        else:
+            no.append(uid(e["id"]))
+    return got, whole, bool(targets), yes, no, [uid(e["id"]) for e in to]
 
 
 def rs(v):
@@ -252,8 +260,11 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
         if missing:
             words = ", ".join(w or "(kullanımı yok)" for w in missing)
             asked_gaps.append(f"Geçirimsizlik payı verilmemiş kullanım: {words}; geçirimsiz alan onlarsız hesaplandı.")
+    reach = None
     if access is not None:
-        (xg, xw, xt), (yg, yw, yt) = reached(b, access), reached(a, access)
+        (xg, xw, xt, xr, xu, xs), (yg, yw, yt, yr, yu, ys) = reached(b, access), reached(a, access)
+        reach = {"baseReached": xr, "baseUnreached": xu, "baseTargets": xs,
+                 "alternativeReached": yr, "alternativeUnreached": yu, "alternativeTargets": ys}
         fr, to, d = ", ".join(access["from"]), ", ".join(access["to"]), rs(access["distance"])
         measures.append(m("access", f"Erişen alan ({fr} → {to}, {d} m)", "m2", xg, yg,
                           f"Kullanımı {fr} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alana düz uzaklık "
@@ -315,6 +326,8 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
            "stamp": now}
     if since is not None:
         out["stale"] = since != now
+    if reach is not None:
+        out["reach"] = reach
     out["revision"] = "$current"
     return out
 
