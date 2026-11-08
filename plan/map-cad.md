@@ -22,6 +22,36 @@ tamamlanma işaretleri ve başka ajanın çalışma alanındaki değişiklikleri
 değiştirilmemiştir. Aşağıdaki maddelerin tamamı **açıktır**; mevcut temellerin
 listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
 
+## Durum özeti (8 Kasım 2026)
+
+Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da yetkili kabul de ister. Her maddenin en az iki
+dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
+yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Üçüncü tur her satırın ilk işini MAP-01'den
+sırayla alır.
+
+| Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
+| --- | --- | --- | --- |
+| MAP-01 İş yapısı | 1200, 1201 | dosyasız öğenin revizyonu ve onay damgası; nesne türüne göre bağlamsal araçlar; tipli katman profili | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-02 Koordinat zinciri | 1230, 1231 | içe aktarmada birimin kotta ve iç içe blokta bir kez uygulanması; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-03 GNSS arşivi | 1340, 1740 | GVX oturum korelasyonları; bilinen noktanın hız ızgarasıyla ölçme epokuna taşınması; arşiv panelinde bazlar | canlı RTK/NTRIP; gerçek alıcı kabulü |
+| MAP-04 Nesne kataloğu | 1360, 1760 | alan sınıfları; ayrı inceleme kaydı ve katalog geçiş raporu; pencerede eksik alan girişi | AI çıkarımı; büyük veri |
+| MAP-05 Ağ kalitesi | 1380, 1740 | robust kestirim; m. 15(1)(c) benzerlik dönüşümü; seyrek çözüm | deformasyon için gerçek seri |
+| MAP-06 Sahnede tasarım | 1290, 1960 | kalıcı ilişki; çok parçalı nesne; köşeyi sahneden seçmek | — |
+| MAP-07 Topoloji | 1261, 1262, 1980 | hata katmanı; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
+| MAP-08 Kadastro | 1400, 2000 | kalıcı parsel kaydı ve sınır kimliği; sahnede gösterim; yaylı sınırda eksik köşe | erişim denetimli hak/pay; resmî kapsam |
+| MAP-09 İmar | 1420, 2020 | plan değişikliği taslağı; sembolün karardan seçilmesi | resmî şema ve eşleme |
+| MAP-10 Senaryo ölçüleri | 1440, 2040 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
+| MAP-11 Arazi düzenlemesi | 1460, 2060 | m. 8(5) yanılma sınırı; ayırma çapının çizimi; değer esaslı dağıtım | ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
+| MAP-13 LiDAR | 1500, 1800 | dönüşümün buluta uygulanması; çoklu tarama demeti; kaba hatayı atan ağırlıklar | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820 | yardımcı eğrinin 5/1 mm deseni; m. 78(1)(ğ) karakteristik kotlar; yüzey birleştirme | gerçek veri ölçümü |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840 | bölge yazısı ve miktar tablosu; malzeme bölgesi; stok sahası; kesit yöntemi | — |
+| MAP-16 Altyapı | 1640, 1860 | disiplinler arası açıklık; profilin canlı güncellenmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
+| MAP-17 Veri devri | 1660, 1880 | blok, ilişki ve tablo örnekleri; teslim paketinin matrisi taşıması | kurum profilleri |
+| MAP-18 Pafta | 1320, 1680, 1900 | ölçme kalite notu; atlas sayfalarının kaynak dökümü | kurum eksen adları; resmî profil kapısı |
+| MAP-19 Saha | 1700, 1920 | iş türleri ve zaman serisi; dönen kaydın pakete eşlenmesi | canlı cihaz; cihaz biçimleri |
+| MAP-20 Yeniden üretim | 1720, 1940 | işlem sürümü ve çıktı revizyonu; tariften başka projede üretim; iptal | — |
+
 ## İnceleme yöntemi ve bulguların sınırı
 
 - Aşağıdaki kaynakçada **35 ayrı birincil web kaynağının içeriği** incelendi:
