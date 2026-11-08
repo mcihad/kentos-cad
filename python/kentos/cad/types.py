@@ -80320,16 +80320,22 @@ class RingGeometry(_Model):
 @dataclass(kw_only=True, slots=True)
 class RoadDrawingDef(_Model):
     """A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was
-    made from (its main source first), the objects it wrote in order and the stamp of those objects as written.
+    made from (its main source first), the objects it wrote in order and the stamp of those objects as written; since
+    schema 209 (docs/adr/2840) the command's version that drew it and the drawing's revision its write made.
     Attributes:
         digest: 16 lower-case hex digits: the objects' JSON in order, stamped.
+        revision: The drawing's revision once its objects were written, as the commands say it (decimal digits; docs/adr/2840);
+            none: a record written before schema 209.
+        version: The version of the command that drew it (docs/adr/2840); none: a record written before schema 209. Unit: version.
     """
     id: str
     command: str
     input: dict[str, Any]
     sources: list[RoadDrawingSource]
     digest: str
+    revision: str | None | Unset = UNSET
     uids: list[str] | Unset = UNSET
+    version: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -80338,8 +80344,12 @@ class RoadDrawingDef(_Model):
         out["input"] = dict(self.input)
         out["sources"] = [e0.to_json() for e0 in self.sources]
         out["digest"] = self.digest
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
+        if self.version is not UNSET:
+            out["version"] = self.version
         return out
 
     @classmethod
@@ -80350,7 +80360,9 @@ class RoadDrawingDef(_Model):
             input=dict(data["input"]),
             sources=[RoadDrawingSource.from_json(e0) for e0 in data["sources"]],
             digest=data["digest"],
+            revision=data.get("revision", UNSET),
             uids=list(data["uids"]) if "uids" in data else UNSET,
+            version=data.get("version", UNSET),
         )
 
 
@@ -80417,6 +80429,8 @@ class RoadDrawingRecipe(_Model):
         version: Unit: version.
         written: Unit: count.
         objects: Unit: count.
+        made: The version that drew it, as its record keeps it (docs/adr/2840); none: a record from before schema 209. Unit: version.
+        revision: The drawing's revision its write made, as its record keeps it (docs/adr/2840).
     """
     command: str
     version: int
@@ -80424,6 +80438,8 @@ class RoadDrawingRecipe(_Model):
     written: int
     objects: int
     digest: str
+    made: int | None | Unset = UNSET
+    revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -80433,6 +80449,10 @@ class RoadDrawingRecipe(_Model):
         out["written"] = self.written
         out["objects"] = self.objects
         out["digest"] = self.digest
+        if self.made is not UNSET:
+            out["made"] = self.made
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
         return out
 
     @classmethod
@@ -80444,6 +80464,8 @@ class RoadDrawingRecipe(_Model):
             written=data["written"],
             objects=data["objects"],
             digest=data["digest"],
+            made=data.get("made", UNSET),
+            revision=data.get("revision", UNSET),
         )
 
 

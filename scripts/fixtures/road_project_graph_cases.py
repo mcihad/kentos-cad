@@ -8,7 +8,9 @@ road_project_cases.py's (ADR 0911's rules, the stamps by hand); the graph is bui
 - the layers a surface's points or breaklines name come first, each once, in the surfaces' order (points, then
   breaklines); a layer the drawing lacks is gone;
 - then the tree's rows in its order; a drawing carries its recipe: its command, version 1, its input as kept (the main
-  source by id), its objects written and there now (the objects' stamp is the command's: `$any`);
+  source by id), its objects written and there now (the objects' stamp is the command's: `$any`); a drawing a step
+  drew keeps the version that drew it (1) and the revision its write made (docs/adr/2840): the revision a
+  `captureRevision` step takes right after the step that drew it, or drew it again;
 - edges: a surface's layers build it; a row is made on its parent in the tree (not a drawing: its sources say it); every
   source a drawing keeps, in the record's order, the first the main one, its stamp then and now (none: gone; a
   definition's stamp of its grades as KentOS holds them, road_grades.py, as the file is written); a sheet's
@@ -101,17 +103,31 @@ def zero_line_boxes(base="t-5", comparison="t-10"):
 SNAP = {}  # (the state, a drawing's id) → the road settings when it was drawn
 
 
+def capture(st):
+    """A step that takes the revision now (docs/adr/2840), under a name new in the state's case."""
+    st.caps = getattr(st, "caps", 0) + 1
+    name = f"r{st.caps}"
+    return name, {"op": "captureRevision", "as": name}
+
+
 def drawn(st, what):
-    """road_project_cases.py's drawing step, the road settings kept as they were when drawn."""
+    """road_project_cases.py's drawing step and the step that takes the revision its write made, the road settings
+    kept as they were when drawn."""
     out = rp.drawn(st, what)
     SNAP[(id(st), st.drawings[-1]["id"])] = copy.deepcopy(st.road)
-    return out
+    name, cap = capture(st)
+    st.drawings[-1]["rev"] = name
+    return [out, cap]
 
 
 def redrawn(st):
-    """Every drawing's road settings now (after it is drawn again)."""
+    """Every drawing's road settings now (after it is drawn again), and the step that takes the revision the drawing
+    again made."""
+    name, cap = capture(st)
     for d in st.drawings:
         SNAP[(id(st), d["id"])] = copy.deepcopy(st.road)
+        d["rev"] = name
+    return cap
 
 
 def stamp_in(st, road, kind, id_):
@@ -167,6 +183,9 @@ def graph(st, deep=False, book_=None, boxes=None):
             command, input_ = rp.INPUTS[(id(st), d["id"])]
             g["recipe"] = {"command": command, "version": 1, "input": input_, "written": d["n"], "objects": d["present"],
                            "digest": ANY}
+            # Docs/adr/2840: the version that drew it and the revision its write made, as its record keeps them.
+            if "rev" in d:
+                g["recipe"].update({"made": 1, "revision": "$" + d["rev"]})
         nodes.append(g)
     edges = []
     for k, n in enumerate(tree["nodes"]):
@@ -268,48 +287,50 @@ def cases():
     a = drawn(st, rp.ZEROLINE)
     boxes = {"cz-1": zero_line_boxes()}
     add("Sıfır hattı: iki kaynağı damgalarıyla, tarifi ve onu gösteren pafta; uzak harita ve Pafta 2 göstermez",
-        [a, asked(st, book_=BOOK, boxes=boxes)], sm)
+        [*a, asked(st, book_=BOOK, boxes=boxes)], sm)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     b = edit_height(st)
     add("Tümsek'in bir kotu değişince çizim güncel değil, onu gösteren pafta teslim edilemez",
-        [a, b, asked(st, book_=BOOK, boxes=boxes)], sm)
+        [*a, b, asked(st, book_=BOOK, boxes=boxes)], sm)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     b = edit_height(st)
     c = {**rp.rebuilt(st, {}), "command": "road.project.rebuild"}
-    redrawn(st)
-    add("Yeniden üretilince zincir yine güncel, kaynakların damgaları yeni", [a, b, c, asked(st, book_=BOOK, boxes=boxes)], sm)
+    cap = redrawn(st)
+    add("Yeniden üretilince zincir yine güncel, kaynakların damgaları yeni",
+        [*a, b, c, cap, asked(st, book_=BOOK, boxes=boxes)], sm)
     sa = map_setup(auto=True)
     st = rp.State(sa)
     a = drawn(st, rp.ZEROLINE)
     b = edit_height(st)
     rp.rebuild(st, st.drawings[0])
-    redrawn(st)
-    add("Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır", [a, b, asked(st, book_=BOOK, boxes=boxes)], sa)
+    cap = redrawn(st)
+    add("Kendiliğinden yeniden üretimde kot değişince zincir güncel kalır", [*a, b, cap, asked(st, book_=BOOK, boxes=boxes)],
+        sa)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     target = len(sm["entities"]) + 1
     st.drawings[0]["present"] -= 1
     b = rp.other("cad.entities.delete", {"uids": [f"$uidOf:{target}"]})
     add("Nesnesi silinen çizim eksik; nesnesi kalmayan çizimi hiçbir pafta göstermez",
-        [a, b, asked(st, book_=BOOK, boxes={"cz-1": []})], sm)
+        [*a, b, asked(st, book_=BOOK, boxes={"cz-1": []})], sm)
     s2 = map_setup(BOOK_TWO)
     st = rp.State(s2)
     a = drawn(st, rp.ZEROLINE)
     b = edit_height(st)
-    add("İki pafta aynı çizimi gösterir: ikisi de teslim edilemez", [a, b, asked(st, book_=BOOK_TWO, boxes=boxes)], s2)
+    add("İki pafta aynı çizimi gösterir: ikisi de teslim edilemez", [*a, b, asked(st, book_=BOOK_TWO, boxes=boxes)], s2)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
-    add("Plan da sorulur: aynı grafik", [a, asked(st, book_=BOOK, boxes=boxes, op="plan")], sm)
+    add("Plan da sorulur: aynı grafik", [*a, asked(st, book_=BOOK, boxes=boxes, op="plan")], sm)
     st = rp.State(sm)
     add("Doğrulama", [asked(st, book_=BOOK, op="validate")], sm)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
-    add("Derin okuma: kurulamayan yüzey grafikte de", [a, asked(st, deep=True, book_=BOOK, boxes=boxes)], sm)
+    add("Derin okuma: kurulamayan yüzey grafikte de", [*a, asked(st, deep=True, book_=BOOK, boxes=boxes)], sm)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
-    add("Geri alınan çizim grafikten de gider", [a, {"op": "undo", "returns": "Sıfır hattı"},
+    add("Geri alınan çizim grafikten de gider", [*a, {"op": "undo", "returns": "Sıfır hattı"},
                                                  asked(rp.State(sm), book_=BOOK)], sm)
     se = map_setup(coordinateEpoch=EPOCH, heights=copy.deepcopy(HEIGHTS))
     add("Projenin epoku ve kot sistemi grafikle gelir", [asked(rp.State(se), book_=BOOK)], se)
@@ -325,24 +346,24 @@ def cases():
     add("Yol projesi: kaynaklar ve dayanakları, pafta kitabı yok", [asked(rp.State(s0))], s0)
     st = rp.State(s0)
     a, b = drawn(st, rp.CORRIDOR), drawn(st, rp.PROFILE)
-    add("Şevli plan ve boykesit çizimi, her kaynağıyla", [a, b, asked(st)], s0)
+    add("Şevli plan ve boykesit çizimi, her kaynağıyla", [*a, *b, asked(st)], s0)
     st = rp.State(s0)
     a = drawn(st, rp.CORRIDOR)
     t = st.find("template", "tk-2")
     t["name"], t["revision"] = "Tip 2b", t.get("revision", 0) + 1
     b = rp.other("road.templates.edit", {"template": "tk-2", "operation": "set", "name": "Tip 2b"})
-    add("Tip kesit değişince yalnız onun kenarı değişir, şevli plan güncel değil", [a, b, asked(st)], s0)
+    add("Tip kesit değişince yalnız onun kenarı değişir, şevli plan güncel değil", [*a, b, asked(st)], s0)
     st = rp.State(s0)
     a = drawn(st, rp.JUNCTION)
     st.road["junctions"] = [j for j in st.road["junctions"] if j["id"] != "j-1"]
     b = rp.other("road.junctions.edit", {"junction": "j-1", "operation": "remove"})
-    add("Kavşak silinince çizimin ana kaynağı yok: kalan kaynaklarının kenarları", [a, b, asked(st)], s0)
+    add("Kavşak silinince çizimin ana kaynağı yok: kalan kaynaklarının kenarları", [*a, b, asked(st)], s0)
     st = rp.State(s0)
     a = drawn(st, rp.GUARDRAIL)
     st.drawings[0]["edited"] = True
     target = len(s0["entities"]) + 1
     b = rp.other("cad.entities.set", {"uids": [f"$uidOf:{target}"], "operation": "color", "color": "#E5484D"})
-    add("Elle değişen çizimin tarifi yazıldığı gibi", [a, b, asked(st)], s0)
+    add("Elle değişen çizimin tarifi yazıldığı gibi", [*a, b, asked(st)], s0)
     add("Mimari proje değil", [step("execute", {}, rp.NOT_ROAD, UNCHANGED)], rp.base(work="architecture"))
     sg = map_setup(None, workspace="gis")
     sg["settings"].pop("cadWork")

@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 209 (docs/adr/2840): a road drawing's record with the version that drew it or the revision its write made.
+    if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some())) {
+        return crate::SCHEMA_WITH_DRAWING_PROVENANCE;
+    }
     // Schema 208 (docs/adr/2580): a constraint naming a boundary edge, a map bond.
     if doc
         .constraints

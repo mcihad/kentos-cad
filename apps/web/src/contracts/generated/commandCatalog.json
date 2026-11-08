@@ -181458,7 +181458,7 @@
     },
     "RoadDrawingDef": {
       "additionalProperties": false,
-      "description": "A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was\nmade from (its main source first), the objects it wrote in order and the stamp of those objects as written.",
+      "description": "A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was\nmade from (its main source first), the objects it wrote in order and the stamp of those objects as written; since\nschema 209 (docs/adr/2840) the command's version that drew it and the drawing's revision its write made.",
       "properties": {
         "command": {
           "type": "string"
@@ -181474,6 +181474,13 @@
           "additionalProperties": true,
           "type": "object"
         },
+        "revision": {
+          "description": "The drawing's revision once its objects were written, as the commands say it (decimal digits; docs/adr/2840);\nnone: a record written before schema 209.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "sources": {
           "items": {
             "$ref": "#/$defs/RoadDrawingSource"
@@ -181485,6 +181492,16 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "version": {
+          "description": "The version of the command that drew it (docs/adr/2840); none: a record written before schema 209.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "version"
         }
       },
       "required": [
@@ -181559,11 +181576,28 @@
           "additionalProperties": true,
           "type": "object"
         },
+        "made": {
+          "description": "The version that drew it, as its record keeps it (docs/adr/2840); none: a record from before schema 209.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "version"
+        },
         "objects": {
           "format": "uint32",
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "revision": {
+          "description": "The drawing's revision its write made, as its record keeps it (docs/adr/2840).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "version": {
           "format": "uint32",

@@ -24913,6 +24913,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {},
      "result": {
@@ -25015,7 +25019,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -37491,6 +37497,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "operation": "set",
@@ -37626,7 +37636,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -50105,6 +50117,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "operation": "set",
@@ -50154,6 +50170,10 @@
      },
      "within": 1e-06,
      "command": "road.project.rebuild"
+    },
+    {
+     "op": "captureRevision",
+     "as": "r2"
     },
     {
      "op": "execute",
@@ -50258,7 +50278,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r2"
          }
         },
         {
@@ -62734,6 +62756,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "operation": "set",
@@ -62762,6 +62788,10 @@
      },
      "within": 1e-06,
      "command": "road.terrains.edit"
+    },
+    {
+     "op": "captureRevision",
+     "as": "r2"
     },
     {
      "op": "execute",
@@ -62866,7 +62896,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r2"
          }
         },
         {
@@ -75343,6 +75375,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "uids": [
@@ -75463,7 +75499,9 @@
           },
           "written": 1,
           "objects": 0,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -87927,6 +87965,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "operation": "set",
@@ -88062,7 +88104,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -100556,6 +100600,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "plan",
      "input": {},
      "result": {
@@ -100658,7 +100706,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -125522,6 +125572,10 @@
      "command": "road.terrains.zeroline"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "deep": true
@@ -125627,7 +125681,9 @@
           },
           "written": 1,
           "objects": 1,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -138101,6 +138157,10 @@
      },
      "within": 1e-06,
      "command": "road.terrains.zeroline"
+    },
+    {
+     "op": "captureRevision",
+     "as": "r1"
     },
     {
      "op": "undo",
@@ -191079,6 +191139,10 @@
      "command": "road.corridors.draw"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "profile": "b-1",
@@ -191095,6 +191159,10 @@
      },
      "within": 1e-06,
      "command": "road.profiles.draw"
+    },
+    {
+     "op": "captureRevision",
+     "as": "r2"
     },
     {
      "op": "execute",
@@ -191163,7 +191231,9 @@
           },
           "written": 134,
           "objects": 134,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r2"
          }
         },
         {
@@ -191288,7 +191358,9 @@
           },
           "written": 293,
           "objects": 293,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -194026,6 +194098,10 @@
      "command": "road.corridors.draw"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "template": "tk-2",
@@ -194214,7 +194290,9 @@
           },
           "written": 293,
           "objects": 293,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {
@@ -196930,6 +197008,10 @@
      "command": "road.junctions.draw"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "junction": "j-1",
@@ -197207,7 +197289,9 @@
           },
           "written": 4,
           "objects": 4,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         }
        ],
@@ -199793,6 +199877,10 @@
      "command": "road.guardrails.draw"
     },
     {
+     "op": "captureRevision",
+     "as": "r1"
+    },
+    {
      "op": "execute",
      "input": {
       "uids": [
@@ -200001,7 +200089,9 @@
           },
           "written": 2,
           "objects": 2,
-          "digest": "$any"
+          "digest": "$any",
+          "made": 1,
+          "revision": "$r1"
          }
         },
         {

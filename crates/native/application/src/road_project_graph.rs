@@ -89,6 +89,8 @@ fn recipe_of(doc: &Document, d: &RoadDrawingDef) -> RoadDrawingRecipe {
         written: u32::try_from(d.uids.len()).unwrap_or(u32::MAX),
         objects: u32::try_from(present).unwrap_or(u32::MAX),
         digest: d.digest.clone(),
+        made: d.version,
+        revision: d.revision.clone(),
     }
 }
 

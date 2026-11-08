@@ -187,7 +187,8 @@ pub struct RoadDrawingSource {
 }
 
 /// A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was
-/// made from (its main source first), the objects it wrote in order and the stamp of those objects as written.
+/// made from (its main source first), the objects it wrote in order and the stamp of those objects as written; since
+/// schema 209 (docs/adr/2840) the command's version that drew it and the drawing's revision its write made.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -205,6 +206,16 @@ pub struct RoadDrawingDef {
     pub uids: Vec<String>,
     /// 16 lower-case hex digits: the objects' JSON in order, stamped.
     pub digest: String,
+    /// The version of the command that drew it (docs/adr/2840); none: a record written before schema 209.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: Option<u32>,
+    /// The drawing's revision once its objects were written, as the commands say it (decimal digits; docs/adr/2840);
+    /// none: a record written before schema 209.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub revision: Option<String>,
 }
 
 impl RoadSettings {
@@ -2025,6 +2036,13 @@ fn drawings_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if !stamp_ok(&d.digest) {
             return fail(at("digest"), "nesnelerin özeti 16 onaltılık hane olur");
+        }
+        // Docs/adr/2840: a command's version is 1 or more; a revision is a whole number as the commands write it.
+        if d.version == Some(0) {
+            return fail(at("version"), "çizimin işlem sürümü 1 ya da daha büyük olur");
+        }
+        if d.revision.as_deref().is_some_and(|r| r.is_empty() || r.len() > 20 || !r.bytes().all(|b| b.is_ascii_digit()) || r.parse::<u64>().is_err()) {
+            return fail(at("revision"), "çizimin çıktı revizyonu bir doğal sayı olur (en çok 20 hane)");
         }
     }
     None
@@ -3992,6 +4010,8 @@ mod tests {
             sources: vec![RoadDrawingSource { kind: RoadSourceKind::Corridor, id: "c-1".into(), digest: "0123456789abcdef".into() }],
             uids: vec!["u-1".into()],
             digest: "fedcba9876543210".into(),
+            version: Some(1),
+            revision: Some("12".into()),
         };
         let of = |drawings: Vec<RoadDrawingDef>| road_problem(&RoadSettings { drawings, ..RoadSettings::default() }).map(|p| p.0);
         assert_eq!(of(vec![drawing("cz-1")]), None);
@@ -4008,6 +4028,18 @@ mod tests {
         let mut d = drawing("cz-1");
         d.digest = "x".into();
         assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].digest"));
+        // Docs/adr/2840: the version and the revision a record keeps, or none (an older file's).
+        let mut d = drawing("cz-1");
+        d.version = Some(0);
+        assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].version"));
+        for bad in ["", "1a", "-3", "123456789012345678901"] {
+            let mut d = drawing("cz-1");
+            d.revision = Some(bad.into());
+            assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].revision"), "{bad:?}");
+        }
+        let mut d = drawing("cz-1");
+        (d.version, d.revision) = (None, None);
+        assert_eq!(of(vec![d]), None);
         // The most a project keeps: the 1001st is refused (what road_drawings_full answers).
         let many: Vec<RoadDrawingDef> = (0..=MAX_ROAD_DRAWINGS).map(|k| drawing(&format!("cz-{k}"))).collect();
         assert_eq!(of(many).as_deref(), Some("drawings"));

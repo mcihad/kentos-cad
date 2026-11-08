@@ -3,10 +3,20 @@ import type { RoadDrawingSource } from "./RoadDrawingSource";
 
 /**
  * A drawing a road command made (docs/adr/0911 §1): its id, the command and its input as given, the sources it was
- * made from (its main source first), the objects it wrote in order and the stamp of those objects as written.
+ * made from (its main source first), the objects it wrote in order and the stamp of those objects as written; since
+ * schema 209 (docs/adr/2840) the command's version that drew it and the drawing's revision its write made.
  */
 export type RoadDrawingDef = { id: string, command: string, input: Record<string, unknown>, sources: Array<RoadDrawingSource>, uids?: Array<string>, 
 /**
  * 16 lower-case hex digits: the objects' JSON in order, stamped.
  */
-digest: string, };
+digest: string, 
+/**
+ * The version of the command that drew it (docs/adr/2840); none: a record written before schema 209.
+ */
+version?: number, 
+/**
+ * The drawing's revision once its objects were written, as the commands say it (decimal digits; docs/adr/2840);
+ * none: a record written before schema 209.
+ */
+revision?: string, };

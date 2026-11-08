@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `208`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-209.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `209`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-210.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -905,6 +905,13 @@ uzaklık kuralı alır: `a` bir düz kenar (`segment`) ya da başka bir sınır 
 başka kural, ters sıra ya da duvar çizgisi ve pervazla birlikte `bad_value` (`broken/map-bond-parallel.kcad`,
 `broken/map-bond-boundary-first.kcad`). Yazıcı 208'i bir kısıt sınır kenarı anınca seçer; 207 ve öncesi sınır kenarını
 `bad_value` sayar (`broken/map-bond-in-schema-207.kcad`). Örnek `map-bond.json/.kcad`.
+
+**Şema 209** (ADR 2840; MAP-20): yol çiziminin kaydında işlem sürümü ve çıktı revizyonu. `settings.road.drawings[i]`'ye
+`version` (çizen komutun sürümü, 32 bitlik doğal sayı, en az 1) ve `revision` (yazımının yaptığı çizim revizyonu,
+komutların yazdığı gibi ondalık rakamlar, en çok 20 hane ve 64 bite sığar). İkisi de isteğe bağlıdır; eski kayıt
+yazmaz. 0 sürüm ya da rakam olmayan revizyon `bad_value` (`broken/drawing-version-zero.kcad`,
+`broken/drawing-revision-not-digits.kcad`). Yazıcı 209'u bir kayıt bunlardan birini taşıyınca seçer; 208 ve öncesi
+`bad_value` sayar (`broken/drawing-provenance-in-schema-208.kcad`). Örnek `map-drawing-provenance.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

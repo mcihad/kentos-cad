@@ -858,11 +858,14 @@ pub const SCHEMA_WITH_KNOWN_VELOCITIES: u32 = 207;
 /// Schema 208 (docs/adr/2580): a constraint naming a boundary edge (`boundary`: part, ring, index), the map bond: a
 /// distance from a straight segment or another boundary edge to it.
 pub const SCHEMA_WITH_BOUNDARY_BONDS: u32 = 208;
+/// Schema 209 (docs/adr/2840): a road drawing's record keeps the command's version that drew it (`version`) and the
+/// drawing's revision its write made (`revision`, decimal digits).
+pub const SCHEMA_WITH_DRAWING_PROVENANCE: u32 = 209;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 206] = [
+pub const SCHEMAS: [u32; 207] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1069,6 +1072,7 @@ pub const SCHEMAS: [u32; 206] = [
     SCHEMA_WITH_WORK_STAMPS,
     SCHEMA_WITH_KNOWN_VELOCITIES,
     SCHEMA_WITH_BOUNDARY_BONDS,
+    SCHEMA_WITH_DRAWING_PROVENANCE,
 ];
 
 /// The file a drawing is saved as.

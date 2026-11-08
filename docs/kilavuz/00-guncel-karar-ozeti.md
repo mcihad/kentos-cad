@@ -214,6 +214,9 @@
 - **Kaydın kendi paketinin tasarımıyla denetlenmesi (8 Kasım 2026; MAP-19, [ADR 2820](../../docs/adr/2820-record-checked-with-its-package-design.md)).**
   `cad.asbuilt.check`'in `packageDesign`'ı: tasarım paketin noktaları ve çizgileri, özetine geri okunarak; katmanlar
   yalnız çizimdeki değişimi söyler. Uygulama kontrolü'nde paketin tasarımıyla. Harita + Yol + CBS.
+- **Çizim kaydında işlem sürümü ve çıktı revizyonu (8 Kasım 2026; MAP-20, [ADR 2840](../../docs/adr/2840-drawing-record-version-and-revision.md)).**
+  `RoadDrawingDef`'in `version` ve `revision`'ı, `.kcad` şema 209; İş grafiği'nin tarifinde `made`/`revision`, masaüstünde
+  Revizyon sütunu. Eski kayıtta yok, tahmin edilmez. Harita + Yol.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

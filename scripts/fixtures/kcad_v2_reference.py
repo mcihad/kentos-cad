@@ -2658,6 +2658,9 @@ def document(d):
     if any(type(r.get(k)) is dict and r[k]["element"]["kind"] == "boundary" for r in rules for k in ("a", "b", "axis")):
         # A constraint naming a boundary edge, a map bond (docs/adr/2580).
         schema = max(schema, 208)
+    if any("version" in x or "revision" in x for x in d["settings"].get("road", {}).get("drawings", [])):
+        # A road drawing's record with the version that drew it and the revision its write made (docs/adr/2840).
+        schema = max(schema, 209)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3514,7 +3517,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-209.kcad"] = container(root(cmap(parts), version=uint(209)))
+    files["schema-version-210.kcad"] = container(root(cmap(parts), version=uint(210)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5966,6 +5969,20 @@ def build():
         broken_kept = copy.deepcopy(kept)
         change(broken_kept)
         out[f"broken/map-bond-{name}.kcad"] = container(document(broken_kept))
+    # Schema 209 (docs/adr/2840): the map's drawings' records with the version that drew each and the revision its
+    # write made; schema 208 refuses them, a version 0 and a revision that is no whole number are refused.
+    proven = load("map-drawing-provenance.json")
+    proven_data = document(proven)
+    assert proven_data.count(b"\x67version\x18\xd1") == 1, "a drawing's version and revision are schema 209"
+    out["map-drawing-provenance.kcad"] = container(proven_data)
+    out["broken/drawing-provenance-in-schema-208.kcad"] = container(
+        proven_data.replace(b"\x67version\x18\xd1", b"\x67version\x18\xd0"))
+    for name, change in (
+            ("version-zero", lambda d: d["settings"]["road"]["drawings"][0].update({"version": 0})),
+            ("revision-not-digits", lambda d: d["settings"]["road"]["drawings"][0].update({"revision": "7a"}))):
+        broken_proven = copy.deepcopy(proven)
+        change(broken_proven)
+        out[f"broken/drawing-{name}.kcad"] = container(document(broken_proven))
     # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
     # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
     # item without a file, an object in two derivations and a draft status written are refused.

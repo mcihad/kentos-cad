@@ -82,6 +82,15 @@ pub struct RoadDrawingRecipe {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub objects: u32,
     pub digest: String,
+    /// The version that drew it, as its record keeps it (docs/adr/2840); none: a record from before schema 209.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub made: Option<u32>,
+    /// The drawing's revision its write made, as its record keeps it (docs/adr/2840).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub revision: Option<String>,
 }
 
 /// A node: what it is, its id and name, how it stands and why (a layer: current, or gone; a sheet: stale when it shows

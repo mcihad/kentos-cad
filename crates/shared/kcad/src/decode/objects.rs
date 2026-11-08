@@ -402,6 +402,8 @@ pub(super) struct Features {
     pub(super) work_stamps: bool,
     /// Schema 207: a known point's own velocity (docs/adr/2520).
     pub(super) known_velocities: bool,
+    /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
+    pub(super) drawing_provenance: bool,
     /// Schema 208: a constraint naming a boundary edge, a map bond (docs/adr/2580).
     pub(super) boundary_bonds: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
@@ -692,6 +694,7 @@ impl Features {
             cutfill_drawings: schema >= crate::SCHEMA_WITH_CUTFILL_DRAWINGS,
             work_stamps: schema >= crate::SCHEMA_WITH_WORK_STAMPS,
             known_velocities: schema >= crate::SCHEMA_WITH_KNOWN_VELOCITIES,
+            drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             boundary_bonds: schema >= crate::SCHEMA_WITH_BOUNDARY_BONDS,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,

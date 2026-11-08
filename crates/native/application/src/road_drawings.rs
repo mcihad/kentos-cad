@@ -279,6 +279,10 @@ pub(crate) fn keep<I: Serialize>(
         },
         uids: uids.to_vec(),
         digest: objects_stamp(doc, uids).0,
+        // Docs/adr/2840: the version that drew it, and the revision its write makes: inside the command's step the
+        // document's revision is already the one the step records.
+        version: Some(version_of(command)),
+        revision: Some(doc.revision().to_string()),
     };
     match list.iter_mut().find(|d| d.id == id) {
         Some(d) => *d = drawing,

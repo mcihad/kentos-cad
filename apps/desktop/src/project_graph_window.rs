@@ -93,15 +93,26 @@ pub fn drawing_rows(g: &RoadProjectGraph, only_outdated: bool) -> Vec<Vec<String
                 format!("{sheet} › {}", e.map.as_deref().unwrap_or(""))
             })
             .collect();
-        let (command, objects) = n.recipe.as_ref().map_or((String::new(), String::new()), |r| {
+        // The version that draws it again, and (docs/adr/2840) the one that drew it when the record says another; the
+        // revision its write made, as its record keeps it (an older file's record: none).
+        let (command, objects, revision) = n.recipe.as_ref().map_or((String::new(), String::new(), String::new()), |r| {
             let short = r.command.rsplit('.').next().unwrap_or(&r.command).to_owned();
-            (format!("{short} v{}", r.version), format!("{}/{}", r.objects, r.written))
+            let made = match r.made {
+                Some(m) if m != r.version => format!(" (v{m} çizdi)"),
+                _ => String::new(),
+            };
+            (
+                format!("{short} v{}{made}", r.version),
+                format!("{}/{}", r.objects, r.written),
+                r.revision.clone().unwrap_or_else(|| "—".to_owned()),
+            )
         });
         rows.push(vec![
             n.name.clone(),
             command,
             sources.join(", "),
             objects,
+            revision,
             crate::road_project_panel::state_name(n.state).to_owned(),
             if sheets.is_empty() { "—".to_owned() } else { sheets.join("; ") },
         ]);
@@ -207,6 +218,7 @@ impl App {
                 col("Komut", 100.0),
                 col("Kaynaklar", 200.0),
                 num("Nesne", 56.0),
+                num("Revizyon", 64.0),
                 col("Durum", 100.0),
                 col("Paftalar", 190.0),
             ],

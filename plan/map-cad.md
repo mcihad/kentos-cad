@@ -50,7 +50,7 @@ sırayla alır.
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820 | iş türleri ve zaman serisi; yetkili inceleme kaydı; paketin yüzeyi | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440 | işlem sürümü ve çıktı revizyonu (şema 207); tariften başka projede üretim; bütçe | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840 | tariften başka projede üretim; bütçe; çizimin kendi hesabının içinde durdurma | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -1716,6 +1716,14 @@ durdurmayı çizimler arasında dinler; durdurulan yeniden üretim hiçbir şey 
 üret'i ve ↻'yi iş olarak koşar: ilerleme çubuğu ve Durdur, pencere donmaz. Masaüstünün işi, Python'un işi ve düz çağrı
 (Python, MCP) aynı sonucu verir (aynı çizimler ve sildikleri). Açık: bellek/CPU bütçesi, çizimin kendi hesabının
 içinde durdurma, işlem sürümü ve çıktı revizyonu (şema 207), tariften başka projede üretim.
+
+**8 Kasım 2026, dördüncü tur — çizim kaydında işlem sürümü ve çıktı revizyonu ([ADR 2840](../docs/adr/2840-drawing-record-version-and-revision.md)).**
+Kapsam: **Harita + Yol**. Araştırma: STAC Processing'in `processing:version`/`processing:datetime`'ı, ArcGIS Pro'nun
+geoprocessing geçmişi (ADR 1940'ın okuması). Kanıtlanan: çizim kaydı çizen komutun sürümünü ve yazımın yaptığı revizyonu
+tutar (adımın kendi revizyonu, ikinci yazım yok); eski kayıt için tahmin yok; `.kcad` şema 209 (Rust okuyucu ve yazıcı,
+bağımsız okuyucu ve başvuru yazıcısı; örnek, üç bozuk dosya, 1701 dosya aynı); İş grafiği'nin tarifinde `made` ve
+`revision`, masaüstünde Revizyon sütunu; grafik durumları yakalanan revizyonlarla, MCP. Açık: tariften başka projede
+üretim, bellek/CPU bütçesi, çizimin kendi hesabının içinde durdurma.
 
 ## Uygulama sırası ve sahiplik
 

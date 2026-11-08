@@ -5,4 +5,12 @@
  * drawing command is v1), its input as kept (its main source by id), how many objects it wrote and how many of them
  * are there now, and the stamp of its objects as written (16 hex digits).
  */
-export type RoadDrawingRecipe = { command: string, version: number, input: Record<string, unknown>, written: number, objects: number, digest: string, };
+export type RoadDrawingRecipe = { command: string, version: number, input: Record<string, unknown>, written: number, objects: number, digest: string, 
+/**
+ * The version that drew it, as its record keeps it (docs/adr/2840); none: a record from before schema 209.
+ */
+made?: number, 
+/**
+ * The drawing's revision its write made, as its record keeps it (docs/adr/2840).
+ */
+revision?: string, };

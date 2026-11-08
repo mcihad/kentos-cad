@@ -1903,6 +1903,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         if !has.cutfill_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.cutfill") {
             return Err(relation("road", "kazı ve dolgu bölgeleri çizimi şema 205'ten önce yazılmaz (road.terrains.cutfill)", r));
         }
+        // A drawing record's version and revision (docs/adr/2840) are schema 209's.
+        if !has.drawing_provenance && v.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some()) {
+            return Err(relation("road", "çizim kaydının işlem sürümü ve çıktı revizyonu şema 209'dan önce yazılmaz", r));
+        }
         if cad_work != Some(CadWork::Road) && !(map && fits) {
             return Err(relation(
                 "road",
